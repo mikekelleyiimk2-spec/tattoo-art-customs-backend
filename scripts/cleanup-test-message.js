@@ -10,9 +10,9 @@ async function main() {
   await migrate();
   const conv = await db.get('SELECT id, subject FROM conversations WHERE id = ?', [convId]);
   if (!conv) { console.log('CLEANUP_NOOP: conversation not found'); process.exit(0); }
-  await db.run('DELETE FROM messages WHERE conversation_id = ?', [convId]);
-  await db.run('DELETE FROM conversation_participants WHERE conversation_id = ?', [convId]);
-  await db.run('DELETE FROM conversations WHERE id = ?', [convId]);
+  await db.query('DELETE FROM messages WHERE conversation_id = ?', [convId]);
+  await db.query('DELETE FROM conversation_participants WHERE conversation_id = ?', [convId]);
+  await db.query('DELETE FROM conversations WHERE id = ?', [convId]);
   console.log('CLEANUP_OK: deleted conversation', JSON.stringify(conv.subject));
   process.exit(0);
 }
