@@ -11,6 +11,7 @@
 //
 // Recipients with cashout_mode = 'manual' are skipped (they cash out on
 // demand). Anyone skipped or failed keeps their balance as payable.
+// No payout goes out without an active designer or tattoo shop subscription.
 // The function never throws; it always returns a summary and emails it to
 // the site admin (or logs it when SMTP isn't configured).
 const db = require('../db');
@@ -33,6 +34,15 @@ async function runWeeklyPayouts() {
 
   const paypalItems = [];
   for (const g of groups) {
+    // No payout without an active designer or shop subscription — a lapsed
+    // subscription skips the payout and the balance stays payable until the
+    // recipient resubscribes. Customer subscriptions never qualify.
+    try {
+      await cashout.requirePayoutEligible(g.recipient_id, g.recipient_type);
+    } catch (e) {
+      summary.skipped.push({ ...g, reason: 'no active designer or tattoo shop subscription — payout held until resubscribed' });
+      continue;
+    }
     const mode = await cashout.getCashoutMode(g.recipient_id, g.recipient_type);
     if (mode !== 'weekly') {
       summary.skipped.push({ ...g, reason: 'manual cashout mode — recipient cashes out on demand' });

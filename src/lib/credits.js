@@ -62,7 +62,10 @@ async function completeTopup({ userId, topupId }) {
 }
 
 // --- Keep commission payouts as site credit (no fee — you're not withdrawing) ---
+// Requires an active designer/shop subscription: customer subscriptions
+// can never touch commission money.
 async function moveCommissionsToCredit({ userId, recipientType }) {
+  await cashout.requirePayoutEligible(userId, recipientType);
   const { payableBalance } = require('./commissions');
   const balance = await payableBalance(recipientType, userId);
   if (balance <= 0) throw new Error('No payable commissions to move.');
@@ -75,6 +78,19 @@ async function moveCommissionsToCredit({ userId, recipientType }) {
      WHERE recipient_type = ? AND recipient_id = ? AND status = 'payable'`,
     [db.now(), recipientType, userId]);
   return { creditedCents: balance, moveId };
+}
+
+// Money the user put in themselves (PayPal top-ups, plus reverted
+// withdrawals) minus what they've already spent or withdrawn. This is always
+// theirs to withdraw — no subscription needed. Anything above it is
+// commission-derived and requires an active designer or shop subscription.
+async function ownMoneyBalance(userId) {
+  const row = await db.get(
+    `SELECT
+       COALESCE(SUM(CASE WHEN kind IN ('topup','withdrawal_revert') THEN amount_cents END),0) AS ins,
+       COALESCE(SUM(CASE WHEN kind IN ('purchase_spend','withdrawal') THEN -amount_cents END),0) AS outs
+     FROM account_credits WHERE user_id = ?`, [userId]);
+  return Math.max(0, row.ins - row.outs);
 }
 
 // --- Withdraw credit to a payout destination: 3% auto-withheld, once per 24h ---
@@ -97,6 +113,12 @@ async function requestWithdrawal({ userId, destinationId, amountCents = null }) 
     throw new Error(`Minimum withdrawal is $${(cashout.MIN_CASHOUT_CENTS / 100).toFixed(2)}.`);
   }
   if (amount > balance) throw new Error('Withdrawal exceeds your credit balance.');
+
+  // Withdrawing your own topped-up money is always allowed. Withdrawing
+  // commission earnings requires an active designer or shop subscription —
+  // customer subscriptions can never receive commissions.
+  const ownMoney = await ownMoneyBalance(userId);
+  if (amount > ownMoney) await cashout.requireAnyPayoutEligible(userId);
 
   const { penaltyCents, netCents } = cashout.earlyQuote(amount);
   const details = JSON.parse(dest.details || '{}');

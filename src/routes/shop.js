@@ -10,6 +10,7 @@ const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { screenText } = require('../lib/screening');
 const { payableBalance } = require('../lib/commissions');
 const { registerPayoutRoutes, payoutDashboardData } = require('../lib/payoutRoutes');
+const { upsertProfile } = require('../lib/profiles');
 
 const router = express.Router();
 router.use(requireLogin, requireSubscription('tattoo_shop'));
@@ -56,9 +57,7 @@ router.post('/profile', formLimiter, checkHoneypot, async (req, res) => {
       bad.map((f) => f.label).join(', ') + ')';
     return res.redirect('/shop');
   }
-  const existing = await db.get('SELECT user_id FROM shop_profiles WHERE user_id = ?', [req.user.id]);
-  if (existing) await db.updateWhere('shop_profiles', { ...fields, profile_status: 'ok' }, 'user_id', req.user.id);
-  else await db.insert('shop_profiles', { user_id: req.user.id, ...fields, created_at: db.now() });
+  await upsertProfile('shop_profiles', req.user.id, { ...fields, profile_status: 'ok' });
   req.session.flash = 'Shop profile updated.';
   res.redirect('/shop');
 });
@@ -69,9 +68,7 @@ router.post('/payout-email', formLimiter, checkHoneypot, async (req, res) => {
     req.session.flash = 'Enter a valid PayPal email.';
     return res.redirect('/shop');
   }
-  const existing = await db.get('SELECT user_id FROM shop_profiles WHERE user_id = ?', [req.user.id]);
-  if (existing) await db.updateWhere('shop_profiles', { payout_paypal_email: email }, 'user_id', req.user.id);
-  else await db.insert('shop_profiles', { user_id: req.user.id, payout_paypal_email: email, created_at: db.now() });
+  await upsertProfile('shop_profiles', req.user.id, { payout_paypal_email: email });
   req.session.flash = 'Payout email saved.';
   res.redirect('/shop');
 });

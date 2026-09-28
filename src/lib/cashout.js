@@ -12,13 +12,38 @@
 // Anything without an automated rail queues in /admin/payouts for the admin
 // to send manually and mark complete.
 const db = require('../db');
-const { payableBalance } = require('./commissions');
+const { payableBalance, recipientEligible } = require('./commissions');
+const { upsertProfile } = require('./profiles');
 const paypal = require('./paypal');
 const wise = require('./wise');
 
 const EARLY_FEE_BPS = 300; // 3% early-cashout penalty
 const MIN_CASHOUT_CENTS = 500; // $5 minimum
 const EARLY_COOLDOWN_MS = 24 * 3600 * 1000; // one early cashout per day
+
+// Payouts and commissions require an ACTIVE designer or tattoo shop
+// subscription (plus a payout method). Customer subscriptions can never
+// receive commissions — the commission engine records those shares as
+// site_kept, and these guards close the gap if a subscription lapses
+// between earning and payout.
+function roleForRecipientType(recipientType) {
+  return recipientType === 'artist' ? 'design_artist' : 'tattoo_shop';
+}
+async function requirePayoutEligible(userId, recipientType) {
+  const ok = await recipientEligible(userId, roleForRecipientType(recipientType));
+  if (!ok) {
+    throw new Error('Payouts require an active designer or tattoo shop subscription with a payout method set up. Customer subscriptions cannot receive commissions.');
+  }
+}
+// Either role qualifies (used for site-credit withdrawals of commission
+// earnings, which aren't tied to one recipient type).
+async function requireAnyPayoutEligible(userId) {
+  const artistOk = await recipientEligible(userId, 'design_artist');
+  const shopOk = await recipientEligible(userId, 'tattoo_shop');
+  if (!artistOk && !shopOk) {
+    throw new Error('Withdrawing commission earnings requires an active designer or tattoo shop subscription. Customer subscriptions cannot receive commissions.');
+  }
+}
 
 // dest_type -> { label, fields: [{key,label,type,placeholder}], hint, auto }
 // auto: 'paypal' | 'wise' | false (manual admin send)
@@ -163,11 +188,7 @@ async function getCashoutMode(userId, recipientType) {
 async function setCashoutMode(userId, recipientType, mode) {
   if (!['weekly', 'manual'].includes(mode)) throw new Error('Invalid cashout mode.');
   const table = recipientType === 'artist' ? 'artist_profiles' : 'shop_profiles';
-  const exists = await db.get(`SELECT user_id FROM ${table} WHERE user_id = ?`, [userId]);
-  if (exists) await db.updateWhere(table, { cashout_mode: mode }, 'user_id', userId);
-  // Explicit column list: these profile tables use user_id as PK (no id column),
-  // so db.insert() (which adds id) cannot be used here.
-  else await db.query(`INSERT INTO ${table} (user_id, cashout_mode, created_at) VALUES (?,?,?)`, [userId, mode, db.now()]);
+  await upsertProfile(table, userId, { cashout_mode: mode });
 }
 
 function earlyQuote(amountCents) {
@@ -239,6 +260,7 @@ async function requestEarlyCashout({ userId, recipientType, destinationId }) {
   const dest = await db.get(
     'SELECT * FROM payout_destinations WHERE id = ? AND user_id = ?', [destinationId, userId]);
   if (!dest) throw new Error('Choose one of your payout destinations.');
+  await requirePayoutEligible(userId, recipientType);
 
   const last = await db.get(
     "SELECT created_at FROM cashout_requests WHERE user_id = ? AND kind IN ('early','withdrawal') AND status != 'canceled' ORDER BY created_at DESC LIMIT 1",
@@ -292,5 +314,5 @@ module.exports = {
   addDestination, setDefaultDestination, deleteDestination,
   getCashoutMode, setCashoutMode,
   requestEarlyCashout, cancelCashout, revertCashout, completeCashout, claimPayableRows,
-  dispatchCashout,
+  dispatchCashout, requirePayoutEligible, requireAnyPayoutEligible, roleForRecipientType,
 };

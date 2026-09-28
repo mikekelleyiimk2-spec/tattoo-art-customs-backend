@@ -46,10 +46,11 @@ router.get('/', requireLogin, async (req, res) => {
   const withdrawals = await db.all(
     "SELECT * FROM cashout_requests WHERE user_id = ? AND kind = 'withdrawal' ORDER BY created_at DESC LIMIT 10",
     [req.user.id]);
+  const uploads = await db.all('SELECT id, title, status, created_at FROM designs WHERE artist_id = ? ORDER BY created_at DESC LIMIT 20', [req.user.id]);
   res.render('account/dashboard', {
     title: 'My Account — Tattoo Art Customs', photos, subs, orders,
     metaDescription: 'Your Tattoo Art Customs account.',
-    creditBalance, creditTxns, destinations, withdrawals,
+    creditBalance, creditTxns, destinations, withdrawals, uploads,
     destTypes: require('../lib/cashout').DEST_TYPES,
   });
 });
@@ -132,6 +133,78 @@ router.post('/photos/:id/delete', requireLogin, formLimiter, checkHoneypot, asyn
     await db.query('DELETE FROM member_photos WHERE id = ?', [photo.id]);
     req.session.flash = 'Photo removed.';
   }
+  res.redirect('/account');
+});
+
+// --- Free art uploads: ANY logged-in user (no subscription required).
+// Every upload requires administrator approval before it appears in the
+// gallery or can be sold. Only active designer-subscription members earn
+// the designer commission on their art; customer subscriptions never
+// earn commission.
+const { screenText } = require('../lib/screening');
+const designStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.join(config.assetDir, 'uploads', 'designs');
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname || '').toLowerCase().slice(0, 5) || '.jpg';
+    cb(null, `${req.user.id}-${Date.now()}-${file.fieldname}${ext}`);
+  },
+});
+const uploadDesign = multer({
+  storage: designStorage,
+  limits: { fileSize: 15 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (/^image\/(jpeg|png|webp)$/.test(file.mimetype)) cb(null, true);
+    else cb(new Error('Only JPG, PNG, or WebP images are allowed.'));
+  },
+}).fields([{ name: 'color', maxCount: 1 }, { name: 'linework', maxCount: 1 }]);
+
+router.get('/upload', requireLogin, (req, res) => res.render('account/upload', {
+  title: 'Upload your art — Tattoo Art Customs', metaDescription: '',
+}));
+
+router.post('/upload', requireLogin, formLimiter, (req, res, next) => {
+  uploadDesign(req, res, (err) => {
+    if (err) { req.session.flash = err.message; return res.redirect('/account/upload'); }
+    next();
+  });
+}, checkHoneypot, async (req, res) => {
+  const files = req.files || {};
+  if (!files.color || !files.linework) {
+    req.session.flash = 'Both a full-color image and a clean linework image are required.';
+    return res.redirect('/account/upload');
+  }
+  const title = String(req.body.title || '').trim().slice(0, 120);
+  if (!title) { req.session.flash = 'Give your design a title.'; return res.redirect('/account/upload'); }
+  const description = String(req.body.description || '').trim().slice(0, 2000);
+  const categories = String(req.body.categories || '').split(',')
+    .map((c) => c.trim().toLowerCase().replace(/[^a-z0-9- ]/g, '').slice(0, 40))
+    .filter(Boolean).slice(0, 12);
+
+  // Contact-info screening on title/description — flagged items go to the
+  // admin review queue; nothing goes live without an admin's approval.
+  const screen = screenText(`${title}\n${description}`);
+  const id = await db.insert('designs', {
+    title, description, categories: JSON.stringify(categories),
+    color_path: path.relative(config.assetDir, files.color[0].path),
+    linework_path: path.relative(config.assetDir, files.linework[0].path),
+    linework_wm_path: '', // set by the watermarking step before approval
+    price_cents: 7500, artist_id: req.user.id,
+    status: screen.ok ? 'pending' : 'flagged', created_at: db.now(), sale_count: 0,
+  });
+  if (!screen.ok) {
+    await db.insert('review_queue', {
+      item_type: 'design', item_id: id,
+      reason: 'Contact info detected in title/description: ' + screen.flags.map((f) => f.label).join(', '),
+      status: 'open', created_at: db.now(),
+    });
+  }
+  req.session.flash = screen.ok
+    ? 'Art uploaded — it goes live after admin approval.'
+    : 'Art uploaded but flagged for review (possible contact info). An admin will review it.';
   res.redirect('/account');
 });
 

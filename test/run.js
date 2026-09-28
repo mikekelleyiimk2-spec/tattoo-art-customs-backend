@@ -267,10 +267,16 @@ async function main() {
   const q = cashout.earlyQuote(10000);
   ok(q.penaltyCents === 300 && q.netCents === 9700, 'early cashout quote: 3% fee');
   ok(Object.keys(cashout.DEST_TYPES).join(',').includes('bank') && cashout.DEST_TYPES.paypal.auto === 'paypal', 'destination types include bank + PayPal');
-  // seed a payable artist balance for the buyer
+  // seed a payable artist balance for the buyer + grant an active designer
+  // subscription with a payout email (payouts require both)
   const { randomUUID } = require('crypto');
   sdb.prepare("INSERT INTO commission_ledger (id, order_id, recipient_type, recipient_id, amount_cents, status, created_at) VALUES (?,?,?,?,?,?,?)")
     .run(randomUUID(), 'o-test', 'artist', buyerId, 10000, 'payable', Date.now());
+  const dplanId = sdb.prepare("SELECT id FROM plans WHERE slug = 'design_artist'").get().id;
+  sdb.prepare("INSERT INTO subscriptions (id, user_id, plan_id, status, created_at) VALUES (?,?,?,?,?)")
+    .run(randomUUID(), buyerId, dplanId, 'active', Date.now());
+  const { upsertProfile } = require('../src/lib/profiles');
+  await upsertProfile('artist_profiles', buyerId, { payout_paypal_email: 'buyer@pay.test' });
   const zelleId = await cashout.addDestination({ userId: buyerId, recipientType: 'artist', destType: 'zelle', details: { identifier: 'buyer@test.local' } });
   ok(!!zelleId, 'zelle destination added');
   const req1 = await cashout.requestEarlyCashout({ userId: buyerId, recipientType: 'artist', destinationId: zelleId });
@@ -321,6 +327,66 @@ async function main() {
   ok(paid.order.status === 'paid' && paid.order.payment_method === 'credit', 'order paid with site credit');
   const commRows = sdb.prepare('SELECT COUNT(*) AS n FROM commission_ledger WHERE order_id = ?').get(worderId).n;
   ok(commRows > 0, 'commissions recorded for credit-paid order');
+
+  // free art uploads: any logged-in account (customer, no subscription)
+  r = await req('POST', '/signup', { body: { display_name: 'Cust', email: 'cust@test.local', password: 'password123' }, follow: false });
+  const custId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('cust@test.local').id;
+  r = await req('GET', '/account/upload');
+  ok(r.status === 200 && r.text.includes('Upload your art'), 'upload page open to any logged-in user');
+  const upForm = new FormData();
+  upForm.append('title', 'Customer Doodle');
+  upForm.append('color', new Blob(['colorbytes'], { type: 'image/jpeg' }), 'c.jpg');
+  upForm.append('linework', new Blob(['linebytes'], { type: 'image/png' }), 'l.png');
+  const upRes = await fetch(`http://localhost:${PORT}/account/upload`, {
+    method: 'POST',
+    headers: { cookie: Object.entries(jar).map(([k, v]) => `${k}=${v}`).join('; ') },
+    body: upForm, redirect: 'manual',
+  });
+  ok(upRes.status === 302 && upRes.headers.get('location') === '/account', 'customer uploads art free, no subscription needed');
+  const upDesign = sdb.prepare('SELECT status, artist_id FROM designs WHERE title = ?').get('Customer Doodle');
+  ok(upDesign && upDesign.status === 'pending' && upDesign.artist_id === custId, 'upload held pending admin approval');
+  const galCount = sdb.prepare("SELECT COUNT(*) AS n FROM designs WHERE title = 'Customer Doodle' AND status = 'approved'").get().n;
+  ok(galCount === 0, 'unapproved upload is not live');
+
+  // payouts require an active designer/shop subscription (customer = never)
+  sdb.prepare("INSERT INTO commission_ledger (id, order_id, recipient_type, recipient_id, amount_cents, status, created_at) VALUES (?,?,?,?,?,?,?)")
+    .run(randomUUID(), 'o-elig', 'artist', walletId, 6000, 'payable', Date.now());
+  let eligErr = '';
+  try { await cashout.requestEarlyCashout({ userId: walletId, recipientType: 'artist', destinationId: wdest }); }
+  catch (e) { eligErr = e.message; }
+  ok(/subscription/i.test(eligErr), 'early cashout blocked without designer/shop subscription');
+  let moveErr = '';
+  try { await credits.moveCommissionsToCredit({ userId: walletId, recipientType: 'artist' }); }
+  catch (e) { moveErr = e.message; }
+  ok(/subscription/i.test(moveErr), 'commission-to-credit blocked without subscription');
+  // commission-derived site credit cannot be withdrawn without subscription…
+  await credits.addCredit({ userId: custId, amountCents: 20000, kind: 'commission_move', note: 'test commission credit' });
+  const custDest = await cashout.addDestination({ userId: custId, recipientType: 'customer', destType: 'zelle', details: { identifier: 'cust@test.local' } });
+  let wdErr = '';
+  try { await credits.requestWithdrawal({ userId: custId, destinationId: custDest, amountCents: 20000 }); }
+  catch (e) { wdErr = e.message; }
+  ok(/subscription/i.test(wdErr), 'commission credit withdrawal blocked without subscription');
+  // …but your own topped-up money is always withdrawable
+  sdb.prepare("UPDATE cashout_requests SET created_at = ? WHERE user_id = ?").run(Date.now() - 25 * 3600 * 1000, walletId);
+  const wOwn = await credits.requestWithdrawal({ userId: walletId, destinationId: wdest, amountCents: 500 });
+  ok(wOwn.status === 'pending' && wOwn.net_cents === 485, 'own top-up money withdrawable without subscription');
+
+  // grant the customer an active designer subscription + payout email
+  const planId = sdb.prepare("SELECT id FROM plans WHERE slug = 'design_artist'").get().id;
+  sdb.prepare("INSERT INTO subscriptions (id, user_id, plan_id, status, created_at) VALUES (?,?,?,?,?)")
+    .run(randomUUID(), custId, planId, 'active', Date.now());
+  await cashout.setCashoutMode(custId, 'artist', 'manual');
+  sdb.prepare("UPDATE artist_profiles SET payout_paypal_email = ? WHERE user_id = ?").run('cust@pay.test', custId);
+  r = await req('GET', '/artist/upload', { follow: false });
+  ok(r.status === 302 && r.location === '/account/upload', 'artist upload redirects to shared free upload page');
+  const wSub = await credits.requestWithdrawal({ userId: custId, destinationId: custDest, amountCents: 20000 });
+  ok(wSub.status === 'pending' && wSub.net_cents === 19400, 'subscribed designer can withdraw commission credit');
+
+  // weekly autopayout skips recipients whose subscription lapsed
+  const autopayout = require('../src/lib/autopayout');
+  const summary = await autopayout.runWeeklyPayouts();
+  ok(summary.skipped.some((s) => s.recipient_id === walletId && /subscription/i.test(s.reason)),
+    'weekly payout holds balance when subscription is not active');
 
   sdb.close();
   server.kill();

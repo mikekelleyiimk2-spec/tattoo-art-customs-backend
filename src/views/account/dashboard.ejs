@@ -10,6 +10,11 @@
       <input type="text" id="display_name" name="display_name" value="<%= currentUser.display_name %>" maxlength="60">
       <p><button class="btn" type="submit">Save</button></p>
     </form>
+    <h2>My art uploads</h2>
+    <p><a class="btn" href="/account/upload">Upload your art</a></p>
+    <p class="muted">Free for everyone. Every upload must be approved by an admin before it appears in the gallery. Only active designer subscriptions earn commission on their art.</p>
+    <% if (!uploads.length) { %><p class="muted">No uploads yet.</p><% } %>
+    <ul><% uploads.forEach(function(d) { %><li><%= d.title %> — <span class="badge <%= d.status === 'approved' ? 'ok' : (d.status === 'rejected' ? 'warn' : '') %>"><%= d.status %></span></li><% }); %></ul>
     <h2>Subscriptions</h2>
     <% if (!subs.length) { %><p class="muted">None — <a href="/membership">see plans</a>.</p><% } %>
     <ul><% subs.forEach(function(s) { %><li><%= s.plan_name %> — <span class="badge <%= s.status === 'active' ? 'ok' : 'warn' %>"><%= s.status %></span></li><% }); %></ul>

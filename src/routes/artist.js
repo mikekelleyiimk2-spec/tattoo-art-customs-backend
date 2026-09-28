@@ -2,40 +2,20 @@
 // Uploads, bio editor (screened), commission dashboard (splits visible
 // here ONLY — never to customers), payout email setup.
 const express = require('express');
-const path = require('path');
-const fs = require('fs');
-const multer = require('multer');
 const db = require('../db');
-const config = require('../config');
 const { requireLogin, requireSubscription } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { screenText } = require('../lib/screening');
 const { payableBalance } = require('../lib/commissions');
 const { registerPayoutRoutes, payoutDashboardData } = require('../lib/payoutRoutes');
+const { upsertProfile } = require('../lib/profiles');
 
 const router = express.Router();
 router.use(requireLogin, requireSubscription('design_artist'));
 registerPayoutRoutes(router, 'artist');
 
-const designStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(config.assetDir, 'uploads', 'designs');
-    fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname || '').toLowerCase().slice(0, 5) || '.jpg';
-    cb(null, `${req.user.id}-${Date.now()}-${file.fieldname}${ext}`);
-  },
-});
-const uploadDesign = multer({
-  storage: designStorage,
-  limits: { fileSize: 15 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (/^image\/(jpeg|png|webp)$/.test(file.mimetype)) cb(null, true);
-    else cb(new Error('Only JPG, PNG, or WebP images are allowed.'));
-  },
-}).fields([{ name: 'color', maxCount: 1 }, { name: 'linework', maxCount: 1 }]);
+// Note 2026-09-28: art uploads moved to /account/upload — free for every
+// logged-in account; admin approval still required before going live.
 
 router.get('/', async (req, res) => {
   const designs = await db.all('SELECT * FROM designs WHERE artist_id = ? ORDER BY created_at DESC', [req.user.id]);
@@ -56,59 +36,17 @@ router.get('/', async (req, res) => {
   });
 });
 
-router.get('/upload', (req, res) => res.render('artist/upload', {
-  title: 'Upload a design — Tattoo Art Customs', metaDescription: '',
-}));
-
-router.post('/upload', formLimiter, (req, res, next) => {
-  uploadDesign(req, res, (err) => {
-    if (err) { req.session.flash = err.message; return res.redirect('/artist/upload'); }
-    next();
-  });
-}, checkHoneypot, async (req, res) => {
-  const files = req.files || {};
-  if (!files.color || !files.linework) {
-    req.session.flash = 'Both a full-color image and a clean linework image are required.';
-    return res.redirect('/artist/upload');
-  }
-  const title = String(req.body.title || '').trim().slice(0, 120);
-  if (!title) { req.session.flash = 'Give your design a title.'; return res.redirect('/artist/upload'); }
-  const description = String(req.body.description || '').trim().slice(0, 2000);
-  const categories = String(req.body.categories || '').split(',')
-    .map((c) => c.trim().toLowerCase().replace(/[^a-z0-9- ]/g, '').slice(0, 40))
-    .filter(Boolean).slice(0, 12);
-
-  // Contact-info screening on title/description.
-  const screen = screenText(`${title}\n${description}`);
-  const id = await db.insert('designs', {
-    title, description, categories: JSON.stringify(categories),
-    color_path: path.relative(config.assetDir, files.color[0].path),
-    linework_path: path.relative(config.assetDir, files.linework[0].path),
-    linework_wm_path: '', // set by the watermarking step before approval
-    price_cents: 7500, artist_id: req.user.id,
-    status: screen.ok ? 'pending' : 'flagged', created_at: db.now(), sale_count: 0,
-  });
-  if (!screen.ok) {
-    await db.insert('review_queue', {
-      item_type: 'design', item_id: id,
-      reason: 'Contact info detected in title/description: ' + screen.flags.map((f) => f.label).join(', '),
-      status: 'open', created_at: db.now(),
-    });
-  }
-  req.session.flash = screen.ok
-    ? 'Design uploaded — it goes live after admin review.'
-    : 'Design uploaded but flagged for review (possible contact info).';
-  res.redirect('/artist');
-});
+router.get('/upload', (req, res) => res.redirect('/account/upload'));
+router.post('/upload', (req, res) => res.redirect(307, '/account/upload'));
+// Note 2026-09-28: uploads moved to /account/upload — free for every
+// logged-in account; admin approval still required before going live.
 
 // Bio editor — screened; blocked on contact info, flagged for review.
 router.post('/bio', formLimiter, checkHoneypot, async (req, res) => {
   const bio = String(req.body.bio || '').trim().slice(0, 2000);
   const screen = screenText(bio);
-  const existing = await db.get('SELECT user_id FROM artist_profiles WHERE user_id = ?', [req.user.id]);
   const data = { bio, bio_status: screen.ok ? 'ok' : 'flagged' };
-  if (existing) await db.updateWhere('artist_profiles', data, 'user_id', req.user.id);
-  else await db.insert('artist_profiles', { user_id: req.user.id, ...data, created_at: db.now() });
+  await upsertProfile('artist_profiles', req.user.id, data);
   if (!screen.ok) {
     await db.insert('review_queue', {
       item_type: 'bio', item_id: req.user.id,
@@ -129,9 +67,7 @@ router.post('/payout-email', formLimiter, checkHoneypot, async (req, res) => {
     req.session.flash = 'Enter a valid PayPal email.';
     return res.redirect('/artist');
   }
-  const existing = await db.get('SELECT user_id FROM artist_profiles WHERE user_id = ?', [req.user.id]);
-  if (existing) await db.updateWhere('artist_profiles', { payout_paypal_email: email }, 'user_id', req.user.id);
-  else await db.insert('artist_profiles', { user_id: req.user.id, payout_paypal_email: email, created_at: db.now() });
+  await upsertProfile('artist_profiles', req.user.id, { payout_paypal_email: email });
   req.session.flash = 'Payout email saved. You become payable once registered, subscribed, and this is set.';
   res.redirect('/artist');
 });

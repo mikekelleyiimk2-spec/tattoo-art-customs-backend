@@ -6,6 +6,7 @@ const express = require('express');
 const db = require('../db');
 const config = require('../config');
 const paypal = require('../lib/paypal');
+const { upsertProfile } = require('../lib/profiles');
 const { requireLogin } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 
@@ -89,12 +90,10 @@ async function grantPlanRole(userId, planSlug) {
   if (!user || user.role === 'admin') return;
   await db.update('users', userId, { role });
   if (role === 'design_artist') {
-    await db.upsert('artist_profiles', 'user_id', { user_id: userId, created_at: db.now() });
+    await upsertProfile('artist_profiles', userId, {});
   }
   if (role === 'tattoo_shop') {
-    await db.upsert('shop_profiles', 'user_id', {
-      user_id: userId, referral_code: makeReferralCode(), created_at: db.now(),
-    });
+    await upsertProfile('shop_profiles', userId, { referral_code: makeReferralCode() });
   }
 }
 
