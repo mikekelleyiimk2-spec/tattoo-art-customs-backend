@@ -7,7 +7,7 @@ async function migrate() {
   await db.init();
   // Ensure the tracking table exists even if the migration file list changes.
   await db.query(`CREATE TABLE IF NOT EXISTS migrations (
-    id TEXT PRIMARY KEY, applied_at INTEGER NOT NULL)`);
+    id TEXT PRIMARY KEY, applied_at BIGINT NOT NULL)`);
 
   const dir = path.join(__dirname, '..', '..', 'migrations');
   const files = fs.readdirSync(dir).filter((f) => f.endsWith('.sql')).sort();

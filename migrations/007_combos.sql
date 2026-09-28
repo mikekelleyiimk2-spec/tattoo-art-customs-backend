@@ -8,6 +8,6 @@ CREATE TABLE IF NOT EXISTS combos (
   style TEXT NOT NULL DEFAULT 'color',
   background TEXT NOT NULL DEFAULT 'white',
   output_path TEXT NOT NULL DEFAULT '',
-  created_at INTEGER NOT NULL
+  created_at BIGINT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_combos_user ON combos(user_id, created_at);

@@ -10,6 +10,6 @@ CREATE TABLE IF NOT EXISTS play_purchases (
   purchase_type TEXT NOT NULL DEFAULT 'inapp',
   status TEXT NOT NULL DEFAULT 'pending',
   email TEXT NOT NULL DEFAULT '',
-  created_at INTEGER NOT NULL,
-  verified_at INTEGER
+  created_at BIGINT NOT NULL,
+  verified_at BIGINT
 );

@@ -4,11 +4,11 @@
 CREATE TABLE IF NOT EXISTS account_credits (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  amount_cents INTEGER NOT NULL,
+  amount_cents BIGINT NOT NULL,
   kind TEXT NOT NULL,
   ref_id TEXT,
   note TEXT NOT NULL DEFAULT '',
-  created_at INTEGER NOT NULL
+  created_at BIGINT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_account_credits_user ON account_credits(user_id);
 
@@ -16,11 +16,11 @@ CREATE INDEX IF NOT EXISTS idx_account_credits_user ON account_credits(user_id);
 CREATE TABLE IF NOT EXISTS credit_topups (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  amount_cents INTEGER NOT NULL,
+  amount_cents BIGINT NOT NULL,
   paypal_order_id TEXT,
   status TEXT NOT NULL DEFAULT 'pending',
-  created_at INTEGER NOT NULL,
-  completed_at INTEGER
+  created_at BIGINT NOT NULL,
+  completed_at BIGINT
 );
 
 -- cashout source: 'commission' (ledger) or 'credit' (wallet withdrawal).

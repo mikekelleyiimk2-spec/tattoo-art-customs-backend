@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS payout_destinations (
   dest_type TEXT NOT NULL,
   label TEXT NOT NULL DEFAULT '',
   details TEXT NOT NULL DEFAULT '{}',
-  is_default INTEGER NOT NULL DEFAULT 0,
-  created_at INTEGER NOT NULL
+  is_default BIGINT NOT NULL DEFAULT 0,
+  created_at BIGINT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_payout_destinations_user ON payout_destinations(user_id);
 
@@ -18,14 +18,14 @@ CREATE TABLE IF NOT EXISTS cashout_requests (
   recipient_type TEXT NOT NULL,
   destination_id TEXT,
   dest_snapshot TEXT NOT NULL DEFAULT '{}',
-  amount_cents INTEGER NOT NULL,
-  penalty_cents INTEGER NOT NULL DEFAULT 0,
-  net_cents INTEGER NOT NULL,
+  amount_cents BIGINT NOT NULL,
+  penalty_cents BIGINT NOT NULL DEFAULT 0,
+  net_cents BIGINT NOT NULL,
   kind TEXT NOT NULL DEFAULT 'early',
   status TEXT NOT NULL DEFAULT 'pending',
   note TEXT NOT NULL DEFAULT '',
-  created_at INTEGER NOT NULL,
-  processed_at INTEGER
+  created_at BIGINT NOT NULL,
+  processed_at BIGINT
 );
 CREATE INDEX IF NOT EXISTS idx_cashout_requests_user ON cashout_requests(user_id, status);
 

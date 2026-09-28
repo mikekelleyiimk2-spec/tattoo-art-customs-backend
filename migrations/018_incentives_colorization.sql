@@ -28,23 +28,23 @@
 -- 'pending_color_approval'.
 ALTER TABLE users ADD COLUMN referral_code TEXT NOT NULL DEFAULT '';
 ALTER TABLE users ADD COLUMN referred_by TEXT;
-ALTER TABLE users ADD COLUMN first_month_discount_used INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE users ADD COLUMN membership_extended_until INTEGER;
-ALTER TABLE subscriptions ADD COLUMN first_month_discount_applied INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE subscriptions ADD COLUMN founding_discount_applied INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE designs ADD COLUMN members_only INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN first_month_discount_used BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN membership_extended_until BIGINT;
+ALTER TABLE subscriptions ADD COLUMN first_month_discount_applied BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE subscriptions ADD COLUMN founding_discount_applied BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE designs ADD COLUMN members_only BIGINT NOT NULL DEFAULT 0;
 
 CREATE TABLE IF NOT EXISTS referral_redemptions (
   id TEXT PRIMARY KEY,
   referrer_id TEXT NOT NULL,
   referred_user_id TEXT NOT NULL,
   subscription_id TEXT NOT NULL,
-  granted_at INTEGER NOT NULL,
-  free_month_start INTEGER NOT NULL,
-  free_month_end INTEGER NOT NULL,
+  granted_at BIGINT NOT NULL,
+  free_month_start BIGINT NOT NULL,
+  free_month_end BIGINT NOT NULL,
   paypal_subscription_id TEXT NOT NULL DEFAULT '',
   status TEXT NOT NULL DEFAULT 'active',
-  created_at INTEGER NOT NULL
+  created_at BIGINT NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_referral_redemption_sub
   ON referral_redemptions(subscription_id);

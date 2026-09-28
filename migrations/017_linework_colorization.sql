@@ -27,9 +27,9 @@
 ALTER TABLE designs ADD COLUMN color_source TEXT NOT NULL DEFAULT 'designer';
 ALTER TABLE designs ADD COLUMN colorization_note TEXT NOT NULL DEFAULT '';
 ALTER TABLE commission_ledger ADD COLUMN commission_type TEXT NOT NULL DEFAULT 'split';
-ALTER TABLE commission_ledger ADD COLUMN cleared_at INTEGER;
-ALTER TABLE orders ADD COLUMN linework_only INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE orders ADD COLUMN on_hold INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE commission_ledger ADD COLUMN cleared_at BIGINT;
+ALTER TABLE orders ADD COLUMN linework_only BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE orders ADD COLUMN on_hold BIGINT NOT NULL DEFAULT 0;
 CREATE INDEX IF NOT EXISTS idx_designs_color_status
   ON designs(color_source, status);
 CREATE INDEX IF NOT EXISTS idx_ledger_cleared
