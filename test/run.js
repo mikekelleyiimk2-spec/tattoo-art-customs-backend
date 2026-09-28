@@ -114,8 +114,8 @@ async function main() {
   await comm.recordSaleCommissions({ id: 'o1', amount_paid_cents: 7500, design_id: 'd1', referred_shop_id: null });
   const byType = {};
   for (const r of rows) byType[r.recipient_type] = (byType[r.recipient_type] || 0) + r.amount_cents;
-  ok(byType.artist === 4500, 'artist gets exactly 60%');
-  ok(byType.site === 3000, 'site keeps 10% + 10% residual + 20% unassigned shop share');
+  ok(byType.artist === 6000, 'artist gets 80% (70% + half the unassigned 20% shop share)');
+  ok(byType.site === 1500, 'site keeps 13% owner + 7% site of the unassigned shop share');
   ok(rows.reduce((s, r) => s + r.amount_cents, 0) === 7500, 'splits sum to the sale total');
   db.get = realGet; db.insert = realInsert;
 
@@ -134,25 +134,25 @@ async function main() {
   const slaOrd = await db.get('SELECT * FROM orders WHERE id = ?', [slaOrderId]);
   await comm.recordSaleCommissions(slaOrd);
   const slaOrig = await comm.recordCustomDesignerCommission(slaOrd, slaDesignerId);
-  ok(slaOrig === 7500, 'custom designer original commission = 60% of $125 = $75.00');
+  ok(slaOrig === 8750, 'custom designer original commission = 70% of $125 = $87.50');
   // 2.5 days late -> days 1-2 charged
   const slaR1 = await sla.applyPenalties({ now: slaNow });
   ok(slaR1.penalties.length === 2, 'two late days charged at +2.5d');
   const slaPens = await sla.penaltyLedger(slaOrderId);
   ok(slaPens.length === 2 && slaPens[0].day_number === 1 && slaPens[1].day_number === 2, 'penalty ledger holds days 1-2');
-  ok(slaPens[0].deduction_cents === 278 && slaPens[0].owner_cents === 150 && slaPens[0].credit_cents === 128,
-    'day-1 math: 3.7% of 7500 = 278 deducted; 150 owner; 128 buyer credit');
+  ok(slaPens[0].deduction_cents === 324 && slaPens[0].owner_cents === 175 && slaPens[0].credit_cents === 149,
+    'day-1 math: 3.7% of 8750 = 324 deducted; 175 owner; 149 buyer credit');
   const slaDrow = await db.get(
     `SELECT * FROM commission_ledger WHERE order_id = ? AND recipient_type = 'artist' AND recipient_id = ?`,
     [slaOrderId, slaDesignerId]);
-  ok(slaDrow.amount_cents === 7500 - 556, 'designer commission reduced by 2x278');
+  ok(slaDrow.amount_cents === 8750 - 648, 'designer commission reduced by 2x324');
   const slaOwnerId = (await db.get('SELECT id FROM users WHERE email = ?', ['admin@test.local'])).id;
   const slaOrow = await db.get(
     `SELECT COALESCE(SUM(amount_cents),0) AS t FROM commission_ledger
      WHERE order_id = ? AND recipient_type = 'site' AND recipient_id = ? AND status = 'payable'`,
     [slaOrderId, slaOwnerId]);
-  ok(slaOrow.t === 300, 'owner payable balance +300 (2 days x 150)');
-  ok((await getCreditBalance(slaBuyerId)) === 256, 'buyer late-delivery site credit +256 (2 days x 128)');
+  ok(slaOrow.t === 350, 'owner payable balance +350 (2 days x 175)');
+  ok((await getCreditBalance(slaBuyerId)) === 298, 'buyer late-delivery site credit +298 (2 days x 149)');
   // idempotency
   const slaR2 = await sla.applyPenalties({ now: slaNow });
   ok(slaR2.penalties.length === 0 && (await sla.penaltyLedger(slaOrderId)).length === 2,
@@ -165,13 +165,13 @@ async function main() {
   ok(slaR3.terminations.length === 1, 'day-7 order termination fired');
   const slaP7 = await sla.penaltyLedger(slaOrderId);
   ok(slaP7.length === 7, 'seven penalty rows total');
-  ok(slaP7[4].deduction_cents === 323 && slaP7[4].owner_cents === 150 && slaP7[4].credit_cents === 173,
-    'day-5 math: 4.3% of 7500 = 323 deducted; 150 owner; 173 buyer credit');
+  ok(slaP7[4].deduction_cents === 376 && slaP7[4].owner_cents === 175 && slaP7[4].credit_cents === 201,
+    'day-5 math: 4.3% of 8750 = 376 deducted; 175 owner; 201 buyer credit');
   const slaD7 = await db.get(
     `SELECT amount_cents FROM commission_ledger WHERE order_id = ? AND recipient_type = 'artist' AND recipient_id = ?`,
     [slaOrderId, slaDesignerId]);
-  ok(slaD7.amount_cents === 5419, 'designer keeps 5419 after 7 days (7500 - 2081)');
-  ok((await getCreditBalance(slaBuyerId)) === 1031, 'buyer credit total 1031 after 7 days');
+  ok(slaD7.amount_cents === 6326, 'designer keeps 6326 after 7 days (8750 - 2424)');
+  ok((await getCreditBalance(slaBuyerId)) === 1199, 'buyer credit total 1199 after 7 days');
   ok((await db.get('SELECT COALESCE(sla_suspended,0) AS s FROM users WHERE id = ?', [slaDesignerId])).s === 0,
     'designer account NEVER auto-suspended at day-7');
   ok((await db.get('SELECT role FROM users WHERE id = ?', [slaDesignerId])).role === 'design_artist',
@@ -228,8 +228,8 @@ async function main() {
   await comm.recordCustomDesignerCommission(repOrd, repDesignerId);
   await sla.applyPenalties({ now: slaNow });
   const repPen = (await sla.penaltyLedger(repOrderId))[0];
-  ok(repPen.deduction_cents === 555 && repPen.owner_cents === 150 && repPen.credit_cents === 405 && repPen.rate_mult === 2,
-    '2x rates: day-1 7.4% of 7500 = 555 deducted; 150 owner; 405 buyer apology credit');
+  ok(repPen.deduction_cents === 648 && repPen.owner_cents === 175 && repPen.credit_cents === 473 && repPen.rate_mult === 2,
+    '2x rates: day-1 7.4% of 8750 = 648 deducted; 175 owner; 473 buyer apology credit');
   // status lifts when the oldest miss ages out of the 30d window
   await db.update('orders', repMissIds[0], { deadline_missed_at: slaNow - 31 * 86400000 });
   const repInfo2 = await sla.repeatOffenderInfo(repDesignerId, slaNow);
@@ -310,7 +310,7 @@ async function main() {
   const { routeCustomOrder } = require('../src/lib/customFulfillment');
   const t2routed = await routeCustomOrder({ ...t2Ord, custom_status: 'new' });
   ok(t2routed.custom_status === 'needs_drafts', 'routing skips commission-suspended designers');
-  // premade sale: designer 60% redirected to owner payable, shop/site shares unchanged
+  // premade sale: designer 80% (70% + no-shop half-share) redirected to owner payable, shop/site shares unchanged
   const t2DesignId = await db.insert('designs', {
     artist_id: t2DesignerId, title: 'T2 Design', status: 'approved',
     price_cents: 7500, created_at: slaNow,
@@ -328,7 +328,7 @@ async function main() {
     `SELECT COALESCE(SUM(amount_cents),0) AS t FROM commission_ledger
      WHERE order_id = ? AND recipient_type = 'site' AND recipient_id = ? AND status = 'payable'`,
     [t2PreId, slaOwnerId]);
-  ok(t2owner.t === 4500, 'premade: designer 60% ($45) redirected to owner payable');
+  ok(t2owner.t === 6000, 'premade: designer 80% ($60) redirected to owner payable');
   // suspension lifts after 30 days when misses age out
   await db.update('users', t2DesignerId, { commission_suspended_until: slaNow - 1000 });
   for (const mid of t2MissIds) await db.update('orders', mid, { deadline_missed_at: slaNow - 61 * 86400000 });
@@ -1018,18 +1018,19 @@ async function main() {
   ok(r.status === 302, 'admin confirms portfolio order payment');
   const pLedger = sdb.prepare('SELECT recipient_type, amount_cents, status FROM commission_ledger WHERE order_id = ?').all(pOrderId);
   const pArtist = pLedger.find((l) => l.recipient_type === 'artist');
-  ok(pArtist && pArtist.amount_cents === Math.round(pOrder.amount_cents * 0.60), 'portfolio custom sale: designer gets 60%');
+  ok(pArtist && pArtist.amount_cents === Math.round(pOrder.amount_cents * 0.80), 'portfolio custom sale: designer gets 80% (70% + no-shop half-share)');
   const pSite = pLedger.filter((l) => l.recipient_type === 'site').reduce((a, l) => a + l.amount_cents, 0);
   const pShop = pLedger.filter((l) => l.recipient_type === 'shop').reduce((a, l) => a + l.amount_cents, 0);
-  // No referring shop: site keeps its 10% + the 10% residual + the unclaimed
-  // 20% shop base = 40%; nothing goes to a shop recipient.
-  ok(pSite === Math.round(pOrder.amount_cents * 0.40) && pShop === 0, 'portfolio custom sale: site keeps 10%+residual+unclaimed shop base, no shop share without referral');
+  // Instant-fulfillment custom piece: premade path, no referring shop —
+  // designer 80%, owner 13% + site 7% (the unassigned shop share split
+  // 50/40/10), no shop share.
+  ok(pSite === Math.round(pOrder.amount_cents * 0.20) && pShop === 0, 'portfolio custom sale: site keeps 13% owner + 7% site, no shop share without referral');
   ok(pArtist.amount_cents + pSite + pShop === pOrder.amount_cents, 'commission splits sum to the order total');
   // Instant delivery: buyer can mint a download token for the clean files.
   r = await req('POST', `/orders/${pOrderId}/download-token`, { follow: false });
   ok(r.status === 302 && (r.location || '').includes('/orders/download/'), 'paid portfolio order unlocks instant download');
 
-  // Commission-suspended designer: 60% redirected to the owner.
+  // Commission-suspended designer: 70% redirected to the owner.
   await db.update('users', bannerArtistId, { commission_suspended_until: Date.now() + 86400000 });
   r = await req('POST', `/orders/buy/${grow.id}`, { follow: false });
   const sOrderId = r.location.split('/orders/manual/')[1];
@@ -1042,7 +1043,7 @@ async function main() {
   ok(sArtist && sArtist.amount_cents === 0 && sArtist.status === 'site_kept', 'suspended designer earns 0 on portfolio sales');
   const ownerId = sdb.prepare("SELECT id FROM users WHERE email = 'admin@test.local'").get().id;
   const sOwner = sLedger.find((l) => l.recipient_type === 'site' && l.recipient_id === ownerId);
-  ok(sOwner && sOwner.amount_cents === Math.round(sOrder.amount_cents * 0.60), 'suspended designer 60% redirected to owner payable');
+  ok(sOwner && sOwner.amount_cents === Math.round(sOrder.amount_cents * 0.80), 'suspended designer 80% redirected to owner payable');
   await db.update('users', bannerArtistId, { commission_suspended_until: null });
 
   // A piece with sales cannot be deleted.
@@ -1151,7 +1152,7 @@ async function main() {
   const inkLedger = sdb.prepare('SELECT recipient_type, amount_cents, commission_type FROM commission_ledger WHERE order_id = ?').all(inkOrderId);
   const inkArtist = inkLedger.find((l) => l.recipient_type === 'artist');
   const inkFee = inkLedger.find((l) => l.commission_type === 'colorization_fee');
-  ok(inkArtist && inkArtist.amount_cents === Math.round(inkOrder.amount_cents * 0.55), 'site-colored sale: designer gets 55%');
+  ok(inkArtist && inkArtist.amount_cents === Math.round(inkOrder.amount_cents * 0.75), 'site-colored sale: designer gets 75% (65% + no-shop half-share)');
   ok(inkFee && inkFee.recipient_type === 'site' && inkFee.amount_cents === Math.round(inkOrder.amount_cents * 0.05),
     'site-colored sale: 5-point website colorization fee recorded distinctly');
   ok(inkLedger.reduce((s, l) => s + l.amount_cents, 0) === inkOrder.amount_cents, 'colorization-fee splits sum to the order total');

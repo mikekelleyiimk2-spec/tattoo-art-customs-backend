@@ -1,6 +1,6 @@
 -- Founding Members launch program (2026-09-28).
 --
--- Founding design artists (first 50): 70% commission instead of 60%,
+-- Founding design artists (first 50): 80% commission instead of 70%,
 --   for 6 months after activation.
 --   users.is_founding_artist / users.founding_artist_ends_at (unix-ms)
 -- Founding tattoo shops (first 100): $79.99 first year instead of $99.99,

@@ -94,35 +94,37 @@ async function runDbTests(ok) {
   const designP = await db.insert('designs', { title: 'Plain piece', artist_id: plainArtist });
   const designLW = await db.insert('designs', { title: 'LW piece', artist_id: foundingArtist, color_source: 'none' });
 
-  // Founding artist premade: 70% of $75 = $52.50, owner split $0.
+  // Founding artist premade, no referring shop: 80% + 10% no-shop share
+  // = 90% of $75 = $67.50; owner 8%, site 2%.
   const o1 = await db.insert('orders', {
     buyer_id: buyer, design_id: designF, order_type: 'premade',
     amount_cents: 7500, amount_paid_cents: 7500, status: 'paid',
   });
   await comm.recordSaleCommissions(await db.get('SELECT * FROM orders WHERE id = ?', [o1]));
   const l1 = await ledgerFor(o1);
-  ok(sumBy(l1, 'artist') === 5250, 'founding artist gets 70% of premade sale');
+  ok(sumBy(l1, 'artist') === 6750, 'founding artist gets 90% of premade sale (80% + half the unassigned shop share)');
   ok(l1.reduce((s, r) => s + r.amount_cents, 0) === 7500, 'founding-artist splits sum to the sale total');
 
-  // Baseline still 60%.
+  // Baseline now 70%.
   const o2 = await db.insert('orders', {
     buyer_id: buyer, design_id: designP, order_type: 'premade',
     amount_cents: 7500, amount_paid_cents: 7500, status: 'paid',
   });
   await comm.recordSaleCommissions(await db.get('SELECT * FROM orders WHERE id = ?', [o2]));
-  ok(sumBy(await ledgerFor(o2), 'artist') === 4500, 'non-founding artist still gets 60%');
+  ok(sumBy(await ledgerFor(o2), 'artist') === 6000, 'non-founding artist gets 80% (70% + half the unassigned shop share)');
 
-  // Linework-only founding artist: 65% (55% base + 10 boost), 5% color fee kept.
+  // Linework-only founding artist: 75% (65% base + 10 boost) + 10% no-shop
+  // share, 5% color fee kept.
   const o3 = await db.insert('orders', {
     buyer_id: buyer, design_id: designLW, order_type: 'premade',
     amount_cents: 7500, amount_paid_cents: 7500, status: 'paid',
   });
   await comm.recordSaleCommissions(await db.get('SELECT * FROM orders WHERE id = ?', [o3]));
   const l3 = await ledgerFor(o3);
-  ok(sumBy(l3, 'artist') === 4875, 'linework-only founding artist gets 65%');
+  ok(sumBy(l3, 'artist') === 6375, 'linework-only founding artist gets 85% (75% + no-shop half-share)');
   ok(l3.reduce((s, r) => s + r.amount_cents, 0) === 7500, 'linework splits sum to the sale total');
 
-  // Founding shop referral on a plain-artist sale: 25% shop, owner split cut to 5%.
+  // Founding shop referral on a plain-artist sale: 25% shop, owner split cut to 0%.
   const foundingShop = shopIds[0];
   const o4 = await db.insert('orders', {
     buyer_id: buyer, design_id: designP, order_type: 'premade',
@@ -132,7 +134,7 @@ async function runDbTests(ok) {
   await comm.recordSaleCommissions(await db.get('SELECT * FROM orders WHERE id = ?', [o4]));
   const l4 = await ledgerFor(o4);
   ok(sumBy(l4, 'shop') === 1875, 'founding shop gets 25% referral share');
-  ok(sumBy(l4, 'artist') === 4500, 'plain artist still gets 60% on referred sale');
+  ok(sumBy(l4, 'artist') === 5250, 'plain artist still gets 70% on referred sale');
   ok(l4.reduce((s, r) => s + r.amount_cents, 0) === 7500, 'referred splits sum to the sale total');
 
   // Combined: founding artist + founding shop.
@@ -143,7 +145,7 @@ async function runDbTests(ok) {
   });
   await comm.recordSaleCommissions(await db.get('SELECT * FROM orders WHERE id = ?', [o5]));
   const l5 = await ledgerFor(o5);
-  ok(sumBy(l5, 'artist') === 5250 && sumBy(l5, 'shop') === 1875, 'combined: 70% artist + 25% shop');
+  ok(sumBy(l5, 'artist') === 6000 && sumBy(l5, 'shop') === 1500, 'combined: 80% artist + 20% shop (shop boost capped - owner share exhausted)');
   ok(l5.reduce((s, r) => s + r.amount_cents, 0) === 7500, 'combined splits sum to the sale total');
 
   // Owner/unregistered art with founding shop: 75/25.
@@ -167,9 +169,9 @@ async function runDbTests(ok) {
     amount_cents: 7500, amount_paid_cents: 7500, status: 'paid',
   });
   await comm.recordSaleCommissions(await db.get('SELECT * FROM orders WHERE id = ?', [o7]));
-  ok(sumBy(await ledgerFor(o7), 'artist') === 4500, 'expired boost reverts to 60%');
+  ok(sumBy(await ledgerFor(o7), 'artist') === 6000, 'expired boost reverts to 80% (70% + no-shop half-share)');
 
-  // Custom commission with founding artist: 70%.
+  // Custom commission with founding artist: 80%.
   const o8 = await db.insert('orders', {
     buyer_id: buyer, order_type: 'custom',
     amount_cents: 15000, amount_paid_cents: 15000, status: 'paid',
@@ -178,7 +180,7 @@ async function runDbTests(ok) {
   await comm.recordCustomDesignerCommission(o8row, foundingArtist);
   const l8 = await db.all(
     `SELECT recipient_id, amount_cents FROM commission_ledger WHERE order_id = ? AND recipient_type = 'artist'`, [o8]);
-  ok(l8.length === 1 && l8[0].amount_cents === 10500, 'founding artist custom commission is 70%');
+  ok(l8.length === 1 && l8[0].amount_cents === 12000, 'founding artist custom commission is 80%');
 
   // --- Raffle entries ---
   const rUser = await mkUser('raffle1@test.local');

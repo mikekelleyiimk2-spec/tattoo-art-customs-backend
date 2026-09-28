@@ -1,20 +1,28 @@
 // Commission engine. Owner rules:
 //
-// - Registered third-party artist's work: 60% original designer,
-//   10% site, 20% referring tattoo shop. These sum to 90%; the remaining
-//   10% is kept by the site (recorded as a separate site_kept entry) —
-//   the stated splits are never altered to absorb it.
+// - Registered third-party artist's work: 70% original designer,
+//   20% referring tattoo shop, 5% owner, 5% site. These sum to 100%.
+//   (Linework-only uploads: designer 65%, site keeps a 5% colorization
+//   fee recorded distinctly.)
+// - No referring shop: the 20% shop share is split 50% designer /
+//   40% owner / 10% site (designer 80%, owner 13%, site 7%).
 // - Owner's art or art from unregistered artists: 80% site, 20% referring
 //   tattoo shop.
 // - Referring shops are paid ONLY on verified sales (admin verifies).
 // - Founding program (first 50 artists / first 100 shops, 6 months):
-//   founding artists earn 70% instead of 60% (the owner's 10% split becomes
-//   0% — the owner funds the boost); founding shops earn 25% instead of
-//   20% on referred sales (the extra 5pts come from the owner's share).
+//   founding artists earn 80% instead of 70% (the +10pts come from the
+//   owner share first, then the site share — the owner funds the boost);
+//   founding shops earn 25% instead of 20% on referred sales (the extra
+//   5pts come from the owner share; on a founding-artist sale the owner
+//   share is already exhausted, so the shop boost is capped at available
+//   funds — the designer's 80% is never cut).
 // - Artists/shops are paid ONLY if registered + actively subscribed +
 //   payout method (PayPal email) configured; otherwise the site keeps all.
 // - Commission splits are shown in artist/shop dashboards ONLY —
 //   never to customers.
+// - Standing rule: splits ALWAYS favor designers and tattoo shops —
+//   they generate the revenue; designers, shops, and designs are the
+//   product and customers are the target market.
 //
 // Splits are recorded in commission_ledger with status:
 //   pending  — sale not yet verified by admin (shop share)
@@ -118,10 +126,11 @@ async function recordSaleCommissions(order) {
   const artistId = design && design.artist_id ? design.artist_id : null;
   const shopId = order.referred_shop_id || null;
   // Founding-program boosts (first 50 artists / first 100 shops, 6 months):
-  // - founding artist: 70% instead of 60%; the owner's 10% split becomes 0%
-  //   (the owner funds the boost).
-  // - founding shop: 25% referral share instead of 20%; the extra 5pts come
-  //   out of the owner's 10% split (or the residual when that split is 0).
+  // - founding artist: 80% instead of 70%; the +10pts come from the owner
+  //   share first, then the site share (the owner funds the boost).
+  // - founding shop: 25% referral share instead of 20%; the extra 5pts
+  //   come out of the owner share, capped at available funds when a
+  //   founding-artist sale already exhausted it.
   const foundingBoost = artistId ? await founding.foundingArtistActive(artistId, t) : false;
   const shopBoost = shopId ? await founding.foundingShopActive(shopId, t) : false;
   // Colorization fee: when the designer did not provide the color version
@@ -129,28 +138,43 @@ async function recordSaleCommissions(order) {
   // rate drops 5 points and the website keeps those 5 points as a
   // colorization fee (recorded distinctly so the owner can see it).
   const noDesignerColor = !!design && (design.color_source === 'site' || design.color_source === 'none');
-  const designerRate = (noDesignerColor ? 0.55 : 0.60) + (foundingBoost ? 0.10 : 0);
-  const colorFeeRate = noDesignerColor ? 0.05 : 0;
 
   if (artistId) {
-    // Third-party artist work: exactly 60% designer / 10% site / 20% shop.
-    // The stated splits sum to 90%; the leftover 10% is kept by the site
-    // as an explicit residual entry (never folded into another split).
-    const designerAmt = Math.round(order.amount_paid_cents * designerRate);
-    let siteAmt = Math.round(order.amount_paid_cents * (foundingBoost ? 0 : 0.10));
-    const feeAmt = Math.round(order.amount_paid_cents * colorFeeRate);
-    const shopBase = Math.round(order.amount_paid_cents * (shopBoost ? 0.25 : 0.20));
-    if (shopBoost && siteAmt > 0) {
-      // The founding shop's extra 5pts come from the owner's share.
-      siteAmt = Math.max(0, siteAmt - Math.round(order.amount_paid_cents * 0.05));
+    // Third-party artist work: 70% designer / 20% referring shop /
+    // 5% owner / 5% site (stated splits sum to 100%).
+    // No referring shop: the 20% shop share splits 50% designer /
+    // 40% owner / 10% site.
+    const total = order.amount_paid_cents;
+    const designerRate = (noDesignerColor ? 0.65 : 0.70) + (foundingBoost ? 0.10 : 0);
+    const colorFeeRate = noDesignerColor ? 0.05 : 0;
+    let ownerRate = foundingBoost ? 0 : 0.05;
+    let siteRate = foundingBoost ? 0 : 0.05;
+    let shopRate = 0.20;
+    if (shopBoost) {
+      const extra = Math.min(0.05, ownerRate);
+      ownerRate -= extra;
+      shopRate += extra;
     }
-    const residual = order.amount_paid_cents - designerAmt - siteAmt - feeAmt - shopBase;
+    // With no referring shop the 20% shop share is redistributed instead.
+    if (!shopId) shopRate = 0;
+    let designerAmt = Math.round(total * designerRate);
+    const feeAmt = Math.round(total * colorFeeRate);
+    let ownerAmt = Math.round(total * ownerRate);
+    let siteAmt = Math.round(total * siteRate);
+    const shopBase = Math.round(total * shopRate);
+    if (!shopId) {
+      designerAmt += Math.round(total * 0.10); // 50% of the 20% shop share
+      ownerAmt += Math.round(total * 0.08);   // 40% of the 20% shop share
+      siteAmt += Math.round(total * 0.02);    // 10% of the 20% shop share
+    }
+    // Rounding plug so the ledger always sums exactly to the sale total.
+    const residual = total - designerAmt - ownerAmt - siteAmt - feeAmt - shopBase;
     const designerEligible = await recipientEligible(artistId, 'design_artist');
     const suspended = await commissionSuspended(artistId, t);
     if (suspended) {
-      // TIER 2: designer's 60% is redirected to the site owner's payable
-      // balance (it funds buyer apology credits). Shop 20% and site 10%
-      // are unchanged; the designer's listings stay up.
+      // TIER 2: the designer's share is redirected to the site owner's
+      // payable balance (it funds buyer apology credits). Shop, owner,
+      // and site shares are unchanged; the designer's listings stay up.
       const ownerId = await ownerUserId();
       entries.push({
         order_id: order.id, recipient_type: 'artist', recipient_id: artistId,
@@ -166,6 +190,10 @@ async function recordSaleCommissions(order) {
         amount_cents: designerAmt, status: designerEligible ? 'payable' : 'site_kept', created_at: t,
       });
     }
+    entries.push({
+      order_id: order.id, recipient_type: 'site', recipient_id: null,
+      amount_cents: ownerAmt, status: 'site_kept', commission_type: 'split', created_at: t,
+    });
     entries.push({
       order_id: order.id, recipient_type: 'site', recipient_id: null,
       amount_cents: siteAmt, status: 'site_kept', commission_type: 'split', created_at: t,
@@ -189,12 +217,9 @@ async function recordSaleCommissions(order) {
         // Shops earn ONLY on verified sales — admin flips pending -> payable.
         status: shopEligible ? 'pending' : 'site_kept', created_at: t,
       });
-    } else {
-      entries.push({
-        order_id: order.id, recipient_type: 'site', recipient_id: null,
-        amount_cents: shopBase, status: 'site_kept', created_at: t,
-      });
     }
+    // No referring shop: the 20% shop share was already split 50/40/10
+    // across designer / owner / site above — nothing left to book.
   } else {
     // Owner / unregistered art: 80 site / 20 referring shop. A founding
     // shop's boost takes its extra 5pts from the owner's share (75/25).
@@ -241,10 +266,10 @@ async function payableBalance(recipientType, recipientId) {
   return row.total;
 }
 
-// Record the designer's 60% commission for a custom order routed to an artist.
+// Record the designer's 70% commission for a custom order routed to an artist.
 // Custom orders have no design_id, so recordSaleCommissions() books them as
 // owner art (80% site / 20% shop). When an artist takes the job, carve their
-// 60% out of the site's share. Idempotent: returns the existing row's amount
+// 70% out of the site's share. Idempotent: returns the existing row's amount
 // if a designer commission was already recorded for this order+artist.
 async function recordCustomDesignerCommission(order, artistId) {
   if (!order || !artistId) return 0;
@@ -262,9 +287,9 @@ async function recordCustomDesignerCommission(order, artistId) {
     });
     return 0;
   }
-  // Founding artists earn 70% on customs for 6 months (the boost is carved
-  // out of the site's share like the standard 60%).
-  const rate = await founding.foundingArtistActive(artistId, db.now()) ? 0.70 : 0.60;
+  // Founding artists earn 80% on customs for 6 months (the boost is carved
+  // out of the site's share like the standard 70%).
+  const rate = await founding.foundingArtistActive(artistId, db.now()) ? 0.80 : 0.70;
   const designerAmt = Math.round((order.amount_paid_cents || 0) * rate);
   if (designerAmt <= 0) return 0;
   // Take it out of the site's share (the largest site_kept 'site' row).
