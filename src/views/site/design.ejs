@@ -8,7 +8,7 @@
     <% design.categories.forEach(function(c) { %><span class="tag"><%= c %></span><% }); %>
     <p><%= design.description %></p>
     <% if (artist) { %><p class="muted">By <%= artist.display_name %></p><% } %>
-    <p><strong><%= money(price) %></strong> <% if (sale) { %><span class="badge ok">Saturday sale price</span><% } %></p>
+    <p><strong><%= money(price) %></strong> <% if (sale) { %><span class="badge ok">Saturday sale price</span><% } %> <% if (typeof isCustom !== 'undefined' && isCustom) { %><span class="badge">custom portfolio piece — delivered instantly</span><% } %></p>
     <% if (currentUser) { %>
     <form method="post" action="/orders/buy/<%= design.id %>">
       <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">

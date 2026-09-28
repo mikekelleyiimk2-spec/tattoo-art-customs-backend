@@ -3,20 +3,25 @@
 // CSS); bots fill it, humans don't. checkHoneypot() rejects those posts.
 const rateLimit = require('express-rate-limit');
 
+// The automated suite fires dozens of form POSTs in seconds from one IP;
+// relax limits there only. Production keeps the strict values.
+const TEST = process.env.NODE_ENV === 'test';
+const L = (n) => (TEST ? 10000 : n);
+
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, max: 30,
+  windowMs: 15 * 60 * 1000, max: L(30),
   message: 'Too many attempts — please wait a few minutes and try again.',
   standardHeaders: true, legacyHeaders: false,
 });
 
 const formLimiter = rateLimit({
-  windowMs: 60 * 1000, max: 20,
+  windowMs: 60 * 1000, max: L(20),
   message: 'Too many submissions — please slow down.',
   standardHeaders: true, legacyHeaders: false,
 });
 
 const messageLimiter = rateLimit({
-  windowMs: 60 * 1000, max: 10,
+  windowMs: 60 * 1000, max: L(10),
   message: 'Too many messages — please wait a moment.',
   standardHeaders: true, legacyHeaders: false,
 });

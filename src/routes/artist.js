@@ -2,7 +2,10 @@
 // Uploads, bio editor (screened), commission dashboard (splits visible
 // here ONLY — never to customers), payout email setup.
 const express = require('express');
+const path = require('path');
+const fs = require('fs');
 const db = require('../db');
+const config = require('../config');
 const { requireLogin, requireSubscription } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { screenText } = require('../lib/screening');
@@ -11,13 +14,99 @@ const slaEnforcer = require('../lib/slaEnforcer');
 const { commissionSuspendedUntil } = require('../lib/commissions');
 const { registerPayoutRoutes, payoutDashboardData } = require('../lib/payoutRoutes');
 const { upsertProfile } = require('../lib/profiles');
+const pricing = require('../lib/pricing');
+const { DESIGN_STYLES, portfolioUploadMulter, handlePortfolioUpload } = require('../lib/portfolioUpload');
 
 const router = express.Router();
 router.use(requireLogin, requireSubscription('design_artist'));
 registerPayoutRoutes(router, 'artist');
 
-// Note 2026-09-28: art uploads moved to /account/upload — free for every
-// logged-in account; admin approval still required before going live.
+// Note 2026-09-28: designer portfolio uploads live here (subscription-gated).
+// /account/upload stays the free path for every logged-in member.
+
+router.get('/portfolio', async (req, res) => {
+  const designs = await db.all(
+    'SELECT * FROM designs WHERE artist_id = ? ORDER BY created_at DESC', [req.user.id]);
+  res.render('artist/portfolio', {
+    title: 'My portfolio — Tattoo Art Customs',
+    designs: designs.map((d) => ({ ...d, categories: JSON.parse(d.categories || '[]') })),
+    userId: req.user.id,
+    customPrice: pricing.customFullCents(), premadePrice: pricing.premadePriceCents(),
+    metaDescription: '',
+  });
+});
+
+router.get('/portfolio/upload', (req, res) => res.render('artist/portfolio-upload', {
+  title: 'Upload a new piece — Tattoo Art Customs',
+  styles: DESIGN_STYLES, action: '/artist/portfolio/upload',
+  customPrice: pricing.customFullCents(), premadePrice: pricing.premadePriceCents(),
+  metaDescription: '',
+}));
+
+router.post('/portfolio/upload', formLimiter, (req, res, next) => {
+  portfolioUploadMulter(req, res, (err) => {
+    if (err) { req.session.flash = err.message; return res.redirect('/artist/portfolio/upload'); }
+    next();
+  });
+}, checkHoneypot, async (req, res) => {
+  await handlePortfolioUpload(req, res, '/artist/portfolio/upload');
+});
+
+router.get('/portfolio/:id/edit', async (req, res) => {
+  const design = await db.get('SELECT * FROM designs WHERE id = ? AND artist_id = ?', [req.params.id, req.user.id]);
+  if (!design) return res.status(404).render('error', { title: 'Not found', message: 'That piece is not in your portfolio.' });
+  const cats = JSON.parse(design.categories || '[]');
+  res.render('artist/portfolio-edit', {
+    title: 'Edit piece — Tattoo Art Customs',
+    design, styles: DESIGN_STYLES,
+    extraCats: cats.filter((c) => c !== design.style).join(', '),
+    metaDescription: '',
+  });
+});
+
+router.post('/portfolio/:id/edit', formLimiter, checkHoneypot, async (req, res) => {
+  const design = await db.get('SELECT * FROM designs WHERE id = ? AND artist_id = ?', [req.params.id, req.user.id]);
+  if (!design) return res.status(404).render('error', { title: 'Not found', message: 'That piece is not in your portfolio.' });
+  const title = String(req.body.title || '').trim().slice(0, 120);
+  if (!title) { req.session.flash = 'Give your design a title.'; return res.redirect(`/artist/portfolio/${design.id}/edit`); }
+  const style = String(req.body.style || '').trim().toLowerCase();
+  if (!DESIGN_STYLES.includes(style)) { req.session.flash = 'Pick a style.'; return res.redirect(`/artist/portfolio/${design.id}/edit`); }
+  const description = String(req.body.description || '').trim().slice(0, 2000);
+  const extraCats = String(req.body.categories || '').split(',')
+    .map((c) => c.trim().toLowerCase().replace(/[^a-z0-9- ]/g, '').slice(0, 40))
+    .filter(Boolean).filter((c) => c !== style).slice(0, 11);
+  const screen = screenText(`${title}\n${description}`);
+  await db.update('designs', design.id, {
+    title, description, style, categories: JSON.stringify([style, ...extraCats]),
+  });
+  if (!screen.ok) {
+    await db.insert('review_queue', {
+      item_type: 'design', item_id: design.id,
+      reason: 'Contact info detected in edited title/description: ' + screen.flags.map((f) => f.label).join(', '),
+      status: 'open', created_at: db.now(),
+    });
+    req.session.flash = 'Saved, but flagged for review (possible contact info). An admin will review it.';
+  } else {
+    req.session.flash = 'Piece updated.';
+  }
+  res.redirect('/artist/portfolio');
+});
+
+router.post('/portfolio/:id/delete', formLimiter, checkHoneypot, async (req, res) => {
+  const design = await db.get('SELECT * FROM designs WHERE id = ? AND artist_id = ?', [req.params.id, req.user.id]);
+  if (!design) return res.status(404).render('error', { title: 'Not found', message: 'That piece is not in your portfolio.' });
+  const paid = await db.get("SELECT id FROM orders WHERE design_id = ? AND status = 'paid' LIMIT 1", [design.id]);
+  if (paid || (design.sale_count || 0) > 0) {
+    req.session.flash = 'This piece has sales and cannot be deleted — contact an administrator.';
+    return res.redirect('/artist/portfolio');
+  }
+  for (const p of [design.color_path, design.linework_path, design.linework_wm_path, design.custom_watermark_path]) {
+    if (p) { try { fs.unlinkSync(path.join(config.assetDir, p)); } catch { /* already gone */ } }
+  }
+  await db.query('DELETE FROM designs WHERE id = ?', [design.id]);
+  req.session.flash = 'Piece deleted.';
+  res.redirect('/artist/portfolio');
+});
 
 router.get('/', async (req, res) => {
   const designs = await db.all('SELECT * FROM designs WHERE artist_id = ? ORDER BY created_at DESC', [req.user.id]);
@@ -66,10 +155,10 @@ router.get('/', async (req, res) => {
   });
 });
 
-router.get('/upload', (req, res) => res.redirect('/account/upload'));
-router.post('/upload', (req, res) => res.redirect(307, '/account/upload'));
-// Note 2026-09-28: uploads moved to /account/upload — free for every
-// logged-in account; admin approval still required before going live.
+router.get('/upload', (req, res) => res.redirect('/artist/portfolio/upload'));
+router.post('/upload', (req, res) => res.redirect(307, '/artist/portfolio/upload'));
+// Note 2026-09-28: designer portfolio uploads live at /artist/portfolio/upload
+// (subscription-gated). /account/upload stays the free path for members.
 
 // Bio editor — screened; blocked on contact info, flagged for review.
 router.post('/bio', formLimiter, checkHoneypot, async (req, res) => {

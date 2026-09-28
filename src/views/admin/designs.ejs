@@ -1,13 +1,14 @@
 <h1>Designs</h1>
 <p><a href="/admin">← Dashboard</a></p>
 <table>
-  <thead><tr><th>Title</th><th>Artist</th><th>Status</th><th>Sales</th><th></th></tr></thead>
+  <thead><tr><th>Title</th><th>Artist</th><th>Status</th><th>Listing</th><th>Sales</th><th></th></tr></thead>
   <tbody>
   <% designs.forEach(function(d) { %>
     <tr>
       <td><%= d.title %></td>
       <td><%= d.artist_email || 'site' %></td>
       <td><span class="badge <%= d.status === 'approved' ? 'ok' : (d.status === 'pending' ? 'warn' : 'bad') %>"><%= d.status %></span></td>
+      <td><span class="badge"><%= d.listing_type === 'custom' ? 'custom · portfolio' : 'pre-design · gallery' %></span></td>
       <td><%= d.sale_count %></td>
       <td>
         <% if (d.status !== 'approved') { %>

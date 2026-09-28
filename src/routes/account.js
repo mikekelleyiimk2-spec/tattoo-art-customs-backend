@@ -7,6 +7,9 @@ const bcrypt = require('bcryptjs');
 const db = require('../db');
 const config = require('../config');
 const { requireLogin } = require('../middleware/auth');
+const { hasActiveSubscription } = require('../middleware/auth');
+const { DESIGN_STYLES, portfolioUploadMulter, handlePortfolioUpload } = require('../lib/portfolioUpload');
+const pricing = require('../lib/pricing');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { registerPayoutRoutes, payoutDashboardData } = require('../lib/payoutRoutes');
 const credits = require('../lib/credits');
@@ -179,16 +182,36 @@ const uploadDesign = multer({
   },
 }).fields([{ name: 'color', maxCount: 1 }, { name: 'linework', maxCount: 1 }]);
 
-router.get('/upload', requireLogin, (req, res) => res.render('account/upload', {
-  title: 'Upload your art — Tattoo Art Customs', metaDescription: '',
-}));
+router.get('/upload', requireLogin, async (req, res) => {
+  // Subscribed design artists get the portfolio upload form here too, so the
+  // app's Upload tab (a WebView to this page) offers listing-type and
+  // watermark choices with no app change.
+  if (await hasActiveSubscription(req.user.id, 'design_artist')) {
+    return res.render('artist/portfolio-upload', {
+      title: 'Upload a new piece — Tattoo Art Customs',
+      styles: DESIGN_STYLES, action: '/account/upload',
+      customPrice: pricing.customFullCents(), premadePrice: pricing.premadePriceCents(),
+      metaDescription: '',
+    });
+  }
+  return res.render('account/upload', {
+    title: 'Upload your art — Tattoo Art Customs', metaDescription: '',
+  });
+});
 
 router.post('/upload', requireLogin, formLimiter, (req, res, next) => {
-  uploadDesign(req, res, (err) => {
-    if (err) { req.session.flash = err.message; return res.redirect('/account/upload'); }
-    next();
-  });
+  // Subscribed design artists upload through the portfolio pipeline
+  // (listing-type + watermark choices), everyone else uses the free path.
+  hasActiveSubscription(req.user.id, 'design_artist').then((isArtist) => {
+    (isArtist ? portfolioUploadMulter : uploadDesign)(req, res, (err) => {
+      if (err) { req.session.flash = err.message; return res.redirect('/account/upload'); }
+      next();
+    });
+  }).catch(next);
 }, checkHoneypot, async (req, res) => {
+  if (await hasActiveSubscription(req.user.id, 'design_artist')) {
+    return handlePortfolioUpload(req, res, '/account/upload');
+  }
   const files = req.files || {};
   if (!files.color || !files.linework) {
     req.session.flash = 'Both a full-color image and a clean linework image are required.';

@@ -45,9 +45,16 @@ router.get('/sitemap.xml', async (req, res) => {
   ];
   try {
     const designs = await db.all(
-      "SELECT id FROM designs WHERE status = 'approved' ORDER BY created_at DESC LIMIT 5000");
+      "SELECT id FROM designs WHERE status = 'approved' AND listing_scope = 'gallery' ORDER BY created_at DESC LIMIT 5000");
     for (const d of designs) {
       urls.push({ loc: `${base}/design/${d.id}`, changefreq: 'weekly', priority: '0.8' });
+    }
+    // Public artist portfolios (include portfolio-only custom pieces).
+    const artists = await db.all(
+      `SELECT DISTINCT u.id FROM users u JOIN designs d ON d.artist_id = u.id
+       WHERE u.role = 'design_artist' AND d.status = 'approved' LIMIT 5000`);
+    for (const a of artists) {
+      urls.push({ loc: `${base}/artists/${a.id}`, changefreq: 'weekly', priority: '0.7' });
     }
   } catch { /* sitemap still serves without design URLs */ }
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
@@ -64,8 +71,10 @@ function parseDesign(row) {
 }
 
 async function approvedDesigns() {
+  // Main gallery: approved pre-designs only. Portfolio-only custom pieces
+  // never appear here — they live on the artist's own portfolio page.
   const rows = await db.all(
-    "SELECT * FROM designs WHERE status = 'approved' ORDER BY created_at DESC");
+    "SELECT * FROM designs WHERE status = 'approved' AND listing_scope = 'gallery' ORDER BY created_at DESC");
   return rows.map(parseDesign);
 }
 
@@ -115,6 +124,10 @@ router.get('/design/:id', async (req, res) => {
   const artist = design.artist_id
     ? await db.get('SELECT display_name FROM users WHERE id = ?', [design.artist_id])
     : null;
+  // Portfolio custom pieces sell at the custom-design price (sale-aware);
+  // pre-designs sell at the premade price.
+  const isCustom = design.listing_type === 'custom';
+  const price = isCustom ? customFullCents() : premadePriceCents();
   let owned = false;
   if (req.user) {
     const o = await db.get(
@@ -125,9 +138,29 @@ router.get('/design/:id', async (req, res) => {
   }
   res.render('site/design', {
     title: `${design.title} — Tattoo Art Customs`,
-    design, artist, price: premadePriceCents(), sale: isSaleWindow(), owned,
+    design, artist, price, isCustom, sale: isSaleWindow(), owned,
     metaDescription: `${design.title} — original tattoo design. ${design.categories.join(', ')}.`,
     creditBalance: req.user ? await require('../lib/credits').getCreditBalance(req.user.id) : 0,
+  });
+});
+
+// Public artist portfolio: bio + pieces (watermarked linework only).
+// No login required.
+router.get('/artists/:id', async (req, res) => {
+  const artist = await db.get(
+    "SELECT id, display_name FROM users WHERE id = ? AND role = 'design_artist'", [req.params.id]);
+  if (!artist) return res.status(404).render('error', { title: 'Not found', message: 'That artist portfolio does not exist.' });
+  const profile = await db.get('SELECT bio FROM artist_profiles WHERE user_id = ?', [artist.id]);
+  const rows = await db.all(
+    "SELECT * FROM designs WHERE artist_id = ? AND status = 'approved' ORDER BY created_at DESC", [artist.id]);
+  const pieces = rows.map((d) => {
+    const isCustom = d.listing_type === 'custom';
+    return { ...d, price: isCustom ? customFullCents() : premadePriceCents(), isCustom };
+  });
+  res.render('site/artist', {
+    title: `${artist.display_name || 'Artist'} — Tattoo Art Customs`,
+    artist, bio: profile ? profile.bio : '', pieces, sale: isSaleWindow(),
+    metaDescription: `${artist.display_name || 'Artist'} — tattoo design portfolio on Tattoo Art Customs.`,
   });
 });
 

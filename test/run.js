@@ -8,6 +8,7 @@ const { spawn } = require('child_process');
 
 const ROOT = path.join(__dirname, '..');
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'tac-test-'));
+process.env.NODE_ENV = 'test'; // relaxes rate limits for the suite (production unaffected)
 process.env.SQLITE_PATH = path.join(TMP, 'test.db');
 process.env.SESSION_SECRET = 'test-secret';
 process.env.BASE_URL = 'http://localhost:4137';
@@ -608,7 +609,7 @@ async function main() {
   await cashout.setCashoutMode(custId, 'artist', 'manual');
   sdb.prepare("UPDATE artist_profiles SET payout_paypal_email = ? WHERE user_id = ?").run('cust@pay.test', custId);
   r = await req('GET', '/artist/upload', { follow: false });
-  ok(r.status === 302 && r.location === '/account/upload', 'artist upload redirects to shared free upload page');
+  ok(r.status === 302 && r.location === '/artist/portfolio/upload', 'artist upload redirects to portfolio upload page');
   const wSub = await credits.requestWithdrawal({ userId: custId, destinationId: custDest, amountCents: 20000 });
   ok(wSub.status === 'pending' && wSub.net_cents === 19400, 'subscribed designer can withdraw commission credit');
 
@@ -662,6 +663,201 @@ async function main() {
   r = await artreq('GET', '/artist');
   ok(r.status === 200 && r.text.includes('Commissions are paused until'), 'suspended artist sees pause notice');
   ok(r.text.includes('6+ deadlines were missed in the last 60 days'), 'pause notice states the reason plainly');
+
+  console.log('portfolios:');
+  // The SLA banner test above left the artist commission-suspended; the
+  // portfolio purchase tests need a clean slate first.
+  await db.update('users', bannerArtistId, { commission_suspended_until: null });
+  const sharp = require('sharp');
+  // Site watermark images must exist under ASSET_DIR for the pipeline
+  // (the pipeline also falls back to the repo-bundled watermarks/ dir).
+  const wmSrcDir = path.join(ROOT, 'watermarks');
+  const wmDstDir = path.join(process.env.ASSET_DIR, 'watermarks');
+  fs.mkdirSync(wmDstDir, { recursive: true });
+  for (const f of fs.readdirSync(wmSrcDir)) fs.copyFileSync(path.join(wmSrcDir, f), path.join(wmDstDir, f));
+
+  async function testJpeg(abs, w, h) {
+    await sharp({ create: { width: w, height: h, channels: 3, background: { r: 250, g: 250, b: 250 } } })
+      .composite([{ input: Buffer.from(`<svg width="${w}" height="${h}"><circle cx="${w / 2}" cy="${h / 2}" r="${Math.floor(Math.min(w, h) / 3)}" fill="none" stroke="black" stroke-width="10"/></svg>`) }])
+      .jpeg().toFile(abs);
+  }
+  // Watermark pipeline unit check (both choices).
+  const { applyWatermarkedLinework } = require('../src/lib/watermark');
+  const wmTestDir = path.join(process.env.ASSET_DIR, 'uploads', 'designs');
+  fs.mkdirSync(wmTestDir, { recursive: true });
+  await testJpeg(path.join(wmTestDir, 'lw.jpg'), 700, 900);
+  await testJpeg(path.join(wmTestDir, 'mywm.jpg'), 400, 300);
+  let wmRel = await applyWatermarkedLinework({ designId: 'wmunit1', lineworkAbs: path.join(wmTestDir, 'lw.jpg'), choice: 'site' });
+  ok(wmRel === 'designs/linework-wm/wmunit1-auto.jpg' && fs.existsSync(path.join(process.env.ASSET_DIR, wmRel)), 'site watermark pipeline generates public linework');
+  wmRel = await applyWatermarkedLinework({ designId: 'wmunit2', lineworkAbs: path.join(wmTestDir, 'lw.jpg'), choice: 'custom', customWatermarkAbs: path.join(wmTestDir, 'mywm.jpg') });
+  ok(fs.existsSync(path.join(process.env.ASSET_DIR, wmRel)), 'custom watermark pipeline generates public linework');
+  const wmMeta = await sharp(path.join(process.env.ASSET_DIR, wmRel)).metadata();
+  ok(wmMeta.width === 700 && wmMeta.height === 900, 'watermarked output keeps linework dimensions');
+  // Repo-bundled fallback: pipeline still works when ASSET_DIR has no copies.
+  fs.rmSync(wmDstDir, { recursive: true, force: true });
+  wmRel = await applyWatermarkedLinework({ designId: 'wmunit3', lineworkAbs: path.join(wmTestDir, 'lw.jpg'), choice: 'site' });
+  ok(fs.existsSync(path.join(process.env.ASSET_DIR, wmRel)), 'site watermark falls back to repo-bundled copies');
+  fs.mkdirSync(wmDstDir, { recursive: true });
+  for (const f of fs.readdirSync(wmSrcDir)) fs.copyFileSync(path.join(wmSrcDir, f), path.join(wmDstDir, f));
+
+  // multipart POST helper (fresh jar per caller)
+  async function mpost(p, fields, files, jarObj) {
+    const form = new FormData();
+    for (const [k, v] of Object.entries(fields)) form.append(k, v);
+    for (const [k, f] of Object.entries(files)) form.append(k, new Blob([f.buffer], { type: f.type }), f.filename);
+    const cookies = Object.entries(jarObj).map(([k, v]) => `${k}=${v}`).join('; ');
+    const res = await fetch(`http://localhost:${PORT}${p}`, {
+      method: 'POST', headers: cookies ? { cookie: cookies } : {}, body: form, redirect: 'manual',
+    });
+    for (const c of (res.headers.getSetCookie ? res.headers.getSetCookie() : [])) {
+      const [k, v] = c.split(';')[0].split('=');
+      jarObj[k.trim()] = (v || '').trim();
+    }
+    return { status: res.status, location: res.headers.get('location'), text: await res.text() };
+  }
+  const colorBuf = await sharp(path.join(wmTestDir, 'lw.jpg')).toBuffer();
+  const lwBuf = await sharp(path.join(wmTestDir, 'lw.jpg')).toBuffer();
+  const myWmBuf = await sharp(path.join(wmTestDir, 'mywm.jpg')).toBuffer();
+
+  // Portfolio pages (artist jar = subscribed design_artist).
+  r = await artreq('GET', '/artist/portfolio');
+  ok(r.status === 200 && r.text.includes('My portfolio'), 'portfolio management page renders');
+  r = await artreq('GET', '/artist/portfolio/upload');
+  ok(r.status === 200 && r.text.includes('Custom portfolio piece') && r.text.includes('Pre-design'), 'upload form offers listing-type choice');
+  ok(r.text.includes('anti-trace'), 'upload form states black anti-trace marks apply in both cases');
+  r = await artreq('GET', '/artist');
+  ok(r.text.includes('My portfolio') && r.text.includes('Upload new piece'), 'dashboard links portfolio prominently');
+
+  // Unsubscribed design_artist cannot reach the portfolio.
+  const unsubJar = {};
+  async function unsubreq(method, p, opts = {}) {
+    const h = { ...(opts.headers || {}) };
+    const cookies = Object.entries(unsubJar).map(([k, v]) => `${k}=${v}`).join('; ');
+    if (cookies) h.cookie = cookies;
+    let payload = opts.body;
+    if (payload && typeof payload === 'object') { payload = new URLSearchParams(payload); h['content-type'] = 'application/x-www-form-urlencoded'; }
+    const res = await fetch(`http://localhost:${PORT}${p}`, { method, headers: h, body: payload, redirect: 'manual' });
+    for (const c of (res.headers.getSetCookie ? res.headers.getSetCookie() : [])) {
+      const [k, v] = c.split(';')[0].split('=');
+      unsubJar[k.trim()] = (v || '').trim();
+    }
+    return { status: res.status, text: await res.text(), location: res.headers.get('location') };
+  }
+  const unsubId = await db.insert('users', { email: 'unsub@test.local', password_hash: await bcrypt.hash('UnsubPass123!', 10), role: 'design_artist', display_name: 'Unsub' });
+  r = await unsubreq('POST', '/login', { body: { email: 'unsub@test.local', password: 'UnsubPass123!' } });
+  r = await unsubreq('GET', '/artist/portfolio', {});
+  ok(r.status === 302 && (r.location || '').includes('/membership'), 'unsubscribed artist blocked from portfolio');
+
+  // Default upload: custom portfolio piece, site watermark.
+  r = await mpost('/artist/portfolio/upload',
+    { title: 'Portfolio Dragon', description: 'A dragon.', style: 'japanese', categories: 'animals', listing_type: 'custom', watermark_choice: 'site' },
+    { color: { buffer: colorBuf, filename: 'c.jpg', type: 'image/jpeg' }, linework: { buffer: lwBuf, filename: 'l.jpg', type: 'image/jpeg' } },
+    artJar);
+  ok(r.status === 302 && r.location === '/artist/portfolio', 'portfolio upload redirects to portfolio');
+  const prow = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('Portfolio Dragon');
+  ok(prow && prow.listing_scope === 'portfolio' && prow.listing_type === 'custom', 'default upload is portfolio-only custom');
+  ok(prow.watermark_choice === 'site', 'watermark choice stored');
+  ok(prow.linework_wm_path && fs.existsSync(path.join(process.env.ASSET_DIR, prow.linework_wm_path)), 'watermarked linework auto-generated at upload');
+  ok(prow.status === 'pending', 'upload waits for admin approval');
+  ok(prow.style === 'japanese', 'style stored at upload');
+
+  // Pre-design opt-in with the artist's own watermark image.
+  r = await mpost('/artist/portfolio/upload',
+    { title: 'Gallery Koi', description: 'Koi fish.', style: 'animals', listing_type: 'predesign', watermark_choice: 'custom' },
+    { color: { buffer: colorBuf, filename: 'c.jpg', type: 'image/jpeg' }, linework: { buffer: lwBuf, filename: 'l.jpg', type: 'image/jpeg' }, watermark: { buffer: myWmBuf, filename: 'w.jpg', type: 'image/jpeg' } },
+    artJar);
+  ok(r.status === 302, 'pre-design upload accepted');
+  const grow = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('Gallery Koi');
+  ok(grow && grow.listing_scope === 'gallery' && grow.listing_type === 'predesign', 'pre-design opt-in is gallery scoped');
+  ok(grow.style === 'animals' && JSON.parse(grow.categories).includes('animals'), 'pre-design category fixed at upload');
+  ok(grow.watermark_choice === 'custom' && grow.custom_watermark_path, 'custom watermark choice + file stored');
+
+  // Approve both via admin.
+  r = await areq('POST', `/admin/designs/${prow.id}/approve`);
+  r = await areq('POST', `/admin/designs/${grow.id}/approve`);
+  ok(sdb.prepare('SELECT status FROM designs WHERE id = ?').get(prow.id).status === 'approved', 'portfolio piece approved');
+
+  // Gallery inclusion rules.
+  r = await req('GET', '/gallery');
+  ok(!r.text.includes('Portfolio Dragon'), 'portfolio custom piece NOT in main gallery');
+  ok(r.text.includes('Gallery Koi'), 'pre-design opt-in IS in main gallery');
+  r = await req('GET', '/api/designs');
+  const apiList = JSON.parse(r.text);
+  ok(apiList.ok && apiList.designs.some((d) => d.title === 'Gallery Koi'), 'app designs API includes pre-design opt-in');
+  ok(!apiList.designs.some((d) => d.title === 'Portfolio Dragon'), 'app designs API excludes portfolio-only piece');
+
+  // Public artist page: bio + both pieces, watermarked linework only.
+  r = await req('GET', `/artists/${bannerArtistId}`);
+  ok(r.status === 200 && r.text.includes('Portfolio Dragon') && r.text.includes('Gallery Koi'), 'public artist page shows portfolio pieces');
+  ok(!r.text.includes('/uploads/'), 'public artist page never exposes clean upload paths');
+  r = await req('GET', '/api/artists/' + bannerArtistId);
+  const apiArtist = JSON.parse(r.text);
+  ok(apiArtist.ok && apiArtist.pieces.length === 2, 'app artist API returns portfolio pieces');
+  ok(apiArtist.pieces.some((p) => p.listing_type === 'custom' && p.price_cents === pricing.customFullCents()), 'app artist API prices custom piece at custom price');
+
+  // Design page: custom piece shows the custom price.
+  r = await req('GET', `/design/${prow.id}`);
+  ok(r.status === 200 && r.text.includes(pricing.money(pricing.customFullCents())), 'design page shows custom price for portfolio piece');
+  ok(r.text.includes('custom portfolio piece'), 'design page labels custom piece');
+
+  // Portfolio edit + delete rules (before any sales on these pieces).
+  r = await artreq('POST', `/artist/portfolio/${grow.id}/edit`, { body: { title: 'Gallery Koi v2', description: 'Koi v2.', style: 'animals', categories: 'fish' } });
+  ok(r.status === 302, 'portfolio edit redirects');
+  ok(sdb.prepare('SELECT title FROM designs WHERE id = ?').get(grow.id).title === 'Gallery Koi v2', 'portfolio edit updates the piece');
+  // Upload a throwaway piece to exercise successful deletion.
+  r = await mpost('/artist/portfolio/upload',
+    { title: 'Deletable Sketch', description: '', style: 'animals', listing_type: 'custom', watermark_choice: 'site' },
+    { color: { buffer: colorBuf, filename: 'c.jpg', type: 'image/jpeg' }, linework: { buffer: lwBuf, filename: 'l.jpg', type: 'image/jpeg' } },
+    artJar);
+  const delRow = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('Deletable Sketch');
+  r = await areq('POST', `/admin/designs/${delRow.id}/approve`);
+  r = await artreq('POST', `/artist/portfolio/${delRow.id}/delete`, {});
+  ok(!sdb.prepare('SELECT id FROM designs WHERE id = ?').get(delRow.id), 'unsold piece can be deleted');
+
+  // Purchase the portfolio custom piece: custom price, instant premade path.
+  r = await req('POST', `/orders/buy/${prow.id}`, { follow: false });
+  ok(r.status === 302 && r.location.includes('/orders/manual/'), 'custom piece checkout starts');
+  const pOrderId = r.location.split('/orders/manual/')[1];
+  const pOrder = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(pOrderId);
+  ok(pOrder.amount_cents === pricing.customFullCents(), 'custom piece charged at current custom price');
+  ok(pOrder.order_type === 'premade' && pOrder.custom_status === 'new', 'custom piece uses instant fulfillment, not the 48h pipeline');
+  // buyer records the manual payment, then admin confirms
+  r = await req('POST', `/orders/manual/${pOrderId}`, { body: { method: 'cashapp', note: 'test' }, follow: false });
+  ok(r.status === 302, 'manual payment recorded for portfolio order');
+  r = await areq('POST', `/admin/orders/${pOrderId}/confirm-manual`);
+  ok(r.status === 302, 'admin confirms portfolio order payment');
+  const pLedger = sdb.prepare('SELECT recipient_type, amount_cents, status FROM commission_ledger WHERE order_id = ?').all(pOrderId);
+  const pArtist = pLedger.find((l) => l.recipient_type === 'artist');
+  ok(pArtist && pArtist.amount_cents === Math.round(pOrder.amount_cents * 0.60), 'portfolio custom sale: designer gets 60%');
+  const pSite = pLedger.filter((l) => l.recipient_type === 'site').reduce((a, l) => a + l.amount_cents, 0);
+  const pShop = pLedger.filter((l) => l.recipient_type === 'shop').reduce((a, l) => a + l.amount_cents, 0);
+  // No referring shop: site keeps its 10% + the 10% residual + the unclaimed
+  // 20% shop base = 40%; nothing goes to a shop recipient.
+  ok(pSite === Math.round(pOrder.amount_cents * 0.40) && pShop === 0, 'portfolio custom sale: site keeps 10%+residual+unclaimed shop base, no shop share without referral');
+  ok(pArtist.amount_cents + pSite + pShop === pOrder.amount_cents, 'commission splits sum to the order total');
+  // Instant delivery: buyer can mint a download token for the clean files.
+  r = await req('POST', `/orders/${pOrderId}/download-token`, { follow: false });
+  ok(r.status === 302 && (r.location || '').includes('/orders/download/'), 'paid portfolio order unlocks instant download');
+
+  // Commission-suspended designer: 60% redirected to the owner.
+  await db.update('users', bannerArtistId, { commission_suspended_until: Date.now() + 86400000 });
+  r = await req('POST', `/orders/buy/${grow.id}`, { follow: false });
+  const sOrderId = r.location.split('/orders/manual/')[1];
+  const sOrder = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(sOrderId);
+  r = await req('POST', `/orders/manual/${sOrderId}`, { body: { method: 'cashapp', note: 'test' }, follow: false });
+  ok(r.status === 302, 'manual payment recorded for pre-design order');
+  r = await areq('POST', `/admin/orders/${sOrderId}/confirm-manual`);
+  const sLedger = sdb.prepare('SELECT recipient_type, recipient_id, amount_cents, status FROM commission_ledger WHERE order_id = ?').all(sOrderId);
+  const sArtist = sLedger.find((l) => l.recipient_type === 'artist');
+  ok(sArtist && sArtist.amount_cents === 0 && sArtist.status === 'site_kept', 'suspended designer earns 0 on portfolio sales');
+  const ownerId = sdb.prepare("SELECT id FROM users WHERE email = 'admin@test.local'").get().id;
+  const sOwner = sLedger.find((l) => l.recipient_type === 'site' && l.recipient_id === ownerId);
+  ok(sOwner && sOwner.amount_cents === Math.round(sOrder.amount_cents * 0.60), 'suspended designer 60% redirected to owner payable');
+  await db.update('users', bannerArtistId, { commission_suspended_until: null });
+
+  // A piece with sales cannot be deleted.
+  r = await artreq('POST', `/artist/portfolio/${prow.id}/delete`, {});
+  ok(sdb.prepare('SELECT id FROM designs WHERE id = ?').get(prow.id), 'piece with sales cannot be deleted');
 
   sdb.close();
   server.kill();

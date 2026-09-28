@@ -1,0 +1,16 @@
+<h1>Edit piece</h1>
+<form method="post" action="/artist/portfolio/<%= design.id %>/edit" class="form">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <label for="title">Title</label>
+  <input type="text" id="title" name="title" maxlength="120" value="<%= design.title %>" required>
+  <label for="description">Description</label>
+  <textarea id="description" name="description" maxlength="2000"><%= design.description %></textarea>
+  <label for="style">Style</label>
+  <select id="style" name="style" required>
+    <% styles.forEach(function(s) { %><option value="<%= s %>" <%= design.style === s ? 'selected' : '' %>><%= s %></option><% }); %>
+  </select>
+  <label for="categories">Extra categories (comma-separated)</label>
+  <input type="text" id="categories" name="categories" maxlength="300" value="<%= extraCats %>">
+  <p class="muted">Listing type (<%= design.listing_type === 'custom' ? 'custom portfolio piece' : 'pre-design' %>) and watermark choice can't be changed after upload — delete and re-upload to change them.</p>
+  <p><button class="btn" type="submit">Save changes</button> <a class="btn btn-secondary" href="/artist/portfolio">Cancel</a></p>
+</form>

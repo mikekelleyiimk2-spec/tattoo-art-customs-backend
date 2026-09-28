@@ -28,11 +28,15 @@ async function resolveReferral(code) {
   return shop ? shop.user_id : null;
 }
 
-// --- Premade: start checkout for a design ---
+// --- Premade + portfolio pieces: start checkout for a design ---
+// Portfolio custom pieces are already-made art: they charge the current
+// custom-design price (sale-aware) and deliver instantly like premade
+// fulfillment — they NEVER go through the 48-hour made-to-order pipeline.
 router.post('/buy/:designId', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
   const design = await db.get("SELECT * FROM designs WHERE id = ? AND status = 'approved'", [req.params.designId]);
   if (!design) return res.status(404).render('error', { title: 'Not found', message: 'That design is not available.' });
-  const price = premadePriceCents();
+  const isCustom = design.listing_type === 'custom';
+  const price = isCustom ? pricing.customFullCents() : premadePriceCents();
   const refCode = referralFromReq(req);
   const orderId = await db.insert('orders', {
     buyer_id: req.user.id, design_id: design.id, order_type: 'premade',

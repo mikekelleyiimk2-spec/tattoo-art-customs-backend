@@ -1,0 +1,33 @@
+<h1>My portfolio</h1>
+<p class="muted">Your public portfolio lives at <a href="/artists/<%= userId %>">/artists/<%= userId %></a> — share it anywhere. Custom pieces sell at the custom-design price and appear only here; pre-designs also appear on the main gallery.</p>
+<p><a class="btn" href="/artist/portfolio/upload">Upload new piece</a></p>
+<% if (!designs.length) { %>
+<p class="muted">Nothing uploaded yet — your pieces will appear here after admin approval.</p>
+<% } %>
+<div class="grid">
+<% designs.forEach(function(d) { %>
+  <div class="card">
+    <% if (d.linework_wm_path) { %>
+    <a href="/design/<%= d.id %>"><img src="/img/designs/<%= d.linework_wm_path.split('/').pop() %>" alt="Tattoo design linework: <%= d.title %>" loading="lazy"></a>
+    <% } %>
+    <h3><%= d.title %></h3>
+    <p class="muted">
+      <span class="badge <%= d.status === 'approved' ? 'ok' : (d.status === 'pending' ? 'warn' : 'bad') %>"><%= d.status %></span>
+      <span class="badge"><%= d.listing_type === 'custom' ? 'custom · ' + money(customPrice) : 'pre-design · ' + money(premadePrice) %></span>
+      <% if (d.listing_scope === 'portfolio') { %><span class="badge">portfolio only</span><% } %>
+      <% if (d.style) { %><span class="badge"><%= d.style %></span><% } %>
+    </p>
+    <p class="muted"><%= d.sale_count %> sale<%= d.sale_count === 1 ? '' : 's' %></p>
+    <p>
+      <a class="btn btn-secondary" href="/artist/portfolio/<%= d.id %>/edit">Edit</a>
+      <% if (d.sale_count === 0) { %>
+      <form method="post" action="/artist/portfolio/<%= d.id %>/delete" style="display:inline" onsubmit="return confirm('Delete this piece permanently?');">
+        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="btn btn-secondary" type="submit">Delete</button>
+      </form>
+      <% } %>
+    </p>
+  </div>
+<% }); %>
+</div>
+<p><a href="/artist">← Back to artist dashboard</a></p>

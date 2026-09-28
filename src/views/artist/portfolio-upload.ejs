@@ -1,0 +1,37 @@
+<h1>Upload a new piece</h1>
+<p class="muted">Your piece goes live in <strong>your portfolio</strong> after admin approval. Choose below whether it also appears on the main gallery as a pre-design.</p>
+<form method="post" action="<%= action %>" enctype="multipart/form-data" class="form">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <label for="title">Title</label>
+  <input type="text" id="title" name="title" maxlength="120" required>
+  <label for="description">Description</label>
+  <textarea id="description" name="description" maxlength="2000"></textarea>
+  <label for="style">Style (fixed at upload — this is where it appears in the gallery for pre-designs)</label>
+  <select id="style" name="style" required>
+    <option value="">— pick a style —</option>
+    <% styles.forEach(function(s) { %><option value="<%= s %>"><%= s %></option><% }); %>
+  </select>
+  <label for="categories">Extra categories (comma-separated, optional)</label>
+  <input type="text" id="categories" name="categories" maxlength="300">
+
+  <h2>Listing type</h2>
+  <label><input type="radio" name="listing_type" value="custom" checked>
+    <strong>Custom portfolio piece</strong> — sells at the custom-design price (currently <%= money(customPrice) %>), shown <strong>only in your portfolio</strong>, never the main gallery. Buyers get it instantly after payment.</label>
+  <label><input type="radio" name="listing_type" value="predesign">
+    <strong>Pre-design</strong> — also listed on the <strong>main design gallery</strong> under the style above at the pre-design price (currently <%= money(premadePrice) %>), and stays in your portfolio too.</label>
+
+  <h2>Watermark</h2>
+  <p class="muted">Public visitors only ever see watermarked linework. <strong>The site's solid-black anti-trace marks are applied in both cases.</strong></p>
+  <label><input type="radio" name="watermark_choice" value="site" checked>
+    <strong>Site watermark</strong> — our standard watermark is applied automatically.</label>
+  <label><input type="radio" name="watermark_choice" value="custom">
+    <strong>My own watermark</strong> — upload your watermark image below (works best with a dark background).</label>
+  <label for="watermark">Your watermark image (only needed if you chose your own above — JPG/PNG/WebP, max 15 MB)</label>
+  <input type="file" id="watermark" name="watermark" accept="image/jpeg,image/png,image/webp">
+
+  <label for="color">Full-color image (JPG/PNG/WebP, max 15 MB)</label>
+  <input type="file" id="color" name="color" accept="image/jpeg,image/png,image/webp" required>
+  <label for="linework">Clean linework image (JPG/PNG/WebP, max 15 MB)</label>
+  <input type="file" id="linework" name="linework" accept="image/jpeg,image/png,image/webp" required>
+  <p><button class="btn" type="submit">Upload for review</button></p>
+</form>

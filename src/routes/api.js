@@ -6,6 +6,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const db = require('../db');
 const { hasAnyActiveSubscription } = require('../middleware/auth');
+const { isSaleWindow, premadePriceCents, customFullCents } = require('../lib/pricing');
 const { authLimiter, checkHoneypot } = require('../middleware/rateLimit');
 
 const router = express.Router();
@@ -66,6 +67,56 @@ router.get('/bootstrap', async (req, res) => {
   req.session.userId = user.id;
   const safeNext = next.startsWith('/') && !next.startsWith('//') ? next : '/account';
   res.redirect(safeNext);
+});
+
+// Main design list for app clients: approved gallery-scope designs only.
+// Designer pre-design opt-ins are included here; portfolio-only custom
+// pieces are NOT (they live on /api/artists/:id).
+router.get('/designs', async (req, res) => {
+  const rows = await db.all(
+    `SELECT d.id, d.title, d.style, d.categories, d.linework_wm_path, d.listing_type,
+            u.display_name AS artist_name
+     FROM designs d LEFT JOIN users u ON u.id = d.artist_id
+     WHERE d.status = 'approved' AND d.listing_scope = 'gallery'
+     ORDER BY d.created_at DESC`);
+  res.json({
+    ok: true,
+    sale: isSaleWindow(),
+    premade_price_cents: premadePriceCents(),
+    designs: rows.map((d) => ({
+      id: d.id, title: d.title, style: d.style || '',
+      categories: JSON.parse(d.categories || '[]'),
+      thumb_url: d.linework_wm_path ? `/img/designs/${String(d.linework_wm_path).split('/').pop()}` : null,
+      price_cents: premadePriceCents(),
+      listing_type: d.listing_type || 'predesign',
+      artist_name: d.artist_name || '',
+    })),
+  });
+});
+
+// Public artist portfolio for app clients (watermarked linework only).
+router.get('/artists/:id', async (req, res) => {
+  const artist = await db.get(
+    "SELECT id, display_name FROM users WHERE id = ? AND role = 'design_artist'", [req.params.id]);
+  if (!artist) return res.status(404).json({ ok: false, error: 'not found' });
+  const profile = await db.get('SELECT bio FROM artist_profiles WHERE user_id = ?', [artist.id]);
+  const rows = await db.all(
+    "SELECT id, title, style, categories, linework_wm_path, listing_type FROM designs WHERE artist_id = ? AND status = 'approved' ORDER BY created_at DESC",
+    [artist.id]);
+  res.json({
+    ok: true,
+    sale: isSaleWindow(),
+    artist: { id: artist.id, display_name: artist.display_name || '', bio: profile ? profile.bio : '' },
+    custom_price_cents: customFullCents(),
+    premade_price_cents: premadePriceCents(),
+    pieces: rows.map((d) => ({
+      id: d.id, title: d.title, style: d.style || '',
+      categories: JSON.parse(d.categories || '[]'),
+      thumb_url: d.linework_wm_path ? `/img/designs/${String(d.linework_wm_path).split('/').pop()}` : null,
+      listing_type: d.listing_type || 'predesign',
+      price_cents: d.listing_type === 'custom' ? customFullCents() : premadePriceCents(),
+    })),
+  });
 });
 
 module.exports = { router, userFromToken };

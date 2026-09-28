@@ -367,14 +367,16 @@ async function applyReviewDecision(item, decision) {
 // A design CANNOT go live until its watermarked linework exists — the
 // public gallery must never show clean color or clean linework.
 router.post('/designs/:id/approve', formLimiter, checkHoneypot, async (req, res) => {
-  const design = await db.get('SELECT linework_wm_path FROM designs WHERE id = ?', [req.params.id]);
+  const design = await db.get('SELECT linework_wm_path, listing_type FROM designs WHERE id = ?', [req.params.id]);
   if (!design) return res.redirect('/admin/designs');
   if (!design.linework_wm_path) {
     req.session.flash = 'Blocked: upload the watermarked linework version before approving — the public gallery only ever shows watermarked linework.';
     return res.redirect('/admin/designs');
   }
   await db.update('designs', req.params.id, { status: 'approved' });
-  req.session.flash = 'Design approved — it is now live in the gallery.';
+  req.session.flash = design.listing_type === 'custom'
+    ? 'Design approved — it is now live in the artist\u2019s portfolio (portfolio-only; not in the main gallery).'
+    : 'Design approved — it is now live in the gallery.';
   res.redirect('/admin/designs');
 });
 router.post('/designs/:id/reject', formLimiter, checkHoneypot, async (req, res) => {
