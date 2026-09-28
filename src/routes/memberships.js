@@ -45,6 +45,15 @@ router.get('/', requireLogin, async (req, res) => {
 router.post('/subscribe/:slug', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
   const plan = await db.get('SELECT * FROM plans WHERE slug = ? AND active = 1', [req.params.slug]);
   if (!plan) return res.status(404).render('error', { title: 'Not found', message: 'Unknown plan.' });
+  // Idempotency: never stack duplicate subscriptions for the same plan —
+  // rapid double-clicks used to create one pending subscription per click.
+  const existing = await db.get(
+    `SELECT id FROM subscriptions WHERE user_id = ? AND plan_id = ? AND status IN ('pending','active')`,
+    [req.user.id, plan.id]);
+  if (existing) {
+    req.session.flash = 'You already have a subscription for this plan — complete or cancel it below.';
+    return res.redirect('/membership');
+  }
   if (plan.slug === 'customer_annual' && !config.paypalAnnualPlanConfigured()) {
     req.session.flash = 'The annual plan is not available yet — the monthly plan is ready now.';
     return res.redirect('/membership');
@@ -104,7 +113,11 @@ router.get('/approve', requireLogin, async (req, res) => {
   try {
     const remote = await paypal.getSubscription(sub.paypal_subscription_id);
     const status = (remote.status || '').toLowerCase();
-    if (status === 'active' || status === 'approval_pending') {
+    // Only a PayPal-confirmed ACTIVE subscription activates membership.
+    // 'approval_pending' means the buyer has not approved (and paid) yet —
+    // activating on it would grant a free membership, so it stays pending
+    // until the buyer approves or the signed webhook confirms activation.
+    if (status === 'active') {
       await db.update('subscriptions', sub.id, {
         status: 'active',
         current_period_end: remote.billing_info?.next_billing_time
@@ -125,10 +138,32 @@ router.get('/approve', requireLogin, async (req, res) => {
       req.session.flash = 'Membership active — welcome!';
     } else {
       await db.update('subscriptions', sub.id, { status: 'pending' });
-      req.session.flash = 'Subscription approval is still pending with PayPal.';
+      req.session.flash = status === 'approval_pending'
+        ? 'Your PayPal approval is still pending — approve it at PayPal, then use "Complete payment" below.'
+        : 'Subscription approval is still pending with PayPal.';
     }
   } catch (e) {
     req.session.flash = 'Could not confirm the subscription: ' + e.message;
+  }
+  res.redirect('/membership');
+});
+
+// Resume an abandoned checkout: re-fetch the PayPal approve URL for a
+// pending subscription owned by the logged-in user and redirect to it.
+router.get('/resume/:id', requireLogin, async (req, res) => {
+  const sub = await db.get('SELECT * FROM subscriptions WHERE id = ? AND user_id = ?',
+    [req.params.id, req.user.id]);
+  if (!sub || sub.status !== 'pending' || !sub.paypal_subscription_id) return res.redirect('/membership');
+  try {
+    const remote = await paypal.getSubscription(sub.paypal_subscription_id);
+    const approve = (remote.links || []).find((l) => l.rel === 'approve');
+    if (approve && approve.href) {
+      req.session.pendingSub = sub.id;
+      return res.redirect(approve.href);
+    }
+    req.session.flash = 'This subscription can no longer be approved at PayPal — please start a new one.';
+  } catch (e) {
+    req.session.flash = 'Could not reach PayPal: ' + e.message;
   }
   res.redirect('/membership');
 });

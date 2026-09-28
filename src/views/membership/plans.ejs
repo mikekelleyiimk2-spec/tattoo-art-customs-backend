@@ -74,6 +74,12 @@
           <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
           <button class="btn btn-secondary" type="submit">Cancel</button>
         </form>
+        <% } else if (s.status === 'pending') { %>
+        <a class="btn" href="/membership/resume/<%= s.id %>">Complete payment</a>
+        <form method="post" action="/membership/cancel/<%= s.id %>" onsubmit="return confirm('Cancel this pending subscription?')" style="display:inline">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn btn-secondary" type="submit">Cancel</button>
+        </form>
         <% } %>
       </td>
     </tr>
