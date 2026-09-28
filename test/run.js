@@ -104,6 +104,23 @@ async function main() {
   ok(founding[0].pricing_scheme.fixed_price.value === '83.28' && founding[0].total_cycles === 1, 'founding shop first year $83.28 for 1 cycle');
   ok(founding[0].tenure_type === 'TRIAL' && founding[1].tenure_type === 'REGULAR' && founding[1].sequence === 2, 'founding first year must be TRIAL tenure (PayPal rejects a second REGULAR cycle)');
   ok(founding[1].pricing_scheme.fixed_price.value === '103.98', 'founding shop renews at $103.98');
+  // Dedicated founding-shop PayPal plan (PayPal rejects a 1-year TRIAL
+  // override at subscription creation, so the discount lives in the plan).
+  cfg.paypal.planIds.founding_shop = '';
+  ok(!cfg.paypalFoundingShopPlanConfigured(), 'founding offer stays hidden until its PayPal plan exists');
+  cfg.paypal.planIds.founding_shop = 'P-TESTFOUNDING';
+  ok(cfg.paypalFoundingShopPlanConfigured(), 'founding offer activates once its PayPal plan is configured');
+  cfg.paypal.planIds.founding_shop = '';
+  const fplan = paypal.foundingShopPlanPayload({
+    productId: 'PROD-TEST', name: 'Founding', description: 'd',
+    trialCents: 8328, regularCents: 10398,
+  });
+  ok(fplan.status === 'ACTIVE' && fplan.product_id === 'PROD-TEST', 'founding plan payload targets the product and is active');
+  ok(fplan.billing_cycles[0].tenure_type === 'TRIAL' && fplan.billing_cycles[0].total_cycles === 1 &&
+     fplan.billing_cycles[0].pricing_scheme.fixed_price.value === '83.28', 'founding plan: $83.28 trial first year');
+  ok(fplan.billing_cycles[1].tenure_type === 'REGULAR' && fplan.billing_cycles[1].total_cycles === 0 &&
+     fplan.billing_cycles[1].pricing_scheme.fixed_price.value === '103.98', 'founding plan: $103.98/yr renewal forever');
+
 
   console.log('commissions:');
   const db = require('../src/db');
@@ -793,6 +810,22 @@ async function main() {
   // custom order: brief too short rejected
   r = await req('POST', '/orders/custom', { body: { brief: 'short' }, follow: false });
   ok(r.status === 302, 'short custom brief rejected');
+
+  // custom order: double-submit guard — same brief twice yields one order
+  const dupeBrief = 'A black-and-grey wolf howling at a full moon, upper arm, six inches tall, dupe-guard test';
+  r = await req('POST', '/orders/custom', { body: { brief: dupeBrief }, follow: false });
+  ok(r.status === 302 && (r.location || '').includes('/orders/manual/'), 'first custom order created (PayPal down in tests -> manual page)');
+  const firstOrderId = (r.location || '').split('/orders/manual/')[1];
+  r = await req('POST', '/orders/custom', { body: { brief: dupeBrief }, follow: false });
+  ok(r.status === 302 && r.location === `/orders/${firstOrderId}`, 'rapid duplicate custom order redirects to the existing order');
+  // order detail shows the fee-inclusive breakdown, not just the base price
+  r = await req('GET', `/orders/${firstOrderId}`);
+  ok(r.status === 200 && r.text.includes('Deposit due now') && r.text.includes('Total with fees'), 'order detail shows deposit + fee-inclusive total');
+  // buyer can cancel their own pending unpaid order
+  r = await req('POST', `/orders/${firstOrderId}/cancel`, { follow: false });
+  ok(r.status === 302 && r.location === '/account', 'cancel redirects to account');
+  r = await req('GET', `/orders/${firstOrderId}`);
+  ok(r.status === 200 && r.text.includes('canceled'), 'canceled order shows canceled status');
 
   // SEO: robots + sitemap
   r = await req('GET', '/robots.txt');

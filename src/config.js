@@ -26,6 +26,11 @@ const config = {
       customer_annual: process.env.PAYPAL_PLAN_CUSTOMER_ANNUAL || '',
       artist: process.env.PAYPAL_PLAN_ARTIST || '',
       shop: process.env.PAYPAL_PLAN_SHOP || '',
+      // Dedicated founding-shop plan ($83.28 first year as a plan-level
+      // trial, then $103.98/yr). Created via scripts/create-founding-shop-plan.js.
+      // When missing, founding checkout falls back to the regular shop plan
+      // at full price rather than failing.
+      founding_shop: process.env.PAYPAL_PLAN_FOUNDING_SHOP || '',
     },
   },
   paypalConfigured() {
@@ -40,6 +45,14 @@ const config = {
   // all checkout.
   paypalAnnualPlanConfigured() {
     return this.paypalConfigured() && !!this.paypal.planIds.customer_annual;
+  },
+  // Dedicated founding-shop plan (trial pricing defined in the plan itself —
+  // PayPal rejects a 1-year TRIAL billing-cycle override at subscription
+  // creation, so the founding discount lives in its own plan). Gated on the
+  // plan ID alone: if API credentials are missing, checkout fails gracefully
+  // with a friendly message anyway.
+  paypalFoundingShopPlanConfigured() {
+    return !!this.paypal.planIds.founding_shop;
   },
   paypalBaseUrl() {
     return this.paypal.mode === 'live'

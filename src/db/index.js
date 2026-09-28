@@ -20,7 +20,14 @@ function placeholdersToPg(sql) {
 
 async function init() {
   if (config.databaseUrl) {
-    const { Pool } = require('pg');
+    const { Pool, types } = require('pg');
+    // node-postgres returns BIGINT (int8) columns as STRINGS by default.
+    // Our timestamps and cent amounts are all BIGINT after migration 021,
+    // and templates do arithmetic on them (deposit_cents + fee_cents,
+    // new Date(delivery_due)). A string breaks both: "7500" + 312 rendered
+    // as $75,003.12 and new Date("...") as Invalid Date. All values fit
+    // safely in a JS number, so parse int8 as int globally.
+    types.setTypeParser(20, (v) => parseInt(v, 10));
     pgPool = new Pool({ connectionString: config.databaseUrl });
     await pgPool.query('SELECT 1');
     mode = 'pg';

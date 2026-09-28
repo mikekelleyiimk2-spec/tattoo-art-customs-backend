@@ -29,7 +29,7 @@ router.get('/', requireLogin, async (req, res) => {
     title: 'Membership — Tattoo Art Customs',
     plans, subs, paypalReady: config.paypalPlansConfigured(),
     annualReady: config.paypalAnnualPlanConfigured(),
-    foundingShop: foundingShop && foundingStatus.shopsLeft > 0, foundingPrice: config.pricing.foundingShop.priceCents,
+    foundingShop: foundingShop && foundingStatus.shopsLeft > 0 && config.paypalFoundingShopPlanConfigured(), foundingPrice: config.pricing.foundingShop.priceCents,
     foundingEnds: config.foundingShopWindowEnd,
     shopsLeft: foundingStatus.shopsLeft,
     firstMonthEligible: await firstMonthDiscountEligible(req.user.id),
@@ -67,20 +67,27 @@ router.post('/subscribe/:slug', requireLogin, formLimiter, checkHoneypot, async 
     let billingCycles = null;
     let firstMonth = false;
     let founding = false;
+    let planKey = PLAN_KEY_BY_SLUG[plan.slug];
     if (plan.slug === 'customer' && await firstMonthDiscountEligible(req.user.id)) {
       billingCycles = paypal.firstMonthTrialCycles(plan.price_cents);
       firstMonth = true;
     } else if (plan.slug === 'tattoo_shop' && config.foundingShopActive()) {
-      // Founding shops: $79.99 first year instead of $99.99 — but only for
-      // the first 100 shops (the founding-shop cap).
+      // Founding shops: $83.28 first year instead of $103.98 — but only for
+      // the first 100 shops (the founding-shop cap). The discount lives in
+      // a dedicated PayPal plan (PayPal rejects a 1-year TRIAL override at
+      // subscription creation), so subscribe to that plan directly.
       const foundingLib = require('../lib/founding');
       if (await foundingLib.foundingShopsAvailable()) {
-        billingCycles = paypal.foundingShopCycles();
+        if (!config.paypalFoundingShopPlanConfigured()) {
+          req.session.flash = 'Founding-shop checkout is being set up — please try again shortly.';
+          return res.redirect('/membership');
+        }
+        planKey = 'founding_shop';
         founding = true;
       }
     }
     const sub = await paypal.createSubscription({
-      planKey: PLAN_KEY_BY_SLUG[plan.slug],
+      planKey,
       returnUrl: `${config.baseUrl}/membership/approve?plan=${plan.slug}`,
       cancelUrl: `${config.baseUrl}/membership`,
       billingCycles,
@@ -96,7 +103,10 @@ router.post('/subscribe/:slug', requireLogin, formLimiter, checkHoneypot, async 
     req.session.pendingSub = subId;
     res.redirect(approve.href);
   } catch (e) {
-    req.session.flash = e.message;
+    // Never leak raw provider errors to the page (they used to render
+    // verbatim, e.g. "PayPal API POST ... failed: ...").
+    console.error('membership subscribe failed:', e.message);
+    req.session.flash = 'Checkout is unavailable right now — please try again in a moment.';
     res.redirect('/membership');
   }
 });

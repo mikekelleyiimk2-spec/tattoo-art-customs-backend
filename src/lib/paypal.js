@@ -147,6 +147,39 @@ function foundingShopCycles() {
   ];
 }
 
+// Pure payload builder for the founding-shop billing plan (exported for tests).
+function foundingShopPlanPayload({ productId, name, description, trialCents, regularCents, intervalUnit = 'YEAR', intervalCount = 1 }) {
+  const price = (cents) => ({ currency_code: 'USD', value: (cents / 100).toFixed(2) });
+  return {
+    product_id: productId,
+    name: String(name).slice(0, 127),
+    description: String(description).slice(0, 127),
+    status: 'ACTIVE',
+    billing_cycles: [
+      {
+        frequency: { interval_unit: intervalUnit, interval_count: intervalCount },
+        tenure_type: 'TRIAL', sequence: 1, total_cycles: 1,
+        pricing_scheme: { fixed_price: price(trialCents) },
+      },
+      {
+        frequency: { interval_unit: intervalUnit, interval_count: intervalCount },
+        tenure_type: 'REGULAR', sequence: 2, total_cycles: 0,
+        pricing_scheme: { fixed_price: price(regularCents) },
+      },
+    ],
+    payment_preferences: { auto_bill_outstanding: true, payment_failure_threshold: 3 },
+  };
+}
+
+// Create a billing plan with a trial first period (used once, from the
+// shell, for the founding-shop plan — PayPal rejects a 1-year TRIAL cycle
+// when overridden at subscription creation, so the discount lives in the
+// plan itself, which is the PayPal-native way to do trial pricing).
+async function createBillingPlan(args) {
+  assertConfigured();
+  return api('/v1/billing/plans', 'POST', foundingShopPlanPayload(args));
+}
+
 async function suspendSubscription(paypalSubscriptionId, reason = 'Referral reward: free month') {
   assertConfigured();
   return api(`/v1/billing/subscriptions/${paypalSubscriptionId}/suspend`, 'POST', { reason });
@@ -222,6 +255,8 @@ module.exports = {
   createCheckoutOrder,
   captureCheckoutOrder,
   createSubscription,
+  createBillingPlan,
+  foundingShopPlanPayload,
   firstMonthTrialCycles,
   foundingShopCycles,
   getSubscription,

@@ -4,6 +4,10 @@
     <tr><th>Type</th><td><%= order.order_type %></td></tr>
     <% if (design) { %><tr><th>Design</th><td><%= design.title %></td></tr><% } %>
     <tr><th>Amount</th><td><%= money(order.amount_cents) %></td></tr>
+    <% if (order.order_type === 'custom' && depositTotal != null) { %>
+      <tr><th>Deposit due now</th><td><%= money(depositTotal) %> <span class="muted">(includes <%= money(order.fee_cents) %> processing fee)</span></td></tr>
+      <tr><th>Total with fees</th><td><%= money(fullTotal) %> <span class="muted">(remainder billed on delivery)</span></td></tr>
+    <% } %>
     <tr><th>Paid</th><td><%= money(order.amount_paid_cents) %></td></tr>
     <tr><th>Status</th><td><span class="badge"><%= order.status %></span></td></tr>
     <% if (order.delivery_due) { %><tr><th>Delivery due</th><td><%= new Date(order.delivery_due).toLocaleString() %></td></tr><% } %>
@@ -27,5 +31,11 @@
 <section class="card">
   <h2>Complete payment</h2>
   <p><a class="btn" href="/orders/manual/<%= order.id %>">Pay with CashApp / Venmo</a></p>
+  <% if (Number(order.amount_paid_cents || 0) === 0) { %>
+  <form method="post" action="/orders/<%= order.id %>/cancel" class="form" onsubmit="return confirm('Cancel this order?');">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p><button class="linklike" type="submit">Cancel this order</button></p>
+  </form>
+  <% } %>
 </section>
 <% } %>

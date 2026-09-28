@@ -120,6 +120,17 @@ router.post('/custom', requireLogin, formLimiter, checkHoneypot, async (req, res
     req.session.flash = 'Describe your custom design in a bit more detail (20+ characters).';
     return res.redirect('/orders/custom');
   }
+  // Idempotency: rapid double-clicks used to stack identical pending orders.
+  // If this user already opened the same request in the last 2 minutes,
+  // send them to it instead of creating another.
+  const dupe = await db.get(
+    `SELECT id FROM orders WHERE buyer_id = ? AND order_type = 'custom'
+     AND status = 'pending' AND custom_brief = ? AND created_at > ?`,
+    [req.user.id, brief, Date.now() - 2 * 60 * 1000]);
+  if (dupe) {
+    req.session.flash = 'That request is already in — here it is.';
+    return res.redirect(`/orders/${dupe.id}`);
+  }
   const refCode = referralFromReq(req);
   const member = await isActiveMember(req.user);
   const full = pricing.customFullCents(new Date(), member);
@@ -231,7 +242,23 @@ router.get('/:orderId', requireLogin, async (req, res) => {
   }
   const design = order.design_id ? await db.get('SELECT title FROM designs WHERE id = ?', [order.design_id]) : null;
   const downloads = await db.all('SELECT * FROM downloads WHERE order_id = ? ORDER BY created_at DESC', [order.id]);
-  res.render('orders/detail', { title: `Order ${order.id.slice(0, 8)} — Tattoo Art Customs`, order, design, downloads, metaDescription: '' });
+  const pricing = require('../lib/pricing');
+  const depositTotal = order.order_type === 'custom' && order.deposit_cents != null
+    ? Number(order.deposit_cents) + Number(order.fee_cents || 0) : null;
+  const fullTotal = order.order_type === 'custom' ? pricing.withFeeCents(Number(order.amount_cents)) : null;
+  res.render('orders/detail', { title: `Order ${order.id.slice(0, 8)} — Tattoo Art Customs`, order, design, downloads, depositTotal, fullTotal, metaDescription: '' });
+});
+
+// Cancel your own pending, unpaid order (e.g. an accidental duplicate).
+router.post('/:orderId/cancel', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
+  const order = await db.get('SELECT * FROM orders WHERE id = ? AND buyer_id = ?', [req.params.orderId, req.user.id]);
+  if (!order || order.status !== 'pending' || Number(order.amount_paid_cents || 0) > 0) {
+    req.session.flash = 'That order cannot be canceled.';
+    return res.redirect('/account');
+  }
+  await db.update('orders', order.id, { status: 'canceled' });
+  req.session.flash = 'Order canceled.';
+  res.redirect('/account');
 });
 
 router.post('/:orderId/download-token', requireLogin, formLimiter, checkHoneypot, async (req, res) => {

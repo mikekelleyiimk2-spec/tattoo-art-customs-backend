@@ -140,10 +140,11 @@ router.use((req, res, next) => {
 
 router.get('/', async (req, res) => {
   const member = await isActiveMember(req.user);
-  const designs = (await approvedDesigns(member)).slice(0, 12);
+  const all = await approvedDesigns(member);
+  const designs = all.slice(0, 12);
   res.render('site/index', {
     title: 'Tattoo Art Customs — Custom Tattoo Designs',
-    designs, sale: await salePriceActive(req.user),
+    designs, designCount: all.length, sale: await salePriceActive(req.user),
     premadePrice: withFeeCents(premadePriceCents(new Date(), member)), customPrice: withFeeCents(customFullCents(new Date(), member)),
     metaDescription: 'Browse hundreds of original tattoo designs. Custom designs $155.74 with 48-hour delivery. Design artists earn 60% commission.',
   });

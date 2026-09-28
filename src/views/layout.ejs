@@ -87,6 +87,23 @@
     b.style.display = 'none';
   });
 })();
+// Double-submit protection + feedback: every POST form disables its submit
+// buttons on submit so rapid clicks can't stack duplicate orders or
+// subscriptions, and the user sees that something is happening.
+document.addEventListener('submit', function (ev) {
+  var f = ev.target;
+  if (!f || f.tagName !== 'FORM') return;
+  if ((f.getAttribute('method') || 'get').toLowerCase() !== 'post') return;
+  if (f.dataset.submitted) { ev.preventDefault(); return; }
+  f.dataset.submitted = '1';
+  Array.prototype.forEach.call(f.querySelectorAll('button[type="submit"], input[type="submit"]'), function (el) {
+    el.disabled = true;
+    if (el.tagName === 'BUTTON' && !el.dataset.label) {
+      el.dataset.label = el.textContent;
+      el.textContent = 'Working…';
+    }
+  });
+});
 // Give every table cell a data-label from its column header, so the
 // small-screen stacked-card table CSS can label each value.
 (function () {

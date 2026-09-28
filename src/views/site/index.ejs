@@ -1,6 +1,6 @@
 <section class="hero">
   <h1>Original tattoo designs, made to be worn.</h1>
-  <p>Browse 300+ original designs. Custom designs are <strong><%= money(customPrice) %></strong><% if (sale) { %> — Saturday sale price<% } %> — 50% deposit, 48-hour delivery.</p>
+  <p><% if (designCount > 0) { %>Browse <%= designCount %>+ original designs.<% } else { %>New original designs landing daily.<% } %> Custom designs are <strong><%= money(customPrice) %></strong><% if (sale) { %> — Saturday sale price<% } %> — 50% deposit, 48-hour delivery.</p>
   <% if (sale) { %>
   <div class="sale-banner" role="status">🔥 Saturday sale is ON — premade designs $52.24 until 5 AM CT Sunday.</div>
   <% } %>
