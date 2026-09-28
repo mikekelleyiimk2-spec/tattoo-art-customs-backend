@@ -11,6 +11,7 @@
       <p class="muted"><%= c.layout %> · <%= c.style %> · <%= new Date(c.created_at).toLocaleDateString() %></p>
       <p>
         <a class="btn" href="/studio/combos/<%= c.id %>/download">Download</a>
+        <a class="btn btn-secondary" href="/prints/order/combo/<%= c.id %>">Order print</a>
       </p>
       <form method="post" action="/studio/combos/<%= c.id %>/delete" style="display:inline" onsubmit="return confirm('Delete this combination?')">
         <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">

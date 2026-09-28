@@ -72,9 +72,17 @@ router.get('/design/:id', async (req, res) => {
   const artist = design.artist_id
     ? await db.get('SELECT display_name FROM users WHERE id = ?', [design.artist_id])
     : null;
+  let owned = false;
+  if (req.user) {
+    const o = await db.get(
+      `SELECT id FROM orders WHERE buyer_id = ? AND design_id = ? AND status = 'paid' AND order_type = 'premade'`,
+      [req.user.id, design.id]
+    );
+    owned = !!o;
+  }
   res.render('site/design', {
     title: `${design.title} — Tattoo Art Customs`,
-    design, artist, price: premadePriceCents(), sale: isSaleWindow(),
+    design, artist, price: premadePriceCents(), sale: isSaleWindow(), owned,
     metaDescription: `${design.title} — original tattoo design. ${design.categories.join(', ')}.`,
   });
 });

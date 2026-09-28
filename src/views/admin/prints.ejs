@@ -1,0 +1,31 @@
+<h1>Print queue</h1>
+<p><a href="/admin">← Dashboard</a></p>
+<p class="muted">Paid print orders waiting to be printed and shipped. Download the full-resolution file, print/ship it, then mark fulfilled.</p>
+<table>
+  <thead><tr><th>Date</th><th>Artwork</th><th>Product</th><th>Style</th><th>Ship to</th><th>Paid</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  <% prints.forEach(function(p) { %>
+    <tr>
+      <td><%= new Date(p.created_at).toLocaleDateString() %></td>
+      <td><%= p.design_title || p.combo_name || '—' %></td>
+      <td><%= products[p.product] ? products[p.product].name : p.product %> × <%= p.quantity %></td>
+      <td><%= p.style %></td>
+      <td><%= p.ship_name %><br><span class="muted"><%= p.ship_address1 %><% if (p.ship_address2) { %>, <%= p.ship_address2 %><% } %><br><%= p.ship_city %>, <%= p.ship_state %> <%= p.ship_zip %><br><%= p.ship_country %></span></td>
+      <td><%= money(p.amount_paid_cents || 0) %> <span class="badge"><%= p.pay_status %></span></td>
+      <td><span class="badge"><%= p.status %></span></td>
+      <td>
+        <% if (p.pay_status === 'paid') { %>
+        <a class="btn btn-secondary" href="/admin/prints/<%= p.id %>/file">Download file</a>
+        <% } %>
+        <% if (p.pay_status === 'paid' && p.status !== 'fulfilled') { %>
+        <form method="post" action="/admin/prints/<%= p.id %>/fulfill" style="display:inline">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn" type="submit">Mark fulfilled</button>
+        </form>
+        <% } %>
+      </td>
+    </tr>
+  <% }); %>
+  </tbody>
+</table>
+<% if (!prints.length) { %><p class="muted">No print orders yet.</p><% } %>

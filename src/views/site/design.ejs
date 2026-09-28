@@ -17,6 +17,9 @@
     <% } else { %>
     <p><a class="btn" href="/login?next=<%= encodeURIComponent('/design/' + design.id) %>">Log in to buy</a></p>
     <% } %>
+    <% if (typeof owned !== 'undefined' && owned) { %>
+    <p><a class="btn btn-secondary" href="/prints/order/design/<%= design.id %>">Order a print</a></p>
+    <% } %>
   </div>
 </div>
 

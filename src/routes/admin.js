@@ -329,4 +329,46 @@ router.post('/ads/:id/delete', formLimiter, checkHoneypot, async (req, res) => {
   res.redirect('/admin/ads');
 });
 
+// --- Print order fulfillment queue ---
+const { PRODUCTS: PRINT_PRODUCTS } = require('../lib/print');
+
+router.get('/prints', async (req, res) => {
+  const prints = await db.all(`
+    SELECT po.*, o.status AS pay_status, o.amount_paid_cents,
+           d.title AS design_title, c.name AS combo_name
+    FROM print_orders po
+    JOIN orders o ON o.id = po.order_id
+    LEFT JOIN designs d ON d.id = po.design_id
+    LEFT JOIN combos c ON c.id = po.combo_id
+    ORDER BY po.created_at DESC`);
+  res.render('admin/prints', { title: 'Print queue — Admin', prints, products: PRINT_PRODUCTS, metaDescription: '' });
+});
+
+router.post('/prints/:id/fulfill', formLimiter, checkHoneypot, async (req, res) => {
+  const po = await db.get('SELECT * FROM print_orders WHERE id = ?', [req.params.id]);
+  if (!po) { req.session.flash = 'Print order not found.'; return res.redirect('/admin/prints'); }
+  await db.update('print_orders', po.id, { status: 'fulfilled', fulfilled_at: db.now() });
+  req.session.flash = 'Print order marked fulfilled.';
+  res.redirect('/admin/prints');
+});
+
+// Admin-only download of the full-resolution file to print.
+router.get('/prints/:id/file', async (req, res) => {
+  const po = await db.get('SELECT * FROM print_orders WHERE id = ?', [req.params.id]);
+  if (!po) return res.status(404).render('error', { title: 'Not found', message: 'Print order not found.' });
+  let rel = null;
+  if (po.design_id) {
+    const d = await db.get('SELECT color_path, linework_path FROM designs WHERE id = ?', [po.design_id]);
+    if (d) rel = po.style === 'linework' ? d.linework_path : d.color_path;
+  } else if (po.combo_id) {
+    const c = await db.get('SELECT output_path FROM combos WHERE id = ?', [po.combo_id]);
+    if (c) rel = c.output_path;
+  }
+  const abs = rel ? path.join(config.assetDir, rel) : null;
+  if (!abs || !fs.existsSync(abs)) {
+    return res.status(404).render('error', { title: 'Not found', message: 'Print file is missing.' });
+  }
+  res.download(abs);
+});
+
 module.exports = router;
