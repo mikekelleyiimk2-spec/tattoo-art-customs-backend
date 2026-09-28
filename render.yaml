@@ -47,7 +47,7 @@ services:
         sync: false
       - key: SMTP_PASS
         sync: false
-      - key: MAIL_FROM
+      - key: SMTP_FROM
         sync: false
 
 databases:
