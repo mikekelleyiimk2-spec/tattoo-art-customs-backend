@@ -14,7 +14,7 @@ const { premadePriceCents, isSaleWindow, salePriceActive } = pricing;
 const { requireLogin, isActiveMember } = require('../middleware/auth');
 const { recordSaleCommissions } = require('../lib/commissions');
 const { routeCustomOrder } = require('../lib/customFulfillment');
-const { onPremadeSold } = require('../lib/replacements');
+const { onCustomPieceSold } = require('../lib/replacements');
 const { onOrderPaid } = require('../lib/printful');
 
 const router = express.Router();
@@ -205,7 +205,7 @@ router.get('/approve/:orderId', requireLogin, async (req, res) => {
     await recordSaleCommissions(fresh);
     const fulfil = await onOrderPaid(fresh);
     await routeCustomOrder(fresh);
-    await onPremadeSold(fresh); // sold premade designs delist + queue a replacement
+    await onCustomPieceSold(fresh); // sold custom pieces delist + queue a replacement
     req.session.flash = order.order_type === 'custom'
       ? 'Deposit received — your custom request is in. Your design will be delivered within 48 hours.'
       : 'Payment received — your download is ready.';

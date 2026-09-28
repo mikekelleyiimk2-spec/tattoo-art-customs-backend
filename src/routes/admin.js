@@ -12,7 +12,7 @@ const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { recordSaleCommissions, verifyOrderCommissions } = require('../lib/commissions');
 const { onOrderPaid } = require('../lib/printful');
 const { routeCustomOrder } = require('../lib/customFulfillment');
-const { onPremadeSold } = require('../lib/replacements');
+const { onCustomPieceSold } = require('../lib/replacements');
 const { colorizationQueue, attachColorVersion, approveColorVersion, notifyDesignLive } = require('../lib/colorization');
 
 const router = express.Router();
@@ -98,7 +98,7 @@ router.post('/orders/:id/confirm-manual', formLimiter, checkHoneypot, async (req
   await recordSaleCommissions(fresh);
   const fulfil = await onOrderPaid(fresh);
   await routeCustomOrder(fresh);
-  await onPremadeSold(fresh); // sold premade designs delist + queue a replacement
+  await onCustomPieceSold(fresh); // sold custom pieces delist + queue a replacement
   req.session.flash = 'Manual payment confirmed — buyer download unlocked, commissions recorded.' +
     (fulfil.submitted ? ' Print auto-submitted to Printful.' : '');
   res.redirect('/admin/orders');

@@ -1046,8 +1046,9 @@ async function main() {
 
   // Commission-suspended designer: 70% redirected to the owner.
   await db.update('users', bannerArtistId, { commission_suspended_until: Date.now() + 86400000 });
-  // Sold designs delist (exclusive sale, owner rule 2026-09-28), so every
-  // buy below mints a fresh approved copy of the source piece.
+  // Sold custom pieces delist (exclusive sale, owner rule 2026-09-28), so a
+  // re-buy mints a fresh approved copy of the source piece. Premade pieces
+  // stay listed and can be bought repeatedly.
   async function cloneDesignForBuy(src) {
     const row = sdb.prepare('SELECT * FROM designs WHERE id = ?').get(src.id || src);
     const { id, status, sold_at, created_at, ...rest } = row;
@@ -1069,7 +1070,7 @@ async function main() {
 
   // Forfeiture: designer with an active subscription but NO payout method
   // set up — the site keeps their share (owner rule, 2026-09-28).
-  r = await req('POST', `/orders/buy/${await cloneDesignForBuy(grow)}`, { follow: false });
+  r = await req('POST', `/orders/buy/${grow.id}`, { follow: false });
   const fOrderId = r.location.split('/orders/manual/')[1];
   r = await req('POST', `/orders/manual/${fOrderId}`, { body: { method: 'cashapp', note: 'test' }, follow: false });
   ok(r.status === 302, 'manual payment recorded for forfeiture test order');
@@ -1083,7 +1084,7 @@ async function main() {
   // Once the designer sets up a payout method, new sales become payable.
   sdb.prepare('INSERT INTO artist_profiles (user_id, payout_paypal_email, created_at) VALUES (?,?,?)')
     .run(bannerArtistId, 'banner@pay.test', Date.now());
-  r = await req('POST', `/orders/buy/${await cloneDesignForBuy(grow)}`, { follow: false });
+  r = await req('POST', `/orders/buy/${grow.id}`, { follow: false });
   const gOrderId = r.location.split('/orders/manual/')[1];
   r = await req('POST', `/orders/manual/${gOrderId}`, { body: { method: 'cashapp', note: 'test' }, follow: false });
   r = await areq('POST', `/admin/orders/${gOrderId}/confirm-manual`);
@@ -1096,7 +1097,7 @@ async function main() {
   // 2026-09-28). Designer gets the no-shop 70% (60 + 10), owner 20%.
   sdb.prepare('INSERT INTO shop_profiles (user_id, business_name, referral_code, created_at) VALUES (?,?,?,?)')
     .run(bannerArtistId, 'Self Shop', 'SELFREF1', Date.now());
-  r = await req('POST', `/orders/buy/${await cloneDesignForBuy(grow)}`, { body: { referral_code: 'SELFREF1' }, follow: false });
+  r = await req('POST', `/orders/buy/${grow.id}`, { body: { referral_code: 'SELFREF1' }, follow: false });
   const srOrderId = r.location.split('/orders/manual/')[1];
   r = await req('POST', `/orders/manual/${srOrderId}`, { body: { method: 'cashapp', note: 'test' }, follow: false });
   r = await areq('POST', `/admin/orders/${srOrderId}/confirm-manual`);
