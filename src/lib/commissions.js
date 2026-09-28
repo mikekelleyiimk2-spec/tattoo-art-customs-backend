@@ -218,8 +218,9 @@ async function recordSaleCommissions(order) {
         status: shopEligible ? 'pending' : 'site_kept', created_at: t,
       });
     }
-    // No referring shop: the 20% shop share was already split 50/40/10
-    // across designer / owner / site above — nothing left to book.
+    // No referring shop: the 20% shop share was already split 50/50
+    // across designer / owner above (site retains its 10% overhead) —
+    // nothing left to book.
   } else {
     // Owner / unregistered art: 80 site / 20 referring shop. A founding
     // shop's boost takes its extra 5pts from the owner's share (75/25).
