@@ -877,6 +877,19 @@ async function main() {
   ok(summary.skipped.some((s) => s.recipient_id === walletId && /subscription/i.test(s.reason)),
     'weekly payout holds balance when subscription is not active');
 
+  // manual-send mode: a payable weekly recipient with a PayPal destination is
+  // queued for manual send (not auto-sent) while PayPal Payouts is disabled
+  const payUserId = await db.insert('users', { email: 'payq@test.local', password_hash: 'x', role: 'design_artist', display_name: 'PayQ' });
+  await upsertTestProfile('artist_profiles', payUserId, { payout_paypal_email: 'payq@x.com' });
+  await db.insert('subscriptions', { user_id: payUserId, plan_id: planId, status: 'active', current_period_end: Date.now() + 86400000 });
+  await db.insert('commission_ledger', { order_id: 'manual-test', recipient_type: 'artist', recipient_id: payUserId, amount_cents: 1000, status: 'payable' });
+  const summary2 = await autopayout.runWeeklyPayouts();
+  const mq = summary2.queued.find((x) => x.recipientId === payUserId);
+  ok(!!mq && mq.amountCents === 1000 && /manual/i.test(mq.via), 'payable PayPal recipient queued for manual send while Payouts disabled');
+  ok(summary2.failed === false, 'manual-send run does not fail without PayPal Payouts');
+  const mrow = await db.get("SELECT id FROM cashout_requests WHERE user_id = ? AND status = 'pending'", [payUserId]);
+  ok(!!mrow, 'manual-send cashout request row created for the admin queue');
+
   // artist dashboard: SLA banner + tier-2 suspension notice render
   const bcrypt = require('bcryptjs');
   const artJar = {};

@@ -690,15 +690,15 @@ router.post('/cashouts/:id/fail', formLimiter, checkHoneypot, async (req, res) =
   res.redirect('/admin/payouts');
 });
 
-// Manually trigger the weekly automated payout run (same code the Monday
+// Manually trigger the weekly payout run (same code the Monday
 // scheduler runs). Useful for testing or off-schedule payouts.
 router.post('/payouts/auto', formLimiter, checkHoneypot, async (req, res) => {
   const { runWeeklyPayouts } = require('../lib/autopayout');
   try {
     const summary = await runWeeklyPayouts();
     req.session.flash = summary.failed
-      ? `Automatic payouts failed: ${summary.error} — shares reverted to payable.`
-      : `Automatic payouts done: ${summary.paid.length} recipient(s) paid, ${summary.skipped.length} skipped.`;
+      ? `Payout run failed: ${summary.error} — shares reverted to payable.`
+      : `Payout run done: ${summary.paid.length} paid automatically, ${summary.queued.length} queued for manual send, ${summary.skipped.length} skipped. Work the queue on /admin/payouts.`;
   } catch (e) {
     req.session.flash = 'Automatic payouts crashed: ' + e.message;
   }

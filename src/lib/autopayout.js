@@ -1,13 +1,18 @@
-// Weekly automated commission payouts.
+// Weekly commission payouts — MANUAL-SEND mode.
 //
 // Every Monday ~9am CT (see lib/scheduler.js), every recipient with
 // cashout_mode = 'weekly', a payable balance >= $5, and a default payout
-// destination gets paid the FULL amount (no penalty — the 3% fee only
-// applies to on-demand early cashouts):
-//   - PayPal destinations: sent automatically in one PayPal Payouts batch.
-//   - Bank destinations: sent via Wise when configured, else queued pending.
-//   - Cash App / Venmo / Zelle / Chime / Varo / other: queued as pending
-//     cashout requests for the admin to send manually from /admin/payouts.
+// destination is queued for MANUAL send: a cashout_requests row
+// (status 'pending') appears on /admin/payouts and the admin sends each
+// payment by hand (PayPal, Wise, Cash App, Venmo, Zelle, bank, …), then
+// marks it sent. A Monday report email goes to the admin listing every
+// queued / skipped recipient.
+//
+// Why manual: PayPal declined the Payouts enrollment (2026-09-28), so the
+// automatic PayPal batch cannot run. To re-enable automatic PayPal
+// payouts once the enrollment is approved, set PAYPAL_PAYOUTS_ENABLED=1 —
+// the batch code path is preserved below and untouched otherwise.
+// (Bank via Wise still sends automatically when Wise is configured.)
 //
 // Recipients with cashout_mode = 'manual' are skipped (they cash out on
 // demand). Anyone skipped or failed keeps their balance as payable.
@@ -24,8 +29,29 @@ const cashout = require('./cashout');
 
 const MIN_PAYOUT_CENTS = 500;
 
+// Automatic PayPal Payouts batch — OFF until the Payouts enrollment is
+// approved (declined 2026-09-28). Set PAYPAL_PAYOUTS_ENABLED=1 to restore
+// the automatic batch; until then PayPal-destination payouts join the
+// manual-send queue like every other rail.
+const PAYPAL_PAYOUTS_ENABLED = process.env.PAYPAL_PAYOUTS_ENABLED === '1';
+
 async function runWeeklyPayouts() {
   const summary = { at: new Date().toISOString(), paid: [], queued: [], skipped: [], failed: false, error: '' };
+
+  // Queue one recipient for manual send: creates the cashout request the
+  // admin works from on /admin/payouts and claims their payable rows.
+  async function queueManualSend(ctx, viaLabel) {
+    const cashoutId = await db.insert('cashout_requests', {
+      user_id: ctx.recipientId, recipient_type: ctx.recipientType, destination_id: ctx.dest.id,
+      dest_snapshot: JSON.stringify({ dest_type: ctx.dest.dest_type, label: ctx.dest.label, details: ctx.details }),
+      amount_cents: ctx.amountCents, penalty_cents: 0, net_cents: ctx.amountCents,
+      kind: 'weekly', status: 'pending', note: `Weekly payout — send manually via ${viaLabel}.`,
+      created_at: db.now(),
+    });
+    await cashout.claimPayableRows({ userId: ctx.recipientId, recipientType: ctx.recipientType, cashoutId });
+    summary.queued.push({ ...ctx, via: viaLabel });
+    return cashoutId;
+  }
 
   const groups = await db.all(
     `SELECT recipient_type, recipient_id
@@ -91,20 +117,17 @@ async function runWeeklyPayouts() {
       }
     } else {
       // Manual rail (or bank/Wise not configured): queue for the admin.
-      const cashoutId = await db.insert('cashout_requests', {
-        user_id: g.recipient_id, recipient_type: g.recipient_type, destination_id: dest.id,
-        dest_snapshot: JSON.stringify({ dest_type: dest.dest_type, label: dest.label, details }),
-        amount_cents: balance, penalty_cents: 0, net_cents: balance,
-        kind: 'weekly', status: 'pending', note: 'Weekly payout — awaiting admin send.',
-        created_at: db.now(),
-      });
-      await cashout.claimPayableRows({ userId: g.recipient_id, recipientType: g.recipient_type, cashoutId });
-      summary.queued.push({ ...ctx, via: dest.label });
+      await queueManualSend(ctx, dest.label);
     }
   }
 
-  // One PayPal batch for everyone on the PayPal rail.
-  if (paypalItems.length) {
+  // PayPal destinations: automatic batch ONLY when the Payouts enrollment
+  // is approved (PAYPAL_PAYOUTS_ENABLED=1) — otherwise manual-send queue.
+  if (paypalItems.length && !PAYPAL_PAYOUTS_ENABLED) {
+    for (const it of paypalItems) await queueManualSend(it, 'PayPal (manual send)');
+  }
+
+  if (paypalItems.length && PAYPAL_PAYOUTS_ENABLED) {
     const batchIds = [];
     for (const it of paypalItems) {
       it.payoutId = await db.insert('payouts', {
@@ -151,6 +174,10 @@ async function runWeeklyPayouts() {
 
 async function notifyAdmin(summary) {
   const lines = [`Weekly payout run — ${summary.at}`];
+  if (!PAYPAL_PAYOUTS_ENABLED) {
+    lines.push('MODE: manual send — PayPal Payouts auto-send is OFF (enrollment declined).');
+    lines.push('Send each queued payment by hand, then mark it sent on /admin/payouts.');
+  }
   for (const p of summary.paid) {
     lines.push(`PAID $${(p.amountCents / 100).toFixed(2)} to ${p.name} via ${p.via} (${p.dest?.label || ''})`);
   }

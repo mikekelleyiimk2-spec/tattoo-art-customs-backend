@@ -24,7 +24,7 @@ function startScheduler() {
     console.log('[scheduler] Running weekly commission payouts…');
     try {
       const summary = await runWeeklyPayouts();
-      console.log(`[scheduler] Weekly payouts done: ${summary.paid.length} paid, ${summary.skipped.length} skipped${summary.failed ? ', FAILED: ' + summary.error : ''}`);
+      console.log(`[scheduler] Weekly payouts done: ${summary.paid.length} paid, ${summary.queued.length} queued for manual send, ${summary.skipped.length} skipped${summary.failed ? ', FAILED: ' + summary.error : ''}`);
     } catch (e) {
       console.error('[scheduler] Weekly payouts crashed:', e.message);
     }
