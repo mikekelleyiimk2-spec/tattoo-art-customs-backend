@@ -191,22 +191,17 @@ router.post('/upload', (req, res) => res.redirect(307, '/artist/portfolio/upload
 // Note 2026-09-28: designer portfolio uploads live at /artist/portfolio/upload
 // (subscription-gated). /account/upload stays the free path for members.
 
-// Bio editor — screened; blocked on contact info, flagged for review.
+// Bio editor — contact info is hard-blocked: never saved, never shown publicly.
 router.post('/bio', formLimiter, checkHoneypot, async (req, res) => {
   const bio = String(req.body.bio || '').trim().slice(0, 2000);
   const screen = screenText(bio);
-  const data = { bio, bio_status: screen.ok ? 'ok' : 'flagged' };
-  await upsertProfile('artist_profiles', req.user.id, data);
   if (!screen.ok) {
-    await db.insert('review_queue', {
-      item_type: 'bio', item_id: req.user.id,
-      reason: 'Contact info detected in bio: ' + screen.flags.map((f) => f.label).join(', '),
-      status: 'open', created_at: db.now(),
-    });
-    req.session.flash = 'Bio saved but flagged for review — remove any contact info or off-site links.';
-  } else {
-    req.session.flash = 'Bio updated.';
+    req.session.flash = 'Blocked: bios may not contain contact info or off-site links — no emails, phones, socials, or payment info. (' +
+      screen.flags.map((f) => f.label).join(', ') + ')';
+    return res.redirect('/artist');
   }
+  await upsertProfile('artist_profiles', req.user.id, { bio, bio_status: 'ok' });
+  req.session.flash = 'Bio updated.';
   res.redirect('/artist');
 });
 

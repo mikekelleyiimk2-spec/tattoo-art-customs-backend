@@ -220,7 +220,7 @@ router.get('/artists/:id', async (req, res) => {
      WHERE u.id = ? AND (u.role = 'design_artist' OR (u.role = 'tattoo_shop' AND sp.designer_opt_in = 1))`,
     [req.params.id]);
   if (!artist) return res.status(404).render('error', { title: 'Not found', message: 'That artist portfolio does not exist.' });
-  const profile = await db.get('SELECT bio FROM artist_profiles WHERE user_id = ?', [artist.id]);
+  const profile = await db.get("SELECT bio FROM artist_profiles WHERE user_id = ? AND bio_status = 'ok'", [artist.id]);
   const member = await isActiveMember(req.user);
   const rows = await db.all(
     `SELECT * FROM designs WHERE artist_id = ? AND status = 'approved'

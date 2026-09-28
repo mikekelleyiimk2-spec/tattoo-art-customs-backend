@@ -178,6 +178,9 @@ router.post('/webhook', async (req, res) => {
         console.error('PayPal webhook signature verification FAILED');
         return res.sendStatus(401);
       }
+    } else if (process.env.NODE_ENV === 'production') {
+      console.error('PayPal webhook REJECTED: PAYPAL_WEBHOOK_ID is not configured in production.');
+      return res.sendStatus(401);
     } else {
       console.warn('PayPal webhook received but PAYPAL_WEBHOOK_ID is not configured — event accepted unverified (dev only).');
     }

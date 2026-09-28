@@ -60,6 +60,8 @@ async function main() {
   ok(!screenText('pay via venmo').ok, 'payment info blocked');
   ok(screenText('123 Main Street, Dallas, TX', { allow: ['street_address'] }).ok, 'shop location address allowed');
   ok(!screenText('bob@mail.com', { allow: ['street_address'] }).ok, 'shop location email still blocked');
+  ok(!screenText('send it to my wallet').ok, 'bare wallet reference blocked in bios/messages');
+  ok(screenText('Wallet', { allow: ['crypto_wallet'] }).ok, 'bare wallet allowed in display names');
 
   console.log('pricing:');
   ok(pricing.money(7500) === '$75.00', 'money formats');
@@ -1066,6 +1068,62 @@ async function main() {
   ok(apiArtist.ok && apiArtist.pieces.length === 2, 'app artist API returns portfolio pieces');
   ok(apiArtist.pieces.some((p) => p.listing_type === 'custom' && p.price_cents === pricing.customFullCents()), 'app artist API prices custom piece at custom price');
 
+  // Anti-bypass: contact info can never reach a public surface.
+  // 1. Bio with contact info is hard-blocked (never saved).
+  r = await artreq('POST', '/artist/bio', { body: { bio: 'Email me at artist@evil.com for customs' } });
+  ok(r.status === 302 && r.location === '/artist', 'bio with contact info blocked (redirects)');
+  const badBio = sdb.prepare('SELECT bio FROM artist_profiles WHERE user_id = ?').get(bannerArtistId);
+  ok(!badBio || !String(badBio.bio || '').includes('artist@evil.com'), 'blocked bio is never saved');
+  // 2. Clean bio saves and shows publicly (web page).
+  r = await artreq('POST', '/artist/bio', { body: { bio: 'I draw blackwork roses and fine-line florals.' } });
+  ok(r.status === 302, 'clean bio saves');
+  r = await req('GET', `/artists/${bannerArtistId}`);
+  ok(r.status === 200 && r.text.includes('blackwork roses'), 'public artist page shows clean bio');
+  // 3. Defense in depth: a flagged bio can never render publicly even if one lands in the DB.
+  sdb.prepare("UPDATE artist_profiles SET bio = ?, bio_status = 'flagged' WHERE user_id = ?").run('call 555-123-4567', bannerArtistId);
+  r = await req('GET', `/artists/${bannerArtistId}`);
+  ok(r.status === 200 && !r.text.includes('555-123-4567'), 'flagged bio hidden from public artist page');
+  r = await req('GET', '/api/artists/' + bannerArtistId);
+  ok(!JSON.parse(r.text).artist.bio.includes('555-123-4567'), 'flagged bio hidden from app artist API');
+  // 4. Display names are screened at signup and on profile update.
+  const jarBackup = { ...jar };
+  r = await req('POST', '/signup', { follow: false, body: { email: 'badname@test.local', password: 'Password123!', display_name: 'DM me on instagram' } });
+  ok(r.status === 302 && r.location === '/signup', 'signup with contact-info display name rejected');
+  ok(!sdb.prepare('SELECT id FROM users WHERE email = ?').get('badname@test.local'), 'rejected signup creates no user');
+  for (const k of Object.keys(jar)) delete jar[k];
+  Object.assign(jar, jarBackup);
+  r = await artreq('POST', '/account/profile', { body: { display_name: 'pay via venmo $mike' } });
+  ok(r.status === 302 && r.location === '/account', 'profile update with contact-info display name rejected');
+  ok(sdb.prepare('SELECT display_name FROM users WHERE id = ?').get(bannerArtistId).display_name === 'Banner Artist', 'rejected display name is not saved');
+  // 5. Custom-order artist notification never leaks the buyer's email.
+  const { notifyArtist } = require('../src/lib/customFulfillment');
+  const nnId = await db.insert('users', { email: 'noname@test.local', password_hash: 'x', role: 'customer', display_name: '' });
+  const nnConv = await notifyArtist({ id: 'order-bypass-test', buyer_id: nnId, custom_brief: 'Test brief', delivery_due: null }, { id: bannerArtistId, display_name: 'Banner Artist' });
+  const nnMsg = sdb.prepare('SELECT body FROM messages WHERE conversation_id = ?').get(nnConv);
+  ok(nnMsg && !nnMsg.body.includes('noname@test.local'), 'custom-order artist message never contains buyer email');
+  ok(nnMsg && nnMsg.body.includes('your customer'), 'custom-order artist message falls back to "your customer"');
+  // 6. PayPal webhook fails closed when the webhook ID is missing in production.
+  // (The main test server runs with NODE_ENV=test, so spin a production-env
+  // server on a scratch port for this one check.)
+  const prodPort = PORT + 1;
+  const prodServer = spawn('node', [path.join(ROOT, 'src', 'index.js')], {
+    cwd: ROOT, env: { ...process.env, NODE_ENV: 'production', PORT: String(prodPort) }, stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  try {
+    await new Promise((resolve, reject) => {
+      const t = setTimeout(() => reject(new Error('prod server did not start')), 15000);
+      prodServer.stdout.on('data', (d) => { if (String(d).includes('listening')) { clearTimeout(t); resolve(); } });
+      prodServer.stderr.on('data', (d) => process.stderr.write(d));
+    });
+    const prodRes = await fetch(`http://localhost:${prodPort}/membership/webhook`, {
+      method: 'POST', headers: { 'content-type': 'application/json' }, redirect: 'manual',
+      body: JSON.stringify({ event_type: 'BILLING.SUBSCRIPTION.ACTIVATED', resource: { id: 'sub-spoof' } }),
+    });
+    ok(prodRes.status === 401, 'webhook without webhook ID fails closed in production');
+  } finally {
+    prodServer.kill();
+  }
+
   // Design page: custom piece shows the custom price.
   r = await req('GET', `/design/${prow.id}`);
   ok(r.status === 200 && r.text.includes(pricing.money(pricing.withFeeCents(pricing.customFullCents()))), 'design page shows custom price for portfolio piece');
@@ -1149,7 +1207,8 @@ async function main() {
   ok(fArtist && fArtist.amount_cents === fExpected && fArtist.status === 'site_kept',
     'designer without a payout method forfeits their 70% share to the site');
   // Once the designer sets up a payout method, new sales become payable.
-  sdb.prepare('INSERT INTO artist_profiles (user_id, payout_paypal_email, created_at) VALUES (?,?,?)')
+  sdb.prepare(`INSERT INTO artist_profiles (user_id, payout_paypal_email, created_at) VALUES (?,?,?)
+    ON CONFLICT(user_id) DO UPDATE SET payout_paypal_email = excluded.payout_paypal_email`)
     .run(bannerArtistId, 'banner@pay.test', Date.now());
   r = await req('POST', `/orders/buy/${grow.id}`, { follow: false });
   const gOrderId = r.location.split('/orders/manual/')[1];

@@ -60,7 +60,7 @@ async function notifyArtist(order, artist) {
     `A customer requested you for a custom tattoo design (deposit paid).\n\n` +
     `Brief: ${order.custom_brief || '(no brief)'}\n\n` +
     `Delivery due: ${due}.\n\n` +
-    `Reply in this thread to coordinate with ${buyer.display_name || buyer.email}.`;
+    `Reply in this thread to coordinate with ${buyer.display_name || 'your customer'}.`;
   const convId = await db.insert('conversations', { subject, created_at: db.now() });
   await db.insert('conversation_participants', { conversation_id: convId, user_id: order.buyer_id });
   await db.insert('conversation_participants', { conversation_id: convId, user_id: artist.id });

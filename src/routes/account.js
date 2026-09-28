@@ -62,7 +62,16 @@ router.get('/', requireLogin, async (req, res) => {
 
 router.post('/profile', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
   const displayName = String(req.body.display_name || '').trim().slice(0, 60);
-  if (displayName) await db.update('users', req.user.id, { display_name: displayName });
+  if (displayName) {
+    // Bare "wallet" is not actionable contact info in a name; everything else stays blocked.
+    const nameScreen = screenText(displayName, { allow: ['crypto_wallet'] });
+    if (!nameScreen.ok) {
+      req.session.flash = 'Display name may not contain contact info or off-site links. (' +
+        nameScreen.flags.map((f) => f.label).join(', ') + ')';
+      return res.redirect('/account');
+    }
+    await db.update('users', req.user.id, { display_name: displayName });
+  }
   req.session.flash = 'Profile updated.';
   res.redirect('/account');
 });

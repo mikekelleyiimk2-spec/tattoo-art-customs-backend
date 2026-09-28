@@ -108,7 +108,7 @@ router.get('/artists/:id', async (req, res) => {
      WHERE u.id = ? AND (u.role = 'design_artist' OR (u.role = 'tattoo_shop' AND sp.designer_opt_in = 1))`,
     [req.params.id]);
   if (!artist) return res.status(404).json({ ok: false, error: 'not found' });
-  const profile = await db.get('SELECT bio FROM artist_profiles WHERE user_id = ?', [artist.id]);
+  const profile = await db.get("SELECT bio FROM artist_profiles WHERE user_id = ? AND bio_status = 'ok'", [artist.id]);
   const rows = await db.all(
     `SELECT id, title, style, categories, linework_wm_path, listing_type
      FROM designs WHERE artist_id = ? AND status = 'approved'

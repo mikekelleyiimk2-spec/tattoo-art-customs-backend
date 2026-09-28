@@ -12,6 +12,7 @@ const { authLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const router = express.Router();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const { ensureReferralCode, recordSignupReferral } = require('../lib/referrals');
+const { screenText } = require('../lib/screening');
 
 router.get('/signup', async (req, res) => {
   // Friend referral links look like /signup?ref=TAC-XXXXXX — remember the
@@ -27,6 +28,15 @@ router.post('/signup', authLimiter, checkHoneypot, async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const password = String(req.body.password || '');
   const displayName = String(req.body.display_name || '').trim().slice(0, 60);
+  if (displayName) {
+    // Bare "wallet" is not actionable contact info in a name; everything else stays blocked.
+    const nameScreen = screenText(displayName, { allow: ['crypto_wallet'] });
+    if (!nameScreen.ok) {
+      req.session.flash = 'Display name may not contain contact info or off-site links. (' +
+        nameScreen.flags.map((f) => f.label).join(', ') + ')';
+      return res.redirect('/signup');
+    }
+  }
   if (!EMAIL_RE.test(email)) { req.session.flash = 'Enter a valid email address.'; return res.redirect('/signup'); }
   if (password.length < 8) { req.session.flash = 'Password must be at least 8 characters.'; return res.redirect('/signup'); }
   if (await db.get('SELECT id FROM users WHERE email = ?', [email])) {

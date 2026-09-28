@@ -18,8 +18,11 @@ const PATTERNS = [
   },
   {
     id: 'payment_info', label: 'payment info',
-    re: /\b(paypal(\.me)?|venmo|cash\s?app|zelle|chime|varo|crypto|bitcoin|btc|eth\b|wallet|western union|moneygram)\b|\$[a-zA-Z][a-zA-Z0-9_-]*/i,
+    re: /\b(paypal(\.me)?|venmo|cash\s?app|zelle|chime|varo|crypto|bitcoin|btc|eth|western union|moneygram)\b|\$[a-zA-Z][a-zA-Z0-9_-]*/i,
   },
+  // Split out: the bare word "wallet" is blocked in bios/messages/shop text,
+  // but allowed in display names (it is not actionable contact info there).
+  { id: 'crypto_wallet', label: 'wallet reference', re: /\bwallets?\b/i },
   {
     id: 'street_address', label: 'street address',
     re: /\b\d{1,5}\s+[a-z0-9.'-]+\s+(street|st|avenue|ave|road|rd|boulevard|blvd|lane|ln|drive|dr|court|ct|way|circle|cir|parkway|pkwy)\b/i,
