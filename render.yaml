@@ -31,6 +31,8 @@ services:
         sync: false
       - key: ADSENSE_PUBLISHER_ID
         value: ca-pub-9088514263110417
+      - key: APPLE_PAY_DOMAIN_ASSOCIATION
+        sync: false
       - key: PAYPAL_PLAN_CUSTOMER
         sync: false
       - key: PAYPAL_PLAN_ARTIST

@@ -66,6 +66,12 @@ const config = {
     publisherId: process.env.ADSENSE_PUBLISHER_ID || '',
   },
 
+  // Apple Pay (via PayPal) — the domain association file content goes here
+  // once the domain is registered in the PayPal developer dashboard.
+  applePay: {
+    domainAssociation: process.env.APPLE_PAY_DOMAIN_ASSOCIATION || '',
+  },
+
   // Wise (bank payouts) — without these, bank cashouts queue for manual admin send.
   wise: {
     apiToken: process.env.WISE_API_TOKEN || '',

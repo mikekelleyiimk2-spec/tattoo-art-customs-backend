@@ -48,6 +48,15 @@ router.get('/ads.txt', (req, res) => {
   res.type('text/plain').send(`google.com, ${pubId}, DIRECT, f08c47fec0942fa0\n`);
 });
 
+// Apple Pay domain verification (via PayPal) — Apple fetches this file to
+// confirm the domain is authorized for Apple Pay. Serves automatically once
+// APPLE_PAY_DOMAIN_ASSOCIATION is set (content from the PayPal dashboard).
+router.get('/.well-known/apple-developer-merchantid-domain-association', (req, res) => {
+  const content = (config.applePay.domainAssociation || '').trim();
+  if (!content) return res.status(404).type('text/plain').send('Not configured');
+  res.type('text/plain').send(content + '\n');
+});
+
 // robots.txt — allow all crawlers; point them at the sitemap.
 router.get('/robots.txt', (req, res) => {
   res.type('text/plain').send(
