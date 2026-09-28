@@ -90,6 +90,7 @@ app.use('/account', require('./routes/account'));
 app.use('/artist', require('./routes/artist'));
 app.use('/shop', require('./routes/shop'));
 app.use('/orders', require('./routes/orders'));
+app.use('/play', require('./routes/play'));
 app.use('/messages', require('./routes/messages'));
 app.use('/admin', require('./routes/admin'));
 
