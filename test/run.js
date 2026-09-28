@@ -419,6 +419,7 @@ async function main() {
   ok(colLiveConvs.length >= 1, 'designer notified when the piece goes live');
 
   await require('./founding').runDbTests(ok);
+  await require('./replacements').runDbTests(ok);
 
   await db.close();
 
@@ -1045,6 +1046,13 @@ async function main() {
 
   // Commission-suspended designer: 70% redirected to the owner.
   await db.update('users', bannerArtistId, { commission_suspended_until: Date.now() + 86400000 });
+  // Sold designs delist (exclusive sale, owner rule 2026-09-28), so every
+  // buy below mints a fresh approved copy of the source piece.
+  async function cloneDesignForBuy(src) {
+    const row = sdb.prepare('SELECT * FROM designs WHERE id = ?').get(src.id || src);
+    const { id, status, sold_at, created_at, ...rest } = row;
+    return db.insert('designs', { ...rest, status: 'approved', created_at: Date.now() });
+  }
   r = await req('POST', `/orders/buy/${grow.id}`, { follow: false });
   const sOrderId = r.location.split('/orders/manual/')[1];
   const sOrder = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(sOrderId);
@@ -1061,7 +1069,7 @@ async function main() {
 
   // Forfeiture: designer with an active subscription but NO payout method
   // set up — the site keeps their share (owner rule, 2026-09-28).
-  r = await req('POST', `/orders/buy/${grow.id}`, { follow: false });
+  r = await req('POST', `/orders/buy/${await cloneDesignForBuy(grow)}`, { follow: false });
   const fOrderId = r.location.split('/orders/manual/')[1];
   r = await req('POST', `/orders/manual/${fOrderId}`, { body: { method: 'cashapp', note: 'test' }, follow: false });
   ok(r.status === 302, 'manual payment recorded for forfeiture test order');
@@ -1075,7 +1083,7 @@ async function main() {
   // Once the designer sets up a payout method, new sales become payable.
   sdb.prepare('INSERT INTO artist_profiles (user_id, payout_paypal_email, created_at) VALUES (?,?,?)')
     .run(bannerArtistId, 'banner@pay.test', Date.now());
-  r = await req('POST', `/orders/buy/${grow.id}`, { follow: false });
+  r = await req('POST', `/orders/buy/${await cloneDesignForBuy(grow)}`, { follow: false });
   const gOrderId = r.location.split('/orders/manual/')[1];
   r = await req('POST', `/orders/manual/${gOrderId}`, { body: { method: 'cashapp', note: 'test' }, follow: false });
   r = await areq('POST', `/admin/orders/${gOrderId}/confirm-manual`);
@@ -1088,7 +1096,7 @@ async function main() {
   // 2026-09-28). Designer gets the no-shop 70% (60 + 10), owner 20%.
   sdb.prepare('INSERT INTO shop_profiles (user_id, business_name, referral_code, created_at) VALUES (?,?,?,?)')
     .run(bannerArtistId, 'Self Shop', 'SELFREF1', Date.now());
-  r = await req('POST', `/orders/buy/${grow.id}`, { body: { referral_code: 'SELFREF1' }, follow: false });
+  r = await req('POST', `/orders/buy/${await cloneDesignForBuy(grow)}`, { body: { referral_code: 'SELFREF1' }, follow: false });
   const srOrderId = r.location.split('/orders/manual/')[1];
   r = await req('POST', `/orders/manual/${srOrderId}`, { body: { method: 'cashapp', note: 'test' }, follow: false });
   r = await areq('POST', `/admin/orders/${srOrderId}/confirm-manual`);
@@ -1218,7 +1226,7 @@ async function main() {
   r = await req('GET', `/orders/download/${inkToken}?file=color`);
   ok(r.status === 403, 'color download blocked for linework-only purchases');
   // Full-color purchase of the site-colored piece still records the fee.
-  r = await req('POST', `/orders/buy/${lwRow.id}`, { follow: false });
+  r = await req('POST', `/orders/buy/${await cloneDesignForBuy(lwRow)}`, { follow: false });
   const fullOrderId = r.location.split('/orders/manual/')[1];
   const fullOrder = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(fullOrderId);
   ok(fullOrder.amount_cents === customList && !fullOrder.linework_only, 'full-color purchase charged at list price');
@@ -1240,7 +1248,7 @@ async function main() {
   ok(noneFee && noneFee.amount_cents === Math.round(noneOrder.amount_cents * 0.05), 'linework-only sale records the colorization fee');
   // Suspended designer still earns 0 on a site-colored sale.
   await db.update('users', bannerArtistId, { commission_suspended_until: Date.now() + 86400000 });
-  r = await req('POST', `/orders/buy/${lwRow.id}`, { follow: false });
+  r = await req('POST', `/orders/buy/${await cloneDesignForBuy(lwRow)}`, { follow: false });
   const suspOrderId = r.location.split('/orders/manual/')[1];
   r = await req('POST', `/orders/manual/${suspOrderId}`, { body: { method: 'cashapp', note: 't' }, follow: false });
   r = await areq('POST', `/admin/orders/${suspOrderId}/confirm-manual`);
