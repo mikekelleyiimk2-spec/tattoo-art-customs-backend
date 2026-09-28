@@ -4,3 +4,4 @@ data/
 assets/
 *.log
 .DS_Store
+*.sqlite3
