@@ -71,4 +71,24 @@ function lineworkOnlyPriceCents(fullCents) {
   return Math.round(fullCents * (1 - LINEWORK_ONLY_DISCOUNT));
 }
 
-module.exports = { isSaleWindow, isMemberSaleWindow, salePriceActive, premadePriceCents, customFullCents, customDepositCents, money, chicagoParts, LINEWORK_ONLY_DISCOUNT, lineworkOnlyPriceCents };
+// STANDING RULE: processing fees are always passed through into prices,
+// never absorbed. Web transactions carry +3.5% + $0.49 (covers the ~3.49%
+// + $0.49 PayPal/card fee); in-app membership sales carry +15% (covers
+// Google Play's 15% cut). Any new processing charge gets added the same way.
+
+// Processing fee added to a web transaction (cents): 3.5% of the base + 49c.
+function processingFeeCents(baseCents) {
+  return Math.round(baseCents * 0.035) + 49;
+}
+
+// Total the customer pays on the website for a base price: price + fee.
+function withFeeCents(baseCents) {
+  return baseCents + processingFeeCents(baseCents);
+}
+
+// In-app (Google Play) membership price: base + 15% store cut.
+function withPlayFeeCents(baseCents) {
+  return Math.round(baseCents * 1.15);
+}
+
+module.exports = { isSaleWindow, isMemberSaleWindow, salePriceActive, premadePriceCents, customFullCents, customDepositCents, money, chicagoParts, LINEWORK_ONLY_DISCOUNT, lineworkOnlyPriceCents, processingFeeCents, withFeeCents, withPlayFeeCents };

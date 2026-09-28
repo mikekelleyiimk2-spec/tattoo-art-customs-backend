@@ -51,9 +51,12 @@ router.post('/buy/:designId', requireLogin, formLimiter, checkHoneypot, async (r
   const lineworkOnly = design.color_source === 'none' || req.body.linework_only === '1';
   const price = lineworkOnly ? pricing.lineworkOnlyPriceCents(listPrice) : listPrice;
   const refCode = referralFromReq(req);
+  // Processing fee (3.5% + $0.49) is added to the total — commissions are
+  // computed on the base price only, so the business never absorbs the fee.
+  const fee = pricing.processingFeeCents(price);
   const orderId = await db.insert('orders', {
     buyer_id: req.user.id, design_id: design.id, order_type: 'premade',
-    amount_cents: price, status: 'pending', payment_method: 'paypal',
+    amount_cents: price, fee_cents: fee, status: 'pending', payment_method: 'paypal',
     referral_code: refCode, referred_shop_id: await resolveReferral(refCode),
     linework_only: lineworkOnly ? 1 : 0,
     created_at: db.now(),
@@ -71,7 +74,7 @@ router.post('/buy/:designId', requireLogin, formLimiter, checkHoneypot, async (r
   }
   try {
     const pp = await paypal.createCheckoutOrder({
-      amountCents: price,
+      amountCents: price + fee,
       description: `Tattoo Art Customs — "${design.title}"${lineworkOnly ? ' (linework only)' : ''}`,
       returnUrl: `${config.baseUrl}/orders/approve/${orderId}`,
       cancelUrl: `${config.baseUrl}/design/${design.id}`,
@@ -101,6 +104,9 @@ router.get('/custom', requireLogin, async (req, res) => {
   res.render('orders/custom', {
     title: 'Request a Custom Design — Tattoo Art Customs',
     deposit, full, sale: await salePriceActive(req.user), artists,
+    depositFee: pricing.processingFeeCents(deposit),
+    depositTotal: pricing.withFeeCents(deposit),
+    fullTotal: pricing.withFeeCents(full),
     metaDescription: `Order a custom tattoo design — ${pricing.money(full)}, 50% deposit, 48-hour delivery.`,
   });
 });
@@ -128,6 +134,7 @@ router.post('/custom', requireLogin, formLimiter, checkHoneypot, async (req, res
     buyer_id: req.user.id, order_type: 'custom',
     amount_cents: full,
     deposit_cents: deposit,
+    fee_cents: pricing.processingFeeCents(deposit), // fee on the deposit (the amount actually charged)
     status: 'pending', payment_method: 'paypal',
     referral_code: refCode, referred_shop_id: await resolveReferral(refCode),
     custom_brief: brief,
@@ -149,7 +156,7 @@ router.post('/custom', requireLogin, formLimiter, checkHoneypot, async (req, res
   }
   try {
     const pp = await paypal.createCheckoutOrder({
-      amountCents: deposit,
+      amountCents: deposit + pricing.processingFeeCents(deposit),
       description: 'Tattoo Art Customs — custom design deposit (50%)',
       returnUrl: `${config.baseUrl}/orders/approve/${orderId}`,
       cancelUrl: `${config.baseUrl}/orders/custom`,

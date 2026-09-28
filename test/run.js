@@ -64,6 +64,12 @@ async function main() {
   console.log('pricing:');
   ok(pricing.money(7500) === '$75.00', 'money formats');
   ok(pricing.money(9999) === '$99.99', 'money formats 99.99');
+  // Processing-fee pass-through (standing rule): 3.5% + $0.49 on web, 15% in-app.
+  ok(pricing.processingFeeCents(5000) === 224, 'web fee on $50 = $2.24');
+  ok(pricing.processingFeeCents(7500) === 312, 'web fee on $75 = $3.12');
+  ok(pricing.withFeeCents(5000) === 5224, 'web total on $50 = $52.24');
+  ok(pricing.withPlayFeeCents(500) === 575, 'Play price on $5 = $5.75');
+  ok(pricing.withPlayFeeCents(9999) === 11499, 'Play price on $99.99 = $114.99');
   // Saturday 8pm CT = Sunday 02:00 UTC (CDT, UTC-5)
   ok(pricing.isSaleWindow(new Date('2026-10-03T20:30:00-05:00')), 'sale window: Sat 8:30pm CT');
   ok(!pricing.isSaleWindow(new Date('2026-10-03T18:30:00-05:00')), 'no sale: Sat 6:30pm CT');
@@ -80,18 +86,18 @@ async function main() {
 
   console.log('subscription incentives (config + paypal billing):');
   const cfg = require('../src/config');
-  ok(cfg.pricing.firstMonth.priceCents === 100, '$1 first-month price');
-  ok(cfg.pricing.foundingShop.priceCents === 7999, '$79.99 founding-shop price');
-  ok(cfg.pricing.plans.customer_annual && cfg.pricing.plans.customer_annual.priceCents === 5000, 'annual customer plan $50/year');
+  ok(cfg.pricing.firstMonth.priceCents === 153, '$1.53 first-month price (base $1 + fee)');
+  ok(cfg.pricing.foundingShop.priceCents === 8328, '$83.28 founding-shop price (base $79.99 + fee)');
+  ok(cfg.pricing.plans.customer_annual && cfg.pricing.plans.customer_annual.priceCents === 5224, 'annual customer plan $52.24/year (base $50 + fee)');
   ok(cfg.foundingShopActive(), 'founding-shop window open (fallback ends 2027-03-01)');
   ok(cfg.foundingShopWindowEnd === Date.parse('2027-03-01T00:00:00-06:00'), 'founding window is a fixed date, not rolling');
   const paypal = require('../src/lib/paypal');
-  const trial = paypal.firstMonthTrialCycles(500);
-  ok(trial[0].pricing_scheme.fixed_price.value === '1.00' && trial[1].pricing_scheme.fixed_price.value === '5.00', '$1 first month then $5/mo billing cycles');
+  const trial = paypal.firstMonthTrialCycles(567);
+  ok(trial[0].pricing_scheme.fixed_price.value === '1.53' && trial[1].pricing_scheme.fixed_price.value === '5.67', '$1.53 first month then $5.67/mo billing cycles');
   ok(trial[0].total_cycles === 1 && trial[1].sequence === 2, 'trial cycle count/sequence');
   const founding = paypal.foundingShopCycles();
-  ok(founding[0].pricing_scheme.fixed_price.value === '79.99' && founding[0].total_cycles === 1, 'founding shop first year $79.99 for 1 cycle');
-  ok(founding[1].pricing_scheme.fixed_price.value === '99.99', 'founding shop renews at $99.99');
+  ok(founding[0].pricing_scheme.fixed_price.value === '83.28' && founding[0].total_cycles === 1, 'founding shop first year $83.28 for 1 cycle');
+  ok(founding[1].pricing_scheme.fixed_price.value === '103.98', 'founding shop renews at $103.98');
 
   console.log('commissions:');
   const db = require('../src/db');
@@ -994,7 +1000,7 @@ async function main() {
 
   // Design page: custom piece shows the custom price.
   r = await req('GET', `/design/${prow.id}`);
-  ok(r.status === 200 && r.text.includes(pricing.money(pricing.customFullCents())), 'design page shows custom price for portfolio piece');
+  ok(r.status === 200 && r.text.includes(pricing.money(pricing.withFeeCents(pricing.customFullCents()))), 'design page shows custom price for portfolio piece');
   ok(r.text.includes('custom portfolio piece'), 'design page labels custom piece');
 
   // Portfolio edit + delete rules (before any sales on these pieces).
@@ -1063,7 +1069,7 @@ async function main() {
   const fOrder = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(fOrderId);
   const fLedger = sdb.prepare('SELECT recipient_type, amount_cents, status FROM commission_ledger WHERE order_id = ?').all(fOrderId);
   const fArtist = fLedger.find((l) => l.recipient_type === 'artist');
-  const fExpected = Math.round(fOrder.amount_paid_cents * 0.70);
+  const fExpected = Math.round(require('../src/lib/commissions').netPaidCents(fOrder) * 0.70);
   ok(fArtist && fArtist.amount_cents === fExpected && fArtist.status === 'site_kept',
     'designer without a payout method forfeits their 70% share to the site');
   // Once the designer sets up a payout method, new sales become payable.
@@ -1074,7 +1080,7 @@ async function main() {
   r = await req('POST', `/orders/manual/${gOrderId}`, { body: { method: 'cashapp', note: 'test' }, follow: false });
   r = await areq('POST', `/admin/orders/${gOrderId}/confirm-manual`);
   const gArtist = sdb.prepare("SELECT amount_cents, status FROM commission_ledger WHERE order_id = ? AND recipient_type = 'artist'").get(gOrderId);
-  ok(gArtist && gArtist.status === 'payable' && gArtist.amount_cents === Math.round(sdb.prepare('SELECT amount_paid_cents FROM orders WHERE id = ?').get(gOrderId).amount_paid_cents * 0.70),
+  ok(gArtist && gArtist.status === 'payable' && gArtist.amount_cents === Math.round(require('../src/lib/commissions').netPaidCents(sdb.prepare('SELECT * FROM orders WHERE id = ?').get(gOrderId)) * 0.70),
     'designer with a payout method earns payable 70% on new sales');
 
   // Self-referral: a shop cannot earn a referral commission on its own
@@ -1088,9 +1094,9 @@ async function main() {
   r = await areq('POST', `/admin/orders/${srOrderId}/confirm-manual`);
   const srLedger = sdb.prepare('SELECT recipient_type, amount_cents, status FROM commission_ledger WHERE order_id = ?').all(srOrderId);
   ok(!srLedger.some((l) => l.recipient_type === 'shop'), 'self-referral books no shop commission row');
-  const srOrder = sdb.prepare('SELECT amount_paid_cents FROM orders WHERE id = ?').get(srOrderId);
+  const srOrder = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(srOrderId);
   const srArtist = srLedger.find((l) => l.recipient_type === 'artist');
-  ok(srArtist && srArtist.amount_cents === Math.round(srOrder.amount_paid_cents * 0.70),
+  ok(srArtist && srArtist.amount_cents === Math.round(require('../src/lib/commissions').netPaidCents(srOrder) * 0.70),
     'self-referred designer gets the no-shop 70% share');
 
   // A piece with sales cannot be deleted.
@@ -1258,7 +1264,7 @@ async function main() {
   const artistBefore = sdb.prepare("SELECT status, cleared_at FROM commission_ledger WHERE order_id = ? AND recipient_type = 'artist'").get(inkOrderId);
   const sweep = await runOwnerSweep({ now: Date.now() });
   ok(sweep.swept_orders === 2, 'sweep clears exactly the two eligible past-24h paid orders');
-  ok(sweep.gross_cents === inkOrder.amount_cents + noneOrder.amount_cents, 'sweep gross matches the cleared orders');
+  ok(sweep.gross_cents === (inkOrder.amount_cents + (inkOrder.fee_cents || 0)) + (noneOrder.amount_cents + (noneOrder.fee_cents || 0)), 'sweep gross matches the cleared orders');
   ok(sweep.report.includes('Gross sales cleared') && sweep.report.includes('Commissions owed'),
     'sweep report covers gross sales, owner net, and commissions owed');
   ok(sweep.colorization_fees_cents === (inkFee.amount_cents + noneFee.amount_cents),

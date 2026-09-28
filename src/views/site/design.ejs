@@ -8,20 +8,20 @@
     <% design.categories.forEach(function(c) { %><span class="tag"><%= c %></span><% }); %>
     <p><%= design.description %></p>
     <% if (artist) { %><p class="muted">By <%= artist.display_name %></p><% } %>
-    <p><strong><%= money(price) %></strong> <% if (sale) { %><span class="badge ok">Saturday sale price</span><% } %> <% if (typeof isCustom !== 'undefined' && isCustom) { %><span class="badge">custom portfolio piece — delivered instantly</span><% } %></p>
+    <p><strong><%= money(priceTotal) %></strong> <span class="muted">(includes <%= money(priceFee) %> processing fee)</span> <% if (sale) { %><span class="badge ok">Saturday sale price</span><% } %> <% if (typeof isCustom !== 'undefined' && isCustom) { %><span class="badge">custom portfolio piece — delivered instantly</span><% } %></p>
     <% if (currentUser) { %>
     <form method="post" action="/orders/buy/<%= design.id %>">
       <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
       <% if (design.color_source === 'none') { %>
       <p class="muted">This piece has no color version — you get the clean linework at 3% off.</p>
       <label><input type="radio" name="linework_only" value="1" checked>
-        <strong>Clean linework only — <%= money(lineworkPrice) %></strong></label>
+        <strong>Clean linework only — <%= money(lineworkTotal) %></strong> <span class="muted">(incl. fee)</span></label>
       <% } else { %>
       <label><input type="radio" name="linework_only" value="0" checked>
-        <strong>Full color + clean linework — <%= money(price) %></strong></label>
+        <strong>Full color + clean linework — <%= money(priceTotal) %></strong> <span class="muted">(incl. fee)</span></label>
       <label><input type="radio" name="linework_only" value="1">
-        <strong>Clean linework only — <%= money(lineworkPrice) %></strong>
-        <span class="muted">(3% off)</span></label>
+        <strong>Clean linework only — <%= money(lineworkTotal) %></strong>
+        <span class="muted">(3% off, incl. fee)</span></label>
       <% } %>
       <p><button class="btn" type="submit">Buy now</button></p>
       <% if (typeof creditBalance !== 'undefined' && creditBalance >= lineworkPrice) { %>

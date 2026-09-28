@@ -1,5 +1,6 @@
 <h1>Pay manually</h1>
-<p>Order <strong><%= order.id.slice(0,8) %></strong> — amount due: <strong><%= money(order.order_type === 'custom' ? order.deposit_cents : order.amount_cents) %></strong></p>
+<% const base = order.order_type === 'custom' ? order.deposit_cents : order.amount_cents; const fee = order.fee_cents || 0; %>
+<p>Order <strong><%= order.id.slice(0,8) %></strong> — amount due: <strong><%= money(base + fee) %></strong> <span class="muted">(includes <%= money(fee) %> processing fee)</span></p>
 <p class="muted">Send payment via CashApp or Venmo using the payment links on our socials, then record it here. An admin confirms every manual payment before your download unlocks.</p>
 <form method="post" action="/orders/manual/<%= order.id %>" class="form">
   <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">

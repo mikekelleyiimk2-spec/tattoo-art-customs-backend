@@ -4,6 +4,7 @@ const express = require('express');
 const db = require('../db');
 const config = require('../config');
 const paypal = require('../lib/paypal');
+const pricing = require('../lib/pricing');
 const { requireLogin } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { PRODUCTS, productIds } = require('../lib/print');
@@ -59,6 +60,7 @@ async function ownsCombo(userId, comboId) {
 async function renderOrderForm(req, res, source) {
   // source: { kind: 'design'|'combo', id, title }
   res.render('prints/order', {
+    withFee: (c) => pricing.withFeeCents(c),
     title: `Order a print — Tattoo Art Customs`,
     source,
     products: PRODUCTS,
@@ -122,9 +124,10 @@ router.post('/order', formLimiter, checkHoneypot, async (req, res) => {
     }
 
     const amount = PRODUCTS[product].price_cents * qty;
+    const fee = pricing.processingFeeCents(amount);
     const orderId = await db.insert('orders', {
       buyer_id: req.user.id, design_id: designId, order_type: 'print',
-      amount_cents: amount, status: 'pending', payment_method: 'paypal',
+      amount_cents: amount, fee_cents: fee, status: 'pending', payment_method: 'paypal',
       created_at: db.now(),
     });
     await db.insert('print_orders', {
@@ -136,7 +139,7 @@ router.post('/order', formLimiter, checkHoneypot, async (req, res) => {
 
     try {
       const pp = await paypal.createCheckoutOrder({
-        amountCents: amount,
+        amountCents: amount + fee,
         description: `Tattoo Art Customs print — ${PRODUCTS[product].name} × ${qty} ("${sourceTitle}")`,
         returnUrl: `${config.baseUrl}/orders/approve/${orderId}`,
         cancelUrl: `${config.baseUrl}/account`,

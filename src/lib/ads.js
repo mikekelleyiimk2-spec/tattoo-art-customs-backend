@@ -3,25 +3,27 @@
 // direct ad is booked for a slot — see views/partials/ad-slot.ejs.
 const db = require('../db');
 
-// Rates are per 30 days. Change here; the /advertise page reads from this.
+// Rates are per 30 days and INCLUDE the 3.5% + $0.49 processing fee
+// (standing rule: fees are passed through into prices, never absorbed).
+// Change here; the /advertise page reads from this.
 const SLOTS = {
   leaderboard: {
     name: 'Leaderboard — every page',
     description: 'Banner below the site header, shown on every page.',
     specs: 'Responsive banner (up to 970×90). JPG/PNG, under 500 KB.',
-    price_cents: 15000,
+    price_cents: 15574, // $150 + $5.74 fee
   },
   gallery_inline: {
     name: 'Gallery spotlight',
     description: 'Large banner above the design grid on the gallery page — the highest-traffic page.',
     specs: 'Responsive banner (up to 970×250). JPG/PNG, under 500 KB.',
-    price_cents: 10000,
+    price_cents: 10399, // $100 + $3.99 fee
   },
   design_page: {
     name: 'Design page banner',
     description: 'Banner under every design detail page, next to the buy button.',
     specs: 'Responsive banner (up to 728×90). JPG/PNG, under 500 KB.',
-    price_cents: 7500,
+    price_cents: 7812, // $75 + $3.12 fee
   },
 };
 

@@ -83,17 +83,19 @@ const config = {
     customSaleFull: 12500,  // $125 Saturday sale
     customDeposit: 7500,    // 50% deposit (regular price; use pricing.js for sale-aware)
     plans: {
-      customer: { slug: 'customer', name: 'Customer Membership', priceCents: 500, interval: 'month' },
-      customer_annual: { slug: 'customer_annual', name: 'Customer Membership (Annual)', priceCents: 5000, interval: 'year' },
-      artist: { slug: 'design_artist', name: 'Design Artist', priceCents: 500, interval: 'month' },
-      shop: { slug: 'tattoo_shop', name: 'Tattoo Shop', priceCents: 9999, interval: 'year' },
+      // Prices INCLUDE the 3.5% + $0.49 web processing fee (standing rule:
+      // fees are passed through, never absorbed). Base + fee shown in parens.
+      customer: { slug: 'customer', name: 'Customer Membership', priceCents: 567, interval: 'month' }, // $5.00 + $0.67
+      customer_annual: { slug: 'customer_annual', name: 'Customer Membership (Annual)', priceCents: 5224, interval: 'year' }, // $50.00 + $2.24
+      artist: { slug: 'design_artist', name: 'Design Artist', priceCents: 567, interval: 'month' }, // $5.00 + $0.67
+      shop: { slug: 'tattoo_shop', name: 'Tattoo Shop', priceCents: 10398, interval: 'year' }, // $99.99 + $3.99
     },
     // Subscription incentives (see memberships.js / referrals.js).
     firstMonth: {
-      priceCents: 100, // $1.00 first month on new monthly customer memberships
+      priceCents: 153, // $1.00 + $0.53 fee — first month on new monthly customer memberships
     },
     foundingShop: {
-      priceCents: 7999, // $79.99 first year during the founding window (vs $99.99)
+      priceCents: 8328, // $79.99 + $3.29 fee — first year during the founding window (vs $103.98)
     },
   },
 

@@ -1,4 +1,5 @@
 <h1>Order a print</h1>
+<p class="muted">Prices include the 3.5% + $0.49 processing fee.</p>
 <p class="muted">Printing: <strong><%= source.title %></strong> (<%= source.kind === 'combo' ? 'your studio combination' : 'your purchased design' %>)</p>
 
 <form method="post" action="/prints/order">
@@ -10,7 +11,7 @@
     <label for="print-product">Product</label>
     <select id="print-product" name="product" required>
       <% Object.entries(products).forEach(function([id, p]) { %>
-      <option value="<%= id %>"><%= p.name %> — <%= money(p.price_cents) %></option>
+      <option value="<%= id %>"><%= p.name %> — <%= money(withFee(p.price_cents)) %></option>
       <% }); %>
     </select>
     <p class="muted" id="product-desc"></p>

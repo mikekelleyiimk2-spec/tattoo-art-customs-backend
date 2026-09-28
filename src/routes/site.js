@@ -3,7 +3,7 @@ const express = require('express');
 const db = require('../db');
 const config = require('../config');
 const { requireLogin, isActiveMember } = require('../middleware/auth');
-const { premadePriceCents, customFullCents, isSaleWindow, lineworkOnlyPriceCents, LINEWORK_ONLY_DISCOUNT, salePriceActive } = require('../lib/pricing');
+const { premadePriceCents, customFullCents, isSaleWindow, lineworkOnlyPriceCents, LINEWORK_ONLY_DISCOUNT, salePriceActive, withFeeCents } = require('../lib/pricing');
 
 const router = express.Router();
 
@@ -121,8 +121,8 @@ router.get('/', async (req, res) => {
   res.render('site/index', {
     title: 'Tattoo Art Customs — Custom Tattoo Designs',
     designs, sale: await salePriceActive(req.user),
-    premadePrice: premadePriceCents(new Date(), member), customPrice: customFullCents(new Date(), member),
-    metaDescription: 'Browse hundreds of original tattoo designs. Custom designs $150 with 48-hour delivery. Design artists earn 60% commission.',
+    premadePrice: withFeeCents(premadePriceCents(new Date(), member)), customPrice: withFeeCents(customFullCents(new Date(), member)),
+    metaDescription: 'Browse hundreds of original tattoo designs. Custom designs $155.74 with 48-hour delivery. Design artists earn 60% commission.',
   });
 });
 
@@ -141,7 +141,7 @@ router.get('/gallery', async (req, res) => {
   res.render('site/gallery', {
     title: 'Design Gallery — Tattoo Art Customs',
     designs, allCats, q: req.query.q || '', cat: req.query.cat || '', sale: await salePriceActive(req.user),
-    premadePrice: premadePriceCents(new Date(), member),
+    premadePrice: withFeeCents(premadePriceCents(new Date(), member)),
     metaDescription: 'Browse and search original tattoo designs by category.',
   });
 });
@@ -168,12 +168,19 @@ router.get('/design/:id', async (req, res) => {
     );
     owned = !!o;
   }
+  const { withFeeCents, processingFeeCents } = require('../lib/pricing');
+  const lineworkBase = lineworkOnlyPriceCents(price);
   res.render('site/design', {
     title: `${design.title} — Tattoo Art Customs`,
     design, artist, price, isCustom, sale: await salePriceActive(req.user), owned,
     // Linework-only purchase option (3% discount). Pieces with no color
     // version are linework-only automatically.
-    lineworkPrice: lineworkOnlyPriceCents(price),
+    lineworkPrice: lineworkBase,
+    // Checkout totals include the 3.5% + $0.49 processing fee.
+    priceTotal: withFeeCents(price),
+    priceFee: processingFeeCents(price),
+    lineworkTotal: withFeeCents(lineworkBase),
+    lineworkFee: processingFeeCents(lineworkBase),
     lineworkDiscount: LINEWORK_ONLY_DISCOUNT,
     metaDescription: `${design.title} — original tattoo design. ${design.categories.join(', ')}.`,
     creditBalance: req.user ? await require('../lib/credits').getCreditBalance(req.user.id) : 0,

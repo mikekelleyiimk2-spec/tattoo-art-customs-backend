@@ -91,7 +91,8 @@ router.post('/orders/:id/confirm-manual', formLimiter, checkHoneypot, async (req
     return res.redirect('/admin/orders');
   }
   const due = order.order_type === 'custom' ? order.deposit_cents : order.amount_cents;
-  await db.update('orders', order.id, { status: 'paid', amount_paid_cents: due, paid_at: db.now() });
+  // The buyer was asked to send base + processing fee (see the manual-payment page).
+  await db.update('orders', order.id, { status: 'paid', amount_paid_cents: due + (order.fee_cents || 0), paid_at: db.now() });
   const fresh = await db.get('SELECT * FROM orders WHERE id = ?', [order.id]);
   await recordSaleCommissions(fresh);
   const fulfil = await onOrderPaid(fresh);

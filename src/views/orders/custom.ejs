@@ -1,5 +1,5 @@
 <h1>Request a custom design</h1>
-<p>Custom designs are <strong><%= money(full) %></strong>. Pay a <strong><%= money(deposit) %></strong> deposit now — your design is delivered within <strong>48 hours</strong>, and the download unlocks in your account.</p>
+<p>Custom designs are <strong><%= money(fullTotal) %></strong>. Pay a <strong><%= money(depositTotal) %></strong> deposit now <span class="muted">(includes <%= money(depositFee) %> processing fee)</span> — your design is delivered within <strong>48 hours</strong>, and the download unlocks in your account.</p>
 <form method="post" action="/orders/custom" class="form">
   <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
   <label for="brief">Describe your design (subject, style, size, placement, colors…)</label>
@@ -14,6 +14,6 @@
   </select>
   <% } %>
   <p><label><input type="checkbox" name="use_credit" value="1"> Pay the deposit with my site credit</label></p>
-  <p><button class="btn" type="submit">Pay <%= money(deposit) %> deposit</button></p>
+  <p><button class="btn" type="submit">Pay <%= money(depositTotal) %> deposit</button></p>
 </form>
 <p class="muted">All sales are final. Prefer to pay another way? Place the request, then choose manual payment (CashApp/Venmo) on the order page.</p>

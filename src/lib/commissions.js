@@ -116,6 +116,13 @@ async function recipientEligible(userId, role) {
 
 // Record commission splits for a paid order. Called once per order
 // (guarded by checking existing ledger rows).
+// Net amount the commission splits are computed on: what the buyer paid
+// minus the processing fee (the fee covers the payment processor's cut and
+// is never commissioned — standing rule: fees are passed through, not shared).
+function netPaidCents(order) {
+  return Math.max(0, (order.amount_paid_cents || 0) - (order.fee_cents || 0));
+}
+
 async function recordSaleCommissions(order) {
   const existing = await db.get('SELECT id FROM commission_ledger WHERE order_id = ?', [order.id]);
   if (existing) return;
@@ -148,7 +155,7 @@ async function recordSaleCommissions(order) {
     // 10% owner / 10% site (stated splits sum to 100%).
     // No referring shop: the 20% shop share splits 50/50 designer /
     // owner (designer 70%, owner 20%); the site retains its 10% overhead.
-    const total = order.amount_paid_cents;
+    const total = netPaidCents(order);
     const designerRate = (noDesignerColor ? 0.55 : 0.60) + (foundingBoost ? 0.10 : 0);
     const colorFeeRate = noDesignerColor ? 0.05 : 0;
     let ownerRate = foundingBoost ? 0 : 0.10;
@@ -228,8 +235,8 @@ async function recordSaleCommissions(order) {
   } else {
     // Owner / unregistered art: 80 site / 20 referring shop. A founding
     // shop's boost takes its extra 5pts from the owner's share (75/25).
-    const shopAmt = Math.round(order.amount_paid_cents * (shopBoost ? 0.25 : 0.20));
-    const siteAmt = order.amount_paid_cents - shopAmt;
+    const shopAmt = Math.round(netPaidCents(order) * (shopBoost ? 0.25 : 0.20));
+    const siteAmt = netPaidCents(order) - shopAmt;
     entries.push({
       order_id: order.id, recipient_type: 'site', recipient_id: null,
       amount_cents: siteAmt, status: 'site_kept', created_at: t,
@@ -295,7 +302,7 @@ async function recordCustomDesignerCommission(order, artistId) {
   // Founding artists earn 80% on customs for 6 months (the boost is carved
   // out of the site's share).
   const rate = await founding.foundingArtistActive(artistId, db.now()) ? 0.80 : 0.70;
-  const designerAmt = Math.round((order.amount_paid_cents || 0) * rate);
+  const designerAmt = Math.round(netPaidCents(order) * rate);
   if (designerAmt <= 0) return 0;
   // Take it out of the site's share (the largest site_kept 'site' row).
   const siteRow = await db.get(
@@ -318,7 +325,7 @@ async function recordCustomDesignerCommission(order, artistId) {
 
 module.exports = {
   recipientEligible, recordSaleCommissions, verifyOrderCommissions, payableBalance,
-  recordCustomDesignerCommission, ownerUserId,
+  recordCustomDesignerCommission, ownerUserId, netPaidCents,
   TIER2_WINDOW_MS, TIER2_MISSES, TIER2_DURATION_MS,
   missTimes, commissionSuspended, commissionSuspendedUntil, refreshCommissionSuspensions,
 };

@@ -4,6 +4,7 @@
 const db = require('../db');
 const config = require('../config');
 const paypal = require('./paypal');
+const pricing = require('./pricing');
 const cashout = require('./cashout');
 const { recordSaleCommissions } = require('./commissions');
 const { onOrderPaid } = require('./printful');
@@ -34,11 +35,13 @@ async function createTopup({ userId, amountCents }) {
     throw new Error(`Minimum top-up is $${(MIN_TOPUP_CENTS / 100).toFixed(2)}.`);
   }
   if (amountCents > 100000) throw new Error('Maximum top-up is $1,000.');
+  // The processing fee is added to the charge; only the base amount becomes credit.
+  const fee = pricing.processingFeeCents(amountCents);
   const topupId = await db.insert('credit_topups', {
-    user_id: userId, amount_cents: amountCents, status: 'pending', created_at: db.now(),
+    user_id: userId, amount_cents: amountCents, fee_cents: fee, status: 'pending', created_at: db.now(),
   });
   const pp = await paypal.createCheckoutOrder({
-    amountCents,
+    amountCents: amountCents + fee,
     description: `Tattoo Art Customs — $${(amountCents / 100).toFixed(2)} site credit`,
     returnUrl: `${config.baseUrl}/account/topup/approve/${topupId}`,
     cancelUrl: `${config.baseUrl}/account`,
@@ -56,8 +59,9 @@ async function completeTopup({ userId, topupId }) {
   const capture = await paypal.captureCheckoutOrder(topup.paypal_order_id);
   const captured = capture.purchase_units?.[0]?.payments?.captures?.[0];
   const paidCents = Math.round(parseFloat(captured?.amount?.value || '0') * 100);
-  if (paidCents < topup.amount_cents) throw new Error('Captured amount did not match the top-up.');
-  await addCredit({ userId, amountCents: paidCents, kind: 'topup', refId: topupId, note: 'PayPal top-up' });
+  const expected = topup.amount_cents + (topup.fee_cents || 0);
+  if (paidCents < expected) throw new Error('Captured amount did not match the top-up.');
+  await addCredit({ userId, amountCents: topup.amount_cents, kind: 'topup', refId: topupId, note: 'PayPal top-up' });
   await db.update('credit_topups', topupId, { status: 'completed', completed_at: db.now() });
   return getCreditBalance(userId);
 }

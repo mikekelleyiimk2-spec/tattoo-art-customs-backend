@@ -34,6 +34,7 @@ router.get('/', requireLogin, async (req, res) => {
     shopsLeft: foundingStatus.shopsLeft,
     firstMonthEligible: await firstMonthDiscountEligible(req.user.id),
     firstMonthPrice: config.pricing.firstMonth.priceCents,
+    customerPlanPrice: (plans.find((x) => x.slug === 'customer') || {}).price_cents || config.pricing.plans.customer.priceCents,
     referralCode, redemptions, money: require('../lib/pricing').money,
     baseUrl: config.baseUrl,
     metaDescription: 'Tattoo Art Customs membership plans.',
