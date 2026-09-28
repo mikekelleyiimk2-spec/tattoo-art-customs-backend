@@ -11,6 +11,7 @@ const { requireLogin, requireRole } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { recordSaleCommissions, verifyOrderCommissions } = require('../lib/commissions');
 const { onOrderPaid } = require('../lib/printful');
+const { routeCustomOrder } = require('../lib/customFulfillment');
 
 const router = express.Router();
 router.use(requireLogin, requireRole('admin'));
@@ -49,6 +50,7 @@ router.post('/orders/:id/confirm-manual', formLimiter, checkHoneypot, async (req
   const fresh = await db.get('SELECT * FROM orders WHERE id = ?', [order.id]);
   await recordSaleCommissions(fresh);
   const fulfil = await onOrderPaid(fresh);
+  await routeCustomOrder(fresh);
   req.session.flash = 'Manual payment confirmed — buyer download unlocked, commissions recorded.' +
     (fulfil.submitted ? ' Print auto-submitted to Printful.' : '');
   res.redirect('/admin/orders');
@@ -98,6 +100,107 @@ router.post('/orders/:id/attach', formLimiter, (req, res, next) => {
     req.session.flash = 'Custom design files attached — the buyer can now download them.';
   }
   res.redirect('/admin/orders');
+});
+
+// --- Custom 48h fulfillment queue ---
+const { FULFILLMENT_STATUSES, draftsDir, parseDrafts } = require('../lib/customFulfillment');
+
+router.get('/custom-orders', async (req, res) => {
+  const filter = String(req.query.status || 'open');
+  let where = "o.order_type = 'custom' AND o.status = 'paid'";
+  const params = [];
+  if (filter === 'open') where += " AND o.custom_status NOT IN ('delivered')";
+  else if (FULFILLMENT_STATUSES.includes(filter)) { where += ' AND o.custom_status = ?'; params.push(filter); }
+  const orders = await db.all(
+    `SELECT o.*, u.email AS buyer_email, u.display_name AS buyer_name,
+            a.display_name AS artist_name
+     FROM orders o JOIN users u ON u.id = o.buyer_id
+     LEFT JOIN users a ON a.id = o.requested_artist_id
+     WHERE ${where} ORDER BY o.delivery_due ASC`, params);
+  const counts = {};
+  for (const s of FULFILLMENT_STATUSES) {
+    const r = await db.get(
+      `SELECT COUNT(*) AS n FROM orders WHERE order_type = 'custom' AND status = 'paid' AND custom_status = ?`, [s]);
+    counts[s] = r.n;
+  }
+  res.render('admin/custom-orders', {
+    title: 'Custom orders — Admin', orders, counts, filter, now: Date.now(), metaDescription: '',
+  });
+});
+
+router.get('/custom-orders/:id', async (req, res) => {
+  const order = await db.get(
+    `SELECT o.*, u.email AS buyer_email, u.display_name AS buyer_name,
+            a.display_name AS artist_name, a.email AS artist_email
+     FROM orders o JOIN users u ON u.id = o.buyer_id
+     LEFT JOIN users a ON a.id = o.requested_artist_id
+     WHERE o.id = ? AND o.order_type = 'custom'`, [req.params.id]);
+  if (!order) return res.status(404).render('error', { title: 'Not found', message: 'Custom order not found.' });
+  const artists = await db.all("SELECT id, display_name FROM users WHERE role = 'design_artist' ORDER BY display_name");
+  res.render('admin/custom-order-detail', {
+    title: `Custom order ${order.id.slice(0, 8)} — Admin`,
+    order, artists, drafts: parseDrafts(order), now: Date.now(), metaDescription: '',
+  });
+});
+
+router.post('/custom-orders/:id/approve', formLimiter, checkHoneypot, async (req, res) => {
+  const order = await db.get("SELECT * FROM orders WHERE id = ? AND order_type = 'custom'", [req.params.id]);
+  if (!order) return res.redirect('/admin/custom-orders');
+  await db.update('orders', order.id, { custom_status: 'approved' });
+  req.session.flash = 'Drafts approved — attach the final files from the sales log to deliver.';
+  res.redirect(`/admin/custom-orders/${order.id}`);
+});
+
+router.post('/custom-orders/:id/request-changes', formLimiter, checkHoneypot, async (req, res) => {
+  const order = await db.get("SELECT * FROM orders WHERE id = ? AND order_type = 'custom'", [req.params.id]);
+  if (!order) return res.redirect('/admin/custom-orders');
+  const note = String(req.body.note || '').trim().slice(0, 2000);
+  const stamped = `[${new Date().toISOString()}] Revision requested: ${note || '(no note)'}\n`;
+  await db.update('orders', order.id, {
+    custom_status: 'in_revision', admin_notes: (order.admin_notes || '') + stamped,
+  });
+  req.session.flash = 'Sent back for revision.';
+  res.redirect(`/admin/custom-orders/${order.id}`);
+});
+
+router.post('/custom-orders/:id/reassign', formLimiter, checkHoneypot, async (req, res) => {
+  const order = await db.get("SELECT * FROM orders WHERE id = ? AND order_type = 'custom'", [req.params.id]);
+  if (!order) return res.redirect('/admin/custom-orders');
+  const artistId = String(req.body.requested_artist_id || '').trim();
+  const artist = artistId
+    ? await db.get("SELECT id, email, display_name FROM users WHERE id = ? AND role = 'design_artist'", [artistId])
+    : null;
+  await db.update('orders', order.id, {
+    requested_artist_id: artist ? artist.id : null,
+    custom_status: artist ? 'routed_to_artist' : 'needs_drafts',
+  });
+  if (artist) {
+    const { notifyArtist } = require('../lib/customFulfillment');
+    await notifyArtist({ ...order, requested_artist_id: artist.id }, artist);
+    req.session.flash = `Reassigned to ${artist.display_name || artist.email}.`;
+  } else {
+    req.session.flash = 'Unassigned — order returned to the draft pipeline.';
+  }
+  res.redirect(`/admin/custom-orders/${order.id}`);
+});
+
+router.post('/custom-orders/:id/deliver', formLimiter, checkHoneypot, async (req, res) => {
+  const order = await db.get("SELECT * FROM orders WHERE id = ? AND order_type = 'custom'", [req.params.id]);
+  if (!order) return res.redirect('/admin/custom-orders');
+  await db.update('orders', order.id, { custom_status: 'delivered' });
+  req.session.flash = 'Marked delivered. (Attach final files from the sales log if you have not already.)';
+  res.redirect(`/admin/custom-orders/${order.id}`);
+});
+
+// Draft images: admin-only, never mounted as public static.
+router.get('/custom-orders/:id/draft/:file', async (req, res) => {
+  const order = await db.get("SELECT id FROM orders WHERE id = ? AND order_type = 'custom'", [req.params.id]);
+  if (!order) return res.status(404).send('Not found');
+  const file = path.basename(String(req.params.file));
+  const full = path.join(draftsDir(order.id), file);
+  if (!full.startsWith(draftsDir(order.id))) return res.status(403).send('Forbidden');
+  if (!fs.existsSync(full)) return res.status(404).send('Not found');
+  res.sendFile(full);
 });
 
 // --- Review queue (flagged designs, bios, messages, shop profiles) ---

@@ -7,6 +7,7 @@ const paypal = require('./paypal');
 const cashout = require('./cashout');
 const { recordSaleCommissions } = require('./commissions');
 const { onOrderPaid } = require('./printful');
+const { routeCustomOrder } = require('./customFulfillment');
 
 const MIN_TOPUP_CENTS = 500; // $5 minimum top-up
 
@@ -156,6 +157,7 @@ async function payOrderWithCredit({ userId, orderId }) {
   const fresh = await db.get('SELECT * FROM orders WHERE id = ?', [order.id]);
   await recordSaleCommissions(fresh);
   const fulfil = await onOrderPaid(fresh);
+  await routeCustomOrder(fresh);
   return { order: fresh, printSubmitted: fulfil.submitted };
 }
 

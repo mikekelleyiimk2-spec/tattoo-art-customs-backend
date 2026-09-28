@@ -13,6 +13,7 @@ const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const pricing = require('../lib/pricing');
 const { premadePriceCents, isSaleWindow } = pricing;
 const { recordSaleCommissions } = require('../lib/commissions');
+const { routeCustomOrder } = require('../lib/customFulfillment');
 const { onOrderPaid } = require('../lib/printful');
 
 const router = express.Router();
@@ -68,12 +69,14 @@ router.post('/buy/:designId', requireLogin, formLimiter, checkHoneypot, async (r
 });
 
 // --- Custom design request: brief + 50% deposit (Saturday-aware pricing) ---
-router.get('/custom', requireLogin, (req, res) => {
+router.get('/custom', requireLogin, async (req, res) => {
   const full = pricing.customFullCents();
   const deposit = pricing.customDepositCents();
+  const artists = await db.all(
+    "SELECT id, display_name FROM users WHERE role = 'design_artist' ORDER BY display_name");
   res.render('orders/custom', {
     title: 'Request a Custom Design — Tattoo Art Customs',
-    deposit, full, sale: pricing.isSaleWindow(),
+    deposit, full, sale: pricing.isSaleWindow(), artists,
     metaDescription: `Order a custom tattoo design — ${pricing.money(full)}, 50% deposit, 48-hour delivery.`,
   });
 });
@@ -86,6 +89,13 @@ router.post('/custom', requireLogin, formLimiter, checkHoneypot, async (req, res
   const refCode = referralFromReq(req);
   const full = pricing.customFullCents();
   const deposit = pricing.customDepositCents();
+  // Optional: customer requests a specific design artist.
+  let requestedArtistId = null;
+  const wantArtist = String(req.body.requested_artist_id || '').trim();
+  if (wantArtist) {
+    const a = await db.get("SELECT id FROM users WHERE id = ? AND role = 'design_artist'", [wantArtist]);
+    if (a) requestedArtistId = a.id;
+  }
   const orderId = await db.insert('orders', {
     buyer_id: req.user.id, order_type: 'custom',
     amount_cents: full,
@@ -93,6 +103,8 @@ router.post('/custom', requireLogin, formLimiter, checkHoneypot, async (req, res
     status: 'pending', payment_method: 'paypal',
     referral_code: refCode, referred_shop_id: await resolveReferral(refCode),
     custom_brief: brief,
+    requested_artist_id: requestedArtistId,
+    custom_status: 'new',
     delivery_due: Date.now() + 48 * 3600 * 1000,
     created_at: db.now(),
   });
@@ -156,7 +168,11 @@ router.get('/approve/:orderId', requireLogin, async (req, res) => {
     const fresh = await db.get('SELECT * FROM orders WHERE id = ?', [order.id]);
     await recordSaleCommissions(fresh);
     const fulfil = await onOrderPaid(fresh);
-    req.session.flash = 'Payment received — your download is ready.' +
+    await routeCustomOrder(fresh);
+    req.session.flash = order.order_type === 'custom'
+      ? 'Deposit received — your custom request is in. Your design will be delivered within 48 hours.'
+      : 'Payment received — your download is ready.';
+    req.session.flash +=
       (fulfil.submitted ? ' Your print was sent to the printer automatically.' : '');
     res.redirect(`/orders/${order.id}`);
   } catch (e) {

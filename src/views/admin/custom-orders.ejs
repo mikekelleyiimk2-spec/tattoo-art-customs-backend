@@ -1,0 +1,46 @@
+<h1>Custom orders — 48h fulfillment</h1>
+<p><a href="/admin">← Dashboard</a></p>
+
+<div class="chips" style="margin-bottom:12px">
+  <a class="chip<%= filter === 'open' ? ' active' : '' %>" href="/admin/custom-orders?status=open">Open</a>
+  <% ['new','routed_to_artist','needs_drafts','drafts_ready','in_revision','approved','delivered'].forEach(function(s) { %>
+  <a class="chip<%= filter === s ? ' active' : '' %>" href="/admin/custom-orders?status=<%= s %>"><%= s.replace(/_/g, ' ') %> (<%= counts[s] || 0 %>)</a>
+  <% }); %>
+</div>
+
+<% if (!orders.length) { %><p class="muted">No custom orders in this view.</p><% } %>
+<table>
+  <thead><tr><th>Order</th><th>Buyer</th><th>Artist</th><th>Status</th><th>SLA</th><th></th></tr></thead>
+  <tbody>
+  <% orders.forEach(function(o) {
+       var left = o.delivery_due ? o.delivery_due - now : null;
+       var overdue = left !== null && left < 0;
+       var urgent = left !== null && left >= 0 && left < 24 * 3600 * 1000;
+  %>
+    <tr<%= overdue ? ' class="row-overdue"' : (urgent ? ' class="row-urgent"' : '') %>>
+      <td><a href="/admin/custom-orders/<%= o.id %>"><%= o.id.slice(0, 8) %></a></td>
+      <td><%= o.buyer_name || o.buyer_email %></td>
+      <td><%= o.artist_name || '—' %></td>
+      <td><span class="badge <%= o.custom_status === 'delivered' || o.custom_status === 'approved' ? 'ok' : '' %>"><%= o.custom_status.replace(/_/g, ' ') %></span></td>
+      <td>
+        <% if (left === null) { %>—<% } else if (overdue) { %>
+          <strong class="sla-overdue">OVERDUE <%= Math.floor(-left / 3600000) %>h</strong>
+        <% } else { %>
+          <% var h = Math.floor(left / 3600000); var m = Math.floor((left % 3600000) / 60000); %>
+          <span class="<%= urgent ? 'sla-urgent' : '' %>"><%= h %>h <%= m %>m left</span>
+        <% } %>
+      </td>
+      <td><a class="btn btn-secondary" href="/admin/custom-orders/<%= o.id %>">Open</a></td>
+    </tr>
+  <% }); %>
+  </tbody>
+</table>
+<style>
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-block; padding: 6px 12px; border: 1px solid #ddd; border-radius: 999px; text-decoration: none; color: inherit; font-size: 14px; }
+.chip.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+.row-urgent td { background: #fff8e1; }
+.row-overdue td { background: #fdecea; }
+.sla-urgent { color: #9a6a00; font-weight: 700; }
+.sla-overdue { color: #b3261e; }
+</style>

@@ -1,0 +1,73 @@
+<h1>Custom order <%= order.id.slice(0, 8) %></h1>
+<p><a href="/admin/custom-orders">← Custom orders</a></p>
+
+<% var left = order.delivery_due ? order.delivery_due - now : null; %>
+<div class="two-col">
+  <section class="card">
+    <h2>Brief</h2>
+    <p style="white-space:pre-wrap"><%= order.custom_brief || '(no brief)' %></p>
+    <p class="muted">Buyer: <strong><%= order.buyer_name || order.buyer_email %></strong> (<%= order.buyer_email %>)</p>
+    <p class="muted">Deposit paid: <%= money(order.amount_paid_cents) %> via <%= order.payment_method %></p>
+    <p>Status: <span class="badge"><%= order.custom_status.replace(/_/g, ' ') %></span></p>
+    <p>Deadline:
+      <% if (left === null) { %>—<% } else if (left < 0) { %>
+        <strong class="sla-overdue">OVERDUE by <%= Math.floor(-left / 3600000) %>h</strong>
+      <% } else { %>
+        <%= Math.floor(left / 3600000) %>h <%= Math.floor((left % 3600000) / 60000) %>m left
+        (<%= new Date(order.delivery_due).toLocaleString() %>)
+      <% } %>
+    </p>
+    <p class="muted">Requested artist: <strong><%= order.artist_name || 'none (draft pipeline)' %></strong></p>
+    <% if (order.admin_notes) { %>
+    <h2>Admin notes</h2>
+    <p style="white-space:pre-wrap" class="muted"><%= order.admin_notes %></p>
+    <% } %>
+  </section>
+
+  <section class="card">
+    <h2>Drafts (<%= drafts.length %>)</h2>
+    <% if (!drafts.length) { %>
+      <p class="muted">No drafts yet. The draft worker picks this order up automatically when it is in “needs drafts”.</p>
+    <% } %>
+    <% drafts.forEach(function(d, i) { %>
+      <figure style="margin:0 0 16px">
+        <img src="/admin/custom-orders/<%= order.id %>/draft/<%= d.file %>" alt="Draft <%= i + 1 %>" style="max-width:100%;border-radius:8px">
+        <% if (d.note) { %><figcaption class="muted"><%= d.note %></figcaption><% } %>
+      </figure>
+    <% }); %>
+
+    <h2>Actions</h2>
+    <% if (['drafts_ready', 'in_revision'].includes(order.custom_status)) { %>
+    <form method="post" action="/admin/custom-orders/<%= order.id %>/approve" style="margin-bottom:12px">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button class="btn" type="submit">Approve drafts</button>
+    </form>
+    <form method="post" action="/admin/custom-orders/<%= order.id %>/request-changes" class="form" style="margin-bottom:12px">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <label for="note">Request changes (notes for the artist / draft run)</label>
+      <textarea id="note" name="note" maxlength="2000" placeholder="What needs fixing…"></textarea>
+      <p><button class="btn btn-secondary" type="submit">Send back for revision</button></p>
+    </form>
+    <% } %>
+    <form method="post" action="/admin/custom-orders/<%= order.id %>/reassign" class="form" style="margin-bottom:12px">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <label for="requested_artist_id">Reassign to artist</label>
+      <select id="requested_artist_id" name="requested_artist_id">
+        <option value="">— draft pipeline (no artist) —</option>
+        <% artists.forEach(function(a) { %>
+        <option value="<%= a.id %>"<%= order.requested_artist_id === a.id ? ' selected' : '' %>><%= a.display_name || 'Artist' %></option>
+        <% }); %>
+      </select>
+      <p><button class="btn btn-secondary" type="submit">Reassign</button></p>
+    </form>
+    <% if (order.custom_status !== 'delivered') { %>
+    <form method="post" action="/admin/custom-orders/<%= order.id %>/deliver" style="margin-bottom:12px"
+          onsubmit="return confirm('Mark this custom order delivered? Attach the final files first if you have not.')">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button class="btn" type="submit">Mark delivered</button>
+    </form>
+    <p class="muted">Attach final color + linework files from the <a href="/admin/orders">sales log</a> (order <%= order.id.slice(0, 8) %>) before delivering.</p>
+    <% } %>
+  </section>
+</div>
+<style>.sla-overdue { color: #b3261e; }</style>
