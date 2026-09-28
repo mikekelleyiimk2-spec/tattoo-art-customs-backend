@@ -126,11 +126,16 @@ function firstMonthTrialCycles(regularCents) {
   ];
 }
 
-// Founding tattoo shop: $79.99 for the first year, then $99.99/year after.
+// Founding tattoo shop: $83.28 for the first year, then $103.98/year after.
+// The discounted first year MUST be tenure_type TRIAL: PayPal rejects an
+// override whose sequence doesn't map onto the plan's own cycles, and the
+// shop plan defines a single REGULAR yearly cycle. A TRIAL cycle prepended
+// at sequence 1 (the same shape as the $1.53 first-month trial, which PayPal
+// accepts) is the supported way to discount the first period.
 function foundingShopCycles() {
   return [
     {
-      sequence: 1, tenure_type: 'REGULAR', total_cycles: 1,
+      sequence: 1, tenure_type: 'TRIAL', total_cycles: 1,
       frequency: { interval_unit: 'YEAR', interval_count: 1 },
       pricing_scheme: { fixed_price: fixedPrice(config.pricing.foundingShop.priceCents) },
     },

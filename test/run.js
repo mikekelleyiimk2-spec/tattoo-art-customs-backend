@@ -102,6 +102,7 @@ async function main() {
   ok(trial[0].total_cycles === 1 && trial[1].sequence === 2, 'trial cycle count/sequence');
   const founding = paypal.foundingShopCycles();
   ok(founding[0].pricing_scheme.fixed_price.value === '83.28' && founding[0].total_cycles === 1, 'founding shop first year $83.28 for 1 cycle');
+  ok(founding[0].tenure_type === 'TRIAL' && founding[1].tenure_type === 'REGULAR' && founding[1].sequence === 2, 'founding first year must be TRIAL tenure (PayPal rejects a second REGULAR cycle)');
   ok(founding[1].pricing_scheme.fixed_price.value === '103.98', 'founding shop renews at $103.98');
 
   console.log('commissions:');
