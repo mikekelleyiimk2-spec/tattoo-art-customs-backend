@@ -9,8 +9,16 @@ async function migrate() {
   await db.query(`CREATE TABLE IF NOT EXISTS migrations (
     id TEXT PRIMARY KEY, applied_at BIGINT NOT NULL)`);
 
+  const mode = db.getMode();
   const dir = path.join(__dirname, '..', '..', 'migrations');
-  const files = fs.readdirSync(dir).filter((f) => f.endsWith('.sql')).sort();
+  // `.pg.sql` migrations run on Postgres only (SQLite is dynamically typed:
+  // its INTEGER already stores 64-bit values, and it lacks ALTER COLUMN).
+  // `.sqlite.sql` is the mirror for symmetry.
+  const files = fs.readdirSync(dir).filter((f) => f.endsWith('.sql')).filter((f) => {
+    if (f.endsWith('.pg.sql')) return mode === 'pg';
+    if (f.endsWith('.sqlite.sql')) return mode === 'sqlite';
+    return true;
+  }).sort();
   const applied = new Set((await db.all('SELECT id FROM migrations')).map((r) => r.id));
 
   for (const file of files) {
