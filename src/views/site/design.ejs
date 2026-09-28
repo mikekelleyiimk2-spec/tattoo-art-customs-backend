@@ -1,7 +1,12 @@
 <div class="two-col">
   <div>
-    <img class="detail-img" src="/img/designs/<%= design.linework_wm_path.split('/').pop() %>" alt="Tattoo design linework: <%= design.title %>">
+    <img class="detail-img" src="/img/designs/<%= imgFile || design.linework_wm_path.split('/').pop() %>" alt="Tattoo design linework: <%= design.title %>">
+    <% if (blurred) { %>
+    <p class="muted"><strong>This preview is blurred</strong> — the piece is rated explicit.
+      <a href="/account#content">Verify your age and opt in</a> to view it unblurred, or purchase it to receive the full files.</p>
+    <% } else { %>
     <p class="muted">Linework preview shown. Full color delivered after purchase.</p>
+    <% } %>
   </div>
   <div>
     <h1><%= design.title %></h1>

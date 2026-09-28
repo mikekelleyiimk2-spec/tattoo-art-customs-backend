@@ -491,33 +491,34 @@ async function main() {
   ok((await db.get('SELECT status FROM referral_redemptions WHERE id = ?', [dueRedId])).status === 'used',
     'past-due referral free month marked used by the daily job');
 
-  console.log('colorization (admin-only approval):');
+  console.log('colorization (admin-only approval, no designer gate):');
   const colorz = require('../src/lib/colorization');
   const colDesignerId = await db.insert('users', { email: 'coldesigner@test.local', password_hash: 'x', role: 'design_artist', display_name: 'Col Designer' });
   const colDesignId = await db.insert('designs', {
-    artist_id: colDesignerId, title: 'Col Piece', status: 'awaiting_color', color_source: 'none',
+    artist_id: colDesignerId, title: 'Col Piece', status: 'pending', color_source: 'none', color_pending: 1,
     price_cents: 7500, created_at: Date.now(),
   });
   fs.mkdirSync(path.join(process.env.ASSET_DIR, 'designs', 'color'), { recursive: true });
   const colAbs = path.join(process.env.ASSET_DIR, 'designs', 'color', 'col-test.jpg');
   fs.writeFileSync(colAbs, 'fake color');
   await colorz.attachColorVersion(colDesignId, colAbs);
-  const colAfter = await db.get('SELECT status, color_path FROM designs WHERE id = ?', [colDesignId]);
-  ok(colAfter.status === 'pending_color_approval' && colAfter.color_path, 'attach moves piece to pending_color_approval');
+  const colAfter = await db.get('SELECT status, color_pending, color_source, color_path FROM designs WHERE id = ?', [colDesignId]);
+  ok(colAfter.status === 'pending' && colAfter.color_pending === 0 && colAfter.color_source === 'site' && colAfter.color_path,
+    'attaching the site-created color sets color_source=site, color_pending=0, and keeps the piece\u2019s approval status');
   const colConvs = await db.all(
     `SELECT c.id FROM conversations c JOIN conversation_participants p ON p.conversation_id = c.id
      WHERE p.user_id = ? AND c.subject LIKE '%colorized%'`, [colDesignerId]);
   ok(colConvs.length >= 1, 'designer notified when color is attached');
-  let approveErr = '';
-  try { await colorz.approveColorVersion(colDesignId, 'not-a-real-admin'); } catch (e) { approveErr = e.message; }
-  ok(approveErr === '', 'approveColorVersion validates status only (route enforces admin role)');
-  const colApproved = await db.get('SELECT status, color_source FROM designs WHERE id = ?', [colDesignId]);
-  ok(colApproved.status === 'pending' && colApproved.color_source === 'site', 'admin approval sets color_source=site, status=pending');
-  await colorz.notifyDesignLive(colDesignId);
+  await colorz.notifyDesignLive(colDesignId, 'Test Admin');
   const colLiveConvs = await db.all(
     `SELECT c.id FROM conversations c JOIN conversation_participants p ON p.conversation_id = c.id
      WHERE p.user_id = ? AND c.subject LIKE '%is live%'`, [colDesignerId]);
   ok(colLiveConvs.length >= 1, 'designer notified when the piece goes live');
+  const liveBody = (await db.get(
+    `SELECT m.body AS body FROM messages m JOIN conversations c ON c.id = m.conversation_id
+     JOIN conversation_participants p ON p.conversation_id = c.id
+     WHERE p.user_id = ? AND c.subject LIKE '%is live%' ORDER BY m.id DESC LIMIT 1`, [colDesignerId])).body || '';
+  ok(liveBody.includes('Test Admin'), 'go-live notice names the admin who approved');
 
   await require('./founding').runDbTests(ok);
   await require('./replacements').runDbTests(ok);
@@ -1449,42 +1450,54 @@ async function main() {
   ok(sdb.prepare('SELECT id FROM designs WHERE id = ?').get(prow.id), 'admin cannot delete a piece with sales');
 
   // ===== Linework-only uploads + site colorization workflow =====
-  // Linework-only upload (no color file) is accepted and held.
+  // Linework-only upload (no color file) is accepted and enters normal admin
+  // approval immediately; the site color version is created while it is live.
   r = await mpost('/artist/portfolio/upload',
     { title: 'Ink Sketch', description: 'Linework only.', style: 'japanese', categories: 'animals', listing_type: 'custom', watermark_choice: 'site' },
     { linework: { buffer: lwBuf, filename: 'l.jpg', type: 'image/jpeg' } },
     artJar);
   ok(r.status === 302 && r.location === '/artist/portfolio', 'linework-only upload accepted');
   const lwRow = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('Ink Sketch');
-  ok(lwRow && lwRow.color_source === 'none' && lwRow.status === 'awaiting_color' && !lwRow.color_path,
-    'linework-only upload held as awaiting_color with no color version');
+  ok(lwRow && lwRow.color_source === 'none' && lwRow.status === 'pending' && !lwRow.color_path && lwRow.color_pending === 1,
+    'linework-only upload enters pending approval with color_pending=1');
   ok(pricing.LINEWORK_ONLY_DISCOUNT === 0.03 && pricing.LINEWORK_ONLY_DISCOUNT <= 0.03,
     'linework-only discount constant is 0.03 and clamped');
-  // Hidden from every public surface.
+  // Pending: hidden from every public surface until approved.
   r = await req('GET', '/gallery');
-  ok(!r.text.includes('Ink Sketch'), 'linework-only piece hidden from the gallery');
+  ok(!r.text.includes('Ink Sketch'), 'linework-only piece hidden from the gallery while pending');
   r = await req('GET', `/artists/${bannerArtistId}`);
-  ok(!r.text.includes('Ink Sketch'), 'linework-only piece hidden from the public portfolio');
+  ok(!r.text.includes('Ink Sketch'), 'linework-only piece hidden from the public portfolio while pending');
   r = await req('GET', '/api/designs');
-  ok(!JSON.parse(r.text).designs.some((d) => d.title === 'Ink Sketch'), 'linework-only piece hidden from the app designs API');
+  ok(!JSON.parse(r.text).designs.some((d) => d.title === 'Ink Sketch'), 'linework-only piece hidden from the app designs API while pending');
   // Owner notified on-site that a color version needs creating.
   const ownerNotif = sdb.prepare(
     `SELECT c.id FROM conversations c JOIN messages m ON m.conversation_id = c.id
      WHERE c.subject LIKE '%Color version needed%' AND m.body LIKE '%Ink Sketch%'`).get();
   ok(!!ownerNotif, 'owner notified on-site that a color version needs creating');
-  // Admin colorization queue lists it.
+  // Admin colorization queue lists it (color_pending drives the queue now).
   r = await areq('GET', '/admin/colorization');
-  ok(r.status === 200 && r.text.includes('Ink Sketch') && r.text.includes('awaiting_color'),
-    'admin colorization queue lists the linework-only piece');
+  ok(r.status === 200 && r.text.includes('Ink Sketch'), 'admin colorization queue lists the linework-only piece');
 
-  // Admin attaches the finished site-created color file.
+  // The linework can be approved BEFORE any color exists — the piece goes
+  // live with watermarked linework while color is still pending.
+  r = await areq('POST', `/admin/designs/${lwRow.id}/approve`);
+  ok(sdb.prepare('SELECT status FROM designs WHERE id = ?').get(lwRow.id).status === 'approved',
+    'linework-only piece approved without a color version');
+  r = await req('GET', `/artists/${bannerArtistId}`);
+  ok(r.text.includes('Ink Sketch'), 'approved linework-only piece is live on the public portfolio');
+  r = await req('GET', `/artists/${bannerArtistId}`);
+  ok(r.text.includes('Ink Sketch') && !r.text.includes('sitecolor') && !r.text.includes('/uploads/'),
+    'public portfolio shows the piece but never a site-created color file');
+
+  // Admin attaches the finished site-created color file: color_source becomes
+  // 'site' and color_pending clears; the approval status does not change.
   r = await mpost(`/admin/colorization/${lwRow.id}/attach`, {},
     { color: { buffer: colorBuf, filename: 'c.jpg', type: 'image/jpeg' } }, adminJar);
   ok(r.status === 302 && r.location === '/admin/colorization', 'admin attaches the color version');
   const afterAttach = sdb.prepare('SELECT * FROM designs WHERE id = ?').get(lwRow.id);
-  ok(afterAttach.status === 'pending_color_approval' && afterAttach.color_path
-    && fs.existsSync(path.join(process.env.ASSET_DIR, afterAttach.color_path)),
-    'attaching color moves the piece to pending_color_approval');
+  ok(afterAttach.status === 'approved' && afterAttach.color_pending === 0 && afterAttach.color_source === 'site'
+    && afterAttach.color_path && fs.existsSync(path.join(process.env.ASSET_DIR, afterAttach.color_path)),
+    'attaching the color clears color_pending, sets color_source=site, and keeps the piece live');
   ok(afterAttach.color_path.includes('sitecolor'), 'site-created color stored under its own filename');
   // Designer is notified for information only — there is no approval gate.
   const artistNotif = sdb.prepare(
@@ -1499,41 +1512,276 @@ async function main() {
   ok(r.status === 200, 'admin can privately preview the site-created color');
   const anonPrev = await fetch(`http://localhost:${PORT}/admin/colorization/${lwRow.id}/preview`, { redirect: 'manual' });
   ok(anonPrev.status !== 200, 'color preview is not reachable without login');
-  // A site administrator approves the color version: color_source becomes
-  // 'site', back into normal admin approval.
+  // The separate color-approval route is gone: attaching IS the approval.
   r = await areq('POST', `/admin/colorization/${lwRow.id}/approve`);
-  const afterApprove = sdb.prepare('SELECT * FROM designs WHERE id = ?').get(lwRow.id);
-  ok(afterApprove.color_source === 'site' && afterApprove.status === 'pending',
-    'admin color approval sets color_source=site and status=pending');
-  r = await areq('POST', `/admin/designs/${lwRow.id}/approve`);
-  ok(sdb.prepare('SELECT status FROM designs WHERE id = ?').get(lwRow.id).status === 'approved',
-    'admin approves the piece after color approval');
-  // The designer is notified when the piece goes live.
+  ok(r.status === 404, 'separate color-approval route removed');
+  // The designer was notified when the piece went live, naming the admin.
   const liveNotif = sdb.prepare(
     `SELECT c.id FROM conversations c JOIN messages m ON m.conversation_id = c.id
      WHERE c.subject LIKE '%is live%' AND m.body LIKE '%Ink Sketch%'`).get();
   ok(!!liveNotif, 'designer notified when the site-colored piece goes live');
   // The site-created color never appears anywhere public.
-  r = await req('GET', `/artists/${bannerArtistId}`);
-  ok(r.text.includes('Ink Sketch') && !r.text.includes('sitecolor') && !r.text.includes('/uploads/'),
-    'public portfolio shows the piece but never the site-created color file');
   r = await req('GET', '/gallery');
   ok(!r.text.includes('sitecolor'), 'gallery never exposes the site-created color');
   r = await req('GET', `/design/${lwRow.id}`);
   ok(r.status === 200 && !r.text.includes('sitecolor') && r.text.includes('Clean linework only'),
     'design page offers the linework-only choice and never shows the site color');
 
-  // Approving color on a piece with no color attached is rejected.
+  // An uncolorized linework-only piece stays live; the colorization queue
+  // still lists it while its color is pending.
   r = await mpost('/artist/portfolio/upload',
     { title: 'Ink Sketch 2', description: 'Linework only.', style: 'japanese', listing_type: 'custom', watermark_choice: 'site' },
     { linework: { buffer: lwBuf, filename: 'l.jpg', type: 'image/jpeg' } },
     artJar);
   const lw2 = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('Ink Sketch 2');
-  r = await areq('POST', `/admin/colorization/${lw2.id}/approve`);
-  const lw2Still = sdb.prepare('SELECT status FROM designs WHERE id = ?').get(lw2.id);
-  ok(lw2Still.status === 'awaiting_color', 'color approval rejected when no color is attached');
+  ok(lw2 && lw2.status === 'pending' && lw2.color_pending === 1, 'second linework-only piece pending with color pending');
+  r = await areq('GET', '/admin/colorization');
+  ok(r.text.includes('Ink Sketch 2'), 'colorization queue lists the still-uncolorized piece');
+
+  // ===== Content policy: sensitivity, blur, hold, reject reasons, appeals =====
+  // Explicit upload generates a blurred preview variant and notifies admins.
+  r = await mpost('/artist/portfolio/upload',
+    { title: 'Explicit Piece', description: 'Policy test.', style: 'japanese', listing_type: 'predesign', watermark_choice: 'site', sensitivity: 'explicit' },
+    { linework: { buffer: lwBuf, filename: 'l.jpg', type: 'image/jpeg' } },
+    artJar);
+  ok(r.status === 302 && r.location === '/artist/portfolio', 'explicit upload accepted');
+  const expRow = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('Explicit Piece');
+  ok(expRow && expRow.sensitivity === 'explicit' && expRow.linework_blur_path
+    && fs.existsSync(path.join(process.env.ASSET_DIR, expRow.linework_blur_path)),
+    'explicit piece stored with a blurred preview variant');
+  const admNotif = sdb.prepare(
+    "SELECT COUNT(*) AS c FROM notifications WHERE kind = 'design_pending' AND link = '/admin/designs'").get();
+  ok(admNotif.c >= 1, 'admins get an in-app notification for the pending upload');
+  // Nude upload: watermarked, NOT blurred.
+  r = await mpost('/artist/portfolio/upload',
+    { title: 'Nude Study', description: 'Policy test.', style: 'japanese', listing_type: 'predesign', watermark_choice: 'site', sensitivity: 'nude' },
+    { linework: { buffer: lwBuf, filename: 'l.jpg', type: 'image/jpeg' } },
+    artJar);
+  const nudeRow = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('Nude Study');
+  ok(nudeRow && nudeRow.sensitivity === 'nude' && !nudeRow.linework_blur_path, 'nude piece is watermarked but not blurred');
+  // Racist content is held for admin-only review — never pending.
+  r = await mpost('/artist/portfolio/upload',
+    { title: 'Hateful Piece', description: 'Policy test.', style: 'japanese', listing_type: 'custom', watermark_choice: 'site', sensitivity: 'racist' },
+    { linework: { buffer: lwBuf, filename: 'l.jpg', type: 'image/jpeg' } },
+    artJar);
+  const hateRow = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('Hateful Piece');
+  ok(hateRow && hateRow.status === 'on_hold', 'racist content is placed on hold, never pending');
+  // on_hold is never auto-approved, even after hours.
+  sdb.prepare('UPDATE designs SET created_at = ? WHERE id = ?').run(Date.now() - 3 * 3600 * 1000, hateRow.id);
+  {
+    const { autoApproveStaleDesigns } = require('../src/lib/autoApprove');
+    const res2 = await autoApproveStaleDesigns();
+    ok(!res2.approved.includes(hateRow.id) && sdb.prepare('SELECT status FROM designs WHERE id = ?').get(hateRow.id).status === 'on_hold',
+      'on_hold designs are never auto-approved');
+  }
+  // Admin approves the explicit piece; blur gating on the public page.
+  r = await areq('POST', `/admin/designs/${expRow.id}/approve`);
+  ok(sdb.prepare('SELECT status FROM designs WHERE id = ?').get(expRow.id).status === 'approved', 'explicit piece approved by admin');
+  r = await req('GET', `/design/${expRow.id}`);
+  ok(r.status === 200 && r.text.includes(expRow.linework_blur_path.split('/').pop()),
+    'signed-out viewer is served the blurred preview for explicit pieces');
+  ok(r.text.includes('blurred'), 'design page explains the blur to viewers');
+  r = await req('GET', '/api/designs');
+  ok(JSON.parse(r.text).designs.some((d) => d.id === expRow.id), 'explicit piece listed in the app API (blurred by gating)');
+  // Age-verified opted-in viewer sees the unblurred watermarked linework.
+  const vuId = await db.insert('users', { email: 'verified@test.local', password_hash: 'x', role: 'customer', display_name: 'Verified', age_verified: 1, show_explicit: 1 });
+  const { displayImgFile } = require('../src/lib/contentPolicy');
+  const unblurred = await displayImgFile(expRow, { id: vuId, role: 'customer', age_verified: true, show_explicit: true });
+  ok(unblurred && unblurred === String(expRow.linework_wm_path).split('/').pop(), 'age-verified opted-in viewer gets the unblurred watermarked linework');
+  const blurred = await displayImgFile(expRow, null);
+  ok(blurred && blurred === String(expRow.linework_blur_path).split('/').pop(), 'signed-out viewer gets the blurred variant');
+  const nudeView = await displayImgFile(nudeRow, null);
+  ok(nudeView && !nudeView.includes('linework-blur'), 'nude pieces are never blurred for anyone');
+
+  // Rejection without a reason is blocked.
+  r = await mpost('/artist/portfolio/upload',
+    { title: 'Appeal Piece', description: 'Policy test.', style: 'japanese', listing_type: 'custom', watermark_choice: 'site' },
+    { linework: { buffer: lwBuf, filename: 'l.jpg', type: 'image/jpeg' } },
+    artJar);
+  const apRow = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('Appeal Piece');
+  r = await areq('POST', `/admin/designs/${apRow.id}/reject`, { body: { reason: '' } });
+  ok(sdb.prepare('SELECT status FROM designs WHERE id = ?').get(apRow.id).status === 'pending',
+    'rejection blocked when no reason is given');
+  // Rejection with a reason: artist is notified with the reason + admin name.
+  r = await areq('POST', `/admin/designs/${apRow.id}/reject`, { body: { reason: 'Does not meet quality bar.' } });
+  ok(sdb.prepare('SELECT status FROM designs WHERE id = ?').get(apRow.id).status === 'rejected', 'rejection with reason goes through');
+  const rejRow = sdb.prepare('SELECT reject_reason FROM designs WHERE id = ?').get(apRow.id);
+  ok(rejRow.reject_reason === 'Does not meet quality bar.', 'rejection reason stored on the design');
+  const rejNotif = sdb.prepare(
+    "SELECT title, body FROM notifications WHERE user_id = ? AND kind = 'design_rejected' ORDER BY created_at DESC").get(bannerArtistId);
+  ok(rejNotif && rejNotif.body.includes('Does not meet quality bar.'), 'artist notified with the rejection reason');
+  ok(rejNotif.body.includes('admin@test.local') || rejNotif.body.includes('Site Admin'),
+    'rejection notice names the admin who decided');
+  // Hold notifies all admins.
+  r = await areq('POST', `/admin/designs/${nudeRow.id}/hold`);
+  ok(sdb.prepare('SELECT status FROM designs WHERE id = ?').get(nudeRow.id).status === 'on_hold', 'hold sets status to on_hold');
+  const holdNotif = sdb.prepare(
+    "SELECT COUNT(*) AS c FROM notifications WHERE kind = 'design_on_hold'").get();
+  ok(holdNotif.c >= 1, 'all admins notified of the hold');
+
+  // Appeal: one per rejected design, to the owner, whose decision is final.
+  r = await artreq('POST', `/artist/portfolio/${apRow.id}/appeal`, { body: { reason: 'I fixed the shading, please look again.' } });
+  ok(r.status === 302, 'appeal submitted');
+  const appeal = sdb.prepare('SELECT * FROM design_appeals WHERE design_id = ?').get(apRow.id);
+  ok(appeal && appeal.status === 'open', 'appeal recorded as open');
+  const appealNotif = sdb.prepare("SELECT COUNT(*) AS c FROM notifications WHERE kind = 'design_appeal'").get();
+  ok(appealNotif.c >= 1, 'owner notified of the appeal');
+  r = await artreq('GET', '/admin/appeals');
+  ok(r.status === 403, 'appeals page forbidden for non-admin artist');
+  r = await areq('GET', '/admin/appeals');
+  ok(r.status === 200 && r.text.includes('Appeal Piece'), 'owner sees the appeal in /admin/appeals');
+  r = await artreq('POST', `/artist/portfolio/${apRow.id}/appeal`, { body: { reason: 'second try' } });
+  ok(sdb.prepare('SELECT COUNT(*) AS c FROM design_appeals WHERE design_id = ?').get(apRow.id).c === 1,
+    'only one appeal per design is allowed');
+  // Owner approves the appeal: the piece goes live and the artist is told.
+  r = await areq('POST', `/admin/appeals/${appeal.id}/approve`);
+  ok(sdb.prepare('SELECT status FROM designs WHERE id = ?').get(apRow.id).status === 'approved', 'owner appeal approval posts the piece');
+  ok(sdb.prepare('SELECT status FROM design_appeals WHERE id = ?').get(appeal.id).status === 'approved', 'appeal marked approved');
+  const appealDecided = sdb.prepare(
+    "SELECT body FROM notifications WHERE user_id = ? AND kind = 'appeal_decided' ORDER BY created_at DESC").get(bannerArtistId);
+  ok(appealDecided && appealDecided.body.toLowerCase().includes('final'), 'artist told the owner decision is final');
+  // Uphold path: second rejected piece, appeal, owner upholds.
+  r = await mpost('/artist/portfolio/upload',
+    { title: 'Appeal Piece 2', description: 'Policy test.', style: 'japanese', listing_type: 'custom', watermark_choice: 'site' },
+    { linework: { buffer: lwBuf, filename: 'l.jpg', type: 'image/jpeg' } },
+    artJar);
+  const ap2 = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('Appeal Piece 2');
+  await areq('POST', `/admin/designs/${ap2.id}/reject`, { body: { reason: 'Off brief.' } });
+  await artreq('POST', `/artist/portfolio/${ap2.id}/appeal`, { body: { reason: 'reconsider please' } });
+  const appeal2 = sdb.prepare('SELECT * FROM design_appeals WHERE design_id = ?').get(ap2.id);
+  r = await areq('POST', `/admin/appeals/${appeal2.id}/uphold`);
+  ok(sdb.prepare('SELECT status FROM design_appeals WHERE id = ?').get(appeal2.id).status === 'upheld', 'appeal can be upheld');
+  ok(sdb.prepare('SELECT status FROM designs WHERE id = ?').get(ap2.id).status === 'rejected', 'design stays rejected when the appeal is upheld');
+
+  // Adolfo is his own admin: self-approved uploaders skip the review queue.
+  const adolfoId = await db.insert('users', {
+    email: 'adolfo3301@yahoo.com', password_hash: await bcrypt.hash('AdolfoPass123!', 10),
+    role: 'design_artist', display_name: 'Adolfo', auto_approve_uploads: 1,
+  });
+  await db.insert('subscriptions', {
+    user_id: adolfoId, plan_id: artPlanId, status: 'active',
+    paypal_subscription_id: 'sub-adolfo-test', created_at: Date.now(),
+  });
+  const adolfoJar = {};
+  async function adolforeq(method, pp, opts = {}) {
+    const h = { ...(opts.headers || {}) };
+    const cookies = Object.entries(adolfoJar).map(([k, v]) => `${k}=${v}`).join('; ');
+    if (cookies) h.cookie = cookies;
+    let payload = opts.body;
+    if (payload && typeof payload === 'object') {
+      payload = new URLSearchParams(payload);
+      h['content-type'] = 'application/x-www-form-urlencoded';
+    }
+    const res = await fetch(`http://localhost:${PORT}${pp}`, { method, headers: h, body: payload, redirect: 'manual' });
+    for (const c of (res.headers.getSetCookie ? res.headers.getSetCookie() : [])) {
+      const [k, v] = c.split(';')[0].split('=');
+      adolfoJar[k.trim()] = (v || '').trim();
+    }
+    return { status: res.status, text: await res.text(), location: res.headers.get('location') };
+  }
+  r = await adolforeq('POST', '/login', { body: { email: 'adolfo3301@yahoo.com', password: 'AdolfoPass123!' } });
+  ok(r.status === 302, 'self-approving artist login ok');
+  const pendBefore = sdb.prepare("SELECT COUNT(*) AS c FROM notifications WHERE kind = 'design_pending'").get().c;
+  r = await mpost('/artist/portfolio/upload',
+    { title: 'Adolfo Live Piece', description: 'No review needed.', style: 'japanese', listing_type: 'predesign', watermark_choice: 'site' },
+    { linework: { buffer: lwBuf, filename: 'l.jpg', type: 'image/jpeg' } },
+    adolfoJar);
+  const adRow = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('Adolfo Live Piece');
+  ok(adRow && adRow.status === 'approved' && adRow.approved_by === adolfoId,
+    'self-approved upload goes live immediately, approved by the uploader');
+  ok(sdb.prepare("SELECT COUNT(*) AS c FROM notifications WHERE kind = 'design_pending'").get().c === pendBefore,
+    'no admin review notification for a self-approved upload');
   r = await req('GET', '/gallery');
-  ok(!r.text.includes('Ink Sketch 2'), 'uncolorized piece stays hidden publicly');
+  ok(r.text.includes('Adolfo Live Piece'), 'self-approved piece is in the gallery');
+  // A flagged upload (contact info) still needs an admin — policy violations are not approvals.
+  r = await mpost('/artist/portfolio/upload',
+    { title: 'Adolfo Flagged', description: 'Call me at 555-555-0100 for customs.', style: 'japanese', listing_type: 'custom', watermark_choice: 'site' },
+    { linework: { buffer: lwBuf, filename: 'l.jpg', type: 'image/jpeg' } },
+    adolfoJar);
+  const adFlag = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('Adolfo Flagged');
+  ok(adFlag && adFlag.status === 'flagged', 'flagged upload still needs an admin even for a self-approver');
+
+  // Push notification flows (test mode: no real network, attempts are logged).
+  const { vapidPublicKey, pushToAdmins, sentLog } = require('../src/lib/push');
+  const vapidKey = await vapidPublicKey();
+  ok(typeof vapidKey === 'string' && vapidKey.length > 20, 'VAPID public key is available');
+  r = await req('GET', '/api/push/vapid-key');
+  ok(r.status === 200 && JSON.parse(r.text).publicKey === vapidKey, 'VAPID key served over the API');
+  {
+    const cookies = Object.entries(adminJar).map(([k, v]) => `${k}=${v}`).join('; ');
+    const sres = await fetch(`http://localhost:${PORT}/api/push/subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', cookie: cookies },
+      body: JSON.stringify({ subscription: { endpoint: 'https://push.test.local/sub/1', keys: { p256dh: 'dh1', auth: 'auth1' } } }),
+    });
+    r = { status: sres.status, text: await sres.text() };
+  }
+  ok(r.status === 200 && JSON.parse(r.text).ok, 'web push subscription accepted');
+  ok(sdb.prepare("SELECT COUNT(*) AS c FROM push_subscriptions WHERE endpoint = 'https://push.test.local/sub/1'").get().c === 1,
+    'web push subscription persisted');
+  r = await areq('POST', '/api/push/unsubscribe', { body: { endpoint: 'https://push.test.local/sub/1' } });
+  ok(r.status === 200 && sdb.prepare("SELECT COUNT(*) AS c FROM push_subscriptions WHERE endpoint = 'https://push.test.local/sub/1'").get().c === 0,
+    'web push subscription removed');
+  // Expo token registration via API token, then an admin push attempt is logged.
+  {
+    const linkRes = await fetch(`http://localhost:${PORT}/api/link-account`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'admin@test.local', password: 'AdminTest123!' }),
+    });
+    const linkData = await linkRes.json();
+    ok(linkRes.ok && linkData.ok && linkData.api_token, 'admin links an API token');
+  }
+  const adminRow = sdb.prepare("SELECT api_token FROM users WHERE email = 'admin@test.local'").get();
+  ok(!!(adminRow && adminRow.api_token), 'admin has an API token');
+  {
+    const eres = await fetch(`http://localhost:${PORT}/api/push/expo-token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-token': adminRow.api_token },
+      body: JSON.stringify({ expo_push_token: 'ExponentPushToken[test-admin-device]' }),
+    });
+    r = { status: eres.status, text: await eres.text() };
+  }
+  ok(r.status === 200 && JSON.parse(r.text).ok, 'expo token registered');
+  ok(sdb.prepare("SELECT expo_push_token FROM users WHERE email = 'admin@test.local'").get().expo_push_token === 'ExponentPushToken[test-admin-device]',
+    'expo token persisted on the user');
+  sentLog.length = 0;
+  await pushToAdmins({ title: 'Test push', body: 'Design review needed.', url: '/admin/designs' });
+  ok(sentLog.some((e) => e.channel === 'expo'), 'admin design-review push attempted via Expo (logged in test mode)');
+
+  // 2-hour SLA escalation: a flagged design past 2h re-notifies admins.
+  const { escalateOverdueDesigns } = require('../src/lib/contentSla');
+  sdb.prepare("INSERT INTO designs (id, title, status, price_cents, created_at, categories, sale_count, artist_id, linework_wm_path) VALUES (?,?,?,?,?,?,?,?,?)")
+    .run('sla-test-1', 'SLA Flag', 'flagged', 7500, Date.now() - 3 * 3600 * 1000, '[]', 0, bannerArtistId, 'designs/linework-wm/x.jpg');
+  const esc1 = await escalateOverdueDesigns();
+  ok(esc1.escalated.includes('sla-test-1'), 'overdue flagged design escalated');
+  const escNotif = sdb.prepare("SELECT COUNT(*) AS c FROM notifications WHERE kind = 'design_sla_escalation'").get();
+  ok(escNotif.c >= 1, 'admins re-notified on SLA breach');
+  const esc2 = await escalateOverdueDesigns();
+  ok(!esc2.escalated.includes('sla-test-1'), 'no repeat escalation within 24h');
+
+  // Notifications page + header badge.
+  {
+    const sres = await fetch(`http://localhost:${PORT}/notifications`, { redirect: 'manual' });
+    r = { status: sres.status, location: sres.headers.get('location') };
+  }
+  ok(r.status === 302 && (r.location || '').includes('/login'), 'signed-out users are redirected from /notifications');
+  r = await areq('GET', '/notifications');
+  ok(r.status === 200 && r.text.includes('Notifications'), 'admin can open the notifications page');
+  const nid = sdb.prepare("SELECT id FROM notifications WHERE user_id = (SELECT id FROM users WHERE email = 'admin@test.local') AND read_at IS NULL LIMIT 1").get();
+  if (nid) {
+    r = await areq('POST', `/notifications/${nid.id}/read`);
+    ok(r.status === 302 && sdb.prepare('SELECT read_at FROM notifications WHERE id = ?').get(nid.id).read_at, 'notification can be marked read');
+  }
+  // Age verification routes.
+  r = await req('POST', '/account/age-verify', { body: { dob: '2010-01-01' } });
+  r = await areq('POST', '/account/age-verify', { body: { dob: '1990-05-05' } });
+  ok(r.status === 302 && sdb.prepare("SELECT age_verified FROM users WHERE email = 'admin@test.local'").get().age_verified === 1,
+    'adult date of birth sets age_verified');
+  r = await areq('POST', '/account/explicit-pref', { body: { show_explicit: '1' } });
+  ok(sdb.prepare("SELECT show_explicit FROM users WHERE email = 'admin@test.local'").get().show_explicit === 1,
+    'verified user can opt in to unblurred explicit previews');
+  r = await areq('GET', '/account');
+  ok(r.text.includes('Content preferences'), 'account page shows the content-preferences section');
 
   // ===== Linework-only checkout discount =====
   const customList = pricing.customFullCents();

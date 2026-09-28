@@ -9,8 +9,14 @@
   <textarea id="description" name="description" maxlength="2000"></textarea>
   <label for="categories">Categories (comma-separated, e.g. animals, blackwork, floral)</label>
   <input type="text" id="categories" name="categories" maxlength="300">
+  <h2>Content rating</h2>
+  <p class="muted">Nudity is allowed. Sexual acts or highly offensive content is shown blurred until the viewer is age-verified and opts in. Racist material is held for admin-only review.</p>
+  <label><input type="radio" name="sensitivity" value="normal" checked> <strong>General</strong> — no nudity or explicit content.</label>
+  <label><input type="radio" name="sensitivity" value="nude"> <strong>Nudity</strong> — contains artistic nudity (allowed, watermarked as usual).</label>
+  <label><input type="radio" name="sensitivity" value="explicit"> <strong>Explicit</strong> — sexual acts or highly offensive content (public preview is blurred).</label>
+  <label><input type="radio" name="sensitivity" value="racist"> <strong>Report as racist/hateful</strong> — held for admin-only review (never auto-approved).</label>
   <label for="color">Full-color image (JPG/PNG/WebP, max 15 MB)</label>
-  <input type="file" id="color" name="color" accept="image/jpeg,image/png,image/webp" required>
+  <input type="file" id="color" name="color" accept="image/jpeg,image/png,image/webp">
   <label for="linework">Clean linework image (JPG/PNG/WebP, max 15 MB)</label>
   <input type="file" id="linework" name="linework" accept="image/jpeg,image/png,image/webp" required>
   <p><button class="btn" type="submit">Upload for review</button></p>

@@ -24,11 +24,21 @@
       <% if (d.style) { %><span class="badge"><%= d.style %></span><% } %>
     </p>
     <p class="muted"><%= d.sale_count %> sale<%= d.sale_count === 1 ? '' : 's' %></p>
-    <% if (d.status === 'awaiting_color') { %>
-    <p class="muted">Waiting on the site-created color version — our team is creating it. We'll let you know when it's live.</p>
+    <% if (d.color_pending) { %>
+    <p class="muted">Your linework is live while our team creates the site color version. We'll notify you when the color is attached — no action needed from you.</p>
     <% } %>
-    <% if (d.status === 'pending_color_approval') { %>
-    <p class="muted">The site-created color version is attached and waiting on a site administrator's review. We'll let you know when it's live — no action needed from you.</p>
+    <% if (d.status === 'rejected') { %>
+    <p class="warn"><strong>Not approved.</strong><% if (d.reject_reason) { %> Reason: <%= d.reject_reason %><% } %></p>
+    <% if (d.appealStatus === 'open') { %>
+    <p class="muted">Your appeal is with the site owner for a final decision.</p>
+    <% } else if (!d.appealStatus) { %>
+    <form method="post" action="/artist/portfolio/<%= d.id %>/appeal" class="form" style="margin-top:.5em">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <label for="appeal-<%= d.id %>">Submit one appeal to the site owner (their decision is final)</label>
+      <textarea id="appeal-<%= d.id %>" name="reason" rows="2" required maxlength="2000" placeholder="Why should the rejection be reconsidered?"></textarea>
+      <p><button class="btn btn-secondary" type="submit">Submit appeal</button></p>
+    </form>
+    <% } %>
     <% } %>
     <p>
       <a class="btn btn-secondary" href="/artist/portfolio/<%= d.id %>/edit">Edit</a>

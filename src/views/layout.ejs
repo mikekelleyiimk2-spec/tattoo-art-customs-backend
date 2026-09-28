@@ -33,6 +33,7 @@
         <% if (currentUser.role === 'tattoo_shop') { %><a href="/shop">Shop</a><% } %>
         <% if (currentUser.role === 'admin' || currentUser.role === 'head_admin') { %><a href="/admin">Admin</a><% } %>
         <a href="/messages">Messages</a>
+        <a href="/notifications">Notifications<% if (typeof notifCount !== 'undefined' && notifCount > 0) { %> <span class="badge warn"><%= notifCount %></span><% } %></a>
         <a href="/logout">Log out</a>
       <% } else { %>
         <a href="/login">Log in</a>

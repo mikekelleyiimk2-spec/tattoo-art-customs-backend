@@ -11,7 +11,10 @@ const db = require('../db');
 const config = require('../config');
 const pricing = require('./pricing');
 const { screenText } = require('./screening');
-const { applyWatermarkedLinework } = require('./watermark');
+const { applyWatermarkedLinework, applyBlurredVariant } = require('./watermark');
+const { SENSITIVITIES } = require('./contentPolicy');
+const { notifyAdmins } = require('./notify');
+const { notifyDesignLive } = require('./colorization');
 
 const DESIGN_STYLES = [
   'blackwork', 'traditional', 'japanese', 'realism', 'fine-line', 'floral',
@@ -49,9 +52,9 @@ const portfolioUploadMulter = multer({
 // req.user must be set (requireLogin). Redirects back with a flash message.
 //
 // Linework-only uploads (no color file) are accepted: they get
-// color_source='none', status='awaiting_color' (hidden everywhere until the
-// site-created color version is approved), and the owner is notified that a
-// color version needs creating.
+// color_source='none', color_pending=1, and enter the normal approval flow —
+// the piece posts with its watermarked linework while the site-created color
+// version follows via the colorization queue.
 async function handlePortfolioUpload(req, res, backUrl) {
   const files = req.files || {};
   if (!files.linework) {
@@ -90,6 +93,12 @@ async function handlePortfolioUpload(req, res, backUrl) {
   }
 
   const screen = screenText(`${title}\n${description}`);
+  // Content rating (owner policy): nudity allowed; sexual acts / highly
+  // offensive content is blurred for the public preview; racist material is
+  // held for admin-only review. Artist self-declares; admins can adjust.
+  const sensitivity = SENSITIVITIES.includes(String(req.body.sensitivity || '').toLowerCase())
+    ? String(req.body.sensitivity).toLowerCase() : 'normal';
+  const holdForHate = String(req.body.sensitivity || '').toLowerCase() === 'racist';
   const id = await db.insert('designs', {
     title,
     description,
@@ -97,17 +106,21 @@ async function handlePortfolioUpload(req, res, backUrl) {
     categories: JSON.stringify([style, ...extraCats]),
     color_path: hasColor ? path.relative(config.assetDir, files.color[0].path) : '',
     color_source: colorSource,
+    color_pending: colorSource === 'none' ? 1 : 0,
     linework_path: path.relative(config.assetDir, files.linework[0].path),
     linework_wm_path: '', // set by the watermark pipeline below
+    sensitivity,
     price_cents: listingType === 'custom' ? pricing.customFullCents() : pricing.premadePriceCents(),
     artist_id: req.user.id,
     listing_scope: listingScope,
     listing_type: listingType,
     watermark_choice: watermarkChoice,
     custom_watermark_path: customWatermarkPath,
-    // Linework-only uploads wait on the site-created color version and are
-    // hidden from every public listing until it is approved.
-    status: colorSource === 'none' ? 'awaiting_color' : (screen.ok ? 'pending' : 'flagged'),
+    // Linework-only uploads are approvable like any other piece: they post
+    // with the watermarked linework and the site color version follows via
+    // the colorization queue (color_pending). Racist-flagged pieces go on
+    // hold for admin-only approve/reject — never auto-approved.
+    status: holdForHate ? 'on_hold' : (screen.ok ? 'pending' : 'flagged'),
     created_at: db.now(),
     sale_count: 0,
   });
@@ -128,8 +141,9 @@ async function handlePortfolioUpload(req, res, backUrl) {
   // If generation fails, the design stays pending and the admin can attach
   // watermarked linework manually (existing fallback path).
   let wmNote = '';
+  let wmRel = '';
   try {
-    const wmRel = await applyWatermarkedLinework({
+    wmRel = await applyWatermarkedLinework({
       designId: id,
       lineworkAbs: files.linework[0].path,
       choice: watermarkChoice,
@@ -137,17 +151,73 @@ async function handlePortfolioUpload(req, res, backUrl) {
         ? path.join(config.assetDir, customWatermarkPath) : null,
     });
     await db.update('designs', id, { linework_wm_path: wmRel });
+    // Explicit content: also bake a blurred public preview (watermark stays
+    // underneath). The blur lifts for age-verified opted-in viewers, the
+    // artist, admins, and buyers — otherwise it stays until purchase.
+    if (sensitivity === 'explicit') {
+      try {
+        const blurRel = await applyBlurredVariant({
+          designId: id,
+          watermarkedAbs: path.join(config.assetDir, wmRel),
+        });
+        await db.update('designs', id, { linework_blur_path: blurRel });
+      } catch (e) {
+        console.error('blur pipeline failed for design', id, e.message);
+      }
+    }
   } catch (e) {
     console.error('watermark pipeline failed for design', id, e.message);
     wmNote = ' (automatic watermarking needs an admin touch — nothing for you to do)';
   }
-  req.session.flash = (screen.ok
-    ? (colorSource === 'none'
-      ? 'Linework uploaded — we\u2019ll create the color version and send it to you for approval before it goes live.'
-      : (listingType === 'predesign'
-        ? 'Pre-design uploaded — it goes live in the gallery and your portfolio after admin approval.'
-        : 'Custom portfolio piece uploaded — it goes live in your portfolio after admin approval.'))
-    : 'Art uploaded but flagged for review (possible contact info). An admin will review it.') + wmNote;
+  // Every pending approval notifies ALL admins (in-app + email) — any one
+  // of them may decide the piece's status. Self-approved uploaders (Adolfo)
+  // skip the queue entirely: their piece goes live immediately, approved by
+  // themselves. Flagged/on-hold pieces still need an admin — those are
+  // policy violations, not approvals.
+  let finalStatus = holdForHate ? 'on_hold' : (screen.ok ? 'pending' : 'flagged');
+  let selfApproved = false;
+  if (finalStatus === 'pending') {
+    try {
+      const uploader = await db.get('SELECT auto_approve_uploads FROM users WHERE id = ?', [req.user.id]);
+      if (uploader && uploader.auto_approve_uploads) {
+        finalStatus = 'approved';
+        selfApproved = true;
+        await db.update('designs', id, { status: 'approved', approved_by: req.user.id });
+        try { await notifyDesignLive(id, 'self-approved'); } catch (e) { console.error('self-approve live notify failed:', e.message); }
+      }
+    } catch (e) { console.error('self-approve check failed:', e.message); }
+  }
+  if (!selfApproved) {
+  try {
+    const artistName = (req.user.display_name || req.user.email || 'A designer');
+    await notifyAdmins({
+      kind: 'design_pending',
+      title: `New piece needs review: "${title}"`,
+      body: `${artistName} uploaded "${title}" (${listingType}). Status: ${finalStatus}.` +
+        (sensitivity !== 'normal' ? ` Content rating: ${sensitivity}.` : '') +
+        (colorSource === 'none' ? ' Linework-only — a site color version will follow.' : ''),
+      link: '/admin/designs',
+      emailSubject: `[Tattoo Art Customs] Review needed: "${title}" (${finalStatus})`,
+      emailText: `${artistName} uploaded "${title}" (${listingType}, ${style}).\n` +
+        `Status: ${finalStatus}${sensitivity !== 'normal' ? ` | Content rating: ${sensitivity}` : ''}\n` +
+        `Review it: ${config.baseUrl}/admin/designs\n\n` +
+        `Any admin may approve, reject, or hold this piece.`,
+    });
+  } catch (e) {
+    console.error('admin notify failed for design', id, e.message);
+  }
+  }
+  req.session.flash = (selfApproved
+    ? 'Art uploaded \u2014 it\u2019s live now (you approve your own pieces).'
+    : (holdForHate
+    ? 'Art uploaded and placed on hold — an admin will personally review it and decide.'
+    : (screen.ok
+      ? ((listingType === 'predesign'
+        ? 'Pre-design uploaded — it goes live in the gallery and your portfolio after approval (within 2 hours).'
+        : 'Custom portfolio piece uploaded — it goes live in your portfolio after approval (within 2 hours).') +
+        (colorSource === 'none' ? ' It posts with your linework; we\u2019ll create the color version too.' : '') +
+        (sensitivity === 'explicit' ? ' Rated explicit — the public preview is blurred.' : ''))
+      : 'Art uploaded but flagged for review (possible contact info). An admin will review it.'))) + wmNote;
   if (colorSource === 'none' && screen.ok) {
     // Tell the owner a color version needs creating (the assistant creates
     // it in a work session; attaching happens in /admin/colorization).

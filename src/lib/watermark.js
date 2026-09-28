@@ -148,4 +148,20 @@ async function applyWatermarkedLinework({ designId, lineworkAbs, choice = 'site'
   return outRel;
 }
 
-module.exports = { applyWatermarkedLinework, SITE_WM_1, SITE_WM_2 };
+// Content-policy blur: a heavily blurred copy of the WATERMARKED linework,
+// used as the public preview for 'explicit' pieces (sexual acts / highly
+// offensive content). The watermark stays baked in underneath the blur.
+// Age-verified opted-in viewers, the artist, admins, and buyers see the
+// unblurred watermarked version instead.
+async function applyBlurredVariant({ designId, watermarkedAbs }) {
+  if (!watermarkedAbs || !fs.existsSync(watermarkedAbs)) {
+    throw new Error('watermarked linework not found for blur: ' + watermarkedAbs);
+  }
+  const outRel = `designs/linework-wm/${designId}-blur.jpg`;
+  const outAbs = path.join(config.assetDir, outRel);
+  fs.mkdirSync(path.dirname(outAbs), { recursive: true });
+  await sharp(watermarkedAbs).blur(40).jpeg({ quality: 82 }).toFile(outAbs);
+  return outRel;
+}
+
+module.exports = { applyWatermarkedLinework, applyBlurredVariant, SITE_WM_1, SITE_WM_2 };

@@ -22,7 +22,7 @@
 <div class="grid">
 <% pieces.forEach(function(p) { %>
   <div class="card">
-    <a href="/design/<%= p.id %>"><img src="/img/designs/<%= p.linework_wm_path.split('/').pop() %>" alt="Tattoo design linework: <%= p.title %>" loading="lazy"></a>
+    <a href="/design/<%= p.id %>"><img src="/img/designs/<%= p.thumb || p.linework_wm_path.split('/').pop() %>" alt="Tattoo design linework: <%= p.title %>" loading="lazy"></a>
     <h3><a href="/design/<%= p.id %>"><%= p.title %></a></h3>
     <p><strong><%= money(p.price) %></strong>
       <% if (p.listing_type === 'custom') { %><span class="badge">custom piece</span><% } else { %><span class="badge">pre-design</span><% } %>

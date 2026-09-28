@@ -32,11 +32,15 @@ registerPayoutRoutes(router, 'artist');
 router.get('/portfolio', async (req, res) => {
   const designs = await db.all(
     'SELECT * FROM designs WHERE artist_id = ? ORDER BY created_at DESC', [req.user.id]);
+  const appeals = await db.all(
+    'SELECT design_id, status FROM design_appeals WHERE artist_id = ?', [req.user.id]).catch(() => []);
+  const appealByDesign = {};
+  for (const a of appeals) appealByDesign[a.design_id] = a.status;
   const me = await db.get(
     'SELECT is_founding_artist, founding_artist_ends_at FROM users WHERE id = ?', [req.user.id]);
   res.render('artist/portfolio', {
     title: 'My portfolio — Tattoo Art Customs',
-    designs: designs.map((d) => ({ ...d, categories: JSON.parse(d.categories || '[]') })),
+    designs: designs.map((d) => ({ ...d, categories: JSON.parse(d.categories || '[]'), appealStatus: appealByDesign[d.id] || null })),
     userId: req.user.id,
     isFoundingArtist: !!(me && me.is_founding_artist),
     foundingEndsAt: me && me.founding_artist_ends_at,
@@ -124,6 +128,64 @@ router.post('/portfolio/:id/delete', formLimiter, checkHoneypot, async (req, res
   }
   await db.query('DELETE FROM designs WHERE id = ?', [design.id]);
   req.session.flash = 'Piece deleted.';
+  res.redirect('/artist/portfolio');
+});
+
+// --- Appeal: one appeal per rejected design, decided by the site owner.
+// The owner's decision is final.
+router.post('/portfolio/:id/appeal', formLimiter, checkHoneypot, async (req, res) => {
+  const design = await db.get('SELECT * FROM designs WHERE id = ? AND artist_id = ?', [req.params.id, req.user.id]);
+  if (!design) return res.status(404).render('error', { title: 'Not found', message: 'That piece is not in your portfolio.' });
+  if (design.status !== 'rejected') {
+    req.session.flash = 'Only rejected pieces can be appealed.';
+    return res.redirect('/artist/portfolio');
+  }
+  const existing = await db.get('SELECT id, status FROM design_appeals WHERE design_id = ?', [design.id]).catch(() => null);
+  if (existing) {
+    req.session.flash = existing.status === 'open'
+      ? 'Your appeal is already with the site owner for a final decision.'
+      : 'You already used your one appeal for this piece — the owner\u2019s decision is final.';
+    return res.redirect('/artist/portfolio');
+  }
+  const reason = String(req.body.reason || '').trim().slice(0, 2000);
+  if (!reason) {
+    req.session.flash = 'Tell the owner why the rejection should be reconsidered.';
+    return res.redirect('/artist/portfolio');
+  }
+  await db.insert('design_appeals', {
+    design_id: design.id, artist_id: req.user.id, reason,
+    status: 'open', created_at: db.now(),
+  });
+  // The appeal goes to the site owner (head_admin) — in-app + email.
+  const { notifyUser, adminUsers } = require('../lib/notify');
+  const { sendMail } = require('../lib/mail');
+  const config = require('../config');
+  const owners = (await adminUsers()).filter((a) => a.role === 'head_admin');
+  const artistName = req.user.display_name || req.user.email || 'A designer';
+  const { pushToUser } = require('../lib/push');
+  for (const o of owners) {
+    await notifyUser(o.id, {
+      kind: 'design_appeal',
+      title: `Appeal needs your final decision: "${design.title || 'untitled'}"`,
+      body: `${artistName} appealed the rejection of "${design.title || 'untitled'}".\n\nTheir case: ${reason}\n\nYour decision is final.`,
+      link: '/admin/appeals',
+    });
+    try { await pushToUser(o.id, {
+      title: `Appeal needs your final decision: "${design.title || 'untitled'}"`,
+      body: `${artistName} appealed the rejection. Your decision is final.`,
+      url: '/admin/appeals',
+    }); } catch (e) { console.error('appeal push failed:', e.message); }
+    if (o.email) {
+      try {
+        await sendMail({
+          to: o.email,
+          subject: `[Tattoo Art Customs] Appeal — final decision needed: "${design.title || 'untitled'}"`,
+          text: `${artistName} appealed the rejection of "${design.title || 'untitled'}".\n\nTheir case:\n${reason}\n\nDecide here: ${config.baseUrl}/admin/appeals\n\nYour decision is final.`,
+        });
+      } catch (e) { console.error('appeal email failed:', e.message); }
+    }
+  }
+  req.session.flash = 'Appeal submitted to the site owner — their decision is final.';
   res.redirect('/artist/portfolio');
 });
 

@@ -14,12 +14,17 @@ function isHeadAdmin(user) {
 
 async function loadUser(req, res, next) {
   res.locals.currentUser = null;
+  res.locals.notifCount = 0;
   if (req.session && req.session.userId) {
     const user = await db.get(
       'SELECT id, email, role, display_name FROM users WHERE id = ?', [req.session.userId]);
     if (user) {
       res.locals.currentUser = user;
       req.user = user;
+      try {
+        const { unreadCount } = require('../lib/notify');
+        res.locals.notifCount = await unreadCount(user.id);
+      } catch (e) { /* notifications table may not exist yet */ }
     } else {
       delete req.session.userId;
     }

@@ -13,7 +13,7 @@ const { recordSaleCommissions, verifyOrderCommissions } = require('../lib/commis
 const { onOrderPaid } = require('../lib/printful');
 const { routeCustomOrder } = require('../lib/customFulfillment');
 const { onCustomPieceSold } = require('../lib/replacements');
-const { colorizationQueue, attachColorVersion, approveColorVersion, notifyDesignLive } = require('../lib/colorization');
+const { colorizationQueue, attachColorVersion, notifyDesignLive } = require('../lib/colorization');
 
 const router = express.Router();
 router.use(requireLogin, requireRole('admin'));
@@ -393,16 +393,15 @@ router.post('/designs/:id/approve', formLimiter, checkHoneypot, async (req, res)
     req.session.flash = 'Blocked: upload the watermarked linework version before approving — the public gallery only ever shows watermarked linework.';
     return res.redirect('/admin/designs');
   }
-  if (design.status === 'awaiting_color' || design.status === 'pending_color_approval') {
-    req.session.flash = 'Blocked: that piece is still waiting on its site-created color version — attach and approve it in the colorization queue first.';
-    return res.redirect('/admin/colorization');
-  }
+  // Linework-only pieces are approvable: they post with the watermarked
+  // linework and the site color version follows via the colorization queue.
   await db.update('designs', req.params.id, { status: 'approved', approved_by: req.user.id });
   { const { completeOnApproval } = require('../lib/replacements');
     await completeOnApproval(req.params.id); } // remake of a sold custom piece → close the request
   // The piece is now live: notify the designer (informational only —
-  // no designer approval gate exists for site-created color).
-  try { await notifyDesignLive(req.params.id); } catch (e) {
+  // no designer approval gate exists for site-created color). The notice
+  // names the admin who approved it.
+  try { await notifyDesignLive(req.params.id, req.user.display_name || req.user.email); } catch (e) {
     console.error('design-live notification failed:', e.message);
   }
   req.session.flash = design.listing_type === 'custom'
@@ -411,8 +410,111 @@ router.post('/designs/:id/approve', formLimiter, checkHoneypot, async (req, res)
   res.redirect('/admin/designs');
 });
 router.post('/designs/:id/reject', formLimiter, checkHoneypot, async (req, res) => {
-  await db.update('designs', req.params.id, { status: 'rejected' });
+  const reason = String(req.body.reason || '').trim().slice(0, 1000);
+  if (!reason) {
+    req.session.flash = 'Give a reason — the artist must be told why within 2 hours of upload.';
+    return res.redirect('/admin/designs');
+  }
+  const design = await db.get('SELECT id, title, artist_id FROM designs WHERE id = ?', [req.params.id]);
+  await db.update('designs', req.params.id, { status: 'rejected', reject_reason: reason });
+  // The artist gets the reason by on-site notification + email, naming the
+  // admin who decided.
+  if (design && design.artist_id) {
+    const { notifyUser } = require('../lib/notify');
+    const { sendMail } = require('../lib/mail');
+    const decidedBy = req.user.display_name || req.user.email || 'an administrator';
+    const title = `Your piece was not approved: "${design.title || 'untitled'}"`;
+    const body = `Thanks for uploading "${design.title || 'untitled'}". It was not approved for the gallery/portfolio.\n\nReason: ${reason}\n\nDecided by: ${decidedBy}\n\nYou may submit ONE appeal to the site owner for a final decision.`;
+    await notifyUser(design.artist_id, { kind: 'design_rejected', title, body, link: '/artist/portfolio' });
+    try {
+      const artist = await db.get('SELECT email FROM users WHERE id = ?', [design.artist_id]);
+      if (artist && artist.email) await sendMail({ to: artist.email, subject: title, text: body });
+    } catch (e) { console.error('reject notify email failed:', e.message); }
+  }
+  req.session.flash = 'Design rejected — the artist has been sent the reason.';
   res.redirect('/admin/designs');
+});
+// Racist/hateful material goes on hold: only a human admin may approve or
+// reject it afterwards — it is never auto-approved. All admins are notified.
+router.post('/designs/:id/hold', formLimiter, checkHoneypot, async (req, res) => {
+  const design = await db.get('SELECT id, title FROM designs WHERE id = ?', [req.params.id]);
+  if (!design) return res.redirect('/admin/designs');
+  await db.update('designs', req.params.id, { status: 'on_hold' });
+  const { notifyAdmins } = require('../lib/notify');
+  const config = require('../config');
+  await notifyAdmins({
+    kind: 'design_on_hold',
+    title: `On hold — admin decision needed: "${design.title || 'untitled'}"`,
+    body: `A piece was placed on hold (possible racist/hateful content) and needs a personal admin decision to approve or reject. It will NOT be auto-approved.`,
+    link: '/admin/designs',
+    emailSubject: `[Tattoo Art Customs] ON HOLD — decision needed: "${design.title || 'untitled'}"`,
+    emailText: `A piece was placed on hold and needs a personal admin decision (approve or reject).\n\nReview it: ${config.baseUrl}/admin/designs\n\nOn-hold pieces are never auto-approved.`,
+  });
+  req.session.flash = 'Design placed on hold — all admins have been notified. Only a personal admin decision can approve or reject it.';
+  res.redirect('/admin/designs');
+});
+
+// --- Appeals: one per rejected design, decided ONLY by the site owner
+// (head_admin). The owner's decision is final.
+router.get('/appeals', async (req, res) => {
+  const appeals = await db.all(
+    `SELECT a.*, d.title AS design_title, d.status AS design_status, d.linework_wm_path,
+            u.display_name AS artist_name, u.email AS artist_email
+     FROM design_appeals a
+     JOIN designs d ON d.id = a.design_id
+     LEFT JOIN users u ON u.id = a.artist_id
+     ORDER BY CASE WHEN a.status = 'open' THEN 0 ELSE 1 END, a.created_at DESC`).catch(() => []);
+  res.render('admin/appeals', {
+    title: 'Design appeals — Admin', appeals,
+    isOwner: isHeadAdmin(req.user), metaDescription: '',
+  });
+});
+
+router.post('/appeals/:id/approve', requireHeadAdmin, formLimiter, checkHoneypot, async (req, res) => {
+  const appeal = await db.get('SELECT * FROM design_appeals WHERE id = ?', [req.params.id]).catch(() => null);
+  if (!appeal || appeal.status !== 'open') return res.redirect('/admin/appeals');
+  const design = await db.get('SELECT linework_wm_path FROM designs WHERE id = ?', [appeal.design_id]);
+  if (!design || !design.linework_wm_path) {
+    req.session.flash = 'Blocked: the piece has no watermarked linework — it cannot go live.';
+    return res.redirect('/admin/appeals');
+  }
+  await db.update('designs', appeal.design_id, { status: 'approved', approved_by: req.user.id, reject_reason: '' });
+  await db.update('design_appeals', appeal.id, { status: 'approved', decided_by: req.user.id, decided_at: db.now() });
+  const { notifyUser } = require('../lib/notify');
+  const { sendMail } = require('../lib/mail');
+  const ownerName = req.user.display_name || req.user.email || 'the site owner';
+  const title = `Appeal decided — your piece is live`;
+  const body = `The site owner (${ownerName}) reviewed your appeal and approved the piece. It is now live in your portfolio/gallery.\n\nThe owner's decision is final.`;
+  await notifyUser(appeal.artist_id, { kind: 'appeal_decided', title, body, link: '/artist/portfolio' });
+  try {
+    const { completeOnApproval } = require('../lib/replacements');
+    await completeOnApproval(appeal.design_id);
+  } catch (e) { /* non-remake */ }
+  try { await notifyDesignLive(appeal.design_id, ownerName + ' (appeal)'); } catch (e) { console.error('appeal live notify failed:', e.message); }
+  const artist = await db.get('SELECT email FROM users WHERE id = ?', [appeal.artist_id]).catch(() => null);
+  if (artist && artist.email) {
+    try { await sendMail({ to: artist.email, subject: title, text: body }); } catch (e) { console.error('appeal email failed:', e.message); }
+  }
+  req.session.flash = 'Appeal approved — the piece is live and the artist has been notified.';
+  res.redirect('/admin/appeals');
+});
+
+router.post('/appeals/:id/uphold', requireHeadAdmin, formLimiter, checkHoneypot, async (req, res) => {
+  const appeal = await db.get('SELECT * FROM design_appeals WHERE id = ?', [req.params.id]).catch(() => null);
+  if (!appeal || appeal.status !== 'open') return res.redirect('/admin/appeals');
+  await db.update('design_appeals', appeal.id, { status: 'upheld', decided_by: req.user.id, decided_at: db.now() });
+  const { notifyUser } = require('../lib/notify');
+  const { sendMail } = require('../lib/mail');
+  const ownerName = req.user.display_name || req.user.email || 'the site owner';
+  const title = `Appeal decided — rejection stands`;
+  const body = `The site owner (${ownerName}) reviewed your appeal and upheld the rejection. The piece will not be listed.\n\nThe owner's decision is final — no further appeals are available for this piece.`;
+  await notifyUser(appeal.artist_id, { kind: 'appeal_decided', title, body, link: '/artist/portfolio' });
+  const artist = await db.get('SELECT email FROM users WHERE id = ?', [appeal.artist_id]).catch(() => null);
+  if (artist && artist.email) {
+    try { await sendMail({ to: artist.email, subject: title, text: body }); } catch (e) { console.error('appeal email failed:', e.message); }
+  }
+  req.session.flash = 'Rejection upheld — the artist has been notified that the decision is final.';
+  res.redirect('/admin/appeals');
 });
 // Permanent delete (moderation): removes the piece and its asset files.
 // Blocked when the piece has sales — those must stay for order history.
@@ -485,10 +587,9 @@ router.get('/designs', async (req, res) => {
 
 // --- Colorization queue: linework-only uploads waiting on the site-created
 // color version. The assistant creates the color in a work session; the admin
-// attaches the finished file here, and then a SITE ADMINISTRATOR approves it
-// (no designer approval gate). The site-created color is a purchase
-// deliverable only — never listed publicly or added to the designer's
-// portfolio.
+// attaches the finished file here (attaching IS the administrator approval).
+// The site-created color is a purchase deliverable only — never listed
+// publicly or added to the designer's portfolio.
 router.get('/colorization', async (req, res) => {
   const queue = await colorizationQueue();
   res.render('admin/colorization', { title: 'Colorization queue — Admin', queue, metaDescription: '' });
@@ -530,23 +631,9 @@ router.post('/colorization/:id/attach', formLimiter, (req, res, next) => {
   if (!req.file) { req.session.flash = 'Choose the finished color image first.'; return res.redirect('/admin/colorization'); }
   try {
     await attachColorVersion(req.params.id, req.file.path);
-    req.session.flash = 'Color version attached — it now needs a site administrator\u2019s approval.';
+    req.session.flash = 'Color version attached — it is now the purchase deliverable for this piece. The piece keeps its current approval status.';
   } catch (e) {
     req.session.flash = 'Attach failed: ' + e.message;
-  }
-  res.redirect('/admin/colorization');
-});
-
-// A site administrator approves the attached site-created color version.
-// The designer is notified for information only — there is no approval gate
-// on their side. Approval moves the piece into the normal admin approval
-// flow (color_source='site').
-router.post('/colorization/:id/approve', formLimiter, checkHoneypot, async (req, res) => {
-  try {
-    await approveColorVersion(req.params.id, req.user.id);
-    req.session.flash = 'Color version approved — the piece is now awaiting normal admin approval.';
-  } catch (e) {
-    req.session.flash = 'Approval failed: ' + e.message;
   }
   res.redirect('/admin/colorization');
 });

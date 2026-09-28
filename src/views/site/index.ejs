@@ -11,7 +11,7 @@
 <div class="grid">
   <% designs.forEach(function(d) { %>
   <article class="design-card">
-    <a href="/design/<%= d.id %>"><img src="/img/designs/<%= d.linework_wm_path.split('/').pop() %>" alt="Tattoo design: <%= d.title %>" loading="lazy"></a>
+    <a href="/design/<%= d.id %>"><img src="/img/designs/<%= d.thumb || d.linework_wm_path.split('/').pop() %>" alt="Tattoo design: <%= d.title %>" loading="lazy"></a>
     <div class="pad">
       <h3><a href="/design/<%= d.id %>"><%= d.title %></a></h3>
       <p class="muted"><%= money(premadePrice) %><% if (sale) { %> <span class="badge ok">Sale</span><% } %></p>

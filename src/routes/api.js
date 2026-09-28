@@ -7,6 +7,7 @@ const bcrypt = require('bcryptjs');
 const db = require('../db');
 const { hasAnyActiveSubscription, isAdminRole, isActiveMember } = require('../middleware/auth');
 const { isSaleWindow, premadePriceCents, customFullCents, salePriceActive } = require('../lib/pricing');
+const { viewerFor, displayImgFile } = require('../lib/contentPolicy');
 const { authLimiter, checkHoneypot } = require('../middleware/rateLimit');
 
 const router = express.Router();
@@ -76,8 +77,10 @@ router.get('/bootstrap', async (req, res) => {
 router.get('/designs', async (req, res) => {
   const user = await userFromToken(req);
   const member = await isActiveMember(user);
+  const viewer = await viewerFor(user);
   const rows = await db.all(
-    `SELECT d.id, d.title, d.style, d.categories, d.linework_wm_path, d.listing_type,
+    `SELECT d.id, d.title, d.style, d.categories, d.linework_wm_path, d.linework_blur_path,
+            d.sensitivity, d.artist_id, d.listing_type,
             u.display_name AS artist_name
      FROM designs d LEFT JOIN users u ON u.id = d.artist_id
      WHERE d.status = 'approved' AND d.listing_scope = 'gallery'
@@ -90,7 +93,7 @@ router.get('/designs', async (req, res) => {
     designs: rows.map((d) => ({
       id: d.id, title: d.title, style: d.style || '',
       categories: JSON.parse(d.categories || '[]'),
-      thumb_url: d.linework_wm_path ? `/img/designs/${String(d.linework_wm_path).split('/').pop()}` : null,
+      thumb_url: (() => { const f = displayImgFile(d, viewer); return f ? `/img/designs/${f}` : null; })(),
       price_cents: premadePriceCents(new Date(), member),
       listing_type: d.listing_type || 'predesign',
       artist_name: d.artist_name || '',
@@ -110,10 +113,12 @@ router.get('/artists/:id', async (req, res) => {
   if (!artist) return res.status(404).json({ ok: false, error: 'not found' });
   const profile = await db.get("SELECT bio FROM artist_profiles WHERE user_id = ? AND bio_status = 'ok'", [artist.id]);
   const rows = await db.all(
-    `SELECT id, title, style, categories, linework_wm_path, listing_type
+    `SELECT id, title, style, categories, linework_wm_path, linework_blur_path,
+            sensitivity, artist_id, listing_type
      FROM designs WHERE artist_id = ? AND status = 'approved'
        AND (members_only = 0 OR ? = 1) ORDER BY created_at DESC`,
     [artist.id, member ? 1 : 0]);
+  const viewer = await viewerFor(user);
   res.json({
     ok: true,
     sale: await salePriceActive(user),
@@ -123,7 +128,7 @@ router.get('/artists/:id', async (req, res) => {
     pieces: rows.map((d) => ({
       id: d.id, title: d.title, style: d.style || '',
       categories: JSON.parse(d.categories || '[]'),
-      thumb_url: d.linework_wm_path ? `/img/designs/${String(d.linework_wm_path).split('/').pop()}` : null,
+      thumb_url: (() => { const f = displayImgFile(d, viewer); return f ? `/img/designs/${f}` : null; })(),
       listing_type: d.listing_type || 'predesign',
       price_cents: d.listing_type === 'custom' ? customFullCents(new Date(), member) : premadePriceCents(new Date(), member),
     })),
@@ -139,6 +144,55 @@ router.get('/founding-status', async (req, res) => {
     shops_left: s.shopsLeft,
     raffle_ends_at: s.raffleEndsAt,
   });
+});
+
+// ---- Push notifications ----
+// VAPID public key for Web Push subscriptions (site).
+router.get('/push/vapid-key', async (req, res) => {
+  const { vapidPublicKey } = require('../lib/push');
+  const key = await vapidPublicKey();
+  if (!key) return res.status(503).json({ ok: false, error: 'push unavailable' });
+  res.json({ ok: true, publicKey: key });
+});
+
+// Save a Web Push subscription for the logged-in website user.
+router.post('/push/subscribe', express.json(), async (req, res) => {
+  if (!req.user) return res.status(401).json({ ok: false, error: 'login required' });
+  const sub = req.body && req.body.subscription;
+  if (!sub || !sub.endpoint || !sub.keys || !sub.keys.p256dh || !sub.keys.auth) {
+    return res.status(400).json({ ok: false, error: 'invalid subscription' });
+  }
+  const endpoint = String(sub.endpoint).slice(0, 500);
+  // Idempotent upsert: one row per endpoint.
+  await db.query('DELETE FROM push_subscriptions WHERE endpoint = ?', [endpoint]).catch(() => {});
+  await db.insert('push_subscriptions', {
+    user_id: req.user.id, endpoint,
+    p256dh: String(sub.keys.p256dh).slice(0, 200), auth: String(sub.keys.auth).slice(0, 200),
+    created_at: db.now(),
+  }).catch(() => {});
+  res.json({ ok: true });
+});
+
+// Remove a Web Push subscription.
+router.post('/push/unsubscribe', express.json(), async (req, res) => {
+  if (!req.user) return res.status(401).json({ ok: false, error: 'login required' });
+  const endpoint = String((req.body && req.body.endpoint) || '').slice(0, 500);
+  if (endpoint) {
+    await db.query('DELETE FROM push_subscriptions WHERE endpoint = ? AND user_id = ?', [endpoint, req.user.id]).catch(() => {});
+  }
+  res.json({ ok: true });
+});
+
+// Register the native app's Expo push token (x-api-token auth).
+router.post('/push/expo-token', express.json(), async (req, res) => {
+  const user = await userFromToken(req);
+  if (!user) return res.status(401).json({ ok: false, error: 'invalid token' });
+  const token = String((req.body && req.body.expo_push_token) || '').slice(0, 200);
+  if (!token.startsWith('ExponentPushToken[')) {
+    return res.status(400).json({ ok: false, error: 'invalid expo token' });
+  }
+  await db.query('UPDATE users SET expo_push_token = ? WHERE id = ?', [token, user.id]).catch(() => {});
+  res.json({ ok: true });
 });
 
 module.exports = { router, userFromToken };

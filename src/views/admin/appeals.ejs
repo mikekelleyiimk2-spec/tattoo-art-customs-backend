@@ -1,0 +1,35 @@
+<h1>Design appeals</h1>
+<p class="muted">Rejected designers may submit <strong>one appeal per piece</strong> to the site owner. Only the owner (head admin) can decide an appeal, and the owner's decision is final.</p>
+<% if (!appeals.length) { %><p class="muted">No appeals yet.</p><% } %>
+<table class="admin-table">
+  <thead><tr><th>Piece</th><th>Artist</th><th>Their case</th><th>Status</th><th>Decision</th></tr></thead>
+  <tbody>
+  <% appeals.forEach(function(a) { %>
+    <tr>
+      <td>
+        <% if (a.linework_wm_path) { %><a href="/design/<%= a.design_id %>"><img src="/img/designs/<%= a.linework_wm_path.split('/').pop() %>" alt="Linework preview" loading="lazy" style="max-width:96px"></a><br><% } %>
+        <%= a.design_title || 'untitled' %><br><span class="muted">design status: <%= a.design_status %></span>
+      </td>
+      <td><%= a.artist_name || a.artist_email || '—' %></td>
+      <td style="max-width:320px"><%= a.reason || '<span class="muted">(no reason given)</span>' %></td>
+      <td><span class="badge <%= a.status === 'open' ? 'warn' : (a.status === 'approved' ? 'ok' : 'bad') %>"><%= a.status %></span></td>
+      <td>
+        <% if (a.status === 'open' && isOwner) { %>
+        <form method="post" action="/admin/appeals/<%= a.id %>/approve" style="display:inline">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn" type="submit">Approve appeal — post the piece</button>
+        </form>
+        <form method="post" action="/admin/appeals/<%= a.id %>/uphold" style="display:inline">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn btn-secondary" type="submit" onclick="return confirm('Uphold the rejection? This is final.');">Uphold rejection</button>
+        </form>
+        <% } else if (a.status === 'open') { %>
+        <span class="muted">Only the site owner can decide appeals.</span>
+        <% } else { %>
+        <span class="muted">Final.</span>
+        <% } %>
+      </td>
+    </tr>
+  <% }); %>
+  </tbody>
+</table>

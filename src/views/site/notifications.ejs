@@ -1,0 +1,92 @@
+<h1>Notifications</h1>
+<div class="card" id="push-card">
+  <h3>Push notifications</h3>
+  <p class="muted" id="push-status">Checking push status on this device…</p>
+  <p><button class="btn btn-secondary" id="push-toggle" type="button" style="display:none">Enable push notifications</button></p>
+</div>
+<script>
+(function () {
+  var statusEl = document.getElementById('push-status');
+  var btn = document.getElementById('push-toggle');
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    statusEl.textContent = 'Push notifications are not supported in this browser.';
+    return;
+  }
+  function urlBase64ToUint8Array(base64String) {
+    var padding = '='.repeat((4 - base64String.length % 4) % 4);
+    var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    var rawData = window.atob(base64);
+    var outputArray = new Uint8Array(rawData.length);
+    for (var i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+    return outputArray;
+  }
+  var currentSub = null;
+  function refresh() {
+    navigator.serviceWorker.ready.then(function (reg) {
+      return reg.pushManager.getSubscription();
+    }).then(function (sub) {
+      currentSub = sub;
+      if (sub) {
+        statusEl.textContent = 'Push notifications are ON for this device.';
+        btn.textContent = 'Turn off push notifications';
+      } else {
+        statusEl.textContent = 'Push notifications are OFF for this device. Admins: turn them on to get pushed the moment a design needs review.';
+        btn.textContent = 'Enable push notifications';
+      }
+      btn.style.display = '';
+    }).catch(function () {
+      statusEl.textContent = 'Could not check push status.';
+    });
+  }
+  btn.addEventListener('click', function () {
+    if (currentSub) {
+      var endpoint = currentSub.endpoint;
+      currentSub.unsubscribe().then(function () {
+        return fetch('/api/push/unsubscribe', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endpoint: endpoint }),
+        });
+      }).then(refresh).catch(refresh);
+      return;
+    }
+    Notification.requestPermission().then(function (perm) {
+      if (perm !== 'granted') { statusEl.textContent = 'Permission denied — push stays off.'; return; }
+      return fetch('/api/push/vapid-key').then(function (r) { return r.json(); });
+    }).then(function (data) {
+      if (!data || !data.publicKey) throw new Error('no key');
+      return navigator.serviceWorker.ready.then(function (reg) {
+        return reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(data.publicKey),
+        });
+      });
+    }).then(function (sub) {
+      return fetch('/api/push/subscribe', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subscription: sub.toJSON() }),
+      });
+    }).then(refresh).catch(function (e) {
+      statusEl.textContent = 'Could not enable push: ' + e.message;
+    });
+  });
+  navigator.serviceWorker.register('/sw.js').then(refresh).catch(function () {
+    statusEl.textContent = 'Could not register the push service worker.';
+  });
+})();
+</script>
+<% if (!notifications.length) { %><p class="muted">Nothing yet.</p><% } %>
+<% notifications.forEach(function(n) { %>
+<div class="card" style="<%= n.read_at ? '' : 'border:2px solid #6a4fb3' %>">
+  <p><strong><%= n.title %></strong> <span class="muted">· <%= new Date(Number(n.created_at)).toLocaleString() %></span></p>
+  <p style="white-space:pre-wrap"><%= n.body %></p>
+  <p>
+    <% if (n.link) { %><a class="btn btn-secondary" href="<%= n.link %>">Open</a><% } %>
+    <% if (!n.read_at) { %>
+    <form method="post" action="/notifications/<%= n.id %>/read" style="display:inline">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button class="btn btn-secondary" type="submit">Mark read</button>
+    </form>
+    <% } %>
+  </p>
+</div>
+<% }); %>

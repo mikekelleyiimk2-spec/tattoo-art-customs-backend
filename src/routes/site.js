@@ -5,7 +5,9 @@ const path = require('path');
 const db = require('../db');
 const config = require('../config');
 const { requireLogin, isActiveMember } = require('../middleware/auth');
+const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { premadePriceCents, customFullCents, isSaleWindow, lineworkOnlyPriceCents, LINEWORK_ONLY_DISCOUNT, salePriceActive, withFeeCents } = require('../lib/pricing');
+const { viewerFor, displayImgFile, canViewUnblurred } = require('../lib/contentPolicy');
 
 const router = express.Router();
 
@@ -141,7 +143,8 @@ router.use((req, res, next) => {
 router.get('/', async (req, res) => {
   const member = await isActiveMember(req.user);
   const all = await approvedDesigns(member);
-  const designs = all.slice(0, 12);
+  const viewer = await viewerFor(req.user);
+  const designs = all.slice(0, 12).map((d) => ({ ...d, thumb: displayImgFile(d, viewer) }));
   res.render('site/index', {
     title: 'Tattoo Art Customs — Custom Tattoo Designs',
     designs, designCount: all.length, sale: await salePriceActive(req.user),
@@ -162,9 +165,11 @@ router.get('/gallery', async (req, res) => {
       d.title.toLowerCase().includes(q) || d.description.toLowerCase().includes(q) ||
       d.categories.some((c) => c.toLowerCase().includes(q)));
   }
+  const viewer = await viewerFor(req.user);
+  const thumbs = designs.map((d) => ({ ...d, thumb: displayImgFile(d, viewer) }));
   res.render('site/gallery', {
     title: 'Design Gallery — Tattoo Art Customs',
-    designs, allCats, q: req.query.q || '', cat: req.query.cat || '', sale: await salePriceActive(req.user),
+    designs: thumbs, allCats, q: req.query.q || '', cat: req.query.cat || '', sale: await salePriceActive(req.user),
     premadePrice: withFeeCents(premadePriceCents(new Date(), member)),
     metaDescription: 'Browse and search original tattoo designs by category.',
   });
@@ -194,9 +199,13 @@ router.get('/design/:id', async (req, res) => {
   }
   const { withFeeCents, processingFeeCents } = require('../lib/pricing');
   const lineworkBase = lineworkOnlyPriceCents(price);
+  const viewer = await viewerFor(req.user);
+  const imgFile = displayImgFile(design, viewer, owned);
+  const blurred = design.sensitivity === 'explicit' && !canViewUnblurred(design, viewer, owned);
   res.render('site/design', {
     title: `${design.title} — Tattoo Art Customs`,
     design, artist, price, isCustom, sale: await salePriceActive(req.user), owned,
+    imgFile, blurred,
     // Linework-only purchase option (3% discount). Pieces with no color
     // version are linework-only automatically.
     lineworkPrice: lineworkBase,
@@ -230,9 +239,11 @@ router.get('/artists/:id', async (req, res) => {
     const isCustom = d.listing_type === 'custom';
     return { ...d, price: isCustom ? customFullCents(new Date(), member) : premadePriceCents(new Date(), member), isCustom };
   });
+  const artViewer = await viewerFor(req.user);
+  const piecesWithThumbs = pieces.map((p) => ({ ...p, thumb: displayImgFile(p, artViewer) }));
   res.render('site/artist', {
     title: `${artist.display_name || 'Artist'} — Tattoo Art Customs`,
-    artist, bio: profile ? profile.bio : '', pieces, sale: await salePriceActive(req.user),
+    artist, bio: profile ? profile.bio : '', pieces: piecesWithThumbs, sale: await salePriceActive(req.user),
     metaDescription: `${artist.display_name || 'Artist'} — tattoo design portfolio on Tattoo Art Customs.`,
   });
 });
@@ -266,6 +277,24 @@ router.get('/raffle', async (req, res) => {
     metaDescription: 'Tattoo Art Customs early-subscriber raffle: prizes, entry window, and winners.',
     ...status, winners,
   });
+});
+
+router.get('/notifications', requireLogin, async (req, res) => {
+  const { unreadCount } = require('../lib/notify');
+  const notes = await db.all(
+    'SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 100', [req.user.id]).catch(() => []);
+  res.render('site/notifications', {
+    title: 'Notifications — Tattoo Art Customs', notifications: notes,
+    metaDescription: '',
+  });
+  res.locals.notifCount = 0; // header badge refreshes on the next page
+});
+
+router.post('/notifications/:id/read', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
+  await db.query(
+    'UPDATE notifications SET read_at = ? WHERE id = ? AND user_id = ?',
+    [db.now(), req.params.id, req.user.id]).catch(() => {});
+  res.redirect('/notifications');
 });
 
 module.exports = router;

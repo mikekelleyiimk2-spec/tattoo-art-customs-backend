@@ -7,7 +7,10 @@
     <tr>
       <td><%= d.title %></td>
       <td><%= d.artist_email || 'site' %></td>
-      <td><span class="badge <%= d.status === 'approved' ? 'ok' : (d.status === 'pending' ? 'warn' : 'bad') %>"><%= d.status %></span></td>
+      <td><span class="badge <%= d.status === 'approved' ? 'ok' : (d.status === 'pending' ? 'warn' : 'bad') %>"><%= d.status %></span>
+        <% if (d.sensitivity && d.sensitivity !== 'normal') { %><span class="badge warn"><%= d.sensitivity %></span><% } %>
+        <% if (d.color_pending) { %><span class="badge">color pending</span><% } %>
+      </td>
       <td><span class="badge"><%= d.listing_type === 'custom' ? 'custom · portfolio' : 'pre-design · gallery' %></span></td>
       <td><%= d.sale_count %></td>
       <td>
@@ -30,10 +33,17 @@
           <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
           <button class="btn" type="submit">Approve</button>
         </form>
-        <form method="post" action="/admin/designs/<%= d.id %>/reject" style="display:inline">
+        <form method="post" action="/admin/designs/<%= d.id %>/reject" style="display:inline" onsubmit="return this.reason.value.trim() ? true : (alert('Give a reason — the artist must be told why.'), false);">
           <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <input type="text" name="reason" placeholder="Rejection reason (sent to artist)" size="28" maxlength="1000">
           <button class="btn btn-secondary" type="submit">Reject</button>
         </form>
+        <% if (d.status !== 'on_hold') { %>
+        <form method="post" action="/admin/designs/<%= d.id %>/hold" style="display:inline" onsubmit="return confirm('Place this piece on hold? Only a personal admin decision can approve or reject it afterwards — it will never be auto-approved.');">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn btn-secondary" type="submit">Hold</button>
+        </form>
+        <% } %>
         <form method="post" action="/admin/designs/<%= d.id %>/delete" style="display:inline" onsubmit="return confirm('Delete this piece permanently? This cannot be undone.');">
           <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
           <button class="linklike" type="submit">Delete</button>

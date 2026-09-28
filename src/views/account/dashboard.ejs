@@ -19,6 +19,24 @@
       <input type="password" id="new_password" name="new_password" minlength="8" autocomplete="new-password">
       <p><button class="btn" type="submit">Change password</button></p>
     </form>
+    <h2 id="content">Content preferences</h2>
+    <p class="muted">Pieces rated explicit (sexual acts / highly offensive content) show a blurred preview.
+    Age-verified users may opt in to viewing them unblurred.</p>
+    <% if (!ageVerified) { %>
+    <form method="post" action="/account/age-verify" class="form">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <label for="dob">Date of birth (verifies you are 18+)</label>
+      <input type="date" id="dob" name="dob" required max="2008-12-31">
+      <p><button class="btn btn-secondary" type="submit">Verify I am 18+</button></p>
+    </form>
+    <% } else { %>
+    <p><span class="badge ok">age verified</span></p>
+    <form method="post" action="/account/explicit-pref" class="form">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <input type="hidden" name="show_explicit" value="<%= showExplicit ? '0' : '1' %>">
+      <p><button class="btn btn-secondary" type="submit"><%= showExplicit ? 'Keep explicit previews blurred' : 'Show explicit previews unblurred' %></button></p>
+    </form>
+    <% } %>
     <h2>My art uploads</h2>
     <p><a class="btn" href="/account/upload">Upload your art</a></p>
     <p class="muted">Free for everyone. Every upload must be approved by an admin before it appears in the gallery. Only active designer subscriptions earn commission on their art.</p>

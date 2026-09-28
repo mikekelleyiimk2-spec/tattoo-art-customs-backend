@@ -33,14 +33,22 @@
   <label for="watermark">Your watermark image (only needed if you chose your own above — JPG/PNG/WebP, max 15 MB)</label>
   <input type="file" id="watermark" name="watermark" accept="image/jpeg,image/png,image/webp">
 
+  <h2>Content rating</h2>
+  <p class="muted">Rate your piece honestly. Linework-only pieces are fine. Nudity is allowed with a watermark. Sexual acts or highly offensive content show a blurred preview (age-verified users may opt in to view them unblurred). Hateful/racist content is held for review by an administrator.</p>
+  <label for="sensitivity">Content rating</label>
+  <select id="sensitivity" name="sensitivity" required>
+    <option value="normal" selected>Normal</option>
+    <option value="nude">Contains nudity</option>
+    <option value="explicit">Explicit — sexual acts or highly offensive content (preview blurred)</option>
+    <option value="racist">Contains racist/hateful content (held for admin review)</option>
+  </select>
+
   <h2>Your art files</h2>
   <label for="linework">Clean linework image (JPG/PNG/WebP, max 15 MB) — required</label>
   <input type="file" id="linework" name="linework" accept="image/jpeg,image/png,image/webp" required>
   <label for="color">Full-color image (JPG/PNG/WebP, max 15 MB) — optional</label>
   <input type="file" id="color" name="color" accept="image/jpeg,image/png,image/webp">
-  <p class="muted">No color version? Leave the color file blank — we will create a full-color version
-  for you and send it to you for approval before your piece goes live. (Note: on sales of pieces
-  where you did not supply the color, the designer's commission rate is 5 points lower and the
-  website keeps a 5-point colorization fee — see your commission dashboard.)</p>
+  <p class="muted">No color version? Leave the color file blank — your linework can still be approved and posted (with our watermark) while we create the full-color version. On sales of pieces where you did not supply the color, the designer's commission rate is 5 points lower and the website keeps a 5-point colorization fee — see your commission dashboard.</p>
+  <p class="muted">An administrator reviews every upload. Your piece enters your portfolio within <strong>2 hours</strong>, or you will receive a rejection reason.</p>
   <p><button class="btn" type="submit">Upload for review</button></p>
 </form>

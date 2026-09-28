@@ -8,8 +8,10 @@
 //
 // Safety gates (same as the manual approve path):
 // - Only status='pending' designs qualify. 'flagged' (contact info detected),
-//   'awaiting_color' / 'pending_color_approval' (colorization pipeline), and
-//   anything already approved/rejected/sold are NEVER auto-approved.
+//   'on_hold' (admin-only review), 'rejected', 'approved', and 'sold' are
+//   NEVER auto-approved. Linework-only pieces enter the normal flow as
+//   'pending' (their site color version follows via color_pending), so they
+//   are approvable like any other piece.
 // - A design CANNOT go live without its watermarked linework — the public
 //   gallery must never show clean color or clean linework. Missing watermark
 //   => skipped and reported, not approved.
@@ -38,7 +40,7 @@ async function autoApproveStaleDesigns() {
     } catch (e) { /* non-remake designs have nothing to close */ }
     try {
       const { notifyDesignLive } = require('./colorization');
-      await notifyDesignLive(d.id);
+      await notifyDesignLive(d.id, 'automatic approval (1-hour rule — no admin reviewed it in time)');
     } catch (e) { /* notification is best-effort */ }
     approved.push(d.id);
   }

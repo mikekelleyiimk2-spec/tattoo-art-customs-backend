@@ -1,19 +1,16 @@
 // Site colorization workflow for linework-only designer uploads.
 //
-// Flow (2026-09-28: administrator approval only — no designer approval gate):
+// Flow (2026-09-28, revised: linework-only pieces are approvable immediately):
 //   1. Designer uploads linework with no color file -> designs.status =
-//      'awaiting_color', color_source = 'none'. The piece is hidden from
-//      every public listing (status is not 'approved') and from the public
-//      portfolio page.
+//      'pending' (normal approval flow — the piece posts with its
+//      watermarked linework), color_source = 'none', color_pending = 1.
 //   2. The owner is notified (on-site message + email) that a color version
 //      needs creating. The assistant creates it in a work session.
-//   3. Admin attaches the finished color file at /admin/colorization ->
-//      status = 'pending_color_approval'; the designer is notified
-//      (informational only).
-//   4. A SITE ADMINISTRATOR approves the color version ->
-//      color_source = 'site', status = 'pending' (back into the normal admin
-//      approval flow, then live per its listing_scope).
-//   5. When the design goes live, the designer is notified (informational).
+//   3. An admin attaches the finished color file at /admin/colorization ->
+//      color_source = 'site', color_pending = 0. The piece keeps whatever
+//      approval status it has (pending/approved/live) — attaching the color
+//      IS the administrator approval of the color version.
+//   4. When the design goes live, the designer is notified (informational).
 //
 // The site-created color version is a PURCHASE DELIVERABLE ONLY: it is never
 // added to the designer's portfolio, never publicly listed, and never
@@ -54,7 +51,8 @@ async function notifyColorizationNeeded(designId) {
     `A designer uploaded linework with no color version, so a color version needs creating.\n\n` +
     `Piece: "${d.title}" by ${d.artist_name || 'a designer'}\n` +
     `Once the color version is ready, attach it in the admin colorization queue: ${config.baseUrl}/admin/colorization\n\n` +
-    `The piece stays hidden until a site administrator approves the color version and the listing.`;
+    `The piece itself goes through the normal approval flow and may already be live with its linework — ` +
+    `the color version is a purchase deliverable.`;
   const ownerId = await ownerUserId();
   if (ownerId) {
     await sendConversation({ userIds: [ownerId], subject, body, senderId: d.artist_id || ownerId });
@@ -64,23 +62,25 @@ async function notifyColorizationNeeded(designId) {
   }
 }
 
-// Step 3: admin attaches the finished site-created color file. The designer
-// is notified for information only — there is no approval gate on their side.
+// Step 3: admin attaches the finished site-created color file. Attaching IS
+// the administrator approval of the color version — the piece keeps whatever
+// approval status it has (it may already be live with its linework). The
+// designer is notified for information only — there is no approval gate on
+// their side.
 async function attachColorVersion(designId, colorAbsPath) {
   const d = await db.get('SELECT * FROM designs WHERE id = ?', [designId]);
   if (!d) throw new Error('Design not found.');
   const rel = path.relative(config.assetDir, colorAbsPath);
   await db.update('designs', designId, {
     color_path: rel,
+    color_source: 'site',
+    color_pending: 0,
     colorization_note: '',
-    status: 'pending_color_approval',
   });
   const artist = await designerEmail(d.artist_id);
   const subject = `Your piece was colorized: "${d.title}"`;
   const body =
     `Good news — our team created the color version of your piece "${d.title}".\n\n` +
-    `A site administrator will review it, and then your piece moves into the normal ` +
-    `approval flow before it goes live. We'll let you know when it's live.\n\n` +
     `The color version is delivered to buyers with your linework after purchase — ` +
     `it is never shown publicly or added to your portfolio as its own piece.\n\n` +
     `Warmly,\nTattoo Art Customs`;
@@ -92,49 +92,40 @@ async function attachColorVersion(designId, colorAbsPath) {
   return rel;
 }
 
-// Step 4: a site administrator approves the site-created color version.
-async function approveColorVersion(designId, adminId) {
-  const d = await db.get('SELECT * FROM designs WHERE id = ?', [designId]);
-  if (!d) throw new Error('Design not found.');
-  if (d.status !== 'pending_color_approval') throw new Error('This piece is not waiting for color approval.');
-  await db.update('designs', designId, {
-    color_source: 'site',
-    colorization_note: '',
-    status: 'pending',
-  });
-  return true;
-}
-
 // Step 5: called when the design goes live — informational only.
-async function notifyDesignLive(designId) {
+// decidedBy names who approved (admin display name, or the automatic rule).
+async function notifyDesignLive(designId, decidedBy = '') {
   const d = await db.get(
     `SELECT d.title, d.artist_id, d.color_source, u.display_name AS artist_name
      FROM designs d LEFT JOIN users u ON u.id = d.artist_id WHERE d.id = ?`, [designId]);
   if (!d || !d.artist_id) return;
   const subject = `Your piece is live: "${d.title}"`;
   const body =
-    `Your piece "${d.title}" is now live${d.color_source === 'site' ? ' with the site-created color version' : ''}.\n\n` +
+    `Your piece "${d.title}" is now live${d.color_source === 'site' ? ' with the site-created color version' : ''}.` +
+    (decidedBy ? ` Approved by: ${decidedBy}.` : '') + `\n\n` +
     `View it in your portfolio: ${config.baseUrl}/artist/portfolio\n\n` +
     `Warmly,\nTattoo Art Customs`;
+  const { notifyUser } = require('./notify');
+  await notifyUser(d.artist_id, { kind: 'design_approved', title: subject, body, link: '/artist/portfolio' });
   const ownerId = await ownerUserId();
   await sendConversation({ userIds: [d.artist_id], subject, body, senderId: ownerId || d.artist_id });
   const artist = await designerEmail(d.artist_id);
   if (artist && artist.email) await sendMail({ to: artist.email, subject, text: body });
 }
 
-// Queue rows for /admin/colorization.
+// Queue rows for /admin/colorization: linework-only pieces still waiting on
+// their site-created color version.
 async function colorizationQueue() {
   return db.all(
     `SELECT d.*, u.email AS artist_email, u.display_name AS artist_name
      FROM designs d LEFT JOIN users u ON u.id = d.artist_id
-     WHERE d.status IN ('awaiting_color', 'pending_color_approval')
+     WHERE d.color_pending = 1
      ORDER BY d.created_at ASC`);
 }
 
 module.exports = {
   notifyColorizationNeeded,
   attachColorVersion,
-  approveColorVersion,
   notifyDesignLive,
   colorizationQueue,
   sendConversation,

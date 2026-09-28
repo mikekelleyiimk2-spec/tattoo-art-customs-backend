@@ -42,6 +42,9 @@ function startScheduler() {
   }, { timezone: 'America/Chicago' });
   // 1-hour designer-approval rule (owner standing order): any pending design
   // no admin personally approved within an hour gets approved automatically.
+  // Same 10-minute block also runs the 2-hour SLA escalation: flagged and
+  // on_hold pieces (never auto-approved) and stuck pending pieces get
+  // re-notified to all admins, and the artist gets their 2h notice.
   cron.schedule('*/10 * * * *', async () => {
     try {
       const { autoApproveStaleDesigns } = require('./autoApprove');
@@ -52,6 +55,15 @@ function startScheduler() {
       }
     } catch (e) {
       console.error('[scheduler] 1h auto-approval crashed:', e.message);
+    }
+    try {
+      const { escalateOverdueDesigns } = require('./contentSla');
+      const { escalated } = await escalateOverdueDesigns();
+      if (escalated.length) {
+        console.log(`[scheduler] 2h SLA escalation: ${escalated.length} design(s) (${escalated.join(',')})`);
+      }
+    } catch (e) {
+      console.error('[scheduler] 2h SLA escalation crashed:', e.message);
     }
   }, { timezone: 'America/Chicago' });
   console.log('Weekly commission payouts scheduled: Mondays ~9:00 AM CT.');

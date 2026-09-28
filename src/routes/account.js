@@ -52,11 +52,14 @@ router.get('/', requireLogin, async (req, res) => {
     "SELECT * FROM cashout_requests WHERE user_id = ? AND kind = 'withdrawal' ORDER BY created_at DESC LIMIT 10",
     [req.user.id]);
   const uploads = await db.all('SELECT id, title, status, created_at FROM designs WHERE artist_id = ? ORDER BY created_at DESC LIMIT 20', [req.user.id]);
+  const ageRow = await db.get('SELECT age_verified, show_explicit FROM users WHERE id = ?', [req.user.id]);
   res.render('account/dashboard', {
     title: 'My Account — Tattoo Art Customs', photos, subs, orders,
     metaDescription: 'Your Tattoo Art Customs account.',
     creditBalance, creditTxns, destinations, withdrawals, uploads,
     destTypes: require('../lib/cashout').DEST_TYPES,
+    ageVerified: !!(ageRow && ageRow.age_verified),
+    showExplicit: !!(ageRow && ageRow.show_explicit),
   });
 });
 
@@ -74,6 +77,46 @@ router.post('/profile', requireLogin, formLimiter, checkHoneypot, async (req, re
   }
   req.session.flash = 'Profile updated.';
   res.redirect('/account');
+});
+
+// --- Age verification + explicit-content preference (content policy) ---
+// An age-verified user may opt in to viewing explicit (blurred) pieces
+// unblurred. Verification is a self-attested date of birth; 18+ sets the flag.
+router.post('/age-verify', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
+  const dob = String(req.body.dob || '').trim().slice(0, 10);
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dob);
+  if (!m) {
+    req.session.flash = 'Enter your date of birth (YYYY-MM-DD).';
+    return res.redirect('/account#content');
+  }
+  const birth = new Date(`${m[1]}-${m[2]}-${m[3]}T00:00:00Z`);
+  if (Number.isNaN(birth.getTime()) || birth > new Date()) {
+    req.session.flash = 'That date of birth does not look valid.';
+    return res.redirect('/account#content');
+  }
+  const ageMs = Date.now() - birth.getTime();
+  const eighteenYearsMs = 18 * 365.25 * 24 * 3600 * 1000;
+  if (ageMs < eighteenYearsMs) {
+    req.session.flash = 'You must be 18 or older for age verification.';
+    return res.redirect('/account#content');
+  }
+  await db.update('users', req.user.id, { age_verified: 1, dob });
+  req.session.flash = 'Age verified — you can now opt in to viewing explicit pieces unblurred.';
+  res.redirect('/account#content');
+});
+
+router.post('/explicit-pref', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
+  const row = await db.get('SELECT age_verified FROM users WHERE id = ?', [req.user.id]);
+  if (!row || !row.age_verified) {
+    req.session.flash = 'Verify your age first.';
+    return res.redirect('/account#content');
+  }
+  const on = String(req.body.show_explicit || '') === '1';
+  await db.update('users', req.user.id, { show_explicit: on ? 1 : 0 });
+  req.session.flash = on
+    ? 'Explicit previews will now show unblurred for you.'
+    : 'Explicit previews will stay blurred for you.';
+  res.redirect('/account#content');
 });
 
 // --- Change password (self-service; needed for temp-password logins) ---

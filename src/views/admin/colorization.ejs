@@ -1,40 +1,27 @@
 <h1>Colorization queue</h1>
 <p><a href="/admin/designs">← Designs</a> · <a href="/admin">← Dashboard</a></p>
-<p class="muted">Linework-only uploads waiting on the site-created color version. Attach the finished
-color file; a <strong>site administrator</strong> then approves the color version — the designer
-is notified for information only (no designer approval gate). The site-created color is a
-<strong>purchase deliverable only</strong> — never publicly listed, never watermarked for display,
-never added to the designer's portfolio.</p>
+<p class="muted">Linework-only uploads waiting on the site-created color version. The piece itself
+goes through the normal approval flow and may already be live with its watermarked linework —
+attaching the finished color file here makes it the <strong>purchase deliverable</strong>
+(delivered to buyers after purchase; never publicly listed, never watermarked for display,
+never added to the designer's portfolio).</p>
 <% if (!queue.length) { %>
 <p class="muted">Queue is empty — nothing waiting on color.</p>
 <% } %>
 <table>
-  <thead><tr><th>Piece</th><th>Artist</th><th>Status</th><th>Color preview</th><th></th></tr></thead>
+  <thead><tr><th>Piece</th><th>Artist</th><th>Approval status</th><th></th></tr></thead>
   <tbody>
   <% queue.forEach(function(d) { %>
     <tr>
       <td><%= d.title %></td>
       <td><%= d.artist_name || d.artist_email || '—' %></td>
-      <td><span class="badge <%= d.status === 'awaiting_color' ? 'warn' : 'ok' %>"><%= d.status %></span></td>
+      <td><span class="badge <%= d.status === 'approved' ? 'ok' : (d.status === 'pending' ? 'warn' : 'bad') %>"><%= d.status %></span></td>
       <td>
-        <% if (d.color_path) { %>
-        <img src="/admin/colorization/<%= d.id %>/preview" alt="Site-created color version: <%= d.title %>" style="max-width:180px" loading="lazy">
-        <% } else { %><span class="muted">—</span><% } %>
-      </td>
-      <td>
-        <% if (d.status === 'awaiting_color') { %>
         <form method="post" action="/admin/colorization/<%= d.id %>/attach" enctype="multipart/form-data" style="display:inline">
           <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
           <label class="muted">Color version <input type="file" name="color" accept="image/jpeg,image/png,image/webp" required></label>
           <button class="btn btn-secondary" type="submit">Attach color version</button>
         </form>
-        <% } else { %>
-        <form method="post" action="/admin/colorization/<%= d.id %>/approve" style="display:inline">
-          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-          <button class="btn" type="submit" onclick="return confirm('Approve this site-created color version? The piece moves to normal admin approval.');">Approve color</button>
-        </form>
-        <span class="muted"> · awaiting a site administrator</span>
-        <% } %>
       </td>
     </tr>
   <% }); %>
