@@ -14,6 +14,9 @@
 //                and shop_profiles.designer_opt_in is set so designer lists
 //                (request-artist dropdown, public portfolios, custom routing,
 //                admin designer actions) include the account.
+// If the matched account still has a reserved placeholder email
+// (@reserved.tattooartcustoms.local) and --email is supplied, the login
+// email is updated to the real address. Real emails are never overwritten.
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const db = require('../src/db');
@@ -64,6 +67,15 @@ async function main() {
   } else if (phone && !user.phone) {
     await db.update('users', user.id, { phone });
     console.log(`added phone to user ${user.id}`);
+  }
+  // If the account still has a reserved placeholder email and a real --email
+  // was supplied, adopt it as the login email (placeholder addresses can
+  // never receive mail). Never overwrites a real email address.
+  if (email && user.email.endsWith('@reserved.tattooartcustoms.local') &&
+      user.email !== email.toLowerCase()) {
+    await db.update('users', user.id, { email: email.toLowerCase() });
+    console.log(`updated login email to ${email.toLowerCase()}`);
+    user.email = email.toLowerCase();
   }
 
   const periodEnd = lifetime ? null : Date.now() + months * 30.44 * 24 * 3600 * 1000;
