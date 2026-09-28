@@ -14,6 +14,8 @@ const express = require('express');
 const db = require('../db');
 const { userFromToken } = require('./api');
 const { verifyPurchase, MEMBERSHIP_PLAN_BY_PRODUCT } = require('../lib/playverify');
+const { grantPlanRole } = require('../lib/planRoles');
+const { maybeEnterRaffle } = require('../lib/founding');
 
 const router = express.Router();
 
@@ -105,6 +107,13 @@ router.post('/verify', express.json(), async (req, res) => {
         });
         if (purchaseId) await db.update('play_purchases', purchaseId, { linked_membership_id: subId });
         membershipActivated = true;
+        // Same post-activation steps as the website checkout: grant the
+        // plan role (+ founding-program claim) and enter the raffle.
+        // Both are idempotent.
+        try { await grantPlanRole(user.id, planSlug); }
+        catch (e) { console.error('play role grant failed:', e.message); }
+        try { await maybeEnterRaffle(user.id, subId); }
+        catch (e) { console.error('play raffle entry failed:', e.message); }
       } else if (verification.expiryTime && purchaseId) {
         await db.update('subscriptions', existing.id, { current_period_end: verification.expiryTime });
         await db.update('play_purchases', purchaseId, { linked_membership_id: existing.id });

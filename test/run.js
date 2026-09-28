@@ -412,6 +412,8 @@ async function main() {
      WHERE p.user_id = ? AND c.subject LIKE '%is live%'`, [colDesignerId]);
   ok(colLiveConvs.length >= 1, 'designer notified when the piece goes live');
 
+  await require('./founding').runDbTests(ok);
+
   await db.close();
 
   // --- HTTP integration ---
@@ -500,6 +502,7 @@ async function main() {
   ok(r.status === 302 && (r.location || '').includes('/account'), 'admin login ok');
   r = await areq('GET', '/admin');
   ok(r.status === 200, 'admin dashboard loads');
+  await require('./founding').runHttpTests(ok, req, areq);
   r = await areq('POST', `/admin/orders/${orderId}/confirm-manual`);
   ok(r.status === 302, 'admin confirms manual payment');
 

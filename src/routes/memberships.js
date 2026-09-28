@@ -6,13 +6,11 @@ const express = require('express');
 const db = require('../db');
 const config = require('../config');
 const paypal = require('../lib/paypal');
-const { upsertProfile } = require('../lib/profiles');
 const { requireLogin } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 
 const router = express.Router();
 const PLAN_KEY_BY_SLUG = { customer: 'customer', customer_annual: 'customer_annual', design_artist: 'artist', tattoo_shop: 'shop' };
-const ROLE_BY_SLUG = { design_artist: 'design_artist', tattoo_shop: 'tattoo_shop' };
 const { isAdminRole } = require('../middleware/auth');
 const { ensureReferralCode, firstMonthDiscountEligible, markFirstMonthUsed, grantReferralReward } = require('../lib/referrals');
 
@@ -26,12 +24,14 @@ router.get('/', requireLogin, async (req, res) => {
   const redemptions = await db.all(
     'SELECT * FROM referral_redemptions WHERE referrer_id = ? ORDER BY granted_at DESC', [req.user.id]);
   const foundingShop = config.foundingShopActive();
+  const foundingStatus = await require('../lib/founding').getFoundingStatus();
   res.render('membership/plans', {
     title: 'Membership — Tattoo Art Customs',
     plans, subs, paypalReady: config.paypalPlansConfigured(),
     annualReady: config.paypalAnnualPlanConfigured(),
-    foundingShop, foundingPrice: config.pricing.foundingShop.priceCents,
+    foundingShop: foundingShop && foundingStatus.shopsLeft > 0, foundingPrice: config.pricing.foundingShop.priceCents,
     foundingEnds: config.foundingShopWindowEnd,
+    shopsLeft: foundingStatus.shopsLeft,
     firstMonthEligible: await firstMonthDiscountEligible(req.user.id),
     firstMonthPrice: config.pricing.firstMonth.priceCents,
     referralCode, redemptions, money: require('../lib/pricing').money,
@@ -61,8 +61,13 @@ router.post('/subscribe/:slug', requireLogin, formLimiter, checkHoneypot, async 
       billingCycles = paypal.firstMonthTrialCycles(plan.price_cents);
       firstMonth = true;
     } else if (plan.slug === 'tattoo_shop' && config.foundingShopActive()) {
-      billingCycles = paypal.foundingShopCycles();
-      founding = true;
+      // Founding shops: $79.99 first year instead of $99.99 — but only for
+      // the first 100 shops (the founding-shop cap).
+      const foundingLib = require('../lib/founding');
+      if (await foundingLib.foundingShopsAvailable()) {
+        billingCycles = paypal.foundingShopCycles();
+        founding = true;
+      }
     }
     const sub = await paypal.createSubscription({
       planKey: PLAN_KEY_BY_SLUG[plan.slug],
@@ -111,6 +116,11 @@ router.get('/approve', requireLogin, async (req, res) => {
       try { await grantReferralReward(sub.user_id, sub.id); } catch (e) {
         console.error('referral reward failed:', e.message);
       }
+      // Early-subscriber raffle: first paid subscription inside the window
+      // earns exactly one entry (idempotent — safe if the webhook runs too).
+      try { await require('../lib/founding').maybeEnterRaffle(sub.user_id, sub.id); } catch (e) {
+        console.error('raffle entry failed:', e.message);
+      }
       req.session.flash = 'Membership active — welcome!';
     } else {
       await db.update('subscriptions', sub.id, { status: 'pending' });
@@ -124,23 +134,11 @@ router.get('/approve', requireLogin, async (req, res) => {
 
 // Grants the role matching a plan slug; creates artist/shop profiles.
 // Idempotent — safe to call from both /approve and the webhook.
-async function grantPlanRole(userId, planSlug) {
-  const role = ROLE_BY_SLUG[planSlug];
-  if (!role) return;
-  const user = await db.get('SELECT role FROM users WHERE id = ?', [userId]);
-  if (!user || isAdminRole(user.role)) return;
-  await db.update('users', userId, { role });
-  if (role === 'design_artist') {
-    await upsertProfile('artist_profiles', userId, {});
-  }
-  if (role === 'tattoo_shop') {
-    await upsertProfile('shop_profiles', userId, { referral_code: makeReferralCode() });
-  }
-}
-
-function makeReferralCode() {
-  return 'TAC-' + Math.random().toString(36).slice(2, 8).toUpperCase();
-}
+// Also claims founding-program status (first 50 artists / first 100 shops);
+// the claim is idempotent and silently no-ops once the caps fill.
+// (Shared implementation lives in src/lib/planRoles.js so the Google Play
+// verification flow grants the same roles and founding status.)
+const { grantPlanRole } = require('../lib/planRoles');
 
 // Cancel (at PayPal + locally).
 router.post('/cancel/:id', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
@@ -199,6 +197,10 @@ router.post('/webhook', async (req, res) => {
       // Refer-a-friend reward (idempotent — safe if /approve already ran it).
       try { await grantReferralReward(sub.user_id, sub.id); } catch (e) {
         console.error('referral reward failed:', e.message);
+      }
+      // Early-subscriber raffle entry (idempotent — safe if /approve ran it).
+      try { await require('../lib/founding').maybeEnterRaffle(sub.user_id, sub.id); } catch (e) {
+        console.error('raffle entry failed:', e.message);
       }
     } else if (type.includes('CANCELLED') || type.includes('EXPIRED')) {
       await db.update('subscriptions', sub.id, { status: 'canceled', canceled_at: db.now() });

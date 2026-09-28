@@ -1,0 +1,33 @@
+<h1>Early Subscriber Raffle</h1>
+
+<% if (!raffleDrawn) { %>
+<p>Subscribe before <strong><%= new Date(raffleEndsAt).toLocaleDateString() %></strong> and you're automatically entered — one entry per person, no purchase beyond your membership needed.</p>
+<% } else { %>
+<p><span class="badge ok">Drawn</span> The raffle has been drawn — congratulations to our winners!</p>
+<% } %>
+
+<section class="card">
+  <h2>Prizes</h2>
+  <ul>
+    <li><strong>Grand prize:</strong> a free custom tattoo design ($150 value), delivered within 48 hours</li>
+    <li><strong>3 × annual prizes:</strong> a free year of membership</li>
+    <li><strong>10 × credit prizes:</strong> $25 in site credit</li>
+  </ul>
+  <p class="muted"><%= raffleEntries %> entries total. Winners are picked at random, one prize per person.</p>
+</section>
+
+<% if (winners.length) { %>
+<section class="card">
+  <h2>Winners</h2>
+  <ul>
+  <% winners.forEach(function(w) { %>
+    <li><strong><%= w.display_name || 'A lucky member' %></strong> —
+      <% if (w.prize_won === 'grand') { %>Grand prize: free custom design
+      <% } else if (w.prize_won === 'annual') { %>Free year of membership
+      <% } else { %>$25 site credit<% } %></li>
+  <% }); %>
+  </ul>
+</section>
+<% } %>
+
+<p><a href="/membership">Get a membership and enter →</a></p>

@@ -1,4 +1,10 @@
 <h1>Shop dashboard</h1>
+<% if (isFoundingShop) { %>
+<p><span class="badge ok">Founding Shop</span>
+  <% if (foundingEndsAt && foundingEndsAt > Date.now()) { %>
+  <span class="muted">— your 25% referral commission boost runs through <%= new Date(foundingEndsAt).toLocaleDateString() %></span>
+  <% } %></p>
+<% } %>
 <p class="muted">Tattoo shops earn <strong>20% on every verified sale</strong> they refer. Payouts require a registered account, an active subscription, and a payout destination set.</p>
 
 <section class="card">

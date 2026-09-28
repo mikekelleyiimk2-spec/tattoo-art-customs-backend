@@ -40,6 +40,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/membership`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/advertise`, changefreq: 'weekly', priority: '0.6' },
     { loc: `${base}/about`, changefreq: 'monthly', priority: '0.5' },
+    { loc: `${base}/raffle`, changefreq: 'weekly', priority: '0.6' },
     { loc: `${base}/terms`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy`, changefreq: 'monthly', priority: '0.3' },
   ];
@@ -160,7 +161,7 @@ router.get('/design/:id', async (req, res) => {
 // No login required.
 router.get('/artists/:id', async (req, res) => {
   const artist = await db.get(
-    "SELECT id, display_name FROM users WHERE id = ? AND role = 'design_artist'", [req.params.id]);
+    "SELECT id, display_name, is_founding_artist FROM users WHERE id = ? AND role = 'design_artist'", [req.params.id]);
   if (!artist) return res.status(404).render('error', { title: 'Not found', message: 'That artist portfolio does not exist.' });
   const profile = await db.get('SELECT bio FROM artist_profiles WHERE user_id = ?', [artist.id]);
   const member = await isActiveMember(req.user);
@@ -192,5 +193,21 @@ router.get('/about', (req, res) => res.render('site/about', {
   title: 'About — Tattoo Art Customs',
   metaDescription: 'About Tattoo Art Customs marketplace.',
 }));
+
+// Public early-subscriber raffle page: prizes + winners once drawn.
+router.get('/raffle', async (req, res) => {
+  const founding = require('../lib/founding');
+  const status = await founding.getFoundingStatus();
+  const winners = status.raffleDrawn ? await db.all(
+    `SELECT r.prize_won, r.drawn_at, u.display_name
+     FROM raffle_entries r JOIN users u ON u.id = r.user_id
+     WHERE r.prize_won IS NOT NULL ORDER BY
+       CASE r.prize_won WHEN 'grand' THEN 0 WHEN 'annual' THEN 1 ELSE 2 END`) : [];
+  res.render('site/raffle', {
+    title: 'Early Subscriber Raffle — Tattoo Art Customs',
+    metaDescription: 'Tattoo Art Customs early-subscriber raffle: prizes, entry window, and winners.',
+    ...status, winners,
+  });
+});
 
 module.exports = router;

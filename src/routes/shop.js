@@ -30,10 +30,14 @@ router.get('/', async (req, res) => {
     [req.user.id, 'paid']);
   const refLink = profile.referral_code ? `${config.baseUrl}/?ref=${profile.referral_code}` : '';
   const payout = await payoutDashboardData(req.user.id, 'shop');
+  const me = await db.get(
+    'SELECT is_founding_shop, founding_shop_ends_at FROM users WHERE id = ?', [req.user.id]);
   res.render('shop/dashboard', {
     title: 'Shop Dashboard — Tattoo Art Customs',
     profile, balance, payouts, ledger, refLink,
     referralSales: referrals[0]?.n || 0, referralTotal: referrals[0]?.total || 0,
+    isFoundingShop: !!(me && me.is_founding_shop),
+    foundingEndsAt: me && me.founding_shop_ends_at,
     metaDescription: '',
     ...payout,
   });

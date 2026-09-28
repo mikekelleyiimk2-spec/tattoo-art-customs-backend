@@ -1,0 +1,72 @@
+<h1>Founding Program</h1>
+<p><a href="/admin">← Dashboard</a></p>
+
+<div class="two-col">
+  <section class="card">
+    <h2>Founding design artists</h2>
+    <p><strong><%= artistsClaimed %> / 50</strong> claimed — <strong><%= artistsLeft %></strong> spots left</p>
+    <p class="muted">First 50 artists activating a paid artist subscription earn 70% commission (instead of 60%) for 6 months. The owner funds the boost.</p>
+  </section>
+  <section class="card">
+    <h2>Founding tattoo shops</h2>
+    <p><strong><%= shopsClaimed %> / 100</strong> claimed — <strong><%= shopsLeft %></strong> spots left</p>
+    <p class="muted">First 100 shops pay $79.99 for their first year (instead of $99.99) and earn 25% referral commission (instead of 20%) for 6 months.</p>
+  </section>
+</div>
+
+<section class="card">
+  <h2>Early-subscriber raffle</h2>
+  <p><strong><%= raffleEntries %></strong> entries.
+    <% if (raffleDrawn) { %><span class="badge ok">drawn</span><% } else { %>
+    Entry window ends <strong><%= new Date(raffleEndsAt).toLocaleString() %></strong>.<% } %></p>
+  <% if (!raffleDrawn) { %>
+  <form method="post" action="/admin/founding/raffle-ends" class="form" style="max-width:26rem">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <label for="raffle_ends_at">Change the entry-window end</label>
+    <input type="datetime-local" id="raffle_ends_at" name="raffle_ends_at" required>
+    <button class="btn btn-secondary" type="submit">Set end date</button>
+  </form>
+  <form method="post" action="/admin/raffle/draw" style="margin-top:1rem"
+        onsubmit="return confirm('Draw the raffle now? This can only be done once: 1 grand prize, 3 annual, 10 credit. Winners are notified immediately.')">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <button class="btn" type="submit" <%= raffleEntries === 0 ? 'disabled' : '' %>>Draw the raffle</button>
+  </form>
+  <% } %>
+</section>
+
+<% if (winners.length) { %>
+<section class="card">
+  <h2>Raffle winners</h2>
+  <table>
+    <thead><tr><th>Winner</th><th>Prize</th><th>Drawn</th></tr></thead>
+    <tbody>
+    <% winners.forEach(function(w) { %>
+      <tr>
+        <td><%= w.display_name || w.email %></td>
+        <td><% if (w.prize_won === 'grand') { %>Grand — free custom design
+            <% } else if (w.prize_won === 'annual') { %>Free year of membership
+            <% } else { %>$25 site credit<% } %></td>
+        <td><%= new Date(w.drawn_at).toLocaleString() %></td>
+      </tr>
+    <% }); %>
+    </tbody>
+  </table>
+</section>
+<% } %>
+
+<div class="two-col">
+  <section class="card">
+    <h2>Founding artists (<%= foundingArtists.length %>)</h2>
+    <% if (!foundingArtists.length) { %><p class="muted">None yet.</p><% } %>
+    <ul><% foundingArtists.forEach(function(a) { %>
+      <li><%= a.display_name || a.email %> <span class="muted">— boost until <%= new Date(a.founding_artist_ends_at).toLocaleDateString() %></span></li>
+    <% }); %></ul>
+  </section>
+  <section class="card">
+    <h2>Founding shops (<%= foundingShops.length %>)</h2>
+    <% if (!foundingShops.length) { %><p class="muted">None yet.</p><% } %>
+    <ul><% foundingShops.forEach(function(s) { %>
+      <li><%= s.display_name || s.email %> <span class="muted">— boost until <%= new Date(s.founding_shop_ends_at).toLocaleDateString() %></span></li>
+    <% }); %></ul>
+  </section>
+</div>

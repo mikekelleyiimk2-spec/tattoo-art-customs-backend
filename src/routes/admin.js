@@ -545,6 +545,53 @@ router.post('/members/:id/verify-shop', formLimiter, checkHoneypot, async (req, 
   res.redirect('/admin/members');
 });
 
+// --- Founding program: counters, raffle window, draw ---
+router.get('/founding', async (req, res) => {
+  const founding = require('../lib/founding');
+  const status = await founding.getFoundingStatus();
+  const winners = await db.all(
+    `SELECT r.prize_won, r.drawn_at, u.display_name, u.email
+     FROM raffle_entries r JOIN users u ON u.id = r.user_id
+     WHERE r.prize_won IS NOT NULL ORDER BY r.drawn_at DESC`);
+  const foundingArtists = await db.all(
+    `SELECT display_name, email, founding_artist_ends_at FROM users
+     WHERE is_founding_artist = 1 ORDER BY founding_artist_ends_at DESC LIMIT 50`);
+  const foundingShops = await db.all(
+    `SELECT display_name, email, founding_shop_ends_at FROM users
+     WHERE is_founding_shop = 1 ORDER BY founding_shop_ends_at DESC LIMIT 100`);
+  res.render('admin/founding', {
+    title: 'Founding Program — Admin', metaDescription: '',
+    ...status, winners, foundingArtists, foundingShops,
+    money: require('../lib/pricing').money,
+  });
+});
+
+// Set the raffle entry window end (expects an HTML datetime-local value).
+router.post('/founding/raffle-ends', formLimiter, checkHoneypot, async (req, res) => {
+  const ts = Date.parse(String(req.body.raffle_ends_at || ''));
+  if (!Number.isInteger(ts) || ts <= 0) {
+    req.session.flash = 'Invalid date — raffle end date not changed.';
+    return res.redirect('/admin/founding');
+  }
+  await require('../lib/founding').setRaffleEndsAt(ts);
+  req.session.flash = `Raffle entry window now ends ${new Date(ts).toLocaleString()}.`;
+  res.redirect('/admin/founding');
+});
+
+// Draw the early-subscriber raffle (one draw ever).
+router.post('/raffle/draw', formLimiter, checkHoneypot, async (req, res) => {
+  try {
+    const result = await require('../lib/founding').drawRaffle();
+    const counts = {};
+    for (const w of result.winners) counts[w.prize] = (counts[w.prize] || 0) + 1;
+    req.session.flash = `Raffle drawn: ${result.winners.length} winners ` +
+      `(${(counts.grand || 0)} grand, ${(counts.annual || 0)} annual, ${(counts.credit || 0)} credit). Winners notified on-site and by email.`;
+  } catch (e) {
+    req.session.flash = 'Draw failed: ' + e.message;
+  }
+  res.redirect('/admin/founding');
+});
+
 // --- Payouts ---
 router.get('/payouts', async (req, res) => {
   const balances = await db.all(

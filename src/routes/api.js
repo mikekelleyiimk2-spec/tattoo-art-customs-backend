@@ -103,7 +103,7 @@ router.get('/artists/:id', async (req, res) => {
   const user = await userFromToken(req);
   const member = await isActiveMember(user);
   const artist = await db.get(
-    "SELECT id, display_name FROM users WHERE id = ? AND role = 'design_artist'", [req.params.id]);
+    "SELECT id, display_name, is_founding_artist FROM users WHERE id = ? AND role = 'design_artist'", [req.params.id]);
   if (!artist) return res.status(404).json({ ok: false, error: 'not found' });
   const profile = await db.get('SELECT bio FROM artist_profiles WHERE user_id = ?', [artist.id]);
   const rows = await db.all(
@@ -114,7 +114,7 @@ router.get('/artists/:id', async (req, res) => {
   res.json({
     ok: true,
     sale: await salePriceActive(user),
-    artist: { id: artist.id, display_name: artist.display_name || '', bio: profile ? profile.bio : '' },
+    artist: { id: artist.id, display_name: artist.display_name || '', bio: profile ? profile.bio : '', is_founding_artist: !!artist.is_founding_artist },
     custom_price_cents: customFullCents(new Date(), member),
     premade_price_cents: premadePriceCents(new Date(), member),
     pieces: rows.map((d) => ({
@@ -124,6 +124,17 @@ router.get('/artists/:id', async (req, res) => {
       listing_type: d.listing_type || 'predesign',
       price_cents: d.listing_type === 'custom' ? customFullCents(new Date(), member) : premadePriceCents(new Date(), member),
     })),
+  });
+});
+
+// Founding-program status for promo posts: spots left + raffle window.
+router.get('/founding-status', async (req, res) => {
+  const s = await require('../lib/founding').getFoundingStatus();
+  res.json({
+    ok: true,
+    artists_left: s.artistsLeft,
+    shops_left: s.shopsLeft,
+    raffle_ends_at: s.raffleEndsAt,
   });
 });
 

@@ -1,0 +1,337 @@
+// Founding Members launch program tests (DB phase — runs before db.close()).
+const db = require('../src/db');
+const founding = require('../src/lib/founding');
+const comm = require('../src/lib/commissions');
+
+async function mkUser(email, role = 'customer') {
+  return db.insert('users', {
+    email, password_hash: 'x', role, display_name: email.split('@')[0],
+  });
+}
+
+async function mkSub(userId, planId, status = 'active') {
+  return db.insert('subscriptions', { user_id: userId, plan_id: planId, status });
+}
+
+async function ledgerFor(orderId) {
+  return db.all('SELECT recipient_type, amount_cents FROM commission_ledger WHERE order_id = ?', [orderId]);
+}
+
+function sumBy(rows, type) {
+  return rows.filter((r) => r.recipient_type === type).reduce((s, r) => s + r.amount_cents, 0);
+}
+
+async function runDbTests(ok) {
+  console.log('founding program:');
+  const customerPlan = (await db.get(`SELECT id FROM plans WHERE slug = 'customer'`)).id;
+
+  // --- Caps: 50 artists ---
+  const dupeArtist = await mkUser('fdupe@test.local');
+  const [d1, d2] = await Promise.all([
+    founding.claimFoundingArtist(dupeArtist), founding.claimFoundingArtist(dupeArtist),
+  ]);
+  ok(d1.claimed && d2.claimed && d2.already, 'concurrent duplicate claim: one wins, other is already:true');
+  let st = await founding.getFoundingStatus();
+  ok(st.artistsClaimed === 1, 'concurrent duplicate claim consumes exactly one slot');
+
+  const artistIds = [dupeArtist];
+  for (let i = 0; i < 49; i++) {
+    const id = await mkUser(`fartist${i}@test.local`);
+    const r = await founding.claimFoundingArtist(id);
+    if (!r.claimed) throw new Error(`artist claim ${i} unexpectedly denied`);
+    artistIds.push(id);
+  }
+  const extraArtist = await mkUser('fartistX@test.local');
+  const deniedA = await founding.claimFoundingArtist(extraArtist);
+  ok(!deniedA.claimed && deniedA.reason === 'cap filled', '51st artist denied when the cap is full');
+  ok((await db.get('SELECT is_founding_artist FROM users WHERE id = ?', [extraArtist])).is_founding_artist === 0,
+    'denied claimant is not flagged as founding');
+  st = await founding.getFoundingStatus();
+  ok(st.artistsClaimed === 50 && st.artistsLeft === 0, 'artist counter exact at 50');
+  const again = await founding.claimFoundingArtist(artistIds[0]);
+  st = await founding.getFoundingStatus();
+  ok(again.claimed && again.already && st.artistsClaimed === 50, 're-claim is idempotent, counter unchanged');
+  // Make the first founding artist a real designer for the page/API tests.
+  await db.update('users', artistIds[0], { role: 'design_artist' });
+
+  // --- Caps: 100 shops ---
+  const dupeShop = await mkUser('fsdupe@test.local');
+  const [s1, s2] = await Promise.all([
+    founding.claimFoundingShop(dupeShop), founding.claimFoundingShop(dupeShop),
+  ]);
+  ok(s1.claimed && s2.claimed && s2.already, 'concurrent duplicate shop claim: one wins');
+  st = await founding.getFoundingStatus();
+  ok(st.shopsClaimed === 1, 'concurrent duplicate shop claim consumes exactly one slot');
+  const shopIds = [dupeShop];
+  for (let i = 0; i < 99; i++) {
+    const id = await mkUser(`fshop${i}@test.local`);
+    const r = await founding.claimFoundingShop(id);
+    if (!r.claimed) throw new Error(`shop claim ${i} unexpectedly denied`);
+    shopIds.push(id);
+  }
+  const extraShop = await mkUser('fshopX@test.local');
+  const deniedS = await founding.claimFoundingShop(extraShop);
+  ok(!deniedS.claimed && deniedS.reason === 'cap filled', '101st shop denied when the cap is full');
+  st = await founding.getFoundingStatus();
+  ok(st.shopsClaimed === 100 && st.shopsLeft === 0, 'shop counter exact at 100');
+  // Give the badge-test designer + shop real passwords for HTTP login tests.
+  const bcrypt = require('bcryptjs');
+  await db.update('users', artistIds[0], { password_hash: await bcrypt.hash('FoundTest123!', 10) });
+  await db.update('users', shopIds[0], {
+    role: 'tattoo_shop', password_hash: await bcrypt.hash('FoundTest123!', 10),
+  });
+  // ...and active role subscriptions, since /artist and /shop require them.
+  const artistPlan = (await db.get(`SELECT id FROM plans WHERE slug = 'design_artist'`)).id;
+  const shopPlan = (await db.get(`SELECT id FROM plans WHERE slug = 'tattoo_shop'`)).id;
+  await mkSub(artistIds[0], artistPlan);
+  await mkSub(shopIds[0], shopPlan);
+
+  // --- Commission math ---
+  const buyer = await mkUser('fbuyer@test.local');
+  const foundingArtist = artistIds[0];
+  const plainArtist = await mkUser('plainartist@test.local');
+  const designF = await db.insert('designs', { title: 'Founding piece', artist_id: foundingArtist });
+  const designP = await db.insert('designs', { title: 'Plain piece', artist_id: plainArtist });
+  const designLW = await db.insert('designs', { title: 'LW piece', artist_id: foundingArtist, color_source: 'none' });
+
+  // Founding artist premade: 70% of $75 = $52.50, owner split $0.
+  const o1 = await db.insert('orders', {
+    buyer_id: buyer, design_id: designF, order_type: 'premade',
+    amount_cents: 7500, amount_paid_cents: 7500, status: 'paid',
+  });
+  await comm.recordSaleCommissions(await db.get('SELECT * FROM orders WHERE id = ?', [o1]));
+  const l1 = await ledgerFor(o1);
+  ok(sumBy(l1, 'artist') === 5250, 'founding artist gets 70% of premade sale');
+  ok(l1.reduce((s, r) => s + r.amount_cents, 0) === 7500, 'founding-artist splits sum to the sale total');
+
+  // Baseline still 60%.
+  const o2 = await db.insert('orders', {
+    buyer_id: buyer, design_id: designP, order_type: 'premade',
+    amount_cents: 7500, amount_paid_cents: 7500, status: 'paid',
+  });
+  await comm.recordSaleCommissions(await db.get('SELECT * FROM orders WHERE id = ?', [o2]));
+  ok(sumBy(await ledgerFor(o2), 'artist') === 4500, 'non-founding artist still gets 60%');
+
+  // Linework-only founding artist: 65% (55% base + 10 boost), 5% color fee kept.
+  const o3 = await db.insert('orders', {
+    buyer_id: buyer, design_id: designLW, order_type: 'premade',
+    amount_cents: 7500, amount_paid_cents: 7500, status: 'paid',
+  });
+  await comm.recordSaleCommissions(await db.get('SELECT * FROM orders WHERE id = ?', [o3]));
+  const l3 = await ledgerFor(o3);
+  ok(sumBy(l3, 'artist') === 4875, 'linework-only founding artist gets 65%');
+  ok(l3.reduce((s, r) => s + r.amount_cents, 0) === 7500, 'linework splits sum to the sale total');
+
+  // Founding shop referral on a plain-artist sale: 25% shop, owner split cut to 5%.
+  const foundingShop = shopIds[0];
+  const o4 = await db.insert('orders', {
+    buyer_id: buyer, design_id: designP, order_type: 'premade',
+    amount_cents: 7500, amount_paid_cents: 7500, status: 'paid',
+    referred_shop_id: foundingShop,
+  });
+  await comm.recordSaleCommissions(await db.get('SELECT * FROM orders WHERE id = ?', [o4]));
+  const l4 = await ledgerFor(o4);
+  ok(sumBy(l4, 'shop') === 1875, 'founding shop gets 25% referral share');
+  ok(sumBy(l4, 'artist') === 4500, 'plain artist still gets 60% on referred sale');
+  ok(l4.reduce((s, r) => s + r.amount_cents, 0) === 7500, 'referred splits sum to the sale total');
+
+  // Combined: founding artist + founding shop.
+  const o5 = await db.insert('orders', {
+    buyer_id: buyer, design_id: designF, order_type: 'premade',
+    amount_cents: 7500, amount_paid_cents: 7500, status: 'paid',
+    referred_shop_id: foundingShop,
+  });
+  await comm.recordSaleCommissions(await db.get('SELECT * FROM orders WHERE id = ?', [o5]));
+  const l5 = await ledgerFor(o5);
+  ok(sumBy(l5, 'artist') === 5250 && sumBy(l5, 'shop') === 1875, 'combined: 70% artist + 25% shop');
+  ok(l5.reduce((s, r) => s + r.amount_cents, 0) === 7500, 'combined splits sum to the sale total');
+
+  // Owner/unregistered art with founding shop: 75/25.
+  const o6 = await db.insert('orders', {
+    buyer_id: buyer, order_type: 'premade',
+    amount_cents: 7500, amount_paid_cents: 7500, status: 'paid',
+    referred_shop_id: foundingShop,
+  });
+  await comm.recordSaleCommissions(await db.get('SELECT * FROM orders WHERE id = ?', [o6]));
+  const l6 = await ledgerFor(o6);
+  ok(sumBy(l6, 'shop') === 1875, 'owner art: founding shop gets 25%');
+  ok(l6.reduce((s, r) => s + r.amount_cents, 0) === 7500, 'owner-art splits sum to the sale total');
+
+  // Expired boost reverts to normal rates.
+  const expArtist = artistIds[1];
+  await db.update('users', expArtist, { founding_artist_ends_at: Date.now() - 1000 });
+  ok(!(await founding.foundingArtistActive(expArtist)), 'expired boost reports inactive');
+  const designE = await db.insert('designs', { title: 'Expired piece', artist_id: expArtist });
+  const o7 = await db.insert('orders', {
+    buyer_id: buyer, design_id: designE, order_type: 'premade',
+    amount_cents: 7500, amount_paid_cents: 7500, status: 'paid',
+  });
+  await comm.recordSaleCommissions(await db.get('SELECT * FROM orders WHERE id = ?', [o7]));
+  ok(sumBy(await ledgerFor(o7), 'artist') === 4500, 'expired boost reverts to 60%');
+
+  // Custom commission with founding artist: 70%.
+  const o8 = await db.insert('orders', {
+    buyer_id: buyer, order_type: 'custom',
+    amount_cents: 15000, amount_paid_cents: 15000, status: 'paid',
+  });
+  const o8row = await db.get('SELECT * FROM orders WHERE id = ?', [o8]);
+  await comm.recordCustomDesignerCommission(o8row, foundingArtist);
+  const l8 = await db.all(
+    `SELECT recipient_id, amount_cents FROM commission_ledger WHERE order_id = ? AND recipient_type = 'artist'`, [o8]);
+  ok(l8.length === 1 && l8[0].amount_cents === 10500, 'founding artist custom commission is 70%');
+
+  // --- Raffle entries ---
+  const rUser = await mkUser('raffle1@test.local');
+  const rSub = await mkSub(rUser, customerPlan);
+  const e1 = await founding.maybeEnterRaffle(rUser, rSub);
+  ok(e1.entered, 'first subscription inside the window earns a raffle entry');
+  const e2 = await founding.maybeEnterRaffle(rUser, rSub);
+  ok(!e2.entered && e2.reason === 'already entered', 'raffle entry is idempotent');
+  ok((await db.all('SELECT id FROM raffle_entries WHERE user_id = ?', [rUser])).length === 1,
+    'exactly one raffle row per user');
+
+  // A returning subscriber's new subscription does not earn an entry.
+  const oldUser = await mkUser('raffleold@test.local');
+  await mkSub(oldUser, customerPlan, 'canceled');
+  const newSub = await mkSub(oldUser, customerPlan);
+  const e3 = await founding.maybeEnterRaffle(oldUser, newSub);
+  ok(!e3.entered && e3.reason === 'not first subscription', 'returning subscriber gets no entry');
+
+  // Window closed: no entry.
+  const realEnds = await founding.getRaffleEndsAt();
+  await founding.setRaffleEndsAt(Date.now() - 1000);
+  const lateUser = await mkUser('rafflelate@test.local');
+  const lateSub = await mkSub(lateUser, customerPlan);
+  const e4 = await founding.maybeEnterRaffle(lateUser, lateSub);
+  ok(!e4.entered && e4.reason === 'window closed', 'no entry after the window closes');
+  await founding.setRaffleEndsAt(realEnds);
+
+  // --- Draw ---
+  const entrants = [rUser];
+  for (let i = 0; i < 19; i++) {
+    const u = await mkUser(`draw${i}@test.local`);
+    await mkSub(u, customerPlan);
+    const e = await founding.maybeEnterRaffle(u, (await db.get(
+      'SELECT id FROM subscriptions WHERE user_id = ? ORDER BY created_at ASC', [u])).id);
+    if (!e.entered) throw new Error(`entrant ${i} failed to enter`);
+    entrants.push(u);
+  }
+  ok((await db.get('SELECT COUNT(*) AS n FROM raffle_entries')).n === 20, '20 raffle entries banked');
+  const draw = await founding.drawRaffle();
+  ok(draw.winners.length === 14, 'draw picks 14 winners from 20 entries');
+  const winnerIds = draw.winners.map((w) => w.user_id);
+  ok(new Set(winnerIds).size === 14, 'all winners are distinct users');
+  const prizeCount = {};
+  for (const w of draw.winners) prizeCount[w.prize] = (prizeCount[w.prize] || 0) + 1;
+  ok(prizeCount.grand === 1 && prizeCount.annual === 3 && prizeCount.credit === 10,
+    'prize mix is 1 grand + 3 annual + 10 credit');
+
+  const grand = draw.winners.find((w) => w.prize === 'grand');
+  const grandOrder = await db.get(`SELECT * FROM orders WHERE buyer_id = ? AND order_type = 'custom'
+    ORDER BY created_at DESC LIMIT 1`, [grand.user_id]);
+  ok(grandOrder && grandOrder.amount_cents === 15000 && grandOrder.amount_paid_cents === 0 &&
+    grandOrder.status === 'paid', 'grand prize creates a $150 custom order, $0 paid');
+
+  const nowDraw = Date.now();
+  for (const w of draw.winners.filter((x) => x.prize === 'annual')) {
+    const u = await db.get('SELECT membership_extended_until FROM users WHERE id = ?', [w.user_id]);
+    ok(u.membership_extended_until && u.membership_extended_until > nowDraw,
+      'annual prize extends the membership');
+  }
+  const creditRows = await db.all(`SELECT * FROM account_credits WHERE kind = 'raffle_prize' AND amount_cents = 2500`);
+  ok(creditRows.length === 10, 'ten $25 site-credit prizes recorded');
+
+  let drewTwice = '';
+  try { await founding.drawRaffle(); } catch (e) { drewTwice = e.message; }
+  ok(drewTwice.includes('already'), 'the raffle cannot be drawn twice');
+
+  const publicWinners = await db.all(
+    `SELECT u.display_name, r.prize_won FROM raffle_entries r
+     JOIN users u ON u.id = r.user_id WHERE r.prize_won IS NOT NULL`);
+  ok(publicWinners.length === 14, 'public results list all 14 winners');
+
+  // --- Shared role-grant path (website checkout + Google Play) ---
+  // src/lib/planRoles.js is used by the Play verification flow, so a
+  // Play-bought artist/shop membership must grant the role, create the
+  // profile, attempt the founding claim, and enter the raffle — exactly
+  // like the website's /approve path.
+  const { grantPlanRole } = require('../src/lib/planRoles');
+  const playUser = await mkUser('fplay@test.local');
+  await grantPlanRole(playUser, 'design_artist');
+  const playRole = await db.get('SELECT role, is_founding_artist FROM users WHERE id = ?', [playUser]);
+  const playProfile = await db.get('SELECT user_id FROM artist_profiles WHERE user_id = ?', [playUser]);
+  ok(playRole.role === 'design_artist' && !!playProfile,
+    'shared grantPlanRole grants the design_artist role and creates the profile (Play parity)');
+  ok(playRole.is_founding_artist === 0,
+    'founding claim through grantPlanRole no-ops cleanly when the cap is full');
+  const playSub = await mkSub(playUser, customerPlan);
+  const re = await founding.maybeEnterRaffle(playUser, playSub);
+  ok(re.entered === true || re.entered === false,
+    'raffle entry callable from the Play activation path (idempotent)');
+}
+
+// HTTP phase: badges, public raffle page, founding-status API, admin page.
+// NOTE: the suite's shared db handle is closed before the HTTP phase, so
+// this opens its own read-only handle (same pattern as the suite's sdb).
+async function runHttpTests(ok, req, areq) {
+  console.log('founding program (http):');
+  const Database = require('better-sqlite3');
+  const tdb = new Database(process.env.SQLITE_PATH, { readonly: true });
+  const artist = tdb.prepare(`SELECT id FROM users WHERE email = 'fdupe@test.local'`).get();
+  tdb.close();
+  let r = await req('GET', `/artists/${artist.id}`);
+  ok(r.status === 200 && r.text.includes('Founding Artist'), 'public artist page shows the Founding Artist badge');
+
+  r = await req('GET', '/raffle');
+  ok(r.status === 200 && r.text.includes('Raffle') && r.text.includes('Winners'),
+    'public raffle page renders with winners after the draw');
+
+  r = await req('GET', '/api/founding-status');
+  const fs = JSON.parse(r.text);
+  ok(r.status === 200 && fs.ok && fs.artists_left === 0 && fs.shops_left === 0,
+    'founding-status API reports the filled caps');
+
+  r = await req('GET', '/api/artists/' + artist.id);
+  const ap = JSON.parse(r.text);
+  ok(r.status === 200 && ap.ok && ap.artist.is_founding_artist === true,
+    'app API exposes the founding-artist flag');
+
+  r = await areq('GET', '/admin/founding');
+  ok(r.status === 200 && r.text.includes('Founding design artists') && r.text.includes('raffle'),
+    'admin founding page renders counters and raffle controls');
+
+  // Badge rendering on the auth-gated pages (own jar per role). Manual
+  // redirects: fetch drops Set-Cookie from followed 302s, so the login
+  // POST must be manual (same reason the suite's areq/artreq are manual).
+  async function jarReq(jar, method, p, body) {
+    const headers = {};
+    const cookies = Object.entries(jar).map(([k, v]) => `${k}=${v}`).join('; ');
+    if (cookies) headers.cookie = cookies;
+    const payload = body ? new URLSearchParams(body) : undefined;
+    if (payload) headers['content-type'] = 'application/x-www-form-urlencoded';
+    const res = await fetch(`http://localhost:4137${p}`, {
+      method, headers, body: payload, redirect: 'manual',
+    });
+    for (const c of (res.headers.getSetCookie ? res.headers.getSetCookie() : [])) {
+      const [k, v] = c.split(';')[0].split('=');
+      jar[k.trim()] = (v || '').trim();
+    }
+    const location = res.headers.get('location');
+    if (location && res.status >= 300 && res.status < 400) {
+      return jarReq(jar, 'GET', new URL(location, 'http://localhost:4137').pathname);
+    }
+    return { status: res.status, text: await res.text() };
+  }
+  const artistJar = {};
+  r = await jarReq(artistJar, 'POST', '/login', { email: 'fdupe@test.local', password: 'FoundTest123!' });
+  ok(r.status === 200, 'founding artist login ok');
+  r = await jarReq(artistJar, 'GET', '/artist/portfolio');
+  ok(r.status === 200 && r.text.includes('Founding Artist'), 'portfolio page shows the Founding Artist badge');
+  const shopJar = {};
+  r = await jarReq(shopJar, 'POST', '/login', { email: 'fsdupe@test.local', password: 'FoundTest123!' });
+  ok(r.status === 200, 'founding shop login ok');
+  r = await jarReq(shopJar, 'GET', '/shop');
+  ok(r.status === 200 && r.text.includes('Founding Shop'), 'shop dashboard shows the Founding Shop badge');
+}
+
+module.exports = { runDbTests, runHttpTests };

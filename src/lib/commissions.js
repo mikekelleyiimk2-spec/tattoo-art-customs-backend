@@ -7,6 +7,10 @@
 // - Owner's art or art from unregistered artists: 80% site, 20% referring
 //   tattoo shop.
 // - Referring shops are paid ONLY on verified sales (admin verifies).
+// - Founding program (first 50 artists / first 100 shops, 6 months):
+//   founding artists earn 70% instead of 60% (the owner's 10% split becomes
+//   0% — the owner funds the boost); founding shops earn 25% instead of
+//   20% on referred sales (the extra 5pts come from the owner's share).
 // - Artists/shops are paid ONLY if registered + actively subscribed +
 //   payout method (PayPal email) configured; otherwise the site keeps all.
 // - Commission splits are shown in artist/shop dashboards ONLY —
@@ -19,6 +23,7 @@
 //   paid     — included in a completed payout run
 const db = require('../db');
 const config = require('../config');
+const founding = require('./founding');
 
 // Site owner lookup (for payable-balance redirects).
 async function ownerUserId() {
@@ -112,12 +117,19 @@ async function recordSaleCommissions(order) {
   const design = order.design_id ? await db.get('SELECT artist_id, color_source FROM designs WHERE id = ?', [order.design_id]) : null;
   const artistId = design && design.artist_id ? design.artist_id : null;
   const shopId = order.referred_shop_id || null;
+  // Founding-program boosts (first 50 artists / first 100 shops, 6 months):
+  // - founding artist: 70% instead of 60%; the owner's 10% split becomes 0%
+  //   (the owner funds the boost).
+  // - founding shop: 25% referral share instead of 20%; the extra 5pts come
+  //   out of the owner's 10% split (or the residual when that split is 0).
+  const foundingBoost = artistId ? await founding.foundingArtistActive(artistId, t) : false;
+  const shopBoost = shopId ? await founding.foundingShopActive(shopId, t) : false;
   // Colorization fee: when the designer did not provide the color version
   // (linework-only upload, with or without a site-created color), their
   // rate drops 5 points and the website keeps those 5 points as a
   // colorization fee (recorded distinctly so the owner can see it).
   const noDesignerColor = !!design && (design.color_source === 'site' || design.color_source === 'none');
-  const designerRate = noDesignerColor ? 0.55 : 0.60;
+  const designerRate = (noDesignerColor ? 0.55 : 0.60) + (foundingBoost ? 0.10 : 0);
   const colorFeeRate = noDesignerColor ? 0.05 : 0;
 
   if (artistId) {
@@ -125,9 +137,13 @@ async function recordSaleCommissions(order) {
     // The stated splits sum to 90%; the leftover 10% is kept by the site
     // as an explicit residual entry (never folded into another split).
     const designerAmt = Math.round(order.amount_paid_cents * designerRate);
-    const siteAmt = Math.round(order.amount_paid_cents * 0.10);
+    let siteAmt = Math.round(order.amount_paid_cents * (foundingBoost ? 0 : 0.10));
     const feeAmt = Math.round(order.amount_paid_cents * colorFeeRate);
-    const shopBase = Math.round(order.amount_paid_cents * 0.20);
+    const shopBase = Math.round(order.amount_paid_cents * (shopBoost ? 0.25 : 0.20));
+    if (shopBoost && siteAmt > 0) {
+      // The founding shop's extra 5pts come from the owner's share.
+      siteAmt = Math.max(0, siteAmt - Math.round(order.amount_paid_cents * 0.05));
+    }
     const residual = order.amount_paid_cents - designerAmt - siteAmt - feeAmt - shopBase;
     const designerEligible = await recipientEligible(artistId, 'design_artist');
     const suspended = await commissionSuspended(artistId, t);
@@ -180,8 +196,9 @@ async function recordSaleCommissions(order) {
       });
     }
   } else {
-    // Owner / unregistered art: 80 site / 20 referring shop
-    const shopAmt = Math.round(order.amount_paid_cents * 0.20);
+    // Owner / unregistered art: 80 site / 20 referring shop. A founding
+    // shop's boost takes its extra 5pts from the owner's share (75/25).
+    const shopAmt = Math.round(order.amount_paid_cents * (shopBoost ? 0.25 : 0.20));
     const siteAmt = order.amount_paid_cents - shopAmt;
     entries.push({
       order_id: order.id, recipient_type: 'site', recipient_id: null,
@@ -245,7 +262,10 @@ async function recordCustomDesignerCommission(order, artistId) {
     });
     return 0;
   }
-  const designerAmt = Math.round((order.amount_paid_cents || 0) * 0.60);
+  // Founding artists earn 70% on customs for 6 months (the boost is carved
+  // out of the site's share like the standard 60%).
+  const rate = await founding.foundingArtistActive(artistId, db.now()) ? 0.70 : 0.60;
+  const designerAmt = Math.round((order.amount_paid_cents || 0) * rate);
   if (designerAmt <= 0) return 0;
   // Take it out of the site's share (the largest site_kept 'site' row).
   const siteRow = await db.get(

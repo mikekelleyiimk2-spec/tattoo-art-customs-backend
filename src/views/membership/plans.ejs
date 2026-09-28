@@ -17,7 +17,7 @@
 <div class="card"><p><strong>New here?</strong> Your first month of the Customer monthly plan is <strong><%= money(firstMonthPrice) %></strong>, then <%= money(500) %>/month. One per account.</p></div>
 <% } %>
 <% if (foundingShop) { %>
-<div class="card"><p><strong>Founding tattoo shops:</strong> join now and your first year is <strong><%= money(foundingPrice) %></strong> (normally $99.99/year). Renews at the regular price. Offer ends <%= new Date(foundingEnds).toLocaleDateString() %>.</p></div>
+<div class="card"><p><strong>Founding tattoo shops:</strong> join now and your first year is <strong><%= money(foundingPrice) %></strong> (normally $99.99/year). Only <strong><%= shopsLeft %> of 100</strong> founding spots left. Renews at the regular price. Offer ends <%= new Date(foundingEnds).toLocaleDateString() %>.</p></div>
 <% } %>
 <div class="grid">
   <% plans.forEach(function(p) { %>

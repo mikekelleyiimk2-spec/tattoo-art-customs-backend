@@ -1,4 +1,10 @@
 <h1>My portfolio</h1>
+<% if (isFoundingArtist) { %>
+<p><span class="badge ok">Founding Artist</span>
+  <% if (foundingEndsAt && foundingEndsAt > Date.now()) { %>
+  <span class="muted">— your 70% commission boost runs through <%= new Date(foundingEndsAt).toLocaleDateString() %></span>
+  <% } %></p>
+<% } %>
 <p class="muted">Your public portfolio lives at <a href="/artists/<%= userId %>">/artists/<%= userId %></a> — share it anywhere. Custom pieces sell at the custom-design price and appear only here; pre-designs also appear on the main gallery.</p>
 <p><a class="btn" href="/artist/portfolio/upload">Upload new piece</a></p>
 <% if (!designs.length) { %>

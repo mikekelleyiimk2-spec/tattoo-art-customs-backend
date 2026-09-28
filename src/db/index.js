@@ -36,6 +36,70 @@ async function init() {
 
 function getMode() { return mode; }
 
+// Serializes SQLite transactions (better-sqlite3 is a single connection).
+let sqliteTxQueue = Promise.resolve();
+
+// Run fn inside a real transaction (row locks via SELECT ... FOR UPDATE on
+// Postgres; BEGIN IMMEDIATE's reserved lock on SQLite). fn receives a
+// { query, get, all } handle bound to the transaction. Commits on success,
+// rolls back on error.
+async function transaction(fn) {
+  if (mode === 'pg') {
+    const client = await pgPool.connect();
+    const tx = {
+      query: async (sql, params = []) => {
+        const res = await client.query(placeholdersToPg(sql), params);
+        return { rows: res.rows };
+      },
+      get: async (sql, params = []) => {
+        const { rows } = await tx.query(sql, params);
+        return rows[0] || null;
+      },
+      all: async (sql, params = []) => {
+        const { rows } = await tx.query(sql, params);
+        return rows;
+      },
+    };
+    try {
+      await client.query('BEGIN');
+      const result = await fn(tx);
+      await client.query('COMMIT');
+      return result;
+    } catch (e) {
+      try { await client.query('ROLLBACK'); } catch (_) { /* already closed */ }
+      throw e;
+    } finally {
+      client.release();
+    }
+  }
+  // SQLite path: better-sqlite3 is a single synchronous connection, so two
+  // overlapping transactions would collide ("cannot start a transaction
+  // within a transaction"). Serialize them through a promise queue —
+  // concurrent claims simply wait their turn. Do not nest transactions.
+  const run = sqliteTxQueue.then(async () => {
+    sqliteDb.exec('BEGIN IMMEDIATE');
+    try {
+      const result = await fn({ query, get, all });
+      sqliteDb.exec('COMMIT');
+      return result;
+    } catch (e) {
+      try { sqliteDb.exec('ROLLBACK'); } catch (_) { /* already closed */ }
+      throw e;
+    }
+  });
+  // Keep the chain alive even when a transaction fails; the caller still
+  // gets the rejection via `run`.
+  sqliteTxQueue = run.catch(() => {});
+  return run;
+}
+async function sqliteTransaction(fn) {
+  const run = sqliteTxQueue.then(() => runTransactionBody(fn));
+  // Keep the chain alive even when a transaction fails; the caller still
+  // gets the rejection via `run`.
+  sqliteTxQueue = run.catch(() => {});
+  return run;
+}
+
 function newId() {
   return crypto.randomBytes(12).toString('hex');
 }
@@ -110,4 +174,4 @@ async function close() {
   if (sqliteDb) sqliteDb.close();
 }
 
-module.exports = { init, getMode, query, get, all, insert, update, updateWhere, upsert, newId, now, close };
+module.exports = { init, getMode, query, get, all, insert, update, updateWhere, upsert, newId, now, close, transaction };

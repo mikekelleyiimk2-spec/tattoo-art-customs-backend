@@ -30,10 +30,14 @@ registerPayoutRoutes(router, 'artist');
 router.get('/portfolio', async (req, res) => {
   const designs = await db.all(
     'SELECT * FROM designs WHERE artist_id = ? ORDER BY created_at DESC', [req.user.id]);
+  const me = await db.get(
+    'SELECT is_founding_artist, founding_artist_ends_at FROM users WHERE id = ?', [req.user.id]);
   res.render('artist/portfolio', {
     title: 'My portfolio — Tattoo Art Customs',
     designs: designs.map((d) => ({ ...d, categories: JSON.parse(d.categories || '[]') })),
     userId: req.user.id,
+    isFoundingArtist: !!(me && me.is_founding_artist),
+    foundingEndsAt: me && me.founding_artist_ends_at,
     customPrice: pricing.customFullCents(), premadePrice: pricing.premadePriceCents(),
     metaDescription: '',
   });

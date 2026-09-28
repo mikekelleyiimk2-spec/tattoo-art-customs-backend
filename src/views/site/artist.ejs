@@ -1,6 +1,7 @@
 <div class="two-col">
   <div>
     <h1><%= artist.display_name || 'Artist' %></h1>
+    <% if (artist.is_founding_artist) { %><p><span class="badge ok">Founding Artist</span></p><% } %>
     <% if (bio) { %><p><%= bio %></p><% } else { %><p class="muted">Tattoo design artist on Tattoo Art Customs.</p><% } %>
   </div>
   <div>

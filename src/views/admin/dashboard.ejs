@@ -8,6 +8,7 @@
   <div class="card"><h3>Open reviews</h3><p><strong><%= stats.openReviews %></strong></p><p><a href="/admin/reviews">Review queue</a></p></div>
   <div class="card"><h3>Payable commissions</h3><p><strong><%= money(stats.payableOut) %></strong></p><p><a href="/admin/payouts">Payouts</a></p></div>
   <div class="card"><h3>Admins</h3><p><a href="/admin/admins">Manage admins</a></p></div>
+  <div class="card"><h3>Founding program</h3><p>Caps, raffle entries, draw</p><p><a href="/admin/founding">Open</a></p></div>
 </div>
 
 <% if ((typeof designerWatch !== 'undefined' && designerWatch.length) || (typeof terminatedOrders !== 'undefined' && terminatedOrders.length)) { %>
