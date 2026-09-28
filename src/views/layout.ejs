@@ -69,21 +69,23 @@
   </div>
   <p class="fineprint">© <%= new Date().getFullYear() %> Tattoo Art Customs. All sales, subscriptions, and memberships are final.</p>
 </footer>
-<div id="cookie-banner" hidden style="position:fixed;left:0;right:0;bottom:0;background:#1a1a1a;color:#fff;padding:12px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;z-index:9999;font-size:14px;">
+<div id="cookie-banner" style="display:none;position:fixed;left:0;right:0;bottom:0;background:#1a1a1a;color:#fff;padding:12px 16px;gap:12px;align-items:center;justify-content:space-between;z-index:9999;font-size:14px;">
   <span>We use cookies for sign-in, preferences, and — once enabled — Google advertising. See our <a href="/privacy" style="color:#ffd166;">Privacy Policy</a>.</span>
   <button id="cookie-ok" class="btn" style="white-space:nowrap;">Got it</button>
 </div>
 <script>
 (function () {
-  try {
-    if (localStorage.getItem('tac_cookie_ok')) return;
-    var b = document.getElementById('cookie-banner');
-    b.hidden = false;
-    document.getElementById('cookie-ok').addEventListener('click', function () {
-      localStorage.setItem('tac_cookie_ok', '1');
-      b.hidden = true;
-    });
-  } catch (e) { /* storage unavailable — banner stays */ }
+  // NOTE: do NOT use the `hidden` attribute on #cookie-banner — its inline
+  // display:flex overrides hidden's display:none, which made the dismiss
+  // button a no-op. Visibility is controlled purely via style.display.
+  var b = document.getElementById('cookie-banner');
+  var seen = false;
+  try { seen = !!localStorage.getItem('tac_cookie_ok'); } catch (e) {}
+  if (!seen) b.style.display = 'flex';
+  document.getElementById('cookie-ok').addEventListener('click', function () {
+    try { localStorage.setItem('tac_cookie_ok', '1'); } catch (e) {}
+    b.style.display = 'none';
+  });
 })();
 // Give every table cell a data-label from its column header, so the
 // small-screen stacked-card table CSS can label each value.

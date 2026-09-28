@@ -504,6 +504,15 @@ async function main() {
 
   await db.close();
 
+  // --- template static checks ---
+  console.log('templates:');
+  const layout = fs.readFileSync(path.join(ROOT, 'src', 'views', 'layout.ejs'), 'utf8');
+  const bannerTag = (layout.match(/<div id="cookie-banner"[^>]*>/) || [''])[0];
+  ok(!/\bhidden\b/.test(bannerTag), 'cookie banner must not use the hidden attribute (inline display overrides it, breaking dismiss)');
+  ok(bannerTag.includes('display:none'), 'cookie banner starts hidden via inline style');
+  ok(layout.includes("b.style.display = 'none'") && layout.includes("b.style.display = 'flex'"),
+    'cookie banner visibility toggled via style.display only');
+
   // --- HTTP integration ---
   console.log('http:');
   const server = spawn('node', [path.join(ROOT, 'src', 'index.js')], {
