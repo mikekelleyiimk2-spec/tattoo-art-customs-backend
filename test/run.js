@@ -1227,6 +1227,25 @@ async function main() {
   r = await areq('POST', `/admin/designs/${prow.id}/approve`);
   r = await areq('POST', `/admin/designs/${grow.id}/approve`);
   ok(sdb.prepare('SELECT status FROM designs WHERE id = ?').get(prow.id).status === 'approved', 'portfolio piece approved');
+  ok(sdb.prepare('SELECT approved_by FROM designs WHERE id = ?').get(prow.id).approved_by, 'manual approval stamps the approving admin');
+
+  // 1-hour auto-approval: stale pending designs get approved by the system.
+  const { autoApproveStaleDesigns } = require('../src/lib/autoApprove');
+  const twoHoursAgo = Date.now() - 2 * 3600 * 1000;
+  const halfHourAgo = Date.now() - 30 * 60 * 1000;
+  const bannerId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('banner@test.local').id;
+  const staleId = await db.insert('designs', { artist_id: bannerId, title: 'Stale Koi', status: 'pending', linework_wm_path: 'wm/stale.jpg', created_at: twoHoursAgo });
+  const freshId = await db.insert('designs', { artist_id: bannerId, title: 'Fresh Koi', status: 'pending', linework_wm_path: 'wm/fresh.jpg', created_at: halfHourAgo });
+  const noWmId = await db.insert('designs', { artist_id: bannerId, title: 'No Watermark Koi', status: 'pending', created_at: twoHoursAgo });
+  const flaggedId = await db.insert('designs', { artist_id: bannerId, title: 'Flagged Koi', status: 'flagged', linework_wm_path: 'wm/flagged.jpg', created_at: twoHoursAgo });
+  const res = await autoApproveStaleDesigns();
+  ok(res.approved.includes(staleId) && res.blocked.includes(noWmId), 'stale pending approved, watermark-less blocked');
+  const staleRow = sdb.prepare('SELECT status, approved_by FROM designs WHERE id = ?').get(staleId);
+  ok(staleRow.status === 'approved' && staleRow.approved_by === 'auto:1h-no-admin-action', 'auto-approval is stamped as the system');
+  ok(sdb.prepare('SELECT status FROM designs WHERE id = ?').get(freshId).status === 'pending', 'fresh pending (<1h) left for admins');
+  ok(sdb.prepare('SELECT status FROM designs WHERE id = ?').get(noWmId).status === 'pending', 'no-watermark design never auto-approved');
+  ok(sdb.prepare('SELECT status FROM designs WHERE id = ?').get(flaggedId).status === 'flagged', 'flagged design never auto-approved');
+  for (const id of [staleId, freshId, noWmId, flaggedId]) sdb.prepare('DELETE FROM designs WHERE id = ?').run(id);
 
   // Admin can delete an unsold piece (moderation), but not one with sales.
   r = await mpost('/artist/portfolio/upload',

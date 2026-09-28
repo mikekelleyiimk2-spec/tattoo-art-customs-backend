@@ -349,7 +349,7 @@ router.post('/reviews/:id/approve', formLimiter, checkHoneypot, async (req, res)
   if (result === 'blocked-no-watermark') {
     req.session.flash = 'Blocked: upload the watermarked linework version before approving this design.';
   } else {
-    await db.update('review_queue', item.id, { status: 'approved', reviewed_at: db.now() });
+    await db.update('review_queue', item.id, { status: 'approved', reviewed_at: db.now(), decided_by: req.user.id });
   }
   res.redirect('/admin/reviews');
 });
@@ -358,7 +358,7 @@ router.post('/reviews/:id/reject', formLimiter, checkHoneypot, async (req, res) 
   const item = await db.get('SELECT * FROM review_queue WHERE id = ?', [req.params.id]);
   if (!item) return res.redirect('/admin/reviews');
   await applyReviewDecision(item, 'reject');
-  await db.update('review_queue', item.id, { status: 'rejected', reviewed_at: db.now() });
+  await db.update('review_queue', item.id, { status: 'rejected', reviewed_at: db.now(), decided_by: req.user.id });
   res.redirect('/admin/reviews');
 });
 
@@ -397,7 +397,7 @@ router.post('/designs/:id/approve', formLimiter, checkHoneypot, async (req, res)
     req.session.flash = 'Blocked: that piece is still waiting on its site-created color version — attach and approve it in the colorization queue first.';
     return res.redirect('/admin/colorization');
   }
-  await db.update('designs', req.params.id, { status: 'approved' });
+  await db.update('designs', req.params.id, { status: 'approved', approved_by: req.user.id });
   { const { completeOnApproval } = require('../lib/replacements');
     await completeOnApproval(req.params.id); } // remake of a sold custom piece → close the request
   // The piece is now live: notify the designer (informational only —

@@ -40,8 +40,23 @@ function startScheduler() {
       console.error('[scheduler] Referral resumes crashed:', e.message);
     }
   }, { timezone: 'America/Chicago' });
+  // 1-hour designer-approval rule (owner standing order): any pending design
+  // no admin personally approved within an hour gets approved automatically.
+  cron.schedule('*/10 * * * *', async () => {
+    try {
+      const { autoApproveStaleDesigns } = require('./autoApprove');
+      const { approved, blocked } = await autoApproveStaleDesigns();
+      if (approved.length || blocked.length) {
+        console.log(`[scheduler] 1h auto-approval: approved ${approved.length} (${approved.join(',') || 'none'})` +
+          (blocked.length ? `; blocked (no watermark) ${blocked.length} (${blocked.join(',')})` : ''));
+      }
+    } catch (e) {
+      console.error('[scheduler] 1h auto-approval crashed:', e.message);
+    }
+  }, { timezone: 'America/Chicago' });
   console.log('Weekly commission payouts scheduled: Mondays ~9:00 AM CT.');
   console.log('Referral subscription resumes scheduled: daily ~6:00 AM CT.');
+  console.log('1-hour design auto-approval scheduled: every 10 minutes.');
 }
 
 module.exports = { startScheduler };
