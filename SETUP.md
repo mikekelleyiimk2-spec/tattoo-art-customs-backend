@@ -36,7 +36,7 @@ buttons show a "payments being set up" notice and buyers are routed to manual pa
 | `PAYPAL_PLAN_SHOP` | yes | Subscription plan ID for $99.99/year tattoo-shop plan |
 | `PAYPAL_PLAN_CUSTOMER_ANNUAL` | no | Subscription plan ID for $50/year customer membership (optional; leave blank and the annual plan shows as "coming soon") |
 | `FOUNDING_SHOP_WINDOW_END` | no | ISO date (e.g. `2027-03-01`) ending the founding-shop window; shops joining before it pay $79.99 for their first year instead of $99.99. Defaults to 2027-03-01. |
-| `SMTP_HOST/PORT/USER/PASS/MAIL_FROM` | no | Email sending; without these, emails are logged to the console |
+| `SMTP_HOST/PORT/USER/PASS/FROM` | no | Email sending; without these, emails are logged to the console |
 | `WISE_API_TOKEN` / `WISE_PROFILE_ID` | no | Wise API token + profile ID for automatic bank-account payouts; without these, bank cashouts queue for manual admin send |
 | `WEEKLY_PAYOUTS_ENABLED` | no | Set to `false` to disable the automatic Monday payout run |
 
