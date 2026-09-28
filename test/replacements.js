@@ -2,7 +2,7 @@
 // Owner rule 2026-09-28: only custom (one-of-a-kind) pieces delist on sale;
 // premade pieces keep selling repeatedly.
 const db = require('../src/db');
-const { onCustomPieceSold, pendingReplacements, markReplacementDone } = require('../src/lib/replacements');
+const { onCustomPieceSold, pendingReplacements, markReplacementDone, linkRemake, completeOnApproval } = require('../src/lib/replacements');
 
 async function runDbTests(ok) {
   console.log('sold custom-piece replacements:');
@@ -60,6 +60,32 @@ async function runDbTests(ok) {
   // Marking done removes it from the pending queue.
   await markReplacementDone(q1[0].id);
   ok((await pendingReplacements()).length === 0, 'done replacement leaves the queue');
+
+  // Remake loop: the original artist links their new upload; approval closes it.
+  const artist = await db.insert('users', {
+    email: 'remakeartist@test.local', password_hash: 'x', role: 'design_artist', display_name: 'remakeartist',
+  });
+  const soldId = await db.insert('designs', {
+    title: 'Sold One-Off', status: 'approved', style: 'realism', listing_type: 'custom',
+    categories: JSON.stringify(['portrait']), price_cents: 7500, artist_id: artist, created_at: now,
+  });
+  await onCustomPieceSold(await mkOrder(soldId));
+  const rq = (await pendingReplacements()).find((r) => r.design_id === soldId);
+  ok(rq && rq.artist_id === artist, 'replacement request is assigned to the original artist');
+  // Another artist cannot steal the link.
+  const other = await db.insert('users', {
+    email: 'otherartist@test.local', password_hash: 'x', role: 'design_artist', display_name: 'otherartist',
+  });
+  const remakeId = await db.insert('designs', {
+    title: 'Remake', status: 'pending', style: 'realism', listing_type: 'custom',
+    categories: JSON.stringify(['portrait']), price_cents: 7500, artist_id: artist, created_at: now,
+  });
+  ok(await linkRemake(rq.id, remakeId, other) === null, 'other artist cannot link a remake');
+  ok(await linkRemake(rq.id, remakeId, artist) === rq.id, 'original artist links their remake');
+  ok((await pendingReplacements()).length === 1, 'request stays pending until the remake is approved');
+  ok(await completeOnApproval(remakeId) === true, 'approving the remake closes the request');
+  ok((await pendingReplacements()).length === 0, 'queue empty after remake approval');
+  ok(await completeOnApproval('nonexistent') === false, 'approval of unrelated design is a no-op');
 }
 
 module.exports = { runDbTests };

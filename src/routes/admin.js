@@ -357,6 +357,10 @@ async function applyReviewDecision(item, decision) {
       if (!design || !design.linework_wm_path) return 'blocked-no-watermark';
     }
     await db.update('designs', item.item_id, { status: decision === 'approve' ? 'approved' : 'rejected' });
+    if (decision === 'approve') {
+      const { completeOnApproval } = require('../lib/replacements');
+      await completeOnApproval(item.item_id); // remake of a sold custom piece → close the request
+    }
   } else if (item.item_type === 'bio') {
     await db.updateWhere('artist_profiles', { bio_status: decision === 'approve' ? 'ok' : 'blocked' }, 'user_id', item.item_id);
   } else if (item.item_type === 'message') {
@@ -382,6 +386,8 @@ router.post('/designs/:id/approve', formLimiter, checkHoneypot, async (req, res)
     return res.redirect('/admin/colorization');
   }
   await db.update('designs', req.params.id, { status: 'approved' });
+  { const { completeOnApproval } = require('../lib/replacements');
+    await completeOnApproval(req.params.id); } // remake of a sold custom piece → close the request
   // The piece is now live: notify the designer (informational only —
   // no designer approval gate exists for site-created color).
   try { await notifyDesignLive(req.params.id); } catch (e) {

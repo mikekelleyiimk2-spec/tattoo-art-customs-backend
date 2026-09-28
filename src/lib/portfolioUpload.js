@@ -118,6 +118,12 @@ async function handlePortfolioUpload(req, res, backUrl) {
       status: 'open', created_at: db.now(),
     });
   }
+  // Remake upload: link this new piece to the sold custom piece it replaces.
+  // The replacement request closes when the remake is approved.
+  if (req.body.remake) {
+    const { linkRemake } = require('./replacements');
+    await linkRemake(String(req.body.remake), id, req.user.id);
+  }
   // Generate the public watermarked linework now, with the artist's choice.
   // If generation fails, the design stays pending and the admin can attach
   // watermarked linework manually (existing fallback path).

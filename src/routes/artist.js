@@ -43,12 +43,23 @@ router.get('/portfolio', async (req, res) => {
   });
 });
 
-router.get('/portfolio/upload', (req, res) => res.render('artist/portfolio-upload', {
-  title: 'Upload a new piece — Tattoo Art Customs',
-  styles: DESIGN_STYLES, action: '/artist/portfolio/upload',
-  customPrice: pricing.customFullCents(), premadePrice: pricing.premadePriceCents(),
-  metaDescription: '',
-}));
+router.get('/portfolio/upload', async (req, res) => {
+  // Remake upload: the artist is replacing one of their sold custom pieces.
+  let remake = null;
+  if (req.query.remake) {
+    const r = await db.get('SELECT * FROM design_replacements WHERE id = ?', [req.query.remake]);
+    if (r && r.status === 'pending' && r.artist_id === req.user.id) {
+      const sold = await db.get('SELECT title FROM designs WHERE id = ?', [r.design_id]);
+      remake = { id: r.id, title: sold ? sold.title : (r.title || 'your sold piece') };
+    }
+  }
+  res.render('artist/portfolio-upload', {
+    title: 'Upload a new piece — Tattoo Art Customs',
+    styles: DESIGN_STYLES, action: '/artist/portfolio/upload',
+    customPrice: pricing.customFullCents(), premadePrice: pricing.premadePriceCents(),
+    metaDescription: '', remake,
+  });
+});
 
 router.post('/portfolio/upload', formLimiter, (req, res, next) => {
   portfolioUploadMulter(req, res, (err) => {
@@ -142,6 +153,12 @@ router.get('/', async (req, res) => {
   const slaRepeat = await slaEnforcer.repeatOffenderInfo(req.user.id, nowMs);
   // Tier 2: commission suspension notice (plain, warm — account stays active).
   const commissionPausedUntil = await commissionSuspendedUntil(req.user.id, nowMs);
+  // Remake requests: this artist's sold custom pieces awaiting their remake.
+  const remakeRequests = await db.all(
+    `SELECT r.id, r.title, r.style, r.categories, d.title AS sold_title
+     FROM design_replacements r LEFT JOIN designs d ON d.id = r.design_id
+     WHERE r.artist_id = ? AND r.status = 'pending' ORDER BY r.created_at ASC`,
+    [req.user.id]);
   for (const o of slaRows) {
     const pen = await db.get(
       `SELECT COALESCE(SUM(deduction_cents),0) AS t FROM sla_penalties WHERE order_id = ?`, [o.id]);
@@ -161,7 +178,7 @@ router.get('/', async (req, res) => {
     designs: designs.map((d) => ({ ...d, categories: JSON.parse(d.categories || '[]') })),
     profile, balance, payouts, ledger, metaDescription: '',
     slaOrders, slaRepeat, repeatNotice: slaEnforcer.REPEAT_OFFENDER_NOTICE, nowMs,
-    commissionPausedUntil,
+    commissionPausedUntil, remakeRequests,
     ...payout,
   });
 });

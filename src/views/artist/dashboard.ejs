@@ -27,6 +27,24 @@
   </table>
 </section>
 <% } %>
+<% if (typeof remakeRequests !== 'undefined' && remakeRequests.length) { %>
+<section class="card" style="border:2px solid #6a4fb3;margin-bottom:16px">
+  <h2 style="color:#6a4fb3">Remake requested — <%= remakeRequests.length %> sold custom piece<%= remakeRequests.length === 1 ? '' : 's' %></h2>
+  <p class="muted">A buyer purchased your one-of-a-kind custom piece, so it has left the shop. Please remake it — upload a new custom piece in the same style and it will go live after admin approval.</p>
+  <table>
+    <thead><tr><th>Sold piece</th><th>Style</th><th></th></tr></thead>
+    <tbody>
+    <% remakeRequests.forEach(function(r) { %>
+      <tr>
+        <td><%= r.sold_title || r.title || 'Untitled' %></td>
+        <td><span class="badge"><%= r.style || '—' %></span></td>
+        <td><a class="btn" href="/artist/portfolio/upload?remake=<%= r.id %>">Upload remake</a></td>
+      </tr>
+    <% }); %>
+    </tbody>
+  </table>
+</section>
+<% } %>
 <p class="muted">Design artists earn <strong>60% commission</strong> on every sale of their designs (70% while your founding-artist boost is active). Custom-design orders pay <strong>70%</strong> (80% for founding artists). Linework-only uploads pay 5 points less, with a 5-point website colorization fee. You are paid only while registered, subscribed, and with a payout destination set — otherwise proceeds stay with the site.</p>
 
 <div class="two-col">
