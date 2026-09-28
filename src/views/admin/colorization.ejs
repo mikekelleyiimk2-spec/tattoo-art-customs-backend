@@ -1,0 +1,33 @@
+<h1>Colorization queue</h1>
+<p><a href="/admin/designs">← Designs</a> · <a href="/admin">← Dashboard</a></p>
+<p class="muted">Linework-only uploads waiting on the site-created color version. Attach the finished
+color file to send it to the designer for approval. The site-created color is a
+<strong>purchase deliverable only</strong> — never publicly listed, never watermarked for display,
+never added to the designer's portfolio.</p>
+<% if (!queue.length) { %>
+<p class="muted">Queue is empty — nothing waiting on color.</p>
+<% } %>
+<table>
+  <thead><tr><th>Piece</th><th>Artist</th><th>Status</th><th>Designer's note</th><th></th></tr></thead>
+  <tbody>
+  <% queue.forEach(function(d) { %>
+    <tr>
+      <td><%= d.title %></td>
+      <td><%= d.artist_name || d.artist_email || '—' %></td>
+      <td><span class="badge <%= d.status === 'awaiting_color' ? 'warn' : 'ok' %>"><%= d.status %></span></td>
+      <td class="muted"><%= d.colorization_note || '—' %></td>
+      <td>
+        <% if (d.status === 'awaiting_color') { %>
+        <form method="post" action="/admin/colorization/<%= d.id %>/attach" enctype="multipart/form-data" style="display:inline">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <label class="muted">Color version <input type="file" name="color" accept="image/jpeg,image/png,image/webp" required></label>
+          <button class="btn btn-secondary" type="submit">Attach &amp; send for approval</button>
+        </form>
+        <% } else { %>
+        <span class="muted">Waiting on the designer</span>
+        <% } %>
+      </td>
+    </tr>
+  <% }); %>
+  </tbody>
+</table>

@@ -859,6 +859,176 @@ async function main() {
   r = await artreq('POST', `/artist/portfolio/${prow.id}/delete`, {});
   ok(sdb.prepare('SELECT id FROM designs WHERE id = ?').get(prow.id), 'piece with sales cannot be deleted');
 
+  // ===== Linework-only uploads + site colorization workflow =====
+  // Linework-only upload (no color file) is accepted and held.
+  r = await mpost('/artist/portfolio/upload',
+    { title: 'Ink Sketch', description: 'Linework only.', style: 'japanese', categories: 'animals', listing_type: 'custom', watermark_choice: 'site' },
+    { linework: { buffer: lwBuf, filename: 'l.jpg', type: 'image/jpeg' } },
+    artJar);
+  ok(r.status === 302 && r.location === '/artist/portfolio', 'linework-only upload accepted');
+  const lwRow = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('Ink Sketch');
+  ok(lwRow && lwRow.color_source === 'none' && lwRow.status === 'awaiting_color' && !lwRow.color_path,
+    'linework-only upload held as awaiting_color with no color version');
+  ok(pricing.LINEWORK_ONLY_DISCOUNT === 0.03 && pricing.LINEWORK_ONLY_DISCOUNT <= 0.03,
+    'linework-only discount constant is 0.03 and clamped');
+  // Hidden from every public surface.
+  r = await req('GET', '/gallery');
+  ok(!r.text.includes('Ink Sketch'), 'linework-only piece hidden from the gallery');
+  r = await req('GET', `/artists/${bannerArtistId}`);
+  ok(!r.text.includes('Ink Sketch'), 'linework-only piece hidden from the public portfolio');
+  r = await req('GET', '/api/designs');
+  ok(!JSON.parse(r.text).designs.some((d) => d.title === 'Ink Sketch'), 'linework-only piece hidden from the app designs API');
+  // Owner notified on-site that a color version needs creating.
+  const ownerNotif = sdb.prepare(
+    `SELECT c.id FROM conversations c JOIN messages m ON m.conversation_id = c.id
+     WHERE c.subject LIKE '%Color version needed%' AND m.body LIKE '%Ink Sketch%'`).get();
+  ok(!!ownerNotif, 'owner notified on-site that a color version needs creating');
+  // Admin colorization queue lists it.
+  r = await areq('GET', '/admin/colorization');
+  ok(r.status === 200 && r.text.includes('Ink Sketch') && r.text.includes('awaiting_color'),
+    'admin colorization queue lists the linework-only piece');
+
+  // Admin attaches the finished site-created color file.
+  r = await mpost(`/admin/colorization/${lwRow.id}/attach`, {},
+    { color: { buffer: colorBuf, filename: 'c.jpg', type: 'image/jpeg' } }, adminJar);
+  ok(r.status === 302 && r.location === '/admin/colorization', 'admin attaches the color version');
+  const afterAttach = sdb.prepare('SELECT * FROM designs WHERE id = ?').get(lwRow.id);
+  ok(afterAttach.status === 'pending_designer_approval' && afterAttach.color_path
+    && fs.existsSync(path.join(process.env.ASSET_DIR, afterAttach.color_path)),
+    'attaching color moves the piece to pending_designer_approval');
+  ok(afterAttach.color_path.includes('sitecolor'), 'site-created color stored under its own filename');
+  // Designer notified and can preview the color version privately.
+  const artistNotif = sdb.prepare(
+    `SELECT c.id FROM conversations c JOIN messages m ON m.conversation_id = c.id
+     WHERE c.subject LIKE '%ready for approval%' AND m.body LIKE '%Ink Sketch%'`).get();
+  ok(!!artistNotif, 'designer notified that the color version is ready for approval');
+  r = await artreq('GET', `/artist/portfolio/${lwRow.id}/color`);
+  ok(r.status === 200, 'designer can privately preview the site-created color');
+  const strangerRes = await fetch(`http://localhost:${PORT}/artist/portfolio/${lwRow.id}/color`, { redirect: 'manual' });
+  ok(strangerRes.status !== 200, 'color preview is not reachable without login');
+  // Designer approves: color_source becomes 'site', back into admin approval.
+  r = await artreq('POST', `/artist/portfolio/${lwRow.id}/approve-color`, {});
+  const afterApprove = sdb.prepare('SELECT * FROM designs WHERE id = ?').get(lwRow.id);
+  ok(afterApprove.color_source === 'site' && afterApprove.status === 'pending',
+    'designer approval sets color_source=site and status=pending');
+  r = await areq('POST', `/admin/designs/${lwRow.id}/approve`);
+  ok(sdb.prepare('SELECT status FROM designs WHERE id = ?').get(lwRow.id).status === 'approved',
+    'admin approves the piece after designer color approval');
+  // The site-created color never appears anywhere public.
+  r = await req('GET', `/artists/${bannerArtistId}`);
+  ok(r.text.includes('Ink Sketch') && !r.text.includes('sitecolor') && !r.text.includes('/uploads/'),
+    'public portfolio shows the piece but never the site-created color file');
+  r = await req('GET', '/gallery');
+  ok(!r.text.includes('sitecolor'), 'gallery never exposes the site-created color');
+  r = await req('GET', `/design/${lwRow.id}`);
+  ok(r.status === 200 && !r.text.includes('sitecolor') && r.text.includes('Clean linework only'),
+    'design page offers the linework-only choice and never shows the site color');
+
+  // Request-changes round trip on a second linework-only piece.
+  r = await mpost('/artist/portfolio/upload',
+    { title: 'Ink Sketch 2', description: 'Linework only.', style: 'japanese', listing_type: 'custom', watermark_choice: 'site' },
+    { linework: { buffer: lwBuf, filename: 'l.jpg', type: 'image/jpeg' } },
+    artJar);
+  const lw2 = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('Ink Sketch 2');
+  r = await mpost(`/admin/colorization/${lw2.id}/attach`, {},
+    { color: { buffer: colorBuf, filename: 'c.jpg', type: 'image/jpeg' } }, adminJar);
+  r = await artreq('POST', `/artist/portfolio/${lw2.id}/request-changes`, { body: { note: 'Warmer reds please.' } });
+  const afterChanges = sdb.prepare('SELECT * FROM designs WHERE id = ?').get(lw2.id);
+  ok(afterChanges.status === 'awaiting_color' && afterChanges.colorization_note.includes('Warmer reds'),
+    'request-changes returns the piece to awaiting_color with the designer note');
+  r = await areq('GET', '/admin/colorization');
+  ok(r.text.includes('Ink Sketch 2') && r.text.includes('Warmer reds'),
+    'admin queue shows the designer change note');
+  r = await req('GET', '/gallery');
+  ok(!r.text.includes('Ink Sketch 2'), 'change-requested piece stays hidden publicly');
+
+  // ===== Linework-only checkout discount =====
+  const customList = pricing.customFullCents();
+  const lwPrice = pricing.lineworkOnlyPriceCents(customList);
+  ok(lwPrice === Math.round(customList * 0.97), 'linework-only price is 3% off the list price');
+  // Buyer chooses linework only on the site-colored piece.
+  r = await req('POST', `/orders/buy/${lwRow.id}`, { body: { linework_only: '1' }, follow: false });
+  const inkOrderId = r.location.split('/orders/manual/')[1];
+  const inkOrder = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(inkOrderId);
+  ok(inkOrder.amount_cents === lwPrice && inkOrder.linework_only === 1,
+    'linework-only choice charged at the 3%-off price and stored on the order');
+  r = await req('POST', `/orders/manual/${inkOrderId}`, { body: { method: 'cashapp', note: 't' }, follow: false });
+  r = await areq('POST', `/admin/orders/${inkOrderId}/confirm-manual`);
+  const inkLedger = sdb.prepare('SELECT recipient_type, amount_cents, commission_type FROM commission_ledger WHERE order_id = ?').all(inkOrderId);
+  const inkArtist = inkLedger.find((l) => l.recipient_type === 'artist');
+  const inkFee = inkLedger.find((l) => l.commission_type === 'colorization_fee');
+  ok(inkArtist && inkArtist.amount_cents === Math.round(inkOrder.amount_cents * 0.55), 'site-colored sale: designer gets 55%');
+  ok(inkFee && inkFee.recipient_type === 'site' && inkFee.amount_cents === Math.round(inkOrder.amount_cents * 0.05),
+    'site-colored sale: 5-point website colorization fee recorded distinctly');
+  ok(inkLedger.reduce((s, l) => s + l.amount_cents, 0) === inkOrder.amount_cents, 'colorization-fee splits sum to the order total');
+  // Download page offers only linework for the linework-only purchase.
+  r = await req('POST', `/orders/${inkOrderId}/download-token`, { follow: false });
+  const inkToken = r.location.split('/orders/download/')[1].replace('/view', '');
+  r = await req('GET', `/orders/download/${inkToken}/view`);
+  ok(r.status === 200 && !r.text.includes('Download full color') && r.text.includes('clean linework only'),
+    'linework-only download page hides the color option');
+  r = await req('GET', `/orders/download/${inkToken}?file=color`);
+  ok(r.status === 403, 'color download blocked for linework-only purchases');
+  // Full-color purchase of the site-colored piece still records the fee.
+  r = await req('POST', `/orders/buy/${lwRow.id}`, { follow: false });
+  const fullOrderId = r.location.split('/orders/manual/')[1];
+  const fullOrder = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(fullOrderId);
+  ok(fullOrder.amount_cents === customList && !fullOrder.linework_only, 'full-color purchase charged at list price');
+  r = await req('POST', `/orders/manual/${fullOrderId}`, { body: { method: 'cashapp', note: 't' }, follow: false });
+  r = await areq('POST', `/admin/orders/${fullOrderId}/confirm-manual`);
+  const fullLedger = sdb.prepare('SELECT recipient_type, amount_cents, commission_type FROM commission_ledger WHERE order_id = ?').all(fullOrderId);
+  ok(fullLedger.some((l) => l.commission_type === 'colorization_fee' && l.amount_cents === Math.round(fullOrder.amount_cents * 0.05)),
+    'colorization fee applies on the site-colored piece even for full-color purchases');
+  // color_source='none' automatically gets the discounted linework-only price.
+  await db.update('designs', lw2.id, { status: 'approved' });
+  r = await req('POST', `/orders/buy/${lw2.id}`, { follow: false });
+  const noneOrderId = r.location.split('/orders/manual/')[1];
+  const noneOrder = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(noneOrderId);
+  ok(noneOrder.amount_cents === lwPrice && noneOrder.linework_only === 1,
+    "color_source='none' piece auto-priced at the 3%-off linework-only price");
+  r = await req('POST', `/orders/manual/${noneOrderId}`, { body: { method: 'cashapp', note: 't' }, follow: false });
+  r = await areq('POST', `/admin/orders/${noneOrderId}/confirm-manual`);
+  const noneFee = sdb.prepare("SELECT amount_cents FROM commission_ledger WHERE order_id = ? AND commission_type = 'colorization_fee'").get(noneOrderId);
+  ok(noneFee && noneFee.amount_cents === Math.round(noneOrder.amount_cents * 0.05), 'linework-only sale records the colorization fee');
+  // Suspended designer still earns 0 on a site-colored sale.
+  await db.update('users', bannerArtistId, { commission_suspended_until: Date.now() + 86400000 });
+  r = await req('POST', `/orders/buy/${lwRow.id}`, { follow: false });
+  const suspOrderId = r.location.split('/orders/manual/')[1];
+  r = await req('POST', `/orders/manual/${suspOrderId}`, { body: { method: 'cashapp', note: 't' }, follow: false });
+  r = await areq('POST', `/admin/orders/${suspOrderId}/confirm-manual`);
+  const suspLedger = sdb.prepare('SELECT recipient_type, amount_cents, status FROM commission_ledger WHERE order_id = ?').all(suspOrderId);
+  const suspArtist = suspLedger.find((l) => l.recipient_type === 'artist');
+  ok(suspArtist && suspArtist.amount_cents === 0, 'suspended designer earns 0 on site-colored sales');
+  await db.update('users', bannerArtistId, { commission_suspended_until: null });
+
+  // ===== Daily owner sweep =====
+  const { runOwnerSweep } = require('../src/lib/ownerSweep');
+  const dayAgo = Date.now() - 25 * 3600 * 1000;
+  // Isolate from older paid orders left behind by earlier test sections:
+  // treat every other order as already swept.
+  await db.query(
+    `UPDATE commission_ledger SET cleared_at = ? WHERE recipient_type = 'site'
+     AND order_id NOT IN (?, ?, ?, ?)`,
+    [Date.now(), inkOrderId, fullOrderId, noneOrderId, suspOrderId]);
+  await db.query('UPDATE orders SET paid_at = ? WHERE id IN (?, ?, ?)', [dayAgo, inkOrderId, fullOrderId, noneOrderId]);
+  // An order on hold (dispute/review) must NOT be swept.
+  await db.query('UPDATE orders SET on_hold = 1 WHERE id = ?', [fullOrderId]);
+  const artistBefore = sdb.prepare("SELECT status, cleared_at FROM commission_ledger WHERE order_id = ? AND recipient_type = 'artist'").get(inkOrderId);
+  const sweep = await runOwnerSweep({ now: Date.now() });
+  ok(sweep.swept_orders === 2, 'sweep clears exactly the two eligible past-24h paid orders');
+  ok(sweep.gross_cents === inkOrder.amount_cents + noneOrder.amount_cents, 'sweep gross matches the cleared orders');
+  ok(sweep.report.includes('Gross sales cleared') && sweep.report.includes('Commissions owed'),
+    'sweep report covers gross sales, owner net, and commissions owed');
+  ok(sweep.colorization_fees_cents === (inkFee.amount_cents + noneFee.amount_cents),
+    'sweep report breaks out the colorization fees');
+  const inkSiteRows = sdb.prepare("SELECT cleared_at FROM commission_ledger WHERE order_id = ? AND recipient_type = 'site'").all(inkOrderId);
+  ok(inkSiteRows.length > 0 && inkSiteRows.every((x) => x.cleared_at), "owner's rows marked cleared on swept orders");
+  const fullSiteRows = sdb.prepare("SELECT cleared_at FROM commission_ledger WHERE order_id = ? AND recipient_type = 'site'").all(fullOrderId);
+  ok(fullSiteRows.every((x) => !x.cleared_at), 'on-hold order is excluded from the sweep');
+  const artistStillOwed = sdb.prepare("SELECT status, cleared_at FROM commission_ledger WHERE order_id = ? AND recipient_type = 'artist'").get(inkOrderId);
+  ok(artistStillOwed.status === artistBefore.status && !artistStillOwed.cleared_at,
+    'artist commissions untouched by the sweep — stay on their own payout schedule');
+
   sdb.close();
   server.kill();
   await new Promise((res2) => server.on('exit', res2));

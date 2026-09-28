@@ -42,4 +42,14 @@ function money(cents) {
   return `$${(cents / 100).toFixed(2)}`;
 }
 
-module.exports = { isSaleWindow, premadePriceCents, customFullCents, customDepositCents, money, chicagoParts };
+// Linework-only purchase discount (owner rule: the discount may never exceed
+// 3% — the value below is clamped to that ceiling, so raising it here can
+// never silently break the rule).
+const LINEWORK_ONLY_DISCOUNT = Math.min(Math.max(0.03, 0), 0.03);
+
+// Price for a linework-only purchase: list price minus the discount.
+function lineworkOnlyPriceCents(fullCents) {
+  return Math.round(fullCents * (1 - LINEWORK_ONLY_DISCOUNT));
+}
+
+module.exports = { isSaleWindow, premadePriceCents, customFullCents, customDepositCents, money, chicagoParts, LINEWORK_ONLY_DISCOUNT, lineworkOnlyPriceCents };

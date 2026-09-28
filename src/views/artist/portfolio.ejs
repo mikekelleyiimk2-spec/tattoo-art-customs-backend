@@ -18,6 +18,24 @@
       <% if (d.style) { %><span class="badge"><%= d.style %></span><% } %>
     </p>
     <p class="muted"><%= d.sale_count %> sale<%= d.sale_count === 1 ? '' : 's' %></p>
+    <% if (d.status === 'awaiting_color') { %>
+    <p class="muted">Waiting on the site-created color version — we'll notify you when it's ready for your approval.</p>
+    <% } %>
+    <% if (d.status === 'pending_designer_approval') { %>
+    <p><strong>Your color version is ready — approve it or request changes:</strong></p>
+    <img src="/artist/portfolio/<%= d.id %>/color" alt="Site-created color version: <%= d.title %>" loading="lazy">
+    <p>
+      <form method="post" action="/artist/portfolio/<%= d.id %>/approve-color" style="display:inline">
+        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="btn" type="submit">Approve color</button>
+      </form>
+    </p>
+    <form method="post" action="/artist/portfolio/<%= d.id %>/request-changes">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <label class="muted">Changes needed<br><textarea name="note" rows="2" required placeholder="Describe what to change in the color version"></textarea></label><br>
+      <button class="btn btn-secondary" type="submit">Request changes</button>
+    </form>
+    <% } %>
     <p>
       <a class="btn btn-secondary" href="/artist/portfolio/<%= d.id %>/edit">Edit</a>
       <% if (d.sale_count === 0) { %>

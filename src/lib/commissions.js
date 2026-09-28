@@ -109,18 +109,26 @@ async function recordSaleCommissions(order) {
 
   const t = db.now();
   const entries = [];
-  const design = order.design_id ? await db.get('SELECT artist_id FROM designs WHERE id = ?', [order.design_id]) : null;
+  const design = order.design_id ? await db.get('SELECT artist_id, color_source FROM designs WHERE id = ?', [order.design_id]) : null;
   const artistId = design && design.artist_id ? design.artist_id : null;
   const shopId = order.referred_shop_id || null;
+  // Colorization fee: when the designer did not provide the color version
+  // (linework-only upload, with or without a site-created color), their
+  // rate drops 5 points and the website keeps those 5 points as a
+  // colorization fee (recorded distinctly so the owner can see it).
+  const noDesignerColor = !!design && (design.color_source === 'site' || design.color_source === 'none');
+  const designerRate = noDesignerColor ? 0.55 : 0.60;
+  const colorFeeRate = noDesignerColor ? 0.05 : 0;
 
   if (artistId) {
     // Third-party artist work: exactly 60% designer / 10% site / 20% shop.
     // The stated splits sum to 90%; the leftover 10% is kept by the site
     // as an explicit residual entry (never folded into another split).
-    const designerAmt = Math.round(order.amount_paid_cents * 0.60);
+    const designerAmt = Math.round(order.amount_paid_cents * designerRate);
     const siteAmt = Math.round(order.amount_paid_cents * 0.10);
+    const feeAmt = Math.round(order.amount_paid_cents * colorFeeRate);
     const shopBase = Math.round(order.amount_paid_cents * 0.20);
-    const residual = order.amount_paid_cents - designerAmt - siteAmt - shopBase;
+    const residual = order.amount_paid_cents - designerAmt - siteAmt - feeAmt - shopBase;
     const designerEligible = await recipientEligible(artistId, 'design_artist');
     const suspended = await commissionSuspended(artistId, t);
     if (suspended) {
@@ -144,11 +152,18 @@ async function recordSaleCommissions(order) {
     }
     entries.push({
       order_id: order.id, recipient_type: 'site', recipient_id: null,
-      amount_cents: siteAmt, status: 'site_kept', created_at: t,
+      amount_cents: siteAmt, status: 'site_kept', commission_type: 'split', created_at: t,
     });
+    if (feeAmt > 0) {
+      // The website's colorization fee — kept distinctly visible in the ledger.
+      entries.push({
+        order_id: order.id, recipient_type: 'site', recipient_id: null,
+        amount_cents: feeAmt, status: 'site_kept', commission_type: 'colorization_fee', created_at: t,
+      });
+    }
     entries.push({
       order_id: order.id, recipient_type: 'site', recipient_id: null,
-      amount_cents: residual, status: 'site_kept', created_at: t,
+      amount_cents: residual, status: 'site_kept', commission_type: 'split', created_at: t,
     });
     if (shopId) {
       const shopEligible = await recipientEligible(shopId, 'tattoo_shop');

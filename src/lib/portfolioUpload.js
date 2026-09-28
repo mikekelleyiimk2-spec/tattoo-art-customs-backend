@@ -47,12 +47,19 @@ const portfolioUploadMulter = multer({
 ]);
 
 // req.user must be set (requireLogin). Redirects back with a flash message.
+//
+// Linework-only uploads (no color file) are accepted: they get
+// color_source='none', status='awaiting_color' (hidden everywhere until the
+// site-created color version is approved), and the owner is notified that a
+// color version needs creating.
 async function handlePortfolioUpload(req, res, backUrl) {
   const files = req.files || {};
-  if (!files.color || !files.linework) {
-    req.session.flash = 'Both a full-color image and a clean linework image are required.';
+  if (!files.linework) {
+    req.session.flash = 'A clean linework image is required.';
     return res.redirect(backUrl);
   }
+  const hasColor = !!(files.color && files.color[0]);
+  const colorSource = hasColor ? 'designer' : 'none';
   const title = String(req.body.title || '').trim().slice(0, 120);
   if (!title) {
     req.session.flash = 'Give your design a title.';
@@ -88,7 +95,8 @@ async function handlePortfolioUpload(req, res, backUrl) {
     description,
     style,
     categories: JSON.stringify([style, ...extraCats]),
-    color_path: path.relative(config.assetDir, files.color[0].path),
+    color_path: hasColor ? path.relative(config.assetDir, files.color[0].path) : '',
+    color_source: colorSource,
     linework_path: path.relative(config.assetDir, files.linework[0].path),
     linework_wm_path: '', // set by the watermark pipeline below
     price_cents: listingType === 'custom' ? pricing.customFullCents() : pricing.premadePriceCents(),
@@ -97,7 +105,9 @@ async function handlePortfolioUpload(req, res, backUrl) {
     listing_type: listingType,
     watermark_choice: watermarkChoice,
     custom_watermark_path: customWatermarkPath,
-    status: screen.ok ? 'pending' : 'flagged',
+    // Linework-only uploads wait on the site-created color version and are
+    // hidden from every public listing until it is approved.
+    status: colorSource === 'none' ? 'awaiting_color' : (screen.ok ? 'pending' : 'flagged'),
     created_at: db.now(),
     sale_count: 0,
   });
@@ -126,10 +136,22 @@ async function handlePortfolioUpload(req, res, backUrl) {
     wmNote = ' (automatic watermarking needs an admin touch — nothing for you to do)';
   }
   req.session.flash = (screen.ok
-    ? (listingType === 'predesign'
-      ? 'Pre-design uploaded — it goes live in the gallery and your portfolio after admin approval.'
-      : 'Custom portfolio piece uploaded — it goes live in your portfolio after admin approval.')
+    ? (colorSource === 'none'
+      ? 'Linework uploaded — we\u2019ll create the color version and send it to you for approval before it goes live.'
+      : (listingType === 'predesign'
+        ? 'Pre-design uploaded — it goes live in the gallery and your portfolio after admin approval.'
+        : 'Custom portfolio piece uploaded — it goes live in your portfolio after admin approval.'))
     : 'Art uploaded but flagged for review (possible contact info). An admin will review it.') + wmNote;
+  if (colorSource === 'none' && screen.ok) {
+    // Tell the owner a color version needs creating (the assistant creates
+    // it in a work session; attaching happens in /admin/colorization).
+    try {
+      const { notifyColorizationNeeded } = require('./colorization');
+      await notifyColorizationNeeded(id);
+    } catch (e) {
+      console.error('colorization notify failed for design', id, e.message);
+    }
+  }
   res.redirect('/artist/portfolio');
 }
 

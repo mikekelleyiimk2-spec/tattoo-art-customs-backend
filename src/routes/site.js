@@ -3,7 +3,7 @@ const express = require('express');
 const db = require('../db');
 const config = require('../config');
 const { requireLogin } = require('../middleware/auth');
-const { premadePriceCents, customFullCents, isSaleWindow } = require('../lib/pricing');
+const { premadePriceCents, customFullCents, isSaleWindow, lineworkOnlyPriceCents, LINEWORK_ONLY_DISCOUNT } = require('../lib/pricing');
 
 const router = express.Router();
 
@@ -139,6 +139,10 @@ router.get('/design/:id', async (req, res) => {
   res.render('site/design', {
     title: `${design.title} — Tattoo Art Customs`,
     design, artist, price, isCustom, sale: isSaleWindow(), owned,
+    // Linework-only purchase option (3% discount). Pieces with no color
+    // version are linework-only automatically.
+    lineworkPrice: lineworkOnlyPriceCents(price),
+    lineworkDiscount: LINEWORK_ONLY_DISCOUNT,
     metaDescription: `${design.title} — original tattoo design. ${design.categories.join(', ')}.`,
     creditBalance: req.user ? await require('../lib/credits').getCreditBalance(req.user.id) : 0,
   });

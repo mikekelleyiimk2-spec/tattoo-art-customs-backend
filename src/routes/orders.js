@@ -36,12 +36,17 @@ router.post('/buy/:designId', requireLogin, formLimiter, checkHoneypot, async (r
   const design = await db.get("SELECT * FROM designs WHERE id = ? AND status = 'approved'", [req.params.designId]);
   if (!design) return res.status(404).render('error', { title: 'Not found', message: 'That design is not available.' });
   const isCustom = design.listing_type === 'custom';
-  const price = isCustom ? pricing.customFullCents() : premadePriceCents();
+  const listPrice = isCustom ? pricing.customFullCents() : premadePriceCents();
+  // Linework-only purchase: the buyer chose it (3% discount), or the piece
+  // has no color version (automatic 3%-off linework-only price).
+  const lineworkOnly = design.color_source === 'none' || req.body.linework_only === '1';
+  const price = lineworkOnly ? pricing.lineworkOnlyPriceCents(listPrice) : listPrice;
   const refCode = referralFromReq(req);
   const orderId = await db.insert('orders', {
     buyer_id: req.user.id, design_id: design.id, order_type: 'premade',
     amount_cents: price, status: 'pending', payment_method: 'paypal',
     referral_code: refCode, referred_shop_id: await resolveReferral(refCode),
+    linework_only: lineworkOnly ? 1 : 0,
     created_at: db.now(),
   });
   // Pay with site credit when requested and the balance covers it.
@@ -58,7 +63,7 @@ router.post('/buy/:designId', requireLogin, formLimiter, checkHoneypot, async (r
   try {
     const pp = await paypal.createCheckoutOrder({
       amountCents: price,
-      description: `Tattoo Art Customs — "${design.title}"`,
+      description: `Tattoo Art Customs — "${design.title}"${lineworkOnly ? ' (linework only)' : ''}`,
       returnUrl: `${config.baseUrl}/orders/approve/${orderId}`,
       cancelUrl: `${config.baseUrl}/design/${design.id}`,
     });
@@ -228,6 +233,13 @@ router.get('/download/:token', async (req, res) => {
   const order = await db.get('SELECT * FROM orders WHERE id = ?', [dl.order_id]);
   if (!order || order.status !== 'paid') return res.status(403).render('error', { title: 'Forbidden', message: 'This order is not paid.' });
   const which = req.query.file === 'linework' ? 'linework' : 'color';
+  // Linework-only purchases never unlock the color version.
+  if (order.linework_only && which === 'color') {
+    return res.status(403).render('error', {
+      title: 'Not included',
+      message: 'You purchased the clean linework only — the color version is not included in this order.',
+    });
+  }
   let absPath = null;
   if (order.order_type === 'premade' && order.design_id) {
     const design = await db.get('SELECT color_path, linework_path FROM designs WHERE id = ?', [order.design_id]);
@@ -253,7 +265,11 @@ router.get('/download/:token/view', async (req, res) => {
   if (!dl || dl.expires_at < Date.now()) {
     return res.status(410).render('error', { title: 'Link expired', message: 'This download link has expired.' });
   }
-  res.render('orders/download', { title: 'Your download — Tattoo Art Customs', token: req.params.token, metaDescription: '' });
+  const order = await db.get('SELECT linework_only FROM orders WHERE id = ?', [dl.order_id]);
+  res.render('orders/download', {
+    title: 'Your download — Tattoo Art Customs', token: req.params.token,
+    lineworkOnly: !!(order && order.linework_only), metaDescription: '',
+  });
 });
 
 module.exports = router;

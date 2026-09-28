@@ -12,6 +12,7 @@ const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { recordSaleCommissions, verifyOrderCommissions } = require('../lib/commissions');
 const { onOrderPaid } = require('../lib/printful');
 const { routeCustomOrder } = require('../lib/customFulfillment');
+const { colorizationQueue, attachColorVersion } = require('../lib/colorization');
 
 const router = express.Router();
 router.use(requireLogin, requireRole('admin'));
@@ -424,6 +425,51 @@ router.get('/designs', async (req, res) => {
     `SELECT d.*, u.email AS artist_email FROM designs d LEFT JOIN users u ON u.id = d.artist_id
      ORDER BY d.created_at DESC LIMIT 100`);
   res.render('admin/designs', { title: 'Designs — Admin', designs, metaDescription: '' });
+});
+
+// --- Colorization queue: linework-only uploads waiting on the site-created
+// color version. The assistant creates the color in a work session; the admin
+// attaches the finished file here, which sends it to the designer for
+// approval. The site-created color is a purchase deliverable only — never
+// listed publicly or added to the designer's portfolio.
+router.get('/colorization', async (req, res) => {
+  const queue = await colorizationQueue();
+  res.render('admin/colorization', { title: 'Colorization queue — Admin', queue, metaDescription: '' });
+});
+const colorStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.join(config.assetDir, 'designs', 'color');
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname || '').toLowerCase().slice(0, 5) || '.jpg';
+    cb(null, `${req.params.id}-sitecolor${ext}`);
+  },
+});
+const uploadColor = multer({
+  storage: colorStorage,
+  limits: { fileSize: 15 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (/^image\/(jpeg|png|webp)$/.test(file.mimetype)) cb(null, true);
+    else cb(new Error('Only JPG, PNG, or WebP images are allowed.'));
+  },
+}).single('color');
+
+router.post('/colorization/:id/attach', formLimiter, (req, res, next) => {
+  uploadColor(req, res, (err) => {
+    if (err) { req.session.flash = err.message; return res.redirect('/admin/colorization'); }
+    next();
+  });
+}, checkHoneypot, async (req, res) => {
+  if (!req.file) { req.session.flash = 'Choose the finished color image first.'; return res.redirect('/admin/colorization'); }
+  try {
+    await attachColorVersion(req.params.id, req.file.path);
+    req.session.flash = 'Color version attached — sent to the designer for approval.';
+  } catch (e) {
+    req.session.flash = 'Attach failed: ' + e.message;
+  }
+  res.redirect('/admin/colorization');
 });
 
 // --- Members ---
