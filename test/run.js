@@ -1300,6 +1300,8 @@ async function main() {
   r = await artreq('POST', `/artist/portfolio/${grow.id}/edit`, { body: { title: 'Gallery Koi v2', description: 'Koi v2.', style: 'animals', categories: 'fish' } });
   ok(r.status === 302, 'portfolio edit redirects');
   ok(sdb.prepare('SELECT title FROM designs WHERE id = ?').get(grow.id).title === 'Gallery Koi v2', 'portfolio edit updates the piece');
+  r = await artreq('GET', `/artist/portfolio/${grow.id}/edit`);
+  ok(r.status === 200 && r.text.includes(`/artist/portfolio/${grow.id}/delete`), 'edit page exposes the delete control');
   // Upload a throwaway piece to exercise successful deletion.
   r = await mpost('/artist/portfolio/upload',
     { title: 'Deletable Sketch', description: '', style: 'animals', listing_type: 'custom', watermark_choice: 'site' },

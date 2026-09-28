@@ -14,3 +14,7 @@
   <p class="muted">Listing type (<%= design.listing_type === 'custom' ? 'custom portfolio piece' : 'pre-design' %>) and watermark choice can't be changed after upload — delete and re-upload to change them.</p>
   <p><button class="btn" type="submit">Save changes</button> <a class="btn btn-secondary" href="/artist/portfolio">Cancel</a></p>
 </form>
+<form method="post" action="/artist/portfolio/<%= design.id %>/delete" class="form" onsubmit="return confirm('Delete this piece permanently? This cannot be undone.');">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <p><button class="linklike" type="submit">Delete this piece</button></p>
+</form>
