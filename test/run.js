@@ -219,6 +219,48 @@ async function main() {
   r = await req('POST', '/orders/custom', { body: { brief: 'short' }, follow: false });
   ok(r.status === 302, 'short custom brief rejected');
 
+  // SEO: robots + sitemap
+  r = await req('GET', '/robots.txt');
+  ok(r.status === 200 && r.text.includes('sitemap.xml'), 'robots.txt serves sitemap reference');
+  r = await req('GET', '/sitemap.xml');
+  ok(r.status === 200 && r.text.includes('<urlset'), 'sitemap.xml serves urlset');
+
+  // account linking: bad creds rejected, good creds mint token, /api/me works
+  const linkRes = await fetch(`http://localhost:${PORT}/api/link-account`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ email: 'buyer@test.local', password: 'wrong' }),
+  });
+  ok(linkRes.status === 401, 'link-account rejects bad password');
+  const linkOk = await fetch(`http://localhost:${PORT}/api/link-account`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ email: 'buyer@test.local', password: 'password123' }),
+  });
+  const linkBody = await linkOk.json();
+  ok(linkOk.status === 200 && linkBody.ok && linkBody.api_token, 'link-account mints token');
+  const meRes = await fetch(`http://localhost:${PORT}/api/me`, {
+    headers: { 'x-api-token': linkBody.api_token },
+  });
+  const meBody = await meRes.json();
+  ok(meRes.status === 200 && meBody.email === 'buyer@test.local', '/api/me returns linked user');
+
+  // bootstrap without token rejected
+  r = await req('GET', '/api/bootstrap', { follow: false });
+  ok(r.status === 401, 'bootstrap rejects missing token');
+
+  // admin promotion UI: admins page loads, add/remove works
+  r = await areq('GET', '/admin/admins');
+  ok(r.status === 200 && r.text.includes('Add admin'), 'admins page loads');
+  r = await areq('POST', '/admin/admins/add', { body: { email: 'buyer@test.local' } });
+  const roleAfter = sdb.prepare('SELECT role FROM users WHERE email = ?').get('buyer@test.local').role;
+  ok(roleAfter === 'admin', 'promote buyer to admin');
+  r = await areq('POST', '/admin/admins/remove', { body: { id: buyerId } });
+  const roleBack = sdb.prepare('SELECT role FROM users WHERE email = ?').get('buyer@test.local').role;
+  ok(roleBack === 'customer', 'demote admin back to customer');
+  // cannot remove own admin access
+  r = await areq('POST', '/admin/admins/remove', { body: { id: adminId } });
+  const stillAdmin = sdb.prepare("SELECT COUNT(*) AS n FROM users WHERE email = 'admin@test.local' AND role = 'admin'").get().n;
+  ok(stillAdmin === 1, 'cannot remove own admin access');
+
   sdb.close();
   server.kill();
   await new Promise((res2) => server.on('exit', res2));

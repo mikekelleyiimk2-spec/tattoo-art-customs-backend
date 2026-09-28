@@ -1,0 +1,29 @@
+<h1>Admins</h1>
+<p><a href="/admin">← Dashboard</a></p>
+<p class="muted">Admins can see orders, payouts, members, the review queue, and all admin tools. Only promote people you trust.</p>
+<table>
+  <thead><tr><th>Email</th><th>Name</th><th>Since</th><th></th></tr></thead>
+  <tbody>
+  <% admins.forEach(function(a) { %>
+    <tr>
+      <td><%= a.email %></td>
+      <td><%= a.display_name || '—' %></td>
+      <td><%= new Date(a.created_at).toLocaleDateString() %></td>
+      <td>
+        <form method="post" action="/admin/admins/remove" style="display:inline">
+          <input type="hidden" name="id" value="<%= a.id %>">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn btn-secondary" type="submit" onclick="return confirm('Remove admin access?')">Remove</button>
+        </form>
+      </td>
+    </tr>
+  <% }); %>
+  </tbody>
+</table>
+<h2>Add admin</h2>
+<p class="muted">The person must already have a website account — they sign up normally, then you promote them here.</p>
+<form method="post" action="/admin/admins/add">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <label>Email <input type="email" name="email" required></label>
+  <p><button class="btn" type="submit">Make admin</button></p>
+</form>

@@ -15,6 +15,37 @@ router.get('/ads.txt', (req, res) => {
   res.type('text/plain').send(`google.com, ${pubId}, DIRECT, f08c47fec0942fa0\n`);
 });
 
+// robots.txt — allow all crawlers; point them at the sitemap.
+router.get('/robots.txt', (req, res) => {
+  res.type('text/plain').send(
+    `User-agent: *\nAllow: /\nSitemap: ${config.baseUrl}/sitemap.xml\n`);
+});
+
+// sitemap.xml — home, gallery, key pages, and every approved design.
+router.get('/sitemap.xml', async (req, res) => {
+  const base = config.baseUrl.replace(/\/$/, '');
+  const urls = [
+    { loc: `${base}/`, changefreq: 'daily', priority: '1.0' },
+    { loc: `${base}/gallery`, changefreq: 'daily', priority: '0.9' },
+    { loc: `${base}/membership`, changefreq: 'weekly', priority: '0.7' },
+    { loc: `${base}/advertise`, changefreq: 'weekly', priority: '0.6' },
+    { loc: `${base}/about`, changefreq: 'monthly', priority: '0.5' },
+    { loc: `${base}/terms`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy`, changefreq: 'monthly', priority: '0.3' },
+  ];
+  try {
+    const designs = await db.all(
+      "SELECT id FROM designs WHERE status = 'approved' ORDER BY created_at DESC LIMIT 5000");
+    for (const d of designs) {
+      urls.push({ loc: `${base}/design/${d.id}`, changefreq: 'weekly', priority: '0.8' });
+    }
+  } catch { /* sitemap still serves without design URLs */ }
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+    urls.map((u) => `  <url><loc>${u.loc}</loc><changefreq>${u.changefreq}</changefreq><priority>${u.priority}</priority></url>`).join('\n') +
+    `\n</urlset>`;
+  res.type('application/xml').send(xml);
+});
+
 function parseDesign(row) {
   if (!row) return null;
   let categories = [];

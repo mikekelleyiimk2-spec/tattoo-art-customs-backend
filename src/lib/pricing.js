@@ -1,8 +1,8 @@
 // Pricing logic. Single source of truth for the Saturday sale window.
 //
 // Saturday sale: every Saturday 7:00 PM -> Sunday 5:00 AM America/Chicago.
-// During the window premade designs are $50 (regular $75).
-// Custom designs are always $150 with a 50% deposit and 48-hour delivery.
+// During the window premade designs are $50 (regular $75) and custom designs
+// are $125 (regular $150). Custom deposit is always 50%, 48-hour delivery.
 const config = require('../config');
 
 function chicagoParts(date = new Date()) {
@@ -26,8 +26,20 @@ function premadePriceCents(date = new Date()) {
     : config.pricing.premadeRegular;
 }
 
+// Custom design full price: $125 during the Saturday sale, $150 regular.
+function customFullCents(date = new Date()) {
+  return isSaleWindow(date)
+    ? config.pricing.customSaleFull
+    : config.pricing.customFull;
+}
+
+// Custom deposit is always 50% of the current full price.
+function customDepositCents(date = new Date()) {
+  return Math.round(customFullCents(date) / 2);
+}
+
 function money(cents) {
   return `$${(cents / 100).toFixed(2)}`;
 }
 
-module.exports = { isSaleWindow, premadePriceCents, money, chicagoParts };
+module.exports = { isSaleWindow, premadePriceCents, customFullCents, customDepositCents, money, chicagoParts };

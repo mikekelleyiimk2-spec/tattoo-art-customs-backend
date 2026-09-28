@@ -9,6 +9,38 @@ const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { PRODUCTS, productIds } = require('../lib/print');
 
 const router = express.Router();
+
+// --- Public routes (no login): Printful file fetch + webhook ---
+const path = require('path');
+const fs = require('fs');
+const { handleWebhook, webhookSecretOk } = require('../lib/printful');
+
+// Printful fetches the artwork via this token-gated URL (fulfill_token is
+// minted per print order and never exposed to customers).
+router.get('/file/:id', async (req, res) => {
+  const token = String(req.query.token || '');
+  const po = await db.get('SELECT * FROM print_orders WHERE id = ? AND fulfill_token = ?', [req.params.id, token]);
+  if (!po || !token) return res.status(404).send('Not found');
+  let rel = null;
+  if (po.design_id) {
+    const d = await db.get('SELECT color_path, linework_path FROM designs WHERE id = ?', [po.design_id]);
+    if (d) rel = po.style === 'linework' ? d.linework_path : d.color_path;
+  } else if (po.combo_id) {
+    const c = await db.get('SELECT output_path FROM combos WHERE id = ?', [po.combo_id]);
+    if (c) rel = c.output_path;
+  }
+  const abs = rel ? path.join(config.assetDir, rel) : null;
+  if (!abs || !fs.existsSync(abs)) return res.status(404).send('File missing');
+  res.download(abs);
+});
+
+// Printful order status / shipment webhook (?secret=PRINTFUL_WEBHOOK_SECRET).
+router.post('/printful-webhook', express.json(), async (req, res) => {
+  if (!webhookSecretOk(req)) return res.status(403).json({ ok: false });
+  const result = await handleWebhook(req.body);
+  res.json(result);
+});
+
 router.use(requireLogin);
 
 async function ownsDesign(userId, designId) {
@@ -98,7 +130,8 @@ router.post('/order', formLimiter, checkHoneypot, async (req, res) => {
     await db.insert('print_orders', {
       id: db.newId(), order_id: orderId, user_id: req.user.id,
       design_id: designId, combo_id: comboId, product, quantity: qty,
-      style: printStyle, ...ship, status: 'pending', created_at: db.now(),
+      style: printStyle, ...ship, status: 'pending',
+      fulfill_token: db.newId() + db.newId(), created_at: db.now(),
     });
 
     try {

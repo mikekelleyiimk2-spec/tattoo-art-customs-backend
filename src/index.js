@@ -109,6 +109,7 @@ app.use('/artist', require('./routes/artist'));
 app.use('/shop', require('./routes/shop'));
 app.use('/orders', require('./routes/orders'));
 app.use('/play', require('./routes/play'));
+app.use('/api', require('./routes/api').router);
 app.use('/studio', require('./routes/studio'));
 app.use('/prints', require('./routes/prints'));
 app.use('/', require('./routes/ads'));
@@ -134,6 +135,8 @@ async function start() {
   setInterval(() => {
     db.query('DELETE FROM sessions WHERE expires_at < ?', [Date.now()]).catch(() => {});
   }, 3600 * 1000).unref();
+  // Weekly automated commission payouts (Mondays ~9am CT).
+  require('./lib/scheduler').startScheduler();
   app.listen(config.port, () => {
     console.log(`Tattoo Art Customs listening on port ${config.port} (${db.getMode()})`);
     if (!config.paypalConfigured()) {

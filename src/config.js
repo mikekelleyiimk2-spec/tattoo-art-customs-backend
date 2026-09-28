@@ -66,8 +66,9 @@ const config = {
   pricing: {
     premadeRegular: 7500,   // $75
     premadeSale: 5000,      // $50 Saturday sale
-    customFull: 15000,      // $150
-    customDeposit: 7500,    // 50% deposit
+    customFull: 15000,      // $150 regular
+    customSaleFull: 12500,  // $125 Saturday sale
+    customDeposit: 7500,    // 50% deposit (regular price; use pricing.js for sale-aware)
     plans: {
       customer: { slug: 'customer', name: 'Customer Membership', priceCents: 500, interval: 'month' },
       artist: { slug: 'design_artist', name: 'Design Artist', priceCents: 500, interval: 'month' },

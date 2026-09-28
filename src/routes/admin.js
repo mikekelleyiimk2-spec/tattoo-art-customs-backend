@@ -10,6 +10,7 @@ const config = require('../config');
 const { requireLogin, requireRole } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { recordSaleCommissions, verifyOrderCommissions } = require('../lib/commissions');
+const { onOrderPaid } = require('../lib/printful');
 
 const router = express.Router();
 router.use(requireLogin, requireRole('admin'));
@@ -47,7 +48,9 @@ router.post('/orders/:id/confirm-manual', formLimiter, checkHoneypot, async (req
   await db.update('orders', order.id, { status: 'paid', amount_paid_cents: due, paid_at: db.now() });
   const fresh = await db.get('SELECT * FROM orders WHERE id = ?', [order.id]);
   await recordSaleCommissions(fresh);
-  req.session.flash = 'Manual payment confirmed — buyer download unlocked, commissions recorded.';
+  const fulfil = await onOrderPaid(fresh);
+  req.session.flash = 'Manual payment confirmed — buyer download unlocked, commissions recorded.' +
+    (fulfil.submitted ? ' Print auto-submitted to Printful.' : '');
   res.redirect('/admin/orders');
 });
 
@@ -277,6 +280,21 @@ router.post('/payouts/run', formLimiter, checkHoneypot, async (req, res) => {
   res.redirect('/admin/payouts');
 });
 
+// Manually trigger the weekly automated payout run (same code the Monday
+// scheduler runs). Useful for testing or off-schedule payouts.
+router.post('/payouts/auto', formLimiter, checkHoneypot, async (req, res) => {
+  const { runWeeklyPayouts } = require('../lib/autopayout');
+  try {
+    const summary = await runWeeklyPayouts();
+    req.session.flash = summary.failed
+      ? `Automatic payouts failed: ${summary.error} — shares reverted to payable.`
+      : `Automatic payouts done: ${summary.paid.length} recipient(s) paid, ${summary.skipped.length} skipped.`;
+  } catch (e) {
+    req.session.flash = 'Automatic payouts crashed: ' + e.message;
+  }
+  res.redirect('/admin/payouts');
+});
+
 router.post('/payouts/:id/complete', formLimiter, checkHoneypot, async (req, res) => {
   const payout = await db.get('SELECT * FROM payouts WHERE id = ?', [req.params.id]);
   if (!payout || payout.status !== 'queued') {
@@ -369,6 +387,29 @@ router.get('/prints/:id/file', async (req, res) => {
     return res.status(404).render('error', { title: 'Not found', message: 'Print file is missing.' });
   }
   res.download(abs);
+});
+
+// --- Admin user management ---
+router.get('/admins', async (req, res) => {
+  const admins = await db.all("SELECT id, email, display_name, created_at FROM users WHERE role = 'admin' ORDER BY created_at");
+  res.render('admin/admins', { title: 'Admins — Admin', admins, metaDescription: '' });
+});
+
+router.post('/admins/add', formLimiter, checkHoneypot, async (req, res) => {
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const user = await db.get('SELECT id, role FROM users WHERE email = ?', [email]);
+  if (!user) { req.session.flash = 'No account with that email yet — they need to sign up first.'; }
+  else if (user.role === 'admin') { req.session.flash = 'That account is already an admin.'; }
+  else { await db.update('users', user.id, { role: 'admin' }); req.session.flash = `${email} is now an admin.`; }
+  res.redirect('/admin/admins');
+});
+
+router.post('/admins/remove', formLimiter, checkHoneypot, async (req, res) => {
+  const user = await db.get('SELECT id FROM users WHERE id = ?', [req.body.id]);
+  if (!user) { req.session.flash = 'Account not found.'; }
+  else if (user.id === req.user.id) { req.session.flash = 'You cannot remove your own admin access.'; }
+  else { await db.update('users', user.id, { role: 'customer' }); req.session.flash = 'Admin access removed.'; }
+  res.redirect('/admin/admins');
 });
 
 module.exports = router;

@@ -12,7 +12,10 @@
       <td><%= p.style %></td>
       <td><%= p.ship_name %><br><span class="muted"><%= p.ship_address1 %><% if (p.ship_address2) { %>, <%= p.ship_address2 %><% } %><br><%= p.ship_city %>, <%= p.ship_state %> <%= p.ship_zip %><br><%= p.ship_country %></span></td>
       <td><%= money(p.amount_paid_cents || 0) %> <span class="badge"><%= p.pay_status %></span></td>
-      <td><span class="badge"><%= p.status %></span></td>
+      <td><span class="badge"><%= p.status %></span>
+        <% if (p.printful_order_id) { %><br><span class="muted">Printful #<%= p.printful_order_id %></span><% } %>
+        <% if (p.tracking_number) { %><br><span class="muted">Tracking: <% if (p.tracking_url) { %><a href="<%= p.tracking_url %>"><%= p.tracking_number %></a><% } else { %><%= p.tracking_number %><% } %></span><% } %>
+      </td>
       <td>
         <% if (p.pay_status === 'paid') { %>
         <a class="btn btn-secondary" href="/admin/prints/<%= p.id %>/file">Download file</a>

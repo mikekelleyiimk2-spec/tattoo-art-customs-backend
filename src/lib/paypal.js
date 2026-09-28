@@ -114,6 +114,31 @@ async function verifyWebhookSignature({ transmissionId, timestamp, webhookId, ev
   return data.verification_status === 'SUCCESS';
 }
 
+// --- Payouts (weekly automated commission payouts) ---
+// Sends a batch of PayPal payouts (one item per recipient). Requires the
+// Payouts feature enabled on the PayPal business account — PayPal approves
+// this separately; without it the API returns an error and callers keep
+// the ledger rows as payable for manual processing.
+async function createPayoutBatch({ items, note }) {
+  assertConfigured();
+  if (!items.length) throw new Error('No payout items.');
+  const batchId = `tac-weekly-${Date.now()}`;
+  return api('/v1/payments/payouts', 'POST', {
+    sender_batch_header: {
+      sender_batch_id: batchId,
+      email_subject: 'Your Tattoo Art Customs payout is on its way',
+      email_message: note || 'Commission payout from Tattoo Art Customs. Thank you!',
+    },
+    items: items.map((it, i) => ({
+      recipient_type: 'EMAIL',
+      amount: { value: (it.amountCents / 100).toFixed(2), currency: 'USD' },
+      receiver: it.recipientEmail,
+      note: it.note || 'Tattoo Art Customs commission payout',
+      sender_item_id: `${batchId}-item-${i}`,
+    })),
+  });
+}
+
 module.exports = {
   PayPalNotConfigured,
   assertConfigured,
@@ -123,4 +148,5 @@ module.exports = {
   getSubscription,
   cancelSubscription,
   verifyWebhookSignature,
+  createPayoutBatch,
 };

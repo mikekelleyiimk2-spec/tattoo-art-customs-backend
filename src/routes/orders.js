@@ -10,8 +10,10 @@ const config = require('../config');
 const paypal = require('../lib/paypal');
 const { requireLogin } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
-const { premadePriceCents, isSaleWindow } = require('../lib/pricing');
+const pricing = require('../lib/pricing');
+const { premadePriceCents, isSaleWindow } = pricing;
 const { recordSaleCommissions } = require('../lib/commissions');
+const { onOrderPaid } = require('../lib/printful');
 
 const router = express.Router();
 
@@ -54,12 +56,16 @@ router.post('/buy/:designId', requireLogin, formLimiter, checkHoneypot, async (r
   }
 });
 
-// --- Custom design request: brief + 50% deposit ---
-router.get('/custom', requireLogin, (req, res) => res.render('orders/custom', {
-  title: 'Request a Custom Design — Tattoo Art Customs',
-  deposit: config.pricing.customDeposit, full: config.pricing.customFull,
-  metaDescription: 'Order a custom tattoo design — $150, 50% deposit, 48-hour delivery.',
-}));
+// --- Custom design request: brief + 50% deposit (Saturday-aware pricing) ---
+router.get('/custom', requireLogin, (req, res) => {
+  const full = pricing.customFullCents();
+  const deposit = pricing.customDepositCents();
+  res.render('orders/custom', {
+    title: 'Request a Custom Design — Tattoo Art Customs',
+    deposit, full, sale: pricing.isSaleWindow(),
+    metaDescription: `Order a custom tattoo design — ${pricing.money(full)}, 50% deposit, 48-hour delivery.`,
+  });
+});
 router.post('/custom', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
   const brief = String(req.body.brief || '').trim().slice(0, 4000);
   if (brief.length < 20) {
@@ -67,10 +73,12 @@ router.post('/custom', requireLogin, formLimiter, checkHoneypot, async (req, res
     return res.redirect('/orders/custom');
   }
   const refCode = referralFromReq(req);
+  const full = pricing.customFullCents();
+  const deposit = pricing.customDepositCents();
   const orderId = await db.insert('orders', {
     buyer_id: req.user.id, order_type: 'custom',
-    amount_cents: config.pricing.customFull,
-    deposit_cents: config.pricing.customDeposit,
+    amount_cents: full,
+    deposit_cents: deposit,
     status: 'pending', payment_method: 'paypal',
     referral_code: refCode, referred_shop_id: await resolveReferral(refCode),
     custom_brief: brief,
@@ -79,7 +87,7 @@ router.post('/custom', requireLogin, formLimiter, checkHoneypot, async (req, res
   });
   try {
     const pp = await paypal.createCheckoutOrder({
-      amountCents: config.pricing.customDeposit,
+      amountCents: deposit,
       description: 'Tattoo Art Customs — custom design deposit (50%)',
       returnUrl: `${config.baseUrl}/orders/approve/${orderId}`,
       cancelUrl: `${config.baseUrl}/orders/custom`,
@@ -125,7 +133,9 @@ router.get('/approve/:orderId', requireLogin, async (req, res) => {
     });
     const fresh = await db.get('SELECT * FROM orders WHERE id = ?', [order.id]);
     await recordSaleCommissions(fresh);
-    req.session.flash = 'Payment received — your download is ready.';
+    const fulfil = await onOrderPaid(fresh);
+    req.session.flash = 'Payment received — your download is ready.' +
+      (fulfil.submitted ? ' Your print was sent to the printer automatically.' : '');
     res.redirect(`/orders/${order.id}`);
   } catch (e) {
     req.session.flash = 'Payment capture failed: ' + e.message;

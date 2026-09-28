@@ -1,5 +1,10 @@
 <h1>Payouts</h1>
 <p><a href="/admin">← Dashboard</a></p>
+<p class="muted">Commissions are paid automatically every Monday morning via PayPal Payouts (recipients owed at least $5 with a payout email on file). Anything skipped or failed stays payable and can be handled manually below.</p>
+<form method="post" action="/admin/payouts/auto" style="margin:12px 0">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <button class="btn" type="submit" onclick="return confirm('Run the automatic payout batch now?')">Run automatic payouts now</button>
+</form>
 <h2>Payable balances</h2>
 <table>
   <thead><tr><th>Recipient</th><th>Email</th><th>Type</th><th>Balance</th><th>PayPal email</th><th></th></tr></thead>
