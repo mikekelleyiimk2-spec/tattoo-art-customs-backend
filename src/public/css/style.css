@@ -1,0 +1,94 @@
+/* Tattoo Art Customs — tattoo-studio aesthetic: warm charcoal, cream paper,
+   blood-red accent. High contrast, mobile-first, keyboard-focus visible. */
+:root {
+  --ink: #1c1a17;
+  --paper: #f7f3ea;
+  --paper-dim: #efe8d8;
+  --accent: #a31621;
+  --accent-dark: #7c0f18;
+  --muted: #6b6257;
+  --line: #ddd3c0;
+  --ok: #2e7d32;
+  --warn: #b26a00;
+  --radius: 10px;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font-family: Georgia, 'Times New Roman', serif; line-height: 1.6;
+  font-size: 17px;
+}
+h1, h2, h3 { font-family: 'Arial Black', Arial, sans-serif; letter-spacing: .5px; line-height: 1.25; }
+h1 { font-size: 2rem; margin: .5em 0; }
+h2 { font-size: 1.4rem; margin-top: 1.5em; }
+a { color: var(--accent); }
+a:hover, a:focus { color: var(--accent-dark); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 3px solid var(--accent); outline-offset: 2px;
+}
+.skip {
+  position: absolute; left: -9999px; top: 0; background: var(--ink); color: #fff; padding: .5em 1em; z-index: 99;
+}
+.skip:focus { left: 0; }
+.container { max-width: 1080px; margin: 0 auto; padding: 0 1rem; }
+.site-header { background: var(--ink); color: var(--paper); position: sticky; top: 0; z-index: 50; }
+.nav { max-width: 1080px; margin: 0 auto; padding: .6rem 1rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.brand { color: var(--paper); text-decoration: none; font-family: 'Arial Black', Arial, sans-serif; font-size: 1.2rem; }
+.nav-links { display: flex; gap: .9rem; align-items: center; margin-left: auto; flex-wrap: wrap; }
+.nav-links a { color: var(--paper); text-decoration: none; font-size: .95rem; }
+.nav-links a:hover { text-decoration: underline; }
+.nav-toggle { display: none; background: none; border: 1px solid var(--paper); color: var(--paper); font-size: 1.2rem; padding: .2em .5em; border-radius: 6px; margin-left: auto; cursor: pointer; }
+.btn {
+  display: inline-block; background: var(--accent); color: #fff !important; border: none;
+  padding: .6em 1.2em; border-radius: var(--radius); text-decoration: none; cursor: pointer; font-size: 1rem;
+}
+.btn:hover, .btn:focus { background: var(--accent-dark); color: #fff; }
+.btn-secondary { background: var(--ink); }
+.flash {
+  background: #fff3cd; border: 1px solid #e0c36a; color: #5c4a00;
+  max-width: 1080px; margin: 1rem auto; padding: .7em 1em; border-radius: var(--radius);
+}
+.card {
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 1.2rem; margin: 1rem 0;
+}
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+.design-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.design-card img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: var(--paper-dim); }
+.design-card .pad { padding: .7rem; }
+.design-card h3 { margin: .2em 0; font-size: 1.05rem; }
+.tag { display: inline-block; background: var(--paper-dim); border-radius: 20px; padding: .1em .7em; font-size: .8rem; margin: .15em; }
+.sale-banner { background: var(--accent); color: #fff; padding: .8em 1em; border-radius: var(--radius); text-align: center; font-weight: bold; }
+form.form { max-width: 560px; }
+label { display: block; margin: .8em 0 .3em; font-weight: bold; }
+input[type=text], input[type=email], input[type=password], input[type=url], textarea, select {
+  width: 100%; padding: .6em; border: 1px solid var(--line); border-radius: 6px; font-size: 1rem; background: #fff; color: var(--ink);
+}
+textarea { min-height: 120px; }
+.hp { position: absolute; left: -9999px; } /* honeypot */
+table { width: 100%; border-collapse: collapse; margin: 1em 0; font-size: .95rem; }
+th, td { text-align: left; padding: .55em .6em; border-bottom: 1px solid var(--line); }
+th { background: var(--paper-dim); }
+.badge { display: inline-block; padding: .15em .7em; border-radius: 20px; font-size: .8rem; background: var(--paper-dim); }
+.badge.ok { background: #d9ecd9; color: #1d5c22; }
+.badge.warn { background: #f7e3c2; color: #7a4d00; }
+.badge.bad { background: #f3cfcf; color: #7c0f18; }
+.site-footer { background: var(--ink); color: var(--paper); margin-top: 3rem; padding: 2rem 0 1rem; }
+.footer-grid { display: flex; gap: 2rem; justify-content: space-between; flex-wrap: wrap; }
+.site-footer nav { display: flex; gap: 1rem; flex-wrap: wrap; }
+.site-footer a { color: var(--paper); }
+.fineprint { text-align: center; font-size: .8rem; color: #b9b0a0; margin-top: 1.5em; }
+.detail-img { max-width: 520px; width: 100%; border: 1px solid var(--line); border-radius: var(--radius); }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.thread { list-style: none; padding: 0; }
+.thread li { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: .8em 1em; margin: .6em 0; }
+.thread li.mine { background: #fdf6e8; margin-left: 2rem; }
+.muted { color: var(--muted); font-size: .9rem; }
+@media (max-width: 700px) {
+  .two-col { grid-template-columns: 1fr; }
+  .nav-toggle { display: block; }
+  .nav-links { display: none; width: 100%; flex-direction: column; align-items: flex-start; }
+  .nav.open .nav-links { display: flex; }
+  h1 { font-size: 1.5rem; }
+}

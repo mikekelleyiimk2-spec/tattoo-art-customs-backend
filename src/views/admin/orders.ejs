@@ -1,0 +1,42 @@
+<h1>Orders</h1>
+<p><a href="/admin">← Dashboard</a></p>
+<table>
+  <thead><tr><th>ID</th><th>Buyer</th><th>Type</th><th>Design</th><th>Amount</th><th>Paid</th><th>Method</th><th>Status</th><th>Referral</th><th></th></tr></thead>
+  <tbody>
+  <% orders.forEach(function(o) { %>
+    <tr>
+      <td><a href="/orders/<%= o.id %>"><%= o.id.slice(0,8) %></a></td>
+      <td><%= o.buyer_email %></td>
+      <td><%= o.order_type %></td>
+      <td><%= o.design_title || '—' %></td>
+      <td><%= money(o.amount_cents) %></td>
+      <td><%= money(o.amount_paid_cents) %></td>
+      <td><%= o.payment_method %></td>
+      <td><span class="badge"><%= o.status %></span></td>
+      <td><%= o.referral_code || '—' %></td>
+      <td>
+        <% if (o.status === 'pending' && o.payment_method !== 'paypal') { %>
+        <form method="post" action="/admin/orders/<%= o.id %>/confirm-manual" style="display:inline">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn" type="submit">Confirm manual payment</button>
+        </form>
+        <% } %>
+        <% if (o.status === 'paid' && o.referral_code) { %>
+        <form method="post" action="/admin/orders/<%= o.id %>/verify-referral" style="display:inline">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn btn-secondary" type="submit">Verify referral sale</button>
+        </form>
+        <% } %>
+        <% if (o.order_type === 'custom' && o.status === 'paid') { %>
+        <form method="post" action="/admin/orders/<%= o.id %>/attach" enctype="multipart/form-data" style="display:inline">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <label class="muted">Color <input type="file" name="color" accept="image/*"></label>
+          <label class="muted">Linework <input type="file" name="linework" accept="image/*"></label>
+          <button class="btn btn-secondary" type="submit">Attach finished files</button>
+        </form>
+        <% } %>
+      </td>
+    </tr>
+  <% }); %>
+  </tbody>
+</table>

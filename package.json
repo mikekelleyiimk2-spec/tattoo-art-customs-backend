@@ -1,0 +1,35 @@
+{
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-ejs-layouts": "^2.5.1",
+    "express-rate-limit": "^8.7.0",
+    "express-session": "^1.18.1",
+    "helmet": "^8.0.0",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.14",
+    "pg": "^8.13.1"
+  },
+  "description": "Tattoo Art Customs marketplace backend — Express + PostgreSQL (SQLite fallback), server-rendered, PayPal payments.",
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED",
+  "main": "src/index.js",
+  "name": "tattoo-art-customs-backend",
+  "optionalDependencies": {
+    "better-sqlite3": "^13.0.3"
+  },
+  "private": true,
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "migrate": "node src/db/migrate.js",
+    "seed": "node src/db/seed.js",
+    "start": "node src/index.js",
+    "test": "node test/run.js"
+  },
+  "version": "1.0.0"
+}

@@ -1,0 +1,9 @@
+<h1>Messages</h1>
+<p><a class="btn" href="/account">← Account</a></p>
+<% if (!conversations.length) { %><p class="muted">No conversations yet.</p><% } %>
+<ul class="thread">
+  <% conversations.forEach(function(c) { %>
+  <li><a href="/messages/<%= c.id %>"><%= c.subject || 'Conversation' %></a>
+    <span class="muted"><%= c.last_at ? new Date(c.last_at).toLocaleString() : '' %></span></li>
+  <% }); %>
+</ul>

@@ -1,0 +1,87 @@
+// Public pages: home, gallery, design detail, terms, privacy.
+const express = require('express');
+const db = require('../db');
+const { premadePriceCents, isSaleWindow } = require('../lib/pricing');
+
+const router = express.Router();
+
+function parseDesign(row) {
+  if (!row) return null;
+  let categories = [];
+  try { categories = JSON.parse(row.categories || '[]'); } catch { /* keep empty */ }
+  return { ...row, categories };
+}
+
+async function approvedDesigns() {
+  const rows = await db.all(
+    "SELECT * FROM designs WHERE status = 'approved' ORDER BY created_at DESC");
+  return rows.map(parseDesign);
+}
+
+// Capture referral codes (?ref=CODE) into a cookie for checkout attribution.
+router.use((req, res, next) => {
+  if (req.query.ref) {
+    res.cookie('ref_code', String(req.query.ref).slice(0, 32), {
+      maxAge: 30 * 24 * 3600 * 1000, httpOnly: true, sameSite: 'lax',
+    });
+  }
+  next();
+});
+
+router.get('/', async (req, res) => {
+  const designs = (await approvedDesigns()).slice(0, 12);
+  res.render('site/index', {
+    title: 'Tattoo Art Customs — Custom Tattoo Designs',
+    designs, sale: isSaleWindow(),
+    metaDescription: 'Browse hundreds of original tattoo designs. Custom designs $150 with 48-hour delivery. Design artists earn 60% commission.',
+  });
+});
+
+router.get('/gallery', async (req, res) => {
+  const q = (req.query.q || '').trim().toLowerCase();
+  const cat = (req.query.cat || '').trim().toLowerCase();
+  let designs = await approvedDesigns();
+  const allCats = [...new Set(designs.flatMap((d) => d.categories))].sort();
+  if (cat) designs = designs.filter((d) => d.categories.some((c) => c.toLowerCase() === cat));
+  if (q) {
+    designs = designs.filter((d) =>
+      d.title.toLowerCase().includes(q) || d.description.toLowerCase().includes(q) ||
+      d.categories.some((c) => c.toLowerCase().includes(q)));
+  }
+  res.render('site/gallery', {
+    title: 'Design Gallery — Tattoo Art Customs',
+    designs, allCats, q: req.query.q || '', cat: req.query.cat || '', sale: isSaleWindow(),
+    metaDescription: 'Browse and search original tattoo designs by category.',
+  });
+});
+
+router.get('/design/:id', async (req, res) => {
+  const design = parseDesign(await db.get(
+    "SELECT * FROM designs WHERE id = ? AND status = 'approved'", [req.params.id]));
+  if (!design) return res.status(404).render('error', { title: 'Not found', message: 'That design is not available.' });
+  const artist = design.artist_id
+    ? await db.get('SELECT display_name FROM users WHERE id = ?', [design.artist_id])
+    : null;
+  res.render('site/design', {
+    title: `${design.title} — Tattoo Art Customs`,
+    design, artist, price: premadePriceCents(), sale: isSaleWindow(),
+    metaDescription: `${design.title} — original tattoo design. ${design.categories.join(', ')}.`,
+  });
+});
+
+router.get('/terms', (req, res) => res.render('site/terms', {
+  title: 'Terms of Service — Tattoo Art Customs',
+  metaDescription: 'Tattoo Art Customs terms of service.',
+}));
+
+router.get('/privacy', (req, res) => res.render('site/privacy', {
+  title: 'Privacy Policy — Tattoo Art Customs',
+  metaDescription: 'Tattoo Art Customs privacy policy.',
+}));
+
+router.get('/about', (req, res) => res.render('site/about', {
+  title: 'About — Tattoo Art Customs',
+  metaDescription: 'About Tattoo Art Customs marketplace.',
+}));
+
+module.exports = router;

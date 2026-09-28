@@ -1,0 +1,17 @@
+<h1><%= conv.subject || 'Conversation' %></h1>
+<p><a href="/messages">← All messages</a></p>
+<ul class="thread">
+  <% messages.forEach(function(m) { %>
+  <li class="<%= m.sender_id === currentUser.id ? 'mine' : '' %>">
+    <strong><%= m.sender_name %></strong> <span class="muted"><%= new Date(m.created_at).toLocaleString() %></span>
+    <p><%= m.body %></p>
+  </li>
+  <% }); %>
+</ul>
+<form method="post" action="/messages/<%= conv.id %>" class="form">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <label for="body">Message</label>
+  <textarea id="body" name="body" required maxlength="4000"></textarea>
+  <p><button class="btn" type="submit">Send</button></p>
+</form>
+<p class="muted">All contact stays on the site — messages with emails, phones, links, or socials are held for review.</p>

@@ -1,0 +1,46 @@
+<h1>My account</h1>
+<p class="muted">Signed in as <%= currentUser.email %> · Role: <strong><%= currentUser.role.replace('_', ' ') %></strong></p>
+
+<div class="two-col">
+  <section class="card">
+    <h2>Profile</h2>
+    <form method="post" action="/account/profile" class="form">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <label for="display_name">Display name</label>
+      <input type="text" id="display_name" name="display_name" value="<%= currentUser.display_name %>" maxlength="60">
+      <p><button class="btn" type="submit">Save</button></p>
+    </form>
+    <h2>Subscriptions</h2>
+    <% if (!subs.length) { %><p class="muted">None — <a href="/membership">see plans</a>.</p><% } %>
+    <ul><% subs.forEach(function(s) { %><li><%= s.plan_name %> — <span class="badge <%= s.status === 'active' ? 'ok' : 'warn' %>"><%= s.status %></span></li><% }); %></ul>
+    <h2>Recent orders</h2>
+    <% if (!orders.length) { %><p class="muted">No orders yet.</p><% } %>
+    <ul><% orders.forEach(function(o) { %><li><a href="/orders/<%= o.id %>">Order <%= o.id.slice(0,8) %></a> — <%= o.order_type %> — <%= money(o.amount_cents) %> — <span class="badge"><%= o.status %></span></li><% }); %></ul>
+  </section>
+
+  <section class="card">
+    <h2>My tattoo photos</h2>
+    <form method="post" action="/account/photos" enctype="multipart/form-data" class="form">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <label for="photo">Upload a photo</label>
+      <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp" required>
+      <label for="caption">Caption</label>
+      <input type="text" id="caption" name="caption" maxlength="140">
+      <p><button class="btn" type="submit">Upload</button></p>
+    </form>
+    <div class="grid">
+      <% photos.forEach(function(p) { %>
+      <div class="design-card">
+        <img src="<%= p.path %>" alt="<%= p.caption || 'Member tattoo photo' %>" loading="lazy">
+        <div class="pad">
+          <p class="muted"><%= p.caption %></p>
+          <form method="post" action="/account/photos/<%= p.id %>/delete" onsubmit="return confirm('Remove this photo?')">
+            <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+            <button class="btn btn-secondary" type="submit">Remove</button>
+          </form>
+        </div>
+      </div>
+      <% }); %>
+    </div>
+  </section>
+</div>

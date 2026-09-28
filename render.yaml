@@ -1,0 +1,51 @@
+# Render Blueprint — one-click deploy for Tattoo Art Customs.
+# In Render: New > Blueprint > point at the repo containing this file.
+services:
+  - type: web
+    name: tattoo-art-customs
+    runtime: docker
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: tattoo-art-customs-db
+          property: connectionString
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: BASE_URL
+        value: https://tattoo-art-customs.onrender.com
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: PAYPAL_MODE
+        value: live
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false
+      - key: PAYPAL_PLAN_CUSTOMER
+        sync: false
+      - key: PAYPAL_PLAN_ARTIST
+        sync: false
+      - key: PAYPAL_PLAN_SHOP
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+
+databases:
+  - name: tattoo-art-customs-db
+    plan: starter

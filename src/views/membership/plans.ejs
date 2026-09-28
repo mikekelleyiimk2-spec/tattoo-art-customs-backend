@@ -1,0 +1,45 @@
+<h1>Membership</h1>
+<% if (!paypalReady) { %>
+<div class="card"><p><strong>Payments are being set up.</strong> Membership checkout via PayPal will be available soon — your account works for browsing in the meantime.</p></div>
+<% } %>
+
+<h2>Plans</h2>
+<div class="grid">
+  <% plans.forEach(function(p) { %>
+  <div class="card">
+    <h3><%= p.name %></h3>
+    <p><strong><%= money(p.price_cents) %></strong> / <%= p.interval %></p>
+    <p class="muted"><%= p.description %></p>
+    <% if (paypalReady) { %>
+    <form method="post" action="/membership/subscribe/<%= p.slug %>">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button class="btn" type="submit">Subscribe</button>
+    </form>
+    <% } %>
+  </div>
+  <% }); %>
+</div>
+
+<h2>Your subscriptions</h2>
+<% if (!subs.length) { %><p class="muted">No subscriptions yet.</p><% } %>
+<table>
+  <thead><tr><th>Plan</th><th>Status</th><th>Renews</th><th></th></tr></thead>
+  <tbody>
+  <% subs.forEach(function(s) { %>
+    <tr>
+      <td><%= s.plan_name %></td>
+      <td><span class="badge <%= s.status === 'active' ? 'ok' : 'warn' %>"><%= s.status %></span></td>
+      <td><%= s.current_period_end ? new Date(s.current_period_end).toLocaleDateString() : '—' %></td>
+      <td>
+        <% if (s.status === 'active') { %>
+        <form method="post" action="/membership/cancel/<%= s.id %>" onsubmit="return confirm('Cancel this membership? All memberships are final and non-refundable.')">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn btn-secondary" type="submit">Cancel</button>
+        </form>
+        <% } %>
+      </td>
+    </tr>
+  <% }); %>
+  </tbody>
+</table>
+<p class="muted">All memberships are final and non-refundable. Canceling stops renewal; access continues until the period ends.</p>

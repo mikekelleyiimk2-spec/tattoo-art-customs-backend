@@ -1,0 +1,36 @@
+<h1>Design gallery</h1>
+<p class="muted">Showing linework previews only — full color is delivered to buyers after purchase.</p>
+<% if (sale) { %><div class="sale-banner" role="status">🔥 Saturday sale: premade designs $50 until 5 AM CT Sunday.</div><% } %>
+
+<form method="get" action="/gallery" class="card" role="search" aria-label="Search designs">
+  <div class="two-col">
+    <div>
+      <label for="q">Search</label>
+      <input type="text" id="q" name="q" value="<%= q %>" placeholder="wolf, mandala, rose…">
+    </div>
+    <div>
+      <label for="cat">Category</label>
+      <select id="cat" name="cat">
+        <option value="">All categories</option>
+        <% allCats.forEach(function(c) { %>
+        <option value="<%= c %>" <%= cat === c ? 'selected' : '' %>><%= c %></option>
+        <% }); %>
+      </select>
+    </div>
+  </div>
+  <p><button class="btn" type="submit">Search</button></p>
+</form>
+
+<% if (!designs.length) { %><p>No designs match. Try another search.</p><% } %>
+<div class="grid">
+  <% designs.forEach(function(d) { %>
+  <article class="design-card">
+    <a href="/design/<%= d.id %>"><img src="/img/designs/<%= d.linework_wm_path.split('/').pop() %>" alt="Tattoo design: <%= d.title %>" loading="lazy"></a>
+    <div class="pad">
+      <h3><a href="/design/<%= d.id %>"><%= d.title %></a></h3>
+      <% d.categories.slice(0,3).forEach(function(c) { %><span class="tag"><%= c %></span><% }); %>
+      <p class="muted"><%= money(d.price_cents) %></p>
+    </div>
+  </article>
+  <% }); %>
+</div>

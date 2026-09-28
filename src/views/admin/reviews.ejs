@@ -1,0 +1,26 @@
+<h1>Review queue</h1>
+<p><a href="/admin">← Dashboard</a></p>
+<% if (!items.length) { %><p class="muted">Nothing waiting for review.</p><% } %>
+<table>
+  <thead><tr><th>Type</th><th>Item</th><th>Reason</th><th>Flagged</th><th></th></tr></thead>
+  <tbody>
+  <% items.forEach(function(i) { %>
+    <tr>
+      <td><%= i.item_type %></td>
+      <td><%= i.item_id.slice(0,12) %></td>
+      <td><%= i.reason %></td>
+      <td><%= new Date(i.created_at).toLocaleString() %></td>
+      <td>
+        <form method="post" action="/admin/reviews/<%= i.id %>/approve" style="display:inline">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn" type="submit">Approve</button>
+        </form>
+        <form method="post" action="/admin/reviews/<%= i.id %>/reject" style="display:inline">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn btn-secondary" type="submit">Reject</button>
+        </form>
+      </td>
+    </tr>
+  <% }); %>
+  </tbody>
+</table>

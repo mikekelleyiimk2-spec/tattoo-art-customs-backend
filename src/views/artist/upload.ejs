@@ -1,0 +1,16 @@
+<h1>Upload a design</h1>
+<p class="muted">Upload both the <strong>full-color</strong> version and the <strong>clean linework</strong> version. Public visitors only ever see the watermarked linework. Your design goes live after admin review.</p>
+<form method="post" action="/artist/upload" enctype="multipart/form-data" class="form">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <label for="title">Title</label>
+  <input type="text" id="title" name="title" maxlength="120" required>
+  <label for="description">Description</label>
+  <textarea id="description" name="description" maxlength="2000"></textarea>
+  <label for="categories">Categories (comma-separated, e.g. animals, blackwork, floral)</label>
+  <input type="text" id="categories" name="categories" maxlength="300">
+  <label for="color">Full-color image (JPG/PNG/WebP, max 15 MB)</label>
+  <input type="file" id="color" name="color" accept="image/jpeg,image/png,image/webp" required>
+  <label for="linework">Clean linework image (JPG/PNG/WebP, max 15 MB)</label>
+  <input type="file" id="linework" name="linework" accept="image/jpeg,image/png,image/webp" required>
+  <p><button class="btn" type="submit">Upload for review</button></p>
+</form>

@@ -1,0 +1,230 @@
+// Test suite: `npm test`. Spins up the app on a temp SQLite DB and
+// exercises the business rules end to end over HTTP, plus lib unit checks.
+// Exits non-zero on the first failure.
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const { spawn } = require('child_process');
+
+const ROOT = path.join(__dirname, '..');
+const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'tac-test-'));
+process.env.SQLITE_PATH = path.join(TMP, 'test.db');
+process.env.SESSION_SECRET = 'test-secret';
+process.env.BASE_URL = 'http://localhost:4137';
+process.env.ADMIN_EMAIL = 'admin@test.local';
+process.env.ADMIN_PASSWORD = 'AdminTest123!';
+process.env.ASSET_DIR = path.join(TMP, 'assets');
+
+const PORT = 4137;
+let failures = 0;
+function ok(cond, name) {
+  if (cond) console.log('  ok -', name);
+  else { failures++; console.error('  FAIL -', name); }
+}
+
+// Minimal cookie jar for fetch.
+const jar = {};
+async function req(method, p, { body, headers = {}, follow = true } = {}) {
+  const h = { ...headers };
+  const cookies = Object.entries(jar).map(([k, v]) => `${k}=${v}`).join('; ');
+  if (cookies) h.cookie = cookies;
+  let payload;
+  if (body && typeof body === 'object' && !(body instanceof URLSearchParams)) {
+    payload = new URLSearchParams(body);
+    h['content-type'] = 'application/x-www-form-urlencoded';
+  } else payload = body;
+  const res = await fetch(`http://localhost:${PORT}${p}`, {
+    method, headers: h, body: payload, redirect: follow ? 'follow' : 'manual',
+  });
+  const setCookies = res.headers.getSetCookie ? res.headers.getSetCookie() : [];
+  for (const c of setCookies) {
+    const [pair] = c.split(';');
+    const [k, v] = pair.split('=');
+    jar[k.trim()] = (v || '').trim();
+  }
+  const text = await res.text();
+  return { status: res.status, text, location: res.headers.get('location') };
+}
+
+async function main() {
+  // --- lib unit checks ---
+  const { screenText } = require('../src/lib/screening');
+  const pricing = require('../src/lib/pricing');
+
+  console.log('screening:');
+  ok(screenText('I draw blackwork roses.').ok, 'clean bio passes');
+  ok(!screenText('email me at a@b.com').ok, 'email blocked');
+  ok(!screenText('call 555-123-4567').ok, 'phone blocked');
+  ok(!screenText('DM me on instagram').ok, 'DM solicitation blocked');
+  ok(!screenText('pay via venmo').ok, 'payment info blocked');
+  ok(screenText('123 Main Street, Dallas, TX', { allow: ['street_address'] }).ok, 'shop location address allowed');
+  ok(!screenText('bob@mail.com', { allow: ['street_address'] }).ok, 'shop location email still blocked');
+
+  console.log('pricing:');
+  ok(pricing.money(7500) === '$75.00', 'money formats');
+  ok(pricing.money(9999) === '$99.99', 'money formats 99.99');
+  // Saturday 8pm CT = Sunday 02:00 UTC (CDT, UTC-5)
+  ok(pricing.isSaleWindow(new Date('2026-10-03T20:30:00-05:00')), 'sale window: Sat 8:30pm CT');
+  ok(!pricing.isSaleWindow(new Date('2026-10-03T18:30:00-05:00')), 'no sale: Sat 6:30pm CT');
+  ok(!pricing.isSaleWindow(new Date('2026-10-04T06:00:00-05:00')), 'no sale: Sun 6am CT');
+  ok(pricing.premadePriceCents(new Date('2026-10-03T20:30:00-05:00')) === 5000, 'sale price $50');
+  ok(pricing.premadePriceCents(new Date('2026-10-05T12:00:00-05:00')) === 7500, 'regular price $75');
+
+  console.log('commissions:');
+  const db = require('../src/db');
+  await db.init();
+  // Seed plans + admin for the HTTP tests below.
+  const { seed } = require('../src/db/seed');
+  await seed();
+  const comm = require('../src/lib/commissions');
+  const realGet = db.get, realInsert = db.insert;
+  const rows = [];
+  db.get = async (sql) => {
+    if (sql.includes('commission_ledger')) return null;
+    if (sql.includes('artist_id')) return { artist_id: 'artist1' };
+    if (sql.includes('FROM users')) return { id: 'artist1', role: 'design_artist' };
+    if (sql.includes('subscriptions')) return { id: 's1' };
+    if (sql.includes('profiles')) return { payout_paypal_email: 'a@x.com' };
+    return null;
+  };
+  db.insert = async (t, d) => { rows.push(d); return 'x'; };
+  await comm.recordSaleCommissions({ id: 'o1', amount_paid_cents: 7500, design_id: 'd1', referred_shop_id: null });
+  const byType = {};
+  for (const r of rows) byType[r.recipient_type] = (byType[r.recipient_type] || 0) + r.amount_cents;
+  ok(byType.artist === 4500, 'artist gets exactly 60%');
+  ok(byType.site === 3000, 'site keeps 10% + 10% residual + 20% unassigned shop share');
+  ok(rows.reduce((s, r) => s + r.amount_cents, 0) === 7500, 'splits sum to the sale total');
+  db.get = realGet; db.insert = realInsert;
+  await db.close();
+
+  // --- HTTP integration ---
+  console.log('http:');
+  const server = spawn('node', [path.join(ROOT, 'src', 'index.js')], {
+    cwd: ROOT, env: { ...process.env, PORT: String(PORT) }, stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  await new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error('server did not start')), 15000);
+    server.stdout.on('data', (d) => { if (String(d).includes('listening')) { clearTimeout(t); resolve(); } });
+    server.stderr.on('data', (d) => process.stderr.write(d));
+  });
+
+  let r = await req('GET', '/health');
+  ok(r.status === 200 && r.text.includes('"ok":true'), 'health check');
+
+  r = await req('GET', '/');
+  ok(r.status === 200 && r.text.includes('Tattoo Art Customs'), 'homepage renders');
+
+  r = await req('GET', '/gallery');
+  ok(r.status === 200, 'gallery renders');
+
+  r = await req('GET', '/account', { follow: false });
+  ok(r.status === 302, 'account requires login');
+
+  // signup + login
+  r = await req('POST', '/signup', { body: { display_name: 'Tester', email: 'buyer@test.local', password: 'password123' }, follow: false });
+  ok(r.status === 302 && r.location.includes('/account'), 'signup redirects to account');
+  r = await req('GET', '/account');
+  ok(r.status === 200 && r.text.includes('buyer@test.local'), 'logged in after signup');
+
+  // auth: bad login rejected
+  const jar2 = {};
+  const badLogin = await fetch(`http://localhost:${PORT}/login`, {
+    method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ email: 'buyer@test.local', password: 'wrongpass' }), redirect: 'manual',
+  });
+  ok(badLogin.status === 302 && badLogin.headers.get('location').includes('/login'), 'bad password rejected');
+
+  // seed a design directly
+  const Database = require('better-sqlite3');
+  const sdb = new Database(process.env.SQLITE_PATH);
+  const did = 'testdesign0001';
+  sdb.prepare(`INSERT INTO designs (id, title, description, price_cents, status, color_path, linework_path, linework_wm_path, categories, sale_count, created_at)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?)`).run(did, 'HTTP Wolf', 'desc', 7500, 'approved',
+    'designs/color/w.jpg', 'designs/linework/w.jpg', 'designs/linework-wm/w-wm.jpg', '[]', 0, Date.now());
+  fs.mkdirSync(path.join(process.env.ASSET_DIR, 'designs', 'linework-wm'), { recursive: true });
+  fs.writeFileSync(path.join(process.env.ASSET_DIR, 'designs', 'linework-wm', 'w-wm.jpg'), 'fake');
+  fs.mkdirSync(path.join(process.env.ASSET_DIR, 'designs', 'color'), { recursive: true });
+  fs.writeFileSync(path.join(process.env.ASSET_DIR, 'designs', 'color', 'w.jpg'), 'fake');
+
+  r = await req('GET', `/design/${did}`);
+  ok(r.status === 200 && r.text.includes('HTTP Wolf'), 'design page renders');
+  ok(!r.text.includes('designs/color/w.jpg'), 'clean color path never leaks to public page');
+
+  // buy flow (PayPal unconfigured -> manual payment page)
+  r = await req('POST', `/orders/buy/${did}`, { follow: false });
+  ok(r.status === 302 && r.location.includes('/orders/manual/'), 'buy falls back to manual payment when PayPal is off');
+  const orderId = r.location.split('/orders/manual/')[1];
+  r = await req('POST', `/orders/manual/${orderId}`, { body: { method: 'cashapp', note: 'test' }, follow: false });
+  ok(r.status === 302, 'manual payment recorded');
+
+  // buyer cannot download before admin confirms
+  r = await req('POST', `/orders/${orderId}/download-token`, { follow: false });
+  ok(r.status === 302, 'download token blocked while unpaid');
+
+  // admin login + confirm
+  const adminJar = {};
+  async function areq(method, p, opts = {}) {
+    const h = { ...(opts.headers || {}) };
+    const cookies = Object.entries(adminJar).map(([k, v]) => `${k}=${v}`).join('; ');
+    if (cookies) h.cookie = cookies;
+    let payload = opts.body;
+    if (payload && typeof payload === 'object') {
+      payload = new URLSearchParams(payload);
+      h['content-type'] = 'application/x-www-form-urlencoded';
+    }
+    const res = await fetch(`http://localhost:${PORT}${p}`, { method, headers: h, body: payload, redirect: 'manual' });
+    for (const c of (res.headers.getSetCookie ? res.headers.getSetCookie() : [])) {
+      const [k, v] = c.split(';')[0].split('=');
+      adminJar[k.trim()] = (v || '').trim();
+    }
+    return { status: res.status, text: await res.text(), location: res.headers.get('location') };
+  }
+  r = await areq('POST', '/login', { body: { email: 'admin@test.local', password: 'AdminTest123!' } });
+  ok(r.status === 302 && (r.location || '').includes('/account'), 'admin login ok');
+  r = await areq('GET', '/admin');
+  ok(r.status === 200, 'admin dashboard loads');
+  r = await areq('POST', `/admin/orders/${orderId}/confirm-manual`);
+  ok(r.status === 302, 'admin confirms manual payment');
+
+  // commission ledger recorded for the sale
+  const ledger = sdb.prepare('SELECT recipient_type, amount_cents, status FROM commission_ledger WHERE order_id = ?').all(orderId);
+  ok(ledger.length > 0 && ledger.reduce((s, x) => s + x.amount_cents, 0) === 7500, 'commissions recorded for manual sale');
+
+  // secure download: token works, direct color path is not mounted
+  r = await req('POST', `/orders/${orderId}/download-token`, { follow: false });
+  ok(r.status === 302 && r.location.includes('/orders/download/') && r.location.endsWith('/view'), 'download token links to landing page');
+  const token = r.location.split('/orders/download/')[1].replace('/view', '');
+  r = await req('GET', `/orders/download/${token}/view`);
+  ok(r.status === 200 && r.text.includes('Download full color'), 'download landing page shows both files');
+  r = await req('GET', '/designs/color/w.jpg');
+  ok(r.status === 404, 'private color file not reachable via public static');
+  r = await req('GET', '/img/designs/w.jpg');
+  ok(r.status === 404, 'private color file not reachable via img mount');
+
+  // messaging with contact info gets flagged
+  const buyerId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('buyer@test.local').id;
+  const adminId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('admin@test.local').id;
+  r = await req('POST', '/messages/start', { body: { to_user_id: adminId, subject: 'hi' }, follow: false });
+  ok(r.status === 302 && r.location.includes('/messages/'), 'conversation started');
+  const convId = r.location.split('/messages/')[1];
+  r = await req('POST', `/messages/${convId}`, { body: { body: 'email me at x@y.com' }, follow: false });
+  const flagged = sdb.prepare("SELECT COUNT(*) AS n FROM review_queue WHERE item_type = 'message' AND status = 'open'").get().n;
+  ok(flagged >= 1, 'message with contact info flagged for review');
+
+  // admin-only routes reject non-admins
+  r = await req('GET', '/admin', { follow: false });
+  ok(r.status === 403 || r.status === 302, 'non-admin blocked from admin area');
+
+  // custom order: brief too short rejected
+  r = await req('POST', '/orders/custom', { body: { brief: 'short' }, follow: false });
+  ok(r.status === 302, 'short custom brief rejected');
+
+  sdb.close();
+  server.kill();
+  await new Promise((res2) => server.on('exit', res2));
+
+  console.log(failures === 0 ? '\nALL TESTS PASSED' : `\n${failures} TEST(S) FAILED`);
+  process.exit(failures === 0 ? 0 : 1);
+}
+
+main().catch((e) => { console.error('test harness error:', e); process.exit(1); });

@@ -1,0 +1,51 @@
+<h1>Payouts</h1>
+<p><a href="/admin">← Dashboard</a></p>
+<h2>Payable balances</h2>
+<table>
+  <thead><tr><th>Recipient</th><th>Email</th><th>Type</th><th>Balance</th><th>PayPal email</th><th></th></tr></thead>
+  <tbody>
+  <% balances.forEach(function(b) { %>
+    <tr>
+      <td><%= b.name %></td>
+      <td><%= b.email %></td>
+      <td><%= b.recipient_type %></td>
+      <td><strong><%= money(b.total) %></strong></td>
+      <td><%= b.paypal_email || '— not set —' %></td>
+      <td>
+        <% if (b.paypal_email) { %>
+        <form method="post" action="/admin/payouts/run" onsubmit="return confirm('Queue a payout of <%= money(b.total) %> to <%= b.paypal_email %>?')">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <input type="hidden" name="recipient_type" value="<%= b.recipient_type %>">
+          <input type="hidden" name="recipient_id" value="<%= b.recipient_id %>">
+          <input type="hidden" name="paypal_email" value="<%= b.paypal_email %>">
+          <button class="btn" type="submit">Queue payout</button>
+        </form>
+        <% } %>
+      </td>
+    </tr>
+  <% }); %>
+  </tbody>
+</table>
+<h2>Payout runs</h2>
+<table>
+  <thead><tr><th>Date</th><th>Recipient</th><th>Amount</th><th>To</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  <% runs.forEach(function(p) { %>
+    <tr>
+      <td><%= new Date(p.created_at).toLocaleString() %></td>
+      <td><%= p.recipient_type %> <%= p.recipient_id.slice(0,8) %></td>
+      <td><%= money(p.amount_cents) %></td>
+      <td><%= p.paypal_email %></td>
+      <td><span class="badge"><%= p.status %></span></td>
+      <td>
+        <% if (p.status === 'queued') { %>
+        <form method="post" action="/admin/payouts/<%= p.id %>/complete">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn btn-secondary" type="submit">Mark sent via PayPal</button>
+        </form>
+        <% } %>
+      </td>
+    </tr>
+  <% }); %>
+  </tbody>
+</table>

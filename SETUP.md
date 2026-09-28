@@ -1,0 +1,86 @@
+# SETUP — Tattoo Art Customs Backend
+
+## 1. Local run (5 minutes)
+
+```bash
+cd tattoo-art-customs-backend
+npm install
+npm run migrate   # creates data/app.db (SQLite) + tables
+npm run seed      # creates the 3 plans + admin user
+npm start         # http://localhost:3000
+```
+
+`npm test` runs the full suite against a throwaway database (does not touch `data/app.db`).
+
+Copy `.env.example` to `.env` and fill in values as needed. Without PayPal credentials the site
+runs fine for browsing, accounts, uploads, messaging, and manual (CashApp/Venmo) payments — checkout
+buttons show a "payments being set up" notice and buyers are routed to manual payment.
+
+## 2. Environment variables
+
+| Variable | Required | What it is |
+|---|---|---|
+| `PORT` | no | Server port (default 3000; hosts like Render set this automatically) |
+| `BASE_URL` | yes (prod) | Public URL, e.g. `https://tattoo-art-customs.onrender.com` (used for PayPal return links + referral links) |
+| `SESSION_SECRET` | yes (prod) | Long random string for session cookies |
+| `DATABASE_URL` | yes (prod) | PostgreSQL connection string. If unset, the app uses SQLite at `SQLITE_PATH` |
+| `SQLITE_PATH` | no | SQLite file (default `data/app.db`) |
+| `ASSET_DIR` | no | Where uploaded images live (default `assets/`) |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | yes | Seed admin login (`npm run seed`) |
+| `PAYPAL_CLIENT_ID` | yes | PayPal REST app client ID (see §3) |
+| `PAYPAL_CLIENT_SECRET` | yes | PayPal REST app secret |
+| `PAYPAL_MODE` | no | `sandbox` (default) or `live` |
+| `PAYPAL_WEBHOOK_ID` | yes | Webhook ID from the PayPal dashboard (see §3) |
+| `PAYPAL_PLAN_CUSTOMER` | yes | Subscription plan ID for $5/month customer membership |
+| `PAYPAL_PLAN_ARTIST` | yes | Subscription plan ID for $5/month design-artist plan |
+| `PAYPAL_PLAN_SHOP` | yes | Subscription plan ID for $99.99/year tattoo-shop plan |
+| `SMTP_HOST/PORT/USER/PASS/MAIL_FROM` | no | Email sending; without these, emails are logged to the console |
+
+## 3. PayPal setup (Business account)
+
+You already have a PayPal Business account. Do this once:
+
+1. Go to **https://developer.paypal.com/dashboard/applications** and log in with the Business account.
+2. **Apps & Credentials** → **Create App** (name it "Tattoo Art Customs"). Copy the **Client ID** and
+   **Secret** → these are `PAYPAL_CLIENT_ID` / `PAYPAL_CLIENT_SECRET`. Keep `PAYPAL_MODE=sandbox`
+   while testing; switch to `live` for real money (the dashboard has a Sandbox/Live toggle — create the
+   app under **Live** when ready).
+3. **Subscription plans** (do this in the same mode you will run): go to
+   **https://www.paypal.com/billing/plans** (or Developer Dashboard → Subscriptions → Plans) and create
+   three plans:
+   - Customer — $5.00 USD, monthly → `PAYPAL_PLAN_CUSTOMER`
+   - Design Artist — $5.00 USD, monthly → `PAYPAL_PLAN_ARTIST`
+   - Tattoo Shop — $99.99 USD, yearly → `PAYPAL_PLAN_SHOP`
+   
+   Copy each plan's ID (looks like `P-xxxxxxxxxxxxxxxx`) into the matching variable.
+4. **Webhooks:** Developer Dashboard → **Apps & Credentials** → your app → **Webhooks** (or
+   **https://developer.paypal.com/dashboard/webhooks**) → **Add Webhook**:
+   - Webhook URL: `https://YOUR-DOMAIN/membership/webhook`
+   - Events: `BILLING.SUBSCRIPTION.ACTIVATED`, `BILLING.SUBSCRIPTION.CANCELLED`,
+     `BILLING.SUBSCRIPTION.EXPIRED`, `BILLING.SUBSCRIPTION.PAYMENT.FAILED`
+   - Copy the **Webhook ID** (looks like `8UV...`) → `PAYPAL_WEBHOOK_ID`.
+   
+   Webhook events are signature-verified against this ID; unverified events are rejected with 401.
+
+## 4. Deploy on Render (recommended)
+
+1. Push this folder to a GitHub repo.
+2. In Render: **New → Blueprint**, select the repo. `render.yaml` creates the web service (Docker) plus
+   a PostgreSQL database and wires `DATABASE_URL`.
+3. After deploy, set the `sync: false` variables in the Render dashboard: `ADMIN_EMAIL`,
+   `ADMIN_PASSWORD`, `PAYPAL_*`, `BASE_URL` (your `https://*.onrender.com` URL), SMTP if used.
+4. The container runs `node src/db/seed.js` then `node src/index.js` on every start: migrations apply
+   automatically and the admin user is created on first boot.
+
+**Important:** Render's filesystem is ephemeral — uploaded images in `ASSET_DIR` disappear on redeploy.
+For production, point `ASSET_DIR` at a persistent disk (Render Disk) or object storage and copy the
+watermarked gallery images there.
+
+## 5. Going live checklist
+
+- [ ] `PAYPAL_MODE=live`, live client ID/secret, live plan IDs, live webhook ID
+- [ ] `BASE_URL` = the real public URL
+- [ ] Strong `SESSION_SECRET`, `ADMIN_EMAIL`/`ADMIN_PASSWORD` set
+- [ ] Test a $1-style sandbox purchase end-to-end first (buy → manual confirm → download → commission ledger)
+- [ ] Prepare the watermarked linework files: admin uploads them per design at **Admin → Designs**
+      (a design cannot be approved until its watermarked linework exists)

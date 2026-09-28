@@ -1,0 +1,60 @@
+<h1>Shop dashboard</h1>
+<p class="muted">Tattoo shops earn <strong>20% on every verified sale</strong> they refer. Payouts require a registered account, an active subscription, and a payout email set.</p>
+
+<section class="card">
+  <h2>Your referral link</h2>
+  <% if (refLink) { %>
+  <p><input type="text" readonly value="<%= refLink %>" onclick="this.select()" aria-label="Your referral link" style="font-size:.9rem"></p>
+  <p class="muted">Share this link — sales made through it are attributed to your shop. You referred <strong><%= referralSales %></strong> paid sale(s) totaling <strong><%= money(referralTotal) %></strong>.</p>
+  <% } else { %><p class="muted">Referral link will appear once your shop profile is created.</p><% } %>
+</section>
+
+<div class="two-col">
+  <section class="card">
+    <h2>Balance</h2>
+    <p><strong><%= money(balance) %></strong> payable</p>
+    <form method="post" action="/shop/payout-email" class="form">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <label for="paypal_email">PayPal email for payouts</label>
+      <input type="email" id="paypal_email" name="paypal_email" value="<%= profile.payout_paypal_email || '' %>">
+      <p><button class="btn" type="submit">Save payout email</button></p>
+    </form>
+  </section>
+  <section class="card">
+    <h2>Shop profile</h2>
+    <p class="muted">You may list <strong>only</strong>: business location, business hours, appointment requirements. No emails, phones, links, socials, or payment info. <% if (!profile.verified) { %><span class="badge warn">pending verification</span><% } %></p>
+    <form method="post" action="/shop/profile" class="form">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <label for="business_name">Business name</label>
+      <input type="text" id="business_name" name="business_name" value="<%= profile.business_name || '' %>" maxlength="120">
+      <label for="location">Business location (city/state only)</label>
+      <input type="text" id="location" name="location" value="<%= profile.location || '' %>" maxlength="200">
+      <label for="hours">Business hours</label>
+      <textarea id="hours" name="hours" maxlength="300"><%= profile.hours || '' %></textarea>
+      <label for="appointment_requirements">Appointment requirements</label>
+      <textarea id="appointment_requirements" name="appointment_requirements" maxlength="600"><%= profile.appointment_requirements || '' %></textarea>
+      <p><button class="btn" type="submit">Save profile</button></p>
+    </form>
+  </section>
+</div>
+
+<h2>Commission ledger</h2>
+<table>
+  <thead><tr><th>Date</th><th>Order</th><th>Amount</th><th>Status</th></tr></thead>
+  <tbody>
+  <% ledger.forEach(function(l) { %>
+    <tr><td><%= new Date(l.created_at).toLocaleDateString() %></td><td><%= l.order_id.slice(0,8) %></td><td><%= money(l.amount_cents) %></td><td><span class="badge"><%= l.status.replace('_',' ') %></span></td></tr>
+  <% }); %>
+  </tbody>
+</table>
+<p class="muted">Shop shares stay <em>pending</em> until an admin verifies the sale, then become payable.</p>
+
+<h2>Payout history</h2>
+<table>
+  <thead><tr><th>Date</th><th>Amount</th><th>To</th><th>Status</th></tr></thead>
+  <tbody>
+  <% payouts.forEach(function(p) { %>
+    <tr><td><%= new Date(p.created_at).toLocaleDateString() %></td><td><%= money(p.amount_cents) %></td><td><%= p.paypal_email %></td><td><span class="badge"><%= p.status %></span></td></tr>
+  <% }); %>
+  </tbody>
+</table>

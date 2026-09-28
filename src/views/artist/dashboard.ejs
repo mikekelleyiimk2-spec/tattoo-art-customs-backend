@@ -1,0 +1,58 @@
+<h1>Artist dashboard</h1>
+<p class="muted">Design artists earn <strong>60% commission</strong> on every sale of their designs. You are paid only while registered, subscribed, and with a payout email set — otherwise proceeds stay with the site.</p>
+
+<div class="two-col">
+  <section class="card">
+    <h2>Your balance</h2>
+    <p><strong><%= money(balance) %></strong> payable</p>
+    <form method="post" action="/artist/payout-email" class="form">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <label for="paypal_email">PayPal email for payouts</label>
+      <input type="email" id="paypal_email" name="paypal_email" value="<%= profile.payout_paypal_email || '' %>">
+      <p><button class="btn" type="submit">Save payout email</button></p>
+    </form>
+  </section>
+  <section class="card">
+    <h2>Artist bio</h2>
+    <p class="muted">No emails, phones, addresses, socials, websites, or payment info — all contact stays through the site. <% if (profile.bio_status === 'flagged') { %><span class="badge warn">flagged for review</span><% } %></p>
+    <form method="post" action="/artist/bio" class="form">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <label for="bio">Bio</label>
+      <textarea id="bio" name="bio" maxlength="2000"><%= profile.bio || '' %></textarea>
+      <p><button class="btn" type="submit">Save bio</button></p>
+    </form>
+  </section>
+</div>
+
+<h2>Your designs <a class="btn" href="/artist/upload">Upload new</a></h2>
+<div class="grid">
+  <% designs.forEach(function(d) { %>
+  <div class="design-card">
+    <% if (d.linework_wm_path) { %><img src="/img/designs/<%= d.linework_wm_path.split('/').pop() %>" alt="<%= d.title %>" loading="lazy"><% } %>
+    <div class="pad">
+      <h3><%= d.title %></h3>
+      <p><span class="badge <%= d.status === 'approved' ? 'ok' : (d.status === 'pending' ? 'warn' : 'bad') %>"><%= d.status %></span> · <%= d.sale_count %> sales</p>
+    </div>
+  </div>
+  <% }); %>
+</div>
+
+<h2>Commission ledger</h2>
+<table>
+  <thead><tr><th>Date</th><th>Order</th><th>Amount</th><th>Status</th></tr></thead>
+  <tbody>
+  <% ledger.forEach(function(l) { %>
+    <tr><td><%= new Date(l.created_at).toLocaleDateString() %></td><td><%= l.order_id.slice(0,8) %></td><td><%= money(l.amount_cents) %></td><td><span class="badge"><%= l.status.replace('_',' ') %></span></td></tr>
+  <% }); %>
+  </tbody>
+</table>
+
+<h2>Payout history</h2>
+<table>
+  <thead><tr><th>Date</th><th>Amount</th><th>To</th><th>Status</th></tr></thead>
+  <tbody>
+  <% payouts.forEach(function(p) { %>
+    <tr><td><%= new Date(p.created_at).toLocaleDateString() %></td><td><%= money(p.amount_cents) %></td><td><%= p.paypal_email %></td><td><span class="badge"><%= p.status %></span></td></tr>
+  <% }); %>
+  </tbody>
+</table>

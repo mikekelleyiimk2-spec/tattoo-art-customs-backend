@@ -1,0 +1,31 @@
+<h1>Order <%= order.id.slice(0,8) %></h1>
+<table>
+  <tbody>
+    <tr><th>Type</th><td><%= order.order_type %></td></tr>
+    <% if (design) { %><tr><th>Design</th><td><%= design.title %></td></tr><% } %>
+    <tr><th>Amount</th><td><%= money(order.amount_cents) %></td></tr>
+    <tr><th>Paid</th><td><%= money(order.amount_paid_cents) %></td></tr>
+    <tr><th>Status</th><td><span class="badge"><%= order.status %></span></td></tr>
+    <% if (order.delivery_due) { %><tr><th>Delivery due</th><td><%= new Date(order.delivery_due).toLocaleString() %></td></tr><% } %>
+  </tbody>
+</table>
+
+<% if (order.status === 'paid') { %>
+<section class="card">
+  <h2>Your download</h2>
+  <form method="post" action="/orders/<%= order.id %>/download-token">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <button class="btn" type="submit">Generate download link (valid 24h)</button>
+  </form>
+  <% if (downloads.length) { %>
+  <ul><% downloads.forEach(function(d) { %>
+    <li><a href="/orders/download/<%= d.token %>/view">Download files</a> <span class="muted">(expires <%= new Date(d.expires_at).toLocaleString() %>)</span></li>
+  <% }); %></ul>
+  <% } %>
+</section>
+<% } else if (order.status === 'pending') { %>
+<section class="card">
+  <h2>Complete payment</h2>
+  <p><a class="btn" href="/orders/manual/<%= order.id %>">Pay with CashApp / Venmo</a></p>
+</section>
+<% } %>

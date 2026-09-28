@@ -1,0 +1,31 @@
+<h1>Members</h1>
+<p><a href="/admin">← Dashboard</a></p>
+<table>
+  <thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Plan</th><th>Joined</th><th></th></tr></thead>
+  <tbody>
+  <% users.forEach(function(u) { %>
+    <tr>
+      <td><%= u.email %></td>
+      <td><%= u.display_name %></td>
+      <td><%= u.role %></td>
+      <td><%= u.plan_name || '—' %></td>
+      <td><%= new Date(u.created_at).toLocaleDateString() %></td>
+      <td>
+        <% if (u.role === 'tattoo_shop') { %>
+        <form method="post" action="/admin/members/<%= u.id %>/verify-shop" style="display:inline">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn btn-secondary" type="submit">Verify shop</button>
+        </form>
+        <% } %>
+        <% if (u.role !== 'admin') { %>
+        <form method="post" action="/admin/members/<%= u.id %>/cancel-membership" style="display:inline" onsubmit="return confirm('Cancel this membership? No refunds per the Terms.')">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <input type="hidden" name="reason" value="Terms violation">
+          <button class="btn btn-secondary" type="submit">Cancel membership</button>
+        </form>
+        <% } %>
+      </td>
+    </tr>
+  <% }); %>
+  </tbody>
+</table>

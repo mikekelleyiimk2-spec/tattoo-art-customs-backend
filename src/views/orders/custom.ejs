@@ -1,0 +1,9 @@
+<h1>Request a custom design</h1>
+<p>Custom designs are <strong><%= money(full) %></strong>. Pay a <strong><%= money(deposit) %></strong> deposit now — your design is delivered within <strong>48 hours</strong>, and the download unlocks in your account.</p>
+<form method="post" action="/orders/custom" class="form">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <label for="brief">Describe your design (subject, style, size, placement, colors…)</label>
+  <textarea id="brief" name="brief" required minlength="20" maxlength="4000" placeholder="e.g. A black-and-grey wolf howling at a full moon for my upper arm, about 6 inches tall…"></textarea>
+  <p><button class="btn" type="submit">Pay <%= money(deposit) %> deposit</button></p>
+</form>
+<p class="muted">All sales are final. Prefer to pay another way? Place the request, then choose manual payment (CashApp/Venmo) on the order page.</p>
