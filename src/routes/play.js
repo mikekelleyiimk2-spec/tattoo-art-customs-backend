@@ -20,10 +20,11 @@ const { maybeEnterRaffle } = require('../lib/founding');
 const router = express.Router();
 
 // Known Play product IDs (must match the SKUs created in the Play Console).
+// Commission-earning plans (artist, shop) are website-only by owner rule
+// (2026-09-28): signup for receiving commissions happens on the website,
+// never via a Play purchase — so those SKUs are rejected here.
 const KNOWN_PRODUCTS = new Set([
   'tac_membership_customer',
-  'tac_membership_artist',
-  'tac_membership_shop',
   'tac_premade',
   'tac_premade_sale',
   'tac_custom_deposit',
