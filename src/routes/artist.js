@@ -7,6 +7,8 @@ const { requireLogin, requireSubscription } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { screenText } = require('../lib/screening');
 const { payableBalance } = require('../lib/commissions');
+const slaEnforcer = require('../lib/slaEnforcer');
+const { commissionSuspendedUntil } = require('../lib/commissions');
 const { registerPayoutRoutes, payoutDashboardData } = require('../lib/payoutRoutes');
 const { upsertProfile } = require('../lib/profiles');
 
@@ -29,13 +31,17 @@ router.get('/', async (req, res) => {
     ['artist', req.user.id]);
   const payout = await payoutDashboardData(req.user.id, 'artist');
   // SLA banner: this artist's at-risk (<24h) and overdue custom orders.
+  // Terminated orders are excluded — the artist's assignment on those ended.
   const nowMs = Date.now();
   const slaRows = await db.all(
     `SELECT id, custom_brief, delivery_due, custom_status, late_penalty_days
      FROM orders WHERE order_type = 'custom' AND status = 'paid'
-     AND requested_artist_id = ? AND custom_status NOT IN ('delivered')
+     AND requested_artist_id = ? AND custom_status NOT IN ('delivered', 'order_terminated')
      AND delivery_due IS NOT NULL ORDER BY delivery_due ASC`, [req.user.id]);
   const slaOrders = [];
+  const slaRepeat = await slaEnforcer.repeatOffenderInfo(req.user.id, nowMs);
+  // Tier 2: commission suspension notice (plain, warm — account stays active).
+  const commissionPausedUntil = await commissionSuspendedUntil(req.user.id, nowMs);
   for (const o of slaRows) {
     const pen = await db.get(
       `SELECT COALESCE(SUM(deduction_cents),0) AS t FROM sla_penalties WHERE order_id = ?`, [o.id]);
@@ -54,7 +60,8 @@ router.get('/', async (req, res) => {
     title: 'Artist Dashboard — Tattoo Art Customs',
     designs: designs.map((d) => ({ ...d, categories: JSON.parse(d.categories || '[]') })),
     profile, balance, payouts, ledger, metaDescription: '',
-    slaOrders, nowMs,
+    slaOrders, slaRepeat, repeatNotice: slaEnforcer.REPEAT_OFFENDER_NOTICE, nowMs,
+    commissionPausedUntil,
     ...payout,
   });
 });

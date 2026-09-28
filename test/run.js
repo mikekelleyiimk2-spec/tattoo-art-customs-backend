@@ -136,10 +136,10 @@ async function main() {
     'rerun charges nothing — idempotent');
   ok((await db.get('SELECT late_penalty_days AS d FROM orders WHERE id = ?', [slaOrderId])).d === 2,
     'orders.late_penalty_days = 2');
-  // jump to 7.5 days late -> days 3-7 charged, termination fires
+  // jump to 7.5 days late -> days 3-7 charged, order termination fires
   const slaR3 = await sla.applyPenalties({ now: slaOrd.delivery_due + Math.floor(7.5 * 86400000) });
   ok(slaR3.penalties.length === 5, 'days 3-7 charged at +7.5d');
-  ok(slaR3.terminations.length === 1, 'day-7 designer termination fired');
+  ok(slaR3.terminations.length === 1, 'day-7 order termination fired');
   const slaP7 = await sla.penaltyLedger(slaOrderId);
   ok(slaP7.length === 7, 'seven penalty rows total');
   ok(slaP7[4].deduction_cents === 323 && slaP7[4].owner_cents === 150 && slaP7[4].credit_cents === 173,
@@ -149,13 +149,18 @@ async function main() {
     [slaOrderId, slaDesignerId]);
   ok(slaD7.amount_cents === 5419, 'designer keeps 5419 after 7 days (7500 - 2081)');
   ok((await getCreditBalance(slaBuyerId)) === 1031, 'buyer credit total 1031 after 7 days');
-  ok((await db.get('SELECT sla_suspended AS s FROM users WHERE id = ?', [slaDesignerId])).s === 1,
-    'designer account suspended');
-  const slaO7 = await db.get('SELECT designer_contract_terminated AS t, replacement_status AS r FROM orders WHERE id = ?', [slaOrderId]);
-  ok(slaO7.t === 1 && slaO7.r === 'offered', 'order flagged terminated, replacement offered');
+  ok((await db.get('SELECT COALESCE(sla_suspended,0) AS s FROM users WHERE id = ?', [slaDesignerId])).s === 0,
+    'designer account NEVER auto-suspended at day-7');
+  ok((await db.get('SELECT role FROM users WHERE id = ?', [slaDesignerId])).role === 'design_artist',
+    'designer role unchanged at day-7');
+  const slaO7 = await db.get(
+    `SELECT designer_contract_terminated AS t, replacement_status AS r,
+            deadline_missed AS m, custom_status AS s FROM orders WHERE id = ?`, [slaOrderId]);
+  ok(slaO7.t === 1 && slaO7.r === 'offered' && slaO7.m === 1 && slaO7.s === 'order_terminated',
+    'order terminated for the customer: assignment ended, miss recorded, replacement offered');
   const slaConvs = await db.get(
     `SELECT COUNT(*) AS n FROM conversations c JOIN conversation_participants p ON p.conversation_id = c.id
-     WHERE p.user_id = ? AND c.subject LIKE '%7 days overdue%'`, [slaBuyerId]);
+     WHERE p.user_id = ? AND c.subject LIKE '%taken care of%'`, [slaBuyerId]);
   ok(slaConvs.n === 1, 'purchaser notified on-site at termination');
   // reminders: idempotent per order+key
   const slaOrder2Id = await db.insert('orders', {
@@ -171,6 +176,155 @@ async function main() {
   const slaWl = await sla.slaWatchlist({ now: slaNow });
   ok(slaWl.overdue.some((o) => o.id === slaOrderId), 'watchlist lists the overdue order');
   ok(slaWl.atRisk.some((o) => o.id === slaOrder2Id), 'watchlist lists the at-risk order');
+
+  // --- Tier 1 repeat offender: 4+ misses in 30 days -> 2x rates ---
+  console.log('sla repeat offender:');
+  const repDesignerId = await db.insert('users', { email: 'repdesigner@test.local', password_hash: 'x', role: 'design_artist', display_name: 'Rep' });
+  const repBuyerId = await db.insert('users', { email: 'repbuyer@test.local', password_hash: 'x', role: 'customer', display_name: 'RepBuyer' });
+  const repMissIds = [];
+  for (let i = 0; i < 4; i++) {
+    repMissIds.push(await db.insert('orders', {
+      buyer_id: repBuyerId, order_type: 'custom', amount_cents: 12500,
+      amount_paid_cents: 12500, status: 'paid', custom_status: 'order_terminated',
+      designer_contract_terminated: 1, late_penalty_days: 7, replacement_status: 'offered',
+      requested_artist_id: repDesignerId, deadline_missed: 1,
+      deadline_missed_at: slaNow - i * 5 * 86400000,
+      delivery_due: slaNow - 20 * 86400000, paid_at: slaNow - 21 * 86400000,
+    }));
+  }
+  const repInfo = await sla.repeatOffenderInfo(repDesignerId, slaNow);
+  ok(repInfo.active && repInfo.misses === 4, '4 misses in 30d -> repeat offender active');
+  ok(repInfo.liftsAt > slaNow, 'repeat-offender lift date is in the future');
+  const repOrderId = await db.insert('orders', {
+    buyer_id: repBuyerId, order_type: 'custom', amount_cents: 12500,
+    amount_paid_cents: 12500, status: 'paid', custom_status: 'routed_to_artist',
+    requested_artist_id: repDesignerId, custom_brief: 'Repeat offender late order.',
+    delivery_due: slaNow - Math.floor(1.5 * 86400000), paid_at: slaNow - 2 * 86400000,
+  });
+  const repOrd = await db.get('SELECT * FROM orders WHERE id = ?', [repOrderId]);
+  await comm.recordCustomDesignerCommission(repOrd, repDesignerId);
+  await sla.applyPenalties({ now: slaNow });
+  const repPen = (await sla.penaltyLedger(repOrderId))[0];
+  ok(repPen.deduction_cents === 555 && repPen.owner_cents === 150 && repPen.credit_cents === 405 && repPen.rate_mult === 2,
+    '2x rates: day-1 7.4% of 7500 = 555 deducted; 150 owner; 405 buyer apology credit');
+  // status lifts when the oldest miss ages out of the 30d window
+  await db.update('orders', repMissIds[0], { deadline_missed_at: slaNow - 31 * 86400000 });
+  const repInfo2 = await sla.repeatOffenderInfo(repDesignerId, slaNow);
+  ok(!repInfo2.active && repInfo2.misses === 3, '3 misses in 30d -> repeat offender lifts');
+  // admin forgive resets the count
+  await db.update('orders', repMissIds[0], { deadline_missed_at: slaNow - 2 * 86400000 });
+  ok((await sla.repeatOffenderInfo(repDesignerId, slaNow)).active, '4 misses again -> active');
+  await db.update('users', repDesignerId, { sla_forgiven_at: slaNow });
+  const repInfo3 = await sla.repeatOffenderInfo(repDesignerId, slaNow);
+  ok(!repInfo3.active && repInfo3.misses === 0, 'forgive resets the missed-deadline count');
+
+  // --- SLA tone: firm but warm, no hostile language ---
+  console.log('sla tone:');
+  const toneOrder = { id: 'o123456789', delivery_due: slaNow + 3600000, custom_brief: 'x' };
+  const warn = sla.reminderCopy('warn_24h', toneOrder, 0, 'Artist');
+  ok(!/FINAL WARNING|shame|stupid|lazy|idiot/i.test(warn.body + warn.subject), 'artist 24h warning has no hostile language');
+  const late5 = sla.reminderCopy('late_5', toneOrder, 1000, 'Artist');
+  ok(!/FINAL WARNING/i.test(late5.body + late5.subject), 'late-day notice has no FINAL WARNING');
+  ok(/reply here and we'll help/i.test(late5.body), 'late-day notice offers help');
+  const delay = sla.buyerDelayCopy({ id: 'o123456789' }, 'Buyer', 128);
+  ok(/apology credit/i.test(delay.body), 'buyer delay notice frames credit as an apology');
+  ok(!/terminated/i.test(delay.body), 'buyer delay notice has no termination language');
+  const termMsg = await db.get(
+    `SELECT m.body FROM messages m JOIN conversations c ON c.id = m.conversation_id
+     JOIN conversation_participants p ON p.conversation_id = c.id
+     WHERE p.user_id = ? AND c.subject LIKE '%taken care of%'`, [slaBuyerId]);
+  ok(termMsg && /apology/i.test(termMsg.body), 'day-7 buyer message apologizes');
+  ok(termMsg && !/contract is terminated|designer.*terminated/i.test(termMsg.body), 'day-7 buyer message has no designer-contract-termination language');
+  ok(sla.REPEAT_OFFENDER_NOTICE === 'Late penalties are currently doubled because 4+ deadlines were missed in the last 30 days.',
+    'repeat-offender notice wording is plain and neutral');
+
+  // --- Tier 2: commission suspension (6+ misses in 60 days) ---
+  console.log('sla tier2:');
+  const t2DesignerId = await db.insert('users', { email: 't2designer@test.local', password_hash: 'x', role: 'design_artist', display_name: 'T2' });
+  const t2BuyerId = await db.insert('users', { email: 't2buyer@test.local', password_hash: 'x', role: 'customer', display_name: 'T2Buyer' });
+  const t2PlanId = (await db.get(`SELECT id FROM plans WHERE slug = 'design_artist'`)).id;
+  await db.insert('subscriptions', {
+    user_id: t2DesignerId, plan_id: t2PlanId, status: 'active',
+    paypal_subscription_id: 'sub-tier2-test', created_at: slaNow,
+  });
+  const t2MissIds = [];
+  for (let i = 0; i < 6; i++) {
+    t2MissIds.push(await db.insert('orders', {
+      buyer_id: t2BuyerId, order_type: 'custom', amount_cents: 12500,
+      amount_paid_cents: 12500, status: 'paid', custom_status: 'order_terminated',
+      designer_contract_terminated: 1, late_penalty_days: 7, replacement_status: 'offered',
+      requested_artist_id: t2DesignerId, deadline_missed: 1,
+      deadline_missed_at: slaNow - i * 7 * 86400000,
+      delivery_due: slaNow - 30 * 86400000, paid_at: slaNow - 31 * 86400000,
+    }));
+  }
+  const t2trig = await comm.refreshCommissionSuspensions({ now: slaNow });
+  ok(t2trig.length === 1 && t2trig[0].designer_id === t2DesignerId, '6th miss in 60d triggers commission suspension');
+  const t2until = await comm.commissionSuspendedUntil(t2DesignerId, slaNow);
+  ok(t2until && t2until > slaNow + 29 * 86400000 && t2until <= slaNow + 30 * 86400000 + 60000,
+    'suspension lasts 30 days');
+  ok(await comm.commissionSuspended(t2DesignerId, slaNow), 'designer is commission-suspended');
+  // new custom order during suspension: 0c designer, owner keeps the share
+  const t2OrderId = await db.insert('orders', {
+    buyer_id: t2BuyerId, order_type: 'custom', amount_cents: 12500,
+    amount_paid_cents: 12500, status: 'paid', custom_status: 'new',
+    requested_artist_id: t2DesignerId, custom_brief: 'Tier2 custom order during suspension.',
+    delivery_due: slaNow + 48 * 3600 * 1000, paid_at: slaNow,
+  });
+  const t2Ord = await db.get('SELECT * FROM orders WHERE id = ?', [t2OrderId]);
+  await comm.recordSaleCommissions(t2Ord);
+  const t2c = await comm.recordCustomDesignerCommission(t2Ord, t2DesignerId);
+  ok(t2c === 0, 'suspended designer books 0c custom commission');
+  const t2crow = await db.get(
+    `SELECT amount_cents FROM commission_ledger WHERE order_id = ? AND recipient_type = 'artist' AND recipient_id = ?`,
+    [t2OrderId, t2DesignerId]);
+  ok(t2crow.amount_cents === 0, 'ledger shows explicit 0c designer row');
+  const t2site = await db.get(
+    `SELECT COALESCE(SUM(amount_cents),0) AS t FROM commission_ledger WHERE order_id = ? AND recipient_type = 'site'`,
+    [t2OrderId]);
+  ok(t2site.t === 12500, 'owner keeps the full share while designer is suspended');
+  // routing skips suspended designers
+  const { routeCustomOrder } = require('../src/lib/customFulfillment');
+  const t2routed = await routeCustomOrder({ ...t2Ord, custom_status: 'new' });
+  ok(t2routed.custom_status === 'needs_drafts', 'routing skips commission-suspended designers');
+  // premade sale: designer 60% redirected to owner payable, shop/site shares unchanged
+  const t2DesignId = await db.insert('designs', {
+    artist_id: t2DesignerId, title: 'T2 Design', status: 'approved',
+    price_cents: 7500, created_at: slaNow,
+  });
+  const t2PreId = await db.insert('orders', {
+    buyer_id: t2BuyerId, order_type: 'premade', amount_cents: 7500,
+    amount_paid_cents: 7500, status: 'paid', design_id: t2DesignId, paid_at: slaNow,
+  });
+  const t2Pre = await db.get('SELECT * FROM orders WHERE id = ?', [t2PreId]);
+  await comm.recordSaleCommissions(t2Pre);
+  const t2prow = await db.get(
+    `SELECT amount_cents FROM commission_ledger WHERE order_id = ? AND recipient_type = 'artist'`, [t2PreId]);
+  ok(t2prow.amount_cents === 0, 'premade: suspended designer gets 0c');
+  const t2owner = await db.get(
+    `SELECT COALESCE(SUM(amount_cents),0) AS t FROM commission_ledger
+     WHERE order_id = ? AND recipient_type = 'site' AND recipient_id = ? AND status = 'payable'`,
+    [t2PreId, slaOwnerId]);
+  ok(t2owner.t === 4500, 'premade: designer 60% ($45) redirected to owner payable');
+  // suspension lifts after 30 days when misses age out
+  await db.update('users', t2DesignerId, { commission_suspended_until: slaNow - 1000 });
+  for (const mid of t2MissIds) await db.update('orders', mid, { deadline_missed_at: slaNow - 61 * 86400000 });
+  const t2lift = await comm.refreshCommissionSuspensions({ now: slaNow });
+  ok(t2lift.length === 0 && !(await comm.commissionSuspended(t2DesignerId, slaNow)),
+    'suspension lifts after 30 days when misses age out');
+  // renew: misses still within 60 days when suspension expires
+  for (const mid of t2MissIds) await db.update('orders', mid, { deadline_missed_at: slaNow - 10 * 86400000 });
+  await db.update('users', t2DesignerId, { commission_suspended_until: slaNow - 1000 });
+  const t2renew = await comm.refreshCommissionSuspensions({ now: slaNow });
+  const t2until3 = await comm.commissionSuspendedUntil(t2DesignerId, slaNow);
+  ok(t2renew.length === 1 && t2until3 > slaNow + 29 * 86400000,
+    'suspension renews for 30 more days when misses persist');
+  // account + subscription never touched
+  const t2u = await db.get(`SELECT role, COALESCE(sla_suspended,0) AS s FROM users WHERE id = ?`, [t2DesignerId]);
+  ok(t2u.role === 'design_artist' && t2u.s === 0, 'designer account never auto-suspended');
+  const t2sub = await db.get(`SELECT status FROM subscriptions WHERE user_id = ?`, [t2DesignerId]);
+  ok(t2sub.status === 'active', 'designer subscription untouched by tier-2 suspension');
+
   await db.close();
 
   // --- HTTP integration ---
@@ -463,6 +617,51 @@ async function main() {
   const summary = await autopayout.runWeeklyPayouts();
   ok(summary.skipped.some((s) => s.recipient_id === walletId && /subscription/i.test(s.reason)),
     'weekly payout holds balance when subscription is not active');
+
+  // artist dashboard: SLA banner + tier-2 suspension notice render
+  const bcrypt = require('bcryptjs');
+  const artJar = {};
+  async function artreq(method, p, opts = {}) {
+    const h = { ...(opts.headers || {}) };
+    const cookies = Object.entries(artJar).map(([k, v]) => `${k}=${v}`).join('; ');
+    if (cookies) h.cookie = cookies;
+    let payload = opts.body;
+    if (payload && typeof payload === 'object') {
+      payload = new URLSearchParams(payload);
+      h['content-type'] = 'application/x-www-form-urlencoded';
+    }
+    const res = await fetch(`http://localhost:${PORT}${p}`, { method, headers: h, body: payload, redirect: 'manual' });
+    for (const c of (res.headers.getSetCookie ? res.headers.getSetCookie() : [])) {
+      const [k, v] = c.split(';')[0].split('=');
+      artJar[k.trim()] = (v || '').trim();
+    }
+    return { status: res.status, text: await res.text(), location: res.headers.get('location') };
+  }
+  const bannerArtistId = await db.insert('users', {
+    email: 'banner@test.local', password_hash: await bcrypt.hash('ArtistPass123!', 10),
+    role: 'design_artist', display_name: 'Banner Artist',
+  });
+  const artPlanId = (await db.get(`SELECT id FROM plans WHERE slug = 'design_artist'`)).id;
+  await db.insert('subscriptions', {
+    user_id: bannerArtistId, plan_id: artPlanId, status: 'active',
+    paypal_subscription_id: 'sub-banner-test', created_at: Date.now(),
+  });
+  const bannerBuyerId = await db.insert('users', { email: 'bannerbuyer@test.local', password_hash: 'x', role: 'customer', display_name: 'BB' });
+  await db.insert('orders', {
+    buyer_id: bannerBuyerId, order_type: 'custom', amount_cents: 12500,
+    amount_paid_cents: 12500, status: 'paid', custom_status: 'routed_to_artist',
+    requested_artist_id: bannerArtistId, custom_brief: 'Banner test brief.',
+    delivery_due: Date.now() + 6 * 3600 * 1000, paid_at: Date.now(),
+  });
+  r = await artreq('POST', '/login', { body: { email: 'banner@test.local', password: 'ArtistPass123!' } });
+  ok(r.status === 302, 'artist login ok');
+  r = await artreq('GET', '/artist');
+  ok(r.status === 200 && r.text.includes('Delivery deadlines'), 'artist dashboard renders SLA banner');
+  ok(!r.text.includes('Commissions are paused until'), 'no suspension notice when not suspended');
+  await db.update('users', bannerArtistId, { commission_suspended_until: Date.now() + 10 * 86400000 });
+  r = await artreq('GET', '/artist');
+  ok(r.status === 200 && r.text.includes('Commissions are paused until'), 'suspended artist sees pause notice');
+  ok(r.text.includes('6+ deadlines were missed in the last 60 days'), 'pause notice states the reason plainly');
 
   sdb.close();
   server.kill();

@@ -1,8 +1,17 @@
 <h1>Artist dashboard</h1>
+<% if (typeof commissionPausedUntil !== 'undefined' && commissionPausedUntil) { %>
+<section class="card" style="border:2px solid #b26a00;margin-bottom:16px">
+  <h2 style="color:#b26a00">Commissions paused until <%= new Date(commissionPausedUntil).toLocaleDateString() %></h2>
+  <p class="muted">Commissions are paused until <%= new Date(commissionPausedUntil).toLocaleDateString() %> because 6+ deadlines were missed in the last 60 days. Your account, subscription, and listings all stay fully active — new-sale commissions simply resume automatically on that date. If you'd like to talk it through, just reply here.</p>
+</section>
+<% } %>
 <% if (typeof slaOrders !== 'undefined' && slaOrders.length) { %>
 <section class="card sla-banner" style="border:2px solid #b3261e;margin-bottom:16px">
-  <h2 style="color:#b3261e">Deadline alert — <%= slaOrders.length %> custom order<%= slaOrders.length === 1 ? '' : 's' %> at risk</h2>
-  <p class="muted">Late delivery costs you <strong>3.7% of your commission per day</strong> (days 1–4), then <strong>4.3%/day</strong> (days 5–7). At 7 days overdue your contract is terminated.</p>
+  <h2 style="color:#b3261e">Delivery deadlines — <%= slaOrders.length %> custom order<%= slaOrders.length === 1 ? '' : 's' %> need<%= slaOrders.length === 1 ? 's' : '' %> your attention</h2>
+  <p class="muted">Thanks for being part of Tattoo Art Customs — on-time delivery keeps our customers happy and your full commission intact. If a 48-hour deadline passes, a small daily late penalty applies to the commission: <strong>3.7%/day</strong> (days 1–4), then <strong>4.3%/day</strong> (days 5–7). At 7 days overdue the order is reassigned so the customer is taken care of.</p>
+  <% if (typeof slaRepeat !== 'undefined' && slaRepeat && slaRepeat.active) { %>
+  <p><strong><%= repeatNotice %></strong> This lifts on <%= new Date(slaRepeat.liftsAt).toLocaleDateString() %>.</p>
+  <% } %>
   <table>
     <thead><tr><th>Order</th><th>Status</th><th>Deadline</th><th>Penalty so far</th></tr></thead>
     <tbody>

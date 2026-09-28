@@ -24,11 +24,14 @@ async function main() {
   console.log('=== SLA enforcement run ===');
   console.log(`penalties applied: ${pen.penalties.length} across ${pen.processed} order(s)`);
   for (const p of pen.penalties) {
-    console.log(`  order ${p.order_id.slice(0, 8)} day ${p.day}: -${money(p.deduction_cents)} designer, ` +
-      `+${money(p.owner_cents)} owner, +${money(p.credit_cents)} buyer credit`);
+    console.log(`  order ${p.order_id.slice(0, 8)} day ${p.day}${p.rate_mult > 1 ? ' (2x)' : ''}: -${money(p.deduction_cents)} designer, ` +
+      `+${money(p.owner_cents)} owner, +${money(p.credit_cents)} buyer apology credit`);
   }
   for (const t of pen.terminations) {
-    console.log(`  TERMINATED designer ${t.designer_id} on order ${t.order_id.slice(0, 8)} — replacement offered to buyer`);
+    console.log(`  Order ${t.order_id.slice(0, 8)} TERMINATED at 7d overdue (designer assignment ended; account untouched) — replacement offered to buyer`);
+  }
+  for (const s of pen.suspensions || []) {
+    console.log(`  TIER-2: designer ${s.designer_id} commission-suspended until ${new Date(s.until).toISOString()} (${s.misses} misses in 60d)`);
   }
   console.log(`reminders sent: ${reminders.length}`);
   for (const r of reminders) console.log(`  order ${r.order_id.slice(0, 8)} -> ${r.key}`);
@@ -38,7 +41,7 @@ async function main() {
   }
   console.log(`overdue: ${overdue.length}`);
   for (const o of overdue) {
-    console.log(`  ${o.id.slice(0, 8)} | ${o.days_late}d late | penalty ${money(o.penalty_cents)} | ${o.artist} | ${o.status}${o.terminated ? ' | CONTRACT TERMINATED' : ''} | ${o.brief}`);
+    console.log(`  ${o.id.slice(0, 8)} | ${o.days_late}d late | penalty ${money(o.penalty_cents)} | ${o.artist} | ${o.status}${o.terminated ? ' | ORDER TERMINATED — replacement pending' : ''} | ${o.brief}`);
   }
   await db.close();
 }

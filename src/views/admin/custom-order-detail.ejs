@@ -25,7 +25,7 @@
 
     <h2>Late penalties</h2>
     <% if (order.designer_contract_terminated) { %>
-    <p><span class="badge" style="background:#b3261e;color:#fff">Designer contract TERMINATED (7d overdue)</span></p>
+    <p><span class="badge" style="background:#b3261e;color:#fff">Order TERMINATED at 7d overdue — designer's assignment ended (their account is unaffected)</span></p>
     <% } %>
     <% if (!penalties.length) { %>
       <p class="muted">No penalties charged. Days charged: <%= order.late_penalty_days || 0 %>.</p>
@@ -36,7 +36,7 @@
       <% penalties.forEach(function(p) { %>
         <tr>
           <td>Day <%= p.day_number %></td>
-          <td><%= p.day_number <= 4 ? '3.7%' : '4.3%' %> of <%= money(p.original_cents) %></td>
+          <td><% var base = p.day_number <= 4 ? 3.7 : 4.3; var mult = p.rate_mult || 1; %><%= (base * mult).toFixed(1).replace(/\.0$/, '') %>%<%= mult > 1 ? ' (2x)' : '' %> of <%= money(p.original_cents) %></td>
           <td><%= money(p.deduction_cents) %></td>
           <td><%= money(p.owner_cents) %></td>
           <td><%= money(p.credit_cents) %> (late-delivery credit)</td>
@@ -53,7 +53,7 @@
 
     <% if (order.designer_contract_terminated && order.replacement_status === 'offered') { %>
     <h2>Replacement — buyer's choice</h2>
-    <p class="muted">The buyer's contract was terminated at 7 days overdue. Offer them one of:</p>
+    <p class="muted">The order was terminated at 7 days overdue — the designer's assignment ended and their account is unaffected. Offer the buyer one of:</p>
     <form method="post" action="/admin/custom-orders/<%= order.id %>/replacement" class="form" style="margin-bottom:12px">
       <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
       <input type="hidden" name="action" value="new_designer">

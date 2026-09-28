@@ -3,7 +3,7 @@
 
 <div class="chips" style="margin-bottom:12px">
   <a class="chip<%= filter === 'open' ? ' active' : '' %>" href="/admin/custom-orders?status=open">Open</a>
-  <% ['new','routed_to_artist','needs_drafts','drafts_ready','in_revision','approved','delivered'].forEach(function(s) { %>
+  <% ['new','routed_to_artist','needs_drafts','drafts_ready','in_revision','approved','order_terminated','delivered'].forEach(function(s) { %>
   <a class="chip<%= filter === s ? ' active' : '' %>" href="/admin/custom-orders?status=<%= s %>"><%= s.replace(/_/g, ' ') %> (<%= counts[s] || 0 %>)</a>
   <% }); %>
 </div>

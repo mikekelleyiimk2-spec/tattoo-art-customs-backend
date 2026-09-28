@@ -10,17 +10,49 @@
   <div class="card"><h3>Admins</h3><p><a href="/admin/admins">Manage admins</a></p></div>
 </div>
 
-<% if ((typeof suspendedDesigners !== 'undefined' && suspendedDesigners.length) || (typeof terminatedOrders !== 'undefined' && terminatedOrders.length)) { %>
-<h2>SLA terminations — action needed</h2>
+<% if ((typeof designerWatch !== 'undefined' && designerWatch.length) || (typeof terminatedOrders !== 'undefined' && terminatedOrders.length)) { %>
+<h2>Designer deadline watch</h2>
 <div class="grid">
-  <% (suspendedDesigners || []).forEach(function(d) { %>
-  <div class="card" style="border:2px solid #b3261e">
+  <% (designerWatch || []).forEach(function(d) { %>
+  <div class="card" style="<%= d.repeat_offender || d.commission_suspended ? 'border:2px solid #b3261e' : '' %>">
     <h3><%= d.display_name || d.email %></h3>
-    <p class="muted"><%= d.email %> — contract terminated (7d overdue), suspended from custom orders pending review.</p>
+    <p class="muted"><%= d.email %></p>
+    <p>
+      <% if (d.commission_suspended) { %>
+        <span class="badge" style="background:#b3261e;color:#fff">commissions paused</span>
+      <% } else if (d.repeat_offender) { %>
+        <span class="badge" style="background:#b3261e;color:#fff">repeat offender (2x penalties)</span>
+      <% } else { %>
+        <span class="badge warn">at risk</span>
+      <% } %>
+      <%= d.misses %> missed deadline<%= d.misses === 1 ? '' : 's' %> in 30 days
+    </p>
+    <% if (d.repeat_offender && d.liftsAt) { %>
+    <p class="muted">2x penalties lift on <%= new Date(d.liftsAt).toLocaleDateString() %>.</p>
+    <% } %>
+    <% if (d.commission_suspended) { %>
+    <p class="muted">0% commission on new sales until <%= new Date(d.commission_suspended_until).toLocaleDateString() %> — 6+ missed deadlines in 60 days. Listings stay up; account and subscription unaffected.</p>
+    <form method="post" action="/admin/designers/<%= d.id %>/lift-suspension" style="margin:0 0 8px">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button class="btn btn-secondary" type="submit">Lift suspension early</button>
+    </form>
+    <% } %>
+    <form method="post" action="/admin/designers/<%= d.id %>/forgive" style="margin:0 0 8px">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button class="btn btn-secondary" type="submit">Forgive / reset count</button>
+    </form>
+    <% if (d.manual_restricted) { %>
+    <p><span class="badge">manually restricted</span></p>
     <form method="post" action="/admin/designers/<%= d.id %>/unsuspend" style="margin:0">
       <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-      <button class="btn btn-secondary" type="submit">Reinstate designer</button>
+      <button class="btn btn-secondary" type="submit">Lift manual restriction</button>
     </form>
+    <% } else { %>
+    <form method="post" action="/admin/designers/<%= d.id %>/restrict" style="margin:0">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button class="btn btn-secondary" type="submit">Restrict designer (manual)</button>
+    </form>
+    <% } %>
   </div>
   <% }); %>
   <% (terminatedOrders || []).forEach(function(o) { %>

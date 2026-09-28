@@ -72,8 +72,13 @@ router.post('/buy/:designId', requireLogin, formLimiter, checkHoneypot, async (r
 router.get('/custom', requireLogin, async (req, res) => {
   const full = pricing.customFullCents();
   const deposit = pricing.customDepositCents();
+  // Tier-2 commission-suspended designers are hidden from the request-artist
+  // dropdown (their listings stay up; only new commissions pause).
+  const nowMs = Date.now();
   const artists = await db.all(
-    "SELECT id, display_name FROM users WHERE role = 'design_artist' AND COALESCE(sla_suspended, 0) = 0 ORDER BY display_name");
+    `SELECT id, display_name FROM users WHERE role = 'design_artist'
+     AND (commission_suspended_until IS NULL OR commission_suspended_until <= ?)
+     ORDER BY display_name`, [nowMs]);
   res.render('orders/custom', {
     title: 'Request a Custom Design — Tattoo Art Customs',
     deposit, full, sale: pricing.isSaleWindow(), artists,
@@ -94,8 +99,9 @@ router.post('/custom', requireLogin, formLimiter, checkHoneypot, async (req, res
   const wantArtist = String(req.body.requested_artist_id || '').trim();
   if (wantArtist) {
     const a = await db.get(
-      `SELECT id FROM users WHERE id = ? AND role = 'design_artist' AND COALESCE(sla_suspended, 0) = 0`,
-      [wantArtist]);
+      `SELECT id FROM users WHERE id = ? AND role = 'design_artist'
+       AND (commission_suspended_until IS NULL OR commission_suspended_until <= ?)`,
+      [wantArtist, Date.now()]);
     if (a) requestedArtistId = a.id;
   }
   const orderId = await db.insert('orders', {

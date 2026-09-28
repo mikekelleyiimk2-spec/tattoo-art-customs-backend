@@ -26,24 +26,50 @@ router.get('/', async (req, res) => {
     openReviews: (await db.get("SELECT COUNT(*) AS n FROM review_queue WHERE status = 'open'")).n,
     payableOut: (await db.get("SELECT COALESCE(SUM(amount_cents),0) AS t FROM commission_ledger WHERE status = 'payable'")).t,
   };
-  // Designers whose contracts were terminated by the SLA enforcer (day-7
-  // overdue) — suspended from new custom orders pending admin review.
-  const suspendedDesigners = await db.all(
-    `SELECT id, email, display_name FROM users WHERE role = 'design_artist' AND sla_suspended = 1 ORDER BY display_name`);
+  // Designer deadline watch: 2-3 missed deadlines in 30 days = "at risk",
+  // 4+ = repeat offender with doubled late-penalty rates. users.sla_suspended
+  // is a manual-admin-only flag — automatic enforcement never touches it.
+  const { offenderWatch } = require('../lib/slaEnforcer');
+  const designerWatch = await offenderWatch({ now: Date.now() });
   const terminatedOrders = await db.all(
     `SELECT o.id, o.replacement_status, u.email AS buyer_email
      FROM orders o JOIN users u ON u.id = o.buyer_id
      WHERE o.designer_contract_terminated = 1 AND o.custom_status NOT IN ('delivered')
      ORDER BY o.delivery_due ASC`);
   res.render('admin/dashboard', {
-    title: 'Admin — Tattoo Art Customs', stats, suspendedDesigners, terminatedOrders, metaDescription: '',
+    title: 'Admin — Tattoo Art Customs', stats, designerWatch, terminatedOrders, metaDescription: '',
   });
+});
+
+// Manual designer restriction (admin action only — nothing automatic sets this).
+router.post('/designers/:id/restrict', formLimiter, checkHoneypot, async (req, res) => {
+  const user = await db.get("SELECT id FROM users WHERE id = ? AND role = 'design_artist'", [req.params.id]);
+  if (user) await db.update('users', user.id, { sla_suspended: 1 });
+  req.session.flash = 'Designer marked as manually restricted (marker for your review — orders still route normally).';
+  res.redirect('/admin');
 });
 
 router.post('/designers/:id/unsuspend', formLimiter, checkHoneypot, async (req, res) => {
   const user = await db.get("SELECT id FROM users WHERE id = ? AND role = 'design_artist'", [req.params.id]);
   if (user) await db.update('users', user.id, { sla_suspended: 0 });
-  req.session.flash = 'Designer reinstated — they can take custom orders again.';
+  req.session.flash = 'Manual restriction lifted.';
+  res.redirect('/admin');
+});
+
+// Forgive / reset a designer's missed-deadline count: misses at or before now
+// stop counting toward the trailing-30-day repeat-offender window.
+router.post('/designers/:id/forgive', formLimiter, checkHoneypot, async (req, res) => {
+  const user = await db.get("SELECT id FROM users WHERE id = ? AND role = 'design_artist'", [req.params.id]);
+  if (user) await db.update('users', user.id, { sla_forgiven_at: Date.now() });
+  req.session.flash = 'Missed-deadline count reset — late penalties return to normal rates.';
+  res.redirect('/admin');
+});
+
+// Lift a Tier-2 commission suspension early (admin action only).
+router.post('/designers/:id/lift-suspension', formLimiter, checkHoneypot, async (req, res) => {
+  const user = await db.get("SELECT id FROM users WHERE id = ? AND role = 'design_artist'", [req.params.id]);
+  if (user) await db.update('users', user.id, { commission_suspended_until: null });
+  req.session.flash = 'Commission suspension lifted early — the designer earns commissions on new sales again.';
   res.redirect('/admin');
 });
 
@@ -155,7 +181,7 @@ router.get('/custom-orders/:id', async (req, res) => {
      WHERE o.id = ? AND o.order_type = 'custom'`, [req.params.id]);
   if (!order) return res.status(404).render('error', { title: 'Not found', message: 'Custom order not found.' });
   const artists = await db.all(
-    "SELECT id, display_name FROM users WHERE role = 'design_artist' AND COALESCE(sla_suspended, 0) = 0 ORDER BY display_name");
+    "SELECT id, display_name, COALESCE(sla_suspended, 0) AS manual_restricted FROM users WHERE role = 'design_artist' ORDER BY display_name");
   const { penaltyLedger } = require('../lib/slaEnforcer');
   const penalties = await penaltyLedger(order.id);
   const penaltyTotals = penalties.reduce((s, p) => ({
@@ -201,10 +227,10 @@ router.post('/custom-orders/:id/reassign', formLimiter, checkHoneypot, async (re
   const artist = artistId
     ? await db.get(
       `SELECT id, email, display_name FROM users
-       WHERE id = ? AND role = 'design_artist' AND COALESCE(sla_suspended, 0) = 0`, [artistId])
+       WHERE id = ? AND role = 'design_artist'`, [artistId])
     : null;
   if (artistId && !artist) {
-    req.session.flash = 'That artist is suspended and cannot take custom orders right now.';
+    req.session.flash = 'That artist was not found.';
     return res.redirect(`/admin/custom-orders/${order.id}`);
   }
   await db.update('orders', order.id, {
@@ -223,7 +249,7 @@ router.post('/custom-orders/:id/reassign', formLimiter, checkHoneypot, async (re
   res.redirect(`/admin/custom-orders/${order.id}`);
 });
 
-// --- Day-7 replacement options (purchaser chooses after designer termination) ---
+// --- Day-7 replacement options (purchaser chooses after order termination) ---
 router.post('/custom-orders/:id/replacement', formLimiter, checkHoneypot, async (req, res) => {
   const order = await db.get("SELECT * FROM orders WHERE id = ? AND order_type = 'custom'", [req.params.id]);
   if (!order) return res.redirect('/admin/custom-orders');
@@ -236,9 +262,9 @@ router.post('/custom-orders/:id/replacement', formLimiter, checkHoneypot, async 
     const artistId = String(req.body.requested_artist_id || '').trim();
     const artist = await db.get(
       `SELECT id, email, display_name FROM users
-       WHERE id = ? AND role = 'design_artist' AND COALESCE(sla_suspended, 0) = 0`, [artistId]);
+       WHERE id = ? AND role = 'design_artist'`, [artistId]);
     if (!artist) {
-      req.session.flash = 'Pick an active (non-suspended) designer.';
+      req.session.flash = 'Pick a designer from the list.';
       return res.redirect(`/admin/custom-orders/${order.id}`);
     }
     await db.update('orders', order.id, {
@@ -261,7 +287,7 @@ router.post('/custom-orders/:id/replacement', formLimiter, checkHoneypot, async 
     if (cents > 0) {
       await addCredit({
         userId: order.buyer_id, amountCents: cents, kind: 'replacement_credit', refId: order.id,
-        note: `Replacement credit — custom order ${order.id.slice(0, 8)} (designer terminated)`,
+        note: `Replacement credit — custom order ${order.id.slice(0, 8)} (order terminated)`,
       });
     }
     await db.update('orders', order.id, { replacement_status: 'credit' });

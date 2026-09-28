@@ -9,7 +9,7 @@ const { recordCustomDesignerCommission } = require('./commissions');
 
 const FULFILLMENT_STATUSES = [
   'new', 'routed_to_artist', 'needs_drafts', 'drafts_ready',
-  'in_revision', 'approved', 'delivered',
+  'in_revision', 'approved', 'delivered', 'order_terminated',
 ];
 
 function draftsDir(orderId) {
@@ -28,17 +28,23 @@ async function routeCustomOrder(order) {
   const cur = order.custom_status || 'new';
   if (cur !== 'new') return order; // already routed
   if (order.requested_artist_id) {
-    const artist = await db.get(
+    // users.sla_suspended is a manual-admin-only flag — automatic enforcement
+    // never sets or reads it, so routing does not filter on it. Tier-2
+    // commission-suspended designers ARE skipped: their orders fall through
+    // to the draft pipeline.
+    const { commissionSuspended } = require('./commissions');
+    let artist = await db.get(
       `SELECT id, email, display_name FROM users
-       WHERE id = ? AND role = 'design_artist' AND COALESCE(sla_suspended, 0) = 0`,
+       WHERE id = ? AND role = 'design_artist'`,
       [order.requested_artist_id]);
+    if (artist && await commissionSuspended(artist.id, Date.now())) artist = null;
     if (artist) {
       await db.update('orders', order.id, { custom_status: 'routed_to_artist' });
       await recordCustomDesignerCommission(order, artist.id);
       await notifyArtist(order, artist);
       return { ...order, custom_status: 'routed_to_artist' };
     }
-    // Requested artist is gone/invalid/suspended — fall through to the draft pipeline.
+    // Requested artist is gone/invalid — fall through to the draft pipeline.
   }
   await db.update('orders', order.id, { custom_status: 'needs_drafts' });
   return { ...order, custom_status: 'needs_drafts' };

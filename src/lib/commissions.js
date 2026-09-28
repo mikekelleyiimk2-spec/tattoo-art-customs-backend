@@ -18,6 +18,69 @@
 //   site_kept — recipient ineligible (or the site's own share); site keeps it
 //   paid     — included in a completed payout run
 const db = require('../db');
+const config = require('../config');
+
+// Site owner lookup (for payable-balance redirects).
+async function ownerUserId() {
+  if (!config.adminEmail) return null;
+  const u = await db.get('SELECT id FROM users WHERE email = ?', [config.adminEmail.toLowerCase()]);
+  return u ? u.id : null;
+}
+
+// --- TIER 2 — commission suspension ---
+// Trigger: 6+ missed deadlines (day-7 order terminations) in the trailing 60
+// days. Effect for 30 days: the designer earns 0% commission on NEW sales
+// (custom + premade); their forfeited share is redirected to the site owner's
+// payable balance. Listings stay up, the account stays fully active, and the
+// subscription is NEVER touched. Lifts automatically after 30 days; on lift,
+// re-check: if still 6+ misses in the trailing 60 days, a new 30-day
+// suspension begins. Tracked in users.commission_suspended_until.
+const TIER2_WINDOW_MS = 60 * 86400000;
+const TIER2_MISSES = 6;
+const TIER2_DURATION_MS = 30 * 86400000;
+
+// Miss timestamps (desc) for a designer inside a trailing window, ignoring
+// anything at/before an admin forgiveness.
+async function missTimes(designerId, now, windowMs) {
+  const u = await db.get('SELECT COALESCE(sla_forgiven_at, 0) AS f FROM users WHERE id = ?', [designerId]);
+  const forgivenAt = u ? u.f : 0;
+  const rows = await db.all(
+    `SELECT deadline_missed_at AS t FROM orders
+     WHERE requested_artist_id = ? AND deadline_missed = 1
+       AND deadline_missed_at >= ? AND deadline_missed_at > ?
+     ORDER BY deadline_missed_at DESC`,
+    [designerId, now - windowMs, forgivenAt]);
+  return rows.map((r) => r.t).filter((t) => t);
+}
+
+async function commissionSuspendedUntil(userId, now = Date.now()) {
+  const u = await db.get('SELECT commission_suspended_until AS u FROM users WHERE id = ?', [userId]);
+  const until = u ? u.u : null;
+  return until && until > now ? until : null;
+}
+
+async function commissionSuspended(userId, now = Date.now()) {
+  return (await commissionSuspendedUntil(userId, now)) !== null;
+}
+
+// Trigger new suspensions and renew expired ones whose misses persist.
+// Called by the SLA enforcer after applying penalties.
+async function refreshCommissionSuspensions({ now = Date.now() } = {}) {
+  const changed = [];
+  const artists = await db.all(
+    `SELECT id, commission_suspended_until FROM users WHERE role = 'design_artist'`);
+  for (const a of artists) {
+    const active = a.commission_suspended_until && a.commission_suspended_until > now;
+    if (active) continue; // lifts automatically; renewal checked once expired
+    const times = await missTimes(a.id, now, TIER2_WINDOW_MS);
+    if (times.length >= TIER2_MISSES) {
+      const until = now + TIER2_DURATION_MS;
+      await db.update('users', a.id, { commission_suspended_until: until });
+      changed.push({ designer_id: a.id, until, misses: times.length });
+    }
+  }
+  return changed;
+}
 
 // Is this user currently eligible to RECEIVE payouts?
 async function recipientEligible(userId, role) {
@@ -59,10 +122,26 @@ async function recordSaleCommissions(order) {
     const shopBase = Math.round(order.amount_paid_cents * 0.20);
     const residual = order.amount_paid_cents - designerAmt - siteAmt - shopBase;
     const designerEligible = await recipientEligible(artistId, 'design_artist');
-    entries.push({
-      order_id: order.id, recipient_type: 'artist', recipient_id: artistId,
-      amount_cents: designerAmt, status: designerEligible ? 'payable' : 'site_kept', created_at: t,
-    });
+    const suspended = await commissionSuspended(artistId, t);
+    if (suspended) {
+      // TIER 2: designer's 60% is redirected to the site owner's payable
+      // balance (it funds buyer apology credits). Shop 20% and site 10%
+      // are unchanged; the designer's listings stay up.
+      const ownerId = await ownerUserId();
+      entries.push({
+        order_id: order.id, recipient_type: 'artist', recipient_id: artistId,
+        amount_cents: 0, status: 'site_kept', created_at: t,
+      });
+      entries.push({
+        order_id: order.id, recipient_type: 'site', recipient_id: ownerId,
+        amount_cents: designerAmt, status: ownerId ? 'payable' : 'site_kept', created_at: t,
+      });
+    } else {
+      entries.push({
+        order_id: order.id, recipient_type: 'artist', recipient_id: artistId,
+        amount_cents: designerAmt, status: designerEligible ? 'payable' : 'site_kept', created_at: t,
+      });
+    }
     entries.push({
       order_id: order.id, recipient_type: 'site', recipient_id: null,
       amount_cents: siteAmt, status: 'site_kept', created_at: t,
@@ -141,6 +220,16 @@ async function recordCustomDesignerCommission(order, artistId) {
     `SELECT * FROM commission_ledger WHERE order_id = ? AND recipient_type = 'artist' AND recipient_id = ?`,
     [order.id, artistId]);
   if (existing) return existing.amount_cents;
+  // TIER 2: while commission-suspended the designer earns 0% on new sales —
+  // the site keeps its full share (the designer's forfeited share stays with
+  // the owner). Record an explicit 0¢ row for transparency.
+  if (await commissionSuspended(artistId, db.now())) {
+    await db.insert('commission_ledger', {
+      order_id: order.id, recipient_type: 'artist', recipient_id: artistId,
+      amount_cents: 0, status: 'site_kept', created_at: db.now(),
+    });
+    return 0;
+  }
   const designerAmt = Math.round((order.amount_paid_cents || 0) * 0.60);
   if (designerAmt <= 0) return 0;
   // Take it out of the site's share (the largest site_kept 'site' row).
@@ -162,4 +251,9 @@ async function recordCustomDesignerCommission(order, artistId) {
   return designerAmt;
 }
 
-module.exports = { recipientEligible, recordSaleCommissions, verifyOrderCommissions, payableBalance, recordCustomDesignerCommission };
+module.exports = {
+  recipientEligible, recordSaleCommissions, verifyOrderCommissions, payableBalance,
+  recordCustomDesignerCommission, ownerUserId,
+  TIER2_WINDOW_MS, TIER2_MISSES, TIER2_DURATION_MS,
+  missTimes, commissionSuspended, commissionSuspendedUntil, refreshCommissionSuspensions,
+};
