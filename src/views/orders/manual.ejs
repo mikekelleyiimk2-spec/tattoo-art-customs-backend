@@ -1,11 +1,26 @@
 <h1>Pay manually</h1>
 <% const base = order.order_type === 'custom' ? order.deposit_cents : order.amount_cents; const fee = order.fee_cents || 0; %>
 <p>Order <strong><%= order.id.slice(0,8) %></strong> — amount due: <strong><%= money(base + fee) %></strong> <span class="muted">(includes <%= money(fee) %> processing fee)</span></p>
-<p class="muted">Send payment via CashApp or Venmo using the payment links on our socials, then record it here. An admin confirms every manual payment before your download unlocks.</p>
+<p class="muted">Send payment via PayPal, CashApp, or Venmo, then record it here. An admin confirms every manual payment before your download unlocks.</p>
+
+<h2>Pay with PayPal</h2>
+<div class="card">
+  <script src="https://www.paypal.com/sdk/js?client-id=BAAa8n0M_O7bdJoOqaMZls49k8n5IXYKxuLEg5wRpXb3PNcGicFLfmdYYlYYat_YagcgwSKL1Vw37r1yIM&components=hosted-buttons&enable-funding=venmo&currency=USD"></script>
+  <div id="paypal-container-WA9DS6J8ERSHW"></div>
+  <script>
+    paypal.HostedButtons({
+      hostedButtonId: "WA9DS6J8ERSHW",
+    }).render("#paypal-container-WA9DS6J8ERSHW")
+  </script>
+  <p class="muted">After paying, record it in the form below so an admin can confirm it and unlock your download.</p>
+</div>
+
+<h2>Pay with CashApp or Venmo</h2>
+<p class="muted">Use the payment links on our socials, then record it here.</p>
 <form method="post" action="/orders/manual/<%= order.id %>" class="form">
   <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
   <label for="method">Payment method</label>
-  <select id="method" name="method"><option value="cashapp">CashApp</option><option value="venmo">Venmo</option></select>
+  <select id="method" name="method"><option value="cashapp">CashApp</option><option value="venmo">Venmo</option><option value="paypal">PayPal</option></select>
   <label for="note">Note (e.g. your $Cashtag or transaction memo)</label>
   <input type="text" id="note" name="note" maxlength="300">
   <p><button class="btn" type="submit">I've sent payment</button></p>

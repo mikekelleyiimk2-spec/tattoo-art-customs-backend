@@ -180,7 +180,7 @@ router.get('/manual/:orderId', requireLogin, async (req, res) => {
 router.post('/manual/:orderId', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
   const order = await db.get('SELECT * FROM orders WHERE id = ? AND buyer_id = ?', [req.params.orderId, req.user.id]);
   if (!order || order.status !== 'pending') return res.redirect('/account');
-  const method = ['cashapp', 'venmo'].includes(req.body.method) ? req.body.method : 'manual';
+  const method = ['cashapp', 'venmo', 'paypal'].includes(req.body.method) ? req.body.method : 'manual';
   const note = String(req.body.note || '').trim().slice(0, 300);
   const brief = (order.custom_brief || '') + `\n[manual note: ${note}]`;
   await db.update('orders', order.id, { payment_method: method, custom_brief: brief });
