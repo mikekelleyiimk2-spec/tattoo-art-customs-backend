@@ -31,7 +31,7 @@
     <div class="pad">
       <h3><a href="/design/<%= d.id %>"><%= d.title %></a></h3>
       <% d.categories.slice(0,3).forEach(function(c) { %><span class="tag"><%= c %></span><% }); %>
-      <p class="muted"><%= money(d.price_cents) %></p>
+      <p class="muted"><%= money(premadePrice) %><% if (sale) { %> <span class="badge ok">Sale</span><% } %></p>
     </div>
   </article>
   <% }); %>

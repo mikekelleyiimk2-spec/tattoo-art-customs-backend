@@ -3,7 +3,7 @@ const express = require('express');
 const db = require('../db');
 const config = require('../config');
 const { requireLogin } = require('../middleware/auth');
-const { premadePriceCents, isSaleWindow } = require('../lib/pricing');
+const { premadePriceCents, customFullCents, isSaleWindow } = require('../lib/pricing');
 
 const router = express.Router();
 
@@ -84,6 +84,7 @@ router.get('/', async (req, res) => {
   res.render('site/index', {
     title: 'Tattoo Art Customs — Custom Tattoo Designs',
     designs, sale: isSaleWindow(),
+    premadePrice: premadePriceCents(), customPrice: customFullCents(),
     metaDescription: 'Browse hundreds of original tattoo designs. Custom designs $150 with 48-hour delivery. Design artists earn 60% commission.',
   });
 });
@@ -102,6 +103,7 @@ router.get('/gallery', async (req, res) => {
   res.render('site/gallery', {
     title: 'Design Gallery — Tattoo Art Customs',
     designs, allCats, q: req.query.q || '', cat: req.query.cat || '', sale: isSaleWindow(),
+    premadePrice: premadePriceCents(),
     metaDescription: 'Browse and search original tattoo designs by category.',
   });
 });
