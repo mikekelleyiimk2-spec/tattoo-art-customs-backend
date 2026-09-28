@@ -414,6 +414,23 @@ router.post('/designs/:id/reject', formLimiter, checkHoneypot, async (req, res) 
   await db.update('designs', req.params.id, { status: 'rejected' });
   res.redirect('/admin/designs');
 });
+// Permanent delete (moderation): removes the piece and its asset files.
+// Blocked when the piece has sales — those must stay for order history.
+router.post('/designs/:id/delete', formLimiter, checkHoneypot, async (req, res) => {
+  const design = await db.get('SELECT * FROM designs WHERE id = ?', [req.params.id]);
+  if (!design) return res.redirect('/admin/designs');
+  const paid = await db.get("SELECT id FROM orders WHERE design_id = ? AND status = 'paid' LIMIT 1", [design.id]);
+  if (paid || (design.sale_count || 0) > 0) {
+    req.session.flash = 'Blocked: that piece has sales and cannot be deleted.';
+    return res.redirect('/admin/designs');
+  }
+  for (const p of [design.color_path, design.linework_path, design.linework_wm_path, design.custom_watermark_path]) {
+    if (p) { try { fs.unlinkSync(path.join(config.assetDir, p)); } catch { /* already gone */ } }
+  }
+  await db.query('DELETE FROM designs WHERE id = ?', [design.id]);
+  req.session.flash = 'Piece deleted.';
+  res.redirect('/admin/designs');
+});
 
 // Members-only toggle: marks a design exclusive to active members (early
 // sale pricing, members-only gallery visibility and checkout).

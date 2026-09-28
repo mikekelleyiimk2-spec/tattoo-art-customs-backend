@@ -34,6 +34,10 @@
           <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
           <button class="btn btn-secondary" type="submit">Reject</button>
         </form>
+        <form method="post" action="/admin/designs/<%= d.id %>/delete" style="display:inline" onsubmit="return confirm('Delete this piece permanently? This cannot be undone.');">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="linklike" type="submit">Delete</button>
+        </form>
         <% } %>
       </td>
     </tr>

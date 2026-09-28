@@ -1217,6 +1217,15 @@ async function main() {
   r = await areq('POST', `/admin/designs/${grow.id}/approve`);
   ok(sdb.prepare('SELECT status FROM designs WHERE id = ?').get(prow.id).status === 'approved', 'portfolio piece approved');
 
+  // Admin can delete an unsold piece (moderation), but not one with sales.
+  r = await mpost('/artist/portfolio/upload',
+    { title: 'Admin Deletable', description: '', style: 'animals', listing_type: 'custom', watermark_choice: 'site' },
+    { color: { buffer: colorBuf, filename: 'c.jpg', type: 'image/jpeg' }, linework: { buffer: lwBuf, filename: 'l.jpg', type: 'image/jpeg' } },
+    artJar);
+  const admDel = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('Admin Deletable');
+  r = await areq('POST', `/admin/designs/${admDel.id}/delete`, {});
+  ok(!sdb.prepare('SELECT id FROM designs WHERE id = ?').get(admDel.id), 'admin can delete an unsold piece');
+
   // Gallery inclusion rules.
   r = await req('GET', '/gallery');
   ok(!r.text.includes('Portfolio Dragon'), 'portfolio custom piece NOT in main gallery');
@@ -1406,6 +1415,8 @@ async function main() {
   // A piece with sales cannot be deleted.
   r = await artreq('POST', `/artist/portfolio/${prow.id}/delete`, {});
   ok(sdb.prepare('SELECT id FROM designs WHERE id = ?').get(prow.id), 'piece with sales cannot be deleted');
+  r = await areq('POST', `/admin/designs/${prow.id}/delete`, {});
+  ok(sdb.prepare('SELECT id FROM designs WHERE id = ?').get(prow.id), 'admin cannot delete a piece with sales');
 
   // ===== Linework-only uploads + site colorization workflow =====
   // Linework-only upload (no color file) is accepted and held.
