@@ -1,0 +1,65 @@
+<h1>Combine your designs</h1>
+<p><a href="/studio">← My combinations</a></p>
+<p class="muted">Subscribers can merge <strong>2–6 paid-for premade designs</strong> into one sheet — handy for planning sleeves, backs, and multi-piece layouts. Only designs you've bought appear here.</p>
+
+<% if (result) { %>
+<section class="card" style="border-color: var(--accent)">
+  <h2>Your combination is ready</h2>
+  <p><strong><%= result.name %></strong></p>
+  <p>
+    <a class="btn" href="/studio/combos/<%= result.id %>/download">Download JPG</a>
+    <a class="btn btn-secondary" href="/studio">Save &amp; view all</a>
+  </p>
+  <p class="muted">Saved to your studio — download it anytime.</p>
+</section>
+<% } %>
+
+<% if (!designs.length) { %>
+<p>You don't own any premade designs yet. <a href="/gallery">Browse the gallery</a> — once you buy designs, they'll show up here to combine.</p>
+<% } else { %>
+<form method="post" action="/studio/combine">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <div>
+    <label for="combo-name">Name this combination (optional)</label>
+    <input type="text" id="combo-name" name="name" maxlength="80" placeholder="e.g. Full sleeve plan">
+  </div>
+  <div class="three-col" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin:.75rem 0">
+    <div>
+      <label for="combo-layout">Layout</label>
+      <select id="combo-layout" name="layout">
+        <option value="row">Side by side</option>
+        <option value="stack">Stacked vertically</option>
+        <option value="grid">Grid (2 columns)</option>
+      </select>
+    </div>
+    <div>
+      <label for="combo-style">Style</label>
+      <select id="combo-style" name="style">
+        <option value="color">Full color</option>
+        <option value="linework">Clean linework</option>
+      </select>
+    </div>
+    <div>
+      <label for="combo-bg">Background</label>
+      <select id="combo-bg" name="background">
+        <option value="white">White</option>
+        <option value="black">Black</option>
+      </select>
+    </div>
+  </div>
+  <h2>Pick 2–6 designs</h2>
+  <div class="grid">
+    <% designs.forEach(function(d) { %>
+    <article class="design-card">
+      <label style="display:block;cursor:pointer">
+        <img src="<%= d.thumb %>" alt="Tattoo design: <%= d.title %>" loading="lazy">
+        <div class="pad">
+          <p><input type="checkbox" name="design_ids" value="<%= d.id %>"> <strong><%= d.title %></strong></p>
+        </div>
+      </label>
+    </article>
+    <% }); %>
+  </div>
+  <p><button class="btn" type="submit">Combine designs</button></p>
+</form>
+<% } %>

@@ -1,0 +1,22 @@
+<h1>Design Studio</h1>
+<p><a class="btn" href="/studio/combine">+ New combination</a></p>
+<% if (!combos.length) { %>
+<p class="muted">No combinations yet. Combine 2–6 of your paid-for premade designs into one sheet.</p>
+<% } %>
+<div class="grid">
+  <% combos.forEach(function(c) { %>
+  <article class="design-card">
+    <div class="pad">
+      <h3><%= c.name %></h3>
+      <p class="muted"><%= c.layout %> · <%= c.style %> · <%= new Date(c.created_at).toLocaleDateString() %></p>
+      <p>
+        <a class="btn" href="/studio/combos/<%= c.id %>/download">Download</a>
+      </p>
+      <form method="post" action="/studio/combos/<%= c.id %>/delete" style="display:inline" onsubmit="return confirm('Delete this combination?')">
+        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="btn btn-secondary" type="submit">Delete</button>
+      </form>
+    </div>
+  </article>
+  <% }); %>
+</div>
