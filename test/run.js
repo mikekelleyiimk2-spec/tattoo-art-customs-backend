@@ -18,6 +18,9 @@ process.env.ASSET_DIR = path.join(TMP, 'assets');
 // Test-only PayPal stub (see src/lib/paypal.js): canned subscription answers
 // so the checkout routes can be exercised over HTTP without network access.
 process.env.TAC_TEST_PAYPAL_STUB = '1';
+// Enables the /__test_async_crash route (proves handler failures can't kill
+// the server process).
+process.env.TAC_TEST_ROUTES = '1';
 
 const PORT = 4137;
 let failures = 0;
@@ -806,6 +809,16 @@ async function main() {
   // admin-only routes reject non-admins
   r = await req('GET', '/admin', { follow: false });
   ok(r.status === 403 || r.status === 302, 'non-admin blocked from admin area');
+
+  // async safety net: a throwing handler 500s for that request but the
+  // server process survives (regression: GROUP_CONCAT on /admin used to
+  // crash the whole service into a Render 502).
+  r = await req('GET', '/__test_async_crash', { follow: false });
+  ok(r.status === 500, 'throwing async route renders 500 instead of crashing');
+  r = await req('GET', '/health');
+  ok(r.status === 200, 'server still alive after an async handler threw');
+  ok(require('../src/db').stringAgg('o.deadline_missed_at') === 'GROUP_CONCAT(o.deadline_missed_at)',
+    'stringAgg uses GROUP_CONCAT on sqlite (STRING_AGG on pg)');
 
   // custom order: brief too short rejected
   r = await req('POST', '/orders/custom', { body: { brief: 'short' }, follow: false });

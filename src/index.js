@@ -13,6 +13,28 @@ const { migrate } = require('./db/migrate');
 const { DbStore } = require('./middleware/sessionStore');
 const { loadUser } = require('./middleware/auth');
 
+// Safety net: Express 4 does NOT forward async handler rejections to error
+// middleware — one bad query (e.g. a Postgres-incompatible GROUP_CONCAT on
+// /admin) used to terminate the whole node process, 502'ing the entire site
+// until Render restarted it. Patch Layer.handle_request (the choke point
+// every route/middleware handler flows through) so a failure renders a 500
+// for that request only. Must run before any router handles a request.
+{
+  const Layer = require('express/lib/router/layer');
+  const orig = Layer.prototype.handle_request;
+  Layer.prototype.handle_request = function (req, res, next) {
+    const fn = this.handle;
+    // Leave error-handling layers (4 args) and non-functions to Express.
+    if (typeof fn !== 'function' || fn.length > 3) {
+      return orig.call(this, req, res, next);
+    }
+    try {
+      const r = fn.call(this, req, res, next);
+      if (r && typeof r.catch === 'function') r.catch(next);
+    } catch (err) { next(err); }
+  };
+}
+
 const app = express();
 
 app.set('view engine', 'ejs');
@@ -121,6 +143,12 @@ app.use('/messages', require('./routes/messages'));
 app.use('/admin', require('./routes/admin'));
 
 // 404 + error handlers
+// Test-only route: proves an async handler failure renders a 500 for that
+// request instead of crashing the process (the old /admin GROUP_CONCAT bug
+// 502'd the whole site). Only exists when TAC_TEST_ROUTES=1.
+if (process.env.TAC_TEST_ROUTES === '1') {
+  app.get('/__test_async_crash', async () => { throw new Error('intentional test crash'); });
+}
 app.use((req, res) => res.status(404).render('error', {
   title: 'Not found', message: 'That page does not exist.',
 }));

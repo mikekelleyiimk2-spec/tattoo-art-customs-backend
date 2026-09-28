@@ -416,7 +416,7 @@ async function offenderWatch({ now = Date.now() } = {}) {
   const rows = await db.all(
     `SELECT u.id, u.email, u.display_name, COALESCE(u.sla_suspended, 0) AS manual_restricted,
             u.commission_suspended_until AS susp_until,
-            GROUP_CONCAT(o.deadline_missed_at) AS miss_times
+            ${db.stringAgg('o.deadline_missed_at')} AS miss_times
      FROM users u LEFT JOIN shop_profiles sp ON sp.user_id = u.id
        LEFT JOIN orders o ON o.requested_artist_id = u.id
        AND o.deadline_missed = 1

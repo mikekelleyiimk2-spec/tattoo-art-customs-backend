@@ -43,6 +43,14 @@ async function init() {
 
 function getMode() { return mode; }
 
+// Portable string aggregation across a GROUP BY: GROUP_CONCAT on SQLite,
+// STRING_AGG on Postgres (which needs an explicit ::text cast for BIGINTs).
+// (A raw GROUP_CONCAT in slaEnforcer once 500'd every /admin hit on Postgres
+// and, via an unhandled rejection, crashed the whole service.)
+function stringAgg(expr) {
+  return getMode() === 'pg' ? `STRING_AGG((${expr})::text, ',')` : `GROUP_CONCAT(${expr})`;
+}
+
 // Serializes SQLite transactions (better-sqlite3 is a single connection).
 let sqliteTxQueue = Promise.resolve();
 
@@ -181,4 +189,4 @@ async function close() {
   if (sqliteDb) sqliteDb.close();
 }
 
-module.exports = { init, getMode, query, get, all, insert, update, updateWhere, upsert, newId, now, close, transaction };
+module.exports = { init, getMode, stringAgg, query, get, all, insert, update, updateWhere, upsert, newId, now, close, transaction };
