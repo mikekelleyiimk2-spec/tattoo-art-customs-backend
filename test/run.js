@@ -605,6 +605,14 @@ async function main() {
   r = await req('POST', `/orders/manual/${orderId}`, { body: { method: 'cashapp', note: 'test' }, follow: false });
   ok(r.status === 302, 'manual payment recorded');
 
+  // exact-amount PayPal on the manual page: with PayPal unconfigured it must
+  // fail safe (no crash, no charge) and send the buyer back to the manual page.
+  r = await req('POST', `/orders/manual/${orderId}/paypal`, { follow: false });
+  ok(r.status === 302 && r.location === `/orders/manual/${orderId}`, 'manual-page PayPal fails safe to the manual page when PayPal is off');
+  r = await req('GET', `/orders/manual/${orderId}`);
+  ok(r.status === 200 && !r.text.includes('WA9DS6J8ERSHW'), 'manual page no longer embeds the hosted subscription button');
+  ok(r.text.includes('Pay with PayPal') && r.text.includes(`/orders/manual/${orderId}/paypal`), 'manual page offers the exact-total PayPal button');
+
   // buyer cannot download before admin confirms
   r = await req('POST', `/orders/${orderId}/download-token`, { follow: false });
   ok(r.status === 302, 'download token blocked while unpaid');

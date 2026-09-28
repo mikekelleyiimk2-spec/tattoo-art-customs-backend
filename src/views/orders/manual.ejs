@@ -5,14 +5,12 @@
 
 <h2>Pay with PayPal</h2>
 <div class="card">
-  <script src="https://www.paypal.com/sdk/js?client-id=BAAa8n0M_O7bdJoOqaMZls49k8n5IXYKxuLEg5wRpXb3PNcGicFLfmdYYlYYat_YagcgwSKL1Vw37r1yIM&components=hosted-buttons&enable-funding=venmo,applepay&currency=USD"></script>
-  <div id="paypal-container-WA9DS6J8ERSHW"></div>
-  <script>
-    paypal.HostedButtons({
-      hostedButtonId: "WA9DS6J8ERSHW",
-    }).render("#paypal-container-WA9DS6J8ERSHW")
-  </script>
-  <p class="muted">After paying, record it in the form below so an admin can confirm it and unlock your download.</p>
+  <p>Pay the exact order total of <strong><%= money(base + fee) %></strong> securely through PayPal — no account needed.</p>
+  <form method="post" action="/orders/manual/<%= order.id %>/paypal" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p><button class="btn" type="submit">Pay <%= money(base + fee) %> with PayPal</button></p>
+  </form>
+  <p class="muted">You'll be taken to PayPal to approve the one-time payment, then returned here automatically.</p>
 </div>
 
 <h2>Pay with CashApp or Venmo</h2>

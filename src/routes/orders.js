@@ -205,6 +205,31 @@ router.post('/manual/:orderId', requireLogin, formLimiter, checkHoneypot, async 
   res.redirect('/account');
 });
 
+// --- Manual page: pay the exact order total with PayPal (one-time) ---
+// Replaces the old hosted subscription button: the buyer never types an
+// amount — the order total (price + processing fee) is charged exactly.
+router.post('/manual/:orderId/paypal', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
+  const order = await db.get('SELECT * FROM orders WHERE id = ? AND buyer_id = ?', [req.params.orderId, req.user.id]);
+  if (!order || order.status !== 'pending') return res.redirect('/account');
+  const total = (order.order_type === 'custom' ? order.deposit_cents : order.amount_cents) + (order.fee_cents || 0);
+  const design = order.design_id ? await db.get('SELECT title FROM designs WHERE id = ?', [order.design_id]) : null;
+  try {
+    const pp = await paypal.createCheckoutOrder({
+      amountCents: total,
+      description: `Tattoo Art Customs — ${design ? `"${design.title}"` : 'custom design deposit (50%)'}`,
+      returnUrl: `${config.baseUrl}/orders/approve/${order.id}`,
+      cancelUrl: `${config.baseUrl}/orders/manual/${order.id}`,
+    });
+    await db.update('orders', order.id, { paypal_order_id: pp.id, payment_method: 'paypal' });
+    const approve = pp.links.find((l) => l.rel === 'approve');
+    return res.redirect(approve.href);
+  } catch (e) {
+    console.error('PayPal order create failed (manual page):', e.message);
+    req.session.flash = 'PayPal checkout is unavailable right now — please use CashApp or Venmo below, or try again later.';
+    return res.redirect(`/orders/manual/${order.id}`);
+  }
+});
+
 // --- PayPal return: capture ---
 router.get('/approve/:orderId', requireLogin, async (req, res) => {
   const order = await db.get('SELECT * FROM orders WHERE id = ? AND buyer_id = ?', [req.params.orderId, req.user.id]);
