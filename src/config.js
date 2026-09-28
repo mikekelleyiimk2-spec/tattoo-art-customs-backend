@@ -58,6 +58,12 @@ const config = {
   adsense: {
     publisherId: process.env.ADSENSE_PUBLISHER_ID || '',
   },
+
+  // Wise (bank payouts) — without these, bank cashouts queue for manual admin send.
+  wise: {
+    apiToken: process.env.WISE_API_TOKEN || '',
+    profileId: process.env.WISE_PROFILE_ID || '',
+  },
   adsenseConfigured() {
     return !!this.adsense.publisherId;
   },

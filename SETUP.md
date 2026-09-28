@@ -35,6 +35,8 @@ buttons show a "payments being set up" notice and buyers are routed to manual pa
 | `PAYPAL_PLAN_ARTIST` | yes | Subscription plan ID for $5/month design-artist plan |
 | `PAYPAL_PLAN_SHOP` | yes | Subscription plan ID for $99.99/year tattoo-shop plan |
 | `SMTP_HOST/PORT/USER/PASS/MAIL_FROM` | no | Email sending; without these, emails are logged to the console |
+| `WISE_API_TOKEN` / `WISE_PROFILE_ID` | no | Wise API token + profile ID for automatic bank-account payouts; without these, bank cashouts queue for manual admin send |
+| `WEEKLY_PAYOUTS_ENABLED` | no | Set to `false` to disable the automatic Monday payout run |
 
 ## 3. PayPal setup (Business account)
 

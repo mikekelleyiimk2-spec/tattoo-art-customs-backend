@@ -242,41 +242,74 @@ router.get('/payouts', async (req, res) => {
     `SELECT recipient_type, recipient_id, COALESCE(SUM(amount_cents),0) AS total
      FROM commission_ledger WHERE status = 'payable'
      GROUP BY recipient_type, recipient_id`);
-  // Attach display names + payout emails.
+  // Attach display names + default payout destination.
+  const { getDefaultDestination } = require('../lib/cashout');
   for (const b of balances) {
     const u = await db.get('SELECT email, display_name FROM users WHERE id = ?', [b.recipient_id]);
     b.email = u?.email || '—'; b.name = u?.display_name || '—';
-    const prof = b.recipient_type === 'artist'
-      ? await db.get('SELECT payout_paypal_email FROM artist_profiles WHERE user_id = ?', [b.recipient_id])
-      : await db.get('SELECT payout_paypal_email FROM shop_profiles WHERE user_id = ?', [b.recipient_id]);
-    b.paypal_email = prof?.payout_paypal_email || '';
+    const dest = await getDefaultDestination(b.recipient_id);
+    b.destination = dest ? dest.summary : '(none set)';
   }
   const runs = await db.all('SELECT * FROM payouts ORDER BY created_at DESC LIMIT 25');
-  res.render('admin/payouts', { title: 'Payouts — Admin', balances, runs, metaDescription: '' });
+  const cashouts = await db.all(
+    `SELECT c.*, u.email AS user_email, u.display_name AS user_name
+     FROM cashout_requests c LEFT JOIN users u ON u.id = c.user_id
+     WHERE c.status IN ('pending','processing') ORDER BY c.created_at DESC LIMIT 50`);
+  for (const c of cashouts) {
+    try { c.dest = JSON.parse(c.dest_snapshot || '{}'); } catch { c.dest = {}; }
+  }
+  const cashoutHistory = await db.all(
+    `SELECT c.*, u.email AS user_email FROM cashout_requests c LEFT JOIN users u ON u.id = c.user_id
+     WHERE c.status IN ('completed','failed','canceled') ORDER BY c.created_at DESC LIMIT 25`);
+
+  // --- Finance: where the site's clear money sits ---
+  // PayPal sales + top-ups land directly in the PayPal Business account;
+  // PayPal Payouts leave from the same account; what remains is the site's.
+  const sum = async (sql, params = []) => (await db.get(sql, params)).t || 0;
+  const finance = {
+    paypalSales: await sum(`SELECT COALESCE(SUM(amount_paid_cents),0) AS t FROM orders WHERE status = 'paid' AND payment_method = 'paypal'`),
+    topups: await sum(`SELECT COALESCE(SUM(amount_cents),0) AS t FROM credit_topups WHERE status = 'completed'`),
+    manualSales: await sum(`SELECT COALESCE(SUM(amount_paid_cents),0) AS t FROM orders WHERE status = 'paid' AND payment_method IN ('cashapp','venmo','manual')`),
+    creditSales: await sum(`SELECT COALESCE(SUM(amount_paid_cents),0) AS t FROM orders WHERE status = 'paid' AND payment_method = 'credit'`),
+    penalties: await sum(`SELECT COALESCE(SUM(penalty_cents),0) AS t FROM cashout_requests WHERE status IN ('completed','pending','processing')`),
+    siteSplits: await sum(`SELECT COALESCE(SUM(amount_cents),0) AS t FROM commission_ledger WHERE recipient_type = 'site' AND status = 'paid'`),
+    paypalBatchOut: await sum(`SELECT COALESCE(SUM(amount_cents),0) AS t FROM payouts WHERE status = 'completed'`),
+  };
+  const completedCashouts = await db.all(`SELECT net_cents, dest_snapshot FROM cashout_requests WHERE status = 'completed'`);
+  let paypalCashoutOut = 0, wiseOut = 0, manualOut = 0;
+  for (const c of completedCashouts) {
+    let t = '';
+    try { t = JSON.parse(c.dest_snapshot || '{}').dest_type || ''; } catch { /* ignore */ }
+    if (t === 'paypal') paypalCashoutOut += c.net_cents;
+    else if (t === 'bank') wiseOut += c.net_cents;
+    else manualOut += c.net_cents;
+  }
+  finance.paypalOut = finance.paypalBatchOut + paypalCashoutOut;
+  finance.wiseOut = wiseOut;
+  finance.manualOut = manualOut;
+  finance.retainedInPaypal = (finance.paypalSales + finance.topups) - finance.paypalOut;
+
+  res.render('admin/payouts', { title: 'Payouts — Admin', balances, runs, cashouts, cashoutHistory, finance, metaDescription: '' });
 });
 
-// Queue a payout run for one recipient. Ledger shares move payable -> queued
-// and are linked to the payout; they become 'paid' only when the admin
-// confirms the PayPal payout completed.
-router.post('/payouts/run', formLimiter, checkHoneypot, async (req, res) => {
-  const { recipient_type, recipient_id, paypal_email } = req.body;
-  if (!['artist', 'shop'].includes(recipient_type) || !recipient_id || !paypal_email) {
-    req.session.flash = 'Missing payout details.';
-    return res.redirect('/admin/payouts');
-  }
-  const rows = await db.all(
-    "SELECT id, amount_cents FROM commission_ledger WHERE recipient_type = ? AND recipient_id = ? AND status = 'payable'",
-    [recipient_type, recipient_id]);
-  const total = rows.reduce((s, r) => s + r.amount_cents, 0);
-  if (!total) { req.session.flash = 'No payable balance for this recipient.'; return res.redirect('/admin/payouts'); }
-  const payoutId = await db.insert('payouts', {
-    recipient_type, recipient_id, amount_cents: total, paypal_email,
-    status: 'queued', created_at: db.now(),
-  });
-  for (const r of rows) {
-    await db.update('commission_ledger', r.id, { status: 'queued', payout_id: payoutId });
-  }
-  req.session.flash = `Payout of $${(total / 100).toFixed(2)} queued to ${paypal_email}. Send it via PayPal, then mark it completed. (Payout #${payoutId.slice(0, 8)})`;
+// --- Manual cashout processing ---
+// The admin sends the money via the destination's app (Cash App, Venmo,
+// Zelle, bank transfer, etc.) then marks it sent here.
+router.post('/cashouts/:id/complete', formLimiter, checkHoneypot, async (req, res) => {
+  const { completeCashout } = require('../lib/cashout');
+  const c = await db.get("SELECT * FROM cashout_requests WHERE id = ? AND status IN ('pending','processing')", [req.params.id]);
+  if (!c) { req.session.flash = 'Cashout request not found or already handled.'; return res.redirect('/admin/payouts'); }
+  await completeCashout(c.id, 'Sent manually by admin.');
+  req.session.flash = `Cashout of $${(c.net_cents / 100).toFixed(2)} marked sent.`;
+  res.redirect('/admin/payouts');
+});
+
+router.post('/cashouts/:id/fail', formLimiter, checkHoneypot, async (req, res) => {
+  const { revertCashout } = require('../lib/cashout');
+  const c = await db.get("SELECT id FROM cashout_requests WHERE id = ? AND status IN ('pending','processing')", [req.params.id]);
+  if (!c) { req.session.flash = 'Cashout request not found or already handled.'; return res.redirect('/admin/payouts'); }
+  await revertCashout(c.id);
+  req.session.flash = 'Cashout marked failed — balance restored to payable.';
   res.redirect('/admin/payouts');
 });
 

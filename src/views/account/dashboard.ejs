@@ -44,3 +44,127 @@
     </div>
   </section>
 </div>
+
+<section class="card" id="credit">
+  <h2>Site credit</h2>
+  <p><strong><%= money(creditBalance) %></strong> available — spend it at checkout, no card needed.</p>
+
+  <h3>Add money</h3>
+  <form method="post" action="/account/topup" class="form" style="max-width:320px">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <label for="topup_amount">Amount (USD, min $5)</label>
+    <input type="number" id="topup_amount" name="amount" min="5" max="1000" step="0.01" placeholder="25.00" required>
+    <p><button class="btn" type="submit">Top up with PayPal</button></p>
+  </form>
+
+  <h3>Withdraw to your bank or wallet</h3>
+  <% if (destinations.length && creditBalance >= 500) {
+    var wQuote = (function(){ var p = Math.round(creditBalance * 3 / 100); return { fee: p, net: creditBalance - p }; })(); %>
+  <p class="muted">Balance <%= money(creditBalance) %> − 3% fee <%= money(wQuote.fee) %> = <strong><%= money(wQuote.net) %></strong> to <%= destinations[0].summary %>.</p>
+  <form method="post" action="/account/withdraw" class="form" style="max-width:320px" onsubmit="return confirm('Withdraw your credit? A 3% fee is withheld automatically.')">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <label for="wd_amount">Amount (USD, blank = full balance)</label>
+    <input type="number" id="wd_amount" name="amount" min="5" step="0.01" placeholder="<%= (creditBalance/100).toFixed(2) %>">
+    <input type="hidden" name="destination_id" value="<%= destinations[0].id %>">
+    <p><button class="btn" type="submit">Withdraw</button></p>
+  </form>
+  <% } else if (!destinations.length) { %>
+  <p class="muted">Add a payout destination below to enable withdrawals.</p>
+  <% } else { %>
+  <p class="muted">You need at least $5.00 credit to withdraw.</p>
+  <% } %>
+
+  <h3>Payout destinations</h3>
+  <% if (destinations.length) { %>
+  <ul><% destinations.forEach(function(d) { %>
+    <li><%= d.summary %> <% if (d.is_default) { %><span class="badge ok">default</span><% } %>
+      <% if (!d.is_default) { %>
+      <form method="post" action="/account/payout-destination/<%= d.id %>/default" style="display:inline">
+        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="btn btn-secondary" type="submit">Make default</button>
+      </form><% } %>
+      <form method="post" action="/account/payout-destination/<%= d.id %>/delete" style="display:inline">
+        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="btn btn-secondary" type="submit" onclick="return confirm('Remove this destination?')">Remove</button>
+      </form>
+    </li><% }); %></ul>
+  <% } %>
+  <details>
+    <summary>Add a payout destination</summary>
+    <form method="post" action="/account/payout-destination/add" class="form" id="wd-dest-form" style="max-width:320px">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <label for="wd_dest_type">Type</label>
+      <select id="wd_dest_type" name="dest_type">
+        <% Object.keys(destTypes).forEach(function(k) { %>
+        <option value="<%= k %>"><%= destTypes[k].label %> — <%= destTypes[k].hint %></option>
+        <% }); %>
+      </select>
+      <% Object.keys(destTypes).forEach(function(k) { %>
+      <div class="wd-dest-fields" data-dest="<%= k %>" style="display:none">
+        <% destTypes[k].fields.forEach(function(f) { %>
+        <label><%= f.label %>
+          <% if (f.type === 'select') { %>
+          <select name="<%= f.key %>"><% f.options.forEach(function(o) { %><option value="<%= o %>"><%= o %></option><% }); %></select>
+          <% } else { %>
+          <input type="<%= f.type %>" name="<%= f.key %>" placeholder="<%= f.placeholder || '' %>" <%= k !== 'paypal' ? 'disabled' : '' %>>
+          <% } %>
+        </label>
+        <% }); %>
+      </div>
+      <% }); %>
+      <p><button class="btn" type="submit">Add destination</button></p>
+    </form>
+    <script>
+      (function () {
+        var sel = document.getElementById('wd_dest_type');
+        function show() {
+          document.querySelectorAll('#wd-dest-form .wd-dest-fields').forEach(function (el) {
+            var on = el.getAttribute('data-dest') === sel.value;
+            el.style.display = on ? '' : 'none';
+            el.querySelectorAll('input,select').forEach(function (i) { i.disabled = !on; });
+          });
+        }
+        sel.addEventListener('change', show); show();
+      })();
+    </script>
+  </details>
+
+  <% if (withdrawals.length) { %>
+  <h3>Withdrawals</h3>
+  <table>
+    <thead><tr><th>Date</th><th>Amount</th><th>Fee withheld</th><th>You get</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    <% withdrawals.forEach(function(w) { %>
+      <tr>
+        <td><%= new Date(w.created_at).toLocaleDateString() %></td>
+        <td><%= money(w.amount_cents) %></td>
+        <td><%= money(w.penalty_cents) %></td>
+        <td><strong><%= money(w.net_cents) %></strong></td>
+        <td><span class="badge"><%= w.status %></span></td>
+        <td><% if (w.status === 'pending') { %>
+          <form method="post" action="/account/cashout/<%= w.id %>/cancel" style="display:inline">
+            <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+            <button class="btn btn-secondary" type="submit">Cancel</button>
+          </form><% } %></td>
+      </tr>
+    <% }); %>
+    </tbody>
+  </table>
+  <% } %>
+
+  <% if (creditTxns.length) { %>
+  <h3>Credit history</h3>
+  <table>
+    <thead><tr><th>Date</th><th>What</th><th>Amount</th></tr></thead>
+    <tbody>
+    <% creditTxns.forEach(function(t) { %>
+      <tr>
+        <td><%= new Date(t.created_at).toLocaleDateString() %></td>
+        <td><%= t.note || t.kind.replace(/_/g, ' ') %></td>
+        <td style="color:<%= t.amount_cents >= 0 ? 'green' : 'inherit' %>"><%= t.amount_cents >= 0 ? '+' : '' %><%= money(t.amount_cents) %></td>
+      </tr>
+    <% }); %>
+    </tbody>
+  </table>
+  <% } %>
+</section>

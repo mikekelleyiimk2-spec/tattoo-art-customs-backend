@@ -2,9 +2,19 @@
 const express = require('express');
 const db = require('../db');
 const config = require('../config');
+const { requireLogin } = require('../middleware/auth');
 const { premadePriceCents, isSaleWindow } = require('../lib/pricing');
 
 const router = express.Router();
+
+// Wallet hub: one URL for the app + website that lands each user on their
+// own money page — artists/shops get their payout settings, everyone else
+// gets their site credit.
+router.get('/wallet', requireLogin, (req, res) => {
+  if (req.user.role === 'design_artist') return res.redirect('/artist#payouts');
+  if (req.user.role === 'tattoo_shop') return res.redirect('/shop#payouts');
+  res.redirect('/account#credit');
+});
 
 // ads.txt — required by Google AdSense so ad revenue is credited to us.
 // Serves automatically once ADSENSE_PUBLISHER_ID is set.
@@ -115,6 +125,7 @@ router.get('/design/:id', async (req, res) => {
     title: `${design.title} — Tattoo Art Customs`,
     design, artist, price: premadePriceCents(), sale: isSaleWindow(), owned,
     metaDescription: `${design.title} — original tattoo design. ${design.categories.join(', ')}.`,
+    creditBalance: req.user ? await require('../lib/credits').getCreditBalance(req.user.id) : 0,
   });
 });
 

@@ -14,6 +14,13 @@
       <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
       <button class="btn" type="submit">Buy now — <%= money(price) %></button>
     </form>
+    <% if (typeof creditBalance !== 'undefined' && creditBalance >= price) { %>
+    <form method="post" action="/orders/buy/<%= design.id %>" style="margin-top:8px">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <input type="hidden" name="use_credit" value="1">
+      <button class="btn btn-secondary" type="submit">Pay with site credit (<%= money(creditBalance) %> available)</button>
+    </form>
+    <% } %>
     <% } else { %>
     <p><a class="btn" href="/login?next=<%= encodeURIComponent('/design/' + design.id) %>">Log in to buy</a></p>
     <% } %>

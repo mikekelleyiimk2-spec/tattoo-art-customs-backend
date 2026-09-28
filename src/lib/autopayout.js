@@ -1,106 +1,137 @@
 // Weekly automated commission payouts.
 //
-// runWeeklyPayouts() gathers every 'payable' commission share, groups by
-// recipient, and sends them in one PayPal Payouts batch. Recipients without
-// a payout email, or owed less than the minimum, are skipped and left as
-// payable (the admin can still pay them manually from /admin/payouts).
+// Every Monday ~9am CT (see lib/scheduler.js), every recipient with
+// cashout_mode = 'weekly', a payable balance >= $5, and a default payout
+// destination gets paid the FULL amount (no penalty — the 3% fee only
+// applies to on-demand early cashouts):
+//   - PayPal destinations: sent automatically in one PayPal Payouts batch.
+//   - Bank destinations: sent via Wise when configured, else queued pending.
+//   - Cash App / Venmo / Zelle / Chime / Varo / other: queued as pending
+//     cashout requests for the admin to send manually from /admin/payouts.
 //
-// Safety: if PayPal Payouts isn't enabled on the business account (it needs
-// separate PayPal approval) or the API call fails, every ledger row is
-// reverted to 'payable' — money never moves halfway. The function never
-// throws; it always returns a summary, and the summary is emailed to the
-// site admin (or logged when SMTP isn't configured).
+// Recipients with cashout_mode = 'manual' are skipped (they cash out on
+// demand). Anyone skipped or failed keeps their balance as payable.
+// The function never throws; it always returns a summary and emails it to
+// the site admin (or logs it when SMTP isn't configured).
 const db = require('../db');
 const config = require('../config');
 const paypal = require('./paypal');
+const wise = require('./wise');
 const { sendMail } = require('./mail');
+const { payableBalance } = require('./commissions');
+const cashout = require('./cashout');
 
-const MIN_PAYOUT_CENTS = 500; // $5 — below this, PayPal fees eat the payout.
-
-async function payoutEmailFor(recipientType, recipientId) {
-  const table = recipientType === 'artist' ? 'artist_profiles' : 'shop_profiles';
-  const row = await db.get(`SELECT payout_paypal_email FROM ${table} WHERE user_id = ?`, [recipientId]);
-  return (row?.payout_paypal_email || '').trim();
-}
+const MIN_PAYOUT_CENTS = 500;
 
 async function runWeeklyPayouts() {
-  const summary = {
-    at: new Date().toISOString(),
-    paid: [], skipped: [], failed: false, error: '',
-  };
+  const summary = { at: new Date().toISOString(), paid: [], queued: [], skipped: [], failed: false, error: '' };
+
   const groups = await db.all(
-    `SELECT recipient_type, recipient_id, COALESCE(SUM(amount_cents),0) AS total,
-            COUNT(*) AS shares
+    `SELECT recipient_type, recipient_id
      FROM commission_ledger WHERE status = 'payable'
      GROUP BY recipient_type, recipient_id`);
 
-  const items = [];
+  const paypalItems = [];
   for (const g of groups) {
-    const email = await payoutEmailFor(g.recipient_type, g.recipient_id);
-    if (!email) {
-      summary.skipped.push({ ...g, reason: 'no payout email on file' });
+    const mode = await cashout.getCashoutMode(g.recipient_id, g.recipient_type);
+    if (mode !== 'weekly') {
+      summary.skipped.push({ ...g, reason: 'manual cashout mode — recipient cashes out on demand' });
       continue;
     }
-    if (g.total < MIN_PAYOUT_CENTS) {
+    const balance = await payableBalance(g.recipient_type, g.recipient_id);
+    if (balance < MIN_PAYOUT_CENTS) {
       summary.skipped.push({ ...g, reason: `below $${(MIN_PAYOUT_CENTS / 100).toFixed(2)} minimum` });
       continue;
     }
-    const user = await db.get('SELECT display_name FROM users WHERE id = ?', [g.recipient_id]);
-    items.push({
-      recipientType: g.recipient_type,
-      recipientId: g.recipient_id,
-      recipientEmail: email,
-      name: user?.display_name || email,
-      amountCents: g.total,
-      shares: g.shares,
-    });
-  }
-
-  if (!items.length) {
-    summary.note = 'Nothing to pay this week.';
-    await notifyAdmin(summary);
-    return summary;
-  }
-
-  // Create payout rows and move ledger shares payable -> queued.
-  for (const it of items) {
-    it.payoutId = await db.insert('payouts', {
-      recipient_type: it.recipientType, recipient_id: it.recipientId,
-      amount_cents: it.amountCents, paypal_email: it.recipientEmail,
-      status: 'processing', created_at: db.now(),
-    });
-    await db.query(
-      `UPDATE commission_ledger SET status = 'queued', payout_id = ?
-       WHERE recipient_type = ? AND recipient_id = ? AND status = 'payable'`,
-      [it.payoutId, it.recipientType, it.recipientId]);
-  }
-
-  try {
-    const batch = await paypal.createPayoutBatch({
-      items: items.map((it) => ({
-        recipientEmail: it.recipientEmail,
-        amountCents: it.amountCents,
-        note: `Tattoo Art Customs weekly payout — ${it.shares} commission share(s). Thank you!`,
-      })),
-      note: 'Your weekly Tattoo Art Customs commission payout.',
-    });
-    const batchId = batch?.batch_header?.payout_batch_id || '';
-    for (const it of items) {
-      await db.update('payouts', it.payoutId, { status: 'completed', completed_at: db.now() });
-      await db.query(
-        `UPDATE commission_ledger SET status = 'paid', paid_at = ?
-         WHERE payout_id = ? AND status = 'queued'`, [db.now(), it.payoutId]);
-      summary.paid.push({ ...it, batchId });
+    const dest = await cashout.getDefaultDestination(g.recipient_id);
+    if (!dest) {
+      summary.skipped.push({ ...g, reason: 'no payout destination set' });
+      continue;
     }
-  } catch (e) {
-    // Revert everything to payable — nothing moved halfway.
-    summary.failed = true;
-    summary.error = e.message;
-    for (const it of items) {
-      await db.update('payouts', it.payoutId, { status: 'failed', completed_at: db.now() });
+    const details = JSON.parse(dest.details || '{}');
+    const user = await db.get('SELECT display_name FROM users WHERE id = ?', [g.recipient_id]);
+    const ctx = {
+      recipientType: g.recipient_type, recipientId: g.recipient_id,
+      name: user?.display_name || '—', dest, details, amountCents: balance,
+    };
+    const spec = cashout.DEST_TYPES[dest.dest_type];
+
+    if (spec.auto === 'paypal') {
+      paypalItems.push({ ...ctx, recipientEmail: details.email });
+    } else if (spec.auto === 'wise' && dest.dest_type === 'bank' && wise.isConfigured()) {
+      // Bank via Wise: send individually now.
+      let cashoutId = null;
+      try {
+        cashoutId = await db.insert('cashout_requests', {
+          user_id: g.recipient_id, recipient_type: g.recipient_type, destination_id: dest.id,
+          dest_snapshot: JSON.stringify({ dest_type: dest.dest_type, label: dest.label, details }),
+          amount_cents: balance, penalty_cents: 0, net_cents: balance,
+          kind: 'weekly', status: 'processing', created_at: db.now(),
+        });
+        await cashout.claimPayableRows({ userId: g.recipient_id, recipientType: g.recipient_type, cashoutId });
+        const transferId = await wise.sendToRecipient({
+          destType: dest.dest_type, details, amountCents: balance,
+          reference: `TAC weekly payout ${cashoutId.slice(0, 8)}`,
+        });
+        await cashout.completeCashout(cashoutId, `Sent via Wise (transfer ${transferId}).`);
+        summary.paid.push({ ...ctx, via: 'Wise', ref: String(transferId) });
+      } catch (e) {
+        if (cashoutId) await cashout.revertCashout(cashoutId);
+        summary.skipped.push({ ...g, reason: `bank transfer failed, kept payable: ${e.message}` });
+      }
+    } else {
+      // Manual rail (or bank/Wise not configured): queue for the admin.
+      const cashoutId = await db.insert('cashout_requests', {
+        user_id: g.recipient_id, recipient_type: g.recipient_type, destination_id: dest.id,
+        dest_snapshot: JSON.stringify({ dest_type: dest.dest_type, label: dest.label, details }),
+        amount_cents: balance, penalty_cents: 0, net_cents: balance,
+        kind: 'weekly', status: 'pending', note: 'Weekly payout — awaiting admin send.',
+        created_at: db.now(),
+      });
+      await cashout.claimPayableRows({ userId: g.recipient_id, recipientType: g.recipient_type, cashoutId });
+      summary.queued.push({ ...ctx, via: dest.label });
+    }
+  }
+
+  // One PayPal batch for everyone on the PayPal rail.
+  if (paypalItems.length) {
+    const batchIds = [];
+    for (const it of paypalItems) {
+      it.payoutId = await db.insert('payouts', {
+        recipient_type: it.recipientType, recipient_id: it.recipientId,
+        amount_cents: it.amountCents, paypal_email: it.recipientEmail,
+        status: 'processing', created_at: db.now(),
+      });
       await db.query(
-        `UPDATE commission_ledger SET status = 'payable', payout_id = NULL
-         WHERE payout_id = ? AND status = 'queued'`, [it.payoutId]);
+        `UPDATE commission_ledger SET status = 'queued', payout_id = ?
+         WHERE recipient_type = ? AND recipient_id = ? AND status = 'payable'`,
+        [it.payoutId, it.recipientType, it.recipientId]);
+    }
+    try {
+      const batch = await paypal.createPayoutBatch({
+        items: paypalItems.map((it) => ({
+          recipientEmail: it.recipientEmail, amountCents: it.amountCents,
+          note: 'Tattoo Art Customs weekly payout. Thank you!',
+        })),
+        note: 'Your weekly Tattoo Art Customs commission payout.',
+      });
+      const batchId = batch?.batch_header?.payout_batch_id || '';
+      for (const it of paypalItems) {
+        await db.update('payouts', it.payoutId, { status: 'completed', completed_at: db.now() });
+        await db.query(
+          `UPDATE commission_ledger SET status = 'paid', paid_at = ?
+           WHERE payout_id = ? AND status = 'queued'`, [db.now(), it.payoutId]);
+        summary.paid.push({ ...it, via: 'PayPal', ref: batchId });
+      }
+    } catch (e) {
+      summary.failed = true;
+      summary.error = e.message;
+      for (const it of paypalItems) {
+        await db.update('payouts', it.payoutId, { status: 'failed', completed_at: db.now() });
+        await db.query(
+          `UPDATE commission_ledger SET status = 'payable', payout_id = NULL
+           WHERE payout_id = ? AND status = 'queued'`, [it.payoutId]);
+      }
     }
   }
 
@@ -111,13 +142,15 @@ async function runWeeklyPayouts() {
 async function notifyAdmin(summary) {
   const lines = [`Weekly payout run — ${summary.at}`];
   for (const p of summary.paid) {
-    lines.push(`PAID $${(p.amountCents / 100).toFixed(2)} to ${p.name} <${p.recipientEmail}> (${p.shares} shares)`);
+    lines.push(`PAID $${(p.amountCents / 100).toFixed(2)} to ${p.name} via ${p.via} (${p.dest?.label || ''})`);
+  }
+  for (const q of summary.queued) {
+    lines.push(`QUEUED $${(q.amountCents / 100).toFixed(2)} for ${q.name} via ${q.via} — send manually in /admin/payouts`);
   }
   for (const s of summary.skipped) {
-    lines.push(`SKIPPED ${s.recipient_type}/${String(s.recipient_id).slice(0, 8)} $${(s.total / 100).toFixed(2)} — ${s.reason}`);
+    lines.push(`SKIPPED ${s.recipient_type}/${String(s.recipient_id).slice(0, 8)} — ${s.reason}`);
   }
-  if (summary.failed) lines.push(`FAILED: ${summary.error} — all shares reverted to payable for manual processing.`);
-  if (summary.note) lines.push(summary.note);
+  if (summary.failed) lines.push(`PAYPAL BATCH FAILED: ${summary.error} — shares reverted to payable.`);
   const to = config.adminEmail;
   if (!to) { console.log('[autopayout]\n' + lines.join('\n')); return; }
   try {

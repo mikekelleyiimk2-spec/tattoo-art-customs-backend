@@ -9,9 +9,11 @@ const { requireLogin, requireSubscription } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { screenText } = require('../lib/screening');
 const { payableBalance } = require('../lib/commissions');
+const { registerPayoutRoutes, payoutDashboardData } = require('../lib/payoutRoutes');
 
 const router = express.Router();
 router.use(requireLogin, requireSubscription('tattoo_shop'));
+registerPayoutRoutes(router, 'shop');
 
 router.get('/', async (req, res) => {
   const profile = await db.get('SELECT * FROM shop_profiles WHERE user_id = ?', [req.user.id]) || {};
@@ -26,11 +28,13 @@ router.get('/', async (req, res) => {
     'SELECT COUNT(*) AS n, COALESCE(SUM(amount_paid_cents),0) AS total FROM orders WHERE referred_shop_id = ? AND status = ?',
     [req.user.id, 'paid']);
   const refLink = profile.referral_code ? `${config.baseUrl}/?ref=${profile.referral_code}` : '';
+  const payout = await payoutDashboardData(req.user.id, 'shop');
   res.render('shop/dashboard', {
     title: 'Shop Dashboard — Tattoo Art Customs',
     profile, balance, payouts, ledger, refLink,
     referralSales: referrals[0]?.n || 0, referralTotal: referrals[0]?.total || 0,
     metaDescription: '',
+    ...payout,
   });
 });
 

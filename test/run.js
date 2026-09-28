@@ -261,6 +261,67 @@ async function main() {
   const stillAdmin = sdb.prepare("SELECT COUNT(*) AS n FROM users WHERE email = 'admin@test.local' AND role = 'admin'").get().n;
   ok(stillAdmin === 1, 'cannot remove own admin access');
 
+  // cashout options: destinations + early cashout with 3% fee
+  const cashout = require('../src/lib/cashout');
+  await db.init(); // re-open: the commissions unit test closed the handle above
+  const q = cashout.earlyQuote(10000);
+  ok(q.penaltyCents === 300 && q.netCents === 9700, 'early cashout quote: 3% fee');
+  ok(Object.keys(cashout.DEST_TYPES).join(',').includes('bank') && cashout.DEST_TYPES.paypal.auto === 'paypal', 'destination types include bank + PayPal');
+  // seed a payable artist balance for the buyer
+  const { randomUUID } = require('crypto');
+  sdb.prepare("INSERT INTO commission_ledger (id, order_id, recipient_type, recipient_id, amount_cents, status, created_at) VALUES (?,?,?,?,?,?,?)")
+    .run(randomUUID(), 'o-test', 'artist', buyerId, 10000, 'payable', Date.now());
+  const zelleId = await cashout.addDestination({ userId: buyerId, recipientType: 'artist', destType: 'zelle', details: { identifier: 'buyer@test.local' } });
+  ok(!!zelleId, 'zelle destination added');
+  const req1 = await cashout.requestEarlyCashout({ userId: buyerId, recipientType: 'artist', destinationId: zelleId });
+  ok(req1.status === 'pending' && req1.penalty_cents === 300 && req1.net_cents === 9700, 'early cashout to manual rail queues pending with 3% fee');
+  const queuedN = sdb.prepare("SELECT COUNT(*) AS n FROM commission_ledger WHERE cashout_id = ? AND status = 'queued'").get(req1.id).n;
+  ok(queuedN === 1, 'ledger rows claimed by cashout');
+  let cooldownHit = false;
+  try { await cashout.requestEarlyCashout({ userId: buyerId, recipientType: 'artist', destinationId: zelleId }); }
+  catch (e) { cooldownHit = /once a day/.test(e.message); }
+  ok(cooldownHit, 'second early cashout within 24h rejected');
+  // admin marks it sent -> ledger paid
+  await cashout.completeCashout(req1.id, 'test send');
+  const paidN = sdb.prepare("SELECT COUNT(*) AS n FROM commission_ledger WHERE cashout_id = ? AND status = 'paid'").get(req1.id).n;
+  ok(paidN === 1, 'admin send marks ledger paid');
+  // cashout mode toggle
+  await cashout.setCashoutMode(buyerId, 'artist', 'manual');
+  ok((await cashout.getCashoutMode(buyerId, 'artist')) === 'manual', 'cashout mode set to manual');
+
+  // /wallet hub: customer lands on their site credit
+  r = await req('GET', '/wallet', { follow: false });
+  ok(r.status === 302 && r.location === '/account#credit', 'wallet hub redirects customer to site credit');
+
+  // site credit: top-up ledger, commissions-to-credit, withdrawal, pay-with-credit
+  const credits = require('../src/lib/credits');
+  await credits.addCredit({ userId: buyerId, amountCents: 5000, kind: 'topup', note: 'test topup' });
+  ok((await credits.getCreditBalance(buyerId)) === 5000, 'credit balance sums ledger');
+  // move payable commissions to credit (no fee)
+  sdb.prepare("INSERT INTO commission_ledger (id, order_id, recipient_type, recipient_id, amount_cents, status, created_at) VALUES (?,?,?,?,?,?,?)")
+    .run(randomUUID(), 'o-test2', 'artist', buyerId, 8000, 'payable', Date.now());
+  const moved = await credits.moveCommissionsToCredit({ userId: buyerId, recipientType: 'artist' });
+  ok(moved.creditedCents === 8000 && (await credits.getCreditBalance(buyerId)) === 13000, 'commissions moved to site credit, no fee');
+  // withdrawal: separate user to avoid the 24h cashout cooldown
+  r = await req('POST', '/signup', { body: { display_name: 'Wallet', email: 'wallet@test.local', password: 'password123' }, follow: false });
+  const walletId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('wallet@test.local').id;
+  await credits.addCredit({ userId: walletId, amountCents: 10000, kind: 'topup', note: 'test' });
+  const wdest = await cashout.addDestination({ userId: walletId, recipientType: 'customer', destType: 'venmo', details: { handle: '@wallettest' } });
+  const wd = await credits.requestWithdrawal({ userId: walletId, destinationId: wdest, amountCents: 10000 });
+  ok(wd.status === 'pending' && wd.penalty_cents === 300 && wd.net_cents === 9700 && wd.source === 'credit', 'withdrawal queues pending with 3% auto-withheld');
+  ok((await credits.getCreditBalance(walletId)) === 0, 'withdrawal debits credit');
+  await cashout.completeCashout(wd.id, 'test send');
+  ok((await credits.getCreditBalance(walletId)) === 0, 'completed withdrawal keeps credit debited');
+  // pay for an order with site credit
+  const worderId = randomUUID();
+  sdb.prepare("INSERT INTO orders (id, buyer_id, design_id, order_type, amount_cents, status, payment_method, created_at) VALUES (?,?,?,?,?,?,?,?)")
+    .run(worderId, walletId, did, 'premade', 7500, 'pending', 'paypal', Date.now());
+  await credits.addCredit({ userId: walletId, amountCents: 8000, kind: 'topup', note: 'test' });
+  const paid = await credits.payOrderWithCredit({ userId: walletId, orderId: worderId });
+  ok(paid.order.status === 'paid' && paid.order.payment_method === 'credit', 'order paid with site credit');
+  const commRows = sdb.prepare('SELECT COUNT(*) AS n FROM commission_ledger WHERE order_id = ?').get(worderId).n;
+  ok(commRows > 0, 'commissions recorded for credit-paid order');
+
   sdb.close();
   server.kill();
   await new Promise((res2) => server.on('exit', res2));

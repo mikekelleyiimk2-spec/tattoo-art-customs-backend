@@ -11,9 +11,11 @@ const { requireLogin, requireSubscription } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { screenText } = require('../lib/screening');
 const { payableBalance } = require('../lib/commissions');
+const { registerPayoutRoutes, payoutDashboardData } = require('../lib/payoutRoutes');
 
 const router = express.Router();
 router.use(requireLogin, requireSubscription('design_artist'));
+registerPayoutRoutes(router, 'artist');
 
 const designStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -45,10 +47,12 @@ router.get('/', async (req, res) => {
   const ledger = await db.all(
     'SELECT * FROM commission_ledger WHERE recipient_type = ? AND recipient_id = ? ORDER BY created_at DESC LIMIT 25',
     ['artist', req.user.id]);
+  const payout = await payoutDashboardData(req.user.id, 'artist');
   res.render('artist/dashboard', {
     title: 'Artist Dashboard — Tattoo Art Customs',
     designs: designs.map((d) => ({ ...d, categories: JSON.parse(d.categories || '[]') })),
     profile, balance, payouts, ledger, metaDescription: '',
+    ...payout,
   });
 });
 

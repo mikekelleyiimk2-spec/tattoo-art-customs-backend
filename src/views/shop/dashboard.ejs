@@ -13,12 +13,7 @@
   <section class="card">
     <h2>Balance</h2>
     <p><strong><%= money(balance) %></strong> payable</p>
-    <form method="post" action="/shop/payout-email" class="form">
-      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-      <label for="paypal_email">PayPal email for payouts</label>
-      <input type="email" id="paypal_email" name="paypal_email" value="<%= profile.payout_paypal_email || '' %>">
-      <p><button class="btn" type="submit">Save payout email</button></p>
-    </form>
+    <p class="muted"><a href="#payouts">Manage payout destinations and cashout options ↓</a></p>
   </section>
   <section class="card">
     <h2>Shop profile</h2>
@@ -58,3 +53,5 @@
   <% }); %>
   </tbody>
 </table>
+
+<%- include('../partials/payout-settings', { payoutBase: '/shop', destinations, cashoutMode, balance, cashoutRequests, earlyQuote, destTypes, minCashoutCents, money }) %>

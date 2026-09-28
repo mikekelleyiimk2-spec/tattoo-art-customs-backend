@@ -1,13 +1,68 @@
 <h1>Payouts</h1>
 <p><a href="/admin">← Dashboard</a></p>
-<p class="muted">Commissions are paid automatically every Monday morning via PayPal Payouts (recipients owed at least $5 with a payout email on file). Anything skipped or failed stays payable and can be handled manually below.</p>
+<p class="muted">Weekly automatic payouts run every Monday ~9am CT (full amount, no fee) to each recipient's default destination — PayPal and bank (Wise) send automatically, other destinations queue below for manual send. Recipients can also cash out on demand (97%, 3% early fee, once a day); PayPal ones send instantly, the rest queue below.</p>
 <form method="post" action="/admin/payouts/auto" style="margin:12px 0">
   <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
   <button class="btn" type="submit" onclick="return confirm('Run the automatic payout batch now?')">Run automatic payouts now</button>
 </form>
+
+<h2>Site finance — clear money</h2>
+<p class="muted">PayPal sales and credit top-ups land directly in your PayPal Business account; PayPal Payouts leave from that same account. Everything left over is the site's clear money and stays in PayPal automatically.</p>
+<table>
+  <tbody>
+    <tr><td>PayPal sales intake</td><td><strong><%= money(finance.paypalSales) %></strong></td></tr>
+    <tr><td>Credit top-ups via PayPal</td><td><strong><%= money(finance.topups) %></strong></td></tr>
+    <tr><td>Paid out via PayPal (batches + cashouts)</td><td>−<%= money(finance.paypalOut) %></td></tr>
+    <tr><td><strong>Clear money in your PayPal Business account</strong></td><td><strong><%= money(finance.retainedInPaypal) %></strong></td></tr>
+  </tbody>
+</table>
+<p class="muted">Includes <%= money(finance.siteSplits) %> site commission splits and <%= money(finance.penalties) %> withheld early-cashout penalties.</p>
+<% if (finance.manualOut > 0) { %>
+<p class="muted">You sent <strong><%= money(finance.manualOut) %></strong> manually from your own apps (Cash App, Venmo, Zelle, …) — reimburse yourself from the PayPal Business account.</p>
+<% } %>
+<% if (finance.wiseOut > 0) { %>
+<p class="muted"><%= money(finance.wiseOut) %> went out via Wise bank transfers.</p>
+<% } %>
+<% if (finance.manualSales > 0) { %>
+<p class="muted"><%= money(finance.manualSales) %> in sales was paid to your CashApp/Venmo directly — move it into your PayPal Business account to keep all clear money in one place.</p>
+<% } %>
+<% if (finance.creditSales > 0) { %>
+<p class="muted"><%= money(finance.creditSales) %> in sales was paid with site credit (already counted in top-ups above).</p>
+<% } %>
+
+<h2>Needs your action — send manually</h2>
+<% if (cashouts.length) { %>
+<table>
+  <thead><tr><th>Date</th><th>Recipient</th><th>Type</th><th>Amount</th><th>Fee</th><th>Send</th><th>Destination details</th><th></th></tr></thead>
+  <tbody>
+  <% cashouts.forEach(function(c) { %>
+    <tr>
+      <td><%= new Date(c.created_at).toLocaleString() %></td>
+      <td><%= c.user_name || c.user_email %></td>
+      <td><span class="badge"><%= c.kind %></span></td>
+      <td><strong><%= money(c.net_cents) %></strong></td>
+      <td><%= money(c.penalty_cents) %></td>
+      <td><%= money(c.net_cents) %></td>
+      <td><span class="muted"><%= c.dest.label %>: <%= Object.entries(c.dest.details || {}).map(function(e){return e[0]+': '+e[1]}).join(', ') %></span></td>
+      <td>
+        <form method="post" action="/admin/cashouts/<%= c.id %>/complete" style="display:inline">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn" type="submit" onclick="return confirm('Confirm you SENT <%= money(c.net_cents) %> to this destination?')">Mark sent</button>
+        </form>
+        <form method="post" action="/admin/cashouts/<%= c.id %>/fail" style="display:inline">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn btn-secondary" type="submit" onclick="return confirm('Mark failed? The balance returns to payable.')">Fail</button>
+        </form>
+      </td>
+    </tr>
+  <% }); %>
+  </tbody>
+</table>
+<% } else { %><p class="muted">Nothing waiting — everything is automatic or already sent.</p><% } %>
+
 <h2>Payable balances</h2>
 <table>
-  <thead><tr><th>Recipient</th><th>Email</th><th>Type</th><th>Balance</th><th>PayPal email</th><th></th></tr></thead>
+  <thead><tr><th>Recipient</th><th>Email</th><th>Type</th><th>Balance</th><th>Default destination</th></tr></thead>
   <tbody>
   <% balances.forEach(function(b) { %>
     <tr>
@@ -15,25 +70,16 @@
       <td><%= b.email %></td>
       <td><%= b.recipient_type %></td>
       <td><strong><%= money(b.total) %></strong></td>
-      <td><%= b.paypal_email || '— not set —' %></td>
-      <td>
-        <% if (b.paypal_email) { %>
-        <form method="post" action="/admin/payouts/run" onsubmit="return confirm('Queue a payout of <%= money(b.total) %> to <%= b.paypal_email %>?')">
-          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-          <input type="hidden" name="recipient_type" value="<%= b.recipient_type %>">
-          <input type="hidden" name="recipient_id" value="<%= b.recipient_id %>">
-          <input type="hidden" name="paypal_email" value="<%= b.paypal_email %>">
-          <button class="btn" type="submit">Queue payout</button>
-        </form>
-        <% } %>
-      </td>
+      <td><span class="muted"><%= b.destination %></span></td>
     </tr>
   <% }); %>
   </tbody>
 </table>
-<h2>Payout runs</h2>
+<% if (!balances.length) { %><p class="muted">No payable balances.</p><% } %>
+
+<h2>PayPal batch runs</h2>
 <table>
-  <thead><tr><th>Date</th><th>Recipient</th><th>Amount</th><th>To</th><th>Status</th><th></th></tr></thead>
+  <thead><tr><th>Date</th><th>Recipient</th><th>Amount</th><th>To</th><th>Status</th></tr></thead>
   <tbody>
   <% runs.forEach(function(p) { %>
     <tr>
@@ -42,14 +88,25 @@
       <td><%= money(p.amount_cents) %></td>
       <td><%= p.paypal_email %></td>
       <td><span class="badge"><%= p.status %></span></td>
-      <td>
-        <% if (p.status === 'queued') { %>
-        <form method="post" action="/admin/payouts/<%= p.id %>/complete">
-          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-          <button class="btn btn-secondary" type="submit">Mark sent via PayPal</button>
-        </form>
-        <% } %>
-      </td>
+    </tr>
+  <% }); %>
+  </tbody>
+</table>
+
+<h2>Cashout history</h2>
+<table>
+  <thead><tr><th>Date</th><th>Recipient</th><th>Type</th><th>Amount</th><th>Fee</th><th>Sent</th><th>Status</th><th>Note</th></tr></thead>
+  <tbody>
+  <% cashoutHistory.forEach(function(c) { %>
+    <tr>
+      <td><%= new Date(c.created_at).toLocaleDateString() %></td>
+      <td><%= c.user_email %></td>
+      <td><span class="badge"><%= c.kind %></span></td>
+      <td><%= money(c.amount_cents) %></td>
+      <td><%= money(c.penalty_cents) %></td>
+      <td><strong><%= money(c.net_cents) %></strong></td>
+      <td><span class="badge"><%= c.status %></span></td>
+      <td><span class="muted"><%= c.note %></span></td>
     </tr>
   <% }); %>
   </tbody>

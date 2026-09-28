@@ -4,6 +4,7 @@
   <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
   <label for="brief">Describe your design (subject, style, size, placement, colors…)</label>
   <textarea id="brief" name="brief" required minlength="20" maxlength="4000" placeholder="e.g. A black-and-grey wolf howling at a full moon for my upper arm, about 6 inches tall…"></textarea>
+  <p><label><input type="checkbox" name="use_credit" value="1"> Pay the deposit with my site credit</label></p>
   <p><button class="btn" type="submit">Pay <%= money(deposit) %> deposit</button></p>
 </form>
 <p class="muted">All sales are final. Prefer to pay another way? Place the request, then choose manual payment (CashApp/Venmo) on the order page.</p>

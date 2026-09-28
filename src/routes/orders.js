@@ -39,6 +39,17 @@ router.post('/buy/:designId', requireLogin, formLimiter, checkHoneypot, async (r
     referral_code: refCode, referred_shop_id: await resolveReferral(refCode),
     created_at: db.now(),
   });
+  // Pay with site credit when requested and the balance covers it.
+  if (req.body.use_credit) {
+    try {
+      const { payOrderWithCredit } = require('../lib/credits');
+      const { order: paid } = await payOrderWithCredit({ userId: req.user.id, orderId });
+      req.session.flash = 'Paid with site credit — your download is ready.';
+      return res.redirect(`/orders/${paid.id}`);
+    } catch (e) {
+      req.session.flash = e.message + ' Continuing with PayPal below.';
+    }
+  }
   try {
     const pp = await paypal.createCheckoutOrder({
       amountCents: price,
@@ -85,6 +96,17 @@ router.post('/custom', requireLogin, formLimiter, checkHoneypot, async (req, res
     delivery_due: Date.now() + 48 * 3600 * 1000,
     created_at: db.now(),
   });
+  // Pay the deposit with site credit when requested.
+  if (req.body.use_credit) {
+    try {
+      const { payOrderWithCredit } = require('../lib/credits');
+      const { order: paid } = await payOrderWithCredit({ userId: req.user.id, orderId });
+      req.session.flash = 'Deposit paid with site credit — your custom request is in.';
+      return res.redirect(`/orders/${paid.id}`);
+    } catch (e) {
+      req.session.flash = e.message + ' Continuing with PayPal below.';
+    }
+  }
   try {
     const pp = await paypal.createCheckoutOrder({
       amountCents: deposit,
