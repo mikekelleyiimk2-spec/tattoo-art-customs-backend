@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
+const bcrypt = require('bcryptjs');
 const db = require('../db');
 const config = require('../config');
 const { requireLogin } = require('../middleware/auth');
@@ -62,7 +63,23 @@ router.post('/profile', requireLogin, formLimiter, checkHoneypot, async (req, re
   res.redirect('/account');
 });
 
-// --- Site credit: top up with PayPal ---
+// --- Change password (self-service; needed for temp-password logins) ---
+router.post('/password', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
+  const current = String(req.body.current_password || '');
+  const next = String(req.body.new_password || '');
+  const user = await db.get('SELECT password_hash FROM users WHERE id = ?', [req.user.id]);
+  if (!user || !(await bcrypt.compare(current, user.password_hash))) {
+    req.session.flash = 'Current password is incorrect.';
+    return res.redirect('/account');
+  }
+  if (next.length < 8) {
+    req.session.flash = 'New password must be at least 8 characters.';
+    return res.redirect('/account');
+  }
+  await db.update('users', req.user.id, { password_hash: await bcrypt.hash(next, 12) });
+  req.session.flash = 'Password changed.';
+  res.redirect('/account');
+});
 router.post('/topup', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
   const dollars = parseFloat(String(req.body.amount || ''));
   if (!isFinite(dollars) || dollars <= 0) {

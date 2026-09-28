@@ -10,6 +10,15 @@
       <input type="text" id="display_name" name="display_name" value="<%= currentUser.display_name %>" maxlength="60">
       <p><button class="btn" type="submit">Save</button></p>
     </form>
+    <h2>Change password</h2>
+    <form method="post" action="/account/password" class="form">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <label for="current_password">Current password</label>
+      <input type="password" id="current_password" name="current_password" autocomplete="current-password">
+      <label for="new_password">New password</label>
+      <input type="password" id="new_password" name="new_password" minlength="8" autocomplete="new-password">
+      <p><button class="btn" type="submit">Change password</button></p>
+    </form>
     <h2>My art uploads</h2>
     <p><a class="btn" href="/account/upload">Upload your art</a></p>
     <p class="muted">Free for everyone. Every upload must be approved by an admin before it appears in the gallery. Only active designer subscriptions earn commission on their art.</p>

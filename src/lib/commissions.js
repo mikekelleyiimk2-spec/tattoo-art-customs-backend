@@ -29,10 +29,13 @@ async function recipientEligible(userId, role) {
     `SELECT s.id FROM subscriptions s JOIN plans p ON p.id = s.plan_id
      WHERE s.user_id = ? AND p.slug = ? AND s.status = 'active'`, [userId, planSlug]);
   if (!sub) return false;
-  const profile = role === 'design_artist'
-    ? await db.get('SELECT payout_paypal_email FROM artist_profiles WHERE user_id = ?', [userId])
-    : await db.get('SELECT payout_paypal_email FROM shop_profiles WHERE user_id = ?', [userId]);
-  return !!(profile && profile.payout_paypal_email);
+  const profileTable = role === 'design_artist' ? 'artist_profiles' : 'shop_profiles';
+  const profile = await db.get(`SELECT payout_paypal_email FROM ${profileTable} WHERE user_id = ?`, [userId]);
+  if (profile && profile.payout_paypal_email) return true;
+  // Any configured payout destination qualifies (PayPal, bank, Cash App,
+  // Venmo, Zelle, Chime, Varo, Wise, other) — not just a PayPal email.
+  const dest = await db.get('SELECT id FROM payout_destinations WHERE user_id = ? LIMIT 1', [userId]);
+  return !!dest;
 }
 
 // Record commission splits for a paid order. Called once per order
