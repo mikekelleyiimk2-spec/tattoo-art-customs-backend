@@ -35,10 +35,15 @@ async function getVapidKeys() {
     const wp = getWebpush();
     if (!wp) return null;
     const keys = wp.generateVAPIDKeys();
-    await db.query(
-      "INSERT OR REPLACE INTO settings (key, value) VALUES ('vapid_public', ?)", [keys.publicKey]).catch(() => {});
-    await db.query(
-      "INSERT OR REPLACE INTO settings (key, value) VALUES ('vapid_private', ?)", [keys.privateKey]).catch(() => {});
+    // Portable upsert: plain UPDATE-then-INSERT (INSERT OR REPLACE and
+    // db.insert's id/created_at columns don't fit the settings table).
+    for (const [k, v] of [['vapid_public', keys.publicKey], ['vapid_private', keys.privateKey]]) {
+      try {
+        const existing = await db.get('SELECT key FROM settings WHERE key = ?', [k]);
+        if (existing) await db.query('UPDATE settings SET value = ? WHERE key = ?', [v, k]);
+        else await db.query('INSERT INTO settings (key, value) VALUES (?, ?)', [k, v]);
+      } catch (e) { console.error('[push] VAPID persist failed:', e.message); }
+    }
     console.log('[push] Generated and persisted VAPID keys.');
     return keys;
   } catch (e) {
