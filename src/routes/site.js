@@ -263,6 +263,56 @@ router.get('/about', (req, res) => res.render('site/about', {
   metaDescription: 'About Tattoo Art Customs marketplace.',
 }));
 
+// Tester bug reports: anyone (signed in or not) can file one. Each report is
+// saved and emailed to the owner the moment it lands.
+router.get('/report-bug', (req, res) => {
+  res.render('site/report-bug', {
+    title: 'Report a Bug — Tattoo Art Customs',
+    metaDescription: 'Report a bug on Tattoo Art Customs — it goes straight to the site owner.',
+  });
+});
+router.post('/report-bug', formLimiter, checkHoneypot, async (req, res) => {
+  const title = String(req.body.title || '').trim().slice(0, 120);
+  const details = String(req.body.details || '').trim().slice(0, 2000);
+  const pageUrl = String(req.body.page_url || '').trim().slice(0, 300);
+  const severity = ['normal', 'annoying', 'blocking'].includes(req.body.severity) ? req.body.severity : 'normal';
+  const reporterEmail = req.user ? req.user.email : String(req.body.reporter_email || '').trim().slice(0, 120);
+  if (!title || !details) {
+    req.session.flash = 'Please give the bug a title and describe what happened.';
+    return res.redirect('/report-bug');
+  }
+  const id = await db.insert('bug_reports', {
+    user_id: req.user ? req.user.id : null,
+    reporter_email: reporterEmail || null,
+    page_url: pageUrl || null,
+    title, details, severity,
+    status: 'open', created_at: db.now(),
+  });
+  const body = `Severity: ${severity}\nPage: ${pageUrl || '—'}\nReporter: ${reporterEmail || 'anonymous'}\n\n${details}`;
+  // Email the owner immediately (ADMIN_EMAIL, else every head admin).
+  try {
+    const { sendMail } = require('../lib/mail');
+    let to = [config.adminEmail].filter(Boolean);
+    if (!to.length) {
+      const heads = await db.all("SELECT email FROM users WHERE role = 'head_admin' AND email IS NOT NULL");
+      to = heads.map((h) => h.email);
+    }
+    for (const addr of to) {
+      await sendMail({ to: addr, subject: `[Bug: ${severity}] ${title}`, text: `New bug report #${String(id).slice(0, 8)}\n\n${body}` });
+    }
+  } catch (e) { console.error('bug report email failed:', e.message); }
+  // In-app nudge for admins too.
+  try {
+    await require('../lib/notify').notifyAdmins({
+      kind: 'bug', title: `Bug reported: ${title}`,
+      body: `${severity} — ${pageUrl || 'no page given'}`,
+      link: '/admin/bugs',
+    });
+  } catch (e) { console.error('bug report notify failed:', e.message); }
+  req.session.flash = 'Thanks — your bug report was sent to the site owner.';
+  res.redirect('/report-bug');
+});
+
 // Public early-subscriber raffle page: prizes + winners once drawn.
 router.get('/raffle', async (req, res) => {
   const founding = require('../lib/founding');

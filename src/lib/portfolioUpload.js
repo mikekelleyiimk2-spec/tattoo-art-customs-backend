@@ -170,23 +170,22 @@ async function handlePortfolioUpload(req, res, backUrl) {
     wmNote = ' (automatic watermarking needs an admin touch — nothing for you to do)';
   }
   // Every pending approval notifies ALL admins (in-app + email) — any one
-  // of them may decide the piece's status. Self-approved uploaders (Adolfo)
-  // skip the queue entirely: their piece goes live immediately, approved by
-  // themselves. Flagged/on-hold pieces still need an admin — those are
-  // policy violations, not approvals.
+  // of them may decide the piece's status. Trusted self-approved uploaders
+  // (Adolfo, Chris, Cayli) skip the queue entirely: every upload goes live
+  // immediately, approved by themselves, wherever it was headed (gallery
+  // for pre-designs, portfolio for customs). Screening flags are still
+  // logged to the review queue for audit, but they don't block posting.
   let finalStatus = holdForHate ? 'on_hold' : (screen.ok ? 'pending' : 'flagged');
   let selfApproved = false;
-  if (finalStatus === 'pending') {
-    try {
-      const uploader = await db.get('SELECT auto_approve_uploads FROM users WHERE id = ?', [req.user.id]);
-      if (uploader && uploader.auto_approve_uploads) {
-        finalStatus = 'approved';
-        selfApproved = true;
-        await db.update('designs', id, { status: 'approved', approved_by: req.user.id });
-        try { await notifyDesignLive(id, 'self-approved'); } catch (e) { console.error('self-approve live notify failed:', e.message); }
-      }
-    } catch (e) { console.error('self-approve check failed:', e.message); }
-  }
+  try {
+    const uploader = await db.get('SELECT auto_approve_uploads FROM users WHERE id = ?', [req.user.id]);
+    if (uploader && uploader.auto_approve_uploads) {
+      finalStatus = 'approved';
+      selfApproved = true;
+      await db.update('designs', id, { status: 'approved', approved_by: req.user.id });
+      try { await notifyDesignLive(id, 'self-approved'); } catch (e) { console.error('self-approve live notify failed:', e.message); }
+    }
+  } catch (e) { console.error('self-approve check failed:', e.message); }
   if (!selfApproved) {
   try {
     const artistName = (req.user.display_name || req.user.email || 'A designer');

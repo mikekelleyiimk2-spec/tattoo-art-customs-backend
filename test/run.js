@@ -613,6 +613,12 @@ async function main() {
   ok(r.status === 200 && !r.text.includes('WA9DS6J8ERSHW'), 'manual page no longer embeds the hosted subscription button');
   ok(r.text.includes('Pay with PayPal') && r.text.includes(`/orders/manual/${orderId}/paypal`), 'manual page offers the exact-total PayPal button');
 
+  // tester bug reports: public form saves + emails the owner (dev-logged here)
+  r = await req('GET', '/report-bug');
+  ok(r.status === 200 && r.text.includes('Report a bug'), 'bug report form renders');
+  r = await req('POST', '/report-bug', { body: { title: 'Test bug', details: 'steps here', page_url: '/gallery', severity: 'blocking' }, follow: false });
+  ok(r.status === 302 && r.location === '/report-bug', 'bug report submits and redirects');
+
   // buyer cannot download before admin confirms
   r = await req('POST', `/orders/${orderId}/download-token`, { follow: false });
   ok(r.status === 302, 'download token blocked while unpaid');
@@ -642,6 +648,12 @@ async function main() {
   await require('./founding').runHttpTests(ok, req, areq);
   r = await areq('POST', `/admin/orders/${orderId}/confirm-manual`);
   ok(r.status === 302, 'admin confirms manual payment');
+
+  // tester bug report persisted + visible in the admin triage list
+  const bugRow = sdb.prepare("SELECT * FROM bug_reports WHERE title = 'Test bug'").get();
+  ok(bugRow && bugRow.status === 'open' && bugRow.severity === 'blocking', 'bug report saved as open');
+  r = await areq('GET', '/admin/bugs');
+  ok(r.status === 200 && r.text.includes('Test bug'), 'admin bug list shows the report');
 
   // commission ledger recorded for the sale
   const ledger = sdb.prepare('SELECT recipient_type, amount_cents, status FROM commission_ledger WHERE order_id = ?').all(orderId);
@@ -1707,7 +1719,8 @@ async function main() {
     { linework: { buffer: lwBuf, filename: 'l.jpg', type: 'image/jpeg' } },
     adolfoJar);
   const adFlag = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('Adolfo Flagged');
-  ok(adFlag && adFlag.status === 'flagged', 'flagged upload still needs an admin even for a self-approver');
+  ok(adFlag && adFlag.status === 'approved' && adFlag.approved_by === adolfoId,
+    'even a flagged upload goes live immediately for a trusted self-approver');
 
   // Push notification flows (test mode: no real network, attempts are logged).
   const { vapidPublicKey, pushToAdmins, sentLog } = require('../src/lib/push');

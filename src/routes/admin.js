@@ -670,6 +670,20 @@ router.post('/members/:id/verify-shop', formLimiter, checkHoneypot, async (req, 
   res.redirect('/admin/members');
 });
 
+// --- Tester bug reports: triage list + open/close ---
+router.get('/bugs', async (req, res) => {
+  const bugs = await db.all('SELECT * FROM bug_reports ORDER BY created_at DESC LIMIT 200');
+  res.render('admin/bugs', {
+    title: 'Bug Reports — Admin', metaDescription: '', bugs,
+  });
+});
+router.post('/bugs/:id/status', formLimiter, checkHoneypot, async (req, res) => {
+  const status = req.body.status === 'closed' ? 'closed' : 'open';
+  await db.update('bug_reports', req.params.id, { status });
+  req.session.flash = `Bug report marked ${status}.`;
+  res.redirect('/admin/bugs');
+});
+
 // --- Founding program: counters, raffle window, draw ---
 router.get('/founding', async (req, res) => {
   const founding = require('../lib/founding');

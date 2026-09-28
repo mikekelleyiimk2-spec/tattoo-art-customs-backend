@@ -1,0 +1,22 @@
+<h1>Report a bug</h1>
+<p class="muted">Found something broken? Tell us where and what happened — it goes straight to the site owner.</p>
+<form method="post" action="/report-bug" class="form">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <label for="br-title">What's wrong (one line)</label>
+  <input id="br-title" name="title" maxlength="120" required placeholder="e.g. Checkout button does nothing on my phone">
+  <label for="br-page">Page where it happened</label>
+  <input id="br-page" name="page_url" maxlength="300" placeholder="e.g. /gallery or paste the page address">
+  <label for="br-severity">How bad is it?</label>
+  <select id="br-severity" name="severity">
+    <option value="normal">It works but something's off</option>
+    <option value="annoying">Annoying — I can work around it</option>
+    <option value="blocking">Blocking — I can't do what I came to do</option>
+  </select>
+  <label for="br-details">What happened (steps help)</label>
+  <textarea id="br-details" name="details" rows="5" maxlength="2000" required placeholder="1. I tapped…&#10;2. Then…&#10;3. Expected…"></textarea>
+  <% if (!currentUser) { %>
+  <label for="br-email">Your email (so we can ask follow-ups)</label>
+  <input id="br-email" type="email" name="reporter_email" maxlength="120" placeholder="you@example.com">
+  <% } %>
+  <p><button class="btn" type="submit">Send bug report</button></p>
+</form>

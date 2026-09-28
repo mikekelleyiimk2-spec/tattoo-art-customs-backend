@@ -1,0 +1,17 @@
+<h1>Bug reports</h1>
+<p class="muted"><%= bugs.filter(b => b.status === 'open').length %> open</p>
+<% for (const b of bugs) { %>
+<div class="card">
+  <p><strong>[<%= b.severity %>]</strong> <%= b.title %>
+    <span class="muted">#<%= String(b.id).slice(0,8) %> · <%= b.status %> · <%= new Date(b.created_at).toLocaleString() %></span></p>
+  <% if (b.page_url) { %><p class="muted">Page: <%= b.page_url %></p><% } %>
+  <% if (b.reporter_email) { %><p class="muted">Reporter: <%= b.reporter_email %></p><% } %>
+  <p><%= b.details %></p>
+  <form method="post" action="/admin/bugs/<%= b.id %>/status" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <input type="hidden" name="status" value="<%= b.status === 'open' ? 'closed' : 'open' %>">
+    <p><button class="btn" type="submit">Mark <%= b.status === 'open' ? 'closed' : 'open' %></button></p>
+  </form>
+</div>
+<% } %>
+<% if (!bugs.length) { %><p class="muted">No bug reports yet.</p><% } %>
