@@ -9,6 +9,13 @@ const { upsertProfile } = require('../src/lib/profiles');
 
 const EMAIL = 'adolfo3301@yahoo.com';
 
+// pg returns BIGINT timestamps as strings — coerce before constructing Dates.
+function fmtEnd(v) {
+  if (v === null || v === undefined) return 'lifetime';
+  const n = Number(v);
+  return Number.isFinite(n) ? new Date(n).toISOString() : String(v);
+}
+
 async function ensureSub(userId, slug, { lifetime, months }) {
   const plan = await db.get('SELECT * FROM plans WHERE slug = ?', [slug]);
   if (!plan) throw new Error('missing plan ' + slug);
@@ -22,7 +29,7 @@ async function ensureSub(userId, slug, { lifetime, months }) {
       await db.update('subscriptions', existing.id, { current_period_end: null });
       console.log(`FIX: ${slug} extended to lifetime`);
     } else {
-      console.log(`OK: ${slug} active (period_end=${existing.current_period_end ? new Date(existing.current_period_end).toISOString() : 'lifetime'})`);
+      console.log(`OK: ${slug} active (period_end=${fmtEnd(existing.current_period_end)})`);
     }
     return;
   }
@@ -76,7 +83,7 @@ async function main() {
   const fin = await db.get('SELECT role, email_verified FROM users WHERE id = ?', [user.id]);
   console.log('FINAL STATE: ' + JSON.stringify({
     email: EMAIL, role: fin.role, verified: !!fin.email_verified,
-    subs: subs.map((s) => ({ slug: s.slug, status: s.status, end: s.current_period_end ? new Date(s.current_period_end).toISOString().slice(0, 10) : 'lifetime' })),
+    subs: subs.map((s) => ({ slug: s.slug, status: s.status, end: fmtEnd(s.current_period_end).slice(0, 10) })),
     designer_opt_in: (await db.get('SELECT designer_opt_in FROM shop_profiles WHERE user_id = ?', [user.id])).designer_opt_in,
     artist_profile: !!(await db.get('SELECT user_id FROM artist_profiles WHERE user_id = ?', [user.id])),
   }));
