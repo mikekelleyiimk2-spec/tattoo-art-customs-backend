@@ -70,6 +70,28 @@ async function main() {
   ok(!pricing.isSaleWindow(new Date('2026-10-04T06:00:00-05:00')), 'no sale: Sun 6am CT');
   ok(pricing.premadePriceCents(new Date('2026-10-03T20:30:00-05:00')) === 5000, 'sale price $50');
   ok(pricing.premadePriceCents(new Date('2026-10-05T12:00:00-05:00')) === 7500, 'regular price $75');
+  // Member early sale entry: members get the sale price from 6 PM Saturday
+  // CT; non-members wait until the public 7 PM window.
+  ok(pricing.premadePriceCents(new Date('2026-10-03T18:30:00-05:00'), true) === 5000, 'member early entry: $50 at 6:30pm CT');
+  ok(pricing.premadePriceCents(new Date('2026-10-03T18:30:00-05:00'), false) === 7500, 'nonmember still $75 at 6:30pm CT');
+  ok(pricing.premadePriceCents(new Date('2026-10-03T17:59:00-05:00'), true) === 7500, 'member early entry starts at 6:00pm sharp');
+  ok(pricing.premadePriceCents(new Date('2026-10-03T19:00:00-05:00')) === 5000, 'public sale still starts at 7pm');
+  ok(pricing.premadePriceCents(new Date('2026-10-05T12:00:00-05:00'), true) === 7500, 'member pays regular outside sale');
+
+  console.log('subscription incentives (config + paypal billing):');
+  const cfg = require('../src/config');
+  ok(cfg.pricing.firstMonth.priceCents === 100, '$1 first-month price');
+  ok(cfg.pricing.foundingShop.priceCents === 7999, '$79.99 founding-shop price');
+  ok(cfg.pricing.plans.customer_annual && cfg.pricing.plans.customer_annual.priceCents === 5000, 'annual customer plan $50/year');
+  ok(cfg.foundingShopActive(), 'founding-shop window open (fallback ends 2027-03-01)');
+  ok(cfg.foundingShopWindowEnd === Date.parse('2027-03-01T00:00:00-06:00'), 'founding window is a fixed date, not rolling');
+  const paypal = require('../src/lib/paypal');
+  const trial = paypal.firstMonthTrialCycles(500);
+  ok(trial[0].pricing_scheme.fixed_price.value === '1.00' && trial[1].pricing_scheme.fixed_price.value === '5.00', '$1 first month then $5/mo billing cycles');
+  ok(trial[0].total_cycles === 1 && trial[1].sequence === 2, 'trial cycle count/sequence');
+  const founding = paypal.foundingShopCycles();
+  ok(founding[0].pricing_scheme.fixed_price.value === '79.99' && founding[0].total_cycles === 1, 'founding shop first year $79.99 for 1 cycle');
+  ok(founding[1].pricing_scheme.fixed_price.value === '99.99', 'founding shop renews at $99.99');
 
   console.log('commissions:');
   const db = require('../src/db');
@@ -326,6 +348,70 @@ async function main() {
   const t2sub = await db.get(`SELECT status FROM subscriptions WHERE user_id = ?`, [t2DesignerId]);
   ok(t2sub.status === 'active', 'designer subscription untouched by tier-2 suspension');
 
+  console.log('refer-a-friend + $1 first month:');
+  const refs = require('../src/lib/referrals');
+  const referrerId = await db.insert('users', { email: 'referrer@test.local', password_hash: 'x', role: 'customer', display_name: 'Referrer' });
+  const friendId = await db.insert('users', { email: 'friend@test.local', password_hash: 'x', role: 'customer', display_name: 'Friend' });
+  const refCode = await refs.ensureReferralCode(referrerId);
+  ok(/^TAC-[A-Z0-9]{6}$/.test(refCode), 'referral code generated in TAC-XXXXXX form');
+  ok((await refs.ensureReferralCode(referrerId)) === refCode, 'referral code stable on repeat');
+  ok((await refs.recordSignupReferral(friendId, refCode)) === referrerId, 'signup records referred_by');
+  const friendOwnCode = await refs.ensureReferralCode(friendId);
+  ok(!(await refs.recordSignupReferral(friendId, friendOwnCode)), 'no self-referral with own code');
+  ok(await refs.firstMonthDiscountEligible(friendId), 'friend eligible for $1 first month');
+  await refs.markFirstMonthUsed(friendId);
+  ok(!(await refs.firstMonthDiscountEligible(friendId)), '$1 first month applies exactly once');
+  // Friend becomes a paying subscriber -> referrer earns one free month.
+  const { randomUUID } = require('crypto');
+  const cplanId = (await db.get("SELECT id FROM plans WHERE slug = 'customer'")).id;
+  const fsubId = await db.insert('subscriptions', { id: randomUUID(), user_id: friendId, plan_id: cplanId, status: 'active', created_at: db.now() });
+  const grant1 = await refs.grantReferralReward(friendId, fsubId);
+  ok(!!grant1 && grant1.referrer_id === referrerId, 'referral reward granted');
+  const referrerAfter = await db.get('SELECT membership_extended_until FROM users WHERE id = ?', [referrerId]);
+  ok(referrerAfter.membership_extended_until > Date.now(), 'referrer membership extended by one free month');
+  const grant2 = await refs.grantReferralReward(friendId, fsubId);
+  ok(grant2.id === grant1.id, 'referral reward idempotent per subscription (no double free month)');
+  const { hasAnyActiveSubscription } = require('../src/middleware/auth');
+  ok(await hasAnyActiveSubscription(referrerId), 'free-month extension counts as active subscription');
+  // Resume job: a past-due free month (PayPal unavailable in tests -> marked used, no crash).
+  const dueSubId = randomUUID();
+  const dueRedId = await db.insert('referral_redemptions', {
+    id: randomUUID(), referrer_id: referrerId, referred_user_id: friendId, subscription_id: dueSubId,
+    granted_at: Date.now() - 40 * 86400000, free_month_start: Date.now() - 40 * 86400000,
+    free_month_end: Date.now() - 10 * 86400000, paypal_subscription_id: 'I-TESTFAKE', status: 'active',
+  });
+  const resumed = await refs.resumeReferralSubscriptions();
+  ok((await db.get('SELECT status FROM referral_redemptions WHERE id = ?', [dueRedId])).status === 'used',
+    'past-due referral free month marked used by the daily job');
+
+  console.log('colorization (admin-only approval):');
+  const colorz = require('../src/lib/colorization');
+  const colDesignerId = await db.insert('users', { email: 'coldesigner@test.local', password_hash: 'x', role: 'design_artist', display_name: 'Col Designer' });
+  const colDesignId = await db.insert('designs', {
+    artist_id: colDesignerId, title: 'Col Piece', status: 'awaiting_color', color_source: 'none',
+    price_cents: 7500, created_at: Date.now(),
+  });
+  fs.mkdirSync(path.join(process.env.ASSET_DIR, 'designs', 'color'), { recursive: true });
+  const colAbs = path.join(process.env.ASSET_DIR, 'designs', 'color', 'col-test.jpg');
+  fs.writeFileSync(colAbs, 'fake color');
+  await colorz.attachColorVersion(colDesignId, colAbs);
+  const colAfter = await db.get('SELECT status, color_path FROM designs WHERE id = ?', [colDesignId]);
+  ok(colAfter.status === 'pending_color_approval' && colAfter.color_path, 'attach moves piece to pending_color_approval');
+  const colConvs = await db.all(
+    `SELECT c.id FROM conversations c JOIN conversation_participants p ON p.conversation_id = c.id
+     WHERE p.user_id = ? AND c.subject LIKE '%colorized%'`, [colDesignerId]);
+  ok(colConvs.length >= 1, 'designer notified when color is attached');
+  let approveErr = '';
+  try { await colorz.approveColorVersion(colDesignId, 'not-a-real-admin'); } catch (e) { approveErr = e.message; }
+  ok(approveErr === '', 'approveColorVersion validates status only (route enforces admin role)');
+  const colApproved = await db.get('SELECT status, color_source FROM designs WHERE id = ?', [colDesignId]);
+  ok(colApproved.status === 'pending' && colApproved.color_source === 'site', 'admin approval sets color_source=site, status=pending');
+  await colorz.notifyDesignLive(colDesignId);
+  const colLiveConvs = await db.all(
+    `SELECT c.id FROM conversations c JOIN conversation_participants p ON p.conversation_id = c.id
+     WHERE p.user_id = ? AND c.subject LIKE '%is live%'`, [colDesignerId]);
+  ok(colLiveConvs.length >= 1, 'designer notified when the piece goes live');
+
   await db.close();
 
   // --- HTTP integration ---
@@ -432,6 +518,70 @@ async function main() {
   r = await req('GET', '/img/designs/w.jpg');
   ok(r.status === 404, 'private color file not reachable via img mount');
 
+  // member-exclusive designs: hidden from non-members everywhere
+  const moid = 'testdesignm01';
+  sdb.prepare(`INSERT INTO designs (id, title, description, price_cents, status, color_path, linework_path, linework_wm_path, categories, sale_count, members_only, created_at)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`).run(moid, 'Members Only Fox', 'desc', 7500, 'approved',
+    'designs/color/w.jpg', 'designs/linework/w.jpg', 'designs/linework-wm/w-wm.jpg', '[]', 0, 1, Date.now());
+  r = await req('GET', `/design/${moid}`, { follow: false });
+  ok(r.status === 404, 'non-member gets 404 on member-only design page');
+  r = await req('POST', `/orders/buy/${moid}`, { follow: false });
+  ok(r.status === 302 && (r.location || '').includes('/membership'), 'non-member cannot buy member-only design');
+  const apiAnon = await fetch(`http://localhost:${PORT}/api/designs`);
+  const apiAnonBody = await apiAnon.json();
+  ok(apiAnonBody.ok && !apiAnonBody.designs.some((d) => d.id === moid), 'member-only design hidden from app API for non-members');
+  r = await req('GET', '/gallery');
+  ok(r.status === 200 && !r.text.includes('Members Only Fox'), 'member-only design hidden from gallery for non-members');
+  // admin can flip members_only back to public
+  r = await areq('POST', `/admin/designs/${moid}/members-only`, { body: { members_only: '0' } });
+  ok(r.status === 302 && sdb.prepare('SELECT members_only FROM designs WHERE id = ?').get(moid).members_only === 0, 'admin toggles members-only off');
+  r = await areq('POST', `/admin/designs/${moid}/members-only`, { body: { members_only: '1' } });
+  ok(r.status === 302 && sdb.prepare('SELECT members_only FROM designs WHERE id = ?').get(moid).members_only === 1, 'admin toggles members-only on');
+
+  // refer-a-friend signup: friend code recorded; membership page shows the
+  // referral link, the $1 first-month note, and the annual plan
+  const buyerCode = sdb.prepare('SELECT referral_code FROM users WHERE email = ?').get('buyer@test.local').referral_code;
+  ok(!!buyerCode, 'signup generated the buyer\u2019s referral code');
+  r = await req('POST', '/signup', { body: { display_name: 'Friend', email: 'friend2@test.local', password: 'password123', referral_code: buyerCode }, follow: false });
+  const friendReferred = sdb.prepare('SELECT referred_by FROM users WHERE email = ?').get('friend2@test.local').referred_by;
+  const buyerRowId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('buyer@test.local').id;
+  ok(friendReferred === buyerRowId, 'friend signup records who referred them');
+  r = await req('GET', '/membership');
+  ok(r.status === 200 && r.text.includes('free month') && r.text.includes('Annual'), 'membership page shows referral link, $1 first month, annual plan');
+  ok(r.text.includes('Annual plan coming soon') || r.text.includes('/subscribe/customer_annual'), 'annual plan shown (or coming soon when PayPal plan ID missing)');
+
+  // removed designer color-approval routes are gone
+  r = await req('POST', '/signup', { body: { display_name: 'ColorDesigner', email: 'colordesigner@test.local', password: 'password123' }, follow: false });
+  const cdId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('colordesigner@test.local').id;
+  const djPlan = sdb.prepare("SELECT id FROM plans WHERE slug = 'design_artist'").get().id;
+  sdb.prepare('INSERT INTO subscriptions (id, user_id, plan_id, status, created_at) VALUES (?,?,?,?,?)')
+    .run(randomUUID(), cdId, djPlan, 'active', Date.now());
+  sdb.prepare("UPDATE users SET role = 'design_artist' WHERE id = ?").run(cdId);
+  const desigJar = {};
+  async function dreq(method, p, opts = {}) {
+    const h = { ...(opts.headers || {}) };
+    const cookies = Object.entries(desigJar).map(([k, v]) => `${k}=${v}`).join('; ');
+    if (cookies) h.cookie = cookies;
+    let payload = opts.body;
+    if (payload && typeof payload === 'object') {
+      payload = new URLSearchParams(payload);
+      h['content-type'] = 'application/x-www-form-urlencoded';
+    }
+    const res = await fetch(`http://localhost:${PORT}${p}`, { method, headers: h, body: payload, redirect: 'manual' });
+    for (const c of (res.headers.getSetCookie ? res.headers.getSetCookie() : [])) {
+      const [k, v] = c.split(';')[0].split('=');
+      desigJar[k.trim()] = (v || '').trim();
+    }
+    return { status: res.status, text: await res.text(), location: res.headers.get('location') };
+  }
+  r = await dreq('POST', '/login', { body: { email: 'colordesigner@test.local', password: 'password123' } });
+  r = await dreq('POST', '/artist/portfolio/someid/approve-color', { follow: false });
+  ok(r.status === 404, 'designer color-approval route removed');
+  r = await dreq('POST', '/artist/portfolio/someid/request-changes', { follow: false });
+  ok(r.status === 404, 'designer color change-request route removed');
+  r = await dreq('GET', '/artist/portfolio');
+  ok(r.status === 200 && !r.text.includes('approve-color'), 'portfolio shows no designer color-approval controls');
+
   // messaging with contact info gets flagged
   const buyerId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('buyer@test.local').id;
   const adminId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('admin@test.local').id;
@@ -478,19 +628,57 @@ async function main() {
   r = await req('GET', '/api/bootstrap', { follow: false });
   ok(r.status === 401, 'bootstrap rejects missing token');
 
-  // admin promotion UI: admins page loads, add/remove works
+  // head admin: seed account bootstraps as head_admin
+  const seedRole = sdb.prepare('SELECT role FROM users WHERE email = ?').get('admin@test.local').role;
+  ok(seedRole === 'head_admin', 'bootstrap admin is head_admin');
+  // admin management UI: admins page loads, add/remove works (head admin)
   r = await areq('GET', '/admin/admins');
-  ok(r.status === 200 && r.text.includes('Add admin'), 'admins page loads');
+  ok(r.status === 200 && r.text.includes('Add admin') && r.text.includes('head admin'), 'admins page loads with head-admin badge');
   r = await areq('POST', '/admin/admins/add', { body: { email: 'buyer@test.local' } });
   const roleAfter = sdb.prepare('SELECT role FROM users WHERE email = ?').get('buyer@test.local').role;
-  ok(roleAfter === 'admin', 'promote buyer to admin');
+  ok(roleAfter === 'admin', 'head admin promotes buyer to admin');
   r = await areq('POST', '/admin/admins/remove', { body: { id: buyerId } });
   const roleBack = sdb.prepare('SELECT role FROM users WHERE email = ?').get('buyer@test.local').role;
-  ok(roleBack === 'customer', 'demote admin back to customer');
-  // cannot remove own admin access
+  ok(roleBack === 'customer', 'head admin demotes admin back to customer');
+  // head admin cannot remove their own head-admin access (last head admin)
   r = await areq('POST', '/admin/admins/remove', { body: { id: adminId } });
-  const stillAdmin = sdb.prepare("SELECT COUNT(*) AS n FROM users WHERE email = 'admin@test.local' AND role = 'admin'").get().n;
-  ok(stillAdmin === 1, 'cannot remove own admin access');
+  const stillHead = sdb.prepare("SELECT COUNT(*) AS n FROM users WHERE email = 'admin@test.local' AND role = 'head_admin'").get().n;
+  ok(stillHead === 1, 'last head admin cannot demote themselves');
+  // normal admins are blocked from admin management entirely
+  r = await req('POST', '/signup', { body: { display_name: 'NormAdmin', email: 'normadmin@test.local', password: 'password123' }, follow: false });
+  ok(r.status === 302, 'normadmin signup ok');
+  r = await areq('POST', '/admin/admins/add', { body: { email: 'normadmin@test.local' } });
+  const normRole = sdb.prepare('SELECT role FROM users WHERE email = ?').get('normadmin@test.local').role;
+  ok(normRole === 'admin', 'normadmin promoted to normal admin');
+  const normJar = {};
+  async function nreq(method, p, opts = {}) {
+    const h = { ...(opts.headers || {}) };
+    const cookies = Object.entries(normJar).map(([k, v]) => `${k}=${v}`).join('; ');
+    if (cookies) h.cookie = cookies;
+    let payload = opts.body;
+    if (payload && typeof payload === 'object') {
+      payload = new URLSearchParams(payload);
+      h['content-type'] = 'application/x-www-form-urlencoded';
+    }
+    const res = await fetch(`http://localhost:${PORT}${p}`, { method, headers: h, body: payload, redirect: 'manual' });
+    for (const c of (res.headers.getSetCookie ? res.headers.getSetCookie() : [])) {
+      const [k, v] = c.split(';')[0].split('=');
+      normJar[k.trim()] = (v || '').trim();
+    }
+    return { status: res.status, text: await res.text(), location: res.headers.get('location') };
+  }
+  r = await nreq('POST', '/login', { body: { email: 'normadmin@test.local', password: 'password123' } });
+  ok(r.status === 302, 'normal admin login ok');
+  r = await nreq('GET', '/admin', { follow: false });
+  ok(r.status === 200, 'normal admin still reaches the admin dashboard');
+  r = await nreq('GET', '/admin/admins', { follow: false });
+  ok(r.status === 403, 'normal admin blocked from admin management page');
+  r = await nreq('POST', '/admin/admins/remove', { body: { id: adminId }, follow: false });
+  const headStill = sdb.prepare("SELECT COUNT(*) AS n FROM users WHERE email = 'admin@test.local' AND role = 'head_admin'").get().n;
+  ok(r.status === 403 && headStill === 1, 'normal admin cannot demote the head admin');
+  // cleanup: head admin demotes the normal admin back to customer
+  r = await areq('POST', '/admin/admins/remove', { body: { id: sdb.prepare('SELECT id FROM users WHERE email = ?').get('normadmin@test.local').id } });
+  ok(sdb.prepare('SELECT role FROM users WHERE email = ?').get('normadmin@test.local').role === 'customer', 'head admin removes normal admin');
 
   // cashout options: destinations + early cashout with 3% fee
   const cashout = require('../src/lib/cashout');
@@ -500,7 +688,6 @@ async function main() {
   ok(Object.keys(cashout.DEST_TYPES).join(',').includes('bank') && cashout.DEST_TYPES.paypal.auto === 'paypal', 'destination types include bank + PayPal');
   // seed a payable artist balance for the buyer + grant an active designer
   // subscription with a payout email (payouts require both)
-  const { randomUUID } = require('crypto');
   sdb.prepare("INSERT INTO commission_ledger (id, order_id, recipient_type, recipient_id, amount_cents, status, created_at) VALUES (?,?,?,?,?,?,?)")
     .run(randomUUID(), 'o-test', 'artist', buyerId, 10000, 'payable', Date.now());
   const dplanId = sdb.prepare("SELECT id FROM plans WHERE slug = 'design_artist'").get().id;
@@ -893,27 +1080,37 @@ async function main() {
     { color: { buffer: colorBuf, filename: 'c.jpg', type: 'image/jpeg' } }, adminJar);
   ok(r.status === 302 && r.location === '/admin/colorization', 'admin attaches the color version');
   const afterAttach = sdb.prepare('SELECT * FROM designs WHERE id = ?').get(lwRow.id);
-  ok(afterAttach.status === 'pending_designer_approval' && afterAttach.color_path
+  ok(afterAttach.status === 'pending_color_approval' && afterAttach.color_path
     && fs.existsSync(path.join(process.env.ASSET_DIR, afterAttach.color_path)),
-    'attaching color moves the piece to pending_designer_approval');
+    'attaching color moves the piece to pending_color_approval');
   ok(afterAttach.color_path.includes('sitecolor'), 'site-created color stored under its own filename');
-  // Designer notified and can preview the color version privately.
+  // Designer is notified for information only — there is no approval gate.
   const artistNotif = sdb.prepare(
     `SELECT c.id FROM conversations c JOIN messages m ON m.conversation_id = c.id
-     WHERE c.subject LIKE '%ready for approval%' AND m.body LIKE '%Ink Sketch%'`).get();
-  ok(!!artistNotif, 'designer notified that the color version is ready for approval');
+     WHERE c.subject LIKE '%was colorized%' AND m.body LIKE '%Ink Sketch%'`).get();
+  ok(!!artistNotif, 'designer notified that the color version was created (informational)');
+  // The old designer preview/approval routes are gone; the admin has a
+  // private preview instead.
   r = await artreq('GET', `/artist/portfolio/${lwRow.id}/color`);
-  ok(r.status === 200, 'designer can privately preview the site-created color');
-  const strangerRes = await fetch(`http://localhost:${PORT}/artist/portfolio/${lwRow.id}/color`, { redirect: 'manual' });
-  ok(strangerRes.status !== 200, 'color preview is not reachable without login');
-  // Designer approves: color_source becomes 'site', back into admin approval.
-  r = await artreq('POST', `/artist/portfolio/${lwRow.id}/approve-color`, {});
+  ok(r.status === 404, 'designer private color preview route removed');
+  r = await areq('GET', `/admin/colorization/${lwRow.id}/preview`);
+  ok(r.status === 200, 'admin can privately preview the site-created color');
+  const anonPrev = await fetch(`http://localhost:${PORT}/admin/colorization/${lwRow.id}/preview`, { redirect: 'manual' });
+  ok(anonPrev.status !== 200, 'color preview is not reachable without login');
+  // A site administrator approves the color version: color_source becomes
+  // 'site', back into normal admin approval.
+  r = await areq('POST', `/admin/colorization/${lwRow.id}/approve`);
   const afterApprove = sdb.prepare('SELECT * FROM designs WHERE id = ?').get(lwRow.id);
   ok(afterApprove.color_source === 'site' && afterApprove.status === 'pending',
-    'designer approval sets color_source=site and status=pending');
+    'admin color approval sets color_source=site and status=pending');
   r = await areq('POST', `/admin/designs/${lwRow.id}/approve`);
   ok(sdb.prepare('SELECT status FROM designs WHERE id = ?').get(lwRow.id).status === 'approved',
-    'admin approves the piece after designer color approval');
+    'admin approves the piece after color approval');
+  // The designer is notified when the piece goes live.
+  const liveNotif = sdb.prepare(
+    `SELECT c.id FROM conversations c JOIN messages m ON m.conversation_id = c.id
+     WHERE c.subject LIKE '%is live%' AND m.body LIKE '%Ink Sketch%'`).get();
+  ok(!!liveNotif, 'designer notified when the site-colored piece goes live');
   // The site-created color never appears anywhere public.
   r = await req('GET', `/artists/${bannerArtistId}`);
   ok(r.text.includes('Ink Sketch') && !r.text.includes('sitecolor') && !r.text.includes('/uploads/'),
@@ -924,23 +1121,17 @@ async function main() {
   ok(r.status === 200 && !r.text.includes('sitecolor') && r.text.includes('Clean linework only'),
     'design page offers the linework-only choice and never shows the site color');
 
-  // Request-changes round trip on a second linework-only piece.
+  // Approving color on a piece with no color attached is rejected.
   r = await mpost('/artist/portfolio/upload',
     { title: 'Ink Sketch 2', description: 'Linework only.', style: 'japanese', listing_type: 'custom', watermark_choice: 'site' },
     { linework: { buffer: lwBuf, filename: 'l.jpg', type: 'image/jpeg' } },
     artJar);
   const lw2 = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('Ink Sketch 2');
-  r = await mpost(`/admin/colorization/${lw2.id}/attach`, {},
-    { color: { buffer: colorBuf, filename: 'c.jpg', type: 'image/jpeg' } }, adminJar);
-  r = await artreq('POST', `/artist/portfolio/${lw2.id}/request-changes`, { body: { note: 'Warmer reds please.' } });
-  const afterChanges = sdb.prepare('SELECT * FROM designs WHERE id = ?').get(lw2.id);
-  ok(afterChanges.status === 'awaiting_color' && afterChanges.colorization_note.includes('Warmer reds'),
-    'request-changes returns the piece to awaiting_color with the designer note');
-  r = await areq('GET', '/admin/colorization');
-  ok(r.text.includes('Ink Sketch 2') && r.text.includes('Warmer reds'),
-    'admin queue shows the designer change note');
+  r = await areq('POST', `/admin/colorization/${lw2.id}/approve`);
+  const lw2Still = sdb.prepare('SELECT status FROM designs WHERE id = ?').get(lw2.id);
+  ok(lw2Still.status === 'awaiting_color', 'color approval rejected when no color is attached');
   r = await req('GET', '/gallery');
-  ok(!r.text.includes('Ink Sketch 2'), 'change-requested piece stays hidden publicly');
+  ok(!r.text.includes('Ink Sketch 2'), 'uncolorized piece stays hidden publicly');
 
   // ===== Linework-only checkout discount =====
   const customList = pricing.customFullCents();

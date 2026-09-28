@@ -1,19 +1,29 @@
 <h1>Admins</h1>
 <p><a href="/admin">← Dashboard</a></p>
-<p class="muted">Admins can see orders, payouts, members, the review queue, and all admin tools. Only promote people you trust.</p>
+<p class="muted">Admins can see orders, payouts, members, the review queue, and all admin tools.
+<strong>Head admin</strong> is the site owner role — only a head admin can manage admins, and the site always keeps at least one.</p>
 <table>
-  <thead><tr><th>Email</th><th>Name</th><th>Since</th><th></th></tr></thead>
+  <thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Since</th><th></th></tr></thead>
   <tbody>
   <% admins.forEach(function(a) { %>
     <tr>
       <td><%= a.email %></td>
       <td><%= a.display_name || '—' %></td>
+      <td>
+        <% if (a.role === 'head_admin') { %>
+        <span class="badge ok">head admin</span>
+        <% } else { %>
+        <span class="badge">admin</span>
+        <% } %>
+      </td>
       <td><%= new Date(a.created_at).toLocaleDateString() %></td>
       <td>
         <form method="post" action="/admin/admins/remove" style="display:inline">
           <input type="hidden" name="id" value="<%= a.id %>">
           <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-          <button class="btn btn-secondary" type="submit" onclick="return confirm('Remove admin access?')">Remove</button>
+          <button class="btn btn-secondary" type="submit" onclick="return confirm('<%= a.role === 'head_admin' ? 'Demote this head admin to admin?' : 'Remove admin access?' %>')">
+            <%= a.role === 'head_admin' ? 'Demote to admin' : 'Remove' %>
+          </button>
         </form>
       </td>
     </tr>

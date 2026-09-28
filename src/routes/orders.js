@@ -8,10 +8,10 @@ const crypto = require('crypto');
 const db = require('../db');
 const config = require('../config');
 const paypal = require('../lib/paypal');
-const { requireLogin } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const pricing = require('../lib/pricing');
-const { premadePriceCents, isSaleWindow } = pricing;
+const { premadePriceCents, isSaleWindow, salePriceActive } = pricing;
+const { requireLogin, isActiveMember } = require('../middleware/auth');
 const { recordSaleCommissions } = require('../lib/commissions');
 const { routeCustomOrder } = require('../lib/customFulfillment');
 const { onOrderPaid } = require('../lib/printful');
@@ -35,8 +35,17 @@ async function resolveReferral(code) {
 router.post('/buy/:designId', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
   const design = await db.get("SELECT * FROM designs WHERE id = ? AND status = 'approved'", [req.params.designId]);
   if (!design) return res.status(404).render('error', { title: 'Not found', message: 'That design is not available.' });
+  // Member-exclusive designs are purchasable by active members only.
+  const member = await isActiveMember(req.user);
+  if (design.members_only && !member) {
+    req.session.flash = 'That design is exclusive to members — join a membership to buy it.';
+    return res.redirect('/membership');
+  }
   const isCustom = design.listing_type === 'custom';
-  const listPrice = isCustom ? pricing.customFullCents() : premadePriceCents();
+  // Members see the sale price from 6 PM Saturday (early entry).
+  const listPrice = isCustom
+    ? pricing.customFullCents(new Date(), member)
+    : premadePriceCents(new Date(), member);
   // Linework-only purchase: the buyer chose it (3% discount), or the piece
   // has no color version (automatic 3%-off linework-only price).
   const lineworkOnly = design.color_source === 'none' || req.body.linework_only === '1';
@@ -79,8 +88,9 @@ router.post('/buy/:designId', requireLogin, formLimiter, checkHoneypot, async (r
 
 // --- Custom design request: brief + 50% deposit (Saturday-aware pricing) ---
 router.get('/custom', requireLogin, async (req, res) => {
-  const full = pricing.customFullCents();
-  const deposit = pricing.customDepositCents();
+  const member = await isActiveMember(req.user);
+  const full = pricing.customFullCents(new Date(), member);
+  const deposit = pricing.customDepositCents(new Date(), member);
   // Tier-2 commission-suspended designers are hidden from the request-artist
   // dropdown (their listings stay up; only new commissions pause).
   const nowMs = Date.now();
@@ -90,7 +100,7 @@ router.get('/custom', requireLogin, async (req, res) => {
      ORDER BY display_name`, [nowMs]);
   res.render('orders/custom', {
     title: 'Request a Custom Design — Tattoo Art Customs',
-    deposit, full, sale: pricing.isSaleWindow(), artists,
+    deposit, full, sale: await salePriceActive(req.user), artists,
     metaDescription: `Order a custom tattoo design — ${pricing.money(full)}, 50% deposit, 48-hour delivery.`,
   });
 });
@@ -101,8 +111,9 @@ router.post('/custom', requireLogin, formLimiter, checkHoneypot, async (req, res
     return res.redirect('/orders/custom');
   }
   const refCode = referralFromReq(req);
-  const full = pricing.customFullCents();
-  const deposit = pricing.customDepositCents();
+  const member = await isActiveMember(req.user);
+  const full = pricing.customFullCents(new Date(), member);
+  const deposit = pricing.customDepositCents(new Date(), member);
   // Optional: customer requests a specific design artist.
   let requestedArtistId = null;
   const wantArtist = String(req.body.requested_artist_id || '').trim();

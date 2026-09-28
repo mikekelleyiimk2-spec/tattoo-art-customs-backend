@@ -31,7 +31,7 @@
         <a href="/studio">Design Studio</a>
         <% if (currentUser.role === 'design_artist') { %><a href="/artist">Artist</a><% } %>
         <% if (currentUser.role === 'tattoo_shop') { %><a href="/shop">Shop</a><% } %>
-        <% if (currentUser.role === 'admin') { %><a href="/admin">Admin</a><% } %>
+        <% if (currentUser.role === 'admin' || currentUser.role === 'head_admin') { %><a href="/admin">Admin</a><% } %>
         <a href="/messages">Messages</a>
         <a href="/logout">Log out</a>
       <% } else { %>

@@ -3,7 +3,12 @@
 // Saturday sale: every Saturday 7:00 PM -> Sunday 5:00 AM America/Chicago.
 // During the window premade designs are $50 (regular $75) and custom designs
 // are $125 (regular $150). Custom deposit is always 50%, 48-hour delivery.
+//
+// Subscriber perk: active members enter the sale at 6:00 PM CT (one hour
+// before the public 7:00 PM start). Pass member=true (resolved via the async
+// salePriceActive(user) helper) to price for a member.
 const config = require('../config');
+const { isActiveMember } = require('../middleware/auth');
 
 function chicagoParts(date = new Date()) {
   const fmt = new Intl.DateTimeFormat('en-US', {
@@ -20,22 +25,36 @@ function isSaleWindow(date = new Date()) {
   return (weekday === 'Sat' && hour >= 19) || (weekday === 'Sun' && hour < 5);
 }
 
-function premadePriceCents(date = new Date()) {
-  return isSaleWindow(date)
+// Member early-entry window: Saturday 18:00 -> Sunday 05:00 America/Chicago.
+function isMemberSaleWindow(date = new Date()) {
+  const { weekday, hour } = chicagoParts(date);
+  return (weekday === 'Sat' && hour >= 18) || (weekday === 'Sun' && hour < 5);
+}
+
+// Is the sale price in effect for this user right now? Members see sale
+// prices from 6 PM Saturday; everyone sees them from 7 PM.
+async function salePriceActive(user, date = new Date()) {
+  if (isSaleWindow(date)) return true;
+  if (!isMemberSaleWindow(date)) return false;
+  return isActiveMember(user);
+}
+
+function premadePriceCents(date = new Date(), member = false) {
+  return (isSaleWindow(date) || (member && isMemberSaleWindow(date)))
     ? config.pricing.premadeSale
     : config.pricing.premadeRegular;
 }
 
 // Custom design full price: $125 during the Saturday sale, $150 regular.
-function customFullCents(date = new Date()) {
-  return isSaleWindow(date)
+function customFullCents(date = new Date(), member = false) {
+  return (isSaleWindow(date) || (member && isMemberSaleWindow(date)))
     ? config.pricing.customSaleFull
     : config.pricing.customFull;
 }
 
 // Custom deposit is always 50% of the current full price.
-function customDepositCents(date = new Date()) {
-  return Math.round(customFullCents(date) / 2);
+function customDepositCents(date = new Date(), member = false) {
+  return Math.round(customFullCents(date, member) / 2);
 }
 
 function money(cents) {
@@ -52,4 +71,4 @@ function lineworkOnlyPriceCents(fullCents) {
   return Math.round(fullCents * (1 - LINEWORK_ONLY_DISCOUNT));
 }
 
-module.exports = { isSaleWindow, premadePriceCents, customFullCents, customDepositCents, money, chicagoParts, LINEWORK_ONLY_DISCOUNT, lineworkOnlyPriceCents };
+module.exports = { isSaleWindow, isMemberSaleWindow, salePriceActive, premadePriceCents, customFullCents, customDepositCents, money, chicagoParts, LINEWORK_ONLY_DISCOUNT, lineworkOnlyPriceCents };

@@ -8,6 +8,8 @@
   <input type="email" id="email" name="email" required autocomplete="email">
   <label for="password">Password (8+ characters)</label>
   <input type="password" id="password" name="password" minlength="8" required autocomplete="new-password">
+  <label for="referral_code">Friend's referral code (optional)</label>
+  <input type="text" id="referral_code" name="referral_code" maxlength="16" value="<%= referralCode || '' %>" placeholder="e.g. TAC-ABC123">
   <p><button class="btn" type="submit">Sign up</button></p>
 </form>
 <p>Already have an account? <a href="/login">Log in</a></p>

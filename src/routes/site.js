@@ -2,8 +2,8 @@
 const express = require('express');
 const db = require('../db');
 const config = require('../config');
-const { requireLogin } = require('../middleware/auth');
-const { premadePriceCents, customFullCents, isSaleWindow, lineworkOnlyPriceCents, LINEWORK_ONLY_DISCOUNT } = require('../lib/pricing');
+const { requireLogin, isActiveMember } = require('../middleware/auth');
+const { premadePriceCents, customFullCents, isSaleWindow, lineworkOnlyPriceCents, LINEWORK_ONLY_DISCOUNT, salePriceActive } = require('../lib/pricing');
 
 const router = express.Router();
 
@@ -45,7 +45,8 @@ router.get('/sitemap.xml', async (req, res) => {
   ];
   try {
     const designs = await db.all(
-      "SELECT id FROM designs WHERE status = 'approved' AND listing_scope = 'gallery' ORDER BY created_at DESC LIMIT 5000");
+      `SELECT id FROM designs WHERE status = 'approved' AND listing_scope = 'gallery'
+       AND members_only = 0 ORDER BY created_at DESC LIMIT 5000`);
     for (const d of designs) {
       urls.push({ loc: `${base}/design/${d.id}`, changefreq: 'weekly', priority: '0.8' });
     }
@@ -70,11 +71,13 @@ function parseDesign(row) {
   return { ...row, categories };
 }
 
-async function approvedDesigns() {
+async function approvedDesigns(member = false) {
   // Main gallery: approved pre-designs only. Portfolio-only custom pieces
   // never appear here — they live on the artist's own portfolio page.
+  // Member-exclusive designs are hidden from non-members everywhere.
   const rows = await db.all(
-    "SELECT * FROM designs WHERE status = 'approved' AND listing_scope = 'gallery' ORDER BY created_at DESC");
+    `SELECT * FROM designs WHERE status = 'approved' AND listing_scope = 'gallery'
+     AND (members_only = 0 OR ? = 1) ORDER BY created_at DESC`, [member ? 1 : 0]);
   return rows.map(parseDesign);
 }
 
@@ -89,11 +92,12 @@ router.use((req, res, next) => {
 });
 
 router.get('/', async (req, res) => {
-  const designs = (await approvedDesigns()).slice(0, 12);
+  const member = await isActiveMember(req.user);
+  const designs = (await approvedDesigns(member)).slice(0, 12);
   res.render('site/index', {
     title: 'Tattoo Art Customs — Custom Tattoo Designs',
-    designs, sale: isSaleWindow(),
-    premadePrice: premadePriceCents(), customPrice: customFullCents(),
+    designs, sale: await salePriceActive(req.user),
+    premadePrice: premadePriceCents(new Date(), member), customPrice: customFullCents(new Date(), member),
     metaDescription: 'Browse hundreds of original tattoo designs. Custom designs $150 with 48-hour delivery. Design artists earn 60% commission.',
   });
 });
@@ -101,7 +105,8 @@ router.get('/', async (req, res) => {
 router.get('/gallery', async (req, res) => {
   const q = (req.query.q || '').trim().toLowerCase();
   const cat = (req.query.cat || '').trim().toLowerCase();
-  let designs = await approvedDesigns();
+  const member = await isActiveMember(req.user);
+  let designs = await approvedDesigns(member);
   const allCats = [...new Set(designs.flatMap((d) => d.categories))].sort();
   if (cat) designs = designs.filter((d) => d.categories.some((c) => c.toLowerCase() === cat));
   if (q) {
@@ -111,8 +116,8 @@ router.get('/gallery', async (req, res) => {
   }
   res.render('site/gallery', {
     title: 'Design Gallery — Tattoo Art Customs',
-    designs, allCats, q: req.query.q || '', cat: req.query.cat || '', sale: isSaleWindow(),
-    premadePrice: premadePriceCents(),
+    designs, allCats, q: req.query.q || '', cat: req.query.cat || '', sale: await salePriceActive(req.user),
+    premadePrice: premadePriceCents(new Date(), member),
     metaDescription: 'Browse and search original tattoo designs by category.',
   });
 });
@@ -120,14 +125,17 @@ router.get('/gallery', async (req, res) => {
 router.get('/design/:id', async (req, res) => {
   const design = parseDesign(await db.get(
     "SELECT * FROM designs WHERE id = ? AND status = 'approved'", [req.params.id]));
-  if (!design) return res.status(404).render('error', { title: 'Not found', message: 'That design is not available.' });
+  const member = await isActiveMember(req.user);
+  if (!design || (design.members_only && !member)) {
+    return res.status(404).render('error', { title: 'Not found', message: 'That design is not available.' });
+  }
   const artist = design.artist_id
     ? await db.get('SELECT display_name FROM users WHERE id = ?', [design.artist_id])
     : null;
   // Portfolio custom pieces sell at the custom-design price (sale-aware);
-  // pre-designs sell at the premade price.
+  // pre-designs sell at the premade price. Members get the early sale entry.
   const isCustom = design.listing_type === 'custom';
-  const price = isCustom ? customFullCents() : premadePriceCents();
+  const price = isCustom ? customFullCents(new Date(), member) : premadePriceCents(new Date(), member);
   let owned = false;
   if (req.user) {
     const o = await db.get(
@@ -138,7 +146,7 @@ router.get('/design/:id', async (req, res) => {
   }
   res.render('site/design', {
     title: `${design.title} — Tattoo Art Customs`,
-    design, artist, price, isCustom, sale: isSaleWindow(), owned,
+    design, artist, price, isCustom, sale: await salePriceActive(req.user), owned,
     // Linework-only purchase option (3% discount). Pieces with no color
     // version are linework-only automatically.
     lineworkPrice: lineworkOnlyPriceCents(price),
@@ -155,15 +163,17 @@ router.get('/artists/:id', async (req, res) => {
     "SELECT id, display_name FROM users WHERE id = ? AND role = 'design_artist'", [req.params.id]);
   if (!artist) return res.status(404).render('error', { title: 'Not found', message: 'That artist portfolio does not exist.' });
   const profile = await db.get('SELECT bio FROM artist_profiles WHERE user_id = ?', [artist.id]);
+  const member = await isActiveMember(req.user);
   const rows = await db.all(
-    "SELECT * FROM designs WHERE artist_id = ? AND status = 'approved' ORDER BY created_at DESC", [artist.id]);
+    `SELECT * FROM designs WHERE artist_id = ? AND status = 'approved'
+     AND (members_only = 0 OR ? = 1) ORDER BY created_at DESC`, [artist.id, member ? 1 : 0]);
   const pieces = rows.map((d) => {
     const isCustom = d.listing_type === 'custom';
-    return { ...d, price: isCustom ? customFullCents() : premadePriceCents(), isCustom };
+    return { ...d, price: isCustom ? customFullCents(new Date(), member) : premadePriceCents(new Date(), member), isCustom };
   });
   res.render('site/artist', {
     title: `${artist.display_name || 'Artist'} — Tattoo Art Customs`,
-    artist, bio: profile ? profile.bio : '', pieces, sale: isSaleWindow(),
+    artist, bio: profile ? profile.bio : '', pieces, sale: await salePriceActive(req.user),
     metaDescription: `${artist.display_name || 'Artist'} — tattoo design portfolio on Tattoo Art Customs.`,
   });
 });

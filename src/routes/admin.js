@@ -7,12 +7,12 @@ const fs = require('fs');
 const multer = require('multer');
 const db = require('../db');
 const config = require('../config');
-const { requireLogin, requireRole } = require('../middleware/auth');
+const { requireLogin, requireRole, requireHeadAdmin, isAdminRole, isHeadAdmin } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { recordSaleCommissions, verifyOrderCommissions } = require('../lib/commissions');
 const { onOrderPaid } = require('../lib/printful');
 const { routeCustomOrder } = require('../lib/customFulfillment');
-const { colorizationQueue, attachColorVersion } = require('../lib/colorization');
+const { colorizationQueue, attachColorVersion, approveColorVersion, notifyDesignLive } = require('../lib/colorization');
 
 const router = express.Router();
 router.use(requireLogin, requireRole('admin'));
@@ -368,13 +368,22 @@ async function applyReviewDecision(item, decision) {
 // A design CANNOT go live until its watermarked linework exists — the
 // public gallery must never show clean color or clean linework.
 router.post('/designs/:id/approve', formLimiter, checkHoneypot, async (req, res) => {
-  const design = await db.get('SELECT linework_wm_path, listing_type FROM designs WHERE id = ?', [req.params.id]);
+  const design = await db.get('SELECT linework_wm_path, listing_type, status FROM designs WHERE id = ?', [req.params.id]);
   if (!design) return res.redirect('/admin/designs');
   if (!design.linework_wm_path) {
     req.session.flash = 'Blocked: upload the watermarked linework version before approving — the public gallery only ever shows watermarked linework.';
     return res.redirect('/admin/designs');
   }
+  if (design.status === 'awaiting_color' || design.status === 'pending_color_approval') {
+    req.session.flash = 'Blocked: that piece is still waiting on its site-created color version — attach and approve it in the colorization queue first.';
+    return res.redirect('/admin/colorization');
+  }
   await db.update('designs', req.params.id, { status: 'approved' });
+  // The piece is now live: notify the designer (informational only —
+  // no designer approval gate exists for site-created color).
+  try { await notifyDesignLive(req.params.id); } catch (e) {
+    console.error('design-live notification failed:', e.message);
+  }
   req.session.flash = design.listing_type === 'custom'
     ? 'Design approved — it is now live in the artist\u2019s portfolio (portfolio-only; not in the main gallery).'
     : 'Design approved — it is now live in the gallery.';
@@ -382,6 +391,15 @@ router.post('/designs/:id/approve', formLimiter, checkHoneypot, async (req, res)
 });
 router.post('/designs/:id/reject', formLimiter, checkHoneypot, async (req, res) => {
   await db.update('designs', req.params.id, { status: 'rejected' });
+  res.redirect('/admin/designs');
+});
+
+// Members-only toggle: marks a design exclusive to active members (early
+// sale pricing, members-only gallery visibility and checkout).
+router.post('/designs/:id/members-only', formLimiter, checkHoneypot, async (req, res) => {
+  const v = req.body.members_only === '1' ? 1 : 0;
+  await db.update('designs', req.params.id, { members_only: v });
+  req.session.flash = v ? 'Design is now members-only.' : 'Design is now public.';
   res.redirect('/admin/designs');
 });
 // Upload the watermarked linework for a design (public gallery version).
@@ -429,9 +447,10 @@ router.get('/designs', async (req, res) => {
 
 // --- Colorization queue: linework-only uploads waiting on the site-created
 // color version. The assistant creates the color in a work session; the admin
-// attaches the finished file here, which sends it to the designer for
-// approval. The site-created color is a purchase deliverable only — never
-// listed publicly or added to the designer's portfolio.
+// attaches the finished file here, and then a SITE ADMINISTRATOR approves it
+// (no designer approval gate). The site-created color is a purchase
+// deliverable only — never listed publicly or added to the designer's
+// portfolio.
 router.get('/colorization', async (req, res) => {
   const queue = await colorizationQueue();
   res.render('admin/colorization', { title: 'Colorization queue — Admin', queue, metaDescription: '' });
@@ -456,6 +475,14 @@ const uploadColor = multer({
   },
 }).single('color');
 
+// Admin-only private preview of the attached site-created color version.
+// Never public — this is a purchase deliverable.
+router.get('/colorization/:id/preview', async (req, res) => {
+  const d = await db.get('SELECT color_path FROM designs WHERE id = ?', [req.params.id]);
+  if (!d || !d.color_path) return res.status(404).send('Not found.');
+  res.sendFile(path.join(config.assetDir, d.color_path));
+});
+
 router.post('/colorization/:id/attach', formLimiter, (req, res, next) => {
   uploadColor(req, res, (err) => {
     if (err) { req.session.flash = err.message; return res.redirect('/admin/colorization'); }
@@ -465,9 +492,23 @@ router.post('/colorization/:id/attach', formLimiter, (req, res, next) => {
   if (!req.file) { req.session.flash = 'Choose the finished color image first.'; return res.redirect('/admin/colorization'); }
   try {
     await attachColorVersion(req.params.id, req.file.path);
-    req.session.flash = 'Color version attached — sent to the designer for approval.';
+    req.session.flash = 'Color version attached — it now needs a site administrator\u2019s approval.';
   } catch (e) {
     req.session.flash = 'Attach failed: ' + e.message;
+  }
+  res.redirect('/admin/colorization');
+});
+
+// A site administrator approves the attached site-created color version.
+// The designer is notified for information only — there is no approval gate
+// on their side. Approval moves the piece into the normal admin approval
+// flow (color_source='site').
+router.post('/colorization/:id/approve', formLimiter, checkHoneypot, async (req, res) => {
+  try {
+    await approveColorVersion(req.params.id, req.user.id);
+    req.session.flash = 'Color version approved — the piece is now awaiting normal admin approval.';
+  } catch (e) {
+    req.session.flash = 'Approval failed: ' + e.message;
   }
   res.redirect('/admin/colorization');
 });
@@ -488,7 +529,7 @@ router.post('/members/:id/cancel-membership', formLimiter, checkHoneypot, async 
   await db.query("UPDATE subscriptions SET status = 'canceled', canceled_at = ? WHERE user_id = ? AND status = 'active'",
     [db.now(), req.params.id]);
   const user = await db.get('SELECT role FROM users WHERE id = ?', [req.params.id]);
-  if (user && user.role !== 'admin') await db.update('users', req.params.id, { role: 'customer' });
+  if (user && !isAdminRole(user.role)) await db.update('users', req.params.id, { role: 'customer' });
   await db.insert('review_queue', {
     item_type: 'note', item_id: req.params.id, reason: `Membership canceled: ${reason}`,
     status: 'closed', created_at: db.now(), reviewed_at: db.now(),
@@ -691,23 +732,44 @@ router.get('/prints/:id/file', async (req, res) => {
 });
 
 // --- Admin user management ---
-router.get('/admins', async (req, res) => {
-  const admins = await db.all("SELECT id, email, display_name, created_at FROM users WHERE role = 'admin' ORDER BY created_at");
-  res.render('admin/admins', { title: 'Admins — Admin', admins, metaDescription: '' });
+// Only the HEAD ADMIN can manage admins. The head admin role is protected:
+// a normal admin cannot be demoted by anyone but a head admin, a head admin
+// cannot be demoted/removed by a normal admin, and the site always keeps at
+// least one head admin.
+router.get('/admins', requireHeadAdmin, async (req, res) => {
+  const admins = await db.all(
+    "SELECT id, email, display_name, role, created_at FROM users WHERE role IN ('admin', 'head_admin') ORDER BY role, created_at");
+  res.render('admin/admins', {
+    title: 'Admins — Admin', admins, metaDescription: '',
+    isHeadAdmin: isHeadAdmin(req.user),
+  });
 });
 
-router.post('/admins/add', formLimiter, checkHoneypot, async (req, res) => {
+router.post('/admins/add', requireHeadAdmin, formLimiter, checkHoneypot, async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const user = await db.get('SELECT id, role FROM users WHERE email = ?', [email]);
   if (!user) { req.session.flash = 'No account with that email yet — they need to sign up first.'; }
-  else if (user.role === 'admin') { req.session.flash = 'That account is already an admin.'; }
+  else if (isAdminRole(user.role)) { req.session.flash = 'That account is already an admin.'; }
   else { await db.update('users', user.id, { role: 'admin' }); req.session.flash = `${email} is now an admin.`; }
   res.redirect('/admin/admins');
 });
 
-router.post('/admins/remove', formLimiter, checkHoneypot, async (req, res) => {
-  const user = await db.get('SELECT id FROM users WHERE id = ?', [req.body.id]);
+router.post('/admins/remove', requireHeadAdmin, formLimiter, checkHoneypot, async (req, res) => {
+  const user = await db.get('SELECT id, role FROM users WHERE id = ?', [req.body.id]);
   if (!user) { req.session.flash = 'Account not found.'; }
+  else if (user.role === 'head_admin') {
+    // Only a head admin reaches this route; a head admin may only be
+    // demoted while at least one other head admin remains.
+    const count = await db.get("SELECT COUNT(*) AS c FROM users WHERE role = 'head_admin'");
+    if (user.id === req.user.id) {
+      req.session.flash = 'You cannot remove your own head-admin access here.';
+    } else if ((count.c || 0) <= 1) {
+      req.session.flash = 'Blocked: the site must keep at least one head admin.';
+    } else {
+      await db.update('users', user.id, { role: 'admin' });
+      req.session.flash = 'Head admin demoted to admin.';
+    }
+  }
   else if (user.id === req.user.id) { req.session.flash = 'You cannot remove your own admin access.'; }
   else { await db.update('users', user.id, { role: 'customer' }); req.session.flash = 'Admin access removed.'; }
   res.redirect('/admin/admins');

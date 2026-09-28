@@ -16,7 +16,9 @@ const { registerPayoutRoutes, payoutDashboardData } = require('../lib/payoutRout
 const { upsertProfile } = require('../lib/profiles');
 const pricing = require('../lib/pricing');
 const { DESIGN_STYLES, portfolioUploadMulter, handlePortfolioUpload } = require('../lib/portfolioUpload');
-const { designerApproveColor, designerRequestChanges } = require('../lib/colorization');
+// notifyColorizationNeeded/notifyDesignLive are called by the admin-side
+// colorization workflow (src/lib/colorization.js); the designer side only
+// receives informational notifications — there is no approval gate here.
 
 const router = express.Router();
 router.use(requireLogin, requireSubscription('design_artist'));
@@ -108,35 +110,10 @@ router.post('/portfolio/:id/delete', formLimiter, checkHoneypot, async (req, res
   res.redirect('/artist/portfolio');
 });
 
-// --- Colorization approval: the designer reviews the site-created color
-// version of a linework-only upload. Private to the designer — never public.
-router.get('/portfolio/:id/color', async (req, res) => {
-  const design = await db.get(
-    "SELECT * FROM designs WHERE id = ? AND artist_id = ? AND status = 'pending_designer_approval'",
-    [req.params.id, req.user.id]);
-  if (!design || !design.color_path) return res.status(404).send('Not found.');
-  res.sendFile(path.join(config.assetDir, design.color_path));
-});
-
-router.post('/portfolio/:id/approve-color', formLimiter, checkHoneypot, async (req, res) => {
-  try {
-    await designerApproveColor(req.params.id, req.user.id);
-    req.session.flash = 'Color version approved — your piece is now awaiting admin approval.';
-  } catch (e) {
-    req.session.flash = 'Could not approve: ' + e.message;
-  }
-  res.redirect('/artist/portfolio');
-});
-
-router.post('/portfolio/:id/request-changes', formLimiter, checkHoneypot, async (req, res) => {
-  try {
-    await designerRequestChanges(req.params.id, req.user.id, req.body.note);
-    req.session.flash = 'Change request sent — the piece is back in the colorization queue.';
-  } catch (e) {
-    req.session.flash = 'Could not send: ' + e.message;
-  }
-  res.redirect('/artist/portfolio');
-});
+// --- Colorization status: site-created color versions are approved by a
+// site administrator only (no designer approval gate). The private preview
+// and any approval controls were removed per the 2026-09-28 workflow — the
+// designer is notified when color is attached and when the piece goes live.
 
 router.get('/', async (req, res) => {
   const designs = await db.all('SELECT * FROM designs WHERE artist_id = ? ORDER BY created_at DESC', [req.user.id]);

@@ -11,10 +11,18 @@ const { authLimiter, checkHoneypot } = require('../middleware/rateLimit');
 
 const router = express.Router();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const { ensureReferralCode, recordSignupReferral } = require('../lib/referrals');
 
-router.get('/signup', (req, res) => res.render('auth/signup', {
-  title: 'Create account — Tattoo Art Customs', metaDescription: 'Create your Tattoo Art Customs account.',
-}));
+router.get('/signup', async (req, res) => {
+  // Friend referral links look like /signup?ref=TAC-XXXXXX — remember the
+  // code in a cookie so the signup POST can credit the referrer.
+  const ref = String(req.query.ref || '').slice(0, 16);
+  if (ref) res.cookie('ref_code', ref, { maxAge: 30 * 86400000, httpOnly: true, sameSite: 'lax' });
+  res.render('auth/signup', {
+    title: 'Create account — Tattoo Art Customs', metaDescription: 'Create your Tattoo Art Customs account.',
+    referralCode: String(ref || req.cookies?.ref_code || '').slice(0, 16),
+  });
+});
 router.post('/signup', authLimiter, checkHoneypot, async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const password = String(req.body.password || '');
@@ -31,6 +39,9 @@ router.post('/signup', authLimiter, checkHoneypot, async (req, res) => {
     display_name: displayName || email.split('@')[0],
     created_at: db.now(), email_verified: 0,
   });
+  // Every account gets its own referral code; record who referred them.
+  await ensureReferralCode(id);
+  await recordSignupReferral(id, req.body.referral_code || req.cookies?.ref_code);
   req.session.userId = id;
   req.session.flash = 'Welcome to Tattoo Art Customs!';
   res.redirect(req.session.returnTo || '/account');

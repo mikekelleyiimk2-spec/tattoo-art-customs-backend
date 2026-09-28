@@ -5,8 +5,8 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const db = require('../db');
-const { hasAnyActiveSubscription } = require('../middleware/auth');
-const { isSaleWindow, premadePriceCents, customFullCents } = require('../lib/pricing');
+const { hasAnyActiveSubscription, isAdminRole, isActiveMember } = require('../middleware/auth');
+const { isSaleWindow, premadePriceCents, customFullCents, salePriceActive } = require('../lib/pricing');
 const { authLimiter, checkHoneypot } = require('../middleware/rateLimit');
 
 const router = express.Router();
@@ -36,7 +36,7 @@ router.post('/link-account', authLimiter, checkHoneypot, express.json(), async (
     user.api_token = db.newId() + db.newId();
     await db.update('users', user.id, { api_token: user.api_token });
   }
-  const isSub = user.role === 'admin' || await hasAnyActiveSubscription(user.id);
+  const isSub = isAdminRole(user.role) || await hasAnyActiveSubscription(user.id);
   return res.json(publicUser(user, isSub));
 });
 
@@ -50,7 +50,7 @@ async function userFromToken(req) {
 router.get('/me', async (req, res) => {
   const user = await userFromToken(req);
   if (!user) return res.status(401).json({ ok: false, error: 'not linked' });
-  const isSub = user.role === 'admin' || await hasAnyActiveSubscription(user.id);
+  const isSub = isAdminRole(user.role) || await hasAnyActiveSubscription(user.id);
   return res.json(publicUser(user, isSub));
 });
 
@@ -71,23 +71,27 @@ router.get('/bootstrap', async (req, res) => {
 
 // Main design list for app clients: approved gallery-scope designs only.
 // Designer pre-design opt-ins are included here; portfolio-only custom
-// pieces are NOT (they live on /api/artists/:id).
+// pieces are NOT (they live on /api/artists/:id). Member-exclusive designs
+// are hidden from non-members.
 router.get('/designs', async (req, res) => {
+  const user = await userFromToken(req);
+  const member = await isActiveMember(user);
   const rows = await db.all(
     `SELECT d.id, d.title, d.style, d.categories, d.linework_wm_path, d.listing_type,
             u.display_name AS artist_name
      FROM designs d LEFT JOIN users u ON u.id = d.artist_id
      WHERE d.status = 'approved' AND d.listing_scope = 'gallery'
-     ORDER BY d.created_at DESC`);
+       AND (d.members_only = 0 OR ? = 1)
+     ORDER BY d.created_at DESC`, [member ? 1 : 0]);
   res.json({
     ok: true,
-    sale: isSaleWindow(),
-    premade_price_cents: premadePriceCents(),
+    sale: await salePriceActive(user),
+    premade_price_cents: premadePriceCents(new Date(), member),
     designs: rows.map((d) => ({
       id: d.id, title: d.title, style: d.style || '',
       categories: JSON.parse(d.categories || '[]'),
       thumb_url: d.linework_wm_path ? `/img/designs/${String(d.linework_wm_path).split('/').pop()}` : null,
-      price_cents: premadePriceCents(),
+      price_cents: premadePriceCents(new Date(), member),
       listing_type: d.listing_type || 'predesign',
       artist_name: d.artist_name || '',
     })),
@@ -96,25 +100,29 @@ router.get('/designs', async (req, res) => {
 
 // Public artist portfolio for app clients (watermarked linework only).
 router.get('/artists/:id', async (req, res) => {
+  const user = await userFromToken(req);
+  const member = await isActiveMember(user);
   const artist = await db.get(
     "SELECT id, display_name FROM users WHERE id = ? AND role = 'design_artist'", [req.params.id]);
   if (!artist) return res.status(404).json({ ok: false, error: 'not found' });
   const profile = await db.get('SELECT bio FROM artist_profiles WHERE user_id = ?', [artist.id]);
   const rows = await db.all(
-    "SELECT id, title, style, categories, linework_wm_path, listing_type FROM designs WHERE artist_id = ? AND status = 'approved' ORDER BY created_at DESC",
-    [artist.id]);
+    `SELECT id, title, style, categories, linework_wm_path, listing_type
+     FROM designs WHERE artist_id = ? AND status = 'approved'
+       AND (members_only = 0 OR ? = 1) ORDER BY created_at DESC`,
+    [artist.id, member ? 1 : 0]);
   res.json({
     ok: true,
-    sale: isSaleWindow(),
+    sale: await salePriceActive(user),
     artist: { id: artist.id, display_name: artist.display_name || '', bio: profile ? profile.bio : '' },
-    custom_price_cents: customFullCents(),
-    premade_price_cents: premadePriceCents(),
+    custom_price_cents: customFullCents(new Date(), member),
+    premade_price_cents: premadePriceCents(new Date(), member),
     pieces: rows.map((d) => ({
       id: d.id, title: d.title, style: d.style || '',
       categories: JSON.parse(d.categories || '[]'),
       thumb_url: d.linework_wm_path ? `/img/designs/${String(d.linework_wm_path).split('/').pop()}` : null,
       listing_type: d.listing_type || 'predesign',
-      price_cents: d.listing_type === 'custom' ? customFullCents() : premadePriceCents(),
+      price_cents: d.listing_type === 'custom' ? customFullCents(new Date(), member) : premadePriceCents(new Date(), member),
     })),
   });
 });

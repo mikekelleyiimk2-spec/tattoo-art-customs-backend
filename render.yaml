@@ -35,6 +35,10 @@ services:
         sync: false
       - key: PAYPAL_PLAN_SHOP
         sync: false
+      - key: PAYPAL_PLAN_CUSTOMER_ANNUAL
+        sync: false
+      - key: FOUNDING_SHOP_WINDOW_END
+        value: 2027-03-01
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT

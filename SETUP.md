@@ -6,7 +6,7 @@
 cd tattoo-art-customs-backend
 npm install
 npm run migrate   # creates data/app.db (SQLite) + tables
-npm run seed      # creates the 3 plans + admin user
+npm run seed      # creates the 4 plans + head-admin user
 npm start         # http://localhost:3000
 ```
 
@@ -34,6 +34,8 @@ buttons show a "payments being set up" notice and buyers are routed to manual pa
 | `PAYPAL_PLAN_CUSTOMER` | yes | Subscription plan ID for $5/month customer membership |
 | `PAYPAL_PLAN_ARTIST` | yes | Subscription plan ID for $5/month design-artist plan |
 | `PAYPAL_PLAN_SHOP` | yes | Subscription plan ID for $99.99/year tattoo-shop plan |
+| `PAYPAL_PLAN_CUSTOMER_ANNUAL` | no | Subscription plan ID for $50/year customer membership (optional; leave blank and the annual plan shows as "coming soon") |
+| `FOUNDING_SHOP_WINDOW_END` | no | ISO date (e.g. `2027-03-01`) ending the founding-shop window; shops joining before it pay $79.99 for their first year instead of $99.99. Defaults to 2027-03-01. |
 | `SMTP_HOST/PORT/USER/PASS/MAIL_FROM` | no | Email sending; without these, emails are logged to the console |
 | `WISE_API_TOKEN` / `WISE_PROFILE_ID` | no | Wise API token + profile ID for automatic bank-account payouts; without these, bank cashouts queue for manual admin send |
 | `WEEKLY_PAYOUTS_ENABLED` | no | Set to `false` to disable the automatic Monday payout run |
@@ -49,12 +51,29 @@ You already have a PayPal Business account. Do this once:
    app under **Live** when ready).
 3. **Subscription plans** (do this in the same mode you will run): go to
    **https://www.paypal.com/billing/plans** (or Developer Dashboard → Subscriptions → Plans) and create
-   three plans:
+   four plans:
    - Customer — $5.00 USD, monthly → `PAYPAL_PLAN_CUSTOMER`
+   - Customer Annual — $50.00 USD, yearly → `PAYPAL_PLAN_CUSTOMER_ANNUAL` (optional — see below)
    - Design Artist — $5.00 USD, monthly → `PAYPAL_PLAN_ARTIST`
    - Tattoo Shop — $99.99 USD, yearly → `PAYPAL_PLAN_SHOP`
-   
+
    Copy each plan's ID (looks like `P-xxxxxxxxxxxxxxxx`) into the matching variable.
+
+   **Subscription incentives** (no extra plans needed — they are applied as
+   PayPal billing-cycle overrides on the plans above):
+   - **$1 first month:** new monthly customer memberships bill $1 for the first
+     month, then $5/month. Applied exactly once per account.
+   - **Annual customer:** $50/year (two months free vs monthly). If you haven't
+     created the annual plan yet, leave `PAYPAL_PLAN_CUSTOMER_ANNUAL` blank —
+     the annual plan shows as "coming soon" without disabling other checkout.
+   - **Founding tattoo shops:** while `FOUNDING_SHOP_WINDOW_END` is in the
+     future, new shop subscriptions bill $79.99 for the first year and renew
+     at $99.99/year automatically. After the window, shops pay $99.99 immediately.
+   - **Refer a friend:** every account gets a personal `TAC-XXXXXX` referral
+     code (`/membership` shows the shareable link; `?ref=CODE` works on signup).
+     When a referred friend becomes a paying subscriber, the referrer gets one
+     free month of membership (exactly once per referred subscription; the
+     referrer's PayPal billing is suspended for the month and resumes automatically).
 4. **Webhooks:** Developer Dashboard → **Apps & Credentials** → your app → **Webhooks** (or
    **https://developer.paypal.com/dashboard/webhooks**) → **Add Webhook**:
    - Webhook URL: `https://YOUR-DOMAIN/membership/webhook`
@@ -86,6 +105,28 @@ watermarked gallery images there.
 - [ ] Test a $1-style sandbox purchase end-to-end first (buy → manual confirm → download → commission ledger)
 - [ ] Prepare the watermarked linework files: admin uploads them per design at **Admin → Designs**
       (a design cannot be approved until its watermarked linework exists)
+
+## Membership perks, roles, and the colorization workflow
+
+- **Member early sale:** active members (any subscription, plus admins) get the
+  Saturday sale price from **6:00 PM CT** instead of the public 7:00 PM CT.
+  Applied on the website and the app — checkout always re-verifies membership
+  server-side.
+- **Member-exclusive designs:** any design can be flagged "members only" at
+  **Admin → Designs**. Exclusive designs are hidden from the gallery, design
+  pages, public artist portfolios, the app API, and checkout for non-members.
+- **Head admin:** the `ADMIN_EMAIL` bootstrap account is the **head admin**.
+  Only a head admin can manage admins (Admin → Admins); the site always keeps
+  at least one head admin, and a normal admin cannot demote one.
+- **Site colorization approval:** linework-only uploads wait as `awaiting_color`;
+  the admin attaches the finished color version in the colorization queue
+  (status → `pending_color_approval`), and a **site administrator** approves it
+  (→ `pending` → normal admin approval). The designer is notified when color is
+  attached and when the piece goes live — there is no designer approval gate.
+  The site-created color is a purchase deliverable only: never public, never
+  watermarked for display, never added to the designer's portfolio.
+- **Referral free months:** the daily scheduler resumes PayPal subscriptions
+  whose referral free month has ended (6:00 AM CT).
 
 ## Selling ad space
 

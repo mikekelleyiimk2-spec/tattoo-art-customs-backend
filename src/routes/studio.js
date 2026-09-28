@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const db = require('../db');
 const config = require('../config');
-const { requireLogin, requireAnySubscription } = require('../middleware/auth');
+const { requireLogin, requireAnySubscription, isAdminRole } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { combine } = require('../lib/combine');
 
@@ -83,7 +83,7 @@ router.post('/combine', formLimiter, checkHoneypot, async (req, res) => {
 // Owner-only download of a saved combination.
 router.get('/combos/:id/download', async (req, res) => {
   const combo = await db.get('SELECT * FROM combos WHERE id = ?', [req.params.id]);
-  if (!combo || (combo.user_id !== req.user.id && req.user.role !== 'admin')) {
+  if (!combo || (combo.user_id !== req.user.id && !isAdminRole(req.user.role))) {
     return res.status(404).render('error', { title: 'Not found', message: 'Combination not found.' });
   }
   const abs = path.join(config.assetDir, combo.output_path);
@@ -95,7 +95,7 @@ router.get('/combos/:id/download', async (req, res) => {
 
 router.post('/combos/:id/delete', formLimiter, checkHoneypot, async (req, res) => {
   const combo = await db.get('SELECT * FROM combos WHERE id = ?', [req.params.id]);
-  if (combo && (combo.user_id === req.user.id || req.user.role === 'admin')) {
+  if (combo && (combo.user_id === req.user.id || isAdminRole(req.user.role))) {
     try { fs.unlinkSync(path.join(config.assetDir, combo.output_path)); } catch { /* gone */ }
     await db.query('DELETE FROM combos WHERE id = ?', [combo.id]);
     req.session.flash = 'Combination deleted.';

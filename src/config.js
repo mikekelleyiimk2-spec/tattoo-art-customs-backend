@@ -23,6 +23,7 @@ const config = {
     webhookId: process.env.PAYPAL_WEBHOOK_ID || '',
     planIds: {
       customer: process.env.PAYPAL_PLAN_CUSTOMER || '',
+      customer_annual: process.env.PAYPAL_PLAN_CUSTOMER_ANNUAL || '',
       artist: process.env.PAYPAL_PLAN_ARTIST || '',
       shop: process.env.PAYPAL_PLAN_SHOP || '',
     },
@@ -33,6 +34,12 @@ const config = {
   paypalPlansConfigured() {
     const p = this.paypal.planIds;
     return this.paypalConfigured() && !!(p.customer && p.artist && p.shop);
+  },
+  // Annual customer plan is optional: when PAYPAL_PLAN_CUSTOMER_ANNUAL is
+  // missing the annual plan shows as "coming soon" instead of disabling
+  // all checkout.
+  paypalAnnualPlanConfigured() {
+    return this.paypalConfigured() && !!this.paypal.planIds.customer_annual;
   },
   paypalBaseUrl() {
     return this.paypal.mode === 'live'
@@ -77,9 +84,31 @@ const config = {
     customDeposit: 7500,    // 50% deposit (regular price; use pricing.js for sale-aware)
     plans: {
       customer: { slug: 'customer', name: 'Customer Membership', priceCents: 500, interval: 'month' },
+      customer_annual: { slug: 'customer_annual', name: 'Customer Membership (Annual)', priceCents: 5000, interval: 'year' },
       artist: { slug: 'design_artist', name: 'Design Artist', priceCents: 500, interval: 'month' },
       shop: { slug: 'tattoo_shop', name: 'Tattoo Shop', priceCents: 9999, interval: 'year' },
     },
+    // Subscription incentives (see memberships.js / referrals.js).
+    firstMonth: {
+      priceCents: 100, // $1.00 first month on new monthly customer memberships
+    },
+    foundingShop: {
+      priceCents: 7999, // $79.99 first year during the founding window (vs $99.99)
+    },
+  },
+
+  // Founding tattoo-shop window: shops that join before this date pay
+  // $79.99 for their first year instead of $99.99. Set FOUNDING_SHOP_WINDOW_END
+  // to an ISO date in production; the fallback is a FIXED date (2027-03-01)
+  // so the window always closes — never a rolling Date.now() fallback.
+  get foundingShopWindowEnd() {
+    const raw = (process.env.FOUNDING_SHOP_WINDOW_END || '').trim();
+    const parsed = raw ? Date.parse(raw) : NaN;
+    if (!Number.isNaN(parsed)) return parsed;
+    return Date.parse('2027-03-01T00:00:00-06:00');
+  },
+  foundingShopActive(now = Date.now()) {
+    return now < this.foundingShopWindowEnd;
   },
 };
 

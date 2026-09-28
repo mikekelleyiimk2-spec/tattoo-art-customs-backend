@@ -13,13 +13,27 @@
 <% } %>
 
 <h2>Plans</h2>
+<% if (firstMonthEligible) { %>
+<div class="card"><p><strong>New here?</strong> Your first month of the Customer monthly plan is <strong><%= money(firstMonthPrice) %></strong>, then <%= money(500) %>/month. One per account.</p></div>
+<% } %>
+<% if (foundingShop) { %>
+<div class="card"><p><strong>Founding tattoo shops:</strong> join now and your first year is <strong><%= money(foundingPrice) %></strong> (normally $99.99/year). Renews at the regular price. Offer ends <%= new Date(foundingEnds).toLocaleDateString() %>.</p></div>
+<% } %>
 <div class="grid">
   <% plans.forEach(function(p) { %>
   <div class="card">
     <h3><%= p.name %></h3>
     <p><strong><%= money(p.price_cents) %></strong> / <%= p.interval %></p>
     <p class="muted"><%= p.description %></p>
-    <% if (paypalReady) { %>
+    <% if (p.slug === 'tattoo_shop' && foundingShop) { %>
+    <p><strong>First year <%= money(foundingPrice) %></strong> for founding shops — renews at <%= money(p.price_cents) %>/year.</p>
+    <% } %>
+    <% if (p.slug === 'customer' && firstMonthEligible) { %>
+    <p><strong>First month <%= money(firstMonthPrice) %></strong>, then <%= money(p.price_cents) %>/month.</p>
+    <% } %>
+    <% if (p.slug === 'customer_annual' && !annualReady) { %>
+    <p class="muted"><strong>Annual plan coming soon</strong> — the yearly plan is being set up. The monthly plan is ready now.</p>
+    <% } else if (paypalReady) { %>
     <form method="post" action="/membership/subscribe/<%= p.slug %>">
       <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
       <button class="btn" type="submit">Subscribe</button>
@@ -27,6 +41,21 @@
     <% } %>
   </div>
   <% }); %>
+</div>
+
+<h2>Refer a friend — earn a free month</h2>
+<div class="card">
+  <p>Share your personal link. When a friend becomes a paying member, <strong>you get one free month</strong> of membership.</p>
+  <p><strong>Your link:</strong> <input type="text" readonly value="<%= baseUrl %>/signup?ref=<%= referralCode %>" onclick="this.select()" style="width:100%"></p>
+  <p class="muted">Your code: <strong><%= referralCode %></strong></p>
+  <% if (redemptions.length) { %>
+  <h3>Free months earned</h3>
+  <ul>
+    <% redemptions.forEach(function(r) { %>
+    <li>One free month (through <%= new Date(r.free_month_end).toLocaleDateString() %>) — <span class="badge <%= r.status === 'active' ? 'ok' : '' %>"><%= r.status %></span></li>
+    <% }); %>
+  </ul>
+  <% } %>
 </div>
 
 <h2>Your subscriptions</h2>

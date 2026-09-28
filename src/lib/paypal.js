@@ -75,18 +75,69 @@ async function captureCheckoutOrder(paypalOrderId) {
 }
 
 // --- Subscriptions (memberships) ---
-async function createSubscription({ planKey, returnUrl, cancelUrl }) {
+// billingCycles: optional PayPal billing_cycles override for the first
+// subscription (e.g. a $1 trial month or a founding-shop first year at
+// $79.99). Use the builders below so the shapes stay valid.
+async function createSubscription({ planKey, returnUrl, cancelUrl, billingCycles = null }) {
   assertConfigured();
   assertPlansConfigured();
   const planId = config.paypal.planIds[planKey];
   if (!planId) throw new PayPalNotConfigured(`no plan ID for "${planKey}"`);
-  return api('/v1/billing/subscriptions', 'POST', {
+  const body = {
     plan_id: planId,
     application_context: {
       return_url: returnUrl, cancel_url: cancelUrl,
       brand_name: 'Tattoo Art Customs',
     },
-  });
+  };
+  if (billingCycles) body.plan = { billing_cycles: billingCycles };
+  return api('/v1/billing/subscriptions', 'POST', body);
+}
+
+function fixedPrice(cents) {
+  return { currency_code: 'USD', value: (cents / 100).toFixed(2) };
+}
+
+// $1 first month (trial), then the regular monthly price forever.
+function firstMonthTrialCycles(regularCents) {
+  return [
+    {
+      sequence: 1, tenure_type: 'TRIAL', total_cycles: 1,
+      frequency: { interval_unit: 'MONTH', interval_count: 1 },
+      pricing_scheme: { fixed_price: fixedPrice(config.pricing.firstMonth.priceCents) },
+    },
+    {
+      sequence: 2, tenure_type: 'REGULAR', total_cycles: 0,
+      frequency: { interval_unit: 'MONTH', interval_count: 1 },
+      pricing_scheme: { fixed_price: fixedPrice(regularCents) },
+    },
+  ];
+}
+
+// Founding tattoo shop: $79.99 for the first year, then $99.99/year after.
+function foundingShopCycles() {
+  return [
+    {
+      sequence: 1, tenure_type: 'REGULAR', total_cycles: 1,
+      frequency: { interval_unit: 'YEAR', interval_count: 1 },
+      pricing_scheme: { fixed_price: fixedPrice(config.pricing.foundingShop.priceCents) },
+    },
+    {
+      sequence: 2, tenure_type: 'REGULAR', total_cycles: 0,
+      frequency: { interval_unit: 'YEAR', interval_count: 1 },
+      pricing_scheme: { fixed_price: fixedPrice(config.pricing.plans.shop.priceCents) },
+    },
+  ];
+}
+
+async function suspendSubscription(paypalSubscriptionId, reason = 'Referral reward: free month') {
+  assertConfigured();
+  return api(`/v1/billing/subscriptions/${paypalSubscriptionId}/suspend`, 'POST', { reason });
+}
+
+async function activateSubscription(paypalSubscriptionId, reason = 'Referral free month ended') {
+  assertConfigured();
+  return api(`/v1/billing/subscriptions/${paypalSubscriptionId}/activate`, 'POST', { reason });
 }
 
 async function getSubscription(paypalSubscriptionId) {
@@ -145,8 +196,12 @@ module.exports = {
   createCheckoutOrder,
   captureCheckoutOrder,
   createSubscription,
+  firstMonthTrialCycles,
+  foundingShopCycles,
   getSubscription,
   cancelSubscription,
+  suspendSubscription,
+  activateSubscription,
   verifyWebhookSignature,
   createPayoutBatch,
 };
