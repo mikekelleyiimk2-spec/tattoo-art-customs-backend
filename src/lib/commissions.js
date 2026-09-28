@@ -124,7 +124,11 @@ async function recordSaleCommissions(order) {
   const entries = [];
   const design = order.design_id ? await db.get('SELECT artist_id, color_source FROM designs WHERE id = ?', [order.design_id]) : null;
   const artistId = design && design.artist_id ? design.artist_id : null;
-  const shopId = order.referred_shop_id || null;
+  const rawShopId = order.referred_shop_id || null;
+  // Anti-gaming: a shop cannot earn a referral commission on its own artist
+  // account's work. Self-referrals are booked exactly like no referral
+  // (the 20% shop share redistributes 50/50 to designer and owner).
+  const shopId = (rawShopId && artistId && rawShopId === artistId) ? null : rawShopId;
   // Founding-program boosts (first 50 artists / first 100 shops, 6 months):
   // - founding artist: 70% instead of 60%; the +10pts come from the owner
   //   share first, then the site share (the owner funds the boost).

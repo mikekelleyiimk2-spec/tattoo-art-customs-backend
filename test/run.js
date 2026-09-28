@@ -1070,6 +1070,22 @@ async function main() {
   ok(gArtist && gArtist.status === 'payable' && gArtist.amount_cents === Math.round(sdb.prepare('SELECT amount_paid_cents FROM orders WHERE id = ?').get(gOrderId).amount_paid_cents * 0.70),
     'designer with a payout method earns payable 70% on new sales');
 
+  // Self-referral: a shop cannot earn a referral commission on its own
+  // artist account's work — booked exactly like no referral (owner rule,
+  // 2026-09-28). Designer gets the no-shop 70% (60 + 10), owner 20%.
+  sdb.prepare('INSERT INTO shop_profiles (user_id, business_name, referral_code, created_at) VALUES (?,?,?,?)')
+    .run(bannerArtistId, 'Self Shop', 'SELFREF1', Date.now());
+  r = await req('POST', `/orders/buy/${grow.id}`, { body: { referral_code: 'SELFREF1' }, follow: false });
+  const srOrderId = r.location.split('/orders/manual/')[1];
+  r = await req('POST', `/orders/manual/${srOrderId}`, { body: { method: 'cashapp', note: 'test' }, follow: false });
+  r = await areq('POST', `/admin/orders/${srOrderId}/confirm-manual`);
+  const srLedger = sdb.prepare('SELECT recipient_type, amount_cents, status FROM commission_ledger WHERE order_id = ?').all(srOrderId);
+  ok(!srLedger.some((l) => l.recipient_type === 'shop'), 'self-referral books no shop commission row');
+  const srOrder = sdb.prepare('SELECT amount_paid_cents FROM orders WHERE id = ?').get(srOrderId);
+  const srArtist = srLedger.find((l) => l.recipient_type === 'artist');
+  ok(srArtist && srArtist.amount_cents === Math.round(srOrder.amount_paid_cents * 0.70),
+    'self-referred designer gets the no-shop 70% share');
+
   // A piece with sales cannot be deleted.
   r = await artreq('POST', `/artist/portfolio/${prow.id}/delete`, {});
   ok(sdb.prepare('SELECT id FROM designs WHERE id = ?').get(prow.id), 'piece with sales cannot be deleted');
