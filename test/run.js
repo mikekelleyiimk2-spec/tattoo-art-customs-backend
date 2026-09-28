@@ -125,6 +125,60 @@ async function main() {
   ok(rows.reduce((s, r) => s + r.amount_cents, 0) === 7500, 'splits sum to the sale total');
   db.get = realGet; db.insert = realInsert;
 
+  console.log('dual-sub bonus:');
+  const { dualSubBonusActive } = require('../src/lib/shopDesigner');
+  const { upsertProfile: upsertTestProfile } = require('../src/lib/profiles');
+  const dualId = await db.insert('users', { email: 'dual@test.local', password_hash: 'x', role: 'tattoo_shop', display_name: 'Dual' });
+  await upsertTestProfile('artist_profiles', dualId, { payout_paypal_email: 'dual@x.com' });
+  await upsertTestProfile('shop_profiles', dualId, { designer_opt_in: 1 });
+  const planA = await db.get("SELECT id FROM plans WHERE slug = 'design_artist'");
+  const planS = await db.get("SELECT id FROM plans WHERE slug = 'tattoo_shop'");
+  // Lifetime designer sub (NULL period end) + active shop sub.
+  await db.insert('subscriptions', { user_id: dualId, plan_id: planA.id, status: 'active', current_period_end: null });
+  await db.insert('subscriptions', { user_id: dualId, plan_id: planS.id, status: 'active', current_period_end: Date.now() + 86400000 });
+  ok(await dualSubBonusActive(dualId) === true, 'dual-sub bonus active with lifetime designer + active shop sub');
+  const plainId = await db.insert('users', { email: 'plain@test.local', password_hash: 'x', role: 'design_artist', display_name: 'Plain' });
+  await upsertTestProfile('artist_profiles', plainId, { payout_paypal_email: 'plain@x.com' });
+  await db.insert('subscriptions', { user_id: plainId, plan_id: planA.id, status: 'active', current_period_end: Date.now() + 86400000 });
+  ok(await dualSubBonusActive(plainId) === false, 'no dual-sub bonus with designer sub only');
+  const dualDesignId = await db.insert('designs', { title: 'Dual', artist_id: dualId, status: 'approved' });
+  const dualOrderId = await db.insert('orders', {
+    buyer_id: plainId, order_type: 'premade', design_id: dualDesignId,
+    amount_cents: 10000, amount_paid_cents: 10000, fee_cents: 0, status: 'paid', referred_shop_id: null,
+  });
+  const dualOrd = await db.get('SELECT * FROM orders WHERE id = ?', [dualOrderId]);
+  await comm.recordSaleCommissions(dualOrd);
+  const dualRows = await db.all('SELECT recipient_type, amount_cents FROM commission_ledger WHERE order_id = ?', [dualOrderId]);
+  const dualByType = {};
+  for (const r of dualRows) dualByType[r.recipient_type] = (dualByType[r.recipient_type] || 0) + r.amount_cents;
+  ok(dualByType.artist === 7200, 'dual-sub designer gets 72% with no referring shop (70% + 2%)');
+  ok(dualRows.reduce((s, r) => s + r.amount_cents, 0) === 10000, 'dual-sub splits sum to the sale total');
+  const dualArtistRow = dualRows.find((r) => r.recipient_type === 'artist');
+  ok(dualArtistRow, 'dual-sub designer ledger row exists');
+  // Referred sale: designer 62%, shop 20%, owner 8%, site 10%.
+  const refShopId = await db.insert('users', { email: 'refshop@test.local', password_hash: 'x', role: 'tattoo_shop', display_name: 'RefShop' });
+  await upsertTestProfile('shop_profiles', refShopId, { payout_paypal_email: 'ref@x.com' });
+  await db.insert('subscriptions', { user_id: refShopId, plan_id: planS.id, status: 'active', current_period_end: Date.now() + 86400000 });
+  const dualOrder2Id = await db.insert('orders', {
+    buyer_id: plainId, order_type: 'premade', design_id: dualDesignId,
+    amount_cents: 10000, amount_paid_cents: 10000, fee_cents: 0, status: 'paid', referred_shop_id: refShopId,
+  });
+  const dualOrd2 = await db.get('SELECT * FROM orders WHERE id = ?', [dualOrder2Id]);
+  await comm.recordSaleCommissions(dualOrd2);
+  const dualRows2 = await db.all('SELECT recipient_type, amount_cents FROM commission_ledger WHERE order_id = ?', [dualOrder2Id]);
+  const d2 = {};
+  for (const r of dualRows2) d2[r.recipient_type] = (d2[r.recipient_type] || 0) + r.amount_cents;
+  ok(d2.artist === 6200 && d2.shop === 2000, 'referred dual-sub sale: designer 62%, shop 20%');
+  ok(dualRows2.reduce((s, r) => s + r.amount_cents, 0) === 10000, 'referred dual-sub splits sum to total');
+  // Custom order: dual-sub designer gets 72%.
+  const dualCustId = await db.insert('orders', {
+    buyer_id: plainId, order_type: 'custom', amount_cents: 10000, amount_paid_cents: 10000, fee_cents: 0, status: 'paid',
+  });
+  const dualCust = await db.get('SELECT * FROM orders WHERE id = ?', [dualCustId]);
+  await comm.recordSaleCommissions(dualCust);
+  const custAmt = await comm.recordCustomDesignerCommission(dualCust, dualId);
+  ok(custAmt === 7200, 'dual-sub designer custom commission = 72% of net');
+
   console.log('sla:');
   const sla = require('../src/lib/slaEnforcer');
   const { getCreditBalance } = require('../src/lib/credits');

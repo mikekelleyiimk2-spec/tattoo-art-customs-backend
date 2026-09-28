@@ -7,6 +7,9 @@
 <p class="muted">Note: on sales of founding artists' designs the referral commission is 20% — the artist's 70% boost already uses the available bonus pool, so the extra 5% doesn't apply on those sales.</p>
 <% } %>
 <p class="muted">Tattoo shops earn <strong>20% on every verified sale</strong> they refer. Payouts require a registered account, an active subscription, and a payout destination set.</p>
+<% if (typeof dualBonus !== 'undefined' && dualBonus) { %>
+<p class="muted"><span class="badge ok">Dual-subscription bonus active</span> — you hold both a designer and a shop subscription, so your referral commission is <strong>22%</strong> instead of 20%, funded from the owner's share.</p>
+<% } %>
 
 <section class="card">
   <h2>Your referral link</h2>
@@ -18,7 +21,10 @@
 
 <section class="card">
   <h2>Free designer membership</h2>
-  <% if (designerOptIn) { %>
+  <% if (designerOptIn && typeof hasDesignerSub !== 'undefined' && hasDesignerSub) { %>
+  <p><span class="badge ok">Active</span> <span class="muted">— designer subscription, alongside your shop subscription</span></p>
+  <p class="muted">Upload your own designs through the <a href="/artist/portfolio">artist portfolio</a> and earn designer commissions on them (62% premade with a referring shop, 72% without, 72% custom, 57% linework-only — includes your +2% dual-subscription bonus). Your public designer portfolio is live on the site. Note: referring your <em>own</em> designs earns no referral commission — those sales are booked as if there were no referring shop.</p>
+  <% } else if (designerOptIn) { %>
   <p><span class="badge ok">Active</span> <span class="muted">— free with your shop subscription</span></p>
   <p class="muted">Upload your own designs through the <a href="/artist/portfolio">artist portfolio</a> and earn designer commissions on them (60% premade with a referring shop, 70% without, 70% custom, 55% linework-only). Your public designer portfolio is live on the site. Note: referring your <em>own</em> designs earns no referral commission — those sales are booked as if there were no referring shop.</p>
   <form method="post" action="/shop/designer-opt-in" class="form">

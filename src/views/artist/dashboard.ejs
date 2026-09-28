@@ -46,6 +46,9 @@
 </section>
 <% } %>
 <p class="muted">Design artists earn <strong>60% commission</strong> on every sale of their designs (70% while your founding-artist boost is active). Custom-design orders pay <strong>70%</strong> (80% for founding artists). Linework-only uploads pay 5 points less, with a 5-point website colorization fee. You are paid only while registered, subscribed, and with a payout destination set — otherwise proceeds stay with the site.</p>
+<% if (typeof dualBonus !== 'undefined' && dualBonus) { %>
+<p class="muted"><span class="badge ok">Dual-subscription bonus active</span> — you hold both a designer and a shop subscription, so you earn <strong>+2%</strong> on every commission (62% premade with a referring shop, 72% without, 72% custom, 57% linework-only), funded from the owner's share.</p>
+<% } %>
 
 <div class="two-col">
   <section class="card">

@@ -31,6 +31,22 @@ async function designerAccess(userId) {
   return shopDesignerActive(userId);
 }
 
+// Dual-subscription loyalty bonus: true when the user holds BOTH an active
+// design_artist subscription and an active tattoo_shop subscription
+// (current_period_end IS NULL counts as active — lifetime grants).
+// Commissions the user earns get +2pts, funded out of the owner's share
+// (the site's 10% overhead is never cut); see commissions.js.
+async function dualSubBonusActive(userId) {
+  const now = Date.now();
+  const rows = await db.all(
+    `SELECT p.slug AS slug FROM subscriptions s JOIN plans p ON p.id = s.plan_id
+     WHERE s.user_id = ? AND p.slug IN ('design_artist', 'tattoo_shop')
+       AND s.status = 'active' AND (s.current_period_end IS NULL OR s.current_period_end > ?)`,
+    [userId, now]);
+  const slugs = new Set(rows.map((r) => r.slug));
+  return slugs.has('design_artist') && slugs.has('tattoo_shop');
+}
+
 function requireDesignerAccess() {
   return async (req, res, next) => {
     if (!req.user) return res.redirect('/login');
@@ -41,4 +57,4 @@ function requireDesignerAccess() {
   };
 }
 
-module.exports = { shopDesignerOptedIn, shopDesignerActive, designerAccess, requireDesignerAccess };
+module.exports = { shopDesignerOptedIn, shopDesignerActive, designerAccess, requireDesignerAccess, dualSubBonusActive };

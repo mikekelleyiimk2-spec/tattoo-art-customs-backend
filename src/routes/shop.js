@@ -5,13 +5,13 @@
 const express = require('express');
 const db = require('../db');
 const config = require('../config');
-const { requireLogin, requireSubscription } = require('../middleware/auth');
+const { requireLogin, requireSubscription, hasActiveSubscription } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { screenText } = require('../lib/screening');
 const { payableBalance } = require('../lib/commissions');
 const { registerPayoutRoutes, payoutDashboardData } = require('../lib/payoutRoutes');
 const { upsertProfile } = require('../lib/profiles');
-const { shopDesignerOptedIn } = require('../lib/shopDesigner');
+const { shopDesignerOptedIn, dualSubBonusActive } = require('../lib/shopDesigner');
 
 const router = express.Router();
 router.use(requireLogin, requireSubscription('tattoo_shop'));
@@ -34,13 +34,15 @@ router.get('/', async (req, res) => {
   const me = await db.get(
     'SELECT is_founding_shop, founding_shop_ends_at FROM users WHERE id = ?', [req.user.id]);
   const designerOptIn = await shopDesignerOptedIn(req.user.id);
+  const hasDesignerSub = await hasActiveSubscription(req.user.id, 'design_artist');
+  const dualBonus = await dualSubBonusActive(req.user.id);
   res.render('shop/dashboard', {
     title: 'Shop Dashboard — Tattoo Art Customs',
     profile, balance, payouts, ledger, refLink,
     referralSales: referrals[0]?.n || 0, referralTotal: referrals[0]?.total || 0,
     isFoundingShop: !!(me && me.is_founding_shop),
     foundingEndsAt: me && me.founding_shop_ends_at,
-    designerOptIn,
+    designerOptIn, hasDesignerSub, dualBonus,
     metaDescription: '',
     ...payout,
   });

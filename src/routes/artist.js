@@ -8,7 +8,7 @@ const fs = require('fs');
 const db = require('../db');
 const config = require('../config');
 const { requireLogin } = require('../middleware/auth');
-const { requireDesignerAccess } = require('../lib/shopDesigner');
+const { requireDesignerAccess, dualSubBonusActive } = require('../lib/shopDesigner');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { screenText } = require('../lib/screening');
 const { payableBalance } = require('../lib/commissions');
@@ -181,6 +181,7 @@ router.get('/', async (req, res) => {
     profile, balance, payouts, ledger, metaDescription: '',
     slaOrders, slaRepeat, repeatNotice: slaEnforcer.REPEAT_OFFENDER_NOTICE, nowMs,
     commissionPausedUntil, remakeRequests,
+    dualBonus: await dualSubBonusActive(req.user.id),
     ...payout,
   });
 });

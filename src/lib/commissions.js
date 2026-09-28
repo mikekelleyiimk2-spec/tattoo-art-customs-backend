@@ -18,6 +18,12 @@
 //   funds — the designer's 70% is never cut).
 // - Artists/shops are paid ONLY if registered + actively subscribed +
 //   payout method (PayPal email) configured; otherwise the site keeps all.
+// - Dual-subscription loyalty bonus: a user holding BOTH an active
+//   design_artist subscription and an active tattoo_shop subscription
+//   earns +2pts on every commission they receive (designer sales AND shop
+//   referral shares). The 2pts come out of the owner's share, floored at
+//   zero — the site's 10% overhead is never cut. On custom orders the 2pts
+//   come out of the business residual the same way.
 // - Commission splits are shown in artist/shop dashboards ONLY —
 //   never to customers.
 // - Standing rule: splits ALWAYS favor designers and tattoo shops —
@@ -32,7 +38,7 @@
 const db = require('../db');
 const config = require('../config');
 const founding = require('./founding');
-const { shopDesignerActive } = require('./shopDesigner');
+const { shopDesignerActive, dualSubBonusActive } = require('./shopDesigner');
 
 // Site owner lookup (for payable-balance redirects).
 async function ownerUserId() {
@@ -170,13 +176,26 @@ async function recordSaleCommissions(order) {
     // No referring shop: the 20% shop share splits 50/50 designer /
     // owner (designer 70%, owner 20%); the site retains its 10% overhead.
     const total = netPaidCents(order);
-    const designerRate = (noDesignerColor ? 0.55 : 0.60) + (foundingBoost ? 0.10 : 0);
+    let designerRate = (noDesignerColor ? 0.55 : 0.60) + (foundingBoost ? 0.10 : 0);
     const colorFeeRate = noDesignerColor ? 0.05 : 0;
     let ownerRate = foundingBoost ? 0 : 0.10;
     let siteRate = foundingBoost ? 0 : 0.10;
     let shopRate = 0.20;
     if (shopBoost) {
       const extra = Math.min(0.05, ownerRate);
+      ownerRate -= extra;
+      shopRate += extra;
+    }
+    // Dual-subscription loyalty bonus (+2pts designer, funded from the
+    // owner's share, capped at available funds — the site's 10% is untouched).
+    if (artistId && await dualSubBonusActive(artistId)) {
+      const extra = Math.min(0.02, ownerRate);
+      ownerRate -= extra;
+      designerRate += extra;
+    }
+    // The same +2pts applies to a dual-subscription shop's referral share.
+    if (shopId && await dualSubBonusActive(shopId)) {
+      const extra = Math.min(0.02, ownerRate);
       ownerRate -= extra;
       shopRate += extra;
     }
@@ -314,8 +333,11 @@ async function recordCustomDesignerCommission(order, artistId) {
     return 0;
   }
   // Founding artists earn 80% on customs for 6 months (the boost is carved
-  // out of the site's share).
-  const rate = await founding.foundingArtistActive(artistId, db.now()) ? 0.80 : 0.70;
+  // out of the site's share). Dual-subscription designers earn +2pts on top
+  // (72%, or 82% while a founding boost is active) — the extra comes out of
+  // the business residual, i.e. the owner's cut.
+  let rate = await founding.foundingArtistActive(artistId, db.now()) ? 0.80 : 0.70;
+  if (await dualSubBonusActive(artistId)) rate += 0.02;
   const designerAmt = Math.round(netPaidCents(order) * rate);
   if (designerAmt <= 0) return 0;
   // Take it out of the site's share (the largest site_kept 'site' row).
