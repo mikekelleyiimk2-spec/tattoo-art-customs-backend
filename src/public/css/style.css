@@ -92,3 +92,7 @@ th { background: var(--paper-dim); }
   .nav.open .nav-links { display: flex; }
   h1 { font-size: 1.5rem; }
 }
+
+/* Ad slots: direct-sold banners + AdSense fallback */
+.ad-slot { margin: 1rem auto; text-align: center; max-width: 970px; }
+.ad-slot img { max-width: 100%; height: auto; display: inline-block; border: 1px solid var(--line); border-radius: var(--radius); }

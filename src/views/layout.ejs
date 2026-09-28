@@ -10,6 +10,9 @@
 <meta property="og:site_name" content="Tattoo Art Customs">
 <meta property="og:title" content="<%= typeof title !== 'undefined' ? title : 'Tattoo Art Customs' %>">
 <link rel="stylesheet" href="/css/style.css">
+<% if (typeof adsenseId !== 'undefined' && adsenseId) { %>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=<%= adsenseId %>" crossorigin="anonymous"></script>
+<% } %>
 </head>
 <body>
 <a class="skip" href="#main">Skip to main content</a>
@@ -41,6 +44,8 @@
 <div class="flash" role="alert"><%= flash %></div>
 <% } %>
 
+<%- include('partials/ad-slot', {slot: 'leaderboard'}) %>
+
 <main id="main" class="container">
   <%- body %>
 </main>
@@ -54,6 +59,7 @@
     <nav aria-label="Footer navigation">
       <a href="/gallery">Gallery</a>
       <a href="/membership">Membership</a>
+      <a href="/advertise">Advertise</a>
       <a href="/terms">Terms</a>
       <a href="/privacy">Privacy</a>
       <a href="/about">About</a>

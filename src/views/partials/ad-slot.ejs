@@ -1,0 +1,12 @@
+<%# Ad slot: shows the booked direct ad for this slot, else falls back to AdSense, else nothing.
+    Expects `slot` (string) and `activeAds` (map) in scope. %>
+<% const _ad = (typeof activeAds !== 'undefined' && activeAds && activeAds[slot]) || null; %>
+<% if (_ad) { %>
+<div class="ad-slot ad-direct" role="complementary" aria-label="Advertisement">
+  <a href="/ads/go/<%= _ad.id %>" target="_blank" rel="sponsored noopener">
+    <img src="<%= _ad.image_path %>" alt="Advertisement: <%= _ad.title %>" loading="lazy">
+  </a>
+</div>
+<% } else { %>
+<%- include('ad-unit') %>
+<% } %>

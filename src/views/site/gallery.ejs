@@ -21,6 +21,8 @@
   <p><button class="btn" type="submit">Search</button></p>
 </form>
 
+<%- include('../partials/ad-slot', {slot: 'gallery_inline'}) %>
+
 <% if (!designs.length) { %><p>No designs match. Try another search.</p><% } %>
 <div class="grid">
   <% designs.forEach(function(d) { %>

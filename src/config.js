@@ -54,6 +54,14 @@ const config = {
   adminEmail: process.env.ADMIN_EMAIL || '',
   adminPassword: process.env.ADMIN_PASSWORD || '',
 
+  // Google AdSense — empty publisher ID means ads stay off.
+  adsense: {
+    publisherId: process.env.ADSENSE_PUBLISHER_ID || '',
+  },
+  adsenseConfigured() {
+    return !!this.adsense.publisherId;
+  },
+
   // Business rules (cents) — single source of truth for pricing.
   pricing: {
     premadeRegular: 7500,   // $75

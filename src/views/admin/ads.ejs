@@ -1,0 +1,38 @@
+<h1>Ad space</h1>
+<p><a href="/admin">← Dashboard</a></p>
+<p class="muted">Activate an order after payment is received — the ad runs for the booked number of months from activation.</p>
+<table>
+  <thead><tr><th>Creative</th><th>Slot</th><th>Advertiser</th><th>Period</th><th>Status</th><th>Impr.</th><th>Clicks</th><th></th></tr></thead>
+  <tbody>
+  <% ads.forEach(function(a) { %>
+    <tr>
+      <td><a href="<%= a.image_path %>" target="_blank" rel="noopener"><img src="<%= a.image_path %>" alt="<%= a.title %>" style="max-width:120px;display:block"></a>
+        <span class="muted"><%= a.title %></span></td>
+      <td><%= slots[a.slot] ? slots[a.slot].name : a.slot %></td>
+      <td><%= a.advertiser_name %><br><span class="muted"><%= a.advertiser_email %></span></td>
+      <td><%= a.months %> mo<% if (a.active) { %><br><span class="muted"><%= new Date(a.starts_at).toLocaleDateString() %> → <%= new Date(a.ends_at).toLocaleDateString() %></span><% } %></td>
+      <td><span class="badge"><%= a.active ? 'live' : 'pending' %></span></td>
+      <td><%= a.impressions %></td>
+      <td><%= a.clicks %></td>
+      <td>
+        <% if (!a.active) { %>
+        <form method="post" action="/admin/ads/<%= a.id %>/activate" style="display:inline">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn" type="submit">Activate (paid)</button>
+        </form>
+        <% } else { %>
+        <form method="post" action="/admin/ads/<%= a.id %>/deactivate" style="display:inline">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn btn-secondary" type="submit">Pause</button>
+        </form>
+        <% } %>
+        <form method="post" action="/admin/ads/<%= a.id %>/delete" style="display:inline" onsubmit="return confirm('Delete this ad?')">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn btn-secondary" type="submit">Delete</button>
+        </form>
+      </td>
+    </tr>
+  <% }); %>
+  </tbody>
+</table>
+<% if (!ads.length) { %><p class="muted">No ad orders yet. Share the <a href="/advertise">advertise page</a>.</p><% } %>

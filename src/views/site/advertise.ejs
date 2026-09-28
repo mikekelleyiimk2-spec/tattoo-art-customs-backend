@@ -1,0 +1,69 @@
+<h1>Advertise with Tattoo Art Customs</h1>
+<p class="muted">Put your brand in front of tattoo lovers, artists, and shops. Your banner runs for 30 days per month booked — pay once, we handle the rest.</p>
+
+<div class="grid">
+  <% Object.entries(slots).forEach(function([id, s]) { %>
+  <article class="card">
+    <h2><%= s.name %></h2>
+    <p><%= s.description %></p>
+    <p class="muted"><strong>Specs:</strong> <%= s.specs %></p>
+    <p><strong><%= money(s.price_cents) %></strong> <span class="muted">/ 30 days</span></p>
+  </article>
+  <% }); %>
+</div>
+
+<section class="card">
+  <h2>Book your ad</h2>
+  <ol class="muted">
+    <li>Fill out the form below and upload your banner.</li>
+    <li>We email you payment instructions (PayPal / card).</li>
+    <li>Once paid, your ad goes live — you get impression and click reports.</li>
+  </ol>
+  <form method="post" action="/advertise" enctype="multipart/form-data">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <div class="two-col">
+      <div>
+        <label for="ad-name">Your name / business</label>
+        <input type="text" id="ad-name" name="advertiser_name" required maxlength="120">
+      </div>
+      <div>
+        <label for="ad-email">Email</label>
+        <input type="email" id="ad-email" name="advertiser_email" required maxlength="160">
+      </div>
+    </div>
+    <div class="two-col">
+      <div>
+        <label for="ad-slot">Placement</label>
+        <select id="ad-slot" name="slot" required>
+          <% Object.entries(slots).forEach(function([id, s]) { %>
+          <option value="<%= id %>"><%= s.name %> — <%= money(s.price_cents) %>/mo</option>
+          <% }); %>
+        </select>
+      </div>
+      <div>
+        <label for="ad-months">Duration</label>
+        <select id="ad-months" name="months">
+          <option value="1">1 month</option>
+          <option value="3">3 months</option>
+          <option value="6">6 months</option>
+          <option value="12">12 months</option>
+        </select>
+      </div>
+    </div>
+    <div>
+      <label for="ad-title">Ad title (for accessibility)</label>
+      <input type="text" id="ad-title" name="title" required maxlength="120" placeholder="e.g. Ink Supply Co. — premium tattoo ink">
+    </div>
+    <div>
+      <label for="ad-link">Link URL (where clicks go)</label>
+      <input type="url" id="ad-link" name="link_url" required placeholder="https://yourshop.com">
+    </div>
+    <div>
+      <label for="ad-creative">Banner creative (JPG/PNG/GIF/WebP, under 500 KB)</label>
+      <input type="file" id="ad-creative" name="creative" accept="image/png,image/jpeg,image/gif,image/webp" required>
+    </div>
+    <p><button class="btn" type="submit">Submit ad order</button></p>
+  </form>
+</section>
+
+<p class="muted">We reserve the right to refuse ads that don't fit the community (no spam, no misleading claims). All ad sales are final once the ad goes live.</p>

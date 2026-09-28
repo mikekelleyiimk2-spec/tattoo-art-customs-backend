@@ -84,3 +84,17 @@ watermarked gallery images there.
 - [ ] Test a $1-style sandbox purchase end-to-end first (buy → manual confirm → download → commission ledger)
 - [ ] Prepare the watermarked linework files: admin uploads them per design at **Admin → Designs**
       (a design cannot be approved until its watermarked linework exists)
+
+## Selling ad space
+
+The site has built-in direct ad sales — no extra setup needed:
+
+- **Advertisers** book at `/advertise`: 3 placements (Leaderboard $150/mo on every page,
+  Gallery spotlight $100/mo, Design page banner $75/mo). Orders arrive as *pending*.
+- **You** activate them in the admin panel under **Ad space** after payment arrives
+  (PayPal/card like any other sale). The ad then runs for the booked months, and you
+  get impression/click counts per ad.
+- If a slot has no booked ad, it falls back to Google AdSense when `ADSENSE_PUBLISHER_ID`
+  is set in `.env` — otherwise the slot stays empty. Apply for AdSense after the site
+  is live, then paste the publisher ID into Render's environment variables.
+- Rates live in `src/lib/ads.js` (`SLOTS`) — edit and redeploy to change them.

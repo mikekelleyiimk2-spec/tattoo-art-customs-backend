@@ -290,4 +290,43 @@ router.post('/payouts/:id/complete', formLimiter, checkHoneypot, async (req, res
   res.redirect('/admin/payouts');
 });
 
+// --- Ad space management ---
+const { SLOTS: AD_SLOTS } = require('../lib/ads');
+
+router.get('/ads', async (req, res) => {
+  const ads = await db.all('SELECT * FROM ads ORDER BY created_at DESC');
+  res.render('admin/ads', { title: 'Ad space — Admin', ads, slots: AD_SLOTS, metaDescription: '' });
+});
+
+router.post('/ads/:id/activate', formLimiter, checkHoneypot, async (req, res) => {
+  const ad = await db.get('SELECT * FROM ads WHERE id = ?', [req.params.id]);
+  if (!ad) { req.session.flash = 'Ad not found.'; return res.redirect('/admin/ads'); }
+  const now = db.now();
+  const months = Math.min(12, Math.max(1, parseInt(ad.months, 10) || 1));
+  await db.update('ads', ad.id, {
+    active: 1,
+    starts_at: now,
+    ends_at: now + months * 30 * 24 * 3600 * 1000,
+  });
+  req.session.flash = `Ad "${ad.title}" is now live for ${months} month(s).`;
+  res.redirect('/admin/ads');
+});
+
+router.post('/ads/:id/deactivate', formLimiter, checkHoneypot, async (req, res) => {
+  await db.update('ads', req.params.id, { active: 0 });
+  req.session.flash = 'Ad paused.';
+  res.redirect('/admin/ads');
+});
+
+router.post('/ads/:id/delete', formLimiter, checkHoneypot, async (req, res) => {
+  const ad = await db.get('SELECT * FROM ads WHERE id = ?', [req.params.id]);
+  if (ad && ad.image_path) {
+    const file = path.join(config.assetDir, 'uploads', 'ads', path.basename(ad.image_path));
+    fs.unlink(file, () => {});
+  }
+  await db.query('DELETE FROM ads WHERE id = ?', [req.params.id]);
+  req.session.flash = 'Ad deleted.';
+  res.redirect('/admin/ads');
+});
+
 module.exports = router;

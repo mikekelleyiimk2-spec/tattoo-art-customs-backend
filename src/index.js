@@ -61,8 +61,23 @@ app.use((req, res, next) => {
   res.locals.flash = req.session.flash || null;
   delete req.session.flash;
   res.locals.paypalReady = config.paypalConfigured();
+  res.locals.adsenseId = config.adsense.publisherId;
   res.locals.siteName = 'Tattoo Art Customs';
   res.locals.money = (cents) => `$${(cents / 100).toFixed(2)}`;
+  next();
+});
+
+// Active direct-sold ads, available to every view (see partials/ad-slot).
+// Counts one impression per page view for each live ad (directional stats).
+app.use(async (req, res, next) => {
+  try {
+    const { getActiveAds, recordImpressions } = require('./lib/ads');
+    const activeAds = await getActiveAds();
+    res.locals.activeAds = activeAds;
+    recordImpressions(Object.values(activeAds).map((a) => a.id)).catch(() => {});
+  } catch (e) {
+    res.locals.activeAds = {};
+  }
   next();
 });
 
@@ -74,10 +89,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 // buyers receive them through time-limited secure download links (/orders).
 const wmDir = path.join(config.assetDir, 'designs', 'linework-wm');
 const photosDir = path.join(config.assetDir, 'uploads', 'photos');
+const adsDir = path.join(config.assetDir, 'uploads', 'ads');
 fs.mkdirSync(wmDir, { recursive: true });
 fs.mkdirSync(photosDir, { recursive: true });
+fs.mkdirSync(adsDir, { recursive: true });
 app.use('/img/designs', express.static(wmDir));
 app.use('/img/photos', express.static(photosDir));
+app.use('/img/ads', express.static(adsDir));
 
 // Routes
 // Health check (for hosting monitors / load balancers).
@@ -91,6 +109,7 @@ app.use('/artist', require('./routes/artist'));
 app.use('/shop', require('./routes/shop'));
 app.use('/orders', require('./routes/orders'));
 app.use('/play', require('./routes/play'));
+app.use('/', require('./routes/ads'));
 app.use('/messages', require('./routes/messages'));
 app.use('/admin', require('./routes/admin'));
 

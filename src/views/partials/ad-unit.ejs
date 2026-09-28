@@ -1,0 +1,11 @@
+<%# Responsive AdSense display unit. Renders nothing until ADSENSE_PUBLISHER_ID is set. %>
+<% if (typeof adsenseId !== 'undefined' && adsenseId) { %>
+<div class="ad-slot" role="complementary" aria-label="Advertisement">
+  <ins class="adsbygoogle"
+       style="display:block"
+       data-ad-client="<%= adsenseId %>"
+       data-ad-format="auto"
+       data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+<% } %>
