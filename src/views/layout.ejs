@@ -85,6 +85,20 @@
     });
   } catch (e) { /* storage unavailable — banner stays */ }
 })();
+// Give every table cell a data-label from its column header, so the
+// small-screen stacked-card table CSS can label each value.
+(function () {
+  document.querySelectorAll('table').forEach(function (t) {
+    var heads = Array.prototype.map.call(
+      t.querySelectorAll('thead th'), function (h) { return h.textContent.trim(); });
+    if (!heads.length) return;
+    t.querySelectorAll('tbody tr').forEach(function (r) {
+      Array.prototype.forEach.call(r.children, function (c, i) {
+        if (c.tagName === 'TD' && heads[i]) c.setAttribute('data-label', heads[i]);
+      });
+    });
+  });
+})();
 </script>
 </body>
 </html>

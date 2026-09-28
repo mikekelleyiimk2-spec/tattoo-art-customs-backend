@@ -13,6 +13,7 @@
   --radius: 10px;
 }
 * { box-sizing: border-box; }
+img { max-width: 100%; height: auto; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0; background: var(--paper); color: var(--ink);
@@ -41,7 +42,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .nav-toggle { display: none; background: none; border: 1px solid var(--paper); color: var(--paper); font-size: 1.2rem; padding: .2em .5em; border-radius: 6px; margin-left: auto; cursor: pointer; }
 .btn {
   display: inline-block; background: var(--accent); color: #fff !important; border: none;
-  padding: .6em 1.2em; border-radius: var(--radius); text-decoration: none; cursor: pointer; font-size: 1rem;
+  padding: .75em 1.4em; border-radius: var(--radius); text-decoration: none; cursor: pointer; font-size: 1rem;
+  min-height: 44px; line-height: 1.4;
 }
 .btn:hover, .btn:focus { background: var(--accent-dark); color: #fff; }
 .btn-secondary { background: var(--ink); }
@@ -62,9 +64,14 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .sale-banner { background: var(--accent); color: #fff; padding: .8em 1em; border-radius: var(--radius); text-align: center; font-weight: bold; }
 form.form { max-width: 560px; }
 label { display: block; margin: .8em 0 .3em; font-weight: bold; }
-input[type=text], input[type=email], input[type=password], input[type=url], textarea, select {
+input[type=text], input[type=email], input[type=password], input[type=url],
+input[type=number], input[type=tel], input[type=file], input[type=date],
+textarea, select {
   width: 100%; padding: .6em; border: 1px solid var(--line); border-radius: 6px; font-size: 1rem; background: #fff; color: var(--ink);
 }
+input[type=file] { padding: .5em; }
+summary { cursor: pointer; padding: .6em 0; font-weight: bold; min-height: 44px; }
+.hero .btn { margin: .25em .5em .25em 0; }
 textarea { min-height: 120px; }
 .hp { position: absolute; left: -9999px; } /* honeypot */
 table { width: 100%; border-collapse: collapse; margin: 1em 0; font-size: .95rem; }
@@ -90,7 +97,28 @@ th { background: var(--paper-dim); }
   .nav-toggle { display: block; }
   .nav-links { display: none; width: 100%; flex-direction: column; align-items: flex-start; }
   .nav.open .nav-links { display: flex; }
+  .nav.open .nav-links a { display: block; width: 100%; padding: .7em .2em; font-size: 1.05rem; }
   h1 { font-size: 1.5rem; }
+}
+
+/* Small screens: data tables become stacked cards. Cell labels come from
+   data-label attributes, which layout.ejs fills in automatically from the
+   table headers, so no per-view markup changes are needed. */
+@media (max-width: 640px) {
+  table, table tbody, table tr, table td, table th { display: block; width: 100%; }
+  table thead { display: none; }
+  table tr {
+    background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+    margin: 0 0 .8em; padding: .4em .8em;
+  }
+  table td, table th { border: none; padding: .35em 0; text-align: left; overflow-wrap: break-word; }
+  table td::before {
+    content: attr(data-label); display: block;
+    font-size: .75rem; font-weight: bold; text-transform: uppercase;
+    letter-spacing: .5px; color: var(--muted);
+  }
+  table td:not([data-label])::before, table td:empty::before { content: none; }
+  #cookie-banner { flex-wrap: wrap; }
 }
 
 /* Ad slots: direct-sold banners + AdSense fallback */
