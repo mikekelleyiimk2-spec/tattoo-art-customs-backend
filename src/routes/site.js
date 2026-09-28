@@ -1,9 +1,19 @@
 // Public pages: home, gallery, design detail, terms, privacy.
 const express = require('express');
 const db = require('../db');
+const config = require('../config');
 const { premadePriceCents, isSaleWindow } = require('../lib/pricing');
 
 const router = express.Router();
+
+// ads.txt — required by Google AdSense so ad revenue is credited to us.
+// Serves automatically once ADSENSE_PUBLISHER_ID is set.
+router.get('/ads.txt', (req, res) => {
+  const raw = (config.adsense.publisherId || '').trim();
+  if (!raw) return res.status(404).type('text/plain').send('Not configured');
+  const pubId = raw.replace(/^ca-pub-/i, 'pub-');
+  res.type('text/plain').send(`google.com, ${pubId}, DIRECT, f08c47fec0942fa0\n`);
+});
 
 function parseDesign(row) {
   if (!row) return null;

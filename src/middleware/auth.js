@@ -55,4 +55,24 @@ function requireSubscription(planSlug) {
   };
 }
 
-module.exports = { loadUser, requireLogin, requireRole, requireSubscription, hasActiveSubscription };
+// Any active subscription (any plan) — for subscriber-only tools like the combiner.
+async function hasAnyActiveSubscription(userId) {
+  const row = await db.get(
+    `SELECT s.id FROM subscriptions s
+     WHERE s.user_id = ? AND s.status = 'active'
+       AND (s.current_period_end IS NULL OR s.current_period_end > ?)`,
+    [userId, Date.now()]);
+  return !!row;
+}
+
+function requireAnySubscription() {
+  return async (req, res, next) => {
+    if (!req.user) return res.redirect('/login');
+    if (req.user.role === 'admin') return next();
+    if (await hasAnyActiveSubscription(req.user.id)) return next();
+    req.session.flash = 'The Design Studio is for subscribers — join a membership to combine your designs.';
+    return res.redirect('/membership');
+  };
+}
+
+module.exports = { loadUser, requireLogin, requireRole, requireSubscription, hasActiveSubscription, hasAnyActiveSubscription, requireAnySubscription };
