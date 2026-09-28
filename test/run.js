@@ -1046,6 +1046,30 @@ async function main() {
   ok(sOwner && sOwner.amount_cents === Math.round(sOrder.amount_cents * 0.70), 'suspended designer 70% redirected to owner payable');
   await db.update('users', bannerArtistId, { commission_suspended_until: null });
 
+  // Forfeiture: designer with an active subscription but NO payout method
+  // set up — the site keeps their share (owner rule, 2026-09-28).
+  r = await req('POST', `/orders/buy/${grow.id}`, { follow: false });
+  const fOrderId = r.location.split('/orders/manual/')[1];
+  r = await req('POST', `/orders/manual/${fOrderId}`, { body: { method: 'cashapp', note: 'test' }, follow: false });
+  ok(r.status === 302, 'manual payment recorded for forfeiture test order');
+  r = await areq('POST', `/admin/orders/${fOrderId}/confirm-manual`);
+  const fOrder = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(fOrderId);
+  const fLedger = sdb.prepare('SELECT recipient_type, amount_cents, status FROM commission_ledger WHERE order_id = ?').all(fOrderId);
+  const fArtist = fLedger.find((l) => l.recipient_type === 'artist');
+  const fExpected = Math.round(fOrder.amount_paid_cents * 0.70);
+  ok(fArtist && fArtist.amount_cents === fExpected && fArtist.status === 'site_kept',
+    'designer without a payout method forfeits their 70% share to the site');
+  // Once the designer sets up a payout method, new sales become payable.
+  sdb.prepare('INSERT INTO artist_profiles (user_id, payout_paypal_email, created_at) VALUES (?,?,?)')
+    .run(bannerArtistId, 'banner@pay.test', Date.now());
+  r = await req('POST', `/orders/buy/${grow.id}`, { follow: false });
+  const gOrderId = r.location.split('/orders/manual/')[1];
+  r = await req('POST', `/orders/manual/${gOrderId}`, { body: { method: 'cashapp', note: 'test' }, follow: false });
+  r = await areq('POST', `/admin/orders/${gOrderId}/confirm-manual`);
+  const gArtist = sdb.prepare("SELECT amount_cents, status FROM commission_ledger WHERE order_id = ? AND recipient_type = 'artist'").get(gOrderId);
+  ok(gArtist && gArtist.status === 'payable' && gArtist.amount_cents === Math.round(sdb.prepare('SELECT amount_paid_cents FROM orders WHERE id = ?').get(gOrderId).amount_paid_cents * 0.70),
+    'designer with a payout method earns payable 70% on new sales');
+
   // A piece with sales cannot be deleted.
   r = await artreq('POST', `/artist/portfolio/${prow.id}/delete`, {});
   ok(sdb.prepare('SELECT id FROM designs WHERE id = ?').get(prow.id), 'piece with sales cannot be deleted');
