@@ -52,4 +52,4 @@ services:
 
 databases:
   - name: tattoo-art-customs-db
-    plan: starter
+    plan: basic-256mb
