@@ -26,7 +26,11 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       // PayPal checkout buttons/webhooks need these.
-      scriptSrc: ["'self'", 'https://www.paypal.com', 'https://www.sandbox.paypal.com'],
+      // 'unsafe-inline' is required: the site's own UI (mobile nav toggle,
+      // cookie banner, plan pickers, payout controls) uses inline handlers.
+      // Without it, CSP silently kills those clicks (reported: hamburger
+      // menu and cookie "Got it" button dead on mobile).
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://www.paypal.com', 'https://www.sandbox.paypal.com'],
       frameSrc: ["'self'", 'https://www.paypal.com', 'https://www.sandbox.paypal.com'],
       imgSrc: ["'self'", 'data:', 'https:'],
       styleSrc: ["'self'", "'unsafe-inline'"],

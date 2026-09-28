@@ -530,6 +530,17 @@ async function main() {
   r = await req('GET', '/');
   ok(r.status === 200 && r.text.includes('Tattoo Art Customs'), 'homepage renders');
 
+  // CSP must permit the site's own inline UI handlers (mobile nav toggle,
+  // cookie banner, plan pickers). Without 'unsafe-inline' those clicks die
+  // silently on real browsers.
+  {
+    const raw = await fetch(`http://localhost:${PORT}/`);
+    const csp = raw.headers.get('content-security-policy') || '';
+    const m = csp.match(/script-src[^;]*/);
+    ok(!!m && m[0].includes("'unsafe-inline'"), 'CSP script-src allows inline handlers (mobile nav + cookie banner work)');
+    await raw.text();
+  }
+
   r = await req('GET', '/gallery');
   ok(r.status === 200, 'gallery renders');
 
