@@ -35,6 +35,7 @@ async function ensureSub(userId, slug, { lifetime, months }) {
 }
 
 async function main() {
+  await db.init();
   const user = await db.get('SELECT * FROM users WHERE email = ?', [EMAIL]);
   if (!user) throw new Error('user not found: ' + EMAIL);
   console.log(`user: id=${user.id} email=${user.email} role=${user.role} verified=${user.email_verified}`);
