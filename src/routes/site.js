@@ -1,5 +1,7 @@
 // Public pages: home, gallery, design detail, terms, privacy.
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const db = require('../db');
 const config = require('../config');
 const { requireLogin, isActiveMember } = require('../middleware/auth');
@@ -49,12 +51,21 @@ router.get('/ads.txt', (req, res) => {
 });
 
 // Apple Pay domain verification (via PayPal) — Apple fetches this file to
-// confirm the domain is authorized for Apple Pay. Serves automatically once
-// APPLE_PAY_DOMAIN_ASSOCIATION is set (content from the PayPal dashboard).
+// confirm the domain is authorized for Apple Pay. Served from the
+// APPLE_PAY_DOMAIN_ASSOCIATION env var when set, otherwise from the shipped
+// PayPal-signed file. Served byte-exact (no trailing newline) as
+// application/octet-stream per PayPal's docs.
 router.get('/.well-known/apple-developer-merchantid-domain-association', (req, res) => {
-  const content = (config.applePay.domainAssociation || '').trim();
+  let content = (config.applePay.domainAssociation || '').trim();
+  if (!content) {
+    try {
+      content = fs.readFileSync(
+        path.join(__dirname, '..', 'public', '.well-known', 'apple-developer-merchantid-domain-association'),
+        'utf8').trim();
+    } catch (e) { /* not shipped */ }
+  }
   if (!content) return res.status(404).type('text/plain').send('Not configured');
-  res.type('text/plain').send(content + '\n');
+  res.type('application/octet-stream').send(content);
 });
 
 // robots.txt — allow all crawlers; point them at the sitemap.
