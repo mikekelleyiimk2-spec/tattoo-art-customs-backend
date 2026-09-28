@@ -15,6 +15,9 @@ process.env.BASE_URL = 'http://localhost:4137';
 process.env.ADMIN_EMAIL = 'admin@test.local';
 process.env.ADMIN_PASSWORD = 'AdminTest123!';
 process.env.ASSET_DIR = path.join(TMP, 'assets');
+// Test-only PayPal stub (see src/lib/paypal.js): canned subscription answers
+// so the checkout routes can be exercised over HTTP without network access.
+process.env.TAC_TEST_PAYPAL_STUB = '1';
 
 const PORT = 4137;
 let failures = 0;
@@ -636,6 +639,82 @@ async function main() {
   r = await req('GET', '/membership');
   ok(r.status === 200 && r.text.includes('free month') && r.text.includes('Annual'), 'membership page shows referral link, $1 first month, annual plan');
   ok(r.text.includes('Annual plan coming soon') || r.text.includes('/subscribe/customer_annual'), 'annual plan shown (or coming soon when PayPal plan ID missing)');
+
+  // membership checkout: subscribe idempotency, approve-only-on-active,
+  // resume link, pending cancel. PayPal answers come from the test-only stub
+  // in src/lib/paypal.js (TAC_TEST_PAYPAL_STUB=1); IDs ending '-ACTIVE' read
+  // back as ACTIVE so both /approve branches run through the real routes.
+  console.log('membership checkout:');
+  const subJar = {};
+  async function subreq(method, p, opts = {}) {
+    const h = { ...(opts.headers || {}) };
+    const cookies = Object.entries(subJar).map(([k, v]) => `${k}=${v}`).join('; ');
+    if (cookies) h.cookie = cookies;
+    let payload = opts.body;
+    if (payload && typeof payload === 'object') {
+      payload = new URLSearchParams(payload);
+      h['content-type'] = 'application/x-www-form-urlencoded';
+    }
+    const res = await fetch(`http://localhost:${PORT}${p}`, { method, headers: h, body: payload, redirect: 'manual' });
+    for (const c of (res.headers.getSetCookie ? res.headers.getSetCookie() : [])) {
+      const [k, v] = c.split(';')[0].split('=');
+      subJar[k.trim()] = (v || '').trim();
+    }
+    const text = await res.text();
+    return { status: res.status, text, location: res.headers.get('location') };
+  }
+  r = await subreq('POST', '/signup', { body: { display_name: 'SubTester', email: 'subtester@test.local', password: 'password123' } });
+  const subUserId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('subtester@test.local').id;
+  r = await subreq('POST', '/membership/subscribe/customer');
+  ok(r.status === 302 && (r.location || '').includes('paypal.test'), 'subscribe redirects to PayPal approval');
+  r = await subreq('POST', '/membership/subscribe/customer');
+  ok(r.status === 302 && r.location === '/membership', 'double subscribe blocked, back to membership');
+  const subRows = sdb.prepare('SELECT * FROM subscriptions WHERE user_id = ?').all(subUserId);
+  ok(subRows.length === 1 && subRows[0].status === 'pending', 'only one pending subscription created (idempotent)');
+  const subId = subRows[0].id;
+  // pending sub shows a "Complete payment" resume link on the membership page
+  r = await subreq('GET', '/membership');
+  ok(r.status === 200 && r.text.includes('Complete payment') && r.text.includes(`/membership/resume/${subId}`), 'pending sub shows Complete payment link');
+  // resume re-fetches the PayPal approve URL and stashes the session
+  r = await subreq('GET', `/membership/resume/${subId}`);
+  ok(r.status === 302 && (r.location || '').includes('paypal.test'), 'resume redirects to PayPal approve URL');
+  // approval_pending must NOT activate
+  r = await subreq('GET', '/membership/approve');
+  ok(r.status === 302 && r.location === '/membership', 'approve bounces back to membership');
+  ok(sdb.prepare('SELECT status FROM subscriptions WHERE id = ?').get(subId).status === 'pending', 'approval_pending never activates the subscription');
+  ok(sdb.prepare('SELECT role FROM users WHERE id = ?').get(subUserId).role === 'customer', 'no role granted while pending');
+  // ACTIVE activates (flip the stored PayPal id to the -ACTIVE convention)
+  sdb.prepare('UPDATE subscriptions SET paypal_subscription_id = ? WHERE id = ?').run(subRows[0].paypal_subscription_id + '-ACTIVE', subId);
+  r = await subreq('GET', `/membership/resume/${subId}`);
+  r = await subreq('GET', '/membership/approve');
+  ok(sdb.prepare('SELECT status FROM subscriptions WHERE id = ?').get(subId).status === 'active', 'PayPal ACTIVE activates the subscription');
+  // another user cannot resume someone else's subscription
+  const subJar2 = {};
+  async function subreq2(method, p, opts = {}) {
+    const h = { ...(opts.headers || {}) };
+    const cookies = Object.entries(subJar2).map(([k, v]) => `${k}=${v}`).join('; ');
+    if (cookies) h.cookie = cookies;
+    let payload = opts.body;
+    if (payload && typeof payload === 'object') {
+      payload = new URLSearchParams(payload);
+      h['content-type'] = 'application/x-www-form-urlencoded';
+    }
+    const res = await fetch(`http://localhost:${PORT}${p}`, { method, headers: h, body: payload, redirect: 'manual' });
+    for (const c of (res.headers.getSetCookie ? res.headers.getSetCookie() : [])) {
+      const [k, v] = c.split(';')[0].split('=');
+      subJar2[k.trim()] = (v || '').trim();
+    }
+    const text = await res.text();
+    return { status: res.status, text, location: res.headers.get('location') };
+  }
+  await subreq2('POST', '/signup', { body: { display_name: 'SubTester2', email: 'subtester2@test.local', password: 'password123' } });
+  r = await subreq2('GET', `/membership/resume/${subId}`);
+  ok(r.status === 302 && r.location === '/membership', 'cannot resume another user\u2019s subscription');
+  // pending subscriptions can be canceled
+  r = await subreq2('POST', '/membership/subscribe/customer');
+  const sub2Id = sdb.prepare('SELECT id FROM subscriptions WHERE user_id = (SELECT id FROM users WHERE email = ?)').get('subtester2@test.local').id;
+  r = await subreq2('POST', `/membership/cancel/${sub2Id}`);
+  ok(r.status === 302 && sdb.prepare('SELECT status FROM subscriptions WHERE id = ?').get(sub2Id).status === 'canceled', 'pending subscription can be canceled');
 
   // removed designer color-approval routes are gone
   r = await req('POST', '/signup', { body: { display_name: 'ColorDesigner', email: 'colordesigner@test.local', password: 'password123' }, follow: false });

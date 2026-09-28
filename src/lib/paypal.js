@@ -15,6 +15,11 @@ function assertConfigured() {
   if (!config.paypalConfigured()) throw new PayPalNotConfigured('missing client ID/secret');
 }
 
+// Test-only stub state (see createSubscription). Subscription IDs ending in
+// '-ACTIVE' read back as ACTIVE so tests can drive both branches of /approve
+// through the real HTTP routes without cross-process patching.
+let testStubSeq = 0;
+
 function assertPlansConfigured() {
   if (!config.paypalPlansConfigured()) {
     throw new PayPalNotConfigured('missing subscription plan IDs — create the 3 plans in the PayPal dashboard and set PAYPAL_PLAN_CUSTOMER/_ARTIST/_SHOP');
@@ -79,6 +84,13 @@ async function captureCheckoutOrder(paypalOrderId) {
 // subscription (e.g. a $1 trial month or a founding-shop first year at
 // $79.99). Use the builders below so the shapes stay valid.
 async function createSubscription({ planKey, returnUrl, cancelUrl, billingCycles = null }) {
+  // Test-only stub (never active in production): the automated suite runs the
+  // server in a separate process, so it cannot monkey-patch this module.
+  // Set TAC_TEST_PAYPAL_STUB=1 in the test runner env to get canned answers.
+  if (process.env.TAC_TEST_PAYPAL_STUB === '1') {
+    testStubSeq += 1;
+    return { id: `I-STUB-${testStubSeq}`, links: [{ rel: 'approve', href: 'https://paypal.test/approve/stub' }] };
+  }
   assertConfigured();
   assertPlansConfigured();
   const planId = config.paypal.planIds[planKey];
@@ -141,11 +153,20 @@ async function activateSubscription(paypalSubscriptionId, reason = 'Referral fre
 }
 
 async function getSubscription(paypalSubscriptionId) {
+  if (process.env.TAC_TEST_PAYPAL_STUB === '1') {
+    const active = String(paypalSubscriptionId || '').endsWith('-ACTIVE');
+    return {
+      id: paypalSubscriptionId,
+      status: active ? 'ACTIVE' : 'APPROVAL_PENDING',
+      links: [{ rel: 'approve', href: 'https://paypal.test/approve/stub' }],
+    };
+  }
   assertConfigured();
   return api(`/v1/billing/subscriptions/${paypalSubscriptionId}`);
 }
 
 async function cancelSubscription(paypalSubscriptionId, reason = 'Canceled by member') {
+  if (process.env.TAC_TEST_PAYPAL_STUB === '1') return { ok: true };
   assertConfigured();
   return api(`/v1/billing/subscriptions/${paypalSubscriptionId}/cancel`, 'POST', { reason });
 }
