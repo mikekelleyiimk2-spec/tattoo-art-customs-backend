@@ -585,6 +585,13 @@ async function main() {
   r = await dreq('GET', '/artist/portfolio');
   ok(r.status === 200 && !r.text.includes('approve-color'), 'portfolio shows no designer color-approval controls');
 
+  // App cashout page: cashout-only, no payout-setup forms (website-only rule).
+  r = await dreq('GET', '/wallet/app');
+  ok(r.status === 200 && r.text.includes('Cashout'), 'app cashout page loads for artists');
+  ok(!r.text.includes('payout-destination/add') && !r.text.includes('Add a payout destination'),
+    'app cashout page has no payout-destination setup forms');
+  ok(r.text.toLowerCase().includes('website'), 'app cashout page notes payout setup is website-only');
+
   // messaging with contact info gets flagged
   const buyerId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('buyer@test.local').id;
   const adminId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('admin@test.local').id;

@@ -16,6 +16,29 @@ router.get('/wallet', requireLogin, (req, res) => {
   res.redirect('/account#credit');
 });
 
+// App cashout page (owner rule 2026-09-28): the app's Wallet tab loads this
+// for artists/shops. It offers cashout to already-configured destinations
+// only — payout-destination setup/verification is website-only, so this page
+// carries no setup forms or links to them, just the notice below.
+router.get('/wallet/app', requireLogin, async (req, res) => {
+  const { payoutDashboardData } = require('../lib/payoutRoutes');
+  if (req.user.role === 'design_artist') {
+    const payout = await payoutDashboardData(req.user.id, 'artist');
+    return res.render('wallet/cashout', {
+      title: 'Cashout — Tattoo Art Customs', metaDescription: '',
+      payoutBase: '/artist', ...payout,
+    });
+  }
+  if (req.user.role === 'tattoo_shop') {
+    const payout = await payoutDashboardData(req.user.id, 'shop');
+    return res.render('wallet/cashout', {
+      title: 'Cashout — Tattoo Art Customs', metaDescription: '',
+      payoutBase: '/shop', ...payout,
+    });
+  }
+  res.redirect('/account#credit');
+});
+
 // ads.txt — required by Google AdSense so ad revenue is credited to us.
 // Serves automatically once ADSENSE_PUBLISHER_ID is set.
 router.get('/ads.txt', (req, res) => {
