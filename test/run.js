@@ -1168,6 +1168,17 @@ async function main() {
   r = await artreq('GET', '/artist');
   ok(r.text.includes('My portfolio') && r.text.includes('Upload new piece'), 'dashboard links portfolio prominently');
 
+  // Message initiation UI: the public artist page exposes a message button
+  // to logged-in visitors (not on your own page); the start route guards
+  // against messaging yourself.
+  const artistUserId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('banner@test.local').id;
+  r = await req('GET', `/artists/${artistUserId}`);
+  ok(r.status === 200 && r.text.includes('/messages/start') && r.text.includes('Message'), 'artist page exposes the message-artist control');
+  r = await artreq('GET', `/artists/${artistUserId}`);
+  ok(r.status === 200 && !r.text.includes('/messages/start'), 'no message control on your own artist page');
+  r = await artreq('POST', '/messages/start', { body: { to_user_id: artistUserId, subject: 'hello' }, follow: false });
+  ok(r.status === 302 && r.location === '/messages', 'cannot start a conversation with yourself');
+
   // Unsubscribed design_artist cannot reach the portfolio.
   const unsubJar = {};
   async function unsubreq(method, p, opts = {}) {

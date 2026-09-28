@@ -6,6 +6,14 @@
   </div>
   <div>
     <p class="muted">Custom portfolio pieces sell at the custom-design price and are delivered instantly after payment. Pre-designs are also listed on the main gallery.</p>
+    <% if (currentUser && currentUser.id !== artist.id) { %>
+    <form method="post" action="/messages/start" style="display:inline">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <input type="hidden" name="to_user_id" value="<%= artist.id %>">
+      <input type="hidden" name="subject" value="Question for <%= artist.display_name || 'Artist' %>">
+      <button class="btn" type="submit">Message <%= artist.display_name || 'artist' %></button>
+    </form>
+    <% } %>
   </div>
 </div>
 <% if (!pieces.length) { %>

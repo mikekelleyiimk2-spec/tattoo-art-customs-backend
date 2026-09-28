@@ -7,7 +7,15 @@
     <h1><%= design.title %></h1>
     <% design.categories.forEach(function(c) { %><span class="tag"><%= c %></span><% }); %>
     <p><%= design.description %></p>
-    <% if (artist) { %><p class="muted">By <%= artist.display_name %></p><% } %>
+    <% if (artist) { %><p class="muted">By <a href="/artists/<%= design.artist_id %>"><%= artist.display_name %></a>
+      <% if (currentUser && currentUser.id !== design.artist_id) { %>
+      <form method="post" action="/messages/start" style="display:inline">
+        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <input type="hidden" name="to_user_id" value="<%= design.artist_id %>">
+        <input type="hidden" name="subject" value="Question about &quot;<%= design.title %>&quot;">
+        <button class="linklike" type="submit">Message the artist</button>
+      </form>
+      <% } %></p><% } %>
     <p><strong><%= money(priceTotal) %></strong> <span class="muted">(includes <%= money(priceFee) %> processing fee)</span> <% if (sale) { %><span class="badge ok">Saturday sale price</span><% } %> <% if (typeof isCustom !== 'undefined' && isCustom) { %><span class="badge">custom portfolio piece — delivered instantly</span><% } %></p>
     <% if (currentUser) { %>
     <form method="post" action="/orders/buy/<%= design.id %>">
