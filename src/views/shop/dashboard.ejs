@@ -16,6 +16,26 @@
   <% } else { %><p class="muted">Referral link will appear once your shop profile is created.</p><% } %>
 </section>
 
+<section class="card">
+  <h2>Free designer membership</h2>
+  <% if (designerOptIn) { %>
+  <p><span class="badge ok">Active</span> <span class="muted">— free with your shop subscription</span></p>
+  <p class="muted">Upload your own designs through the <a href="/artist/portfolio">artist portfolio</a> and earn designer commissions on them (60% premade with a referring shop, 70% without, 70% custom, 55% linework-only). Your public designer portfolio is live on the site. Note: referring your <em>own</em> designs earns no referral commission — those sales are booked as if there were no referring shop.</p>
+  <form method="post" action="/shop/designer-opt-in" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <input type="hidden" name="enable" value="0">
+    <p><button class="btn" type="submit">Turn off designer membership</button></p>
+  </form>
+  <% } else { %>
+  <p class="muted">Your shop subscription includes designer membership at <strong>no extra cost</strong>: upload your own designs, earn designer commissions on every sale, and get a public designer portfolio. It stays active as long as your shop subscription is active.</p>
+  <form method="post" action="/shop/designer-opt-in" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <input type="hidden" name="enable" value="1">
+    <p><button class="btn" type="submit">Turn on free designer membership</button></p>
+  </form>
+  <% } %>
+</section>
+
 <div class="two-col">
   <section class="card">
     <h2>Balance</h2>

@@ -45,14 +45,20 @@ router.get('/', async (req, res) => {
 
 // Manual designer restriction (admin action only — nothing automatic sets this).
 router.post('/designers/:id/restrict', formLimiter, checkHoneypot, async (req, res) => {
-  const user = await db.get("SELECT id FROM users WHERE id = ? AND role = 'design_artist'", [req.params.id]);
+  const user = await db.get(
+    `SELECT u.id FROM users u LEFT JOIN shop_profiles sp ON sp.user_id = u.id
+     WHERE u.id = ? AND (u.role = 'design_artist' OR (u.role = 'tattoo_shop' AND sp.designer_opt_in = 1))`,
+    [req.params.id]);
   if (user) await db.update('users', user.id, { sla_suspended: 1 });
   req.session.flash = 'Designer marked as manually restricted (marker for your review — orders still route normally).';
   res.redirect('/admin');
 });
 
 router.post('/designers/:id/unsuspend', formLimiter, checkHoneypot, async (req, res) => {
-  const user = await db.get("SELECT id FROM users WHERE id = ? AND role = 'design_artist'", [req.params.id]);
+  const user = await db.get(
+    `SELECT u.id FROM users u LEFT JOIN shop_profiles sp ON sp.user_id = u.id
+     WHERE u.id = ? AND (u.role = 'design_artist' OR (u.role = 'tattoo_shop' AND sp.designer_opt_in = 1))`,
+    [req.params.id]);
   if (user) await db.update('users', user.id, { sla_suspended: 0 });
   req.session.flash = 'Manual restriction lifted.';
   res.redirect('/admin');
@@ -61,7 +67,10 @@ router.post('/designers/:id/unsuspend', formLimiter, checkHoneypot, async (req, 
 // Forgive / reset a designer's missed-deadline count: misses at or before now
 // stop counting toward the trailing-30-day repeat-offender window.
 router.post('/designers/:id/forgive', formLimiter, checkHoneypot, async (req, res) => {
-  const user = await db.get("SELECT id FROM users WHERE id = ? AND role = 'design_artist'", [req.params.id]);
+  const user = await db.get(
+    `SELECT u.id FROM users u LEFT JOIN shop_profiles sp ON sp.user_id = u.id
+     WHERE u.id = ? AND (u.role = 'design_artist' OR (u.role = 'tattoo_shop' AND sp.designer_opt_in = 1))`,
+    [req.params.id]);
   if (user) await db.update('users', user.id, { sla_forgiven_at: Date.now() });
   req.session.flash = 'Missed-deadline count reset — late penalties return to normal rates.';
   res.redirect('/admin');
@@ -69,7 +78,10 @@ router.post('/designers/:id/forgive', formLimiter, checkHoneypot, async (req, re
 
 // Lift a Tier-2 commission suspension early (admin action only).
 router.post('/designers/:id/lift-suspension', formLimiter, checkHoneypot, async (req, res) => {
-  const user = await db.get("SELECT id FROM users WHERE id = ? AND role = 'design_artist'", [req.params.id]);
+  const user = await db.get(
+    `SELECT u.id FROM users u LEFT JOIN shop_profiles sp ON sp.user_id = u.id
+     WHERE u.id = ? AND (u.role = 'design_artist' OR (u.role = 'tattoo_shop' AND sp.designer_opt_in = 1))`,
+    [req.params.id]);
   if (user) await db.update('users', user.id, { commission_suspended_until: null });
   req.session.flash = 'Commission suspension lifted early — the designer earns commissions on new sales again.';
   res.redirect('/admin');

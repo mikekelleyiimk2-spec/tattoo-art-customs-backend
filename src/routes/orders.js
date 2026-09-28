@@ -97,11 +97,14 @@ router.get('/custom', requireLogin, async (req, res) => {
   const deposit = pricing.customDepositCents(new Date(), member);
   // Tier-2 commission-suspended designers are hidden from the request-artist
   // dropdown (their listings stay up; only new commissions pause).
+  // Shops opted into the free designer membership are listed as designers.
   const nowMs = Date.now();
   const artists = await db.all(
-    `SELECT id, display_name FROM users WHERE role = 'design_artist'
-     AND (commission_suspended_until IS NULL OR commission_suspended_until <= ?)
-     ORDER BY display_name`, [nowMs]);
+    `SELECT u.id, u.display_name FROM users u
+     LEFT JOIN shop_profiles sp ON sp.user_id = u.id
+     WHERE (u.role = 'design_artist' OR (u.role = 'tattoo_shop' AND sp.designer_opt_in = 1))
+     AND (u.commission_suspended_until IS NULL OR u.commission_suspended_until <= ?)
+     ORDER BY u.display_name`, [nowMs]);
   res.render('orders/custom', {
     title: 'Request a Custom Design — Tattoo Art Customs',
     deposit, full, sale: await salePriceActive(req.user), artists,
@@ -126,8 +129,10 @@ router.post('/custom', requireLogin, formLimiter, checkHoneypot, async (req, res
   const wantArtist = String(req.body.requested_artist_id || '').trim();
   if (wantArtist) {
     const a = await db.get(
-      `SELECT id FROM users WHERE id = ? AND role = 'design_artist'
-       AND (commission_suspended_until IS NULL OR commission_suspended_until <= ?)`,
+      `SELECT u.id FROM users u
+       LEFT JOIN shop_profiles sp ON sp.user_id = u.id
+       WHERE u.id = ? AND (u.role = 'design_artist' OR (u.role = 'tattoo_shop' AND sp.designer_opt_in = 1))
+       AND (u.commission_suspended_until IS NULL OR u.commission_suspended_until <= ?)`,
       [wantArtist, Date.now()]);
     if (a) requestedArtistId = a.id;
   }

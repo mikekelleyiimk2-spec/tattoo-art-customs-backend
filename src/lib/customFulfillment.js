@@ -34,8 +34,9 @@ async function routeCustomOrder(order) {
     // to the draft pipeline.
     const { commissionSuspended } = require('./commissions');
     let artist = await db.get(
-      `SELECT id, email, display_name FROM users
-       WHERE id = ? AND role = 'design_artist'`,
+      `SELECT u.id, u.email, u.display_name FROM users u
+       LEFT JOIN shop_profiles sp ON sp.user_id = u.id
+       WHERE u.id = ? AND (u.role = 'design_artist' OR (u.role = 'tattoo_shop' AND sp.designer_opt_in = 1))`,
       [order.requested_artist_id]);
     if (artist && await commissionSuspended(artist.id, Date.now())) artist = null;
     if (artist) {

@@ -1286,6 +1286,83 @@ async function main() {
   ok(artistStillOwed.status === artistBefore.status && !artistStillOwed.cleared_at,
     'artist commissions untouched by the sweep — stay on their own payout schedule');
 
+  // ===== Shop free designer opt-in =====
+  console.log('shop-designer-optin:');
+  const { shopDesignerActive, designerAccess } = require('../src/lib/shopDesigner');
+  const shopDesId = await db.insert('users', {
+    email: 'shopdesigner@test.local', password_hash: await bcrypt.hash('ShopPass123!', 10),
+    role: 'tattoo_shop', display_name: 'Shop Designer',
+  });
+  const shopPlanId = (await db.get(`SELECT id FROM plans WHERE slug = 'tattoo_shop'`)).id;
+  const shopDesSubId = await db.insert('subscriptions', {
+    user_id: shopDesId, plan_id: shopPlanId, status: 'active',
+    paypal_subscription_id: 'sub-shopdesigner-test', created_at: Date.now(),
+  });
+  ok(!(await designerAccess(shopDesId)), 'shop has no designer access before opt-in');
+  const shopJar = {};
+  async function shopreq(method, p, opts = {}) {
+    const h = { ...(opts.headers || {}) };
+    const cookies = Object.entries(shopJar).map(([k, v]) => `${k}=${v}`).join('; ');
+    if (cookies) h.cookie = cookies;
+    let payload = opts.body;
+    if (payload && typeof payload === 'object') { payload = new URLSearchParams(payload); h['content-type'] = 'application/x-www-form-urlencoded'; }
+    const res = await fetch(`http://localhost:${PORT}${p}`, { method, headers: h, body: payload, redirect: 'manual' });
+    for (const c of (res.headers.getSetCookie ? res.headers.getSetCookie() : [])) {
+      const [k, v] = c.split(';')[0].split('=');
+      shopJar[k.trim()] = (v || '').trim();
+    }
+    return { status: res.status, text: await res.text(), location: res.headers.get('location') };
+  }
+  let sr = await shopreq('POST', '/login', { body: { email: 'shopdesigner@test.local', password: 'ShopPass123!' } });
+  ok(sr.status === 302, 'shop login ok');
+  sr = await shopreq('GET', '/artist/portfolio', {});
+  ok(sr.status === 302 && (sr.location || '').includes('/membership'), 'shop blocked from artist area before opt-in');
+  sr = await req('GET', `/artists/${shopDesId}`);
+  ok(sr.status === 404, 'public artist page 404s for non-opted-in shop');
+  sr = await shopreq('POST', '/shop/designer-opt-in', { body: { enable: '1', website: '' } });
+  ok(sr.status === 302 && (sr.location || '').includes('/shop'), 'opt-in posts back to shop dashboard');
+  ok(await shopDesignerActive(shopDesId) && await designerAccess(shopDesId), 'opt-in is live with an active shop subscription');
+  sr = await shopreq('GET', '/artist/portfolio', {});
+  ok(sr.status === 200, 'opted-in shop can open the artist portfolio');
+  sr = await shopreq('GET', '/shop', {});
+  ok(sr.status === 200 && sr.text.includes('Free designer membership') && sr.text.includes('badge ok'), 'shop dashboard shows the active opt-in');
+  sr = await req('GET', `/artists/${shopDesId}`);
+  ok(sr.status === 200, 'public artist page live for opted-in shop');
+  // The opted-in shop earns designer commissions on its active shop
+  // subscription — no artist plan needed — and the self-referral guard
+  // still holds: referring its OWN design is booked exactly like no
+  // referral (no 20% shop cut).
+  await upsertProfile('shop_profiles', shopDesId, { payout_paypal_email: 'shop@pay.test' });
+  ok(await comm.recipientEligible(shopDesId, 'design_artist'), 'opted-in shop is eligible for designer payouts');
+  const shopDesDesignId = 'testdesignshop1';
+  sdb.prepare(`INSERT INTO designs (id, artist_id, title, description, price_cents, status, listing_type, listing_scope, color_path, linework_path, linework_wm_path, categories, sale_count, created_at)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(shopDesDesignId, shopDesId, 'Shop Flash', 'desc', 7500, 'approved', 'predesign', 'gallery',
+    'designs/color/w.jpg', 'designs/linework/w.jpg', 'designs/linework-wm/w-wm.jpg', '[]', 0, Date.now());
+  const selfRefOrderId = await db.insert('orders', {
+    buyer_id: bannerBuyerId, order_type: 'premade', design_id: shopDesDesignId,
+    amount_cents: 7500, amount_paid_cents: 7500, status: 'paid',
+    referred_shop_id: shopDesId, paid_at: Date.now(),
+  });
+  await comm.recordSaleCommissions(await db.get('SELECT * FROM orders WHERE id = ?', [selfRefOrderId]));
+  const selfRows = sdb.prepare('SELECT recipient_type, amount_cents, status FROM commission_ledger WHERE order_id = ?').all(selfRefOrderId);
+  const selfByType = {};
+  for (const rrow of selfRows) selfByType[rrow.recipient_type] = (selfByType[rrow.recipient_type] || 0) + rrow.amount_cents;
+  ok(selfByType.artist === 5250, 'self-referral: shop earns the 70% designer share on its own design');
+  ok(!selfByType.shop, 'self-referral: NO 20% shop referral cut on its own design');
+  ok(selfRows.some((rrow) => rrow.recipient_type === 'artist' && rrow.status === 'payable'), 'designer share is payable to the opted-in shop');
+  sr = await req('GET', '/orders/custom');
+  ok(sr.status === 200 && sr.text.includes('Shop Designer'), 'opted-in shop appears in the request-artist dropdown');
+  // Opt-out returns the shop to shop-only access.
+  sr = await shopreq('POST', '/shop/designer-opt-in', { body: { enable: '0', website: '' } });
+  ok(!(await designerAccess(shopDesId)), 'designer access ends when the shop opts out');
+  sr = await shopreq('GET', '/artist/portfolio', {});
+  ok(sr.status === 302 && (sr.location || '').includes('/membership'), 'opted-out shop blocked from artist area again');
+  // Lapsed shop subscription also suspends the designer side.
+  await shopreq('POST', '/shop/designer-opt-in', { body: { enable: '1', website: '' } });
+  await db.update('subscriptions', shopDesSubId, { status: 'cancelled' });
+  ok(!(await shopDesignerActive(shopDesId)) && !(await designerAccess(shopDesId)), 'designer opt-in dies with the shop subscription');
+  ok(!(await comm.recipientEligible(shopDesId, 'design_artist')), 'no designer payout eligibility without an active shop subscription');
+
   sdb.close();
   server.kill();
   await new Promise((res2) => server.on('exit', res2));

@@ -94,10 +94,13 @@ router.get('/sitemap.xml', async (req, res) => {
     for (const d of designs) {
       urls.push({ loc: `${base}/design/${d.id}`, changefreq: 'weekly', priority: '0.8' });
     }
-    // Public artist portfolios (include portfolio-only custom pieces).
+    // Public artist portfolios (include portfolio-only custom pieces;
+    // opted-in shops are designers too).
     const artists = await db.all(
       `SELECT DISTINCT u.id FROM users u JOIN designs d ON d.artist_id = u.id
-       WHERE u.role = 'design_artist' AND d.status = 'approved' LIMIT 5000`);
+       LEFT JOIN shop_profiles sp ON sp.user_id = u.id
+       WHERE (u.role = 'design_artist' OR (u.role = 'tattoo_shop' AND sp.designer_opt_in = 1))
+       AND d.status = 'approved' LIMIT 5000`);
     for (const a of artists) {
       urls.push({ loc: `${base}/artists/${a.id}`, changefreq: 'weekly', priority: '0.7' });
     }
@@ -208,10 +211,14 @@ router.get('/design/:id', async (req, res) => {
 });
 
 // Public artist portfolio: bio + pieces (watermarked linework only).
-// No login required.
+// No login required. Includes tattoo shops opted into the free designer
+// membership — they are designers on the site too.
 router.get('/artists/:id', async (req, res) => {
   const artist = await db.get(
-    "SELECT id, display_name, is_founding_artist FROM users WHERE id = ? AND role = 'design_artist'", [req.params.id]);
+    `SELECT u.id, u.display_name, u.is_founding_artist FROM users u
+     LEFT JOIN shop_profiles sp ON sp.user_id = u.id
+     WHERE u.id = ? AND (u.role = 'design_artist' OR (u.role = 'tattoo_shop' AND sp.designer_opt_in = 1))`,
+    [req.params.id]);
   if (!artist) return res.status(404).render('error', { title: 'Not found', message: 'That artist portfolio does not exist.' });
   const profile = await db.get('SELECT bio FROM artist_profiles WHERE user_id = ?', [artist.id]);
   const member = await isActiveMember(req.user);

@@ -8,6 +8,7 @@ const db = require('../db');
 const config = require('../config');
 const { requireLogin } = require('../middleware/auth');
 const { hasActiveSubscription } = require('../middleware/auth');
+const { designerAccess } = require('../lib/shopDesigner');
 const { DESIGN_STYLES, portfolioUploadMulter, handlePortfolioUpload } = require('../lib/portfolioUpload');
 const pricing = require('../lib/pricing');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
@@ -186,7 +187,7 @@ router.get('/upload', requireLogin, async (req, res) => {
   // Subscribed design artists get the portfolio upload form here too, so the
   // app's Upload tab (a WebView to this page) offers listing-type and
   // watermark choices with no app change.
-  if (await hasActiveSubscription(req.user.id, 'design_artist')) {
+  if (await designerAccess(req.user.id)) {
     return res.render('artist/portfolio-upload', {
       title: 'Upload a new piece — Tattoo Art Customs',
       styles: DESIGN_STYLES, action: '/account/upload',
@@ -202,14 +203,14 @@ router.get('/upload', requireLogin, async (req, res) => {
 router.post('/upload', requireLogin, formLimiter, (req, res, next) => {
   // Subscribed design artists upload through the portfolio pipeline
   // (listing-type + watermark choices), everyone else uses the free path.
-  hasActiveSubscription(req.user.id, 'design_artist').then((isArtist) => {
+  designerAccess(req.user.id).then((isArtist) => {
     (isArtist ? portfolioUploadMulter : uploadDesign)(req, res, (err) => {
       if (err) { req.session.flash = err.message; return res.redirect('/account/upload'); }
       next();
     });
   }).catch(next);
 }, checkHoneypot, async (req, res) => {
-  if (await hasActiveSubscription(req.user.id, 'design_artist')) {
+  if (await designerAccess(req.user.id)) {
     return handlePortfolioUpload(req, res, '/account/upload');
   }
   const files = req.files || {};

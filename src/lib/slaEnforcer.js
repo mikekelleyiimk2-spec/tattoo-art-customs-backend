@@ -417,11 +417,12 @@ async function offenderWatch({ now = Date.now() } = {}) {
     `SELECT u.id, u.email, u.display_name, COALESCE(u.sla_suspended, 0) AS manual_restricted,
             u.commission_suspended_until AS susp_until,
             GROUP_CONCAT(o.deadline_missed_at) AS miss_times
-     FROM users u LEFT JOIN orders o ON o.requested_artist_id = u.id
+     FROM users u LEFT JOIN shop_profiles sp ON sp.user_id = u.id
+       LEFT JOIN orders o ON o.requested_artist_id = u.id
        AND o.deadline_missed = 1
        AND o.deadline_missed_at >= ?
        AND o.deadline_missed_at > COALESCE(u.sla_forgiven_at, 0)
-     WHERE u.role = 'design_artist'
+     WHERE (u.role = 'design_artist' OR (u.role = 'tattoo_shop' AND sp.designer_opt_in = 1))
      GROUP BY u.id`,
     [now - REPEAT_WINDOW_MS]);
   const watch = [];

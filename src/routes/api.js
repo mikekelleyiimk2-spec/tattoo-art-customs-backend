@@ -103,7 +103,10 @@ router.get('/artists/:id', async (req, res) => {
   const user = await userFromToken(req);
   const member = await isActiveMember(user);
   const artist = await db.get(
-    "SELECT id, display_name, is_founding_artist FROM users WHERE id = ? AND role = 'design_artist'", [req.params.id]);
+    `SELECT u.id, u.display_name, u.is_founding_artist FROM users u
+     LEFT JOIN shop_profiles sp ON sp.user_id = u.id
+     WHERE u.id = ? AND (u.role = 'design_artist' OR (u.role = 'tattoo_shop' AND sp.designer_opt_in = 1))`,
+    [req.params.id]);
   if (!artist) return res.status(404).json({ ok: false, error: 'not found' });
   const profile = await db.get('SELECT bio FROM artist_profiles WHERE user_id = ?', [artist.id]);
   const rows = await db.all(

@@ -1,4 +1,5 @@
-// Design artist area (requires active design_artist subscription).
+// Design artist area (requires designer access: an active design_artist
+// subscription, or a tattoo shop with the free designer opt-in enabled).
 // Uploads, bio editor (screened), commission dashboard (splits visible
 // here ONLY — never to customers), payout email setup.
 const express = require('express');
@@ -6,7 +7,8 @@ const path = require('path');
 const fs = require('fs');
 const db = require('../db');
 const config = require('../config');
-const { requireLogin, requireSubscription } = require('../middleware/auth');
+const { requireLogin } = require('../middleware/auth');
+const { requireDesignerAccess } = require('../lib/shopDesigner');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { screenText } = require('../lib/screening');
 const { payableBalance } = require('../lib/commissions');
@@ -21,7 +23,7 @@ const { DESIGN_STYLES, portfolioUploadMulter, handlePortfolioUpload } = require(
 // receives informational notifications — there is no approval gate here.
 
 const router = express.Router();
-router.use(requireLogin, requireSubscription('design_artist'));
+router.use(requireLogin, requireDesignerAccess());
 registerPayoutRoutes(router, 'artist');
 
 // Note 2026-09-28: designer portfolio uploads live here (subscription-gated).

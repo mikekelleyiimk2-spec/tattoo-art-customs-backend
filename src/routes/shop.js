@@ -11,6 +11,7 @@ const { screenText } = require('../lib/screening');
 const { payableBalance } = require('../lib/commissions');
 const { registerPayoutRoutes, payoutDashboardData } = require('../lib/payoutRoutes');
 const { upsertProfile } = require('../lib/profiles');
+const { shopDesignerOptedIn } = require('../lib/shopDesigner');
 
 const router = express.Router();
 router.use(requireLogin, requireSubscription('tattoo_shop'));
@@ -32,12 +33,14 @@ router.get('/', async (req, res) => {
   const payout = await payoutDashboardData(req.user.id, 'shop');
   const me = await db.get(
     'SELECT is_founding_shop, founding_shop_ends_at FROM users WHERE id = ?', [req.user.id]);
+  const designerOptIn = await shopDesignerOptedIn(req.user.id);
   res.render('shop/dashboard', {
     title: 'Shop Dashboard — Tattoo Art Customs',
     profile, balance, payouts, ledger, refLink,
     referralSales: referrals[0]?.n || 0, referralTotal: referrals[0]?.total || 0,
     isFoundingShop: !!(me && me.is_founding_shop),
     foundingEndsAt: me && me.founding_shop_ends_at,
+    designerOptIn,
     metaDescription: '',
     ...payout,
   });
@@ -74,6 +77,22 @@ router.post('/payout-email', formLimiter, checkHoneypot, async (req, res) => {
   }
   await upsertProfile('shop_profiles', req.user.id, { payout_paypal_email: email });
   req.session.flash = 'Payout email saved.';
+  res.redirect('/shop');
+});
+
+// Free designer membership opt-in. Free only while the shop subscription is
+// active — access and commission eligibility are checked live, so lapsing
+// the subscription automatically suspends the designer side.
+router.post('/designer-opt-in', formLimiter, checkHoneypot, async (req, res) => {
+  const enable = req.body.enable === '1';
+  await upsertProfile('shop_profiles', req.user.id, { designer_opt_in: enable ? 1 : 0 });
+  if (enable) {
+    // Make sure the designer-side pages (portfolio, bio) have a profile row.
+    await upsertProfile('artist_profiles', req.user.id, {});
+    req.session.flash = 'Designer membership enabled — free with your shop subscription. Upload from the artist portfolio.';
+  } else {
+    req.session.flash = 'Designer membership turned off. Your shop subscription and referral commissions are unchanged.';
+  }
   res.redirect('/shop');
 });
 

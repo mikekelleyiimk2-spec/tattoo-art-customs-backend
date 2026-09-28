@@ -32,6 +32,7 @@
 const db = require('../db');
 const config = require('../config');
 const founding = require('./founding');
+const { shopDesignerActive } = require('./shopDesigner');
 
 // Site owner lookup (for payable-balance redirects).
 async function ownerUserId() {
@@ -104,10 +105,23 @@ async function recipientEligible(userId, role) {
   const sub = await db.get(
     `SELECT s.id FROM subscriptions s JOIN plans p ON p.id = s.plan_id
      WHERE s.user_id = ? AND p.slug = ? AND s.status = 'active'`, [userId, planSlug]);
-  if (!sub) return false;
+  if (!sub) {
+    // Shops opted into the free designer membership earn designer
+    // commissions on their active shop subscription — no artist plan needed.
+    // (The self-referral guard below still applies: a shop can never earn
+    // a referral commission on its own design.)
+    if (role === 'design_artist' && await shopDesignerActive(userId)) {
+      // fall through to the payout-destination check
+    } else return false;
+  }
   const profileTable = role === 'design_artist' ? 'artist_profiles' : 'shop_profiles';
-  const profile = await db.get(`SELECT payout_paypal_email FROM ${profileTable} WHERE user_id = ?`, [userId]);
-  if (profile && profile.payout_paypal_email) return true;
+  const tables = profileTable === 'artist_profiles'
+    ? ['artist_profiles', 'shop_profiles'] // opted-in shops keep payouts on their shop profile
+    : ['shop_profiles'];
+  for (const t of tables) {
+    const profile = await db.get(`SELECT payout_paypal_email FROM ${t} WHERE user_id = ?`, [userId]);
+    if (profile && profile.payout_paypal_email) return true;
+  }
   // Any configured payout destination qualifies (PayPal, bank, Cash App,
   // Venmo, Zelle, Chime, Varo, Wise, other) — not just a PayPal email.
   const dest = await db.get('SELECT id FROM payout_destinations WHERE user_id = ? LIMIT 1', [userId]);
