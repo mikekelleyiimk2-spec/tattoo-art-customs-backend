@@ -138,6 +138,9 @@ async function main() {
   // Lifetime designer sub (NULL period end) + active shop sub.
   await db.insert('subscriptions', { user_id: dualId, plan_id: planA.id, status: 'active', current_period_end: null });
   await db.insert('subscriptions', { user_id: dualId, plan_id: planS.id, status: 'active', current_period_end: Date.now() + 86400000 });
+  // Owner rule 2026-09-28: the +2% bonus is Adolfo's account ONLY — point the
+  // override at the test user so the bonus path is exercised below.
+  process.env.DUAL_BONUS_USER_ID = dualId;
   ok(await dualSubBonusActive(dualId) === true, 'dual-sub bonus active with lifetime designer + active shop sub');
   const plainId = await db.insert('users', { email: 'plain@test.local', password_hash: 'x', role: 'design_artist', display_name: 'Plain' });
   await upsertTestProfile('artist_profiles', plainId, { payout_paypal_email: 'plain@x.com' });
@@ -180,6 +183,24 @@ async function main() {
   await comm.recordSaleCommissions(dualCust);
   const custAmt = await comm.recordCustomDesignerCommission(dualCust, dualId);
   ok(custAmt === 7200, 'dual-sub designer custom commission = 72% of net');
+  // Exclusivity: another account holding BOTH subscriptions gets NO bonus.
+  const otherDualId = await db.insert('users', { email: 'otherdual@test.local', password_hash: 'x', role: 'tattoo_shop', display_name: 'OtherDual' });
+  await upsertTestProfile('artist_profiles', otherDualId, { payout_paypal_email: 'other@x.com' });
+  await upsertTestProfile('shop_profiles', otherDualId, { designer_opt_in: 1 });
+  await db.insert('subscriptions', { user_id: otherDualId, plan_id: planA.id, status: 'active', current_period_end: null });
+  await db.insert('subscriptions', { user_id: otherDualId, plan_id: planS.id, status: 'active', current_period_end: Date.now() + 86400000 });
+  ok(await dualSubBonusActive(otherDualId) === false, 'no dual-sub bonus for other accounts even with both subs');
+  const otherDesignId = await db.insert('designs', { title: 'OtherDual', artist_id: otherDualId, status: 'approved' });
+  const otherOrderId = await db.insert('orders', {
+    buyer_id: plainId, order_type: 'premade', design_id: otherDesignId,
+    amount_cents: 10000, amount_paid_cents: 10000, fee_cents: 0, status: 'paid', referred_shop_id: null,
+  });
+  await comm.recordSaleCommissions(await db.get('SELECT * FROM orders WHERE id = ?', [otherOrderId]));
+  const otherRows = await db.all('SELECT recipient_type, amount_cents FROM commission_ledger WHERE order_id = ?', [otherOrderId]);
+  const otherByType = {};
+  for (const r of otherRows) otherByType[r.recipient_type] = (otherByType[r.recipient_type] || 0) + r.amount_cents;
+  ok(otherByType.artist === 7000, 'other dual-sub designer gets standard 70% (no bonus)');
+  delete process.env.DUAL_BONUS_USER_ID;
 
   console.log('sla:');
   const sla = require('../src/lib/slaEnforcer');

@@ -31,12 +31,18 @@ async function designerAccess(userId) {
   return shopDesignerActive(userId);
 }
 
-// Dual-subscription loyalty bonus: true when the user holds BOTH an active
+// Dual-subscription loyalty bonus: Adolfo's account ONLY (owner rule
+// 2026-09-28) — no other account gets the +2%, even holding both an active
 // design_artist subscription and an active tattoo_shop subscription
 // (current_period_end IS NULL counts as active — lifetime grants).
-// Commissions the user earns get +2pts, funded out of the owner's share
+// Commissions Adolfo earns get +2pts, funded out of the owner's share
 // (the site's 10% overhead is never cut); see commissions.js.
+// DUAL_BONUS_USER_ID env override exists so tests can exercise the path.
+function dualBonusUserId() {
+  return process.env.DUAL_BONUS_USER_ID || '3dcf35ac4d2762d2f2725398'; // Adolfo — adolfo3301@yahoo.com
+}
 async function dualSubBonusActive(userId) {
+  if (userId !== dualBonusUserId()) return false;
   const now = Date.now();
   const rows = await db.all(
     `SELECT p.slug AS slug FROM subscriptions s JOIN plans p ON p.id = s.plan_id
@@ -57,4 +63,4 @@ function requireDesignerAccess() {
   };
 }
 
-module.exports = { shopDesignerOptedIn, shopDesignerActive, designerAccess, requireDesignerAccess, dualSubBonusActive };
+module.exports = { shopDesignerOptedIn, shopDesignerActive, designerAccess, requireDesignerAccess, dualSubBonusActive, dualBonusUserId };
