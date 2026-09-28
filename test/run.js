@@ -114,8 +114,8 @@ async function main() {
   await comm.recordSaleCommissions({ id: 'o1', amount_paid_cents: 7500, design_id: 'd1', referred_shop_id: null });
   const byType = {};
   for (const r of rows) byType[r.recipient_type] = (byType[r.recipient_type] || 0) + r.amount_cents;
-  ok(byType.artist === 6000, 'artist gets 80% (70% + half the unassigned 20% shop share)');
-  ok(byType.site === 1500, 'site keeps 13% owner + 7% site of the unassigned shop share');
+  ok(byType.artist === 5250, 'artist gets 70% (60% + half the unassigned 20% shop share)');
+  ok(byType.site === 2250, 'site keeps 20% owner + 10% site of the unassigned shop share');
   ok(rows.reduce((s, r) => s + r.amount_cents, 0) === 7500, 'splits sum to the sale total');
   db.get = realGet; db.insert = realInsert;
 
@@ -310,7 +310,7 @@ async function main() {
   const { routeCustomOrder } = require('../src/lib/customFulfillment');
   const t2routed = await routeCustomOrder({ ...t2Ord, custom_status: 'new' });
   ok(t2routed.custom_status === 'needs_drafts', 'routing skips commission-suspended designers');
-  // premade sale: designer 80% (70% + no-shop half-share) redirected to owner payable, shop/site shares unchanged
+  // premade sale: designer 70% (60% + no-shop half-share) redirected to owner payable, shop/site shares unchanged
   const t2DesignId = await db.insert('designs', {
     artist_id: t2DesignerId, title: 'T2 Design', status: 'approved',
     price_cents: 7500, created_at: slaNow,
@@ -328,7 +328,7 @@ async function main() {
     `SELECT COALESCE(SUM(amount_cents),0) AS t FROM commission_ledger
      WHERE order_id = ? AND recipient_type = 'site' AND recipient_id = ? AND status = 'payable'`,
     [t2PreId, slaOwnerId]);
-  ok(t2owner.t === 6000, 'premade: designer 80% ($60) redirected to owner payable');
+  ok(t2owner.t === 5250, 'premade: designer 70% ($52.50) redirected to owner payable');
   // suspension lifts after 30 days when misses age out
   await db.update('users', t2DesignerId, { commission_suspended_until: slaNow - 1000 });
   for (const mid of t2MissIds) await db.update('orders', mid, { deadline_missed_at: slaNow - 61 * 86400000 });
@@ -1018,13 +1018,13 @@ async function main() {
   ok(r.status === 302, 'admin confirms portfolio order payment');
   const pLedger = sdb.prepare('SELECT recipient_type, amount_cents, status FROM commission_ledger WHERE order_id = ?').all(pOrderId);
   const pArtist = pLedger.find((l) => l.recipient_type === 'artist');
-  ok(pArtist && pArtist.amount_cents === Math.round(pOrder.amount_cents * 0.80), 'portfolio custom sale: designer gets 80% (70% + no-shop half-share)');
+  ok(pArtist && pArtist.amount_cents === Math.round(pOrder.amount_cents * 0.70), 'portfolio custom sale: designer gets 70% (60% + no-shop half-share)');
   const pSite = pLedger.filter((l) => l.recipient_type === 'site').reduce((a, l) => a + l.amount_cents, 0);
   const pShop = pLedger.filter((l) => l.recipient_type === 'shop').reduce((a, l) => a + l.amount_cents, 0);
   // Instant-fulfillment custom piece: premade path, no referring shop —
-  // designer 80%, owner 13% + site 7% (the unassigned shop share split
-  // 50/40/10), no shop share.
-  ok(pSite === Math.round(pOrder.amount_cents * 0.20) && pShop === 0, 'portfolio custom sale: site keeps 13% owner + 7% site, no shop share without referral');
+  // designer 70%, owner 20% + site 10% (the unassigned shop share split
+  // 50/50), no shop share.
+  ok(pSite === Math.round(pOrder.amount_cents * 0.30) && pShop === 0, 'portfolio custom sale: site keeps 20% owner + 10% site, no shop share without referral');
   ok(pArtist.amount_cents + pSite + pShop === pOrder.amount_cents, 'commission splits sum to the order total');
   // Instant delivery: buyer can mint a download token for the clean files.
   r = await req('POST', `/orders/${pOrderId}/download-token`, { follow: false });
@@ -1043,7 +1043,7 @@ async function main() {
   ok(sArtist && sArtist.amount_cents === 0 && sArtist.status === 'site_kept', 'suspended designer earns 0 on portfolio sales');
   const ownerId = sdb.prepare("SELECT id FROM users WHERE email = 'admin@test.local'").get().id;
   const sOwner = sLedger.find((l) => l.recipient_type === 'site' && l.recipient_id === ownerId);
-  ok(sOwner && sOwner.amount_cents === Math.round(sOrder.amount_cents * 0.80), 'suspended designer 80% redirected to owner payable');
+  ok(sOwner && sOwner.amount_cents === Math.round(sOrder.amount_cents * 0.70), 'suspended designer 70% redirected to owner payable');
   await db.update('users', bannerArtistId, { commission_suspended_until: null });
 
   // A piece with sales cannot be deleted.
@@ -1152,7 +1152,7 @@ async function main() {
   const inkLedger = sdb.prepare('SELECT recipient_type, amount_cents, commission_type FROM commission_ledger WHERE order_id = ?').all(inkOrderId);
   const inkArtist = inkLedger.find((l) => l.recipient_type === 'artist');
   const inkFee = inkLedger.find((l) => l.commission_type === 'colorization_fee');
-  ok(inkArtist && inkArtist.amount_cents === Math.round(inkOrder.amount_cents * 0.75), 'site-colored sale: designer gets 75% (65% + no-shop half-share)');
+  ok(inkArtist && inkArtist.amount_cents === Math.round(inkOrder.amount_cents * 0.65), 'site-colored sale: designer gets 65% (55% + no-shop half-share)');
   ok(inkFee && inkFee.recipient_type === 'site' && inkFee.amount_cents === Math.round(inkOrder.amount_cents * 0.05),
     'site-colored sale: 5-point website colorization fee recorded distinctly');
   ok(inkLedger.reduce((s, l) => s + l.amount_cents, 0) === inkOrder.amount_cents, 'colorization-fee splits sum to the order total');

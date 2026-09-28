@@ -1,21 +1,21 @@
 // Commission engine. Owner rules:
 //
-// - Registered third-party artist's work: 70% original designer,
-//   20% referring tattoo shop, 5% owner, 5% site. These sum to 100%.
-//   (Linework-only uploads: designer 65%, site keeps a 5% colorization
+// - Registered third-party artist's work: 60% original designer,
+//   20% referring tattoo shop, 10% owner, 10% site. These sum to 100%.
+//   (Linework-only uploads: designer 55%, site keeps a 5% colorization
 //   fee recorded distinctly.)
-// - No referring shop: the 20% shop share is split 50% designer /
-//   40% owner / 10% site (designer 80%, owner 13%, site 7%).
+// - No referring shop: the 20% shop share is split 50/50 designer /
+//   owner (designer 70%, owner 20%); the site retains its 10% overhead.
 // - Owner's art or art from unregistered artists: 80% site, 20% referring
 //   tattoo shop.
 // - Referring shops are paid ONLY on verified sales (admin verifies).
 // - Founding program (first 50 artists / first 100 shops, 6 months):
-//   founding artists earn 80% instead of 70% (the +10pts come from the
+//   founding artists earn 70% instead of 60% (the +10pts come from the
 //   owner share first, then the site share — the owner funds the boost);
 //   founding shops earn 25% instead of 20% on referred sales (the extra
 //   5pts come from the owner share; on a founding-artist sale the owner
 //   share is already exhausted, so the shop boost is capped at available
-//   funds — the designer's 80% is never cut).
+//   funds — the designer's 70% is never cut).
 // - Artists/shops are paid ONLY if registered + actively subscribed +
 //   payout method (PayPal email) configured; otherwise the site keeps all.
 // - Commission splits are shown in artist/shop dashboards ONLY —
@@ -126,7 +126,7 @@ async function recordSaleCommissions(order) {
   const artistId = design && design.artist_id ? design.artist_id : null;
   const shopId = order.referred_shop_id || null;
   // Founding-program boosts (first 50 artists / first 100 shops, 6 months):
-  // - founding artist: 80% instead of 70%; the +10pts come from the owner
+  // - founding artist: 70% instead of 60%; the +10pts come from the owner
   //   share first, then the site share (the owner funds the boost).
   // - founding shop: 25% referral share instead of 20%; the extra 5pts
   //   come out of the owner share, capped at available funds when a
@@ -140,15 +140,15 @@ async function recordSaleCommissions(order) {
   const noDesignerColor = !!design && (design.color_source === 'site' || design.color_source === 'none');
 
   if (artistId) {
-    // Third-party artist work: 70% designer / 20% referring shop /
-    // 5% owner / 5% site (stated splits sum to 100%).
-    // No referring shop: the 20% shop share splits 50% designer /
-    // 40% owner / 10% site.
+    // Third-party artist work: 60% designer / 20% referring shop /
+    // 10% owner / 10% site (stated splits sum to 100%).
+    // No referring shop: the 20% shop share splits 50/50 designer /
+    // owner (designer 70%, owner 20%); the site retains its 10% overhead.
     const total = order.amount_paid_cents;
-    const designerRate = (noDesignerColor ? 0.65 : 0.70) + (foundingBoost ? 0.10 : 0);
+    const designerRate = (noDesignerColor ? 0.55 : 0.60) + (foundingBoost ? 0.10 : 0);
     const colorFeeRate = noDesignerColor ? 0.05 : 0;
-    let ownerRate = foundingBoost ? 0 : 0.05;
-    let siteRate = foundingBoost ? 0 : 0.05;
+    let ownerRate = foundingBoost ? 0 : 0.10;
+    let siteRate = foundingBoost ? 0 : 0.10;
     let shopRate = 0.20;
     if (shopBoost) {
       const extra = Math.min(0.05, ownerRate);
@@ -164,8 +164,8 @@ async function recordSaleCommissions(order) {
     const shopBase = Math.round(total * shopRate);
     if (!shopId) {
       designerAmt += Math.round(total * 0.10); // 50% of the 20% shop share
-      ownerAmt += Math.round(total * 0.08);   // 40% of the 20% shop share
-      siteAmt += Math.round(total * 0.02);    // 10% of the 20% shop share
+      ownerAmt += Math.round(total * 0.10);    // 50% of the 20% shop share
+      // site retains its 10% overhead
     }
     // Rounding plug so the ledger always sums exactly to the sale total.
     const residual = total - designerAmt - ownerAmt - siteAmt - feeAmt - shopBase;
@@ -288,7 +288,7 @@ async function recordCustomDesignerCommission(order, artistId) {
     return 0;
   }
   // Founding artists earn 80% on customs for 6 months (the boost is carved
-  // out of the site's share like the standard 70%).
+  // out of the site's share).
   const rate = await founding.foundingArtistActive(artistId, db.now()) ? 0.80 : 0.70;
   const designerAmt = Math.round((order.amount_paid_cents || 0) * rate);
   if (designerAmt <= 0) return 0;

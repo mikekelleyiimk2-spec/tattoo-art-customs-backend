@@ -1,7 +1,7 @@
 // Founding Members launch program.
 //
 // - Founding design artists (first 50 to activate a paid artist
-//   subscription): 80% commission instead of 70% for 6 months. The owner
+//   subscription): 70% commission instead of 60% for 6 months. The owner
 //   funds the boost — the +10pts come from the owner share first, then
 //   the site share (both become 0% on those sales).
 // - Founding tattoo shops (first 100): $79.99 first year instead of $99.99,

@@ -15,7 +15,7 @@ async function seed() {
     const descriptions = {
       customer: 'Lower-cost custom commissions, pre-made designs, early access to new content. First month $1.',
       customer_annual: 'Everything in Customer Membership, billed yearly — two months free ($50/year).',
-      design_artist: 'Upload your art, write an artist bio, earn 70% commission per sale.',
+      design_artist: 'Upload your art, write an artist bio, earn 60% commission per sale.',
       tattoo_shop: 'Refer customers and earn 20% on every verified sale you refer.',
     };
     if (existing) {

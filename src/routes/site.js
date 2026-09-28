@@ -99,7 +99,7 @@ router.get('/', async (req, res) => {
     title: 'Tattoo Art Customs — Custom Tattoo Designs',
     designs, sale: await salePriceActive(req.user),
     premadePrice: premadePriceCents(new Date(), member), customPrice: customFullCents(new Date(), member),
-    metaDescription: 'Browse hundreds of original tattoo designs. Custom designs $150 with 48-hour delivery. Design artists earn 70% commission.',
+    metaDescription: 'Browse hundreds of original tattoo designs. Custom designs $150 with 48-hour delivery. Design artists earn 60% commission.',
   });
 });
 
