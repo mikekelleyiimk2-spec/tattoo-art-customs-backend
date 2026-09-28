@@ -65,11 +65,12 @@ async function verifyPurchase({ productId, purchaseToken, type }) {
 }
 
 // Play product ID -> website plan slug (memberships only).
-// Artist and shop plans are website-only (owner rule 2026-09-28) and are
-// deliberately absent here: a Play purchase can never activate a
-// commission-earning plan.
+// Payout-method setup and verification stays website-only (owner rule
+// 2026-09-28); plans themselves may be bought via Google Play.
 const MEMBERSHIP_PLAN_BY_PRODUCT = {
   tac_membership_customer: 'customer',
+  tac_membership_artist: 'design_artist',
+  tac_membership_shop: 'tattoo_shop',
 };
 
 module.exports = { verifyPurchase, serviceAccountConfigured, MEMBERSHIP_PLAN_BY_PRODUCT, PACKAGE_NAME };
