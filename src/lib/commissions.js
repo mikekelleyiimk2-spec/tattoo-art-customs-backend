@@ -130,4 +130,36 @@ async function payableBalance(recipientType, recipientId) {
   return row.total;
 }
 
-module.exports = { recipientEligible, recordSaleCommissions, verifyOrderCommissions, payableBalance };
+// Record the designer's 60% commission for a custom order routed to an artist.
+// Custom orders have no design_id, so recordSaleCommissions() books them as
+// owner art (80% site / 20% shop). When an artist takes the job, carve their
+// 60% out of the site's share. Idempotent: returns the existing row's amount
+// if a designer commission was already recorded for this order+artist.
+async function recordCustomDesignerCommission(order, artistId) {
+  if (!order || !artistId) return 0;
+  const existing = await db.get(
+    `SELECT * FROM commission_ledger WHERE order_id = ? AND recipient_type = 'artist' AND recipient_id = ?`,
+    [order.id, artistId]);
+  if (existing) return existing.amount_cents;
+  const designerAmt = Math.round((order.amount_paid_cents || 0) * 0.60);
+  if (designerAmt <= 0) return 0;
+  // Take it out of the site's share (the largest site_kept 'site' row).
+  const siteRow = await db.get(
+    `SELECT * FROM commission_ledger WHERE order_id = ? AND recipient_type = 'site'
+     AND recipient_id IS NULL AND status = 'site_kept' ORDER BY amount_cents DESC LIMIT 1`,
+    [order.id]);
+  if (siteRow) {
+    await db.update('commission_ledger', siteRow.id, {
+      amount_cents: Math.max(0, siteRow.amount_cents - designerAmt),
+    });
+  }
+  const eligible = await recipientEligible(artistId, 'design_artist');
+  await db.insert('commission_ledger', {
+    order_id: order.id, recipient_type: 'artist', recipient_id: artistId,
+    amount_cents: designerAmt, status: eligible ? 'payable' : 'site_kept',
+    created_at: db.now(),
+  });
+  return designerAmt;
+}
+
+module.exports = { recipientEligible, recordSaleCommissions, verifyOrderCommissions, payableBalance, recordCustomDesignerCommission };

@@ -95,6 +95,82 @@ async function main() {
   ok(byType.site === 3000, 'site keeps 10% + 10% residual + 20% unassigned shop share');
   ok(rows.reduce((s, r) => s + r.amount_cents, 0) === 7500, 'splits sum to the sale total');
   db.get = realGet; db.insert = realInsert;
+
+  console.log('sla:');
+  const sla = require('../src/lib/slaEnforcer');
+  const { getCreditBalance } = require('../src/lib/credits');
+  const slaBuyerId = await db.insert('users', { email: 'slabuyer@test.local', password_hash: 'x', role: 'customer', display_name: 'Buyer' });
+  const slaDesignerId = await db.insert('users', { email: 'sladesigner@test.local', password_hash: 'x', role: 'design_artist', display_name: 'Designer' });
+  const slaNow = Date.now();
+  const slaOrderId = await db.insert('orders', {
+    buyer_id: slaBuyerId, order_type: 'custom', amount_cents: 12500, deposit_cents: 6250,
+    amount_paid_cents: 12500, status: 'paid', custom_status: 'routed_to_artist',
+    requested_artist_id: slaDesignerId, custom_brief: 'SLA test custom design brief for penalty math.',
+    delivery_due: slaNow - Math.floor(2.5 * 86400000), paid_at: slaNow - 3 * 86400000,
+  });
+  const slaOrd = await db.get('SELECT * FROM orders WHERE id = ?', [slaOrderId]);
+  await comm.recordSaleCommissions(slaOrd);
+  const slaOrig = await comm.recordCustomDesignerCommission(slaOrd, slaDesignerId);
+  ok(slaOrig === 7500, 'custom designer original commission = 60% of $125 = $75.00');
+  // 2.5 days late -> days 1-2 charged
+  const slaR1 = await sla.applyPenalties({ now: slaNow });
+  ok(slaR1.penalties.length === 2, 'two late days charged at +2.5d');
+  const slaPens = await sla.penaltyLedger(slaOrderId);
+  ok(slaPens.length === 2 && slaPens[0].day_number === 1 && slaPens[1].day_number === 2, 'penalty ledger holds days 1-2');
+  ok(slaPens[0].deduction_cents === 278 && slaPens[0].owner_cents === 150 && slaPens[0].credit_cents === 128,
+    'day-1 math: 3.7% of 7500 = 278 deducted; 150 owner; 128 buyer credit');
+  const slaDrow = await db.get(
+    `SELECT * FROM commission_ledger WHERE order_id = ? AND recipient_type = 'artist' AND recipient_id = ?`,
+    [slaOrderId, slaDesignerId]);
+  ok(slaDrow.amount_cents === 7500 - 556, 'designer commission reduced by 2x278');
+  const slaOwnerId = (await db.get('SELECT id FROM users WHERE email = ?', ['admin@test.local'])).id;
+  const slaOrow = await db.get(
+    `SELECT COALESCE(SUM(amount_cents),0) AS t FROM commission_ledger
+     WHERE order_id = ? AND recipient_type = 'site' AND recipient_id = ? AND status = 'payable'`,
+    [slaOrderId, slaOwnerId]);
+  ok(slaOrow.t === 300, 'owner payable balance +300 (2 days x 150)');
+  ok((await getCreditBalance(slaBuyerId)) === 256, 'buyer late-delivery site credit +256 (2 days x 128)');
+  // idempotency
+  const slaR2 = await sla.applyPenalties({ now: slaNow });
+  ok(slaR2.penalties.length === 0 && (await sla.penaltyLedger(slaOrderId)).length === 2,
+    'rerun charges nothing — idempotent');
+  ok((await db.get('SELECT late_penalty_days AS d FROM orders WHERE id = ?', [slaOrderId])).d === 2,
+    'orders.late_penalty_days = 2');
+  // jump to 7.5 days late -> days 3-7 charged, termination fires
+  const slaR3 = await sla.applyPenalties({ now: slaOrd.delivery_due + Math.floor(7.5 * 86400000) });
+  ok(slaR3.penalties.length === 5, 'days 3-7 charged at +7.5d');
+  ok(slaR3.terminations.length === 1, 'day-7 designer termination fired');
+  const slaP7 = await sla.penaltyLedger(slaOrderId);
+  ok(slaP7.length === 7, 'seven penalty rows total');
+  ok(slaP7[4].deduction_cents === 323 && slaP7[4].owner_cents === 150 && slaP7[4].credit_cents === 173,
+    'day-5 math: 4.3% of 7500 = 323 deducted; 150 owner; 173 buyer credit');
+  const slaD7 = await db.get(
+    `SELECT amount_cents FROM commission_ledger WHERE order_id = ? AND recipient_type = 'artist' AND recipient_id = ?`,
+    [slaOrderId, slaDesignerId]);
+  ok(slaD7.amount_cents === 5419, 'designer keeps 5419 after 7 days (7500 - 2081)');
+  ok((await getCreditBalance(slaBuyerId)) === 1031, 'buyer credit total 1031 after 7 days');
+  ok((await db.get('SELECT sla_suspended AS s FROM users WHERE id = ?', [slaDesignerId])).s === 1,
+    'designer account suspended');
+  const slaO7 = await db.get('SELECT designer_contract_terminated AS t, replacement_status AS r FROM orders WHERE id = ?', [slaOrderId]);
+  ok(slaO7.t === 1 && slaO7.r === 'offered', 'order flagged terminated, replacement offered');
+  const slaConvs = await db.get(
+    `SELECT COUNT(*) AS n FROM conversations c JOIN conversation_participants p ON p.conversation_id = c.id
+     WHERE p.user_id = ? AND c.subject LIKE '%7 days overdue%'`, [slaBuyerId]);
+  ok(slaConvs.n === 1, 'purchaser notified on-site at termination');
+  // reminders: idempotent per order+key
+  const slaOrder2Id = await db.insert('orders', {
+    buyer_id: slaBuyerId, order_type: 'custom', amount_cents: 12500,
+    amount_paid_cents: 12500, status: 'paid', custom_status: 'routed_to_artist',
+    requested_artist_id: slaDesignerId, custom_brief: 'Second SLA test brief.',
+    delivery_due: slaNow + 12 * 3600 * 1000, paid_at: slaNow,
+  });
+  const slaS1 = await sla.sendDueReminders({ now: slaNow });
+  ok(slaS1.some((r) => r.order_id === slaOrder2Id && r.key === 'warn_24h'), '24h-warning reminder sent to artist');
+  const slaS2 = await sla.sendDueReminders({ now: slaNow });
+  ok(slaS2.length === 0, 'reminders idempotent — nothing re-sent');
+  const slaWl = await sla.slaWatchlist({ now: slaNow });
+  ok(slaWl.overdue.some((o) => o.id === slaOrderId), 'watchlist lists the overdue order');
+  ok(slaWl.atRisk.some((o) => o.id === slaOrder2Id), 'watchlist lists the at-risk order');
   await db.close();
 
   // --- HTTP integration ---

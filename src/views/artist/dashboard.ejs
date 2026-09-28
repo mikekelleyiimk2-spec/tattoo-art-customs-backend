@@ -1,4 +1,23 @@
 <h1>Artist dashboard</h1>
+<% if (typeof slaOrders !== 'undefined' && slaOrders.length) { %>
+<section class="card sla-banner" style="border:2px solid #b3261e;margin-bottom:16px">
+  <h2 style="color:#b3261e">Deadline alert — <%= slaOrders.length %> custom order<%= slaOrders.length === 1 ? '' : 's' %> at risk</h2>
+  <p class="muted">Late delivery costs you <strong>3.7% of your commission per day</strong> (days 1–4), then <strong>4.3%/day</strong> (days 5–7). At 7 days overdue your contract is terminated.</p>
+  <table>
+    <thead><tr><th>Order</th><th>Status</th><th>Deadline</th><th>Penalty so far</th></tr></thead>
+    <tbody>
+    <% slaOrders.forEach(function(o) { %>
+      <tr>
+        <td><%= o.id.slice(0, 8) %> — <%= o.brief %></td>
+        <td><span class="badge"><%= o.status %></span></td>
+        <td><% if (o.days_late > 0) { %><strong style="color:#b3261e"><%= o.days_late %>d overdue</strong><% } else { %><%= o.hours_left %>h left<% } %></td>
+        <td><%= money(o.penalty_cents) %></td>
+      </tr>
+    <% }); %>
+    </tbody>
+  </table>
+</section>
+<% } %>
 <p class="muted">Design artists earn <strong>60% commission</strong> on every sale of their designs. You are paid only while registered, subscribed, and with a payout destination set — otherwise proceeds stay with the site.</p>
 
 <div class="two-col">

@@ -5,6 +5,7 @@ const path = require('path');
 const db = require('../db');
 const config = require('../config');
 const { screenText } = require('./screening');
+const { recordCustomDesignerCommission } = require('./commissions');
 
 const FULFILLMENT_STATUSES = [
   'new', 'routed_to_artist', 'needs_drafts', 'drafts_ready',
@@ -28,14 +29,16 @@ async function routeCustomOrder(order) {
   if (cur !== 'new') return order; // already routed
   if (order.requested_artist_id) {
     const artist = await db.get(
-      "SELECT id, email, display_name FROM users WHERE id = ? AND role = 'design_artist'",
+      `SELECT id, email, display_name FROM users
+       WHERE id = ? AND role = 'design_artist' AND COALESCE(sla_suspended, 0) = 0`,
       [order.requested_artist_id]);
     if (artist) {
       await db.update('orders', order.id, { custom_status: 'routed_to_artist' });
+      await recordCustomDesignerCommission(order, artist.id);
       await notifyArtist(order, artist);
       return { ...order, custom_status: 'routed_to_artist' };
     }
-    // Requested artist is gone/invalid — fall through to the draft pipeline.
+    // Requested artist is gone/invalid/suspended — fall through to the draft pipeline.
   }
   await db.update('orders', order.id, { custom_status: 'needs_drafts' });
   return { ...order, custom_status: 'needs_drafts' };

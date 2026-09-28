@@ -9,3 +9,26 @@
   <div class="card"><h3>Payable commissions</h3><p><strong><%= money(stats.payableOut) %></strong></p><p><a href="/admin/payouts">Payouts</a></p></div>
   <div class="card"><h3>Admins</h3><p><a href="/admin/admins">Manage admins</a></p></div>
 </div>
+
+<% if ((typeof suspendedDesigners !== 'undefined' && suspendedDesigners.length) || (typeof terminatedOrders !== 'undefined' && terminatedOrders.length)) { %>
+<h2>SLA terminations — action needed</h2>
+<div class="grid">
+  <% (suspendedDesigners || []).forEach(function(d) { %>
+  <div class="card" style="border:2px solid #b3261e">
+    <h3><%= d.display_name || d.email %></h3>
+    <p class="muted"><%= d.email %> — contract terminated (7d overdue), suspended from custom orders pending review.</p>
+    <form method="post" action="/admin/designers/<%= d.id %>/unsuspend" style="margin:0">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button class="btn btn-secondary" type="submit">Reinstate designer</button>
+    </form>
+  </div>
+  <% }); %>
+  <% (terminatedOrders || []).forEach(function(o) { %>
+  <div class="card">
+    <h3>Order <%= o.id.slice(0, 8) %></h3>
+    <p class="muted"><%= o.buyer_email %> — replacement: <strong><%= (o.replacement_status || 'offered').replace(/_/g, ' ') %></strong></p>
+    <p><a href="/admin/custom-orders/<%= o.id %>">Open order</a></p>
+  </div>
+  <% }); %>
+</div>
+<% } %>

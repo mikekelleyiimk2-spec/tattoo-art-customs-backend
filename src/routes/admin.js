@@ -26,7 +26,25 @@ router.get('/', async (req, res) => {
     openReviews: (await db.get("SELECT COUNT(*) AS n FROM review_queue WHERE status = 'open'")).n,
     payableOut: (await db.get("SELECT COALESCE(SUM(amount_cents),0) AS t FROM commission_ledger WHERE status = 'payable'")).t,
   };
-  res.render('admin/dashboard', { title: 'Admin — Tattoo Art Customs', stats, metaDescription: '' });
+  // Designers whose contracts were terminated by the SLA enforcer (day-7
+  // overdue) — suspended from new custom orders pending admin review.
+  const suspendedDesigners = await db.all(
+    `SELECT id, email, display_name FROM users WHERE role = 'design_artist' AND sla_suspended = 1 ORDER BY display_name`);
+  const terminatedOrders = await db.all(
+    `SELECT o.id, o.replacement_status, u.email AS buyer_email
+     FROM orders o JOIN users u ON u.id = o.buyer_id
+     WHERE o.designer_contract_terminated = 1 AND o.custom_status NOT IN ('delivered')
+     ORDER BY o.delivery_due ASC`);
+  res.render('admin/dashboard', {
+    title: 'Admin — Tattoo Art Customs', stats, suspendedDesigners, terminatedOrders, metaDescription: '',
+  });
+});
+
+router.post('/designers/:id/unsuspend', formLimiter, checkHoneypot, async (req, res) => {
+  const user = await db.get("SELECT id FROM users WHERE id = ? AND role = 'design_artist'", [req.params.id]);
+  if (user) await db.update('users', user.id, { sla_suspended: 0 });
+  req.session.flash = 'Designer reinstated — they can take custom orders again.';
+  res.redirect('/admin');
 });
 
 // --- Sales log ---
@@ -136,10 +154,23 @@ router.get('/custom-orders/:id', async (req, res) => {
      LEFT JOIN users a ON a.id = o.requested_artist_id
      WHERE o.id = ? AND o.order_type = 'custom'`, [req.params.id]);
   if (!order) return res.status(404).render('error', { title: 'Not found', message: 'Custom order not found.' });
-  const artists = await db.all("SELECT id, display_name FROM users WHERE role = 'design_artist' ORDER BY display_name");
+  const artists = await db.all(
+    "SELECT id, display_name FROM users WHERE role = 'design_artist' AND COALESCE(sla_suspended, 0) = 0 ORDER BY display_name");
+  const { penaltyLedger } = require('../lib/slaEnforcer');
+  const penalties = await penaltyLedger(order.id);
+  const penaltyTotals = penalties.reduce((s, p) => ({
+    deduction: s.deduction + p.deduction_cents,
+    owner: s.owner + p.owner_cents,
+    credit: s.credit + p.credit_cents,
+  }), { deduction: 0, owner: 0, credit: 0 });
+  const designerLedger = order.requested_artist_id ? await db.all(
+    `SELECT * FROM commission_ledger WHERE order_id = ? AND recipient_type = 'artist' AND recipient_id = ?
+     ORDER BY created_at DESC`,
+    [order.id, order.requested_artist_id]) : [];
   res.render('admin/custom-order-detail', {
     title: `Custom order ${order.id.slice(0, 8)} — Admin`,
     order, artists, drafts: parseDrafts(order), now: Date.now(), metaDescription: '',
+    penalties, penaltyTotals, designerLedger,
   });
 });
 
@@ -168,18 +199,78 @@ router.post('/custom-orders/:id/reassign', formLimiter, checkHoneypot, async (re
   if (!order) return res.redirect('/admin/custom-orders');
   const artistId = String(req.body.requested_artist_id || '').trim();
   const artist = artistId
-    ? await db.get("SELECT id, email, display_name FROM users WHERE id = ? AND role = 'design_artist'", [artistId])
+    ? await db.get(
+      `SELECT id, email, display_name FROM users
+       WHERE id = ? AND role = 'design_artist' AND COALESCE(sla_suspended, 0) = 0`, [artistId])
     : null;
+  if (artistId && !artist) {
+    req.session.flash = 'That artist is suspended and cannot take custom orders right now.';
+    return res.redirect(`/admin/custom-orders/${order.id}`);
+  }
   await db.update('orders', order.id, {
     requested_artist_id: artist ? artist.id : null,
     custom_status: artist ? 'routed_to_artist' : 'needs_drafts',
   });
   if (artist) {
+    const { recordCustomDesignerCommission } = require('../lib/commissions');
+    await recordCustomDesignerCommission(order, artist.id);
     const { notifyArtist } = require('../lib/customFulfillment');
     await notifyArtist({ ...order, requested_artist_id: artist.id }, artist);
     req.session.flash = `Reassigned to ${artist.display_name || artist.email}.`;
   } else {
     req.session.flash = 'Unassigned — order returned to the draft pipeline.';
+  }
+  res.redirect(`/admin/custom-orders/${order.id}`);
+});
+
+// --- Day-7 replacement options (purchaser chooses after designer termination) ---
+router.post('/custom-orders/:id/replacement', formLimiter, checkHoneypot, async (req, res) => {
+  const order = await db.get("SELECT * FROM orders WHERE id = ? AND order_type = 'custom'", [req.params.id]);
+  if (!order) return res.redirect('/admin/custom-orders');
+  const action = String(req.body.action || '');
+  const { addCredit } = require('../lib/credits');
+  const { recordCustomDesignerCommission } = require('../lib/commissions');
+  const { notifyArtist } = require('../lib/customFulfillment');
+
+  if (action === 'new_designer') {
+    const artistId = String(req.body.requested_artist_id || '').trim();
+    const artist = await db.get(
+      `SELECT id, email, display_name FROM users
+       WHERE id = ? AND role = 'design_artist' AND COALESCE(sla_suspended, 0) = 0`, [artistId]);
+    if (!artist) {
+      req.session.flash = 'Pick an active (non-suspended) designer.';
+      return res.redirect(`/admin/custom-orders/${order.id}`);
+    }
+    await db.update('orders', order.id, {
+      requested_artist_id: artist.id, custom_status: 'routed_to_artist',
+      replacement_status: 'new_designer', designer_contract_terminated: 0,
+      late_penalty_days: 0, delivery_due: Date.now() + 48 * 3600 * 1000,
+    });
+    await recordCustomDesignerCommission(order, artist.id);
+    await notifyArtist({ ...order, requested_artist_id: artist.id }, artist);
+    req.session.flash = `New designer assigned (${artist.display_name || artist.email}) — fresh 48-hour deadline.`;
+  } else if (action === 'owner_makes') {
+    await db.update('orders', order.id, {
+      requested_artist_id: null, custom_status: 'needs_drafts',
+      replacement_status: 'owner_makes', designer_contract_terminated: 0,
+      late_penalty_days: 0, delivery_due: Date.now() + 48 * 3600 * 1000,
+    });
+    req.session.flash = 'You are making this design — it is back in the draft pipeline with a fresh 48-hour deadline.';
+  } else if (action === 'credit') {
+    const cents = Math.max(0, parseInt(req.body.credit_cents, 10) || order.amount_paid_cents || 0);
+    if (cents > 0) {
+      await addCredit({
+        userId: order.buyer_id, amountCents: cents, kind: 'replacement_credit', refId: order.id,
+        note: `Replacement credit — custom order ${order.id.slice(0, 8)} (designer terminated)`,
+      });
+    }
+    await db.update('orders', order.id, { replacement_status: 'credit' });
+    req.session.flash = `Website credit issued: $${(cents / 100).toFixed(2)}.`;
+  } else if (action === 'predesigns') {
+    await db.update('orders', order.id, { replacement_status: 'predesigns' });
+    req.session.flash = 'Recorded: equivalent value in pre-designs + edits. Fulfill from the catalog, then mark delivered.';
+  } else {
+    req.session.flash = 'Unknown replacement action.';
   }
   res.redirect(`/admin/custom-orders/${order.id}`);
 });

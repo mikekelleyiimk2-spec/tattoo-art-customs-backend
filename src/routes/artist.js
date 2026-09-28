@@ -28,10 +28,33 @@ router.get('/', async (req, res) => {
     'SELECT * FROM commission_ledger WHERE recipient_type = ? AND recipient_id = ? ORDER BY created_at DESC LIMIT 25',
     ['artist', req.user.id]);
   const payout = await payoutDashboardData(req.user.id, 'artist');
+  // SLA banner: this artist's at-risk (<24h) and overdue custom orders.
+  const nowMs = Date.now();
+  const slaRows = await db.all(
+    `SELECT id, custom_brief, delivery_due, custom_status, late_penalty_days
+     FROM orders WHERE order_type = 'custom' AND status = 'paid'
+     AND requested_artist_id = ? AND custom_status NOT IN ('delivered')
+     AND delivery_due IS NOT NULL ORDER BY delivery_due ASC`, [req.user.id]);
+  const slaOrders = [];
+  for (const o of slaRows) {
+    const pen = await db.get(
+      `SELECT COALESCE(SUM(deduction_cents),0) AS t FROM sla_penalties WHERE order_id = ?`, [o.id]);
+    const msLeft = o.delivery_due - nowMs;
+    const daysLate = Math.max(0, Math.floor(-msLeft / 86400000));
+    if (daysLate > 0 || msLeft <= 24 * 3600 * 1000) {
+      slaOrders.push({
+        id: o.id, brief: (o.custom_brief || '').slice(0, 80),
+        status: (o.custom_status || '').replace(/_/g, ' '),
+        days_late: daysLate, hours_left: Math.max(0, Math.floor(msLeft / 3600000)),
+        penalty_cents: pen.t,
+      });
+    }
+  }
   res.render('artist/dashboard', {
     title: 'Artist Dashboard — Tattoo Art Customs',
     designs: designs.map((d) => ({ ...d, categories: JSON.parse(d.categories || '[]') })),
     profile, balance, payouts, ledger, metaDescription: '',
+    slaOrders, nowMs,
     ...payout,
   });
 });

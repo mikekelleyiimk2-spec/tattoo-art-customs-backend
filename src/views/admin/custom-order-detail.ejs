@@ -22,6 +22,67 @@
     <h2>Admin notes</h2>
     <p style="white-space:pre-wrap" class="muted"><%= order.admin_notes %></p>
     <% } %>
+
+    <h2>Late penalties</h2>
+    <% if (order.designer_contract_terminated) { %>
+    <p><span class="badge" style="background:#b3261e;color:#fff">Designer contract TERMINATED (7d overdue)</span></p>
+    <% } %>
+    <% if (!penalties.length) { %>
+      <p class="muted">No penalties charged. Days charged: <%= order.late_penalty_days || 0 %>.</p>
+    <% } else { %>
+    <table>
+      <thead><tr><th>Day</th><th>Rate</th><th>Deducted</th><th>→ Owner</th><th>→ Buyer credit</th></tr></thead>
+      <tbody>
+      <% penalties.forEach(function(p) { %>
+        <tr>
+          <td>Day <%= p.day_number %></td>
+          <td><%= p.day_number <= 4 ? '3.7%' : '4.3%' %> of <%= money(p.original_cents) %></td>
+          <td><%= money(p.deduction_cents) %></td>
+          <td><%= money(p.owner_cents) %></td>
+          <td><%= money(p.credit_cents) %> (late-delivery credit)</td>
+        </tr>
+      <% }); %>
+      </tbody>
+    </table>
+    <p class="muted">Totals — deducted: <strong><%= money(penaltyTotals.deduction) %></strong> ·
+      owner: <%= money(penaltyTotals.owner) %> · buyer credit: <%= money(penaltyTotals.credit) %></p>
+    <% } %>
+    <% if (designerLedger.length) { %>
+    <p class="muted">Designer commission now: <strong><%= money(designerLedger[0].amount_cents) %></strong> (<%= designerLedger[0].status %>)</p>
+    <% } %>
+
+    <% if (order.designer_contract_terminated && order.replacement_status === 'offered') { %>
+    <h2>Replacement — buyer's choice</h2>
+    <p class="muted">The buyer's contract was terminated at 7 days overdue. Offer them one of:</p>
+    <form method="post" action="/admin/custom-orders/<%= order.id %>/replacement" class="form" style="margin-bottom:12px">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <input type="hidden" name="action" value="new_designer">
+      <label for="repl_artist">1. New designer (fresh 48h deadline)</label>
+      <select id="repl_artist" name="requested_artist_id">
+        <% artists.forEach(function(a) { %><option value="<%= a.id %>"><%= a.display_name || 'Artist' %></option><% }); %>
+      </select>
+      <p><button class="btn" type="submit">Assign new designer</button></p>
+    </form>
+    <form method="post" action="/admin/custom-orders/<%= order.id %>/replacement" style="margin-bottom:12px">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <input type="hidden" name="action" value="owner_makes">
+      <button class="btn btn-secondary" type="submit">2. Owner makes it</button>
+    </form>
+    <form method="post" action="/admin/custom-orders/<%= order.id %>/replacement" class="form" style="margin-bottom:12px">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <input type="hidden" name="action" value="credit">
+      <label for="credit_cents">3. Website credit for a replacement design (cents)</label>
+      <input id="credit_cents" name="credit_cents" type="number" min="0" value="<%= order.amount_paid_cents %>">
+      <p><button class="btn btn-secondary" type="submit">Issue credit</button></p>
+    </form>
+    <form method="post" action="/admin/custom-orders/<%= order.id %>/replacement" style="margin-bottom:12px">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <input type="hidden" name="action" value="predesigns">
+      <button class="btn btn-secondary" type="submit">4. Equivalent value in pre-designs + edits</button>
+    </form>
+    <% } else if (order.replacement_status && order.replacement_status !== 'offered') { %>
+    <p class="muted">Replacement choice: <strong><%= order.replacement_status.replace(/_/g, ' ') %></strong></p>
+    <% } %>
   </section>
 
   <section class="card">
