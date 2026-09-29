@@ -38,6 +38,15 @@ const PAYPAL_PAYOUTS_ENABLED = process.env.PAYPAL_PAYOUTS_ENABLED === '1';
 async function runWeeklyPayouts() {
   const summary = { at: new Date().toISOString(), paid: [], queued: [], skipped: [], failed: false, error: '' };
 
+  // Admin task pay: promote held task-pay rows to payable (oldest first)
+  // while the 25%-of-overhead cap allows, before tallying this week's payees.
+  try {
+    const promoted = await require('../lib/adminTaskPay').releaseHeld();
+    if (promoted) summary.adminTaskPayReleased = promoted;
+  } catch (e) {
+    console.error('admin task pay release failed:', e.message);
+  }
+
   // Queue one recipient for manual send: creates the cashout request the
   // admin works from on /admin/payouts and claims their payable rows.
   async function queueManualSend(ctx, viaLabel) {

@@ -77,6 +77,36 @@
 </table>
 <% if (!balances.length) { %><p class="muted">No payable balances.</p><% } %>
 
+<h2>Admin task earnings</h2>
+<p class="muted">Per-task pay for admin work, funded from the site's 10% overhead. There is no base pay — an admin earns only by completing paid tasks. Task pay stacks into each admin's normal payable balance and goes out with the Monday payout run at the $5 minimum.</p>
+<p class="muted">Cap: total granted task pay (payable + held + paid) may never exceed <%= adminTaskMeta.capPct %>% of cumulative site overhead. Currently <strong><%= money(adminTaskMeta.grantedCents) %></strong> granted against <strong><%= money(adminTaskMeta.overheadCents) %></strong> overhead (cap <%= money(Math.floor(adminTaskMeta.overheadCents * adminTaskMeta.capPct / 100)) %>). Anything beyond the cap stays held and is released as overhead grows.</p>
+<% if (adminEarnings.length) { %>
+<table>
+  <thead><tr><th>Admin</th><th>Earned (all time)</th><th>Stacked balance (payable now)</th><th>Paid to date</th></tr></thead>
+  <tbody>
+  <% adminEarnings.forEach(function(a) { %>
+    <tr>
+      <td><%= a.display_name || a.email %></td>
+      <td><%= money(a.earned) %></td>
+      <td><strong><%= money(a.payable_now) %></strong></td>
+      <td><%= money(a.paid_total) %></td>
+    </tr>
+  <% }); %>
+  </tbody>
+</table>
+<% } else { %><p class="muted">No admin task pay recorded yet.</p><% } %>
+<details>
+  <summary>Rate card</summary>
+  <table>
+    <thead><tr><th>Task</th><th>Pay</th></tr></thead>
+    <tbody>
+    <% Object.keys(adminTaskMeta.rateCard).sort().forEach(function(t) { %>
+      <tr><td><%= t %></td><td><%= money(adminTaskMeta.rateCard[t]) %></td></tr>
+    <% }); %>
+    </tbody>
+  </table>
+</details>
+
 <h2>PayPal batch runs</h2>
 <table>
   <thead><tr><th>Date</th><th>Recipient</th><th>Amount</th><th>To</th><th>Status</th></tr></thead>

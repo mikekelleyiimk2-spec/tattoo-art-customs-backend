@@ -5,6 +5,30 @@ https://tattoo-art-customs.onrender.com.
 **Versioning:** the deployed git commit (reported by `/health`) is the
 website's version — package.json stays 1.0.0 between releases.
 
+## 2026-09-29
+
+### Added
+- Per-task administrator pay out of the website's 10% overhead (owner rule):
+  admins earn only by completing paid tasks — no base pay. Rate card, in
+  cents: design approve/reject/hold 25; review approve/reject 10; custom
+  approve/request-changes/reassign/deliver 100; replacement close 50;
+  manual order confirm 50; referral verify 50; appeal decide 200; shop
+  verify 100; membership cancel 25; bug triage 25; cashout complete 25;
+  payout complete 25; designer restrict/unsuspend/forgive/lift 50;
+  colorization attach 50; print fulfill 50; ad activate/deactivate 10.
+  Total granted task pay may never exceed 25% of cumulative site overhead
+  (`ADMIN_TASK_PAY_OVERHEAD_CAP_PCT`); anything beyond is held and released
+  oldest-first as overhead grows (released at the start of each Monday
+  payout run). Task pay stacks into the admin's normal payable balance and
+  goes out with the weekly payout at the $5 minimum; payout requires an
+  admin account with an active designer or tattoo shop subscription plus a
+  payout destination (same forfeiture rule as everyone else). Self-pay
+  guard: no pay for moderating your own designs. Site overhead ledger rows
+  are never debited — task pay is a separate capped obligation.
+  Migration 034 (`admin_task_pay`); `/admin/payouts` gains an "Admin task
+  earnings" section (earned / stacked payable balance / paid to date +
+  rate card).
+
 ## 2026-09-28
 
 ### Added

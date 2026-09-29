@@ -520,6 +520,7 @@ async function main() {
      WHERE p.user_id = ? AND c.subject LIKE '%is live%' ORDER BY m.id DESC LIMIT 1`, [colDesignerId])).body || '';
   ok(liveBody.includes('Test Admin'), 'go-live notice names the admin who approved');
 
+  await require('./adminTaskPay').runDbTests(ok);
   await require('./founding').runDbTests(ok);
   await require('./replacements').runDbTests(ok);
 

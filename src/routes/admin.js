@@ -14,9 +14,21 @@ const { onOrderPaid } = require('../lib/printful');
 const { routeCustomOrder } = require('../lib/customFulfillment');
 const { onCustomPieceSold } = require('../lib/replacements');
 const { colorizationQueue, attachColorVersion, notifyDesignLive } = require('../lib/colorization');
+const { recordTask: recordAdminTask } = require('../lib/adminTaskPay');
 
 const router = express.Router();
 router.use(requireLogin, requireRole('admin'));
+
+// Per-task admin pay (owner rule 2026-09-29): every paid admin action below
+// records task pay for the acting admin out of the site's overhead. A
+// bookkeeping failure must never break the admin action itself.
+async function payAdmin(req, taskType, refType, refId) {
+  try {
+    await recordAdminTask({ adminUserId: req.user.id, taskType, refType, refId });
+  } catch (e) {
+    console.error(`admin task pay failed (${taskType}/${refType}/${refId}):`, e.message);
+  }
+}
 
 router.get('/', async (req, res) => {
   const stats = {
@@ -50,6 +62,7 @@ router.post('/designers/:id/restrict', formLimiter, checkHoneypot, async (req, r
      WHERE u.id = ? AND (u.role = 'design_artist' OR (u.role = 'tattoo_shop' AND sp.designer_opt_in = 1))`,
     [req.params.id]);
   if (user) await db.update('users', user.id, { sla_suspended: 1 });
+  if (user) await payAdmin(req, 'designer_restrict', 'user', user.id);
   req.session.flash = 'Designer marked as manually restricted (marker for your review — orders still route normally).';
   res.redirect('/admin');
 });
@@ -60,6 +73,7 @@ router.post('/designers/:id/unsuspend', formLimiter, checkHoneypot, async (req, 
      WHERE u.id = ? AND (u.role = 'design_artist' OR (u.role = 'tattoo_shop' AND sp.designer_opt_in = 1))`,
     [req.params.id]);
   if (user) await db.update('users', user.id, { sla_suspended: 0 });
+  if (user) await payAdmin(req, 'designer_unsuspend', 'user', user.id);
   req.session.flash = 'Manual restriction lifted.';
   res.redirect('/admin');
 });
@@ -72,6 +86,7 @@ router.post('/designers/:id/forgive', formLimiter, checkHoneypot, async (req, re
      WHERE u.id = ? AND (u.role = 'design_artist' OR (u.role = 'tattoo_shop' AND sp.designer_opt_in = 1))`,
     [req.params.id]);
   if (user) await db.update('users', user.id, { sla_forgiven_at: Date.now() });
+  if (user) await payAdmin(req, 'designer_forgive', 'user', user.id);
   req.session.flash = 'Missed-deadline count reset — late penalties return to normal rates.';
   res.redirect('/admin');
 });
@@ -83,6 +98,7 @@ router.post('/designers/:id/lift-suspension', formLimiter, checkHoneypot, async 
      WHERE u.id = ? AND (u.role = 'design_artist' OR (u.role = 'tattoo_shop' AND sp.designer_opt_in = 1))`,
     [req.params.id]);
   if (user) await db.update('users', user.id, { commission_suspended_until: null });
+  if (user) await payAdmin(req, 'designer_lift', 'user', user.id);
   req.session.flash = 'Commission suspension lifted early — the designer earns commissions on new sales again.';
   res.redirect('/admin');
 });
@@ -112,6 +128,7 @@ router.post('/orders/:id/confirm-manual', formLimiter, checkHoneypot, async (req
   await routeCustomOrder(fresh);
   await onCustomPieceSold(fresh); // sold custom pieces delist + queue a replacement
   try { await require('../lib/saleWatch').watchOrderPaid(fresh); } catch (e) { console.error('sale watch failed:', e.message); }
+  await payAdmin(req, 'order_confirm_manual', 'order', order.id);
   req.session.flash = 'Manual payment confirmed — buyer download unlocked, commissions recorded.' +
     (fulfil.submitted ? ' Print auto-submitted to Printful.' : '');
   res.redirect('/admin/orders');
@@ -120,6 +137,7 @@ router.post('/orders/:id/confirm-manual', formLimiter, checkHoneypot, async (req
 // Verify a referred sale (releases the shop's 20% to payable).
 router.post('/orders/:id/verify-referral', formLimiter, checkHoneypot, async (req, res) => {
   const n = await verifyOrderCommissions(req.params.id);
+  if (n) await payAdmin(req, 'order_verify_referral', 'order', req.params.id);
   req.session.flash = n ? `Sale verified — ${n} commission share(s) released.` : 'Nothing pending for this order.';
   res.redirect('/admin/orders');
 });
@@ -221,6 +239,7 @@ router.post('/custom-orders/:id/approve', formLimiter, checkHoneypot, async (req
   const order = await db.get("SELECT * FROM orders WHERE id = ? AND order_type = 'custom'", [req.params.id]);
   if (!order) return res.redirect('/admin/custom-orders');
   await db.update('orders', order.id, { custom_status: 'approved' });
+  await payAdmin(req, 'custom_approve', 'custom_order', order.id);
   req.session.flash = 'Drafts approved — attach the final files from the sales log to deliver.';
   res.redirect(`/admin/custom-orders/${order.id}`);
 });
@@ -233,6 +252,7 @@ router.post('/custom-orders/:id/request-changes', formLimiter, checkHoneypot, as
   await db.update('orders', order.id, {
     custom_status: 'in_revision', admin_notes: (order.admin_notes || '') + stamped,
   });
+  await payAdmin(req, 'custom_request_changes', 'custom_order', order.id);
   req.session.flash = 'Sent back for revision.';
   res.redirect(`/admin/custom-orders/${order.id}`);
 });
@@ -254,6 +274,7 @@ router.post('/custom-orders/:id/reassign', formLimiter, checkHoneypot, async (re
     requested_artist_id: artist ? artist.id : null,
     custom_status: artist ? 'routed_to_artist' : 'needs_drafts',
   });
+  await payAdmin(req, 'custom_reassign', 'custom_order', order.id);
   if (artist) {
     const { recordCustomDesignerCommission } = require('../lib/commissions');
     await recordCustomDesignerCommission(order, artist.id);
@@ -315,6 +336,9 @@ router.post('/custom-orders/:id/replacement', formLimiter, checkHoneypot, async 
   } else {
     req.session.flash = 'Unknown replacement action.';
   }
+  if (['new_designer', 'owner_makes', 'credit', 'predesigns'].includes(action)) {
+    await payAdmin(req, 'replacement_close', 'custom_order', order.id);
+  }
   res.redirect(`/admin/custom-orders/${order.id}`);
 });
 
@@ -322,6 +346,7 @@ router.post('/custom-orders/:id/deliver', formLimiter, checkHoneypot, async (req
   const order = await db.get("SELECT * FROM orders WHERE id = ? AND order_type = 'custom'", [req.params.id]);
   if (!order) return res.redirect('/admin/custom-orders');
   await db.update('orders', order.id, { custom_status: 'delivered' });
+  await payAdmin(req, 'custom_deliver', 'custom_order', order.id);
   req.session.flash = 'Marked delivered. (Attach final files from the sales log if you have not already.)';
   res.redirect(`/admin/custom-orders/${order.id}`);
 });
@@ -351,6 +376,7 @@ router.post('/reviews/:id/approve', formLimiter, checkHoneypot, async (req, res)
     req.session.flash = 'Blocked: upload the watermarked linework version before approving this design.';
   } else {
     await db.update('review_queue', item.id, { status: 'approved', reviewed_at: db.now(), decided_by: req.user.id });
+    await payAdmin(req, 'review_approve', 'review', item.id);
   }
   res.redirect('/admin/reviews');
 });
@@ -360,6 +386,7 @@ router.post('/reviews/:id/reject', formLimiter, checkHoneypot, async (req, res) 
   if (!item) return res.redirect('/admin/reviews');
   await applyReviewDecision(item, 'reject');
   await db.update('review_queue', item.id, { status: 'rejected', reviewed_at: db.now(), decided_by: req.user.id });
+  await payAdmin(req, 'review_reject', 'review', item.id);
   res.redirect('/admin/reviews');
 });
 
@@ -397,6 +424,7 @@ router.post('/designs/:id/approve', formLimiter, checkHoneypot, async (req, res)
   // Linework-only pieces are approvable: they post with the watermarked
   // linework and the site color version follows via the colorization queue.
   await db.update('designs', req.params.id, { status: 'approved', approved_by: req.user.id });
+  await payAdmin(req, 'design_approve', 'design', req.params.id);
   { const { completeOnApproval } = require('../lib/replacements');
     await completeOnApproval(req.params.id); } // remake of a sold custom piece → close the request
   // The piece is now live: notify the designer (informational only —
@@ -418,6 +446,7 @@ router.post('/designs/:id/reject', formLimiter, checkHoneypot, async (req, res) 
   }
   const design = await db.get('SELECT id, title, artist_id FROM designs WHERE id = ?', [req.params.id]);
   await db.update('designs', req.params.id, { status: 'rejected', reject_reason: reason });
+  await payAdmin(req, 'design_reject', 'design', req.params.id);
   // The artist gets the reason by on-site notification + email, naming the
   // admin who decided.
   if (design && design.artist_id) {
@@ -441,6 +470,7 @@ router.post('/designs/:id/hold', formLimiter, checkHoneypot, async (req, res) =>
   const design = await db.get('SELECT id, title FROM designs WHERE id = ?', [req.params.id]);
   if (!design) return res.redirect('/admin/designs');
   await db.update('designs', req.params.id, { status: 'on_hold' });
+  await payAdmin(req, 'design_hold', 'design', req.params.id);
   const { notifyAdmins } = require('../lib/notify');
   const config = require('../config');
   await notifyAdmins({
@@ -497,6 +527,7 @@ router.post('/appeals/:id/approve', requireHeadAdmin, formLimiter, checkHoneypot
     try { await sendMail({ to: artist.email, subject: title, text: body }); } catch (e) { console.error('appeal email failed:', e.message); }
   }
   req.session.flash = 'Appeal approved — the piece is live and the artist has been notified.';
+  await payAdmin(req, 'appeal_decide', 'appeal', appeal.id);
   res.redirect('/admin/appeals');
 });
 
@@ -515,6 +546,7 @@ router.post('/appeals/:id/uphold', requireHeadAdmin, formLimiter, checkHoneypot,
     try { await sendMail({ to: artist.email, subject: title, text: body }); } catch (e) { console.error('appeal email failed:', e.message); }
   }
   req.session.flash = 'Rejection upheld — the artist has been notified that the decision is final.';
+  await payAdmin(req, 'appeal_decide', 'appeal', appeal.id);
   res.redirect('/admin/appeals');
 });
 // Permanent delete (moderation): removes the piece and its asset files.
@@ -632,6 +664,7 @@ router.post('/colorization/:id/attach', formLimiter, (req, res, next) => {
   if (!req.file) { req.session.flash = 'Choose the finished color image first.'; return res.redirect('/admin/colorization'); }
   try {
     await attachColorVersion(req.params.id, req.file.path);
+    await payAdmin(req, 'colorization_attach', 'colorization', req.params.id);
     req.session.flash = 'Color version attached — it is now the purchase deliverable for this piece. The piece keeps its current approval status.';
   } catch (e) {
     req.session.flash = 'Attach failed: ' + e.message;
@@ -661,12 +694,14 @@ router.post('/members/:id/cancel-membership', formLimiter, checkHoneypot, async 
     status: 'closed', created_at: db.now(), reviewed_at: db.now(),
   });
   req.session.flash = 'Membership canceled — no refunds per the Terms.';
+  await payAdmin(req, 'member_cancel', 'user', req.params.id);
   res.redirect('/admin/members');
 });
 
 // Verify a tattoo shop (allows the limited shop profile fields).
 router.post('/members/:id/verify-shop', formLimiter, checkHoneypot, async (req, res) => {
   await db.updateWhere('shop_profiles', { verified: 1 }, 'user_id', req.params.id);
+  await payAdmin(req, 'shop_verify', 'user', req.params.id);
   req.session.flash = 'Shop verified.';
   res.redirect('/admin/members');
 });
@@ -681,6 +716,7 @@ router.get('/bugs', async (req, res) => {
 router.post('/bugs/:id/status', formLimiter, checkHoneypot, async (req, res) => {
   const status = req.body.status === 'closed' ? 'closed' : 'open';
   await db.update('bug_reports', req.params.id, { status });
+  await payAdmin(req, 'bug_triage', 'bug', req.params.id);
   req.session.flash = `Bug report marked ${status}.`;
   res.redirect('/admin/bugs');
 });
@@ -786,7 +822,19 @@ router.get('/payouts', async (req, res) => {
   finance.manualOut = manualOut;
   finance.retainedInPaypal = (finance.paypalSales + finance.topups) - finance.paypalOut;
 
-  res.render('admin/payouts', { title: 'Payouts — Admin', balances, runs, cashouts, cashoutHistory, finance, metaDescription: '' });
+  // Admin task pay (owner rule 2026-09-29): per-task pay out of the site
+  // overhead, capped at 25% of cumulative overhead. Task pay accrues into
+  // each admin's normal payable balance and goes out with the Monday run.
+  const adminTaskPay = require('../lib/adminTaskPay');
+  const adminEarnings = await adminTaskPay.adminEarnings();
+  const adminTaskMeta = {
+    rateCard: adminTaskPay.RATE_CARD,
+    capPct: adminTaskPay.ADMIN_TASK_PAY_OVERHEAD_CAP_PCT,
+    overheadCents: await adminTaskPay.overheadCents(),
+    grantedCents: await adminTaskPay.grantedCents(),
+  };
+
+  res.render('admin/payouts', { title: 'Payouts — Admin', balances, runs, cashouts, cashoutHistory, finance, adminEarnings, adminTaskMeta, metaDescription: '' });
 });
 
 // --- Manual cashout processing ---
@@ -797,6 +845,7 @@ router.post('/cashouts/:id/complete', formLimiter, checkHoneypot, async (req, re
   const c = await db.get("SELECT * FROM cashout_requests WHERE id = ? AND status IN ('pending','processing')", [req.params.id]);
   if (!c) { req.session.flash = 'Cashout request not found or already handled.'; return res.redirect('/admin/payouts'); }
   await completeCashout(c.id, 'Sent manually by admin.');
+  await payAdmin(req, 'cashout_complete', 'cashout', c.id);
   req.session.flash = `Cashout of $${(c.net_cents / 100).toFixed(2)} marked sent.`;
   res.redirect('/admin/payouts');
 });
@@ -834,6 +883,7 @@ router.post('/payouts/:id/complete', formLimiter, checkHoneypot, async (req, res
   await db.update('payouts', payout.id, { status: 'completed', completed_at: db.now() });
   await db.query("UPDATE commission_ledger SET status = 'paid', paid_at = ? WHERE payout_id = ? AND status = 'queued'",
     [db.now(), payout.id]);
+  await payAdmin(req, 'payout_complete', 'payout', payout.id);
   req.session.flash = 'Payout marked completed — shares are now paid.';
   res.redirect('/admin/payouts');
 });
@@ -856,12 +906,14 @@ router.post('/ads/:id/activate', formLimiter, checkHoneypot, async (req, res) =>
     starts_at: now,
     ends_at: now + months * 30 * 24 * 3600 * 1000,
   });
+  await payAdmin(req, 'ad_activate', 'ad', ad.id);
   req.session.flash = `Ad "${ad.title}" is now live for ${months} month(s).`;
   res.redirect('/admin/ads');
 });
 
 router.post('/ads/:id/deactivate', formLimiter, checkHoneypot, async (req, res) => {
   await db.update('ads', req.params.id, { active: 0 });
+  await payAdmin(req, 'ad_deactivate', 'ad', req.params.id);
   req.session.flash = 'Ad paused.';
   res.redirect('/admin/ads');
 });
@@ -896,6 +948,7 @@ router.post('/prints/:id/fulfill', formLimiter, checkHoneypot, async (req, res) 
   const po = await db.get('SELECT * FROM print_orders WHERE id = ?', [req.params.id]);
   if (!po) { req.session.flash = 'Print order not found.'; return res.redirect('/admin/prints'); }
   await db.update('print_orders', po.id, { status: 'fulfilled', fulfilled_at: db.now() });
+  await payAdmin(req, 'print_fulfill', 'print', po.id);
   req.session.flash = 'Print order marked fulfilled.';
   res.redirect('/admin/prints');
 });

@@ -27,9 +27,21 @@ const EARLY_COOLDOWN_MS = 24 * 3600 * 1000; // one early cashout per day
 // site_kept, and these guards close the gap if a subscription lapses
 // between earning and payout.
 function roleForRecipientType(recipientType) {
-  return recipientType === 'artist' ? 'design_artist' : 'tattoo_shop';
+  if (recipientType === 'artist') return 'design_artist';
+  if (recipientType === 'admin') return 'admin';
+  return 'tattoo_shop';
 }
 async function requirePayoutEligible(userId, recipientType) {
+  // Admin task pay: the recipient must be an actual admin (admin/head_admin)
+  // holding an active designer or tattoo shop subscription — same payout
+  // destination + forfeiture rules as everyone else.
+  if (recipientType === 'admin') {
+    const user = await db.get('SELECT role FROM users WHERE id = ?', [userId]);
+    if (!user || (user.role !== 'admin' && user.role !== 'head_admin')) {
+      throw new Error('Admin task pay requires an admin account.');
+    }
+    return requireAnyPayoutEligible(userId);
+  }
   const ok = await recipientEligible(userId, roleForRecipientType(recipientType));
   if (!ok) {
     throw new Error('Payouts require an active designer or tattoo shop subscription with a payout method set up. Customer subscriptions cannot receive commissions.');
