@@ -125,7 +125,9 @@ app.use('/img/ads', express.static(adsDir));
 
 // Routes
 // Health check (for hosting monitors / load balancers).
-app.get('/health', (req, res) => res.json({ ok: true, time: Date.now() }));
+// commit = deployed version (RENDER_GIT_COMMIT is set by Render at build time).
+const BUILD_COMMIT = process.env.RENDER_GIT_COMMIT || null;
+app.get('/health', (req, res) => res.json({ ok: true, time: Date.now(), commit: BUILD_COMMIT }));
 
 app.use('/', require('./routes/site'));
 app.use('/', require('./routes/auth'));
