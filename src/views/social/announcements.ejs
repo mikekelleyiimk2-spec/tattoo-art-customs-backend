@@ -1,0 +1,9 @@
+<h1><%= shop.display_name || 'Shop' %> — announcements</h1>
+
+<% if (!posts.length) { %><p class="muted">No announcements yet.</p><% } %>
+<% for (const a of posts) { %>
+<section class="card">
+  <p class="muted"><%= new Date(a.created_at).toLocaleDateString() %></p>
+  <p><%= a.body %></p>
+</section>
+<% } %>

@@ -1,0 +1,24 @@
+<h1>Manage Events</h1>
+<section class="card">
+  <h2>Create an event</h2>
+  <form method="post" action="/events/create" class="form">
+    <label>Title <input type="text" name="title" maxlength="120" required></label>
+    <label>Description <textarea name="description" rows="3" maxlength="2000"></textarea></label>
+    <label>Starts <input type="datetime-local" name="starts_at" required></label>
+    <label>Ends <input type="datetime-local" name="ends_at"></label>
+    <label>Capacity (blank = unlimited) <input type="number" name="cap" min="1" step="1"></label>
+    <label>Registration price in dollars (blank/0 = free — customers pay on the website at signup, never in the app) <input type="number" name="registration_price_dollars" min="0" step="0.01" placeholder="e.g. 20"></label>
+    <button type="submit">Create event</button>
+  </form>
+</section>
+<% for (const e of events) { %>
+<section class="card">
+  <h2><%= e.title %> <span class="muted">(<%= e.status %>)</span></h2>
+  <p class="muted"><%= new Date(e.starts_at).toLocaleString('en-US', { timeZone: 'America/Chicago' }) %> · <%= e.signup_count %> signed up<% if (e.cap != null) { %> / <%= e.cap %><% } %>
+    · <%= (Number(e.registration_price_cents) || 0) > 0 ? money(Number(e.registration_price_cents)) + ' registration' : 'free registration' %></p>
+  <p><a href="/events/manage/<%= e.id %>">Attendees</a>
+    <% if (e.status === 'open') { %>
+    · <form method="post" action="/events/<%= e.id %>/close" class="form" style="display:inline"><button type="submit">Close signups</button></form>
+    <% } %></p>
+</section>
+<% } %>

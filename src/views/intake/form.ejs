@@ -1,0 +1,26 @@
+<h1>Intake Form</h1>
+<p class="muted">Booking at <strong><%= booking.shop_name %></strong> on <%= new Date(booking.start_at).toLocaleString('en-US', { timeZone: 'America/Chicago' }) %>. Fill this out before your appointment so your artist can prep.</p>
+<form method="post" action="/intake/<%= booking.id %>" class="form" enctype="multipart/form-data">
+  <label>Placement (where on the body)
+    <input type="text" name="placement" maxlength="120" value="<%= intake && intake.placement ? intake.placement : '' %>" placeholder="e.g. left forearm, outer">
+  </label>
+  <label>Size
+    <input type="text" name="size_text" maxlength="120" value="<%= intake && intake.size_text ? intake.size_text : '' %>" placeholder="e.g. 4 inches wide">
+  </label>
+  <label><input type="checkbox" name="cover_up" value="1" <%= intake && intake.cover_up ? 'checked' : '' %>> This is a cover-up</label>
+  <label>Details for your artist
+    <textarea name="details" rows="6" maxlength="4000" placeholder="What you want, style references, anything the artist should know…"><%= intake && intake.details ? intake.details : '' %></textarea>
+  </label>
+  <label>Reference photos (up to <%= maxPhotos %>)
+    <input type="file" name="photos" accept="image/jpeg,image/png,image/webp" multiple>
+  </label>
+  <% if (photos.length) { %>
+  <p class="muted">Already attached:</p>
+  <div>
+    <% photos.forEach(function (p, i) { %>
+    <img src="/intake/photo/<%= booking.id %>/<%= i %>" alt="Reference photo <%= i + 1 %>" style="max-width:120px;margin:4px">
+    <% }); %>
+  </div>
+  <% } %>
+  <button type="submit">Save intake form</button>
+</form>

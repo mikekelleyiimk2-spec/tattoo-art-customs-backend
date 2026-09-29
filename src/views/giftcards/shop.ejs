@@ -1,0 +1,12 @@
+<h1>Gift Card Sales</h1>
+<p class="muted">Cards sold for your shop: <strong><%= cards.filter(c => c.status !== 'pending').length %></strong> ·
+Total value sold: <strong><%= money(totalSold) %></strong> ·
+Redeemed: <strong><%= redeemedCount %></strong></p>
+<p class="muted">Gift cards become your revenue when redeemed against a booking — not at purchase.</p>
+<% if (!cards.length) { %><p class="muted">No gift cards sold for your shop yet.</p><% } %>
+<% for (const c of cards) { %>
+<section class="card">
+  <h2><%= money(c.amount_cents) %> — <code><%= c.code %></code></h2>
+  <p class="muted">Status: <%= c.status %> · bought by <%= c.purchaser_name || 'a customer' %> on <%= new Date(c.created_at).toLocaleDateString() %></p>
+</section>
+<% } %>

@@ -1,0 +1,24 @@
+<h1><%= board.name %></h1>
+<p><a href="/social/boards">← All boards</a></p>
+
+<section class="card">
+  <h2>Add a design</h2>
+  <form method="post" action="/social/boards/<%= board.id %>/add" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p><input type="text" name="design_id" placeholder="Design ID" aria-label="Design ID" required>
+    <button class="btn" type="submit">Add</button></p>
+  </form>
+</section>
+
+<% if (!board.items.length) { %><p class="muted">Nothing saved here yet.</p><% } %>
+<% for (const d of board.items) { %>
+<section class="card">
+  <% if (d.linework_wm_path) { %><p><img src="/img/designs/<%= d.linework_wm_path.split('/').pop() %>" alt="Design linework" style="max-width:200px"></p><% } %>
+  <h2><%= d.title %></h2>
+  <p class="muted"><%= d.style %></p>
+  <form method="post" action="/social/boards/<%= board.id %>/remove">
+    <input type="hidden" name="design_id" value="<%= d.id %>">
+    <button class="btn secondary" type="submit">Remove</button>
+  </form>
+</section>
+<% } %>

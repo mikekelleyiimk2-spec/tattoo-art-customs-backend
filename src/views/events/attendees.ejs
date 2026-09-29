@@ -1,0 +1,9 @@
+<h1>Attendees — <%= event.title %></h1>
+<p class="muted"><%= event.signup_count %> signed up<% if (event.cap != null) { %> / <%= event.cap %> spots<% } %></p>
+<% if (!signups.length) { %><p class="muted">No signups yet.</p><% } %>
+<ul>
+  <% for (const s of signups) { %>
+  <li><%= s.display_name %> (<%= s.email %>) — signed up <%= new Date(s.created_at).toLocaleString('en-US', { timeZone: 'America/Chicago' }) %></li>
+  <% } %>
+</ul>
+<p><a href="/events/manage">Back to events</a></p>

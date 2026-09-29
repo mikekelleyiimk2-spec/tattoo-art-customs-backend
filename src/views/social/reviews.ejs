@@ -1,0 +1,14 @@
+<h1><%= subject === 'shop' ? 'Shop' : 'Artist' %> reviews</h1>
+
+<% if (count) { %>
+<p><strong><%= average %> / 5</strong> <span class="muted">from <%= count %> review<%= count === 1 ? '' : 's' %></span></p>
+<% } else { %>
+<p class="muted">No reviews yet.</p>
+<% } %>
+
+<% for (const r of reviews) { %>
+<section class="card">
+  <p><strong><%= r.rating %> / 5</strong> <span class="muted">by <%= r.customer_name || 'A customer' %> · <%= new Date(r.created_at).toLocaleDateString() %></span></p>
+  <% if (r.body) { %><p><%= r.body %></p><% } %>
+</section>
+<% } %>

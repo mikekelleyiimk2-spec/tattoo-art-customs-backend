@@ -1,0 +1,20 @@
+<h1>Claim Your Spot</h1>
+<% if (!usable) { %>
+<p class="muted"><% if (expired || entry.status === 'expired') { %>This offer expired — the spot went to the next person in line.<% } else { %>This offer is no longer available (status: <%= entry.status %>).<% } %></p>
+<p><a href="/waitlist/mine">Back to my waitlist</a></p>
+<% } else { %>
+<section class="card">
+  <h2><%= entry.shop_name %></h2>
+  <% if (startAt && endAt) { %>
+  <p><strong><%= new Date(startAt).toLocaleString('en-US', { timeZone: 'America/Chicago' }) %></strong>
+    – <%= new Date(endAt).toLocaleTimeString('en-US', { timeZone: 'America/Chicago', hour: 'numeric', minute: '2-digit' }) %></p>
+  <% } else { %>
+  <p class="muted">A spot opened up — claim it within 24 hours, then pick your time with the shop.</p>
+  <% } %>
+  <form method="post" action="/waitlist/claim/<%= entry.id %>" class="form">
+    <input type="hidden" name="start" value="<%= startAt || '' %>">
+    <input type="hidden" name="end" value="<%= endAt || '' %>">
+    <button type="submit">Claim this spot</button>
+  </form>
+</section>
+<% } %>

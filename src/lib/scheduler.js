@@ -15,6 +15,8 @@ let started = false;
 function startScheduler() {
   if (started) return;
   started = true;
+  // Booking reminders (shop toolset) run independently of the payouts toggle.
+  require('./bookingReminders').registerBookingReminderJobs();
   if (process.env.WEEKLY_PAYOUTS_ENABLED === 'false') {
     console.log('Weekly payouts disabled (WEEKLY_PAYOUTS_ENABLED=false).');
     return;

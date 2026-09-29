@@ -1,0 +1,14 @@
+<h1>My Waitlist</h1>
+<% if (!entries.length) { %><p class="muted">You're not on any waitlist.</p><% } %>
+<% for (const e of entries) { %>
+<section class="card">
+  <h2><%= e.shop_name %><% if (e.staff_name) { %> — <%= e.staff_name %><% } %></h2>
+  <p class="muted">Status: <strong><%= e.status %></strong>
+    <% if (e.status === 'offered' && e.offer_expires_at) { %> · claim by <%= new Date(e.offer_expires_at).toLocaleString('en-US', { timeZone: 'America/Chicago' }) %><% } %>
+    <% if (e.notes) { %><br>Notes: <%= e.notes %><% } %></p>
+  <% if (e.status === 'offered') { %><p><a href="/waitlist/claim/<%= e.id %>">Claim your spot</a></p><% } %>
+  <% if (e.status === 'waiting' || e.status === 'offered') { %>
+  <form method="post" action="/waitlist/<%= e.id %>/leave" class="form"><button type="submit">Leave waitlist</button></form>
+  <% } %>
+</section>
+<% } %>

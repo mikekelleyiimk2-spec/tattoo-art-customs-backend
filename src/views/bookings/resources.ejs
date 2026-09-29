@@ -1,0 +1,117 @@
+<h1>Chairs, staff &amp; availability</h1>
+<p class="muted"><a href="/bookings/chairs">Chairs</a> · <a href="/bookings/staff">Staff</a> · <a href="/bookings/availability">Availability</a> · <a href="/bookings/manage">Bookings</a></p>
+
+<% if (tab === 'chairs') { %>
+<section class="card">
+  <h2>Chairs</h2>
+  <% chairs.forEach(function (c) { %>
+    <p><%= c.name %> <% if (!c.active) { %><span class="badge">inactive</span><% } %>
+      <form method="post" action="/bookings/chairs/<%= c.id %>/toggle" class="inline-form">
+        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="btn btn-small btn-quiet" type="submit"><%= c.active ? 'Deactivate' : 'Activate' %></button>
+      </form>
+      <form method="post" action="/bookings/chairs/<%= c.id %>/delete" class="inline-form">
+        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="btn btn-small btn-quiet" type="submit">Delete</button>
+      </form>
+    </p>
+  <% }); %>
+  <form method="post" action="/bookings/chairs" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <label for="chair-name">Add a chair</label>
+    <input type="text" id="chair-name" name="name" maxlength="80" required>
+    <p><button class="btn" type="submit">Add chair</button></p>
+  </form>
+</section>
+<% } %>
+
+<% if (tab === 'staff') { %>
+<section class="card">
+  <h2>Staff</h2>
+  <% staff.forEach(function (s) { %>
+    <p><%= s.name %> <% if (!s.active) { %><span class="badge">inactive</span><% } %>
+      <form method="post" action="/bookings/staff/<%= s.id %>/toggle" class="inline-form">
+        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="btn btn-small btn-quiet" type="submit"><%= s.active ? 'Deactivate' : 'Activate' %></button>
+      </form>
+      <form method="post" action="/bookings/staff/<%= s.id %>/delete" class="inline-form">
+        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="btn btn-small btn-quiet" type="submit">Delete</button>
+      </form>
+    </p>
+  <% }); %>
+  <form method="post" action="/bookings/staff" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <label for="staff-name">Add staff member</label>
+    <input type="text" id="staff-name" name="name" maxlength="80" required>
+    <label for="staff-artist">Linked artist account id (optional)</label>
+    <input type="text" id="staff-artist" name="artist_user_id" maxlength="64">
+    <p><button class="btn" type="submit">Add staff</button></p>
+  </form>
+</section>
+<% } %>
+
+<% if (tab === 'availability') { %>
+<section class="card">
+  <h2>Availability rules</h2>
+  <p class="muted">Times are in UTC. A rule with no staff/chair applies to everyone; pick one to scope it.</p>
+  <% rules.forEach(function (r) { %>
+    <p><%= ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][r.weekday] %>
+      <%= String(Math.floor(r.start_minutes / 60)).padStart(2, '0') %>:<%= String(r.start_minutes % 60).padStart(2, '0') %>–<%= String(Math.floor(r.end_minutes / 60)).padStart(2, '0') %>:<%= String(r.end_minutes % 60).padStart(2, '0') %>
+      (<%= r.slot_length_minutes %>-min slots)
+      <% if (r.staff_name) { %><span class="muted"><%= r.staff_name %></span><% } %>
+      <% if (r.chair_name) { %><span class="muted"><%= r.chair_name %></span><% } %>
+      <% if (!r.active) { %><span class="badge">inactive</span><% } %>
+      <form method="post" action="/bookings/availability/<%= r.id %>/toggle" class="inline-form">
+        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="btn btn-small btn-quiet" type="submit"><%= r.active ? 'Deactivate' : 'Activate' %></button>
+      </form>
+      <form method="post" action="/bookings/availability/<%= r.id %>/delete" class="inline-form">
+        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="btn btn-small btn-quiet" type="submit">Delete</button>
+      </form>
+    </p>
+  <% }); %>
+  <form method="post" action="/bookings/availability" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <div class="two-col">
+      <div>
+        <label for="av-weekday">Day</label>
+        <select id="av-weekday" name="weekday">
+          <option value="0">Sunday</option><option value="1">Monday</option>
+          <option value="2">Tuesday</option><option value="3">Wednesday</option>
+          <option value="4">Thursday</option><option value="5">Friday</option>
+          <option value="6">Saturday</option>
+        </select>
+      </div>
+      <div>
+        <label for="av-len">Slot length (minutes)</label>
+        <input type="number" id="av-len" name="slot_length_minutes" min="15" max="480" value="60">
+      </div>
+      <div>
+        <label for="av-start">Start (HH:MM UTC)</label>
+        <input type="text" id="av-start" name="start" placeholder="09:00" pattern="\d{1,2}:\d{2}" required>
+      </div>
+      <div>
+        <label for="av-end">End (HH:MM UTC)</label>
+        <input type="text" id="av-end" name="end" placeholder="17:00" pattern="\d{1,2}:\d{2}" required>
+      </div>
+      <div>
+        <label for="av-staff">Staff (optional)</label>
+        <select id="av-staff" name="staff_id">
+          <option value="">Everyone</option>
+          <% staffList.forEach(function (s) { %><option value="<%= s.id %>"><%= s.name %></option><% }); %>
+        </select>
+      </div>
+      <div>
+        <label for="av-chair">Chair (optional)</label>
+        <select id="av-chair" name="chair_id">
+          <option value="">Any chair</option>
+          <% chairList.forEach(function (c) { %><option value="<%= c.id %>"><%= c.name %></option><% }); %>
+        </select>
+      </div>
+    </div>
+    <p><button class="btn" type="submit">Add rule</button></p>
+  </form>
+</section>
+<% } %>

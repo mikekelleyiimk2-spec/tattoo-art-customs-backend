@@ -1,0 +1,5 @@
+<h1>Pick your slot — <%= shop.display_name %></h1>
+<section class="card">
+  <p><span class="badge ok">Deposit paid</span> <span class="muted"><%= money(deposit.amount_cents) %> credit applied at confirmation.</span></p>
+</section>
+<%- include('_slotpicker', { shopId: shop.id, staff: staff, chairs: chairs, postUrl: '/bookings/deposit-first/' + deposit.id + '/book', submitLabel: 'Confirm appointment', designId: designId }) %>

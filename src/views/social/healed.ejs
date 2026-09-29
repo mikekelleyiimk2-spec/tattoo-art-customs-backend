@@ -1,0 +1,43 @@
+<h1>Healed results</h1>
+<p class="muted">Fresh ink, fully healed — shared by the community.</p>
+
+<section class="card">
+  <h2>Share your healed tattoo</h2>
+  <form method="post" action="/social/healed" enctype="multipart/form-data" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p><label>Photo <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required></label></p>
+    <p><label>Caption<br><textarea name="caption" rows="2" maxlength="2000" required placeholder="How did it heal?"></textarea></label></p>
+    <p><button class="btn" type="submit">Post healed result</button></p>
+  </form>
+</section>
+
+<% for (const p of posts) { %>
+<section class="card">
+  <p class="muted"><strong><%= p.author_name || 'A customer' %></strong>
+    <% if (p.artist_name) { %> · artist: <%= p.artist_name %><% } %>
+    <% if (p.shop_name) { %> · shop: <%= p.shop_name %><% } %>
+    · <%= new Date(p.created_at).toLocaleDateString() %></p>
+  <% if (p.photo_path) { %><p><img src="/img/photos/<%= p.photo_path.split('/').pop() %>" alt="Healed tattoo photo" style="max-width:100%"></p><% } %>
+  <p><%= p.caption %></p>
+  <p>
+    <form method="post" action="/social/healed/<%= p.id %>/<%= p.liked_by_viewer ? 'unlike' : 'like' %>" style="display:inline">
+      <button class="btn<%= p.liked_by_viewer ? ' secondary' : '' %>" type="submit">
+        <%= p.liked_by_viewer ? 'Unlike' : 'Like' %> (<%= p.likes_count %>)
+      </button>
+    </form>
+    <span class="muted"><%= p.comment_count %> comment<%= p.comment_count === 1 ? '' : 's' %></span>
+  </p>
+  <form method="post" action="/social/healed/<%= p.id %>/comment" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p><input type="text" name="body" maxlength="2000" placeholder="Add a comment…" aria-label="Add a comment">
+    <button class="btn" type="submit">Comment</button></p>
+  </form>
+</section>
+<% } %>
+
+<% if (page > 1 || posts.length === per_page) { %>
+<p>
+  <% if (page > 1) { %><a href="/social/healed?page=<%= page - 1 %>">← Newer</a><% } %>
+  <% if (posts.length === per_page) { %> <a href="/social/healed?page=<%= page + 1 %>">Older →</a><% } %>
+</p>
+<% } %>

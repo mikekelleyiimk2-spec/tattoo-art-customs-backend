@@ -1,0 +1,16 @@
+<h1>Waitlist</h1>
+<p class="muted"><strong><%= waiting %></strong> waiting · <strong><%= offered %></strong> with open offers</p>
+<form method="post" action="/waitlist/offer-next" class="form">
+  <button type="submit">Offer next in line (next opening)</button>
+</form>
+<% if (!entries.length) { %><p class="muted">Nobody on the waitlist.</p><% } %>
+<% for (const e of entries) { %>
+<section class="card">
+  <h2><%= e.customer_name %> <span class="muted">(<%= e.customer_email %>)</span></h2>
+  <p class="muted">Status: <strong><%= e.status %></strong>
+    <% if (e.staff_name) { %> · <%= e.staff_name %><% } %>
+    <% if (e.status === 'offered' && e.offer_expires_at) { %> · offer expires <%= new Date(e.offer_expires_at).toLocaleString('en-US', { timeZone: 'America/Chicago' }) %><% } %>
+    <br>Waiting since <%= new Date(e.created_at).toLocaleString('en-US', { timeZone: 'America/Chicago' }) %>
+    <% if (e.notes) { %><br>Notes: <%= e.notes %><% } %></p>
+</section>
+<% } %>

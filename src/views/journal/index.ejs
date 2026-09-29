@@ -1,0 +1,40 @@
+<h1>My tattoo journal</h1>
+<p class="muted">Your appointments, entries, healed results, and saved designs — one timeline.</p>
+
+<section class="card">
+  <h2>New journal entry</h2>
+  <form method="post" action="/journal/entries" enctype="multipart/form-data" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p><label>Photo (optional) <input type="file" name="photo" accept="image/jpeg,image/png,image/webp"></label></p>
+    <p><label>Caption<br><textarea name="caption" rows="2" maxlength="2000" placeholder="What happened today?"></textarea></label></p>
+    <p><label>When (optional) <input type="date" name="happened_at"></label></p>
+    <p><button class="btn" type="submit">Save entry</button></p>
+  </form>
+</section>
+
+<% if (boards && boards.length) { %>
+<section class="card">
+  <h2>Your boards</h2>
+  <% for (const b of boards) { %>
+  <p><a href="/social/boards/<%= b.id %>"><%= b.name %></a> <span class="muted">(<%= b.item_count %>)</span></p>
+  <% } %>
+</section>
+<% } %>
+
+<% if (!timeline.length) { %><p class="muted">Nothing here yet — book an appointment or write your first entry.</p><% } %>
+<% for (const ev of timeline) { %>
+<section class="card">
+  <% if (ev.kind === 'journal') { %>
+    <p><span class="badge">Journal</span> <span class="muted"><%= new Date(ev.at).toLocaleDateString() %></span></p>
+    <% if (ev.entry.photo_path) { %><p><img src="/img/photos/<%= ev.entry.photo_path.split('/').pop() %>" alt="Journal photo" style="max-width:100%"></p><% } %>
+    <% if (ev.entry.caption) { %><p><%= ev.entry.caption %></p><% } %>
+  <% } else if (ev.kind === 'booking') { %>
+    <p><span class="badge ok">Appointment</span> <span class="muted"><%= new Date(ev.at).toLocaleDateString() %></span></p>
+    <p>With <strong><%= ev.booking.shop_name %></strong> — <%= ev.booking.status.replace(/_/g, ' ') %></p>
+  <% } else { %>
+    <p><span class="badge ok">Healed result</span> <span class="muted"><%= new Date(ev.at).toLocaleDateString() %></span></p>
+    <% if (ev.post.photo_path) { %><p><img src="/img/photos/<%= ev.post.photo_path.split('/').pop() %>" alt="Healed tattoo photo" style="max-width:100%"></p><% } %>
+    <p><%= ev.post.caption %> (<%= ev.post.likes_count %> likes)</p>
+  <% } %>
+</section>
+<% } %>

@@ -1,0 +1,18 @@
+<h1>Flash Events</h1>
+<p class="muted">Pop-up flash days and special events from tattoo shops.</p>
+<% if (!events.length) { %><p class="muted">No upcoming events right now.</p><% } %>
+<% for (const e of events) { %>
+<section class="card">
+  <h2><%= e.title %></h2>
+  <p class="muted"><%= e.shop_name %> · <%= new Date(e.starts_at).toLocaleString('en-US', { timeZone: 'America/Chicago' }) %>
+    <% if (e.ends_at) { %>– <%= new Date(e.ends_at).toLocaleTimeString('en-US', { timeZone: 'America/Chicago', hour: 'numeric', minute: '2-digit' }) %><% } %></p>
+  <% if (e.description) { %><p><%= e.description %></p><% } %>
+  <p class="muted"><%= e.signup_count %> signed up<% if (e.cap != null) { %> / <%= e.cap %> spots<% } %>
+    · <%= (Number(e.registration_price_cents) || 0) > 0 ? 'Registration ' + money(Number(e.registration_price_cents)) : 'Free' %></p>
+  <% if (e.my_signup) { %>
+  <form method="post" action="/events/<%= e.id %>/leave" class="form"><button type="submit">Leave event</button></form>
+  <% } else { %>
+  <form method="post" action="/events/<%= e.id %>/signup" class="form"><button type="submit" <%= (e.cap != null && e.signup_count >= e.cap) ? 'disabled' : '' %>><%= (Number(e.registration_price_cents) || 0) > 0 ? 'Register — ' + money(Number(e.registration_price_cents)) : 'Sign up' %></button></form>
+  <% } %>
+</section>
+<% } %>

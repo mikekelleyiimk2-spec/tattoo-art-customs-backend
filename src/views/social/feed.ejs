@@ -1,0 +1,42 @@
+<h1>Your feed</h1>
+<p class="muted">Announcements from shops you follow and healed results from artists you follow.</p>
+
+<section class="card">
+  <h2>Post an announcement</h2>
+  <p class="muted">Shops with an active subscription can announce news, guest spots, and booking openings here. Business location, hours, and appointment requirements are fine — email, phone numbers, social handles, and payment info are not.</p>
+  <form method="post" action="/social/announce" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p><label><textarea name="body" rows="2" maxlength="2000" placeholder="What's new at your shop?"></textarea></label></p>
+    <p><button class="btn" type="submit">Post announcement</button></p>
+  </form>
+</section>
+
+<% if (!items.length) { %>
+<p class="muted">Nothing here yet — follow some shops and artists to fill your feed.</p>
+<% } %>
+<% for (const it of items) { %>
+<section class="card">
+  <% if (it.kind === 'announcement') { %>
+    <p><span class="badge">Announcement</span></p>
+    <p><strong><%= it.author_name || 'A shop' %></strong> <span class="muted">· <%= new Date(it.created_at).toLocaleDateString() %></span></p>
+    <p><%= it.body %></p>
+  <% } else { %>
+    <p><span class="badge ok">Healed result</span></p>
+    <p><strong><%= it.author_name || 'An artist' %></strong> <span class="muted">· <%= new Date(it.created_at).toLocaleDateString() %></span></p>
+    <% if (it.photo_path) { %><p><img src="/img/photos/<%= it.photo_path.split('/').pop() %>" alt="Healed tattoo photo" style="max-width:100%"></p><% } %>
+    <p><%= it.body %></p>
+    <form method="post" action="/social/healed/<%= it.id %>/<%= it.liked_by_viewer ? 'unlike' : 'like' %>" style="display:inline">
+      <button class="btn<%= it.liked_by_viewer ? ' secondary' : '' %>" type="submit">
+        <%= it.liked_by_viewer ? 'Unlike' : 'Like' %> (<%= it.likes_count %>)
+      </button>
+    </form>
+  <% } %>
+</section>
+<% } %>
+
+<% if (page > 1 || items.length === per_page) { %>
+<p>
+  <% if (page > 1) { %><a href="/social/feed?page=<%= page - 1 %>">← Newer</a><% } %>
+  <% if (items.length === per_page) { %> <a href="/social/feed?page=<%= page + 1 %>">Older →</a><% } %>
+</p>
+<% } %>

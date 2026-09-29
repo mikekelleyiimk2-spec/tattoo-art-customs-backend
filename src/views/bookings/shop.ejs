@@ -1,0 +1,20 @@
+<h1>Book an appointment — <%= shop.display_name %></h1>
+
+<% if (!bookingActive) { %>
+  <section class="card"><p class="muted">Online booking is paused for this shop right now. Check back soon.</p></section>
+<% } else if (depositFirst) { %>
+  <section class="card">
+    <h2>Deposit first</h2>
+    <p>This shop collects the booking deposit <strong>before</strong> you pick a time. Pay the deposit, then choose your slot from their live availability.</p>
+    <p><a class="btn" href="/bookings/deposit-first/<%= shop.id %>">Start with the deposit</a></p>
+  </section>
+<% } else { %>
+  <% if (settings.booking_instructions) { %>
+    <section class="card"><h2>Before you book</h2><p><%= settings.booking_instructions %></p></section>
+  <% } %>
+  <% if (settings.deposit_policy_text) { %>
+    <section class="card"><h2>Deposit policy</h2><p><%= settings.deposit_policy_text %></p></section>
+  <% } %>
+  <%- include('_slotpicker', { shopId: shop.id, staff: staff, chairs: chairs, postUrl: '/bookings/hold', submitLabel: 'Hold this slot', designId: designId }) %>
+  <p class="muted">Holding a slot reserves it for <%= settings.slot_hold_minutes %> minutes while you complete the deposit checkout.</p>
+<% } %>

@@ -98,6 +98,9 @@ async function main() {
   ok(cfg.pricing.foundingShop.priceCents === 8328, '$83.28 founding-shop price (base $79.99 + fee)');
   ok(cfg.pricing.plans.customer_annual && cfg.pricing.plans.customer_annual.priceCents === 5224, 'annual customer plan $52.24/year (base $50 + fee)');
   ok(cfg.foundingShopActive(), 'founding-shop window open (fallback ends 2027-03-01)');
+
+  console.log('booking fees (shop toolset):');
+  await require('./shoptools-phase1').runUnitTests(ok);
   ok(cfg.foundingShopWindowEnd === Date.parse('2027-03-01T00:00:00-06:00'), 'founding window is a fixed date, not rolling');
   const paypal = require('../src/lib/paypal');
   const trial = paypal.firstMonthTrialCycles(567);
@@ -523,6 +526,10 @@ async function main() {
   await require('./adminTaskPay').runDbTests(ok);
   await require('./founding').runDbTests(ok);
   await require('./replacements').runDbTests(ok);
+  await require('./shoptools-phase2').runDbTests(ok);
+  await require('./shoptools-phase3').runDbTests(ok);
+  await require('./shoptools-phase4').runDbTests(ok);
+  await require('./shoptools-phase5').runDbTests(ok);
 
   await db.close();
 
@@ -676,6 +683,10 @@ async function main() {
   r = await areq('GET', '/admin');
   ok(r.status === 200, 'admin dashboard loads');
   await require('./founding').runHttpTests(ok, req, areq);
+  await require('./shoptools-phase2').runHttpTests(ok, req);
+  await require('./shoptools-phase3').runHttpTests(ok, req);
+  await require('./shoptools-phase4').runHttpTests(ok, req);
+  await require('./shoptools-phase5').runHttpTests(ok, req);
   r = await areq('POST', `/admin/orders/${orderId}/confirm-manual`);
   ok(r.status === 302, 'admin confirms manual payment');
 

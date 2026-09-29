@@ -1,0 +1,55 @@
+<h1>Manage bookings</h1>
+<p class="muted"><a href="/bookings/settings">Booking settings</a> · <a href="/bookings/chairs">Chairs</a> · <a href="/bookings/staff">Staff</a> · <a href="/bookings/availability">Availability</a></p>
+
+<section class="card">
+  <h2>Upcoming</h2>
+  <% if (!upcoming.length) { %><p class="muted">Nothing booked.</p><% } %>
+  <% upcoming.forEach(function (b) { %>
+    <div class="booking-row">
+      <p><strong><%= new Date(Number(b.start_at)).toUTCString().slice(0, 22) %> UTC</strong>
+        — <%= b.customer_name %> <span class="badge"><%= b.status.replace(/_/g, ' ') %></span>
+        <span class="muted"><%= money(b.deposit_cents) %> deposit</span></p>
+      <p>
+        <a class="btn btn-small" href="/bookings/receipt/<%= b.id %>">Receipt</a>
+        <% if (b.status === 'confirmed') { %>
+          <form method="post" action="/bookings/<%= b.id %>/complete" class="inline-form">
+            <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+            <button class="btn btn-small" type="submit">Complete</button>
+          </form>
+          <form method="post" action="/bookings/<%= b.id %>/no-show" class="inline-form">
+            <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+            <button class="btn btn-small btn-quiet" type="submit">No-show</button>
+          </form>
+          <form method="post" action="/bookings/<%= b.id %>/balance" class="inline-form">
+            <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+            <input type="number" name="amount_dollars" min="1" step="0.01" placeholder="$ balance due" aria-label="Balance due in dollars" style="width:9em">
+            <button class="btn btn-small btn-quiet" type="submit">Record balance</button>
+          </form>
+        <% } %>
+        <form method="post" action="/bookings/<%= b.id %>/cancel" class="inline-form">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn btn-small btn-quiet" type="submit">Cancel</button>
+        </form>
+      </p>
+    </div>
+  <% }); %>
+</section>
+
+<% if (deposits.length) { %>
+<section class="card">
+  <h2>Unspent deposit credits</h2>
+  <% deposits.forEach(function (d) { %>
+    <p><%= d.customer_name %> — <strong><%= money(d.amount_cents) %></strong> <span class="muted">paid <%= new Date(Number(d.created_at)).toLocaleDateString() %></span></p>
+  <% }); %>
+</section>
+<% } %>
+
+<section class="card">
+  <h2>Past</h2>
+  <% if (!past.length) { %><p class="muted">No past bookings.</p><% } %>
+  <% past.forEach(function (b) { %>
+    <p><span class="muted"><%= new Date(Number(b.start_at)).toUTCString().slice(0, 22) %></span>
+      — <%= b.customer_name %> <span class="badge"><%= b.status.replace(/_/g, ' ') %></span>
+      <a href="/bookings/receipt/<%= b.id %>">Receipt</a></p>
+  <% }); %>
+</section>

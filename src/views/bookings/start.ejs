@@ -1,0 +1,17 @@
+<h1>Get this tattooed</h1>
+<p class="muted">Pick a shop with live booking below — you'll choose your artist, time, and deposit next.</p>
+<% if (!shops.length) { %>
+  <section class="card"><p class="muted">No shops are taking online bookings right now. Check back soon.</p></section>
+<% } %>
+<% shops.forEach(function (s) { %>
+  <section class="card">
+    <h2><%= s.display_name %></h2>
+    <form method="post" action="/bookings/start" class="form">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <input type="hidden" name="shop_id" value="<%= s.id %>">
+      <input type="hidden" name="design_id" value="<%= designId || '' %>">
+      <p><button class="btn" type="submit">Book at <%= s.display_name %></button></p>
+    </form>
+    <p class="muted"><a href="/bookings/shop/<%= s.id %><%= designId ? '?design_id=' + encodeURIComponent(designId) : '' %>">View availability first</a></p>
+  </section>
+<% }); %>

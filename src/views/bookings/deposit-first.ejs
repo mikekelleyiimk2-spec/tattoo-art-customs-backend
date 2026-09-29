@@ -1,0 +1,22 @@
+<h1>Booking deposit — <%= shop.display_name %></h1>
+<section class="card">
+  <h2>How this works</h2>
+  <ol>
+    <li>Pay the booking deposit below (held as credit with the shop).</li>
+    <li>Pick your slot from the shop's live availability.</li>
+    <li>Your appointment is confirmed instantly — the deposit credit is applied.</li>
+  </ol>
+  <% if (settings.deposit_policy_text) { %><p><%= settings.deposit_policy_text %></p><% } %>
+  <p class="muted">Deposit credit expires <%= settings.deposit_credit_expiry_days %> days after payment.</p>
+</section>
+<section class="card">
+  <h2>Deposit breakdown</h2>
+  <ul class="receipt-lines">
+    <% lines.forEach(function (l) { %><li><%= l %></li><% }); %>
+  </ul>
+  <p class="muted">The 5% platform fee is non-refundable.</p>
+  <form method="post" action="/bookings/deposit-first/<%= shop.id %>" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p><button class="btn" type="submit">Pay <%= money(fees.total) %> deposit with PayPal</button></p>
+  </form>
+</section>

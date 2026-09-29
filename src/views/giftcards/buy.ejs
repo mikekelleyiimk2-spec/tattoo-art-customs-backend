@@ -1,0 +1,68 @@
+<h1>Buy a Gift Card</h1>
+<p class="muted">Give tattoo art. The buyer pays the card value + a 5% platform fee + processing — redemption is always fee-free.</p>
+
+<form method="post" action="/giftcards/buy" class="form">
+  <fieldset>
+    <legend>Amount</legend>
+    <% for (const p of presets) { %>
+    <label><input type="radio" name="preset" value="<%= p %>" <%= p === 5000 ? 'checked' : '' %>> <%= money(p) %></label>
+    <% } %>
+    <label><input type="radio" name="preset" value="" id="custom-radio"> Custom
+      <input type="number" name="custom_amount" id="custom-amount" min="<%= minCustom / 100 %>" max="<%= maxCustom / 100 %>" step="1" placeholder="<%= minCustom / 100 %>–<%= maxCustom / 100 %>">
+    </label>
+  </fieldset>
+
+  <div id="fee-preview" class="card">
+    <h2>What you'll pay</h2>
+    <p>Card value: <strong id="fp-base"><%= money(defaultFees.base) %></strong><br>
+    Platform fee (5%): <span id="fp-fee"><%= money(defaultFees.platformFee) %></span><br>
+    Processing: <span id="fp-proc"><%= money(defaultFees.processing) %></span><br>
+    <strong>Total: <span id="fp-total"><%= money(defaultFees.total) %></span></strong></p>
+  </div>
+
+  <label>Recipient email (optional — we'll email them the code)
+    <input type="email" name="recipient_email" maxlength="200" placeholder="friend@example.com">
+  </label>
+
+  <label>For a specific shop (optional)
+    <select name="shop_user_id">
+      <option value="">Any shop on Tattoo Art Customs</option>
+      <% for (const s of shops) { %>
+      <option value="<%= s.id %>"><%= s.display_name %></option>
+      <% } %>
+    </select>
+  </label>
+
+  <button type="submit">Continue to PayPal</button>
+</form>
+
+<script>
+(function () {
+  var presets = document.querySelectorAll('input[name="preset"]');
+  var custom = document.getElementById('custom-amount');
+  function currentCents() {
+    var sel = document.querySelector('input[name="preset"]:checked');
+    if (sel && sel.value) return parseInt(sel.value, 10);
+    var v = parseFloat(custom.value || '0');
+    return Math.round(v * 100);
+  }
+  async function refresh() {
+    var cents = currentCents();
+    if (!cents || cents <= 0) return;
+    try {
+      var r = await fetch('/giftcards/fees?amount_cents=' + cents);
+      var j = await r.json();
+      if (!j.ok) return;
+      document.getElementById('fp-base').textContent = j.baseFmt;
+      document.getElementById('fp-fee').textContent = j.platformFeeFmt;
+      document.getElementById('fp-proc').textContent = j.processingFmt;
+      document.getElementById('fp-total').textContent = j.totalFmt;
+    } catch (e) { /* preview is best-effort */ }
+  }
+  presets.forEach(function (p) { p.addEventListener('change', refresh); });
+  custom.addEventListener('input', function () {
+    document.getElementById('custom-radio').checked = true;
+    refresh();
+  });
+})();
+</script>

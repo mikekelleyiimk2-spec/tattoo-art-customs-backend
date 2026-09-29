@@ -1,0 +1,19 @@
+<h1>Intake Form</h1>
+<p class="muted"><strong><%= booking.customer_name %></strong> (<%= booking.customer_email %>) — booked for <%= new Date(booking.start_at).toLocaleString('en-US', { timeZone: 'America/Chicago' }) %></p>
+<% if (!intake) { %><p class="muted">The customer hasn't filled out the intake form yet.</p><% } else { %>
+<section class="card">
+  <p><strong>Placement:</strong> <%= intake.placement || '—' %></p>
+  <p><strong>Size:</strong> <%= intake.size_text || '—' %></p>
+  <p><strong>Cover-up:</strong> <%= intake.cover_up ? 'Yes' : 'No' %></p>
+  <p><strong>Details:</strong></p>
+  <p><%= intake.details || '—' %></p>
+  <% if (photos.length) { %>
+  <p><strong>Reference photos:</strong></p>
+  <div>
+    <% photos.forEach(function (p, i) { %>
+    <a href="/intake/photo/<%= booking.id %>/<%= i %>" target="_blank" rel="noopener"><img src="/intake/photo/<%= booking.id %>/<%= i %>" alt="Reference photo <%= i + 1 %>" style="max-width:180px;margin:4px"></a>
+    <% }); %>
+  </div>
+  <% } %>
+</section>
+<% } %>

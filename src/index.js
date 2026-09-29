@@ -151,6 +151,14 @@ app.use('/prints', require('./routes/prints'));
 app.use('/', require('./routes/ads'));
 app.use('/messages', require('./routes/messages'));
 app.use('/admin', require('./routes/admin'));
+// Shop toolset (booking, gift cards, intake, waitlist, events, social, journal).
+app.use('/bookings', require('./routes/bookings'));
+app.use('/giftcards', require('./routes/giftcards'));
+app.use('/intake', require('./routes/intake'));
+app.use('/waitlist', require('./routes/waitlist'));
+app.use('/events', require('./routes/events'));
+app.use('/social', require('./routes/social'));
+app.use('/journal', require('./routes/journal'));
 
 // 404 + error handlers
 // Test-only route: proves an async handler failure renders a 500 for that

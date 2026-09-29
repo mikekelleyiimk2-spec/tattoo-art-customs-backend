@@ -1,0 +1,8 @@
+<h1>Gift Card Ready</h1>
+<% if (already) { %><p class="muted">This purchase was already activated.</p><% } %>
+<section class="card">
+  <h2><%= amount %> gift card</h2>
+  <p>Your code:</p>
+  <p><input type="text" readonly value="<%= code %>" onclick="this.select()" aria-label="Gift card code" style="font-size:1.4rem;letter-spacing:.15em"></p>
+  <p class="muted">We've emailed the code to you<%= typeof recipient !== 'undefined' && recipient ? ' and the recipient' : '' %>. Redeem it when booking: <a href="/giftcards/redeem">redeem a gift card</a>.</p>
+</section>

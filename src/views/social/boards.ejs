@@ -1,0 +1,32 @@
+<h1>Your design boards</h1>
+<p class="muted">Save designs you're dreaming about into boards.</p>
+
+<section class="card">
+  <h2>New board</h2>
+  <form method="post" action="/social/boards" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p><input type="text" name="name" maxlength="80" placeholder="Board name" aria-label="Board name" required>
+    <button class="btn" type="submit">Create board</button></p>
+  </form>
+</section>
+
+<% if (!boards.length) { %><p class="muted">No boards yet.</p><% } %>
+<% for (const b of boards) { %>
+<section class="card">
+  <h2><a href="/social/boards/<%= b.id %>"><%= b.name %></a></h2>
+  <p class="muted"><%= b.item_count %> design<%= b.item_count === 1 ? '' : 's' %></p>
+</section>
+<% } %>
+
+<% if (following && following.length) { %>
+<section class="card">
+  <h2>Following</h2>
+  <% for (const f of following) { %>
+  <p><strong><%= f.display_name || f.id %></strong> <span class="muted">(<%= f.role %>)</span>
+    <form method="post" action="/social/unfollow/<%= f.id %>" style="display:inline">
+      <input type="hidden" name="back" value="/social/boards">
+      <button class="btn secondary" type="submit">Unfollow</button>
+    </form></p>
+  <% } %>
+</section>
+<% } %>

@@ -1,0 +1,9 @@
+<h1>My Gift Cards</h1>
+<% if (!cards.length) { %><p class="muted">You haven't bought any gift cards yet. <a href="/giftcards/buy">Buy one</a>.</p><% } %>
+<% for (const c of cards) { %>
+<section class="card">
+  <h2><%= money(c.amount_cents) %> — <code><%= c.code %></code></h2>
+  <p class="muted">Status: <%= c.status %><% if (c.recipient_email) { %> · sent to <%= c.recipient_email %><% } %></p>
+  <% if (c.status === 'active') { %><p><a href="/giftcards/redeem">Redeem</a></p><% } %>
+</section>
+<% } %>

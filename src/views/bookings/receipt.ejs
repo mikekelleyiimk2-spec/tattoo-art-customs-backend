@@ -1,0 +1,45 @@
+<h1>Receipt</h1>
+<section class="card">
+  <h2><%= shop ? shop.display_name : 'Booking' %></h2>
+  <p>Customer: <strong><%= customer ? customer.display_name : '' %></strong></p>
+  <p>Appointment: <strong><%= new Date(Number(booking.start_at)).toUTCString().slice(0, 22) %> UTC</strong></p>
+  <p>Status: <span class="badge"><%= booking.status.replace(/_/g, ' ') %></span></p>
+  <% if (booking.design_id) { %><p class="muted">Design: <a href="/design/<%= booking.design_id %>"><%= booking.design_id.slice(0, 8) %></a></p><% } %>
+</section>
+<% if (receipt) { %>
+<section class="card">
+  <h2>Payment</h2>
+  <% try { var rl = JSON.parse(receipt.lines_json); %>
+    <ul class="receipt-lines">
+      <% rl.lines.forEach(function (l) { %><li><%= l %></li><% }); %>
+    </ul>
+  <% } catch (e) { %><p class="muted">Receipt details unavailable.</p><% } %>
+  <% if (payment) { %>
+    <p class="muted">Payment status: <%= payment.status %><% if (payment.refunded_cents) { %> — refunded <%= money(payment.refunded_cents) %><% } %></p>
+  <% } %>
+  <% if (deposit) { %>
+    <p class="muted">Deposit status: <%= deposit.status %></p>
+  <% } %>
+  <% if (typeof balancePayment !== 'undefined' && balancePayment) { %>
+    <p class="muted">Session balance: <%= balancePayment.status %><% if (balancePayment.refunded_cents) { %> — refunded <%= money(balancePayment.refunded_cents) %><% } %></p>
+  <% } %>
+</section>
+<% } else { %>
+<section class="card"><p class="muted">No payment recorded yet.</p></section>
+<% } %>
+<% if (typeof isCustomer !== 'undefined' && isCustomer && typeof balancePayment !== 'undefined' && balancePayment && balancePayment.status === 'pending') { %>
+<section class="card">
+  <h2>Session balance due: <%= money(balancePayment.total_cents) %></h2>
+  <p class="muted">The shop recorded a remaining balance on this booking. Pay it here on the website — the shop receives 100% of the balance amount.</p>
+  <p><a class="btn" href="/bookings/balance/<%= balancePayment.id %>">Pay <%= money(balancePayment.total_cents) %></a></p>
+</section>
+<% } %>
+<% if (['pending_deposit', 'confirmed'].includes(booking.status)) { %>
+<section class="card">
+  <h2>Cancel this booking</h2>
+  <form method="post" action="/bookings/<%= booking.id %>/cancel" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p><button class="btn btn-quiet" type="submit">Cancel booking</button></p>
+  </form>
+</section>
+<% } %>

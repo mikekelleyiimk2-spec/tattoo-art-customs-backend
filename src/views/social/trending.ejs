@@ -1,0 +1,12 @@
+<h1>Trending artists</h1>
+<p class="muted">Ranked by healed-post activity over the last 30 days — posts plus the likes they earned.</p>
+
+<% if (!artists.length) { %><p class="muted">No activity yet — be the first to share a healed result.</p><% } %>
+<ol>
+<% for (const a of artists) { %>
+  <li>
+    <strong><%= a.display_name || 'An artist' %></strong>
+    <span class="muted">— <%= a.post_count %> post<%= a.post_count === 1 ? '' : 's' %>, <%= a.like_count %> like<%= a.like_count === 1 ? '' : 's' %></span>
+  </li>
+<% } %>
+</ol>

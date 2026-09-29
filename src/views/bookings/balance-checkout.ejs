@@ -1,0 +1,17 @@
+<h1>Session balance checkout</h1>
+<section class="card">
+  <h2><%= shop ? shop.display_name : 'Booking' %></h2>
+  <p class="muted">Appointment: <%= new Date(Number(booking.start_at)).toUTCString().slice(0, 22) %> UTC</p>
+</section>
+<section class="card">
+  <h2>What you're paying</h2>
+  <ul class="receipt-lines">
+    <% lines.forEach(function (l) { %><li><%= l %></li><% }); %>
+  </ul>
+  <p class="muted">The 5% platform fee is non-refundable. The shop receives 100% of the balance.</p>
+  <form method="post" action="/bookings/balance/<%= payment.id %>" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p><button class="btn" type="submit">Pay <%= money(fees.total) %> with PayPal</button></p>
+  </form>
+  <p><a href="/bookings/receipt/<%= booking.id %>">Back to receipt</a></p>
+</section>

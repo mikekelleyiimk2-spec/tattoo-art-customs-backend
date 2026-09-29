@@ -1,0 +1,53 @@
+<h1>Booking settings</h1>
+<form method="post" action="/bookings/settings" class="form">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+  <section class="card">
+    <h2>Booking flow</h2>
+    <label class="check">
+      <input type="checkbox" name="deposit_before_booking" value="1" <%= Number(settings.deposit_before_booking) === 1 ? 'checked' : '' %>>
+      Collect the deposit <strong>before</strong> the customer picks a slot
+    </label>
+    <div class="two-col flow-explain">
+      <div>
+        <h3>Off — book first (standard)</h3>
+        <p class="muted">The customer picks a time, the slot is held for <%= settings.slot_hold_minutes %> minutes, then they pay the deposit at checkout to confirm. Best when you want the calendar to fill fast.</p>
+      </div>
+      <div>
+        <h3>On — deposit first (reversed)</h3>
+        <p class="muted">The customer pays the deposit up front as shop credit, <em>then</em> picks a time from your live availability and the appointment confirms instantly. Best when you want only serious bookings on your calendar.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Deposit</h2>
+    <label for="deposit_amount_cents">Deposit amount (cents — e.g. 5000 = $50.00; 0 = $1 flat booking fee)</label>
+    <input type="number" id="deposit_amount_cents" name="deposit_amount_cents" min="0" step="100" value="<%= settings.deposit_amount_cents || 0 %>">
+    <label for="deposit_policy_text">Deposit policy (shown to customers)</label>
+    <textarea id="deposit_policy_text" name="deposit_policy_text" rows="3" maxlength="2000"><%= settings.deposit_policy_text || '' %></textarea>
+    <label class="check">
+      <input type="checkbox" name="noshow_forfeit_deposit" value="1" <%= Number(settings.noshow_forfeit_deposit) === 1 ? 'checked' : '' %>>
+      No-shows forfeit the deposit (you keep it)
+    </label>
+    <label for="deposit_credit_expiry_days">Deposit credit expires after (days)</label>
+    <input type="number" id="deposit_credit_expiry_days" name="deposit_credit_expiry_days" min="1" max="365" value="<%= settings.deposit_credit_expiry_days %>">
+  </section>
+
+  <section class="card">
+    <h2>Cancellation</h2>
+    <label for="cancel_window_hours">Free cancellation up to (hours before the appointment)</label>
+    <input type="number" id="cancel_window_hours" name="cancel_window_hours" min="1" max="720" value="<%= settings.cancel_window_hours %>">
+    <p class="muted">Inside the window the customer gets the deposit base refunded (the 5% platform fee is never refunded). Outside it, the deposit is forfeited when the box above is checked.</p>
+  </section>
+
+  <section class="card">
+    <h2>Holds &amp; instructions</h2>
+    <label for="slot_hold_minutes">Slot hold time (minutes)</label>
+    <input type="number" id="slot_hold_minutes" name="slot_hold_minutes" min="5" max="1440" value="<%= settings.slot_hold_minutes %>">
+    <label for="booking_instructions">Booking instructions (shown on your booking page)</label>
+    <textarea id="booking_instructions" name="booking_instructions" rows="3" maxlength="2000"><%= settings.booking_instructions || '' %></textarea>
+  </section>
+
+  <p><button class="btn" type="submit">Save settings</button></p>
+</form>

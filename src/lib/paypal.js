@@ -75,8 +75,37 @@ async function createCheckoutOrder({ amountCents, description, returnUrl, cancel
 }
 
 async function captureCheckoutOrder(paypalOrderId) {
+  // Test-only stub (TAC_TEST_PAYPAL_STUB=1, never active in production):
+  // the automated suite runs the server in a separate process, so it cannot
+  // monkey-patch this module. Returns a canned COMPLETED capture so the
+  // booking capture routes can be exercised over HTTP without network access.
+  // (createCheckoutOrder keeps its real behavior — the orders buy flow
+  // depends on it throwing when PayPal is unconfigured.)
+  if (process.env.TAC_TEST_PAYPAL_STUB === '1') {
+    testStubSeq += 1;
+    const capId = `C-STUB-${testStubSeq}`;
+    return {
+      id: paypalOrderId, status: 'COMPLETED',
+      purchase_units: [{ payments: { captures: [{ id: capId, status: 'COMPLETED', amount: { currency_code: 'USD', value: '0.00' } }] } }],
+    };
+  }
   assertConfigured();
   return api(`/v2/checkout/orders/${paypalOrderId}/capture`, 'POST', {});
+}
+
+// Refund a captured checkout payment (partial or full). Used by booking
+// cancellations inside the free-cancel window: the shop's `base` is refunded,
+// the 5% platform fee is never refunded.
+async function refundCheckoutCapture(paypalCaptureId, amountCents) {
+  if (process.env.TAC_TEST_PAYPAL_STUB === '1') {
+    testStubSeq += 1;
+    return { id: `R-STUB-${testStubSeq}`, status: 'COMPLETED' };
+  }
+  assertConfigured();
+  const body = Number.isInteger(amountCents) && amountCents > 0
+    ? { amount: { currency_code: 'USD', value: (amountCents / 100).toFixed(2) } }
+    : {};
+  return api(`/v2/payments/captures/${paypalCaptureId}/refund`, 'POST', body);
 }
 
 // --- Subscriptions (memberships) ---
@@ -254,6 +283,7 @@ module.exports = {
   assertConfigured,
   createCheckoutOrder,
   captureCheckoutOrder,
+  refundCheckoutCapture,
   createSubscription,
   createBillingPlan,
   foundingShopPlanPayload,

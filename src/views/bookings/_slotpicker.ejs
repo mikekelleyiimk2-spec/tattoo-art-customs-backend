@@ -1,0 +1,85 @@
+<%# Slot picker partial. Locals: shopId, staff, chairs, postUrl, submitLabel, designId %>
+<section class="card">
+  <h2>Pick a time</h2>
+  <div class="two-col">
+    <div>
+      <label for="sp-staff">Artist / staff</label>
+      <select id="sp-staff">
+        <option value="">Any</option>
+        <% staff.forEach(function (s) { %>
+          <option value="<%= s.id %>"><%= s.name %></option>
+        <% }); %>
+      </select>
+    </div>
+    <div>
+      <label for="sp-chair">Chair</label>
+      <select id="sp-chair">
+        <option value="">Any</option>
+        <% chairs.forEach(function (c) { %>
+          <option value="<%= c.id %>"><%= c.name %></option>
+        <% }); %>
+      </select>
+    </div>
+  </div>
+  <label for="sp-date">Date</label>
+  <input type="date" id="sp-date">
+  <p><button class="btn" type="button" id="sp-find">Find open slots</button></p>
+  <p class="muted">Times shown in UTC. The shop confirms the final time with you.</p>
+  <div id="sp-slots" class="slot-grid"></div>
+  <form method="post" action="<%= postUrl %>" class="form" id="sp-form" style="display:none">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <input type="hidden" name="shop_id" value="<%= shopId %>">
+    <input type="hidden" name="staff_id" id="sp-f-staff" value="">
+    <input type="hidden" name="chair_id" id="sp-f-chair" value="">
+    <input type="hidden" name="start_at" id="sp-f-start" value="">
+    <input type="hidden" name="end_at" id="sp-f-end" value="">
+    <input type="hidden" name="design_id" value="<%= designId || '' %>">
+    <p id="sp-chosen" class="muted"></p>
+    <p><button class="btn" type="submit" id="sp-submit"><%= submitLabel %></button></p>
+  </form>
+</section>
+<script>
+(function () {
+  var shopId = <%= JSON.stringify(shopId) %>;
+  var dateEl = document.getElementById('sp-date');
+  var d = new Date(); d.setUTCDate(d.getUTCDate() + 1);
+  dateEl.value = d.toISOString().slice(0, 10);
+  function fmt(ts) {
+    return new Date(ts).toUTCString().replace('GMT', 'UTC').slice(0, 22);
+  }
+  document.getElementById('sp-find').addEventListener('click', function () {
+    var day = dateEl.value;
+    if (!day) return;
+    var from = Date.parse(day + 'T00:00:00Z');
+    var to = from + 86400000;
+    var qs = 'shop_id=' + encodeURIComponent(shopId)
+      + '&from=' + from + '&to=' + to
+      + '&staff_id=' + encodeURIComponent(document.getElementById('sp-staff').value)
+      + '&chair_id=' + encodeURIComponent(document.getElementById('sp-chair').value);
+    var grid = document.getElementById('sp-slots');
+    grid.innerHTML = '<p class="muted">Loading…</p>';
+    fetch('/bookings/slots?' + qs).then(function (r) { return r.json(); }).then(function (data) {
+      grid.innerHTML = '';
+      if (!data.ok || !data.slots.length) {
+        grid.innerHTML = '<p class="muted">No open slots that day — try another date.</p>';
+        return;
+      }
+      data.slots.forEach(function (s) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'btn slot';
+        b.textContent = fmt(s.start_at) + ' – ' + new Date(s.end_at).toISOString().slice(14, 19) + ' UTC';
+        b.addEventListener('click', function () {
+          document.getElementById('sp-f-staff').value = s.staff_id || document.getElementById('sp-staff').value || '';
+          document.getElementById('sp-f-chair').value = s.chair_id || document.getElementById('sp-chair').value || '';
+          document.getElementById('sp-f-start').value = s.start_at;
+          document.getElementById('sp-f-end').value = s.end_at;
+          document.getElementById('sp-chosen').textContent = 'Selected: ' + fmt(s.start_at);
+          document.getElementById('sp-form').style.display = '';
+          document.getElementById('sp-submit').focus();
+        });
+        grid.appendChild(b);
+      });
+    }).catch(function () { grid.innerHTML = '<p class="muted">Could not load slots.</p>'; });
+  });
+})();
+</script>
