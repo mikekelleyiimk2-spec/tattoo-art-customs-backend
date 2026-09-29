@@ -1,7 +1,13 @@
 node_modules/
 .env
 data/
-assets/
+assets/*
+!assets/designs/
+!assets/catalog/
+assets/designs/*
+!assets/designs/linework-wm/
+assets/catalog/*
+!assets/catalog/manifest.json
 *.log
 .DS_Store
 *.sqlite3
