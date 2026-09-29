@@ -53,6 +53,11 @@ app.use(helmet({
       // Without it, CSP silently kills those clicks (reported: hamburger
       // menu and cookie "Got it" button dead on mobile).
       scriptSrc: ["'self'", "'unsafe-inline'", 'https://www.paypal.com', 'https://www.sandbox.paypal.com'],
+      // helmet defaults script-src-attr to 'none', which kills inline
+      // onclick handlers even when script-src allows 'unsafe-inline'.
+      // The mobile hamburger, cookie banner, and payout controls all use
+      // inline handlers, so drop that directive entirely.
+      scriptSrcAttr: null,
       frameSrc: ["'self'", 'https://www.paypal.com', 'https://www.sandbox.paypal.com'],
       imgSrc: ["'self'", 'data:', 'https:'],
       styleSrc: ["'self'", "'unsafe-inline'"],

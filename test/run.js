@@ -554,12 +554,14 @@ async function main() {
 
   // CSP must permit the site's own inline UI handlers (mobile nav toggle,
   // cookie banner, plan pickers). Without 'unsafe-inline' those clicks die
-  // silently on real browsers.
+  // silently on real browsers. And helmet's default script-src-attr 'none'
+  // would kill inline onclick even WITH 'unsafe-inline' — it must be gone.
   {
     const raw = await fetch(`http://localhost:${PORT}/`);
     const csp = raw.headers.get('content-security-policy') || '';
     const m = csp.match(/script-src[^;]*/);
     ok(!!m && m[0].includes("'unsafe-inline'"), 'CSP script-src allows inline handlers (mobile nav + cookie banner work)');
+    ok(!/script-src-attr/.test(csp), 'CSP has no script-src-attr directive (helmet default would block inline onclick)');
     await raw.text();
   }
 
