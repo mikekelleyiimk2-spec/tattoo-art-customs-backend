@@ -1,5 +1,6 @@
 // Design artist area (requires designer access: an active design_artist
-// subscription, or a tattoo shop with the free designer opt-in enabled).
+// subscription, or a tattoo shop subscription — which includes the full
+// designer membership automatically).
 // Uploads, bio editor (screened), commission dashboard (splits visible
 // here ONLY — never to customers), payout email setup.
 const express = require('express');

@@ -31,6 +31,11 @@ async function grantPlanRole(userId, planSlug) {
   }
   if (role === 'tattoo_shop') {
     await upsertProfile('shop_profiles', userId, { referral_code: makeReferralCode() });
+    // A shop subscription includes the full designer membership — make
+    // sure the designer-side pages (portfolio, bio) have a profile row.
+    // Founding-artist status is NOT claimed here; that stays exclusive to
+    // design_artist plan buyers.
+    await upsertProfile('artist_profiles', userId, {});
     try { await foundingLib.claimFoundingShop(userId); }
     catch (e) { console.error('founding shop claim failed:', e.message); }
   }

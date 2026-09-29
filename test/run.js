@@ -159,7 +159,6 @@ async function main() {
   const { upsertProfile: upsertTestProfile } = require('../src/lib/profiles');
   const dualId = await db.insert('users', { email: 'dual@test.local', password_hash: 'x', role: 'tattoo_shop', display_name: 'Dual' });
   await upsertTestProfile('artist_profiles', dualId, { payout_paypal_email: 'dual@x.com' });
-  await upsertTestProfile('shop_profiles', dualId, { designer_opt_in: 1 });
   const planA = await db.get("SELECT id FROM plans WHERE slug = 'design_artist'");
   const planS = await db.get("SELECT id FROM plans WHERE slug = 'tattoo_shop'");
   // Lifetime designer sub (NULL period end) + active shop sub.
@@ -213,7 +212,6 @@ async function main() {
   // Exclusivity: another account holding BOTH subscriptions gets NO bonus.
   const otherDualId = await db.insert('users', { email: 'otherdual@test.local', password_hash: 'x', role: 'tattoo_shop', display_name: 'OtherDual' });
   await upsertTestProfile('artist_profiles', otherDualId, { payout_paypal_email: 'other@x.com' });
-  await upsertTestProfile('shop_profiles', otherDualId, { designer_opt_in: 1 });
   await db.insert('subscriptions', { user_id: otherDualId, plan_id: planA.id, status: 'active', current_period_end: null });
   await db.insert('subscriptions', { user_id: otherDualId, plan_id: planS.id, status: 'active', current_period_end: Date.now() + 86400000 });
   ok(await dualSubBonusActive(otherDualId) === false, 'no dual-sub bonus for other accounts even with both subs');
@@ -1976,8 +1974,8 @@ async function main() {
   ok(artistStillOwed.status === artistBefore.status && !artistStillOwed.cleared_at,
     'artist commissions untouched by the sweep — stay on their own payout schedule');
 
-  // ===== Shop free designer opt-in =====
-  console.log('shop-designer-optin:');
+  // ===== Shop subscription includes the designer membership (owner rule 2026-09-29) =====
+  console.log('shop-designer-included:');
   const { shopDesignerActive, designerAccess } = require('../src/lib/shopDesigner');
   const shopDesId = await db.insert('users', {
     email: 'shopdesigner@test.local', password_hash: await bcrypt.hash('ShopPass123!', 10),
@@ -1988,7 +1986,8 @@ async function main() {
     user_id: shopDesId, plan_id: shopPlanId, status: 'active',
     paypal_subscription_id: 'sub-shopdesigner-test', created_at: Date.now(),
   });
-  ok(!(await designerAccess(shopDesId)), 'shop has no designer access before opt-in');
+  // No opt-in step: an active shop subscription IS a designer subscription.
+  ok(await shopDesignerActive(shopDesId) && await designerAccess(shopDesId), 'active shop subscription carries designer access automatically');
   const shopJar = {};
   async function shopreq(method, p, opts = {}) {
     const h = { ...(opts.headers || {}) };
@@ -2006,24 +2005,17 @@ async function main() {
   let sr = await shopreq('POST', '/login', { body: { email: 'shopdesigner@test.local', password: 'ShopPass123!' } });
   ok(sr.status === 302, 'shop login ok');
   sr = await shopreq('GET', '/artist/portfolio', {});
-  ok(sr.status === 302 && (sr.location || '').includes('/membership'), 'shop blocked from artist area before opt-in');
+  ok(sr.status === 200, 'shop can open the artist portfolio — designer membership included');
   sr = await req('GET', `/artists/${shopDesId}`);
-  ok(sr.status === 404, 'public artist page 404s for non-opted-in shop');
-  sr = await shopreq('POST', '/shop/designer-opt-in', { body: { enable: '1', website: '' } });
-  ok(sr.status === 302 && (sr.location || '').includes('/shop'), 'opt-in posts back to shop dashboard');
-  ok(await shopDesignerActive(shopDesId) && await designerAccess(shopDesId), 'opt-in is live with an active shop subscription');
-  sr = await shopreq('GET', '/artist/portfolio', {});
-  ok(sr.status === 200, 'opted-in shop can open the artist portfolio');
+  ok(sr.status === 200, 'public artist page live for the shop — designer membership included');
   sr = await shopreq('GET', '/shop', {});
-  ok(sr.status === 200 && sr.text.includes('Free designer membership') && sr.text.includes('badge ok'), 'shop dashboard shows the active opt-in');
-  sr = await req('GET', `/artists/${shopDesId}`);
-  ok(sr.status === 200, 'public artist page live for opted-in shop');
-  // The opted-in shop earns designer commissions on its active shop
-  // subscription — no artist plan needed — and the self-referral guard
-  // still holds: referring its OWN design is booked exactly like no
-  // referral (no 20% shop cut).
+  ok(sr.status === 200 && sr.text.includes('Designer membership — included') && sr.text.includes('badge ok'), 'shop dashboard shows the included designer membership');
+  // The shop earns designer commissions on its active shop subscription —
+  // no artist plan needed — and the self-referral guard still holds:
+  // referring its OWN design is booked exactly like no referral (no 20%
+  // shop cut).
   await upsertProfile('shop_profiles', shopDesId, { payout_paypal_email: 'shop@pay.test' });
-  ok(await comm.recipientEligible(shopDesId, 'design_artist'), 'opted-in shop is eligible for designer payouts');
+  ok(await comm.recipientEligible(shopDesId, 'design_artist'), 'shop is eligible for designer payouts on its shop subscription');
   const shopDesDesignId = 'testdesignshop1';
   sdb.prepare(`INSERT INTO designs (id, artist_id, title, description, price_cents, status, listing_type, listing_scope, color_path, linework_path, linework_wm_path, categories, sale_count, created_at)
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(shopDesDesignId, shopDesId, 'Shop Flash', 'desc', 7500, 'approved', 'predesign', 'gallery',
@@ -2039,18 +2031,12 @@ async function main() {
   for (const rrow of selfRows) selfByType[rrow.recipient_type] = (selfByType[rrow.recipient_type] || 0) + rrow.amount_cents;
   ok(selfByType.artist === 5250, 'self-referral: shop earns the 70% designer share on its own design');
   ok(!selfByType.shop, 'self-referral: NO 20% shop referral cut on its own design');
-  ok(selfRows.some((rrow) => rrow.recipient_type === 'artist' && rrow.status === 'payable'), 'designer share is payable to the opted-in shop');
+  ok(selfRows.some((rrow) => rrow.recipient_type === 'artist' && rrow.status === 'payable'), 'designer share is payable to the shop');
   sr = await req('GET', '/orders/custom');
-  ok(sr.status === 200 && sr.text.includes('Shop Designer'), 'opted-in shop appears in the request-artist dropdown');
-  // Opt-out returns the shop to shop-only access.
-  sr = await shopreq('POST', '/shop/designer-opt-in', { body: { enable: '0', website: '' } });
-  ok(!(await designerAccess(shopDesId)), 'designer access ends when the shop opts out');
-  sr = await shopreq('GET', '/artist/portfolio', {});
-  ok(sr.status === 302 && (sr.location || '').includes('/membership'), 'opted-out shop blocked from artist area again');
+  ok(sr.status === 200 && sr.text.includes('Shop Designer'), 'shop appears in the request-artist dropdown');
   // Lapsed shop subscription also suspends the designer side.
-  await shopreq('POST', '/shop/designer-opt-in', { body: { enable: '1', website: '' } });
   await db.update('subscriptions', shopDesSubId, { status: 'cancelled' });
-  ok(!(await shopDesignerActive(shopDesId)) && !(await designerAccess(shopDesId)), 'designer opt-in dies with the shop subscription');
+  ok(!(await shopDesignerActive(shopDesId)) && !(await designerAccess(shopDesId)), 'designer access dies with the shop subscription');
   ok(!(await comm.recipientEligible(shopDesId, 'design_artist')), 'no designer payout eligibility without an active shop subscription');
 
   sdb.close();

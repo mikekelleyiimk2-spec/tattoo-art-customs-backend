@@ -152,7 +152,7 @@ router.get('/artists/:id', async (req, res) => {
   const artist = await db.get(
     `SELECT u.id, u.display_name, u.is_founding_artist FROM users u
      LEFT JOIN shop_profiles sp ON sp.user_id = u.id
-     WHERE u.id = ? AND (u.role = 'design_artist' OR (u.role = 'tattoo_shop' AND sp.designer_opt_in = 1))`,
+     WHERE u.id = ? AND (u.role = 'design_artist' OR u.role = 'tattoo_shop')`,
     [req.params.id]);
   if (!artist) return res.status(404).json({ ok: false, error: 'not found' });
   const profile = await db.get("SELECT bio FROM artist_profiles WHERE user_id = ? AND bio_status = 'ok'", [artist.id]);

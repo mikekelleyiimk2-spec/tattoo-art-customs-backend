@@ -102,7 +102,7 @@ router.get('/sitemap.xml', async (req, res) => {
     const artists = await db.all(
       `SELECT DISTINCT u.id FROM users u JOIN designs d ON d.artist_id = u.id
        LEFT JOIN shop_profiles sp ON sp.user_id = u.id
-       WHERE (u.role = 'design_artist' OR (u.role = 'tattoo_shop' AND sp.designer_opt_in = 1))
+       WHERE (u.role = 'design_artist' OR u.role = 'tattoo_shop')
        AND d.status = 'approved' LIMIT 5000`);
     for (const a of artists) {
       urls.push({ loc: `${base}/artists/${a.id}`, changefreq: 'weekly', priority: '0.7' });
@@ -257,7 +257,7 @@ router.get('/artists/:id', async (req, res) => {
   const artist = await db.get(
     `SELECT u.id, u.display_name, u.is_founding_artist FROM users u
      LEFT JOIN shop_profiles sp ON sp.user_id = u.id
-     WHERE u.id = ? AND (u.role = 'design_artist' OR (u.role = 'tattoo_shop' AND sp.designer_opt_in = 1))`,
+     WHERE u.id = ? AND (u.role = 'design_artist' OR u.role = 'tattoo_shop')`,
     [req.params.id]);
   if (!artist) return res.status(404).render('error', { title: 'Not found', message: 'That artist portfolio does not exist.' });
   const profile = await db.get("SELECT bio FROM artist_profiles WHERE user_id = ? AND bio_status = 'ok'", [artist.id]);

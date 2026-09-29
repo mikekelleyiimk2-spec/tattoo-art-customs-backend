@@ -112,8 +112,9 @@ async function recipientEligible(userId, role) {
     `SELECT s.id FROM subscriptions s JOIN plans p ON p.id = s.plan_id
      WHERE s.user_id = ? AND p.slug = ? AND s.status = 'active'`, [userId, planSlug]);
   if (!sub) {
-    // Shops opted into the free designer membership earn designer
-    // commissions on their active shop subscription — no artist plan needed.
+    // Every shop subscription includes the designer membership — shops
+    // earn designer commissions on their active shop subscription, no
+    // artist plan needed.
     // (The self-referral guard below still applies: a shop can never earn
     // a referral commission on its own design.)
     if (role === 'design_artist' && await shopDesignerActive(userId)) {
@@ -122,7 +123,7 @@ async function recipientEligible(userId, role) {
   }
   const profileTable = role === 'design_artist' ? 'artist_profiles' : 'shop_profiles';
   const tables = profileTable === 'artist_profiles'
-    ? ['artist_profiles', 'shop_profiles'] // opted-in shops keep payouts on their shop profile
+    ? ['artist_profiles', 'shop_profiles'] // shops keep payouts on their shop profile
     : ['shop_profiles'];
   for (const t of tables) {
     const profile = await db.get(`SELECT payout_paypal_email FROM ${t} WHERE user_id = ?`, [userId]);

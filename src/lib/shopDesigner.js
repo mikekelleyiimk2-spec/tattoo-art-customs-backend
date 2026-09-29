@@ -1,31 +1,29 @@
-// Free designer membership for tattoo shops (opt-in).
+// Every tattoo shop subscription IS a designer subscription (owner rule
+// 2026-09-29).
 //
-// A shop with an active tattoo_shop subscription may opt in to designer
-// membership at no extra cost: upload through the artist portfolio
-// pipeline, earn designer commissions, get a public designer portfolio,
-// and appear in the request-artist dropdown. The opt-in is only live
-// while the shop subscription is active — lapse the subscription and
-// designer access plus designer-commission eligibility stop automatically
-// (every check below is live per-request; no cron needed).
+// A shop with an active tattoo_shop subscription automatically gets the
+// full designer membership — no opt-in needed: upload through the artist
+// portfolio pipeline, earn designer commissions, get a public designer
+// portfolio, and appear in the request-artist dropdown. Lapse the shop
+// subscription and designer access plus designer-commission eligibility
+// stop automatically (every check below is live per-request; no cron
+// needed).
 //
 // Anti-gaming is UNCHANGED: commissions.js books a shop's referral of its
 // OWN design exactly like no referral (designer 70% / owner 20% / site
-// 10%) — an opted-in shop can never pay itself the 20% shop referral cut.
+// 10%) — a shop can never pay itself the 20% shop referral cut.
 const db = require('../db');
 const { hasActiveSubscription, isAdminRole } = require('../middleware/auth');
+const { upsertProfile } = require('./profiles');
 
-async function shopDesignerOptedIn(userId) {
-  const row = await db.get('SELECT designer_opt_in FROM shop_profiles WHERE user_id = ?', [userId]);
-  return !!(row && row.designer_opt_in);
-}
-
-// Opt-in is only meaningful with a live shop subscription.
+// Live check: an active tattoo_shop subscription carries the designer
+// membership with it.
 async function shopDesignerActive(userId) {
-  if (!(await shopDesignerOptedIn(userId))) return false;
   return hasActiveSubscription(userId, 'tattoo_shop');
 }
 
-// Full designer access: paid artist subscription OR opted-in shop.
+// Full designer access: paid artist subscription OR shop subscription
+// (which includes the designer membership automatically).
 async function designerAccess(userId) {
   if (await hasActiveSubscription(userId, 'design_artist')) return true;
   return shopDesignerActive(userId);
@@ -57,10 +55,16 @@ function requireDesignerAccess() {
   return async (req, res, next) => {
     if (!req.user) return res.redirect('/login');
     if (isAdminRole(req.user.role)) return next();
-    if (await designerAccess(req.user.id)) return next();
-    req.session.flash = 'This requires an active Design Artist membership — or a tattoo shop subscription with the free designer opt-in turned on.';
+    if (await designerAccess(req.user.id)) {
+      // Shops carry the designer membership automatically — make sure the
+      // designer-side pages (portfolio, bio) have a profile row, including
+      // for shops subscribed before this rule existed.
+      try { await upsertProfile('artist_profiles', req.user.id, {}); } catch (e) { /* read-only contexts */ }
+      return next();
+    }
+    req.session.flash = 'This requires an active Design Artist membership — included automatically with every tattoo shop subscription.';
     return res.redirect('/membership');
   };
 }
 
-module.exports = { shopDesignerOptedIn, shopDesignerActive, designerAccess, requireDesignerAccess, dualSubBonusActive, dualBonusUserId };
+module.exports = { shopDesignerActive, designerAccess, requireDesignerAccess, dualSubBonusActive, dualBonusUserId };

@@ -17,7 +17,7 @@ async function seed() {
       customer: 'Lower-cost custom commissions, pre-made designs, early access to new content. First month $1.53.',
       customer_annual: 'Everything in Customer Membership, billed yearly — two months free ($52.24/year).',
       design_artist: 'Upload your art, write an artist bio, earn 60% commission per sale.',
-      tattoo_shop: 'Refer customers and earn 20% on every verified sale you refer.',
+      tattoo_shop: 'Refer customers and earn 20% on every verified sale you refer. Includes the full Design Artist membership — upload your art, write an artist bio, earn designer commissions.',
     };
     if (existing) {
       await db.update('plans', existing.id, {

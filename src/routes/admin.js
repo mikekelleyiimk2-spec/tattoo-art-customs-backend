@@ -59,7 +59,7 @@ router.get('/', async (req, res) => {
 router.post('/designers/:id/restrict', formLimiter, checkHoneypot, async (req, res) => {
   const user = await db.get(
     `SELECT u.id FROM users u LEFT JOIN shop_profiles sp ON sp.user_id = u.id
-     WHERE u.id = ? AND (u.role = 'design_artist' OR (u.role = 'tattoo_shop' AND sp.designer_opt_in = 1))`,
+     WHERE u.id = ? AND (u.role = 'design_artist' OR u.role = 'tattoo_shop')`,
     [req.params.id]);
   if (user) await db.update('users', user.id, { sla_suspended: 1 });
   if (user) await payAdmin(req, 'designer_restrict', 'user', user.id);
@@ -70,7 +70,7 @@ router.post('/designers/:id/restrict', formLimiter, checkHoneypot, async (req, r
 router.post('/designers/:id/unsuspend', formLimiter, checkHoneypot, async (req, res) => {
   const user = await db.get(
     `SELECT u.id FROM users u LEFT JOIN shop_profiles sp ON sp.user_id = u.id
-     WHERE u.id = ? AND (u.role = 'design_artist' OR (u.role = 'tattoo_shop' AND sp.designer_opt_in = 1))`,
+     WHERE u.id = ? AND (u.role = 'design_artist' OR u.role = 'tattoo_shop')`,
     [req.params.id]);
   if (user) await db.update('users', user.id, { sla_suspended: 0 });
   if (user) await payAdmin(req, 'designer_unsuspend', 'user', user.id);
@@ -83,7 +83,7 @@ router.post('/designers/:id/unsuspend', formLimiter, checkHoneypot, async (req, 
 router.post('/designers/:id/forgive', formLimiter, checkHoneypot, async (req, res) => {
   const user = await db.get(
     `SELECT u.id FROM users u LEFT JOIN shop_profiles sp ON sp.user_id = u.id
-     WHERE u.id = ? AND (u.role = 'design_artist' OR (u.role = 'tattoo_shop' AND sp.designer_opt_in = 1))`,
+     WHERE u.id = ? AND (u.role = 'design_artist' OR u.role = 'tattoo_shop')`,
     [req.params.id]);
   if (user) await db.update('users', user.id, { sla_forgiven_at: Date.now() });
   if (user) await payAdmin(req, 'designer_forgive', 'user', user.id);
@@ -95,7 +95,7 @@ router.post('/designers/:id/forgive', formLimiter, checkHoneypot, async (req, re
 router.post('/designers/:id/lift-suspension', formLimiter, checkHoneypot, async (req, res) => {
   const user = await db.get(
     `SELECT u.id FROM users u LEFT JOIN shop_profiles sp ON sp.user_id = u.id
-     WHERE u.id = ? AND (u.role = 'design_artist' OR (u.role = 'tattoo_shop' AND sp.designer_opt_in = 1))`,
+     WHERE u.id = ? AND (u.role = 'design_artist' OR u.role = 'tattoo_shop')`,
     [req.params.id]);
   if (user) await db.update('users', user.id, { commission_suspended_until: null });
   if (user) await payAdmin(req, 'designer_lift', 'user', user.id);
