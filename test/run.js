@@ -613,6 +613,33 @@ async function main() {
   ok(r.status === 200 && !r.text.includes('WA9DS6J8ERSHW'), 'manual page no longer embeds the hosted subscription button');
   ok(r.text.includes('Pay with PayPal') && r.text.includes(`/orders/manual/${orderId}/paypal`), 'manual page offers the exact-total PayPal button');
 
+  // app quick-buy: linked account creates a pending order, no payment moves.
+  // Regression test (2026-09-29): quick-buy once passed referral_code: null,
+  // which violates the NOT NULL column and 500'd on production.
+  {
+    const linkRes = await fetch(`http://localhost:${PORT}/api/link-account`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: 'buyer@test.local', password: 'password123' }),
+    });
+    const linkBody = await linkRes.json();
+    ok(linkRes.status === 200 && linkBody.api_token, 'link-account mints an app token');
+    const qbRes = await fetch(`http://localhost:${PORT}/api/orders/quick-buy/${did}`, {
+      method: 'POST', headers: { 'x-api-token': linkBody.api_token },
+    });
+    const qbBody = await qbRes.json();
+    ok(qbRes.status === 200 && qbBody.ok && (qbBody.checkout_path || '').startsWith('/orders/manual/'), 'quick-buy creates a pending order and returns the manual checkout path');
+    const qbOrderId = qbBody.checkout_path.split('/orders/manual/')[1];
+    const qbOrder = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(qbOrderId);
+    ok(qbOrder && qbOrder.status === 'pending' && qbOrder.fee_cents > 0, 'quick-buy order is pending with the processing fee stored');
+    ok(qbOrder && qbOrder.referral_code === '', 'quick-buy stores empty referral code (NOT NULL safe)');
+    const qbNoAuth = await fetch(`http://localhost:${PORT}/api/orders/quick-buy/${did}`, { method: 'POST' });
+    ok(qbNoAuth.status === 401, 'quick-buy without token is 401');
+    const qbBadDesign = await fetch(`http://localhost:${PORT}/api/orders/quick-buy/nope`, {
+      method: 'POST', headers: { 'x-api-token': linkBody.api_token },
+    });
+    ok(qbBadDesign.status === 404, 'quick-buy with unknown design is 404');
+  }
+
   // tester bug reports: public form saves + emails the owner (dev-logged here)
   r = await req('GET', '/report-bug');
   ok(r.status === 200 && r.text.includes('Report a bug'), 'bug report form renders');

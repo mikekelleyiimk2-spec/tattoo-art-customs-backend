@@ -18,6 +18,44 @@ async function migrate() {
   if (mode === 'pg') {
     await db.query('ALTER TABLE migrations ALTER COLUMN applied_at TYPE BIGINT');
   }
+  // Column-level repair (2026-09-29): a past deploy recorded migrations 017/020
+  // as applied without their ADD COLUMNs taking effect (tracker rows present,
+  // orders.fee_cents missing). Ensure the columns exist before serving
+  // traffic; the ADD is skipped when the column is already there. Done in code
+  // (like the tracker repair above), not in a migration file.
+  const REQUIRED_COLUMNS = [
+    ['orders', 'fee_cents', 'BIGINT NOT NULL DEFAULT 0'],
+    ['orders', 'linework_only', 'BIGINT NOT NULL DEFAULT 0'],
+    ['credit_topups', 'fee_cents', 'BIGINT NOT NULL DEFAULT 0'],
+  ];
+  for (const [table, column, ddl] of REQUIRED_COLUMNS) {
+    let exists = false;
+    let tableExists = false;
+    if (mode === 'pg') {
+      const t = await db.query('SELECT 1 FROM information_schema.tables WHERE table_name = ?', [table]);
+      tableExists = t.rows.length > 0;
+      if (tableExists) {
+        const r = await db.query(
+          'SELECT 1 FROM information_schema.columns WHERE table_name = ? AND column_name = ?',
+          [table, column]
+        );
+        exists = r.rows.length > 0;
+      }
+    } else {
+      const t = await db.all("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?", [table]);
+      tableExists = t.length > 0;
+      if (tableExists) {
+        const cols = await db.all(`PRAGMA table_info(${table})`);
+        exists = cols.some((c) => c.name === column);
+      }
+    }
+    if (tableExists && !exists) {
+      const add = mode === 'pg' ? 'ADD COLUMN IF NOT EXISTS ' : 'ADD COLUMN ';
+      await db.query(`ALTER TABLE ${table} ${add}${column} ${ddl}`);
+      console.log(`repaired missing column ${table}.${column}`);
+    }
+  }
+
   const dir = path.join(__dirname, '..', '..', 'migrations');
   // `.pg.sql` migrations run on Postgres only (SQLite is dynamically typed:
   // its INTEGER already stores 64-bit values, and it lacks ALTER COLUMN).

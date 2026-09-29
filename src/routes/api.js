@@ -106,7 +106,7 @@ router.post('/orders/quick-buy/:designId', express.json(), async (req, res) => {
     fee_cents: fee,
     status: 'pending',
     payment_method: 'paypal',
-    referral_code: null,
+    referral_code: '',
     referred_shop_id: null,
     linework_only: lineworkOnly ? 1 : 0,
     created_at: db.now(),
