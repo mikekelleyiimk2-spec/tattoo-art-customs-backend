@@ -70,6 +70,50 @@ router.get('/bootstrap', async (req, res) => {
   res.redirect(safeNext);
 });
 
+// App quick-buy: create a pending premade order for the linked account and
+// hand back the manual checkout path. The app opens that path through
+// /api/bootstrap, so the buyer lands signed-in, straight on the payment page.
+// No money moves here — payment happens on the /orders/manual/:id page.
+router.post('/orders/quick-buy/:designId', express.json(), async (req, res) => {
+  const user = await userFromToken(req);
+  if (!user) return res.status(401).json({ ok: false, error: 'not linked' });
+  const design = await db.get("SELECT * FROM designs WHERE id = ? AND status = 'approved'", [
+    req.params.designId,
+  ]);
+  if (!design) return res.status(404).json({ ok: false, error: 'not available' });
+  const member = await isActiveMember(user);
+  if (design.members_only && !member) {
+    return res.status(403).json({ ok: false, error: 'members only' });
+  }
+  const {
+    premadePriceCents: premadeCents,
+    customFullCents: customCents,
+    lineworkOnlyPriceCents,
+    processingFeeCents,
+  } = require('../lib/pricing');
+  const isCustom = design.listing_type === 'custom';
+  const listPrice = isCustom
+    ? customCents(new Date(), member)
+    : premadeCents(new Date(), member);
+  const lineworkOnly = design.color_source === 'none';
+  const price = lineworkOnly ? lineworkOnlyPriceCents(listPrice) : listPrice;
+  const fee = processingFeeCents(price);
+  const orderId = await db.insert('orders', {
+    buyer_id: user.id,
+    design_id: design.id,
+    order_type: 'premade',
+    amount_cents: price,
+    fee_cents: fee,
+    status: 'pending',
+    payment_method: 'paypal',
+    referral_code: null,
+    referred_shop_id: null,
+    linework_only: lineworkOnly ? 1 : 0,
+    created_at: db.now(),
+  });
+  return res.json({ ok: true, checkout_path: `/orders/manual/${orderId}` });
+});
+
 // Main design list for app clients: approved gallery-scope designs only.
 // Designer pre-design opt-ins are included here; portfolio-only custom
 // pieces are NOT (they live on /api/artists/:id). Member-exclusive designs
@@ -135,14 +179,16 @@ router.get('/artists/:id', async (req, res) => {
   });
 });
 
-// Founding-program status for promo posts: spots left + raffle window.
+// Founding-program status for promo posts: spots left + raffle progress.
 router.get('/founding-status', async (req, res) => {
   const s = await require('../lib/founding').getFoundingStatus();
   res.json({
     ok: true,
     artists_left: s.artistsLeft,
     shops_left: s.shopsLeft,
-    raffle_ends_at: s.raffleEndsAt,
+    raffle_target: s.raffleTarget,
+    raffle_entries: s.raffleEntries,
+    raffle_open: s.raffleOpen,
   });
 });
 
