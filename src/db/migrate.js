@@ -45,7 +45,10 @@ async function migrate() {
       const t = await db.all("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?", [table]);
       tableExists = t.length > 0;
       if (tableExists) {
-        const cols = await db.all(`PRAGMA table_info(${table})`);
+        // NOTE: `PRAGMA table_info(x)` cannot be read through db.all — the
+        // query wrapper only treats SELECT/WITH as reads, so it returns [].
+        // Use the table-valued pragma function instead, which is a SELECT.
+        const cols = await db.all('SELECT name FROM pragma_table_info(?)', [table]);
         exists = cols.some((c) => c.name === column);
       }
     }
