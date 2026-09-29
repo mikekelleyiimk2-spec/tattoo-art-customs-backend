@@ -52,13 +52,18 @@ app.use(helmet({
       // cookie banner, plan pickers, payout controls) uses inline handlers.
       // Without it, CSP silently kills those clicks (reported: hamburger
       // menu and cookie "Got it" button dead on mobile).
-      scriptSrc: ["'self'", "'unsafe-inline'", 'https://www.paypal.com', 'https://www.sandbox.paypal.com'],
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://www.paypal.com', 'https://www.sandbox.paypal.com',
+        // AdSense: without these the adsbygoogle.js tag the site injects is
+        // blocked and no ads render (found 2026-09-29 during hamburger CSP test).
+        'https://pagead2.googlesyndication.com', 'https://googleads.g.doubleclick.net'],
       // helmet defaults script-src-attr to 'none', which kills inline
       // onclick handlers even when script-src allows 'unsafe-inline'.
       // The mobile hamburger, cookie banner, and payout controls all use
       // inline handlers, so drop that directive entirely.
       scriptSrcAttr: null,
-      frameSrc: ["'self'", 'https://www.paypal.com', 'https://www.sandbox.paypal.com'],
+      frameSrc: ["'self'", 'https://www.paypal.com', 'https://www.sandbox.paypal.com',
+        // AdSense renders creatives in iframes from these hosts.
+        'https://googleads.g.doubleclick.net', 'https://tpc.googlesyndication.com'],
       imgSrc: ["'self'", 'data:', 'https:'],
       styleSrc: ["'self'", "'unsafe-inline'"],
       connectSrc: ["'self'", 'https://api-m.paypal.com', 'https://api-m.sandbox.paypal.com'],
