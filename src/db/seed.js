@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const config = require('../config');
 const db = require('./index');
 const { migrate } = require('./migrate');
+const { seedCatalog } = require('./seed-catalog');
 
 async function seed() {
   await migrate();
@@ -57,6 +58,9 @@ async function seed() {
   } else {
     console.log('ADMIN_EMAIL/ADMIN_PASSWORD not set — skipping admin creation');
   }
+
+  // Owner's pre-made catalog -> public gallery (one-time, idempotent).
+  await seedCatalog();
 }
 
 if (require.main === module) {

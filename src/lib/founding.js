@@ -22,32 +22,45 @@ const db = require('../db');
 const FOUNDING_ARTIST_CAP = 50;
 const FOUNDING_SHOP_CAP = 100;
 const FOUNDING_BOOST_MS = 6 * 30 * 86400000; // ~6 months
-const RAFFLE_WINDOW_MS = 60 * 86400000; // 60 days from launch
 const RAFFLE_GRAND_CENTS = 15000; // free custom design ($150 value)
 const RAFFLE_CREDIT_CENTS = 2500; // $25 site credit
 const ANNUAL_PRIZE_MS = 365 * 86400000; // 12 months
 
-// --- Raffle window ---
-// Admin-settable via settings.raffle_ends_at (unix-ms). Default: 60 days
-// after the founding-program migration was applied (the launch).
-async function getRaffleEndsAt() {
-  const row = await db.get(`SELECT value FROM settings WHERE key = 'raffle_ends_at'`);
-  if (row && /^\d+$/.test(String(row.value))) return parseInt(row.value, 10);
-  const mig = await db.get(`SELECT applied_at FROM migrations WHERE id = '019_founding_program.sql'`);
-  const launch = mig && mig.applied_at ? mig.applied_at : Date.now();
-  return launch + RAFFLE_WINDOW_MS;
+// --- Raffle entry rules (participant-count based) ---
+// The raffle has NO time deadline: entries stay open until the participant
+// target is reached (or the admin draws early). The admin sets the target
+// on /admin/founding; default 100 participants.
+const RAFFLE_DEFAULT_TARGET = 100;
+// One raffle ticket costs $2.00 (processing fee added at checkout).
+const RAFFLE_TICKET_CENTS = 200;
+
+async function getRaffleTarget() {
+  const row = await db.get(`SELECT value FROM settings WHERE key = 'raffle_target_participants'`);
+  const n = row ? parseInt(String(row.value), 10) : NaN;
+  return Number.isInteger(n) && n > 0 ? n : RAFFLE_DEFAULT_TARGET;
 }
 
-async function setRaffleEndsAt(ts) {
-  if (!Number.isInteger(ts) || ts <= 0) throw new Error('Invalid raffle end date.');
+async function setRaffleTarget(n) {
+  if (!Number.isInteger(n) || n <= 0) throw new Error('Invalid raffle participant target.');
   // Manual upsert: the settings table's PK is `key` (no `id` column), so
   // db.upsert/db.insert can't be used here (they inject an id).
-  const existing = await db.get(`SELECT key FROM settings WHERE key = 'raffle_ends_at'`);
+  const existing = await db.get(`SELECT key FROM settings WHERE key = 'raffle_target_participants'`);
   if (existing) {
-    await db.updateWhere('settings', { value: String(ts) }, 'key', 'raffle_ends_at');
+    await db.updateWhere('settings', { value: String(n) }, 'key', 'raffle_target_participants');
   } else {
-    await db.query(`INSERT INTO settings (key, value) VALUES ('raffle_ends_at', ?)`, [String(ts)]);
+    await db.query(`INSERT INTO settings (key, value) VALUES ('raffle_target_participants', ?)`, [String(n)]);
   }
+}
+
+// Are raffle entries currently open? Closed once drawn, or once the
+// participant target is reached.
+async function raffleEntriesOpen() {
+  const drawn = await db.get(`SELECT id FROM raffle_entries WHERE drawn_at IS NOT NULL LIMIT 1`);
+  if (drawn) return { open: false, reason: 'already drawn' };
+  const target = await getRaffleTarget();
+  const { n } = await db.get(`SELECT COUNT(*) AS n FROM raffle_entries`);
+  if (n >= target) return { open: false, reason: 'target reached' };
+  return { open: true, target, entries: n };
 }
 
 // --- Counters / status ---
@@ -55,14 +68,16 @@ async function getFoundingStatus() {
   const c = await db.get(`SELECT artists_claimed, shops_claimed FROM founding_counters WHERE id = 'global'`);
   const entries = await db.get(`SELECT COUNT(*) AS n FROM raffle_entries`);
   const drawn = await db.get(`SELECT COUNT(*) AS n FROM raffle_entries WHERE drawn_at IS NOT NULL`);
+  const target = await getRaffleTarget();
   return {
     artistsClaimed: c ? c.artists_claimed : 0,
     shopsClaimed: c ? c.shops_claimed : 0,
     artistsLeft: Math.max(0, FOUNDING_ARTIST_CAP - (c ? c.artists_claimed : 0)),
     shopsLeft: Math.max(0, FOUNDING_SHOP_CAP - (c ? c.shops_claimed : 0)),
-    raffleEndsAt: await getRaffleEndsAt(),
+    raffleTarget: target,
     raffleEntries: entries.n,
     raffleDrawn: drawn.n > 0,
+    raffleOpen: !(drawn.n > 0) && entries.n < target,
   };
 }
 
@@ -125,14 +140,30 @@ async function claimFoundingShop(userId, now = Date.now()) {
 
 // --- Raffle ---
 // One entry per user, ever (UNIQUE on user_id), only when their FIRST
-// subscription activates inside the raffle window. Safe to call from both
+// subscription activates while entries are open. Safe to call from both
 // the approve flow and the PayPal webhook — the second call is a no-op.
 async function maybeEnterRaffle(userId, subscriptionId, now = Date.now()) {
-  if (now > await getRaffleEndsAt()) return { entered: false, reason: 'window closed' };
+  const open = await raffleEntriesOpen();
+  if (!open.open) return { entered: false, reason: open.reason };
   const other = await db.get(
     `SELECT id FROM subscriptions WHERE user_id = ? AND id != ? AND status != 'pending' LIMIT 1`,
     [userId, subscriptionId]);
   if (other) return { entered: false, reason: 'not first subscription' };
+  try {
+    await db.insert('raffle_entries', { user_id: userId, entered_at: now });
+    return { entered: true };
+  } catch (e) {
+    if (/UNIQUE/i.test(e.message)) return { entered: false, reason: 'already entered' };
+    throw e;
+  }
+}
+
+// Paid raffle ticket entry ($2): one entry per user, ever, only while
+// entries are open. Buying a ticket when the user already has an entry
+// (e.g. from a subscription) is a no-op — never double-enters.
+async function enterRaffleViaTicket(userId, now = Date.now()) {
+  const open = await raffleEntriesOpen();
+  if (!open.open) return { entered: false, reason: open.reason };
   try {
     await db.insert('raffle_entries', { user_id: userId, entered_at: now });
     return { entered: true };
@@ -237,10 +268,11 @@ async function drawRaffle({ now = Date.now() } = {}) {
 }
 
 module.exports = {
-  FOUNDING_ARTIST_CAP, FOUNDING_SHOP_CAP, FOUNDING_BOOST_MS, RAFFLE_WINDOW_MS,
-  getRaffleEndsAt, setRaffleEndsAt, getFoundingStatus,
+  FOUNDING_ARTIST_CAP, FOUNDING_SHOP_CAP, FOUNDING_BOOST_MS,
+  RAFFLE_DEFAULT_TARGET, RAFFLE_TICKET_CENTS,
+  getRaffleTarget, setRaffleTarget, raffleEntriesOpen, getFoundingStatus,
   foundingArtistsAvailable, foundingShopsAvailable,
   foundingArtistActive, foundingShopActive,
   claimFoundingArtist, claimFoundingShop,
-  maybeEnterRaffle, drawRaffle,
+  maybeEnterRaffle, enterRaffleViaTicket, drawRaffle,
 };

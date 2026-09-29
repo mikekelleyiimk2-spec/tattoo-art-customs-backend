@@ -162,6 +162,7 @@ async function payOrderWithCredit({ userId, orderId }) {
   await recordSaleCommissions(fresh);
   const fulfil = await onOrderPaid(fresh);
   await routeCustomOrder(fresh);
+  try { await require('./saleWatch').watchOrderPaid(fresh); } catch (e) { console.error('sale watch failed:', e.message); }
   return { order: fresh, printSubmitted: fulfil.submitted };
 }
 

@@ -120,6 +120,7 @@ router.get('/approve', requireLogin, async (req, res) => {
     `SELECT s.*, p.slug AS plan_slug FROM subscriptions s
      JOIN plans p ON p.id = s.plan_id WHERE s.id = ?`, [subId]);
   if (!sub || sub.user_id !== req.user.id) return res.redirect('/membership');
+  const wasActive = sub.status === 'active';
   try {
     const remote = await paypal.getSubscription(sub.paypal_subscription_id);
     const status = (remote.status || '').toLowerCase();
@@ -144,6 +145,11 @@ router.get('/approve', requireLogin, async (req, res) => {
       // earns exactly one entry (idempotent — safe if the webhook runs too).
       try { await require('../lib/founding').maybeEnterRaffle(sub.user_id, sub.id); } catch (e) {
         console.error('raffle entry failed:', e.message);
+      }
+      // First-sale watch: the owner gets a notification on every new paid
+      // membership (idempotent — only on a fresh activation).
+      if (!wasActive) {
+        try { await require('../lib/saleWatch').watchSubscriptionActive(sub); } catch (e) { console.error('sale watch failed:', e.message); }
       }
       req.session.flash = 'Membership active — welcome!';
     } else {
@@ -240,6 +246,7 @@ router.post('/webhook', async (req, res) => {
     if (!sub) return res.sendStatus(200);
     const type = event.event_type || '';
     if (type.includes('ACTIVATED')) {
+      const wasActive = sub.status === 'active';
       await db.update('subscriptions', sub.id, { status: 'active' });
       // Grant the role here too — the buyer may never return via /approve.
       await grantPlanRole(sub.user_id, sub.plan_slug);
@@ -250,6 +257,10 @@ router.post('/webhook', async (req, res) => {
       // Early-subscriber raffle entry (idempotent — safe if /approve ran it).
       try { await require('../lib/founding').maybeEnterRaffle(sub.user_id, sub.id); } catch (e) {
         console.error('raffle entry failed:', e.message);
+      }
+      // First-sale watch: notify the owner on a fresh activation only.
+      if (!wasActive) {
+        try { await require('../lib/saleWatch').watchSubscriptionActive(sub); } catch (e) { console.error('sale watch failed:', e.message); }
       }
     } else if (type.includes('CANCELLED') || type.includes('EXPIRED')) {
       await db.update('subscriptions', sub.id, { status: 'canceled', canceled_at: db.now() });

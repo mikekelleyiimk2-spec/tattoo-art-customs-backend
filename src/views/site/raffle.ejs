@@ -1,7 +1,9 @@
 <h1>Early Subscriber Raffle</h1>
 
-<% if (!raffleDrawn) { %>
-<p>Subscribe before <strong><%= new Date(raffleEndsAt).toLocaleDateString() %></strong> and you're automatically entered — one entry per person, no purchase beyond your membership needed.</p>
+<% if (!raffleDrawn && raffleOpen) { %>
+<p>We're drawing the winners when we hit <strong><%= raffleTarget %> participants</strong> — no deadline, just a headcount. <strong><%= raffleEntries %> / <%= raffleTarget %></strong> in so far.</p>
+<% } else if (!raffleDrawn) { %>
+<p><span class="badge ok">Target reached</span> We hit <strong><%= raffleTarget %></strong> participants — the draw is coming up!</p>
 <% } else { %>
 <p><span class="badge ok">Drawn</span> The raffle has been drawn — congratulations to our winners!</p>
 <% } %>
@@ -13,8 +15,27 @@
     <li><strong>3 × annual prizes:</strong> a free year of membership</li>
     <li><strong>10 × credit prizes:</strong> $25 in site credit</li>
   </ul>
-  <p class="muted"><%= raffleEntries %> entries total. Winners are picked at random, one prize per person.</p>
+  <p class="muted"><%= raffleEntries %> participants total. Winners are picked at random, one prize per person.</p>
 </section>
+
+<% if (!raffleDrawn && raffleOpen) { %>
+<section class="card">
+  <h2>Get in the raffle</h2>
+  <% if (alreadyEntered) { %>
+  <p><span class="badge ok">You're in!</span> One entry per person — you're already entered. Good luck!</p>
+  <% } else { %>
+  <p>Two ways in — one entry per person, ever:</p>
+  <ul>
+    <li><a href="/membership">Grab a membership</a> — every new subscriber is entered automatically.</li>
+    <li>Or buy a raffle ticket for <strong><%= money(ticketCents) %></strong> <span class="muted">(<%= money(ticketCents + ticketFeeCents) %> with processing fee)</span> — no membership needed.</li>
+  </ul>
+  <form method="post" action="/raffle/tickets" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p><button class="btn" type="submit">Buy a $2 raffle ticket</button></p>
+  </form>
+  <% } %>
+</section>
+<% } %>
 
 <% if (winners.length) { %>
 <section class="card">
@@ -30,4 +51,6 @@
 </section>
 <% } %>
 
+<% if (!alreadyEntered && !raffleDrawn && raffleOpen) { %>
 <p><a href="/membership">Get a membership and enter →</a></p>
+<% } %>

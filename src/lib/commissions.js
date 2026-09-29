@@ -149,6 +149,16 @@ async function recordSaleCommissions(order) {
 
   const t = db.now();
   const entries = [];
+  // Raffle tickets: 100% of the net sale goes to the site (the prize pool
+  // is funded from it). No designer, shop, or owner split.
+  if (order.order_type === 'raffle_ticket') {
+    await db.insert('commission_ledger', {
+      order_id: order.id, recipient_type: 'site', recipient_id: null,
+      amount_cents: netPaidCents(order), status: 'site_kept',
+      commission_type: 'raffle', created_at: t,
+    });
+    return;
+  }
   const design = order.design_id ? await db.get('SELECT artist_id, color_source FROM designs WHERE id = ?', [order.design_id]) : null;
   const artistId = design && design.artist_id ? design.artist_id : null;
   const rawShopId = order.referred_shop_id || null;

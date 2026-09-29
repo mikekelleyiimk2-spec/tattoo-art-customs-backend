@@ -247,6 +247,7 @@ router.get('/approve/:orderId', requireLogin, async (req, res) => {
     const fulfil = await onOrderPaid(fresh);
     await routeCustomOrder(fresh);
     await onCustomPieceSold(fresh); // sold custom pieces delist + queue a replacement
+    try { await require('../lib/saleWatch').watchOrderPaid(fresh); } catch (e) { console.error('sale watch failed:', e.message); }
     req.session.flash = order.order_type === 'custom'
       ? 'Deposit received — your custom request is in. Your design will be delivered within 48 hours.'
       : 'Payment received — your download is ready.';

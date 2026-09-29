@@ -111,6 +111,7 @@ router.post('/orders/:id/confirm-manual', formLimiter, checkHoneypot, async (req
   const fulfil = await onOrderPaid(fresh);
   await routeCustomOrder(fresh);
   await onCustomPieceSold(fresh); // sold custom pieces delist + queue a replacement
+  try { await require('../lib/saleWatch').watchOrderPaid(fresh); } catch (e) { console.error('sale watch failed:', e.message); }
   req.session.flash = 'Manual payment confirmed — buyer download unlocked, commissions recorded.' +
     (fulfil.submitted ? ' Print auto-submitted to Printful.' : '');
   res.redirect('/admin/orders');
@@ -705,15 +706,16 @@ router.get('/founding', async (req, res) => {
   });
 });
 
-// Set the raffle entry window end (expects an HTML datetime-local value).
-router.post('/founding/raffle-ends', formLimiter, checkHoneypot, async (req, res) => {
-  const ts = Date.parse(String(req.body.raffle_ends_at || ''));
-  if (!Number.isInteger(ts) || ts <= 0) {
-    req.session.flash = 'Invalid date — raffle end date not changed.';
+// Set the raffle participant target (entries close when it is reached — the
+// raffle has no time deadline).
+router.post('/founding/raffle-target', formLimiter, checkHoneypot, async (req, res) => {
+  const n = parseInt(String(req.body.raffle_target || ''), 10);
+  if (!Number.isInteger(n) || n <= 0) {
+    req.session.flash = 'Invalid target — raffle participant target not changed.';
     return res.redirect('/admin/founding');
   }
-  await require('../lib/founding').setRaffleEndsAt(ts);
-  req.session.flash = `Raffle entry window now ends ${new Date(ts).toLocaleString()}.`;
+  await require('../lib/founding').setRaffleTarget(n);
+  req.session.flash = `Raffle entries now close at ${n} participants.`;
   res.redirect('/admin/founding');
 });
 

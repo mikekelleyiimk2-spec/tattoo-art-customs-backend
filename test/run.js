@@ -1722,6 +1722,50 @@ async function main() {
   ok(adFlag && adFlag.status === 'approved' && adFlag.approved_by === adolfoId,
     'even a flagged upload goes live immediately for a trusted self-approver');
 
+  // First-sale watcher: every paid order notifies the owner with a
+  // verification report; the ledger must sum exactly to the net sale.
+  const { watchOrderPaid, watchSubscriptionActive } = require('../src/lib/saleWatch');
+  const watchArtistId = await db.insert('users', {
+    email: 'watchartist@test.local', password_hash: await bcrypt.hash('WatchPass123!', 10),
+    role: 'design_artist', display_name: 'Watch Artist',
+  });
+  await db.insert('subscriptions', {
+    user_id: watchArtistId, plan_id: artPlanId, status: 'active',
+    paypal_subscription_id: 'sub-watch-test', created_at: Date.now(),
+  });
+  sdb.prepare(`INSERT INTO artist_profiles (user_id, payout_paypal_email, created_at) VALUES (?,?,?)
+    ON CONFLICT(user_id) DO UPDATE SET payout_paypal_email = excluded.payout_paypal_email`)
+    .run(watchArtistId, 'watch@pay.test', Date.now());
+  const watchBuyerId = await db.insert('users', {
+    email: 'watchbuyer@test.local', password_hash: await bcrypt.hash('WatchPass123!', 10),
+    role: 'customer', display_name: 'Watch Buyer',
+  });
+  sdb.prepare(`INSERT INTO designs (id, title, status, price_cents, created_at, categories, sale_count, artist_id, linework_wm_path)
+    VALUES (?,?,?,?,?,?,?,?,?)`)
+    .run('watch-design-1', 'Watch Design', 'approved', 7500, Date.now(), '[]', 0, watchArtistId, 'designs/linework-wm/x.jpg');
+  sdb.prepare(`INSERT INTO orders (id, buyer_id, design_id, order_type, amount_cents, amount_paid_cents, fee_cents, status, payment_method, created_at, paid_at)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?)`)
+    .run('watch-order-1', watchBuyerId, 'watch-design-1', 'premade', 7500, 7812, 312, 'paid', 'paypal', Date.now(), Date.now());
+  await require('../src/lib/commissions').recordSaleCommissions(
+    await db.get('SELECT * FROM orders WHERE id = ?', ['watch-order-1']));
+  const saleNotifBefore = sdb.prepare("SELECT COUNT(*) AS c FROM notifications WHERE kind = 'sale'").get().c;
+  await watchOrderPaid({ id: 'watch-order-1' });
+  const watchLedger = sdb.prepare('SELECT COALESCE(SUM(amount_cents),0) AS t FROM commission_ledger WHERE order_id = ?').get('watch-order-1').t;
+  ok(watchLedger === 7500, 'sale watch: commission ledger sums exactly to the net sale (fee excluded)');
+  ok(sdb.prepare("SELECT COUNT(*) AS c FROM notifications WHERE kind = 'sale'").get().c === saleNotifBefore + 1,
+    'sale watch: owner gets an in-app sale notification');
+  const saleNotif = sdb.prepare("SELECT title, body FROM notifications WHERE kind = 'sale' ORDER BY created_at DESC").get();
+  ok(/^(SALE #\d+|Sale:)/.test(saleNotif.title) && saleNotif.body.includes('$78.12') && saleNotif.body.includes('Commissions:'),
+    'sale watch: sale notification carries a verification report with the paid total and commission breakdown');
+  // New paid memberships notify the owner too.
+  const watchSubId = await db.insert('subscriptions', {
+    user_id: watchBuyerId, plan_id: artPlanId, status: 'active',
+    paypal_subscription_id: 'sub-watch-sub', created_at: Date.now(),
+  });
+  await watchSubscriptionActive({ id: watchSubId });
+  ok(sdb.prepare("SELECT COUNT(*) AS c FROM notifications WHERE kind = 'sale'").get().c === saleNotifBefore + 2,
+    'sale watch: new paid membership notifies the owner');
+
   // Push notification flows (test mode: no real network, attempts are logged).
   const { vapidPublicKey, pushToAdmins, sentLog } = require('../src/lib/push');
   const vapidKey = await vapidPublicKey();

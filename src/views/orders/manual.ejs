@@ -1,12 +1,12 @@
 <h1>Pay manually</h1>
-<% const base = order.order_type === 'custom' ? order.deposit_cents : order.amount_cents; const fee = order.fee_cents || 0; %>
+<% const base = order.order_type === 'custom' ? order.deposit_cents : order.amount_cents; const fee = order.fee_cents || 0; const mp = typeof basePath !== 'undefined' ? basePath : '/orders/manual'; const isTicket = order.order_type === 'raffle_ticket'; %>
 <p>Order <strong><%= order.id.slice(0,8) %></strong> — amount due: <strong><%= money(base + fee) %></strong> <span class="muted">(includes <%= money(fee) %> processing fee)</span></p>
-<p class="muted">Send payment via PayPal, CashApp, or Venmo, then record it here. An admin confirms every manual payment before your download unlocks.</p>
+<p class="muted">Send payment via PayPal, CashApp, or Venmo, then record it here. An admin confirms every manual payment before <%= isTicket ? 'your raffle entry is recorded' : 'your download unlocks' %>.</p>
 
 <h2>Pay with PayPal</h2>
 <div class="card">
   <p>Pay the exact order total of <strong><%= money(base + fee) %></strong> securely through PayPal — no account needed.</p>
-  <form method="post" action="/orders/manual/<%= order.id %>/paypal" class="form">
+  <form method="post" action="<%= mp %>/<%= order.id %>/paypal" class="form">
     <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
     <p><button class="btn" type="submit">Pay <%= money(base + fee) %> with PayPal</button></p>
   </form>
@@ -15,7 +15,7 @@
 
 <h2>Pay with CashApp or Venmo</h2>
 <p class="muted">Use the payment links on our socials, then record it here.</p>
-<form method="post" action="/orders/manual/<%= order.id %>" class="form">
+<form method="post" action="<%= mp %>/<%= order.id %>" class="form">
   <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
   <label for="method">Payment method</label>
   <select id="method" name="method"><option value="cashapp">CashApp</option><option value="venmo">Venmo</option><option value="paypal">PayPal</option></select>

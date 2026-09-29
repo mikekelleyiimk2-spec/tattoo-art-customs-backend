@@ -16,15 +16,16 @@
 
 <section class="card">
   <h2>Early-subscriber raffle</h2>
-  <p><strong><%= raffleEntries %></strong> entries.
-    <% if (raffleDrawn) { %><span class="badge ok">drawn</span><% } else { %>
-    Entry window ends <strong><%= new Date(raffleEndsAt).toLocaleString() %></strong>.<% } %></p>
+  <p><strong><%= raffleEntries %> / <%= raffleTarget %></strong> participants.
+    <% if (raffleDrawn) { %><span class="badge ok">drawn</span><% } else if (!raffleOpen) { %>
+    <span class="badge ok">target reached — ready to draw</span><% } else { %>
+    Entries close at <strong><%= raffleTarget %></strong> participants (no time deadline).<% } %></p>
   <% if (!raffleDrawn) { %>
-  <form method="post" action="/admin/founding/raffle-ends" class="form" style="max-width:26rem">
+  <form method="post" action="/admin/founding/raffle-target" class="form" style="max-width:26rem">
     <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-    <label for="raffle_ends_at">Change the entry-window end</label>
-    <input type="datetime-local" id="raffle_ends_at" name="raffle_ends_at" required>
-    <button class="btn btn-secondary" type="submit">Set end date</button>
+    <label for="raffle_target">Participant target (entries close when reached)</label>
+    <input type="number" id="raffle_target" name="raffle_target" min="1" value="<%= raffleTarget %>" required>
+    <button class="btn btn-secondary" type="submit">Set target</button>
   </form>
   <form method="post" action="/admin/raffle/draw" style="margin-top:1rem"
         onsubmit="return confirm('Draw the raffle now? This can only be done once: 1 grand prize, 3 annual, 10 credit. Winners are notified immediately.')">
