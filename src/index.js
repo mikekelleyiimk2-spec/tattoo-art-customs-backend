@@ -89,6 +89,8 @@ app.use((req, res, next) => {
   res.locals.paypalReady = config.paypalConfigured();
   res.locals.adsenseId = config.adsense.publisherId;
   res.locals.siteName = 'Tattoo Art Customs';
+  res.locals.baseUrl = config.baseUrl;
+  res.locals.googleVerification = config.googleSiteVerification;
   res.locals.money = (cents) => `$${(cents / 100).toFixed(2)}`;
   next();
 });

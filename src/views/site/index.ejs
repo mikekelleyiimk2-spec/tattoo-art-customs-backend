@@ -1,6 +1,6 @@
 <section class="hero">
-  <h1>Original tattoo designs, made to be worn.</h1>
-  <p><% if (designCount > 0) { %>Browse <%= designCount %>+ original designs.<% } else { %>New original designs landing daily.<% } %> Custom designs are <strong><%= money(customPrice) %></strong><% if (sale) { %> — Saturday sale price<% } %> — 50% deposit, 48-hour delivery.</p>
+  <h1>Buy original tattoo designs online</h1>
+  <p><% if (designCount > 0) { %>Browse <%= designCount %>+ original tattoo designs from independent artists.<% } else { %>New original designs landing daily.<% } %> Custom tattoo designs are <strong><%= money(customPrice) %></strong><% if (sale) { %> — Saturday sale price<% } %> — 50% deposit, 48-hour delivery.</p>
   <% if (sale) { %>
   <div class="sale-banner" role="status">🔥 Saturday sale is ON — premade designs $52.24 until 5 AM CT Sunday.</div>
   <% } %>
@@ -27,4 +27,10 @@
     <li><strong>Tattoo shops</strong> — $103.98/year, earn <strong>20% on every verified sale</strong> you refer.</li>
   </ul>
   <p><a class="btn" href="/membership">Join as a design artist</a> <a class="btn btn-secondary" href="/membership">Join as a tattoo shop</a></p>
+</section>
+
+<section class="card">
+  <h2>Custom tattoo designs, drawn for you</h2>
+  <p>Want something one-of-a-kind? Order a custom tattoo design online and a professional designer draws it for you within 48 hours. Every purchase includes the full-color artwork and the clean linework stencil your tattoo artist needs. Prefer ready-made? Our gallery of original tattoo designs is searchable by style — blackwork, fine line, traditional, realism, and more.</p>
+  <p><a class="btn btn-secondary" href="/orders/custom">Start a custom design</a></p>
 </section>

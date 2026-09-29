@@ -91,10 +91,11 @@ router.get('/sitemap.xml', async (req, res) => {
   ];
   try {
     const designs = await db.all(
-      `SELECT id FROM designs WHERE status = 'approved' AND listing_scope = 'gallery'
+      `SELECT id, created_at FROM designs WHERE status = 'approved' AND listing_scope = 'gallery'
        AND members_only = 0 ORDER BY created_at DESC LIMIT 5000`);
     for (const d of designs) {
-      urls.push({ loc: `${base}/design/${d.id}`, changefreq: 'weekly', priority: '0.8' });
+      const lastmod = d.created_at ? new Date(Number(d.created_at)).toISOString().slice(0, 10) : '';
+      urls.push({ loc: `${base}/design/${d.id}`, changefreq: 'weekly', priority: '0.8', lastmod });
     }
     // Public artist portfolios (include portfolio-only custom pieces;
     // opted-in shops are designers too).
@@ -108,7 +109,7 @@ router.get('/sitemap.xml', async (req, res) => {
     }
   } catch { /* sitemap still serves without design URLs */ }
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
-    urls.map((u) => `  <url><loc>${u.loc}</loc><changefreq>${u.changefreq}</changefreq><priority>${u.priority}</priority></url>`).join('\n') +
+    urls.map((u) => `  <url><loc>${u.loc}</loc>${u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ''}<changefreq>${u.changefreq}</changefreq><priority>${u.priority}</priority></url>`).join('\n') +
     `\n</urlset>`;
   res.type('application/xml').send(xml);
 });
@@ -145,11 +146,15 @@ router.get('/', async (req, res) => {
   const all = await approvedDesigns(member);
   const viewer = await viewerFor(req.user);
   const designs = all.slice(0, 12).map((d) => ({ ...d, thumb: displayImgFile(d, viewer) }));
+  const base = config.baseUrl.replace(/\/$/, '');
+  const ogImg = designs.length && designs[0].thumb ? `${base}/img/designs/${designs[0].thumb}` : '';
   res.render('site/index', {
-    title: 'Tattoo Art Customs — Custom Tattoo Designs',
+    title: 'Buy Original Tattoo Designs Online — Custom Tattoo Designs | Tattoo Art Customs',
     designs, designCount: all.length, sale: await salePriceActive(req.user),
     premadePrice: withFeeCents(premadePriceCents(new Date(), member)), customPrice: withFeeCents(customFullCents(new Date(), member)),
-    metaDescription: 'Browse hundreds of original tattoo designs. Custom designs $155.74 with 48-hour delivery. Design artists earn 60% commission.',
+    metaDescription: 'Buy original tattoo designs online from independent artists. 900+ ready-made designs plus custom tattoo designs with 48-hour delivery.',
+    canonical: `${base}/`,
+    ogImage: ogImg,
   });
 });
 
@@ -168,10 +173,11 @@ router.get('/gallery', async (req, res) => {
   const viewer = await viewerFor(req.user);
   const thumbs = designs.map((d) => ({ ...d, thumb: displayImgFile(d, viewer) }));
   res.render('site/gallery', {
-    title: 'Design Gallery — Tattoo Art Customs',
+    title: 'Tattoo Design Gallery — Buy Original Tattoo Designs | Tattoo Art Customs',
     designs: thumbs, allCats, q: req.query.q || '', cat: req.query.cat || '', sale: await salePriceActive(req.user),
     premadePrice: withFeeCents(premadePriceCents(new Date(), member)),
-    metaDescription: 'Browse and search original tattoo designs by category.',
+    metaDescription: 'Search 900+ original tattoo designs by style and category. Buy ready-made tattoo designs from independent artists — full color and linework included.',
+    canonical: `${config.baseUrl.replace(/\/$/, '')}/gallery`,
   });
 });
 
@@ -202,20 +208,44 @@ router.get('/design/:id', async (req, res) => {
   const viewer = await viewerFor(req.user);
   const imgFile = displayImgFile(design, viewer, owned);
   const blurred = design.sensitivity === 'explicit' && !canViewUnblurred(design, viewer, owned);
+  const base = config.baseUrl.replace(/\/$/, '');
+  const canonical = `${base}/design/${design.id}`;
+  const styleBit = design.style ? `${design.style} ` : '';
+  const artistName = artist && artist.display_name ? artist.display_name : 'Tattoo Art Customs';
+  const catBit = design.categories.length ? ` (${design.categories.slice(0, 3).join(', ')})` : '';
+  const priceTotalCents = withFeeCents(price);
+  const priceStr = `$${(priceTotalCents / 100).toFixed(2)}`;
+  const ogImgFile = imgFile || (design.linework_wm_path || '').split('/').pop();
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: `${design.title} — ${styleBit}tattoo design`,
+    image: ogImgFile ? `${base}/img/designs/${ogImgFile}` : canonical,
+    description: `Original ${styleBit}tattoo design "${design.title}" by ${artistName}. Buy the full color and clean linework files at Tattoo Art Customs.`,
+    brand: { '@type': 'Brand', name: 'Tattoo Art Customs' },
+    offers: {
+      '@type': 'Offer',
+      url: canonical,
+      priceCurrency: 'USD',
+      price: (priceTotalCents / 100).toFixed(2),
+      availability: 'https://schema.org/InStock',
+    },
+  };
   res.render('site/design', {
-    title: `${design.title} — Tattoo Art Customs`,
+    title: `${design.title} — ${styleBit}Tattoo Design for Sale | Tattoo Art Customs`,
     design, artist, price, isCustom, sale: await salePriceActive(req.user), owned,
     imgFile, blurred,
     // Linework-only purchase option (3% discount). Pieces with no color
     // version are linework-only automatically.
     lineworkPrice: lineworkBase,
     // Checkout totals include the 3.5% + $0.49 processing fee.
-    priceTotal: withFeeCents(price),
+    priceTotal: priceTotalCents,
     priceFee: processingFeeCents(price),
     lineworkTotal: withFeeCents(lineworkBase),
     lineworkFee: processingFeeCents(lineworkBase),
     lineworkDiscount: LINEWORK_ONLY_DISCOUNT,
-    metaDescription: `${design.title} — original tattoo design. ${design.categories.join(', ')}.`,
+    metaDescription: `Buy "${design.title}" — an original ${styleBit}tattoo design${catBit} by ${artistName}. ${priceStr}, full color + linework delivered after purchase.`,
+    canonical, ogImage: ogImgFile ? `${base}/img/designs/${ogImgFile}` : '', ogType: 'product', jsonLd,
     creditBalance: req.user ? await require('../lib/credits').getCreditBalance(req.user.id) : 0,
   });
 });
@@ -242,9 +272,10 @@ router.get('/artists/:id', async (req, res) => {
   const artViewer = await viewerFor(req.user);
   const piecesWithThumbs = pieces.map((p) => ({ ...p, thumb: displayImgFile(p, artViewer) }));
   res.render('site/artist', {
-    title: `${artist.display_name || 'Artist'} — Tattoo Art Customs`,
+    title: `${artist.display_name || 'Artist'} — Tattoo Designs for Sale | Tattoo Art Customs`,
     artist, bio: profile ? profile.bio : '', pieces: piecesWithThumbs, sale: await salePriceActive(req.user),
-    metaDescription: `${artist.display_name || 'Artist'} — tattoo design portfolio on Tattoo Art Customs.`,
+    metaDescription: `${artist.display_name || 'Artist'} — buy original tattoo designs from this artist's portfolio at Tattoo Art Customs.`,
+    canonical: `${config.baseUrl.replace(/\/$/, '')}/artists/${artist.id}`,
   });
 });
 

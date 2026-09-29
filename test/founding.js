@@ -199,14 +199,15 @@ async function runDbTests(ok) {
   const e3 = await founding.maybeEnterRaffle(oldUser, newSub);
   ok(!e3.entered && e3.reason === 'not first subscription', 'returning subscriber gets no entry');
 
-  // Window closed: no entry.
-  const realEnds = await founding.getRaffleEndsAt();
-  await founding.setRaffleEndsAt(Date.now() - 1000);
+  // Window closed (participant target reached): no entry.
+  const realTarget = await founding.getRaffleTarget();
+  const { n: entryCount } = await db.get('SELECT COUNT(*) AS n FROM raffle_entries');
+  await founding.setRaffleTarget(Math.max(1, entryCount)); // target reached -> closed
   const lateUser = await mkUser('rafflelate@test.local');
   const lateSub = await mkSub(lateUser, customerPlan);
   const e4 = await founding.maybeEnterRaffle(lateUser, lateSub);
-  ok(!e4.entered && e4.reason === 'window closed', 'no entry after the window closes');
-  await founding.setRaffleEndsAt(realEnds);
+  ok(!e4.entered && e4.reason === 'target reached', 'no entry after the target is reached');
+  await founding.setRaffleTarget(realTarget);
 
   // --- Draw ---
   const entrants = [rUser];

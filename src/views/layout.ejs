@@ -7,8 +7,32 @@
 <% if (typeof metaDescription !== 'undefined' && metaDescription) { %>
 <meta name="description" content="<%= metaDescription %>">
 <% } %>
+<% if (typeof googleVerification !== 'undefined' && googleVerification) { %>
+<meta name="google-site-verification" content="<%= googleVerification %>">
+<% } %>
+<% if (typeof canonical !== 'undefined' && canonical) { %>
+<link rel="canonical" href="<%= canonical %>">
+<% } %>
 <meta property="og:site_name" content="Tattoo Art Customs">
+<meta property="og:type" content="<%= typeof ogType !== 'undefined' ? ogType : 'website' %>">
+<% if (typeof canonical !== 'undefined' && canonical) { %>
+<meta property="og:url" content="<%= canonical %>">
+<% } %>
 <meta property="og:title" content="<%= typeof title !== 'undefined' ? title : 'Tattoo Art Customs' %>">
+<% if (typeof metaDescription !== 'undefined' && metaDescription) { %>
+<meta property="og:description" content="<%= metaDescription %>">
+<% } %>
+<% if (typeof ogImage !== 'undefined' && ogImage) { %>
+<meta property="og:image" content="<%= ogImage %>">
+<% } %>
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="<%= typeof title !== 'undefined' ? title : 'Tattoo Art Customs' %>">
+<% if (typeof metaDescription !== 'undefined' && metaDescription) { %>
+<meta name="twitter:description" content="<%= metaDescription %>">
+<% } %>
+<% if (typeof ogImage !== 'undefined' && ogImage) { %>
+<meta name="twitter:image" content="<%= ogImage %>">
+<% } %>
 <link rel="stylesheet" href="/css/style.css">
 <% if (typeof adsenseId !== 'undefined' && adsenseId) { %>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=<%= adsenseId %>" crossorigin="anonymous"></script>

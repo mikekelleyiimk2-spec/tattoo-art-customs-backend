@@ -11,6 +11,7 @@ function required(name, fallback = '') {
 const config = {
   port: parseInt(process.env.PORT || '3000', 10),
   baseUrl: (process.env.BASE_URL || 'http://localhost:3000').replace(/\/$/, ''),
+  googleSiteVerification: process.env.GOOGLE_SITE_VERIFICATION || '',
   sessionSecret: process.env.SESSION_SECRET || 'dev-only-secret-change-me',
   databaseUrl: process.env.DATABASE_URL || '',
   sqlitePath: process.env.SQLITE_PATH || path.join(__dirname, '..', 'data', 'app.db'),

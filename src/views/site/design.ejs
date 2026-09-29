@@ -1,3 +1,6 @@
+<% if (typeof jsonLd !== 'undefined' && jsonLd) { %>
+<script type="application/ld+json"><%- JSON.stringify(jsonLd) %></script>
+<% } %>
 <div class="two-col">
   <div>
     <img class="detail-img" src="/img/designs/<%= imgFile || design.linework_wm_path.split('/').pop() %>" alt="Tattoo design linework: <%= design.title %>">
