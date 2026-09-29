@@ -79,7 +79,12 @@ async function migrate() {
       // Tolerate re-running a migration whose DDL already applied (see the
       // tracker repair above): on Postgres, ADD COLUMN IF NOT EXISTS makes
       // the re-run a no-op instead of an error. SQLite keeps exact behavior.
-      if (mode === 'pg') stmt = stmt.replace(/ADD COLUMN /g, 'ADD COLUMN IF NOT EXISTS ');
+      // Only guard plain ADD COLUMN: a migration that already says
+      // ADD COLUMN IF NOT EXISTS must pass through untouched, or the
+      // replace below would double it into "... IF NOT EXISTS IF NOT
+      // EXISTS ..." which Postgres rejects with a syntax error.
+      // (2026-09-29: this exact double-apply broke Render deploy of 038.)
+      if (mode === 'pg') stmt = stmt.replace(/ADD COLUMN (?!IF NOT EXISTS )/g, 'ADD COLUMN IF NOT EXISTS ');
       await db.query(stmt);
     }
     await db.insert('migrations', { id: file, applied_at: db.now() });
