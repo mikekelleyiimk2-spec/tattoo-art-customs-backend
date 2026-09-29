@@ -49,6 +49,7 @@
       <a href="/orders/custom">Custom Design</a>
       <a href="/membership">Membership</a>
       <a href="/about">About</a>
+      <% if (playStoreUrl) { %><a class="btn" href="<%= playStoreUrl %>" target="_blank" rel="noopener">Get the app</a><% } %>
       <% if (currentUser) { %>
         <a href="/account">Account</a>
         <a href="/wallet">Wallet</a>
@@ -90,6 +91,7 @@
       <a href="/terms">Terms</a>
       <a href="/privacy">Privacy</a>
       <a href="/about">About</a>
+      <% if (playStoreUrl) { %><a href="<%= playStoreUrl %>" target="_blank" rel="noopener">Get the app</a><% } %>
     </nav>
   </div>
   <p class="fineprint">© <%= new Date().getFullYear() %> Tattoo Art Customs. All sales, subscriptions, and memberships are final.</p>
