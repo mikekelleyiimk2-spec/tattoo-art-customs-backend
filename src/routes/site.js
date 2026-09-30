@@ -155,6 +155,7 @@ router.get('/', async (req, res) => {
     metaDescription: 'Buy original tattoo designs online from independent artists. 900+ ready-made designs plus custom tattoo designs with 48-hour delivery.',
     canonical: `${base}/`,
     ogImage: ogImg,
+    playStoreUrl: config.playStoreUrl,
   });
 });
 
@@ -342,6 +343,25 @@ router.post('/report-bug', formLimiter, checkHoneypot, async (req, res) => {
   } catch (e) { console.error('bug report notify failed:', e.message); }
   req.session.flash = 'Thanks — your bug report was sent to the site owner.';
   res.redirect('/report-bug');
+});
+
+// App launch notify: homepage "coming soon" banner collects an email so we
+// can announce the mobile app launch. The list doubles as warm customer
+// leads for outreach.
+router.post('/app-notify', formLimiter, checkHoneypot, async (req, res) => {
+  const raw = String(req.body.email || '').trim().toLowerCase().slice(0, 120);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(raw)) {
+    req.session.flash = 'Please enter a valid email address.';
+    return res.redirect('/#app');
+  }
+  try {
+    const existing = await db.get('SELECT id FROM app_launch_signups WHERE email = ?', [raw]);
+    if (!existing) {
+      await db.insert('app_launch_signups', { email: raw, created_at: db.now(), notified_at: null });
+    }
+  } catch (e) { console.error('app-notify insert failed:', e.message); }
+  req.session.flash = "You're on the list — we'll email you the moment the app launches.";
+  res.redirect('/#app');
 });
 
 // Public opening-raffle page: prizes, entry progress, winners once drawn.
