@@ -28,6 +28,16 @@ const PRODUCTS = {
     description: 'Your design on stretched gallery canvas.',
     price_cents: 12000,
   },
+  // POD custom tee (owner rule 2026-09-30): Bella + Canvas 3001 via
+  // Printful. Apparel product: price is size-adjusted at checkout via
+  // pricing.teePriceCents(); variant IDs come from
+  // PRINTFUL_VARIANT_TEE_<COLOR>_<SIZE> env (see lib/printful.js).
+  tee_classic: {
+    name: 'Custom tee — Bella + Canvas 3001',
+    description: 'Your purchased design printed on a premium Bella + Canvas 3001 tee.',
+    price_cents: 2899,
+    apparel: true,
+  },
 };
 
 function productIds() {

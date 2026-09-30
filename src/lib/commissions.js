@@ -176,6 +176,29 @@ async function recordSaleCommissions(order) {
     });
     return;
   }
+  // POD tees (owner rule 2026-09-30): the shirt is a site-margin physical
+  // product, not a design sale. Tee ordering requires owning the design
+  // (same rule as prints), so the designer was already paid their 60% on
+  // the design purchase itself. Booking the normal design splits on the
+  // shirt price would exceed the Printful base + shipping cost and lose
+  // money on every shirt, so the full net base is kept as site overhead.
+  //
+  // Design-contest prize escrow (owner rule 2026-09-30): the prize is held,
+  // not sold. Splits are booked only when a winner is picked (88% winner /
+  // 12% site) via pickWinner() — never as a normal sale here, or the prize
+  // would be double-booked.
+  if (order.order_type === 'contest') return;
+  if (order.order_type === 'print') {
+    const po = await db.get('SELECT product FROM print_orders WHERE order_id = ?', [order.id]);
+    if (po && po.product === 'tee_classic') {
+      await db.insert('commission_ledger', {
+        order_id: order.id, recipient_type: 'site', recipient_id: null,
+        amount_cents: commissionBaseCents(order), status: 'site_kept',
+        commission_type: 'merch_tee', created_at: t,
+      });
+      return;
+    }
+  }
   const design = order.design_id ? await db.get('SELECT artist_id, color_source FROM designs WHERE id = ?', [order.design_id]) : null;
   const artistId = design && design.artist_id ? design.artist_id : null;
   const rawShopId = order.referred_shop_id || null;

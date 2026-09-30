@@ -1,0 +1,20 @@
+<h1>Design contests</h1>
+<p><a href="/admin">← Dashboard</a></p>
+<p class="muted">Contests past their 7-day deadline with entries and no winner need a judge — pick one below or on the contest page.</p>
+<table>
+  <thead><tr><th>Date</th><th>Title</th><th>Customer</th><th>Prize</th><th>Entries</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  <% contests.forEach(function(c) { %>
+    <tr>
+      <td><%= new Date(c.created_at).toLocaleDateString() %></td>
+      <td><%= c.title %></td>
+      <td><%= c.customer_name || '—' %></td>
+      <td><%= money(c.prize_cents) %></td>
+      <td><%= c.entry_count %></td>
+      <td><span class="badge<%= c.status === 'judging' ? ' warn' : '' %>"><%= c.status %></span></td>
+      <td><a class="btn btn-secondary" href="/admin/contests/<%= c.id %>">Open</a></td>
+    </tr>
+  <% }); %>
+  </tbody>
+</table>
+<% if (!contests.length) { %><p class="muted">No contests yet.</p><% } %>

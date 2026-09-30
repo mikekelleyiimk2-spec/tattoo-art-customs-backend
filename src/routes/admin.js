@@ -126,6 +126,16 @@ router.post('/orders/:id/confirm-manual', formLimiter, checkHoneypot, async (req
   await db.update('orders', order.id, { status: 'paid', amount_paid_cents: due + (order.fee_cents || 0), paid_at: db.now() });
   const fresh = await db.get('SELECT * FROM orders WHERE id = ?', [order.id]);
   await recordSaleCommissions(fresh);
+  // Design-contest prize escrow paid manually: open the contest for entries.
+  if (fresh.order_type === 'contest') {
+    const contest = await db.get('SELECT id FROM contests WHERE order_id = ?', [fresh.id]);
+    if (contest) {
+      await require('../lib/contests').openContest(contest.id, {
+        paidCents: (fresh.amount_paid_cents || 0),
+        paymentMethod: fresh.payment_method || 'manual',
+      });
+    }
+  }
   const fulfil = await onOrderPaid(fresh);
   await routeCustomOrder(fresh);
   await onCustomPieceSold(fresh); // sold custom pieces delist + queue a replacement
@@ -1025,6 +1035,50 @@ router.get('/prints/:id/file', async (req, res) => {
     return res.status(404).render('error', { title: 'Not found', message: 'Print file is missing.' });
   }
   res.download(abs);
+});
+
+// --- Design contests (bounty board) ---
+// Admins can pick a winner on any open/judging contest (e.g. when the
+// 7-day window expired without the customer picking).
+router.get('/contests', async (req, res) => {
+  const contests = await db.all(`
+    SELECT c.*, u.display_name AS customer_name,
+           (SELECT COUNT(*) FROM contest_entries e WHERE e.contest_id = c.id) AS entry_count
+    FROM contests c LEFT JOIN users u ON u.id = c.customer_id
+    ORDER BY c.created_at DESC`);
+  res.render('admin/contests', {
+    title: 'Design contests — Admin', contests,
+    money: require('../lib/pricing').money, metaDescription: '',
+  });
+});
+
+router.get('/contests/:id', async (req, res) => {
+  const c = await db.get(
+    `SELECT c.*, u.display_name AS customer_name FROM contests c
+     LEFT JOIN users u ON u.id = c.customer_id WHERE c.id = ?`, [req.params.id]);
+  if (!c) { req.session.flash = 'Contest not found.'; return res.redirect('/admin/contests'); }
+  const entries = await db.all(
+    `SELECT e.*, u.display_name AS designer_name FROM contest_entries e
+     LEFT JOIN users u ON u.id = e.designer_id WHERE e.contest_id = ? ORDER BY e.created_at ASC`,
+    [c.id]);
+  res.render('admin/contest-detail', {
+    title: `Contest — ${c.title} — Admin`, c, entries,
+    money: require('../lib/pricing').money, metaDescription: '',
+  });
+});
+
+router.post('/contests/:id/pick/:entryId', formLimiter, checkHoneypot, async (req, res) => {
+  try {
+    const { winnerShare } = await require('../lib/contests').pickWinner({
+      contestId: req.params.id, entryId: req.params.entryId,
+      pickerId: req.user.id, pickerIsAdmin: true,
+    });
+    await payAdmin(req, 'contest_judge', 'contest', req.params.id);
+    req.session.flash = `Winner picked — ${require('../lib/pricing').money(winnerShare)} to the winning designer.`;
+  } catch (e) {
+    req.session.flash = e.message || 'Could not pick a winner.';
+  }
+  res.redirect(`/admin/contests/${req.params.id}`);
 });
 
 // --- Admin user management ---

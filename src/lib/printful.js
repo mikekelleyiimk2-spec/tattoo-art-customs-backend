@@ -24,7 +24,18 @@ function printfulConfigured() {
   return !!(process.env.PRINTFUL_API_KEY || '').trim();
 }
 
-function variantIdFor(product) {
+function variantIdFor(product, printOrder) {
+  // POD custom tee (owner rule 2026-09-30): Bella + Canvas 3001 variants are
+  // size+color specific. Set one env var per combo you sell, e.g.
+  // PRINTFUL_VARIANT_TEE_BLACK_M=4011. Find the IDs in your Printful
+  // dashboard (Products > Bella + Canvas 3001 > variant list). A combo with
+  // no variant configured stays in the manual admin queue and the admin is
+  // told exactly which env var to set.
+  if (product === 'tee_classic' && printOrder) {
+    const color = String(printOrder.color || 'black').toUpperCase();
+    const size = String(printOrder.size || 'M').toUpperCase();
+    return process.env[`PRINTFUL_VARIANT_TEE_${color}_${size}`] || '';
+  }
   const map = {
     print_8x10: process.env.PRINTFUL_VARIANT_8X10 || '',
     print_12x16: process.env.PRINTFUL_VARIANT_12X16 || '',
@@ -58,9 +69,12 @@ function fileUrlFor(printOrder) {
 
 // Submit one paid print_orders row to Printful. Returns the Printful order id.
 async function submitPrintOrder(printOrder) {
-  const variantId = variantIdFor(printOrder.product);
+  const variantId = variantIdFor(printOrder.product, printOrder);
   if (!variantId) {
-    throw new Error(`No Printful variant configured for ${printOrder.product} (set PRINTFUL_VARIANT_*)`);
+    const hint = printOrder.product === 'tee_classic'
+      ? ` (set PRINTFUL_VARIANT_TEE_${String(printOrder.color || 'black').toUpperCase()}_${String(printOrder.size || 'M').toUpperCase()})`
+      : ' (set PRINTFUL_VARIANT_*)';
+    throw new Error(`No Printful variant configured for ${printOrder.product}${hint}`);
   }
   if (!printOrder.fulfill_token) {
     printOrder.fulfill_token = db.newId() + db.newId();

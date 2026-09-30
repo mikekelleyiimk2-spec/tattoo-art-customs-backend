@@ -1,0 +1,157 @@
+// POD custom tees (mounted at /merch). Owner rule 2026-09-30.
+//
+// Flow: a buyer picks one of their OWNED premade designs -> size/color/qty
+// -> checkout -> order rides the print_orders + Printful auto-fulfillment
+// path (order_type='print', product='tee_classic'). Ownership is required
+// (same rule as prints): the designer was already paid on the design sale,
+// so the shirt itself is a site-margin physical product (see the merch_tee
+// guard in recordSaleCommissions).
+//
+// Without PRINTFUL_API_KEY the tee flow degrades to "merch coming soon"
+// with an email notify list (merch_notify) — no silent manual-queue labor
+// lands on the owner.
+const express = require('express');
+const db = require('../db');
+const config = require('../config');
+const paypal = require('../lib/paypal');
+const pricing = require('../lib/pricing');
+const { requireLogin } = require('../middleware/auth');
+const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
+const { printfulConfigured } = require('../lib/printful');
+
+const router = express.Router();
+
+// --- Public: merch landing (tee info, or "coming soon" + notify) ---
+router.get('/', async (req, res) => {
+  const configured = printfulConfigured();
+  let ownedCount = 0;
+  if (configured && req.session && req.session.userId) {
+    const r = await db.get(
+      `SELECT COUNT(*) AS c FROM orders WHERE buyer_id = ? AND design_id IS NOT NULL
+       AND status = 'paid' AND order_type = 'premade'`,
+      [req.session.userId]
+    ).catch(() => ({ c: 0 }));
+    ownedCount = r ? r.c : 0;
+  }
+  res.render('merch/index', {
+    title: 'Merch — Tattoo Art Customs',
+    configured,
+    sizes: pricing.TEE_SIZES,
+    colors: pricing.TEE_COLORS,
+    priceFor: pricing.teePriceCents,
+    withFee: (c) => pricing.withFeeCents(c),
+    money: pricing.money,
+    ownedCount,
+    metaDescription: 'Tattoo Art Customs merch — your purchased designs on premium Bella + Canvas tees.',
+  });
+});
+
+router.post('/notify', formLimiter, checkHoneypot, async (req, res) => {
+  const email = String(req.body.email || '').trim().slice(0, 160);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    req.session.flash = 'Please enter a valid email address.';
+    return res.redirect('/merch');
+  }
+  const existing = await db.get('SELECT id FROM merch_notify WHERE email = ?', [email]).catch(() => null);
+  if (!existing) {
+    await db.insert('merch_notify', { id: db.newId(), email, created_at: db.now() });
+  }
+  req.session.flash = "You're on the list — we'll email you the moment merch drops.";
+  res.redirect('/merch');
+});
+
+async function ownsDesign(userId, designId) {
+  const o = await db.get(
+    `SELECT id FROM orders WHERE buyer_id = ? AND design_id = ? AND status = 'paid' AND order_type = 'premade'`,
+    [userId, designId]
+  );
+  return !!o;
+}
+
+// --- Tee order form for one owned design ---
+router.get('/tee/:designId', requireLogin, formLimiter, async (req, res) => {
+  if (!printfulConfigured()) {
+    req.session.flash = 'Merch is coming soon — join the notify list below.';
+    return res.redirect('/merch');
+  }
+  const design = await db.get("SELECT id, title, color_source FROM designs WHERE id = ? AND status = 'approved'", [req.params.designId]);
+  if (!design) return res.status(404).render('error', { title: 'Not found', message: 'That design is not available.' });
+  if (!(await ownsDesign(req.user.id, design.id))) {
+    req.session.flash = 'Tees are available for designs you have purchased.';
+    return res.redirect(`/design/${design.id}`);
+  }
+  res.render('merch/tee-order', {
+    title: `Tee — ${design.title} — Tattoo Art Customs`,
+    design,
+    sizes: pricing.TEE_SIZES,
+    colors: pricing.TEE_COLORS,
+    priceFor: pricing.teePriceCents,
+    withFee: (c) => pricing.withFeeCents(c),
+    money: pricing.money,
+    metaDescription: '',
+  });
+});
+
+router.post('/tee', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
+  try {
+    if (!printfulConfigured()) throw new Error('Merch is coming soon.');
+    const designId = String(req.body.design_id || '');
+    const design = await db.get("SELECT id, title FROM designs WHERE id = ? AND status = 'approved'", [designId]);
+    if (!design || !(await ownsDesign(req.user.id, design.id))) {
+      throw new Error('Tees are available for designs you have purchased.');
+    }
+    const size = pricing.teeSizeLabel(req.body.size);
+    const color = pricing.teeColorLabel(req.body.color);
+    const qty = Math.min(10, Math.max(1, parseInt(req.body.quantity, 10) || 1));
+    const style = req.body.style === 'linework' ? 'linework' : 'color';
+
+    const ship = {
+      ship_name: String(req.body.ship_name || '').slice(0, 120).trim(),
+      ship_address1: String(req.body.ship_address1 || '').slice(0, 160).trim(),
+      ship_address2: String(req.body.ship_address2 || '').slice(0, 160).trim(),
+      ship_city: String(req.body.ship_city || '').slice(0, 80).trim(),
+      ship_state: String(req.body.ship_state || '').slice(0, 80).trim(),
+      ship_zip: String(req.body.ship_zip || '').slice(0, 20).trim(),
+      ship_country: String(req.body.ship_country || 'US').slice(0, 60).trim() || 'US',
+    };
+    if (!ship.ship_name || !ship.ship_address1 || !ship.ship_city || !ship.ship_zip) {
+      throw new Error('Name, street address, city, and ZIP are required for shipping.');
+    }
+
+    const unit = pricing.teePriceCents(size);
+    const amount = unit * qty;
+    const fee = pricing.processingFeeCents(amount);
+    const orderId = await db.insert('orders', {
+      buyer_id: req.user.id, design_id: design.id, order_type: 'print',
+      amount_cents: amount, fee_cents: fee, status: 'pending', payment_method: 'paypal',
+      created_at: db.now(),
+    });
+    await db.insert('print_orders', {
+      id: db.newId(), order_id: orderId, user_id: req.user.id,
+      design_id: design.id, combo_id: null, product: 'tee_classic', quantity: qty,
+      style, size, color, ...ship, status: 'pending',
+      fulfill_token: db.newId() + db.newId(), created_at: db.now(),
+    });
+
+    try {
+      const pp = await paypal.createCheckoutOrder({
+        amountCents: amount + fee,
+        description: `Tattoo Art Customs tee — Bella + Canvas 3001 ${color} ${size} × ${qty} ("${design.title}")`,
+        returnUrl: `${config.baseUrl}/orders/approve/${orderId}`,
+        cancelUrl: `${config.baseUrl}/account`,
+      });
+      await db.update('orders', orderId, { paypal_order_id: pp.id });
+      const approve = pp.links.find((l) => l.rel === 'approve');
+      return res.redirect(approve.href);
+    } catch (e) {
+      console.error('PayPal tee order create failed:', e.message);
+      req.session.flash = 'PayPal checkout is unavailable right now — you can pay manually below.';
+      return res.redirect(`/orders/manual/${orderId}`);
+    }
+  } catch (e) {
+    req.session.flash = e.message || 'Could not start your tee order.';
+    return res.redirect('/merch');
+  }
+});
+
+module.exports = router;

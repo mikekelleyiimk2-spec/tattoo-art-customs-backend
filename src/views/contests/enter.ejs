@@ -1,0 +1,15 @@
+<h1>Enter contest</h1>
+<p class="muted">Upload your entry image (JPG, PNG, or WebP, max 15MB). You keep full rights to your entry unless it wins.</p>
+
+<form method="post" action="/contests/<%= contestId %>/enter" enctype="multipart/form-data">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <div>
+    <label for="entry-image">Entry image</label>
+    <input type="file" id="entry-image" name="entry_image" accept="image/jpeg,image/png,image/webp" required>
+  </div>
+  <div>
+    <label for="entry-note">Note for the contest holder (optional)</label>
+    <textarea id="entry-note" name="note" rows="3" maxlength="500" placeholder="Anything they should know about your entry…"></textarea>
+  </div>
+  <p><button class="btn" type="submit">Submit entry</button></p>
+</form>

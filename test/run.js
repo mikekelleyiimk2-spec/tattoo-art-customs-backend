@@ -2992,6 +2992,227 @@ async function main() {
   ok(!(await shopDesignerActive(shopDesId)) && !(await designerAccess(shopDesId)), 'designer access dies with the shop subscription');
   ok(!(await comm.recipientEligible(shopDesId, 'design_artist')), 'no designer payout eligibility without an active shop subscription');
 
+  // ===== POD custom tees + design contests (owner rules 2026-09-30) =====
+  {
+    console.log('pod tees:');
+    const tpricing = require('../src/lib/pricing');
+    const printful = require('../src/lib/printful');
+    const tcomm = require('../src/lib/commissions');
+    const tcontests = require('../src/lib/contests');
+    function tjar() {
+      const j = {};
+      return async function (method, p, { body, follow = true } = {}) {
+        const h = {};
+        const cookies = Object.entries(j).map(([k, v]) => `${k}=${v}`).join('; ');
+        if (cookies) h.cookie = cookies;
+        let payload = body;
+        if (payload && typeof payload === 'object') { payload = new URLSearchParams(payload); h['content-type'] = 'application/x-www-form-urlencoded'; }
+        const res = await fetch(`http://localhost:${PORT}${p}`, { method, headers: h, body: payload, redirect: follow ? 'follow' : 'manual' });
+        for (const c of (res.headers.getSetCookie ? res.headers.getSetCookie() : [])) {
+          const [k, v] = c.split(';')[0].split('='); j[k.trim()] = (v || '').trim();
+        }
+        return { status: res.status, text: await res.text(), location: res.headers.get('location') };
+      };
+    }
+
+    // Tee pricing: S-XL $28.99, 2XL $30.99, 3XL $32.99.
+    ok(tpricing.teePriceCents('S') === 2899 && tpricing.teePriceCents('M') === 2899 &&
+      tpricing.teePriceCents('L') === 2899 && tpricing.teePriceCents('XL') === 2899,
+      'tee S-XL retails $28.99');
+    ok(tpricing.teePriceCents('2XL') === 3099, 'tee 2XL retails $30.99');
+    ok(tpricing.teePriceCents('3XL') === 3299, 'tee 3XL retails $32.99');
+    ok(tpricing.teeSizeLabel('xxl') === 'M' && tpricing.teeSizeLabel('3xl') === '3XL', 'tee size sanitizes (bad -> M)');
+    ok(tpricing.teeColorLabel('RED') === 'black' && tpricing.teeColorLabel('White') === 'white', 'tee color sanitizes (bad -> black)');
+    // Margin check on the verified numbers: $28.99 - stripe - $11.92 base - $4.95 ship ≈ $10.98.
+    const stripeFee = Math.round(2899 * 0.029) + 30;
+    ok(2899 - stripeFee - 1192 - 495 >= 1000, 'tee S-XL holds ~$10+ margin after Stripe + Printful base + shipping');
+
+    // Without PRINTFUL_API_KEY the merch page degrades to coming-soon.
+    const treq = tjar();
+    let tr = await treq('GET', '/merch');
+    ok(tr.status === 200 && tr.text.toLowerCase().includes('coming soon'), 'merch page shows coming-soon without Printful key');
+    tr = await treq('POST', '/merch/notify', { body: { email: 'tee-fan@test.local' }, follow: false });
+    ok(tr.status === 302, 'merch notify signup redirects');
+    ok(sdb.prepare('SELECT id FROM merch_notify WHERE email = ?').get('tee-fan@test.local'), 'merch notify email stored');
+    await treq('POST', '/signup', { body: { display_name: 'Tee Buyer', email: 'teebuyer@test.local', password: 'password123' }, follow: false });
+    tr = await treq('GET', '/merch/tee/design-x', { follow: false });
+    ok(tr.status === 302 && (tr.location || '').includes('/merch'), 'tee order form redirects to merch when Printful is unconfigured');
+
+    // Printful variant mapping (lib-level): PRINTFUL_VARIANT_TEE_<COLOR>_<SIZE>.
+    ok(!printful.printfulConfigured(), 'printful not configured in the test env');
+    process.env.PRINTFUL_VARIANT_TEE_BLACK_M = '4011';
+    ok(printful.variantIdFor('tee_classic', { color: 'black', size: 'M' }) === '4011',
+      'tee variant resolves from PRINTFUL_VARIANT_TEE_<COLOR>_<SIZE>');
+    ok(printful.variantIdFor('tee_classic', { color: 'white', size: 'XL' }) === '',
+      'unconfigured tee size/color returns empty (stays in manual queue)');
+    ok(printful.variantIdFor('print_8x10') === '', 'paper print variants still env-driven (no regression)');
+    delete process.env.PRINTFUL_VARIANT_TEE_BLACK_M;
+
+    // Tee commission guard: the shirt is a site-margin physical product —
+    // the designer was paid on the design sale, so no design splits here.
+    const teeBuyerId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('teebuyer@test.local').id;
+    const teeDesId = await db.insert('users', { email: 'teedes@test.local', password_hash: 'x', role: 'design_artist', display_name: 'Tee Designer' });
+    const teeDesignId = 'des-tee-1';
+    sdb.prepare(`INSERT INTO designs (id, artist_id, title, description, price_cents, status, color_path, linework_path, linework_wm_path, categories, sale_count, created_at)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`).run(teeDesignId, teeDesId, 'Tee Wolf', 'desc', 7500, 'approved',
+      'designs/color/t.jpg', 'designs/linework/t.jpg', 'designs/linework-wm/t-wm.jpg', '[]', 0, Date.now());
+    await db.insert('orders', {
+      buyer_id: teeBuyerId, design_id: teeDesignId, order_type: 'premade',
+      amount_cents: 7500, fee_cents: 312, amount_paid_cents: 7812, status: 'paid',
+      payment_method: 'paypal', paid_at: Date.now(),
+    });
+    const teeAmt = tpricing.teePriceCents('XL') * 2; // 5798
+    const teeFee = tpricing.processingFeeCents(teeAmt);
+    const teeOrderId = await db.insert('orders', {
+      buyer_id: teeBuyerId, design_id: teeDesignId, order_type: 'print',
+      amount_cents: teeAmt, fee_cents: teeFee, amount_paid_cents: teeAmt + teeFee,
+      status: 'paid', payment_method: 'paypal', paid_at: Date.now(),
+    });
+    await db.insert('print_orders', {
+      order_id: teeOrderId, user_id: teeBuyerId, design_id: teeDesignId,
+      product: 'tee_classic', quantity: 2, style: 'color', size: 'XL', color: 'black',
+      ship_name: 'T', ship_address1: 'A', ship_city: 'C', ship_zip: 'Z', ship_country: 'US',
+      status: 'pending', fulfill_token: 'tee-test-token',
+    });
+    await tcomm.recordSaleCommissions(await db.get('SELECT * FROM orders WHERE id = ?', [teeOrderId]));
+    const teeRows = sdb.prepare('SELECT recipient_type, amount_cents, status, commission_type FROM commission_ledger WHERE order_id = ?').all(teeOrderId);
+    ok(teeRows.length === 1 && teeRows[0].commission_type === 'merch_tee' &&
+      teeRows[0].recipient_type === 'site' && teeRows[0].status === 'site_kept',
+      'tee order books exactly one merch_tee site row');
+    ok(teeRows[0].amount_cents === teeAmt, 'tee site row equals the full net base (no designer split on the shirt)');
+    const teeSubmit = await printful.onOrderPaid(await db.get('SELECT * FROM orders WHERE id = ?', [teeOrderId]));
+    ok(teeSubmit.submitted === false && teeSubmit.reason === 'printful not configured',
+      'tee stays in the manual queue without a Printful key (never throws)');
+
+    console.log('design contests:');
+    // Quote math: $60 prize -> $2.59 fee -> $62.59 total.
+    const cq = tcontests.contestQuote(6000);
+    ok(cq.feeCents === 259 && cq.totalCents === 6259, 'contest quote: $60 prize + $2.59 fee = $62.59 total');
+    let cthrew = false;
+    try { tcontests.validateBrief({ title: 'Hi', description: 'too short', prizeCents: 3000 }); } catch (e) { cthrew = true; }
+    ok(cthrew, 'contest brief validation rejects short title/description');
+    cthrew = false;
+    try { tcontests.validateBrief({ title: 'A valid contest title', description: 'A sufficiently long description for the validation test.', prizeCents: 2000 }); } catch (e) { cthrew = true; }
+    ok(cthrew, 'contest rejects prizes under $30');
+    cthrew = false;
+    try { tcontests.validateBrief({ title: 'A valid contest title', description: 'A sufficiently long description, email me at a@b.com please.', prizeCents: 5000 }); } catch (e) { cthrew = true; }
+    ok(cthrew, 'contest brief screening blocks contact info');
+
+    // Board renders; form requires login.
+    const creq = tjar();
+    let cr = await creq('GET', '/contests');
+    ok(cr.status === 200 && cr.text.includes('Design Contests'), 'contest board renders');
+    const anon = tjar();
+    cr = await anon('GET', '/contests/new', { follow: false });
+    ok(cr.status === 302 && (cr.location || '').includes('/login'), 'contest form requires login');
+    await creq('POST', '/signup', { body: { display_name: 'Contest Customer', email: 'contestcust@test.local', password: 'password123' }, follow: false });
+    const custId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('contestcust@test.local').id;
+    cr = await creq('POST', '/contests', { body: { title: 'Cheap contest', description: 'A sufficiently long description for the cheap contest test.', prize_cents: '1000' }, follow: false });
+    ok(cr.status === 302 && (cr.location || '').includes('/contests/new'), 'sub-$30 prize rejected back to the form');
+
+    // Create: PayPal createCheckoutOrder throws unconfigured in test -> manual fallback.
+    cr = await creq('POST', '/contests', { body: {
+      title: 'Test bounty wolf', description: 'Draw a neo-traditional wolf head, fierce expression, for a forearm piece.',
+      style: 'traditional', size_placement: 'Forearm', prize_cents: '6000',
+    }, follow: false });
+    ok(cr.status === 302 && (cr.location || '').includes('/orders/manual/'), 'contest created -> manual prize-pay fallback');
+    const contestOrderId = (cr.location || '').split('/orders/manual/')[1];
+    const contestRow = sdb.prepare('SELECT * FROM contests WHERE order_id = ?').get(contestOrderId);
+    ok(contestRow && contestRow.status === 'pending_payment' && contestRow.prize_cents === 6000, 'contest pending with $60 prize escrow');
+    const co = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(contestOrderId);
+    ok(co && co.order_type === 'contest' && co.amount_cents === 6000 && co.fee_cents === 259, 'prize escrow order: $60 + $2.59 fee');
+    await tcomm.recordSaleCommissions(await db.get('SELECT * FROM orders WHERE id = ?', [contestOrderId]));
+    ok(sdb.prepare('SELECT COUNT(*) AS n FROM commission_ledger WHERE order_id = ?').get(contestOrderId).n === 0,
+      'no sale commissions booked on prize escrow');
+
+    // Capture the prize (stubbed PayPal) -> contest opens with a 7-day window.
+    sdb.prepare('UPDATE orders SET paypal_order_id = ? WHERE id = ?').run('pp-contest-1', contestOrderId);
+    cr = await creq('GET', `/contests/capture/${contestRow.id}`, { follow: false });
+    ok(cr.status === 302 && (cr.location || '').includes(`/contests/${contestRow.id}`), 'prize capture opens the contest');
+    const opened = sdb.prepare('SELECT * FROM contests WHERE id = ?').get(contestRow.id);
+    ok(opened.status === 'open' && opened.ends_at > Date.now() + 6.9 * 86400000, 'contest open with ~7-day window');
+    cr = await creq('GET', `/contests/${opened.id}`);
+    ok(cr.status === 200 && cr.text.includes('Test bounty wolf') && cr.text.includes('$60.00'), 'contest detail shows the brief and prize');
+
+    // Designer signup + eligibility, entry form renders.
+    const dreq = tjar();
+    await dreq('POST', '/signup', { body: { display_name: 'Contest Designer', email: 'contestdes@test.local', password: 'password123' }, follow: false });
+    const desId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('contestdes@test.local').id;
+    sdb.prepare("UPDATE users SET role = 'design_artist' WHERE id = ?").run(desId);
+    const dplanId = sdb.prepare("SELECT id FROM plans WHERE slug = 'design_artist'").get().id;
+    await db.insert('subscriptions', { user_id: desId, plan_id: dplanId, status: 'active', current_period_end: Date.now() + 86400000 });
+    const { upsertProfile } = require('../src/lib/profiles');
+    await upsertProfile('artist_profiles', desId, { payout_paypal_email: 'contestdes@pay.test' });
+    ok(await tcomm.recipientEligible(desId, 'design_artist'), 'contest designer is payout-eligible');
+    cr = await dreq('GET', `/contests/${opened.id}/enter`);
+    ok(cr.status === 200 && cr.text.includes('Entry image'), 'designer entry form renders');
+
+    // Entry via lib; holder can view the file, strangers get 403.
+    const entryDir = path.join(process.env.ASSET_DIR, 'uploads', 'contests');
+    fs.mkdirSync(entryDir, { recursive: true });
+    fs.writeFileSync(path.join(entryDir, 'test-entry.jpg'), 'fake-entry-image');
+    const entryId = await tcontests.enterContest({ contestId: opened.id, designerId: desId, imagePath: 'uploads/contests/test-entry.jpg', note: 'My wolf entry' });
+    ok(!!entryId, 'designer entry recorded');
+    cthrew = false;
+    try { await tcontests.enterContest({ contestId: opened.id, designerId: opened.customer_id, imagePath: 'uploads/contests/test-entry.jpg' }); } catch (e) { cthrew = true; }
+    ok(cthrew, 'contest holder cannot enter their own contest');
+    cr = await creq('GET', `/contests/entry/${entryId}/file`, { follow: false });
+    ok(cr.status === 200, 'contest holder can view the entry file');
+    const sreq = tjar();
+    await sreq('POST', '/signup', { body: { display_name: 'Stranger', email: 'stranger@test.local', password: 'password123' }, follow: false });
+    let sr = await sreq('GET', `/contests/entry/${entryId}/file`, { follow: false });
+    ok(sr.status === 403, 'strangers cannot view contest entries before judging');
+
+    // Non-holder cannot pick; holder picks -> 88/12 split.
+    sr = await sreq('POST', `/contests/${opened.id}/pick/${entryId}`, { follow: false });
+    ok(sr.status === 302, 'non-holder pick attempt redirects');
+    ok(sdb.prepare('SELECT status FROM contests WHERE id = ?').get(opened.id).status === 'open', 'non-holder cannot pick the winner');
+    cr = await creq('POST', `/contests/${opened.id}/pick/${entryId}`, { follow: false });
+    ok(cr.status === 302, 'holder pick redirects');
+    const awarded = sdb.prepare('SELECT * FROM contests WHERE id = ?').get(opened.id);
+    ok(awarded.status === 'awarded' && awarded.winner_user_id === desId, 'contest awarded to the winning designer');
+    const cRows = sdb.prepare('SELECT recipient_type, recipient_id, amount_cents, status, commission_type FROM commission_ledger WHERE order_id = ?').all(contestOrderId);
+    const prizeRow = cRows.find((x) => x.commission_type === 'contest_prize');
+    const feeRow = cRows.find((x) => x.commission_type === 'contest_fee');
+    ok(cRows.length === 2, 'exactly two contest ledger rows');
+    ok(prizeRow && prizeRow.amount_cents === 5280 && prizeRow.status === 'payable' && prizeRow.recipient_id === desId,
+      'winner gets 88% ($52.80) payable');
+    ok(feeRow && feeRow.amount_cents === 720 && feeRow.recipient_type === 'site' && feeRow.status === 'site_kept',
+      'site keeps 12% ($7.20)');
+    cthrew = false;
+    try { await tcontests.pickWinner({ contestId: opened.id, entryId, pickerId: custId }); } catch (e) { cthrew = true; }
+    ok(cthrew, 'cannot pick twice on an awarded contest');
+
+    // Expiry: no entries -> refunded as site credit; entries -> judging.
+    const { contestId: emptyId } = await tcontests.createPendingContest({
+      customerId: custId, title: 'Empty bounty test',
+      description: 'A sufficiently long description for the empty bounty test.', prizeCents: 3000,
+    });
+    await tcontests.openContest(emptyId, { paidCents: 3259, paymentMethod: 'paypal' });
+    sdb.prepare('UPDATE contests SET ends_at = ? WHERE id = ?').run(Date.now() - 1000, emptyId);
+    const { contestId: judgedId } = await tcontests.createPendingContest({
+      customerId: custId, title: 'Judged bounty test',
+      description: 'A sufficiently long description for the judged bounty test.', prizeCents: 3000,
+    });
+    await tcontests.openContest(judgedId, { paidCents: 3259, paymentMethod: 'paypal' });
+    sdb.prepare('UPDATE contests SET ends_at = ? WHERE id = ?').run(Date.now() - 1000, judgedId);
+    await tcontests.enterContest({ contestId: judgedId, designerId: desId, imagePath: 'uploads/contests/test-entry.jpg' });
+    const rep = await tcontests.expireContests(Date.now());
+    ok(rep.refunded === 1 && rep.judging === 1, 'expiry: one refunded, one moved to judging');
+    ok(sdb.prepare('SELECT status FROM contests WHERE id = ?').get(emptyId).status === 'refunded', 'empty contest refunded');
+    const { getCreditBalance } = require('../src/lib/credits');
+    ok((await getCreditBalance(custId)) >= 3000, 'prize returned to customer as site credit');
+    ok(sdb.prepare('SELECT status FROM contests WHERE id = ?').get(judgedId).status === 'judging', 'contest with entries moves to judging');
+    const jEntry = sdb.prepare('SELECT id FROM contest_entries WHERE contest_id = ?').get(judgedId).id;
+    await tcontests.pickWinner({ contestId: judgedId, entryId: jEntry, pickerId: 'admin', pickerIsAdmin: true });
+    ok(sdb.prepare('SELECT status FROM contests WHERE id = ?').get(judgedId).status === 'awarded', 'admin can pick the winner on expiry');
+
+    // Admin contest list renders.
+    const areq = tjar();
+    await areq('POST', '/login', { body: { email: 'admin@test.local', password: 'AdminTest123!' }, follow: false });
+    const ar = await areq('GET', '/admin/contests');
+    ok(ar.status === 200 && ar.text.includes('Design contests'), 'admin contest list renders');
+  }
   sdb.close();
   server.kill();
   await new Promise((res2) => server.on('exit', res2));

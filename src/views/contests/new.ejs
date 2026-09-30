@@ -1,0 +1,43 @@
+<h1>Post a design contest</h1>
+<p class="muted">Describe the tattoo design you want. Designers submit entries for 7 days, then you pick a winner. The prize is paid up front and held in escrow — the winner gets the prize minus a 12% platform fee.</p>
+
+<form method="post" action="/contests">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+  <div>
+    <label for="contest-title">Title</label>
+    <input type="text" id="contest-title" name="title" required maxlength="120" placeholder="e.g. Neo-traditional wolf sleeve panel">
+  </div>
+
+  <div>
+    <label for="contest-desc">The brief — what should designers draw?</label>
+    <textarea id="contest-desc" name="description" required rows="6" maxlength="4000" placeholder="Subject, mood, must-haves, must-avoids…"></textarea>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <label for="contest-style">Style</label>
+      <select id="contest-style" name="style">
+        <option value="">Any style</option>
+        <% styles.forEach(function(s) { %><option value="<%= s %>"><%= s %></option><% }); %>
+      </select>
+    </div>
+    <div>
+      <label for="contest-placement">Size / placement</label>
+      <input type="text" id="contest-placement" name="size_placement" maxlength="200" placeholder="e.g. Forearm, ~6 inches tall">
+    </div>
+  </div>
+
+  <div>
+    <label for="contest-prize">Prize (minimum <%= money(minPrize) %>)</label>
+    <select id="contest-prize" name="prize_cents" required>
+      <% suggestions.forEach(function(s, i) { %>
+      <option value="<%= s.prize %>"<%= i === 0 ? ' selected' : '' %>><%= money(s.prize) %> prize — <%= money(s.quote.totalCents) %> total incl. fee</option>
+      <% }); %>
+    </select>
+    <p class="muted">The prize is charged now (plus the 3.5% + $0.49 processing fee) and held in escrow. If no one enters, it's refunded to your site credit.</p>
+  </div>
+
+  <p><button class="btn" type="submit">Post contest &amp; pay prize</button></p>
+</form>
+<p class="muted">All contest sales are final once a winner is picked. Contest briefs are screened — no contact info or off-site payment mentions.</p>

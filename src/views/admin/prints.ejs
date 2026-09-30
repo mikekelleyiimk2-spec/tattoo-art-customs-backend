@@ -8,7 +8,7 @@
     <tr>
       <td><%= new Date(p.created_at).toLocaleDateString() %></td>
       <td><%= p.design_title || p.combo_name || '—' %></td>
-      <td><%= products[p.product] ? products[p.product].name : p.product %> × <%= p.quantity %></td>
+      <td><%= products[p.product] ? products[p.product].name : p.product %> × <%= p.quantity %><% if (p.product === 'tee_classic' && (p.size || p.color)) { %><br><span class="muted"><%= p.color ? p.color.charAt(0).toUpperCase() + p.color.slice(1) : '' %> <%= p.size || '' %></span><% } %></td>
       <td><%= p.style %></td>
       <td><%= p.ship_name %><br><span class="muted"><%= p.ship_address1 %><% if (p.ship_address2) { %>, <%= p.ship_address2 %><% } %><br><%= p.ship_city %>, <%= p.ship_state %> <%= p.ship_zip %><br><%= p.ship_country %></span></td>
       <td><%= money(p.amount_paid_cents || 0) %> <span class="badge"><%= p.pay_status %></span></td>

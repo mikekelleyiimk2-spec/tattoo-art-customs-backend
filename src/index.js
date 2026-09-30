@@ -163,6 +163,8 @@ app.use('/play', require('./routes/play'));
 app.use('/api', require('./routes/api').router);
 app.use('/studio', require('./routes/studio'));
 app.use('/prints', require('./routes/prints'));
+app.use('/merch', require('./routes/merch'));
+app.use('/contests', require('./routes/contests'));
 app.use('/', require('./routes/ads'));
 app.use('/messages', require('./routes/messages'));
 app.use('/admin', require('./routes/admin'));

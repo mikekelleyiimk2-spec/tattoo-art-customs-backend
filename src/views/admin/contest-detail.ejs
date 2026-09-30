@@ -1,0 +1,21 @@
+<h1>Contest — <%= c.title %></h1>
+<p><a href="/admin/contests">← Contests</a> · <a href="/contests/<%= c.id %>">Public page</a></p>
+<p class="muted"><strong><%= money(c.prize_cents) %></strong> prize · <%= c.entry_count != null ? c.entry_count : entries.length %> entries · status <span class="badge"><%= c.status %></span></p>
+<p><%= c.description %></p>
+<% if (c.size_placement) { %><p class="muted"><strong>Size / placement:</strong> <%= c.size_placement %></p><% } %>
+
+<% entries.forEach(function(e) { %>
+<div class="card">
+  <p><img src="/contests/entry/<%= e.id %>/file" alt="Contest entry" style="max-width:320px"></p>
+  <% if (e.note) { %><p><%= e.note %></p><% } %>
+  <p class="muted">by <%= e.designer_name || e.designer_id %></p>
+  <% if (['open', 'judging'].includes(c.status)) { %>
+  <form method="post" action="/admin/contests/<%= c.id %>/pick/<%= e.id %>" style="display:inline">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <button class="btn" type="submit" onclick="return confirm('Pick this entry as the winner? This pays out the prize and cannot be undone.')">Pick winner</button>
+  </form>
+  <% } %>
+  <% if (c.winner_entry_id === e.id) { %><p><span class="badge ok">winner</span></p><% } %>
+</div>
+<% }); %>
+<% if (!entries.length) { %><p class="muted">No entries.</p><% } %>

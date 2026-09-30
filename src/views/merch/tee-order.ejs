@@ -1,0 +1,78 @@
+<h1>Custom tee</h1>
+<p class="muted">Printing: <strong><%= design.title %></strong> (your purchased design)</p>
+<p class="muted">Bella + Canvas 3001 — premium ring-spun cotton tee. Prices include the 3.5% + $0.49 processing fee.</p>
+
+<form method="post" action="/merch/tee">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <input type="hidden" name="design_id" value="<%= design.id %>">
+
+  <div class="two-col">
+    <div>
+      <label for="tee-size">Size</label>
+      <select id="tee-size" name="size" required>
+        <% sizes.forEach(function(s) { %>
+        <option value="<%= s %>"<%= s === 'M' ? ' selected' : '' %>><%= s %> — <%= money(withFee(priceFor(s))) %></option>
+        <% }); %>
+      </select>
+    </div>
+    <div>
+      <label for="tee-color">Color</label>
+      <select id="tee-color" name="color" required>
+        <% colors.forEach(function(c) { %>
+        <option value="<%= c %>"><%= c.charAt(0).toUpperCase() + c.slice(1) %></option>
+        <% }); %>
+      </select>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <label for="tee-qty">Quantity (max 10)</label>
+      <input type="number" id="tee-qty" name="quantity" value="1" min="1" max="10" required>
+    </div>
+    <div>
+      <label for="tee-style">Artwork style</label>
+      <select id="tee-style" name="style">
+        <option value="color">Full color</option>
+        <option value="linework">Clean linework</option>
+      </select>
+    </div>
+  </div>
+
+  <h2>Shipping address</h2>
+  <div>
+    <label for="ship-name">Full name</label>
+    <input type="text" id="ship-name" name="ship_name" required maxlength="120" autocomplete="name">
+  </div>
+  <div>
+    <label for="ship-address1">Street address</label>
+    <input type="text" id="ship-address1" name="ship_address1" required maxlength="160" autocomplete="street-address">
+  </div>
+  <div>
+    <label for="ship-address2">Apt / suite (optional)</label>
+    <input type="text" id="ship-address2" name="ship_address2" maxlength="160">
+  </div>
+  <div class="two-col">
+    <div>
+      <label for="ship-city">City</label>
+      <input type="text" id="ship-city" name="ship_city" required maxlength="80" autocomplete="address-level2">
+    </div>
+    <div>
+      <label for="ship-state">State / region</label>
+      <input type="text" id="ship-state" name="ship_state" maxlength="80" autocomplete="address-level1">
+    </div>
+  </div>
+  <div class="two-col">
+    <div>
+      <label for="ship-zip">ZIP / postal code</label>
+      <input type="text" id="ship-zip" name="ship_zip" required maxlength="20" autocomplete="postal-code">
+    </div>
+    <div>
+      <label for="ship-country">Country</label>
+      <input type="text" id="ship-country" name="ship_country" value="US" maxlength="60" autocomplete="country-name">
+    </div>
+  </div>
+
+  <p><button class="btn" type="submit">Continue to payment</button></p>
+</form>
+<p class="muted">Tees are made to order and ship within 5–7 business days. All merch sales are final.</p>

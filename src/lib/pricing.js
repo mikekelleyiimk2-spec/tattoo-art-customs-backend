@@ -125,4 +125,27 @@ const RUSH_SITE_CENTS = 1200;
 const RUSH_SLA_HOURS = 24;
 const STANDARD_SLA_HOURS = 48;
 
-module.exports = { isSaleWindow, isMemberSaleWindow, salePriceActive, premadePriceCents, customFullCents, customDepositCents, money, chicagoParts, LINEWORK_ONLY_DISCOUNT, lineworkOnlyPriceCents, processingFeeCents, withFeeCents, withPlayFeeCents, FIRST_CUSTOM_DISCOUNT_RATE, FIRST_CUSTOM_DISCOUNT_CODE, firstCustomFullCents, firstCustomDepositCents, RUSH_FEE_CENTS, RUSH_DESIGNER_CENTS, RUSH_SITE_CENTS, RUSH_SLA_HOURS, STANDARD_SLA_HOURS };
+// POD custom tee (owner rule 2026-09-30): Bella + Canvas 3001 via Printful.
+// Verified 2026-09-30: base ~$11.92 S-XL (+$2.00 per size above XL),
+// US shipping $4.95, Stripe 2.9% + $0.30. Retail holds ~$10-11 margin per
+// shirt after the processing-fee pass-through:
+//   S-XL $28.99 -> 2899 - 114 (fee) - 1192 (base) - 495 (ship) = $10.98
+//   2XL  $30.99 -> 3099 - 120 (fee) - 1392 (base) - 495 (ship) = $10.92
+//   3XL  $32.99 -> 3299 - 126 (fee) - 1592 (base) - 495 (ship) = $10.86
+const TEE_SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL'];
+const TEE_COLORS = ['black', 'white'];
+const TEE_PRICE_CENTS = { S: 2899, M: 2899, L: 2899, XL: 2899, '2XL': 3099, '3XL': 3299 };
+function teePriceCents(size) {
+  const s = String(size || 'M').toUpperCase();
+  return TEE_PRICE_CENTS[s] || TEE_PRICE_CENTS.M;
+}
+function teeSizeLabel(size) {
+  const s = String(size || 'M').toUpperCase();
+  return TEE_SIZES.includes(s) ? s : 'M';
+}
+function teeColorLabel(color) {
+  const c = String(color || 'black').toLowerCase();
+  return TEE_COLORS.includes(c) ? c : 'black';
+}
+
+module.exports = { isSaleWindow, isMemberSaleWindow, salePriceActive, premadePriceCents, customFullCents, customDepositCents, money, chicagoParts, LINEWORK_ONLY_DISCOUNT, lineworkOnlyPriceCents, processingFeeCents, withFeeCents, withPlayFeeCents, FIRST_CUSTOM_DISCOUNT_RATE, FIRST_CUSTOM_DISCOUNT_CODE, firstCustomFullCents, firstCustomDepositCents, RUSH_FEE_CENTS, RUSH_DESIGNER_CENTS, RUSH_SITE_CENTS, RUSH_SLA_HOURS, STANDARD_SLA_HOURS, TEE_SIZES, TEE_COLORS, TEE_PRICE_CENTS, teePriceCents, teeSizeLabel, teeColorLabel };
