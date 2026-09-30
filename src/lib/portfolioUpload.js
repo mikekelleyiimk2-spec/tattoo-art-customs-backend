@@ -58,22 +58,24 @@ const portfolioUploadMulter = multer({
 // Tier-1 funding guard for the upload pipeline (shared by POST
 // /artist/portfolio/upload and POST /account/upload).
 //
-// Owner rule 2026-09-29: lifetime subscription holders (the owner's inner
-// circle populating the site) NEVER pay review fees and their uploads NEVER
-// count against quota — charging them is the owner charging himself.
-// The lifetime check runs FIRST, so the quota increment and fee booking are
-// skipped entirely for them and nothing about fee bookkeeping can ever break
-// their upload. A failure inside the check itself fails closed to the normal
-// fee path (never an accidental exemption); a fee-booking failure still
-// never breaks the upload.
+// Owner rule 2026-09-29 (narrowed): ONLY population_admin-flagged accounts
+// (the six "super admins with population setup": the head_admin plus Chris,
+// Cayli, Aiden, Lesha, and Carina) are NEVER charged review fees and their
+// uploads NEVER count against quota. Every other lifetime holder follows
+// the normal quota/fee rules.
+// The flag check runs FIRST, so the quota increment and fee booking are
+// skipped entirely for flagged accounts and nothing about fee bookkeeping
+// can ever break their upload. A failure inside the check itself fails
+// closed to the normal fee path (never an accidental exemption); a
+// fee-booking failure still never breaks the upload.
 async function maybeBookReviewFee(userId, designId) {
-  let lifetimeHolder = false;
+  let popAdmin = false;
   try {
-    lifetimeHolder = await require('../middleware/auth').hasLifetimeSubscription(userId);
+    popAdmin = await require('../middleware/auth').isPopulationAdmin(userId);
   } catch (e) {
-    console.error('lifetime check failed for design', designId, e.message);
+    console.error('population_admin check failed for design', designId, e.message);
   }
-  if (lifetimeHolder) return { charged: false, exempt: true, count: 0, note: '' };
+  if (popAdmin) return { charged: false, exempt: true, count: 0, note: '' };
   // Every upload counts toward the uploader's monthly free quota
   // (15/Chicago month); over-quota uploads book a $0.40 review fee into
   // the prepaid pool that funds design-triage admin pay. Never touches

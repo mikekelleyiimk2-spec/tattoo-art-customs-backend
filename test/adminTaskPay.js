@@ -157,35 +157,46 @@ async function runDbTests(ok) {
   ok((await comm.payableBalance('designer', uploader2)) === -40,
     'fee with no balance books as negative — nets against FUTURE earnings');
 
-  // --- Lifetime holders: exempt from review fees AND quota (owner rule) ---
+  // --- population_admin flag: ONLY flagged accounts are exempt (owner rule,
+  // narrowed 2026-09-29). Every other lifetime holder follows normal rules.
   const { maybeBookReviewFee } = require('../src/lib/portfolioUpload');
-  const { hasLifetimeSubscription } = require('../src/middleware/auth');
+  const { hasLifetimeSubscription, isPopulationAdmin, assertNotPopulationAdmin } = require('../src/middleware/auth');
   const planArtist = await db.get("SELECT id FROM plans WHERE slug = 'design_artist'");
+  ok(await isPopulationAdmin('nobody') === false, 'unknown user is not a population admin');
+  // Flagged account: 20 uploads, zero fees, zero quota rows, pool untouched.
+  const popId = await mkUser('atp-popadmin@test.local', 'design_artist');
+  await db.query('UPDATE users SET population_admin = 1 WHERE id = ?', [popId]);
+  ok(await isPopulationAdmin(popId) === true, 'population_admin flag detected');
+  const poolBeforePop = await atp.poolBalance();
+  for (let i = 0; i < 20; i++) {
+    const pf = await maybeBookReviewFee(popId, `pop-upl${i}`);
+    ok(pf.exempt === true && !pf.charged && !pf.note,
+      `flagged upload ${i + 1} is free, exempt, and shows no fee note`);
+  }
+  const popUsage = await db.get('SELECT * FROM artist_upload_usage WHERE user_id = ?', [popId]);
+  ok(!popUsage, 'flagged uploads never touch quota');
+  const popFees = await db.get(
+    `SELECT COUNT(*) AS n FROM commission_ledger WHERE recipient_id = ? AND commission_type = 'review_fee'`,
+    [popId]);
+  ok(popFees.n === 0, 'flagged uploads book zero review fees');
+  ok((await atp.poolBalance()) === poolBeforePop, 'pool untouched by flagged uploads');
+  // Non-flag lifetime holder (the Adolfo case): normal quota/fee rules apply.
   const lifeId = await mkUser('atp-lifetime@test.local', 'design_artist');
   await db.insert('subscriptions', {
     user_id: lifeId, plan_id: planArtist.id, status: 'active', current_period_end: null,
   });
   ok(await hasLifetimeSubscription(lifeId) === true, 'lifetime grant detected (active + NULL period end)');
-  ok(await hasLifetimeSubscription(uploader) === false, 'regular paid sub is not a lifetime grant');
-  const poolBeforeLife = await atp.poolBalance();
-  for (let i = 0; i < 20; i++) {
-    const lf = await maybeBookReviewFee(lifeId, `life-upl${i}`);
-    ok(lf.exempt === true && !lf.charged && !lf.note,
-      `lifetime upload ${i + 1} is free, exempt, and shows no fee note`);
-  }
-  const lifeUsage = await db.get('SELECT * FROM artist_upload_usage WHERE user_id = ?', [lifeId]);
-  ok(!lifeUsage, 'lifetime uploads never touch quota');
-  const lifeFees = await db.get(
-    `SELECT COUNT(*) AS n FROM commission_ledger WHERE recipient_id = ? AND commission_type = 'review_fee'`,
-    [lifeId]);
-  ok(lifeFees.n === 0, 'lifetime uploads book zero review fees');
-  ok((await atp.poolBalance()) === poolBeforeLife, 'pool untouched by lifetime uploads');
-  // A canceled lifetime grant loses the exemption and rejoins quota.
-  await db.query(`UPDATE subscriptions SET status = 'canceled' WHERE user_id = ?`, [lifeId]);
-  ok(await hasLifetimeSubscription(lifeId) === false, 'canceled lifetime grant is not exempt');
-  const lfAfter = await maybeBookReviewFee(lifeId, 'life-upl21');
-  ok(!lfAfter.exempt && !lfAfter.charged && lfAfter.count === 1,
-    'ex-lifetime holder rejoins quota at upload 1');
+  ok(await isPopulationAdmin(lifeId) === false, 'non-flag lifetime holder is NOT a population admin');
+  for (let i = 0; i < 15; i++) await maybeBookReviewFee(lifeId, `life-upl${i}`);
+  const life16 = await maybeBookReviewFee(lifeId, 'life-upl16');
+  ok(life16.charged && life16.amount_cents === 40 && !!life16.note,
+    'non-flag lifetime holder: 16th upload books the $0.40 fee like everyone else');
+  // Unflagging rejoins quota at upload 1.
+  await db.query('UPDATE users SET population_admin = 0 WHERE id = ?', [popId]);
+  ok(await isPopulationAdmin(popId) === false, 'unflagged account loses the exemption');
+  const pfAfter = await maybeBookReviewFee(popId, 'pop-upl21');
+  ok(!pfAfter.exempt && !pfAfter.charged && pfAfter.count === 1,
+    'unflagged account rejoins quota at upload 1');
   // Regular subscriber through the same hook path: 16th upload still pays.
   const regId = await mkUser('atp-regular@test.local', 'design_artist');
   await db.insert('subscriptions', {
@@ -195,6 +206,15 @@ async function runDbTests(ok) {
   const r16 = await maybeBookReviewFee(regId, 'reg-upl16');
   ok(r16.charged && r16.amount_cents === 40 && !!r16.note,
     'regular subscriber: 16th upload books the $0.40 fee via the hook');
+  // Monthly-charge guard: throws for flagged accounts, passes for everyone else.
+  await db.query('UPDATE users SET population_admin = 1 WHERE id = ?', [popId]);
+  let guardErr = null;
+  try { await assertNotPopulationAdmin(popId); } catch (e) { guardErr = e; }
+  ok(!!guardErr && /population-admin/i.test(guardErr.message),
+    'assertNotPopulationAdmin throws a clear error for flagged accounts');
+  let guardOk = false;
+  try { await assertNotPopulationAdmin(regId); guardOk = true; } catch (e) { /* must not throw */ }
+  ok(guardOk, 'assertNotPopulationAdmin passes for non-flagged accounts');
 
   // --- Tier 3: ad revenue split ---
   const ads = require('../src/lib/ads');

@@ -45,6 +45,18 @@ router.get('/', requireLogin, async (req, res) => {
 router.post('/subscribe/:slug', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
   const plan = await db.get('SELECT * FROM plans WHERE slug = ? AND active = 1', [req.params.slug]);
   if (!plan) return res.status(404).render('error', { title: 'Not found', message: 'Unknown plan.' });
+  // Owner rule 2026-09-29: population-admin accounts ("super admins with
+  // population setup") are NEVER auto-charged monthly membership fees — a
+  // recurring PayPal subscription would bill them every cycle. Refuse the
+  // creation loudly, never silently bill. (Voluntary one-time premade/custom
+  // purchases are unaffected — this guard only covers recurring billing.)
+  try {
+    await require('../middleware/auth').assertNotPopulationAdmin(req.user.id);
+  } catch (e) {
+    console.warn('blocked recurring subscription creation for population_admin', req.user.id);
+    req.session.flash = 'Population-admin accounts are never billed for memberships — your access is already covered.';
+    return res.redirect('/membership');
+  }
   // Idempotency: never stack duplicate subscriptions for the same plan —
   // rapid double-clicks used to create one pending subscription per click.
   const existing = await db.get(
@@ -165,6 +177,15 @@ router.get('/resume/:id', requireLogin, async (req, res) => {
   const sub = await db.get('SELECT * FROM subscriptions WHERE id = ? AND user_id = ?',
     [req.params.id, req.user.id]);
   if (!sub || sub.status !== 'pending' || !sub.paypal_subscription_id) return res.redirect('/membership');
+  // Same owner rule as /subscribe: resuming a pending billing agreement
+  // would restart automatic monthly charges — never for population admins.
+  try {
+    await require('../middleware/auth').assertNotPopulationAdmin(req.user.id);
+  } catch (e) {
+    console.warn('blocked subscription resume for population_admin', req.user.id);
+    req.session.flash = 'Population-admin accounts are never billed for memberships — your access is already covered.';
+    return res.redirect('/membership');
+  }
   try {
     const remote = await paypal.getSubscription(sub.paypal_subscription_id);
     const approve = (remote.links || []).find((l) => l.rel === 'approve');

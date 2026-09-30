@@ -824,6 +824,41 @@ async function main() {
     const custNone = await require('../src/lib/fulfillment').fulfillPremadeOrder(custPaid);
     ok(custNone === null, 'fulfillPremadeOrder passes custom orders through untouched');
 
+    // population_admin: never auto-charged monthly, but one-time purchases work.
+    const popJar = {};
+    async function preq(method, p, opts = {}) {
+      const h = { ...(opts.headers || {}) };
+      const cookies = Object.entries(popJar).map(([k, v]) => `${k}=${v}`).join('; ');
+      if (cookies) h.cookie = cookies;
+      let payload = opts.body;
+      if (payload && typeof payload === 'object') { payload = new URLSearchParams(payload); h['content-type'] = 'application/x-www-form-urlencoded'; }
+      const res = await fetch(`http://localhost:${PORT}${p}`, { method, headers: h, body: payload, redirect: 'manual' });
+      for (const c of (res.headers.getSetCookie ? res.headers.getSetCookie() : [])) {
+        const [k, v] = c.split(';')[0].split('='); popJar[k.trim()] = (v || '').trim();
+      }
+      return { status: res.status, text: await res.text(), location: res.headers.get('location') };
+    }
+    let pr = await preq('POST', '/signup', { body: { display_name: 'PopAdmin', email: 'popadmin@test.local', password: 'password123' } });
+    ok(pr.status === 302, 'population-admin test user signed up');
+    const popRow = sdb.prepare("SELECT id FROM users WHERE email = 'popadmin@test.local'").get();
+    sdb.prepare('UPDATE users SET population_admin = 1 WHERE id = ?').run(popRow.id);
+    // (a) recurring subscription creation is refused loudly — no PayPal call, no row.
+    pr = await preq('POST', '/membership/subscribe/customer', { body: {} });
+    ok(pr.status === 302 && (pr.location || '').includes('/membership'),
+      'population_admin blocked from starting a recurring membership (redirects, never billed)');
+    const popSub = sdb.prepare('SELECT COUNT(*) AS n FROM subscriptions WHERE user_id = ?').get(popRow.id).n;
+    ok(popSub === 0, 'no subscription row created for the blocked attempt');
+    // (b) voluntary one-time premade purchase still completes.
+    sdb.prepare(`INSERT INTO orders
+      (id, buyer_id, design_id, order_type, amount_cents, fee_cents, status, payment_method, paypal_order_id, referral_code, created_at)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?)`).run(
+      'ord-pop-1', popRow.id, fdid, 'premade', 7500, 312, 'pending', 'paypal', 'pp-pop-' + Date.now(), '', Date.now());
+    pr = await preq('GET', '/orders/approve/ord-pop-1');
+    ok(pr.status === 302 && (pr.location || '').includes('/orders/ord-pop-1'),
+      'population_admin premade capture redirects to the order page');
+    const popPaid = sdb.prepare('SELECT * FROM orders WHERE id = ?').get('ord-pop-1');
+    ok(popPaid && popPaid.status === 'paid', 'population_admin one-time premade purchase completes and is marked paid');
+
     // (i) premades are never delisted by selling
     const stillLive = sdb.prepare("SELECT status FROM designs WHERE id = ?").get(fdid);
     ok(stillLive && stillLive.status === 'approved', 'premade design stays approved/live after sale');

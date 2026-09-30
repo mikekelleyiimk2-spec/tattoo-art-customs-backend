@@ -102,6 +102,28 @@ async function hasLifetimeSubscription(userId) {
   return !!row;
 }
 
+// Population admin ("super admin with population setup"): the owner's
+// site-population inner circle, flagged explicitly per user — NOT every
+// lifetime holder. Owner rule 2026-09-29 (narrowed): ONLY these six accounts
+// hold the flag — the head_admin (owner), Chris Jones, Cayli Cradic, Aiden,
+// Lesha Hughes, and Carina. Flagged accounts are NEVER charged upload
+// review fees (no quota counting) and NEVER auto-charged monthly
+// subscription/membership fees; voluntary one-time purchases stay open.
+async function isPopulationAdmin(userId) {
+  if (!userId) return false;
+  const row = await db.get('SELECT population_admin FROM users WHERE id = ?', [userId]);
+  return !!(row && row.population_admin);
+}
+
+// Guard for every server-side path that CREATES a recurring
+// subscription/membership charge. Throws with a clear message — callers
+// turn it into a flash + redirect, never a silent bill.
+async function assertNotPopulationAdmin(userId) {
+  if (await isPopulationAdmin(userId)) {
+    throw new Error('population-admin accounts are never billed for memberships — access is already covered');
+  }
+}
+
 function requireSubscription(planSlug) {
   return async (req, res, next) => {
     if (!req.user) return res.redirect('/login');
@@ -142,4 +164,4 @@ function requireAnySubscription() {
   };
 }
 
-module.exports = { loadUser, requireLogin, requireRole, requireHeadAdmin, requireSubscription, requireAnySubscription, hasActiveSubscription, hasAnyActiveSubscription, hasLifetimeSubscription, isActiveMember, isAdminRole, isHeadAdmin };
+module.exports = { loadUser, requireLogin, requireRole, requireHeadAdmin, requireSubscription, requireAnySubscription, hasActiveSubscription, hasAnyActiveSubscription, hasLifetimeSubscription, isPopulationAdmin, assertNotPopulationAdmin, isActiveMember, isAdminRole, isHeadAdmin };
