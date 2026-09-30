@@ -69,6 +69,10 @@ router.post('/advertise', formLimiter, checkHoneypot, (req, res) => {
         created_at: db.now(),
       });
       const price = res.locals.money(SLOTS[slot].price_cents * m);
+      // TODO (Tier-3 ad funding): when this ad's payment is confirmed, call
+      // recordAdRevenue({ amountCents, source: 'direct:' + slot }) from
+      // lib/ads.js — 50% sweeps into the site overhead pool (cushion for
+      // Tier-2 admin task pay + storage), 50% stays with the owner.
       req.session.flash = `Order received — ${m} month(s) of "${SLOTS[slot].name}" for ${price}. We'll email ${advertiser_email} with payment instructions, then your ad goes live.`;
       return res.redirect('/advertise');
     } catch (e) {

@@ -58,4 +58,36 @@ function validLinkUrl(url) {
   return typeof url === 'string' && /^(https?:\/\/)/i.test(url.trim());
 }
 
-module.exports = { SLOTS, slotIds, getActiveAds, recordImpressions, recordClick, validLinkUrl };
+// ---------------------------------------------------------------------------
+// TIER 3 — ad-revenue funding for the site overhead pool (owner rule 2026-09-29).
+// ---------------------------------------------------------------------------
+// 50% of every recognized ad-revenue dollar is swept into the site overhead
+// pool (commission_ledger recipient_type='site'), cushioning Tier-2 admin
+// task pay and storage costs. The other 50% belongs to the owner and needs
+// no ledger row — it is simply not booked here.
+//
+// TODO — ingestion points (no automatic revenue event exists yet):
+// - AdSense pays Google -> the owner's bank directly; the site never sees the
+//   money. Reconcile manually: a future /admin/ads "record payout" button
+//   should call recordAdRevenue({ amountCents, source: 'adsense' }).
+// - Direct-sold slots (routes/ads.js) are confirmed by manual email today;
+//   call recordAdRevenue({ amountCents, source: 'direct:<slot>' }) wherever
+//   that payment gets confirmed (see the TODO in routes/ads.js).
+async function recordAdRevenue({ amountCents, source }) {
+  const amt = Math.max(0, Math.round(amountCents || 0));
+  const siteShare = Math.floor(amt / 2); // owner-favorable rounding on odd cents
+  if (siteShare > 0) {
+    await db.insert('commission_ledger', {
+      // Synthetic order_id: the ledger column is NOT NULL and has no `note`
+      // field, so ad revenue uses a namespaced id that can never collide
+      // with a real sale's commission rows.
+      order_id: `adrev:${source}:${Date.now()}`,
+      recipient_type: 'site', recipient_id: null,
+      amount_cents: siteShare, status: 'site_kept',
+      commission_type: 'ad_revenue',
+    });
+  }
+  return { site_cents: siteShare, owner_cents: amt - siteShare };
+}
+
+module.exports = { SLOTS, slotIds, getActiveAds, recordImpressions, recordClick, validLinkUrl, recordAdRevenue };

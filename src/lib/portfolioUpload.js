@@ -141,6 +141,21 @@ async function handlePortfolioUpload(req, res, backUrl) {
       status: 'open', created_at: db.now(),
     });
   }
+  // Tier-1 funding: every upload counts toward the uploader's monthly free
+  // quota (15/Chicago month); over-quota uploads book a $0.40 review fee
+  // into the prepaid pool that funds design-triage admin pay. Never touches
+  // site overhead or the owner's pocket. A booking failure must never break
+  // the upload itself.
+  let reviewFeeNote = '';
+  try {
+    const { recordDesignUploadFee, REVIEW_FEE_CENTS } = require('./adminTaskPay');
+    const fee = await recordDesignUploadFee(req.user.id, id);
+    if (fee.charged) {
+      reviewFeeNote = ` That's upload ${fee.count} this month — a $${(REVIEW_FEE_CENTS / 100).toFixed(2)} review fee was applied to your earnings balance (it pays the admin who reviews this piece).`;
+    }
+  } catch (e) {
+    console.error('review fee booking failed for design', id, e.message);
+  }
   // Remake upload: link this new piece to the sold custom piece it replaces.
   // The replacement request closes when the remake is approved.
   if (req.body.remake) {
@@ -227,7 +242,7 @@ async function handlePortfolioUpload(req, res, backUrl) {
         : 'Custom portfolio piece uploaded — it goes live in your portfolio after approval (within 2 hours).') +
         (colorSource === 'none' ? ' It posts with your linework; we\u2019ll create the color version too.' : '') +
         (sensitivity === 'explicit' ? ' Rated explicit — the public preview is blurred.' : ''))
-      : 'Art uploaded but flagged for review (possible contact info). An admin will review it.'))) + wmNote;
+      : 'Art uploaded but flagged for review (possible contact info). An admin will review it.'))) + wmNote + reviewFeeNote;
   if (colorSource === 'none' && screen.ok) {
     // Tell the owner a color version needs creating (the assistant creates
     // it in a work session; attaching happens in /admin/colorization).

@@ -41,23 +41,45 @@ async function runDbTests(ok) {
   await bookSiteOverhead(4000, 'a');
   ok((await atp.overheadCents()) >= 4000, 'overhead tallied from site ledger rows');
 
+  // --- Tier 1: design triage is pool-funded. Empty pool → defensive hold ---
+  const d0 = await mkDesign(otherArtist);
+  const r0 = await atp.recordTask({ adminUserId: admin, taskType: 'design_approve', refType: 'design', refId: d0 });
+  ok(r0.status === 'held' && !r0.ledger_id && r0.funded_by === 'pool',
+    'triage with an empty pool is held, never paid as owner debt');
+  ok((await atp.releaseHeld()) === 0, 'releaseHeld cannot promote a pool-held row while the pool is short');
+
+  // Seed the prepaid pool (as upload fees would), then the held row promotes
+  // from the pool — never from overhead.
+  await db.insert('review_fee_pool', {
+    kind: 'fee_in', amount_cents: 100, user_id: otherArtist, ref_type: 'design', ref_id: 'seed',
+  });
+  ok((await atp.poolBalance()) === 100, 'pool balance tallies fee_in credits');
+  ok((await atp.releaseHeld()) === 1, 'releaseHeld promotes the pool-held row once fees arrive');
+  const promoted0 = await db.get('SELECT status, ledger_id, funded_by FROM admin_task_pay WHERE id = ?', [r0.id]);
+  ok(promoted0.status === 'payable' && !!promoted0.ledger_id && promoted0.funded_by === 'pool',
+    'promoted triage row is payable + pool-funded');
+  ok((await atp.poolBalance()) === 75, 'pool debited exactly $0.25 for the triage');
+
   // --- Basic record: design triage on someone else's design ---
   const d1 = await mkDesign(otherArtist);
   const r1 = await atp.recordTask({ adminUserId: admin, taskType: 'design_approve', refType: 'design', refId: d1 });
-  ok(!r1.duplicate && r1.status === 'payable' && r1.amount_cents === 25, 'design approval records $0.25 payable');
+  ok(!r1.duplicate && r1.status === 'payable' && r1.amount_cents === 25 && r1.funded_by === 'pool',
+    'design approval records $0.25 payable from the pool');
   ok(r1.ledger_id, 'payable task pay books a commission_ledger row');
   const ledgerRow = await db.get('SELECT * FROM commission_ledger WHERE id = ?', [r1.ledger_id]);
   ok(ledgerRow && ledgerRow.recipient_type === 'admin' && ledgerRow.recipient_id === admin &&
     ledgerRow.status === 'payable' && ledgerRow.order_id === `admintask:design_approve:design:${d1}`,
     'ledger row is admin/payable with a synthetic order_id');
-  ok((await comm.payableBalance('admin', admin)) === 25, 'admin task pay flows into payableBalance');
+  ok((await atp.poolBalance()) === 50, 'second triage debits the pool again');
+  ok((await atp.grantedCents()) === 0, 'pool-funded pay does NOT count toward the overhead cap');
+  ok((await comm.payableBalance('admin', admin)) === 50, 'admin task pay flows into payableBalance');
 
   // --- Idempotency: double-record pays once ---
   const r2 = await atp.recordTask({ adminUserId: admin, taskType: 'design_approve', refType: 'design', refId: d1 });
   ok(r2.duplicate === true, 'second record of the same task+ref is a duplicate');
   ok((await db.get('SELECT COUNT(*) AS n FROM admin_task_pay WHERE task_type = ? AND ref_type = ? AND ref_id = ?',
     ['design_approve', 'design', String(d1)])).n === 1, 'duplicate pays nothing — one row only');
-  ok((await comm.payableBalance('admin', admin)) === 25, 'duplicate does not inflate the payable balance');
+  ok((await comm.payableBalance('admin', admin)) === 50, 'duplicate does not inflate the payable balance');
 
   // --- Self-pay guard ---
   const own = await mkDesign(admin);
@@ -71,7 +93,7 @@ async function runDbTests(ok) {
   // against the live totals instead of assuming a clean ledger.
   const overheadNow = await atp.overheadCents();
   const capNow = Math.floor(overheadNow * 25 / 100);
-  const grantedNow = await atp.grantedCents(); // $0.25 from the design approval above
+  const grantedNow = await atp.grantedCents(); // 0 — the two triage rows above are pool-funded
   const room = capNow - grantedNow;
   const nPayable = Math.max(0, Math.floor(room / 200)); // $2 appeal decisions that fit
   for (let i = 0; i < nPayable; i++) {
@@ -95,8 +117,63 @@ async function runDbTests(ok) {
   ok((await atp.releaseHeld()) === 1, 'releaseHeld promotes the held row once overhead grows');
   const promoted = await db.get('SELECT status, ledger_id FROM admin_task_pay WHERE id = ?', [held.id]);
   ok(promoted.status === 'payable' && !!promoted.ledger_id, 'promoted row becomes payable with a ledger row');
-  const expectedTotal = 25 + (nPayable + 1) * 200;
+  const expectedTotal = 50 + (nPayable + 1) * 200;
   ok((await comm.payableBalance('admin', admin)) === expectedTotal, `stacked payable balance is $${(expectedTotal / 100).toFixed(2)}`);
+
+  // --- Tier 1 upload quota: 15 free per month, $0.40 from #16 ---
+  const uploader = await mkUser('atp-uploader@test.local', 'design_artist');
+  for (let i = 0; i < atp.FREE_UPLOADS_PER_MONTH; i++) {
+    const f = await atp.recordDesignUploadFee(uploader, `upl${i}`);
+    ok(!f.charged && f.count === i + 1, `upload ${i + 1} is free (within quota)`);
+  }
+  const poolBeforeFee = await atp.poolBalance();
+  const f16 = await atp.recordDesignUploadFee(uploader, 'upl16');
+  ok(f16.charged && f16.amount_cents === atp.REVIEW_FEE_CENTS && f16.count === 16,
+    '16th upload in the month books the $0.40 review fee');
+  ok((await atp.poolBalance()) - poolBeforeFee === 40, 'fee credits the prepaid pool');
+  const feeRow = await db.get(`SELECT * FROM commission_ledger WHERE order_id = 'reviewfee:upl16'`);
+  ok(feeRow && feeRow.amount_cents === -40 && feeRow.recipient_type === 'designer' &&
+    feeRow.recipient_id === uploader && feeRow.commission_type === 'review_fee',
+    'fee is a negative designer ledger row (nets against earnings)');
+  const usage = await db.get(
+    'SELECT * FROM artist_upload_usage WHERE user_id = ? AND month = ?', [uploader, atp.chicagoMonthKey()]);
+  ok(usage && usage.count === 16 && /^\d{4}-\d{2}$/.test(usage.month),
+    'usage tracked per Chicago calendar month');
+  // A second month starts a fresh quota.
+  await db.query(`UPDATE artist_upload_usage SET month = '2000-01' WHERE user_id = ?`, [uploader]);
+  const fNew = await atp.recordDesignUploadFee(uploader, 'upl-newmonth');
+  ok(!fNew.charged && fNew.count === 1, 'quota resets each calendar month');
+
+  // --- Fee nets against the designer's payable balance ---
+  await db.insert('commission_ledger', {
+    order_id: 'test-earn', recipient_type: 'designer', recipient_id: uploader,
+    amount_cents: 1000, status: 'payable', commission_type: 'premade',
+  });
+  ok((await comm.payableBalance('designer', uploader)) === 960,
+    'review fee nets against payable earnings ($10.00 - $0.40)');
+  const uploader2 = await mkUser('atp-uploader2@test.local', 'design_artist');
+  for (let i = 0; i < atp.FREE_UPLOADS_PER_MONTH; i++) await atp.recordDesignUploadFee(uploader2, `u2-${i}`);
+  await atp.recordDesignUploadFee(uploader2, 'u2-16');
+  ok((await comm.payableBalance('designer', uploader2)) === -40,
+    'fee with no balance books as negative — nets against FUTURE earnings');
+
+  // --- Tier 3: ad revenue split ---
+  const ads = require('../src/lib/ads');
+  const ohBefore = await atp.overheadCents();
+  const split = await ads.recordAdRevenue({ amountCents: 101, source: 'test' });
+  ok(split.site_cents === 50 && split.owner_cents === 51,
+    'ad revenue splits 50/50 to site overhead / owner (floor on odd cents)');
+  ok((await atp.overheadCents()) - ohBefore === 50, 'site half lands in the overhead pool');
+  const adRow = await db.get(
+    `SELECT * FROM commission_ledger WHERE commission_type = 'ad_revenue' ORDER BY created_at DESC LIMIT 1`);
+  ok(adRow && adRow.recipient_type === 'site' && adRow.status === 'site_kept' && adRow.amount_cents === 50,
+    'ad revenue books a site_kept overhead row');
+  const adCountBefore = (await db.get(
+    `SELECT COUNT(*) AS n FROM commission_ledger WHERE commission_type = 'ad_revenue'`)).n;
+  const zero = await ads.recordAdRevenue({ amountCents: 0, source: 'test' });
+  ok(zero.site_cents === 0 && (await db.get(
+    `SELECT COUNT(*) AS n FROM commission_ledger WHERE commission_type = 'ad_revenue'`)).n === adCountBefore,
+    'zero revenue books no ledger row');
 
   // --- Payout eligibility: admin + active designer sub + payout destination ---
   let threw = false;
@@ -124,16 +201,20 @@ async function runDbTests(ok) {
   // --- Cleanup: this suite shares one test DB, and notifyAdmins() writes one
   // notification per admin user — a leftover role='admin' test user would
   // double later sale-notification counts. Remove everything we created. ---
-  const myIds = [admin, otherArtist, nonAdmin];
+  const myIds = [admin, otherArtist, nonAdmin, uploader, uploader2];
   const ph = myIds.map(() => '?').join(',');
   await db.query(`DELETE FROM admin_task_pay WHERE admin_user_id IN (${ph})`, myIds);
-  await db.query(`DELETE FROM commission_ledger WHERE order_id LIKE 'admintask:%' OR order_id LIKE 'test-site-%'`);
+  await db.query(`DELETE FROM review_fee_pool WHERE user_id IN (${ph}) OR ref_id = 'seed'`, myIds);
+  await db.query(`DELETE FROM artist_upload_usage WHERE user_id IN (${ph})`, myIds);
+  await db.query(`DELETE FROM commission_ledger WHERE order_id LIKE 'admintask:%' OR order_id LIKE 'test-site-%'
+    OR order_id LIKE 'reviewfee:%' OR order_id LIKE 'adrev:%' OR order_id = 'test-earn'`);
   await db.query(`DELETE FROM subscriptions WHERE user_id IN (${ph})`, myIds);
   await db.query(`DELETE FROM artist_profiles WHERE user_id IN (${ph})`, myIds);
-  await db.query('DELETE FROM designs WHERE id IN (?, ?)', [d1, own]);
+  await db.query('DELETE FROM designs WHERE id IN (?, ?, ?)', [d0, d1, own]);
   await db.query(`DELETE FROM users WHERE id IN (${ph})`, myIds);
   ok((await db.get(`SELECT COUNT(*) AS n FROM users WHERE id IN (${ph})`, myIds)).n === 0,
     'test users cleaned up');
+  ok((await db.get(`SELECT COUNT(*) AS n FROM review_fee_pool`)).n === 0, 'pool rows cleaned up');
 }
 
 module.exports = { runDbTests };

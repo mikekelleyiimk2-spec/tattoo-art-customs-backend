@@ -39,7 +39,9 @@ async function runWeeklyPayouts() {
   const summary = { at: new Date().toISOString(), paid: [], queued: [], skipped: [], failed: false, error: '' };
 
   // Admin task pay: promote held task-pay rows to payable (oldest first)
-  // while the 25%-of-overhead cap allows, before tallying this week's payees.
+  // before tallying this week's payees. Overhead-funded rows promote while
+  // the 25%-of-overhead cap allows; pool-funded design-triage rows promote
+  // only from the prepaid review-fee pool.
   try {
     const promoted = await require('../lib/adminTaskPay').releaseHeld();
     if (promoted) summary.adminTaskPayReleased = promoted;
