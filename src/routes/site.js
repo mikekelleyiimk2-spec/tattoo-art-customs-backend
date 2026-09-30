@@ -88,6 +88,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/raffle`, changefreq: 'weekly', priority: '0.6' },
     { loc: `${base}/terms`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/contact`, changefreq: 'monthly', priority: '0.4' },
   ];
   try {
     const designs = await db.all(
@@ -295,6 +296,42 @@ router.get('/about', (req, res) => res.render('site/about', {
   title: 'About — Tattoo Art Customs',
   metaDescription: 'About Tattoo Art Customs marketplace.',
 }));
+
+// Contact page: public form + business email. Emailed straight to the owner.
+router.get('/contact', (req, res) => res.render('site/contact', {
+  title: 'Contact Us — Tattoo Art Customs',
+  metaDescription: 'Contact Tattoo Art Customs — orders, custom designs, artist and shop signups.',
+}));
+router.post('/contact', formLimiter, checkHoneypot, async (req, res) => {
+  const name = String(req.body.name || '').trim().slice(0, 120);
+  const email = String(req.body.email || '').trim().slice(0, 120);
+  const topic = ['order', 'custom', 'artist', 'shop', 'other'].includes(req.body.topic) ? req.body.topic : 'other';
+  const message = String(req.body.message || '').trim().slice(0, 2000);
+  if (!name || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(email) || !message) {
+    req.session.flash = 'Please include your name, a valid email, and a message.';
+    return res.redirect('/contact');
+  }
+  const body = `From: ${name} <${email}>\nTopic: ${topic}\n\n${message}`;
+  try {
+    const { sendMail } = require('../lib/mail');
+    let to = [config.adminEmail].filter(Boolean);
+    if (!to.length) {
+      const heads = await db.all("SELECT email FROM users WHERE role = 'head_admin' AND email IS NOT NULL");
+      to = heads.map((h) => h.email);
+    }
+    for (const addr of to) {
+      await sendMail({ to: addr, subject: `[Contact: ${topic}] ${name}`, text: body });
+    }
+  } catch (e) { console.error('contact email failed:', e.message); }
+  try {
+    await require('../lib/notify').notifyAdmins({
+      kind: 'contact', title: `Contact message: ${topic}`,
+      body: `${name} <${email}>`, link: '/contact',
+    });
+  } catch (e) { console.error('contact notify failed:', e.message); }
+  req.session.flash = 'Thanks — your message was sent. We\'ll reply soon.';
+  res.redirect('/contact');
+});
 
 // Aftercare guide with affiliate product picks (owner-approved 2026-09-30).
 // Tag is the owner's Amazon Associates tracking ID.
