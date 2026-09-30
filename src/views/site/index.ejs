@@ -32,6 +32,14 @@
   <% } %>
 </section>
 
+<% if (youtubeUrl) { %>
+<section class="card" id="youtube">
+  <h2>🎥 We're on YouTube — subscribe</h2>
+  <p>Daily flash drops, custom design timelapses, and aftercare guides. New videos every day — hit subscribe so you never miss a drop.</p>
+  <p><a class="btn" href="<%= youtubeUrl %>?sub_confirmation=1" target="_blank" rel="noopener">Subscribe on YouTube</a></p>
+</section>
+<% } %>
+
 <h2>Fresh designs</h2>
 <div class="grid">
   <% designs.forEach(function(d) { %>
