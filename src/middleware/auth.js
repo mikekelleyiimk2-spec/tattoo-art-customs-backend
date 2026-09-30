@@ -88,6 +88,20 @@ async function hasActiveSubscription(userId, planSlug) {
   return false;
 }
 
+// Lifetime subscription holder (any plan): the owner-granted inner circle.
+// Represented as an active subscriptions row with current_period_end IS NULL
+// (lifetime grants never expire). Owner rule 2026-09-29: lifetime holders
+// never pay upload review fees and their uploads never count against quota
+// (charging them is the owner charging himself).
+async function hasLifetimeSubscription(userId) {
+  const row = await db.get(
+    `SELECT s.id FROM subscriptions s
+     WHERE s.user_id = ? AND s.status = 'active' AND s.current_period_end IS NULL
+     LIMIT 1`,
+    [userId]);
+  return !!row;
+}
+
 function requireSubscription(planSlug) {
   return async (req, res, next) => {
     if (!req.user) return res.redirect('/login');
@@ -128,4 +142,4 @@ function requireAnySubscription() {
   };
 }
 
-module.exports = { loadUser, requireLogin, requireRole, requireHeadAdmin, requireSubscription, requireAnySubscription, hasActiveSubscription, hasAnyActiveSubscription, isActiveMember, isAdminRole, isHeadAdmin };
+module.exports = { loadUser, requireLogin, requireRole, requireHeadAdmin, requireSubscription, requireAnySubscription, hasActiveSubscription, hasAnyActiveSubscription, hasLifetimeSubscription, isActiveMember, isAdminRole, isHeadAdmin };

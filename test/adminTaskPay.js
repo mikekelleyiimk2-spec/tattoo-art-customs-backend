@@ -157,6 +157,45 @@ async function runDbTests(ok) {
   ok((await comm.payableBalance('designer', uploader2)) === -40,
     'fee with no balance books as negative — nets against FUTURE earnings');
 
+  // --- Lifetime holders: exempt from review fees AND quota (owner rule) ---
+  const { maybeBookReviewFee } = require('../src/lib/portfolioUpload');
+  const { hasLifetimeSubscription } = require('../src/middleware/auth');
+  const planArtist = await db.get("SELECT id FROM plans WHERE slug = 'design_artist'");
+  const lifeId = await mkUser('atp-lifetime@test.local', 'design_artist');
+  await db.insert('subscriptions', {
+    user_id: lifeId, plan_id: planArtist.id, status: 'active', current_period_end: null,
+  });
+  ok(await hasLifetimeSubscription(lifeId) === true, 'lifetime grant detected (active + NULL period end)');
+  ok(await hasLifetimeSubscription(uploader) === false, 'regular paid sub is not a lifetime grant');
+  const poolBeforeLife = await atp.poolBalance();
+  for (let i = 0; i < 20; i++) {
+    const lf = await maybeBookReviewFee(lifeId, `life-upl${i}`);
+    ok(lf.exempt === true && !lf.charged && !lf.note,
+      `lifetime upload ${i + 1} is free, exempt, and shows no fee note`);
+  }
+  const lifeUsage = await db.get('SELECT * FROM artist_upload_usage WHERE user_id = ?', [lifeId]);
+  ok(!lifeUsage, 'lifetime uploads never touch quota');
+  const lifeFees = await db.get(
+    `SELECT COUNT(*) AS n FROM commission_ledger WHERE recipient_id = ? AND commission_type = 'review_fee'`,
+    [lifeId]);
+  ok(lifeFees.n === 0, 'lifetime uploads book zero review fees');
+  ok((await atp.poolBalance()) === poolBeforeLife, 'pool untouched by lifetime uploads');
+  // A canceled lifetime grant loses the exemption and rejoins quota.
+  await db.query(`UPDATE subscriptions SET status = 'canceled' WHERE user_id = ?`, [lifeId]);
+  ok(await hasLifetimeSubscription(lifeId) === false, 'canceled lifetime grant is not exempt');
+  const lfAfter = await maybeBookReviewFee(lifeId, 'life-upl21');
+  ok(!lfAfter.exempt && !lfAfter.charged && lfAfter.count === 1,
+    'ex-lifetime holder rejoins quota at upload 1');
+  // Regular subscriber through the same hook path: 16th upload still pays.
+  const regId = await mkUser('atp-regular@test.local', 'design_artist');
+  await db.insert('subscriptions', {
+    user_id: regId, plan_id: planArtist.id, status: 'active', current_period_end: Date.now() + 86400000,
+  });
+  for (let i = 0; i < 15; i++) await maybeBookReviewFee(regId, `reg-upl${i}`);
+  const r16 = await maybeBookReviewFee(regId, 'reg-upl16');
+  ok(r16.charged && r16.amount_cents === 40 && !!r16.note,
+    'regular subscriber: 16th upload books the $0.40 fee via the hook');
+
   // --- Tier 3: ad revenue split ---
   const ads = require('../src/lib/ads');
   const ohBefore = await atp.overheadCents();
@@ -201,7 +240,7 @@ async function runDbTests(ok) {
   // --- Cleanup: this suite shares one test DB, and notifyAdmins() writes one
   // notification per admin user — a leftover role='admin' test user would
   // double later sale-notification counts. Remove everything we created. ---
-  const myIds = [admin, otherArtist, nonAdmin, uploader, uploader2];
+  const myIds = [admin, otherArtist, nonAdmin, uploader, uploader2, lifeId, regId];
   const ph = myIds.map(() => '?').join(',');
   await db.query(`DELETE FROM admin_task_pay WHERE admin_user_id IN (${ph})`, myIds);
   await db.query(`DELETE FROM review_fee_pool WHERE user_id IN (${ph}) OR ref_id = 'seed'`, myIds);

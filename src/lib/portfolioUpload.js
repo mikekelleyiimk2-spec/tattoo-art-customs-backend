@@ -55,6 +55,42 @@ const portfolioUploadMulter = multer({
 // color_source='none', color_pending=1, and enter the normal approval flow —
 // the piece posts with its watermarked linework while the site-created color
 // version follows via the colorization queue.
+// Tier-1 funding guard for the upload pipeline (shared by POST
+// /artist/portfolio/upload and POST /account/upload).
+//
+// Owner rule 2026-09-29: lifetime subscription holders (the owner's inner
+// circle populating the site) NEVER pay review fees and their uploads NEVER
+// count against quota — charging them is the owner charging himself.
+// The lifetime check runs FIRST, so the quota increment and fee booking are
+// skipped entirely for them and nothing about fee bookkeeping can ever break
+// their upload. A failure inside the check itself fails closed to the normal
+// fee path (never an accidental exemption); a fee-booking failure still
+// never breaks the upload.
+async function maybeBookReviewFee(userId, designId) {
+  let lifetimeHolder = false;
+  try {
+    lifetimeHolder = await require('../middleware/auth').hasLifetimeSubscription(userId);
+  } catch (e) {
+    console.error('lifetime check failed for design', designId, e.message);
+  }
+  if (lifetimeHolder) return { charged: false, exempt: true, count: 0, note: '' };
+  // Every upload counts toward the uploader's monthly free quota
+  // (15/Chicago month); over-quota uploads book a $0.40 review fee into
+  // the prepaid pool that funds design-triage admin pay. Never touches
+  // site overhead or the owner's pocket.
+  try {
+    const { recordDesignUploadFee, REVIEW_FEE_CENTS } = require('./adminTaskPay');
+    const fee = await recordDesignUploadFee(userId, designId);
+    if (fee.charged) {
+      fee.note = ` That's upload ${fee.count} this month — a $${(REVIEW_FEE_CENTS / 100).toFixed(2)} review fee was applied to your earnings balance (it pays the admin who reviews this piece).`;
+    }
+    return fee;
+  } catch (e) {
+    console.error('review fee booking failed for design', designId, e.message);
+    return { charged: false, count: 0, note: '', error: true };
+  }
+}
+
 async function handlePortfolioUpload(req, res, backUrl) {
   const files = req.files || {};
   if (!files.linework) {
@@ -141,20 +177,15 @@ async function handlePortfolioUpload(req, res, backUrl) {
       status: 'open', created_at: db.now(),
     });
   }
-  // Tier-1 funding: every upload counts toward the uploader's monthly free
-  // quota (15/Chicago month); over-quota uploads book a $0.40 review fee
-  // into the prepaid pool that funds design-triage admin pay. Never touches
-  // site overhead or the owner's pocket. A booking failure must never break
-  // the upload itself.
+  // Tier-1 funding: the fee guard runs the lifetime exemption first, then
+  // quota/fees for everyone else. It never throws, so fee bookkeeping can
+  // never break the upload itself.
   let reviewFeeNote = '';
   try {
-    const { recordDesignUploadFee, REVIEW_FEE_CENTS } = require('./adminTaskPay');
-    const fee = await recordDesignUploadFee(req.user.id, id);
-    if (fee.charged) {
-      reviewFeeNote = ` That's upload ${fee.count} this month — a $${(REVIEW_FEE_CENTS / 100).toFixed(2)} review fee was applied to your earnings balance (it pays the admin who reviews this piece).`;
-    }
+    const fee = await maybeBookReviewFee(req.user.id, id);
+    if (fee.note) reviewFeeNote = fee.note;
   } catch (e) {
-    console.error('review fee booking failed for design', id, e.message);
+    console.error('review fee hook failed for design', id, e.message);
   }
   // Remake upload: link this new piece to the sold custom piece it replaces.
   // The replacement request closes when the remake is approved.
@@ -256,4 +287,4 @@ async function handlePortfolioUpload(req, res, backUrl) {
   res.redirect('/artist/portfolio');
 }
 
-module.exports = { DESIGN_STYLES, portfolioUploadMulter, handlePortfolioUpload };
+module.exports = { DESIGN_STYLES, portfolioUploadMulter, handlePortfolioUpload, maybeBookReviewFee };
