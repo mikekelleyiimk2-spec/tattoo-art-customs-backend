@@ -8,10 +8,19 @@
 </section>
 
 <section class="card" id="app">
-  <% if (playStoreUrl) { %>
+  <% if (playStoreUrl || appStoreUrl) { %>
   <h2>📱 Our app is now available</h2>
   <p>The Tattoo Art Customs app is live — browse the gallery, order custom designs, and manage your collection on the go.</p>
-  <p><a class="btn" href="<%= playStoreUrl %>">Get it on Google Play</a></p>
+  <p><% if (playStoreUrl) { %><a class="btn" href="<%= playStoreUrl %>">Get it on Google Play</a><% } %> <% if (appStoreUrl) { %><a class="btn" href="<%= appStoreUrl %>">Download on the App Store</a><% } %></p>
+  <% if (!appStoreUrl) { %>
+  <p class="muted">iPhone version coming soon — drop your email and we'll tell you the moment it lands:</p>
+  <form method="post" action="/app-notify" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <input type="hidden" name="platform" value="ios">
+    <input type="email" name="email" maxlength="120" required placeholder="you@example.com" aria-label="Email for iPhone app launch notification">
+    <button type="submit">Notify me</button>
+  </form>
+  <% } %>
   <% } else { %>
   <h2>📱 Our app is coming soon</h2>
   <p>The Tattoo Art Customs mobile app is on its way — the gallery, custom orders, and your collection, in your pocket. Drop your email and we'll tell you the moment it launches.</p>

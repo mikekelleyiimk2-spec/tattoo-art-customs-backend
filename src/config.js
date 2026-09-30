@@ -13,6 +13,7 @@ const config = {
   baseUrl: (process.env.BASE_URL || 'http://localhost:3000').replace(/\/$/, ''),
   googleSiteVerification: process.env.GOOGLE_SITE_VERIFICATION || '',
   playStoreUrl: process.env.PLAY_STORE_URL || '',
+  appStoreUrl: process.env.APP_STORE_URL || '',
   sessionSecret: process.env.SESSION_SECRET || 'dev-only-secret-change-me',
   databaseUrl: process.env.DATABASE_URL || '',
   sqlitePath: process.env.SQLITE_PATH || path.join(__dirname, '..', 'data', 'app.db'),

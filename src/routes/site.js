@@ -156,6 +156,7 @@ router.get('/', async (req, res) => {
     canonical: `${base}/`,
     ogImage: ogImg,
     playStoreUrl: config.playStoreUrl,
+    appStoreUrl: config.appStoreUrl,
   });
 });
 
@@ -350,6 +351,7 @@ router.post('/report-bug', formLimiter, checkHoneypot, async (req, res) => {
 // leads for outreach.
 router.post('/app-notify', formLimiter, checkHoneypot, async (req, res) => {
   const raw = String(req.body.email || '').trim().toLowerCase().slice(0, 120);
+  const platform = ['ios', 'android'].includes(req.body.platform) ? req.body.platform : 'any';
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(raw)) {
     req.session.flash = 'Please enter a valid email address.';
     return res.redirect('/#app');
@@ -357,7 +359,7 @@ router.post('/app-notify', formLimiter, checkHoneypot, async (req, res) => {
   try {
     const existing = await db.get('SELECT id FROM app_launch_signups WHERE email = ?', [raw]);
     if (!existing) {
-      await db.insert('app_launch_signups', { email: raw, created_at: db.now(), notified_at: null });
+      await db.insert('app_launch_signups', { email: raw, platform, created_at: db.now(), notified_at: null });
     }
   } catch (e) { console.error('app-notify insert failed:', e.message); }
   req.session.flash = "You're on the list — we'll email you the moment the app launches.";
