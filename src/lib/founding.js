@@ -37,11 +37,17 @@ const RAFFLE_OWNER_PROFIT_TARGET_CENTS = 270000; // $2,700
 const RAFFLE_FREE_MONTH_MS = 30 * 86400000; // grand prize: 1 free month
 
 // Owner's subscription-profit meter for the raffle close condition.
-// Subscriptions are tracked without per-payment revenue rows, so there is
-// no clean ledger query yet — returns null and the page lists the profit
-// condition as text until a real meter is wired in.
+// Reads the subscription_revenue ledger (migration 042): every recorded
+// subscription payment contributes its owner share. Returns 0 (not null)
+// once the ledger exists — the profit condition is live.
 async function raffleOwnerSubscriptionProfits() {
-  return null;
+  try {
+    return await require('./subscriptionRevenue').ownerSubscriptionProfitsCents();
+  } catch (e) {
+    // Ledger table missing (very old DB before migrations ran) — treat the
+    // condition as unknown rather than closed.
+    return null;
+  }
 }
 
 // Are raffle entries currently open? Closed once drawn. Otherwise open at
@@ -238,4 +244,5 @@ module.exports = {
   foundingArtistActive, foundingShopActive,
   claimFoundingArtist, claimFoundingShop,
   enterRaffleOnSignup, drawRaffle,
+  raffleOwnerSubscriptionProfits,
 };

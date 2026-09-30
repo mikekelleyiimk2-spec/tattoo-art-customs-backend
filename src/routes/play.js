@@ -109,6 +109,15 @@ router.post('/verify', express.json(), async (req, res) => {
         });
         if (purchaseId) await db.update('play_purchases', purchaseId, { linked_membership_id: subId });
         membershipActivated = true;
+        // Ledger the Play purchase (idempotent on purchase token; renewals
+        // reusing the token are no-ops). Recorded at gross plan price —
+        // Google's store cut is not deducted (see subscriptionRevenue.js).
+        try {
+          await require('../lib/subscriptionRevenue').recordSubscriptionRevenue({
+            userId: user.id, plan: planSlug, amountCents: plan.price_cents,
+            provider: 'google_play', providerRef: `play:${purchaseToken.slice(0, 120)}`,
+          });
+        } catch (e) { console.error('subscription revenue record failed:', e.message); }
         // Same post-activation steps as the website checkout: grant the
         // plan role (+ founding-program claim). Idempotent.
         try { await grantPlanRole(user.id, planSlug); }

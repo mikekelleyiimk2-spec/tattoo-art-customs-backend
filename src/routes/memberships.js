@@ -13,6 +13,7 @@ const router = express.Router();
 const PLAN_KEY_BY_SLUG = { customer: 'customer', customer_annual: 'customer_annual', design_artist: 'artist', tattoo_shop: 'shop' };
 const { isAdminRole } = require('../middleware/auth');
 const { ensureReferralCode, firstMonthDiscountEligible, markFirstMonthUsed, grantReferralReward } = require('../lib/referrals');
+const { recordPaypalActivation, recordPaypalSale } = require('../lib/subscriptionRevenue');
 
 router.get('/', requireLogin, async (req, res) => {
   const plans = await db.all('SELECT * FROM plans WHERE active = 1 ORDER BY price_cents');
@@ -129,7 +130,7 @@ router.get('/approve', requireLogin, async (req, res) => {
   delete req.session.pendingSub;
   if (!subId) return res.redirect('/membership');
   const sub = await db.get(
-    `SELECT s.*, p.slug AS plan_slug FROM subscriptions s
+    `SELECT s.*, p.slug AS plan_slug, p.price_cents AS plan_price_cents FROM subscriptions s
      JOIN plans p ON p.id = s.plan_id WHERE s.id = ?`, [subId]);
   if (!sub || sub.user_id !== req.user.id) return res.redirect('/membership');
   const wasActive = sub.status === 'active';
@@ -157,6 +158,8 @@ router.get('/approve', requireLogin, async (req, res) => {
       // membership (idempotent — only on a fresh activation).
       if (!wasActive) {
         try { await require('../lib/saleWatch').watchSubscriptionActive(sub); } catch (e) { console.error('sale watch failed:', e.message); }
+        // Ledger the first payment (idempotent — the webhook shares the ref).
+        try { await recordPaypalActivation(sub, config); } catch (e) { console.error('subscription revenue record failed:', e.message); }
       }
       req.session.flash = 'Membership active — welcome!';
     } else {
@@ -253,14 +256,39 @@ router.post('/webhook', async (req, res) => {
     }
     const event = req.body;
     const resource = event.resource || {};
+    const type = event.event_type || '';
+    // Recurring subscription payment (and the first payment's sale event):
+    // PAYMENT.SALE.COMPLETED carries the exact charged amount. The first
+    // payment's sale is skipped when the activation already counted it
+    // (recordPaypalSale handles the ordering either way).
+    if (type === 'PAYMENT.SALE.COMPLETED' && resource.billing_agreement_id && resource.id) {
+      const saleSub = await db.get(
+        `SELECT s.*, p.slug AS plan_slug FROM subscriptions s
+         JOIN plans p ON p.id = s.plan_id
+         WHERE s.paypal_subscription_id = ?`, [resource.billing_agreement_id]);
+      if (saleSub) {
+        const amt = resource.amount || {};
+        const total = parseFloat(amt.total || '0');
+        if (String(amt.currency || 'USD').toUpperCase() === 'USD' && total > 0) {
+          try {
+            await recordPaypalSale({
+              sub: saleSub,
+              saleId: resource.id,
+              amountCents: Math.round(total * 100),
+              saleTimeMs: resource.create_time ? Date.parse(resource.create_time) : null,
+            });
+          } catch (e) { console.error('subscription revenue record failed:', e.message); }
+        }
+      }
+      return res.sendStatus(200);
+    }
     const paypalSubId = resource.id || resource.billing_agreement_id;
     if (!paypalSubId) return res.sendStatus(200);
     const sub = await db.get(
-      `SELECT s.*, p.slug AS plan_slug FROM subscriptions s
+      `SELECT s.*, p.slug AS plan_slug, p.price_cents AS plan_price_cents FROM subscriptions s
        JOIN plans p ON p.id = s.plan_id
        WHERE s.paypal_subscription_id = ?`, [paypalSubId]);
     if (!sub) return res.sendStatus(200);
-    const type = event.event_type || '';
     if (type.includes('ACTIVATED')) {
       const wasActive = sub.status === 'active';
       await db.update('subscriptions', sub.id, { status: 'active' });
@@ -273,6 +301,9 @@ router.post('/webhook', async (req, res) => {
       // First-sale watch: notify the owner on a fresh activation only.
       if (!wasActive) {
         try { await require('../lib/saleWatch').watchSubscriptionActive(sub); } catch (e) { console.error('sale watch failed:', e.message); }
+        // Ledger the first payment (idempotent — /approve shares the ref,
+        // and webhook retries hit the UNIQUE constraint).
+        try { await recordPaypalActivation(sub, config); } catch (e) { console.error('subscription revenue record failed:', e.message); }
       }
     } else if (type.includes('CANCELLED') || type.includes('EXPIRED')) {
       await db.update('subscriptions', sub.id, { status: 'canceled', canceled_at: db.now() });
