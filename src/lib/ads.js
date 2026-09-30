@@ -90,4 +90,16 @@ async function recordAdRevenue({ amountCents, source }) {
   return { site_cents: siteShare, owner_cents: amt - siteShare };
 }
 
-module.exports = { SLOTS, slotIds, getActiveAds, recordImpressions, recordClick, validLinkUrl, recordAdRevenue };
+// Totals for the /admin/ads "record payout" panel. recordAdRevenue books
+// only the 50% site share to commission_ledger, so gross is derived as 2x
+// the site share (off by at most 1c per payout on odd-cent amounts —
+// recordAdRevenue rounds owner-favorable).
+async function adRevenueTotals() {
+  const r = await db.get(
+    `SELECT COUNT(*) AS n, COALESCE(SUM(amount_cents),0) AS site
+     FROM commission_ledger WHERE commission_type = 'ad_revenue'`);
+  const site = r ? Number(r.site) || 0 : 0;
+  return { payouts: r ? Number(r.n) || 0 : 0, siteCents: site, grossCents: site * 2 };
+}
+
+module.exports = { SLOTS, slotIds, getActiveAds, recordImpressions, recordClick, validLinkUrl, recordAdRevenue, adRevenueTotals };

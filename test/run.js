@@ -1326,6 +1326,90 @@ async function main() {
   r = await subreq2('POST', `/membership/cancel/${sub2Id}`);
   ok(r.status === 302 && sdb.prepare('SELECT status FROM subscriptions WHERE id = ?').get(sub2Id).status === 'canceled', 'pending subscription can be canceled');
 
+  // Subscription revenue ledger (owner rule 2026-09-30): every subscription
+  // payment is recorded exactly once, split 90% owner / 10% site overhead.
+  console.log('subscription revenue ledger:');
+  await db.init(); // re-open: the unit phase closed the handle
+  const srev = require('../src/lib/subscriptionRevenue');
+  const s567 = srev.splitRevenue(567);
+  ok(s567.amount === 567 && s567.ownerShare === 511 && s567.siteShare === 56, '567c splits 511 owner / 56 site (owner-favorable odd cent)');
+  const s153 = srev.splitRevenue(153);
+  ok(s153.ownerShare === 138 && s153.siteShare === 15, '$1.53 first-month promo splits 138/15');
+  const sZero = await srev.recordSubscriptionRevenue({ userId: subUserId, plan: 'customer', amountCents: 0, provider: 'paypal', providerRef: 'zero:test' });
+  ok(sZero.recorded === false && sZero.reason === 'zero_amount', 'zero-amount payments are never recorded');
+  const rd1 = await srev.recordSubscriptionRevenue({ userId: subUserId, plan: 'customer', amountCents: 567, provider: 'test', providerRef: 'dup:1' });
+  const rd2 = await srev.recordSubscriptionRevenue({ userId: subUserId, plan: 'customer', amountCents: 567, provider: 'test', providerRef: 'dup:1' });
+  ok(rd1.recorded === true && rd2.recorded === false && rd2.reason === 'duplicate', 'duplicate provider ref is a no-op');
+  ok(sdb.prepare("SELECT COUNT(*) AS n FROM subscription_revenue WHERE provider_ref = 'dup:1'").get().n === 1, 'exactly one row for a duplicated ref');
+  sdb.prepare("DELETE FROM subscription_revenue WHERE provider = 'test'").run();
+  // /approve ran above for subtester's ACTIVE subscription — the first
+  // payment should already be in the ledger exactly once.
+  const stSub = sdb.prepare('SELECT * FROM subscriptions WHERE id = ?').get(subId);
+  const stPp = stSub.paypal_subscription_id;
+  const stExpFirst = stSub.first_month_discount_applied ? cfg.pricing.firstMonth.priceCents : stSub.price_cents;
+  const stRev = sdb.prepare("SELECT * FROM subscription_revenue WHERE provider_ref = ?").get('sub-activated:' + stPp);
+  ok(stRev && stRev.amount_cents === stExpFirst, '/approve records the first subscription payment');
+  ok(stRev && stRev.owner_share_cents + stRev.site_share_cents === stRev.amount_cents, 'owner + site shares sum to the payment');
+  // Webhook ACTIVATED on a fresh subscription records the first payment;
+  // a retry is a no-op.
+  const subJar3 = {};
+  async function subreq3(method, p, opts = {}) {
+    const h = { ...(opts.headers || {}) };
+    const cookies = Object.entries(subJar3).map(([k, v]) => `${k}=${v}`).join('; ');
+    if (cookies) h.cookie = cookies;
+    let payload = opts.body;
+    if (payload && typeof payload === 'object') {
+      payload = new URLSearchParams(payload);
+      h['content-type'] = 'application/x-www-form-urlencoded';
+    }
+    const res = await fetch(`http://localhost:${PORT}${p}`, { method, headers: h, body: payload, redirect: 'manual' });
+    for (const c of (res.headers.getSetCookie ? res.headers.getSetCookie() : [])) {
+      const [k, v] = c.split(';')[0].split('=');
+      subJar3[k.trim()] = (v || '').trim();
+    }
+    const text = await res.text();
+    return { status: res.status, text, location: res.headers.get('location') };
+  }
+  async function pwebhook(body) {
+    const res = await fetch(`http://localhost:${PORT}/membership/webhook`, {
+      method: 'POST', headers: { 'content-type': 'application/json' }, redirect: 'manual',
+      body: JSON.stringify(body),
+    });
+    await res.text();
+    return res.status;
+  }
+  r = await subreq3('POST', '/signup', { body: { display_name: 'SubTester3', email: 'subtester3@test.local', password: 'password123' } });
+  const sub3UserId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('subtester3@test.local').id;
+  r = await subreq3('POST', '/membership/subscribe/customer');
+  ok(r.status === 302 && (r.location || '').includes('paypal.test'), 'third subscriber reaches PayPal approval');
+  const sub3Id = sdb.prepare('SELECT id FROM subscriptions WHERE user_id = ?').get(sub3UserId).id;
+  const pp3 = sdb.prepare('SELECT paypal_subscription_id FROM subscriptions WHERE id = ?').get(sub3Id).paypal_subscription_id;
+  ok(await pwebhook({ event_type: 'BILLING.SUBSCRIPTION.ACTIVATED', resource: { id: pp3 } }) === 200, 'webhook ACTIVATED accepted');
+  const rev3 = sdb.prepare('SELECT * FROM subscription_revenue WHERE provider_ref = ?').get('sub-activated:' + pp3);
+  ok(rev3 && rev3.amount_cents === cfg.pricing.firstMonth.priceCents, 'webhook ACTIVATED records the $1.53 first payment');
+  ok(rev3 && rev3.owner_share_cents === 138 && rev3.site_share_cents === 15, 'first payment splits 138 owner / 15 site');
+  ok(sdb.prepare("SELECT status FROM subscriptions WHERE id = ?").get(sub3Id).status === 'active', 'webhook ACTIVATED activates the subscription');
+  ok(await pwebhook({ event_type: 'BILLING.SUBSCRIPTION.ACTIVATED', resource: { id: pp3 } }) === 200, 'webhook ACTIVATED retry accepted');
+  ok(sdb.prepare('SELECT COUNT(*) AS n FROM subscription_revenue WHERE provider_ref = ?').get('sub-activated:' + pp3).n === 1, 'webhook ACTIVATED retry records nothing new');
+  // The first payment's PAYMENT.SALE.COMPLETED is not double-counted, in
+  // either arrival order; a later recurring sale records exactly once.
+  ok(await pwebhook({ event_type: 'PAYMENT.SALE.COMPLETED', resource: { id: 'sale-first-3', billing_agreement_id: pp3, amount: { total: '1.53', currency: 'USD' }, create_time: new Date().toISOString() } }) === 200, 'first-payment sale event accepted');
+  ok(sdb.prepare('SELECT COUNT(*) AS n FROM subscription_revenue WHERE user_id = ?').get(sub3UserId).n === 1, 'first-payment sale event is not double-counted');
+  const later = new Date(Date.now() + 35 * 86400000).toISOString();
+  ok(await pwebhook({ event_type: 'PAYMENT.SALE.COMPLETED', resource: { id: 'sale-recur-3', billing_agreement_id: pp3, amount: { total: '5.67', currency: 'USD' }, create_time: later } }) === 200, 'recurring sale event accepted');
+  const recur = sdb.prepare("SELECT * FROM subscription_revenue WHERE provider_ref = 'sale:sale-recur-3'").get();
+  ok(recur && recur.amount_cents === 567 && recur.owner_share_cents === 511 && recur.site_share_cents === 56, 'recurring payment recorded at plan price, 511/56 split');
+  ok(await pwebhook({ event_type: 'PAYMENT.SALE.COMPLETED', resource: { id: 'sale-recur-3', billing_agreement_id: pp3, amount: { total: '5.67', currency: 'USD' }, create_time: later } }) === 200, 'recurring sale retry accepted');
+  ok(sdb.prepare("SELECT COUNT(*) AS n FROM subscription_revenue WHERE provider_ref = 'sale:sale-recur-3'").get().n === 1, 'recurring sale retry records nothing new');
+  // Non-USD sale events are ignored.
+  ok(await pwebhook({ event_type: 'PAYMENT.SALE.COMPLETED', resource: { id: 'sale-eur-3', billing_agreement_id: pp3, amount: { total: '5.00', currency: 'EUR' }, create_time: later } }) === 200, 'non-USD sale event accepted');
+  ok(!sdb.prepare("SELECT id FROM subscription_revenue WHERE provider_ref = 'sale:sale-eur-3'").get(), 'non-USD sale event records nothing');
+  // The raffle's profit meter reads this ledger.
+  const foundingLib = require('../src/lib/founding');
+  const meter = await foundingLib.raffleOwnerSubscriptionProfits();
+  const expectMeter = sdb.prepare('SELECT COALESCE(SUM(owner_share_cents),0) AS t FROM subscription_revenue').get().t;
+  ok(meter === expectMeter && meter > 0, 'raffle profit meter sums owner shares from the ledger');
+
   // removed designer color-approval routes are gone
   r = await req('POST', '/signup', { body: { display_name: 'ColorDesigner', email: 'colordesigner@test.local', password: 'password123' }, follow: false });
   const cdId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('colordesigner@test.local').id;
@@ -1485,6 +1569,27 @@ async function main() {
   r = await nreq('POST', '/admin/admins/remove', { body: { id: adminId }, follow: false });
   const headStill = sdb.prepare("SELECT COUNT(*) AS n FROM users WHERE email = 'admin@test.local' AND role = 'head_admin'").get().n;
   ok(r.status === 403 && headStill === 1, 'normal admin cannot demote the head admin');
+  // Ad revenue payout recording (owner rule 2026-09-30): head-admin-only
+  // control on /admin/ads; each payout splits 50/50 site/owner; the page
+  // shows the exact cumulative recorded revenue.
+  r = await areq('GET', '/admin/ads');
+  ok(r.status === 200 && r.text.includes('Record ad revenue payout'), 'admin ads page shows the payout panel');
+  r = await areq('POST', '/admin/ads/record', { body: { amount: '10.01', source: 'adsense' } });
+  ok(r.status === 302 && r.location === '/admin/ads', 'head admin records an ad payout');
+  const adRevRow = sdb.prepare("SELECT * FROM commission_ledger WHERE commission_type = 'ad_revenue' AND order_id LIKE 'adrev:manual:adsense:%'").get();
+  ok(adRevRow && adRevRow.amount_cents === 500 && adRevRow.recipient_type === 'site', 'payout books the 50% site share (odd cent to owner: 500 of 1001)');
+  r = await areq('GET', '/admin/ads');
+  ok(r.status === 200 && r.text.includes('$10.00') && r.text.includes('across 1 payout'), 'ads page shows exact cumulative gross revenue');
+  r = await nreq('POST', '/admin/ads/record', { body: { amount: '5.00', source: 'adsense' }, follow: false });
+  ok(r.status === 403, 'normal admin is blocked from recording payouts');
+  ok(sdb.prepare("SELECT COUNT(*) AS n FROM commission_ledger WHERE commission_type = 'ad_revenue'").get().n === 1, 'blocked payout records nothing');
+  r = await areq('POST', '/admin/ads/record', { body: { amount: 'not-a-number', source: 'adsense' } });
+  ok(r.status === 302, 'invalid amount redirects back with an error');
+  ok(sdb.prepare("SELECT COUNT(*) AS n FROM commission_ledger WHERE commission_type = 'ad_revenue'").get().n === 1, 'invalid payout records nothing');
+  r = await areq('POST', '/admin/ads/record', { body: { amount: '5.00', source: '' } });
+  ok(sdb.prepare("SELECT COUNT(*) AS n FROM commission_ledger WHERE commission_type = 'ad_revenue'").get().n === 1, 'missing source records nothing');
+  r = await nreq('GET', '/admin/ads', { follow: false });
+  ok(r.status === 200 && r.text.includes('$10.00') && !r.text.includes('action="/admin/ads/record"'), 'normal admin sees totals but no record form');
   // cleanup: head admin demotes the normal admin back to customer
   r = await areq('POST', '/admin/admins/remove', { body: { id: sdb.prepare('SELECT id FROM users WHERE email = ?').get('normadmin@test.local').id } });
   ok(sdb.prepare('SELECT role FROM users WHERE email = ?').get('normadmin@test.local').role === 'customer', 'head admin removes normal admin');
@@ -1846,6 +1951,10 @@ async function main() {
   r = await artreq('GET', '/artist/portfolio/upload');
   ok(r.text.includes('/artist/watermark-builder'), 'upload form links the on-site watermark builder');
   ok(r.text.includes('see-through'), 'upload form warns against weak see-through marks');
+  // Artist dashboard links the builder too (app parity: reachable from the
+  // app's artist tab via the website session).
+  r = await artreq('GET', '/artist');
+  ok(r.status === 200 && r.text.includes('/artist/watermark-builder'), 'artist dashboard links the watermark builder');
 
   // 'My own watermark' with no file falls back to the on-site built mark.
   r = await mpost('/artist/portfolio/upload',

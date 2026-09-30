@@ -45,7 +45,7 @@ const RATE_CARD = {
   designer_restrict: 50, designer_unsuspend: 50, designer_forgive: 50, designer_lift: 50,
   colorization_attach: 50,
   print_fulfill: 50,
-  ad_activate: 10, ad_deactivate: 10,
+  ad_activate: 10, ad_deactivate: 10, ad_revenue_record: 10,
 };
 
 // Cumulative site overhead: every commission_ledger row booked to the site

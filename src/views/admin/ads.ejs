@@ -1,5 +1,25 @@
 <h1>Ad space</h1>
 <p><a href="/admin">← Dashboard</a></p>
+
+<section class="card" style="margin-bottom:16px">
+  <h2>Record ad revenue payout</h2>
+  <p class="muted">Recorded so far: <strong><%= money(adGrossCents) %></strong> gross across <%= adPayouts %> payout(s)
+  (<%= money(adSiteCents) %> swept to site overhead — payouts split 50/50 site/owner; gross is derived from the site's
+  50% share, odd cents round to the owner). When a payout lands in the owner's bank
+  (e.g. AdSense), record it here so the site's half is reconciled.</p>
+  <% if (isHead) { %>
+  <form method="post" action="/admin/ads/record" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <label>Amount (USD) <input type="text" name="amount" inputmode="decimal" placeholder="0.00" required></label>
+    <label>Source <input type="text" name="source" placeholder="adsense" required></label>
+    <button class="btn" type="submit">Record payout</button>
+  </form>
+  <% } else { %>
+  <p class="muted">Only the head admin can record payouts.</p>
+  <% } %>
+</section>
+
+<h2>Ad orders</h2>
 <p class="muted">Activate an order after payment is received — the ad runs for the booked number of months from activation.</p>
 <table>
   <thead><tr><th>Creative</th><th>Slot</th><th>Advertiser</th><th>Period</th><th>Status</th><th>Impr.</th><th>Clicks</th><th></th></tr></thead>

@@ -880,11 +880,37 @@ router.post('/payouts/:id/complete', formLimiter, checkHoneypot, async (req, res
 });
 
 // --- Ad space management ---
-const { SLOTS: AD_SLOTS } = require('../lib/ads');
+const { SLOTS: AD_SLOTS, recordAdRevenue, adRevenueTotals } = require('../lib/ads');
 
 router.get('/ads', async (req, res) => {
   const ads = await db.all('SELECT * FROM ads ORDER BY created_at DESC');
-  res.render('admin/ads', { title: 'Ad space — Admin', ads, slots: AD_SLOTS, metaDescription: '' });
+  const rev = await adRevenueTotals();
+  res.render('admin/ads', {
+    title: 'Ad space — Admin', ads, slots: AD_SLOTS, metaDescription: '',
+    isHead: isHeadAdmin(req.user), adPayouts: rev.payouts,
+    adGrossCents: rev.grossCents, adSiteCents: rev.siteCents,
+  });
+});
+
+// Tier-3 admin pay (owner rule 2026-09-30): manually record an ad-revenue
+// payout (e.g. AdSense pays the owner's bank directly — the site never sees
+// the money, so it is reconciled here). Head-admin only. 50% sweeps to the
+// site overhead pool via recordAdRevenue; the other 50% is the owner's.
+router.post('/ads/record', requireHeadAdmin, formLimiter, checkHoneypot, async (req, res) => {
+  try {
+    const dollars = parseFloat(String(req.body.amount || '').replace(/[^0-9.]/g, ''));
+    if (!Number.isFinite(dollars) || dollars <= 0) throw new Error('Enter the payout amount in dollars.');
+    const amountCents = Math.round(dollars * 100);
+    if (amountCents > 100000000) throw new Error('That amount is implausibly large — check the decimal point.');
+    const source = String(req.body.source || '').trim().toLowerCase().replace(/[^a-z0-9:_-]/g, '').slice(0, 60);
+    if (!source) throw new Error('Name the source (e.g. adsense).');
+    const r = await recordAdRevenue({ amountCents, source: `manual:${source}` });
+    await payAdmin(req, 'ad_revenue_record', 'ad_revenue', `${source}:${amountCents}`);
+    req.session.flash = `Recorded ${res.locals.money(amountCents)} ad revenue (${source}): ${res.locals.money(r.site_cents)} to site overhead, ${res.locals.money(r.owner_cents)} owner.`;
+  } catch (e) {
+    req.session.flash = 'Could not record the payout: ' + e.message;
+  }
+  res.redirect('/admin/ads');
 });
 
 router.post('/ads/:id/activate', formLimiter, checkHoneypot, async (req, res) => {
