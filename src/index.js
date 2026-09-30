@@ -203,6 +203,12 @@ async function start() {
   setInterval(() => {
     db.query('DELETE FROM sessions WHERE expires_at < ?', [Date.now()]).catch(() => {});
   }, 3600 * 1000).unref();
+  // Design-contest expiry (hourly): past-deadline contests -> refund to site
+  // credit when no entries, or 'judging' when entries await a winner pick.
+  setInterval(() => {
+    require('./lib/contests').expireContests(Date.now())
+      .catch((e) => console.error('contest expiry failed:', e.message));
+  }, 3600 * 1000).unref();
   // Weekly automated commission payouts (Mondays ~9am CT).
   require('./lib/scheduler').startScheduler();
   app.listen(config.port, () => {
