@@ -38,6 +38,7 @@
 const db = require('../db');
 const config = require('../config');
 const founding = require('./founding');
+const shopIncentives = require('./shopIncentives');
 const { shopDesignerActive, dualSubBonusActive } = require('./shopDesigner');
 
 // Site owner lookup (for payable-balance redirects).
@@ -145,7 +146,12 @@ function netPaidCents(order) {
 }
 
 async function recordSaleCommissions(order) {
-  const existing = await db.get('SELECT id FROM commission_ledger WHERE order_id = ?', [order.id]);
+  // Idempotent: a booking_bonus row (awarded later, at booking-confirm
+  // time) must not block the sale splits from being recorded.
+  const existing = await db.get(
+    `SELECT id FROM commission_ledger WHERE order_id = ?
+     AND COALESCE(commission_type, '') != 'booking_bonus' LIMIT 1`,
+    [order.id]);
   if (existing) return;
 
   const t = db.now();
@@ -209,6 +215,18 @@ async function recordSaleCommissions(order) {
       const extra = Math.min(0.02, ownerRate);
       ownerRate -= extra;
       shopRate += extra;
+    }
+    // Referral volume tiers (owner rule 2026-09-29): 20% base -> 22% at
+    // 25+ verified referral sales in the calendar month -> 25% at 50+.
+    // The uplift comes ONLY from the owner's share; designer percentages
+    // never move. Capped at available owner funds like the other boosts.
+    if (shopId) {
+      const tierRate = await shopIncentives.shopVolumeTierRate(shopId);
+      if (tierRate > shopRate) {
+        const extra = Math.min(tierRate - shopRate, ownerRate);
+        ownerRate -= extra;
+        shopRate += extra;
+      }
     }
     // With no referring shop the 20% shop share is redistributed instead.
     if (!shopId) shopRate = 0;
@@ -277,9 +295,17 @@ async function recordSaleCommissions(order) {
     // across designer / owner above (site retains its 10% overhead) —
     // nothing left to book.
   } else {
-    // Owner / unregistered art: 80 site / 20 referring shop. A founding
+    // Owner / unregistered art: 80% site / 20% referring shop. A founding
     // shop's boost takes its extra 5pts from the owner's share (75/25).
-    const shopAmt = Math.round(netPaidCents(order) * (shopBoost ? 0.25 : 0.20));
+    // Referral volume tiers (owner rule 2026-09-29) lift the shop's cut to
+    // 22%/25% at 25+/50+ verified referral sales in the calendar month,
+    // funded from the site's share.
+    let shopPct = shopBoost ? 0.25 : 0.20;
+    if (shopId) {
+      const tierRate = await shopIncentives.shopVolumeTierRate(shopId);
+      if (tierRate > shopPct) shopPct = tierRate;
+    }
+    const shopAmt = Math.round(netPaidCents(order) * shopPct);
     const siteAmt = netPaidCents(order) - shopAmt;
     entries.push({
       order_id: order.id, recipient_type: 'site', recipient_id: null,

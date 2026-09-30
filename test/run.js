@@ -974,6 +974,213 @@ async function main() {
       'eligible subscriber keeps the discount before either cap');
   }
 
+  // Shop purchase incentives (owner rule 2026-09-29):
+  // (a) referral volume tiers — 20% base, 22% at 25+ verified referral
+  // sales in the calendar month, 25% at 50+; uplift only from the owner's
+  // share; (b) booking-conversion bonus — a referred purchase followed by
+  // a confirmed booking at the same shop within 30 days earns the shop
+  // $5 (premade) or 5% of base (custom), one bonus per order.
+  {
+    const inc = require('../src/lib/shopIncentives');
+    const { upsertProfile } = require('../src/lib/profiles');
+    const { computeBookingFees } = require('../src/lib/bookingFees');
+    const flow = require('../src/lib/bookingFlow');
+    const bcryptjs = require('bcryptjs');
+    // db handle already reopened in the block above (same HTTP phase).
+
+    // --- setup: payout-eligible shop, designer + design, buyers ---
+    async function mkShop(email, withPayout) {
+      const id = await db.insert('users', {
+        email, password_hash: await bcryptjs.hash('ShopPass123!', 10),
+        role: 'tattoo_shop', display_name: email.split('@')[0],
+      });
+      const planId = (await db.get(`SELECT id FROM plans WHERE slug = 'tattoo_shop'`)).id;
+      await db.insert('subscriptions', {
+        user_id: id, plan_id: planId, status: 'active',
+        current_period_end: Date.now() + 86400000,
+      });
+      if (withPayout) await upsertProfile('shop_profiles', id, { payout_paypal_email: `${email.split('@')[0]}@pay.test` });
+      return id;
+    }
+    const tierShopId = await mkShop('tiershop@test.local', true);
+    const bonusShopId = await mkShop('bonusshop@test.local', true);
+    const noPayShopId = await mkShop('nopayshop@test.local', false); // forfeiture path
+    const tierDesId = await db.insert('users', {
+      email: 'tierdes@test.local', password_hash: 'x',
+      role: 'design_artist', display_name: 'Tier Designer',
+    });
+    const desPlanId = (await db.get(`SELECT id FROM plans WHERE slug = 'design_artist'`)).id;
+    await db.insert('subscriptions', {
+      user_id: tierDesId, plan_id: desPlanId, status: 'active',
+      current_period_end: Date.now() + 86400000,
+    });
+    await upsertProfile('artist_profiles', tierDesId, { payout_paypal_email: 'tierdes@pay.test' });
+    const tierDesignId = await db.insert('designs', {
+      title: 'Tier Flash', artist_id: tierDesId, status: 'approved', price_cents: 7500,
+    });
+    async function mkBuyer(email) {
+      return db.insert('users', {
+        email, password_hash: 'x', role: 'customer', display_name: email.split('@')[0],
+      });
+    }
+    const tierBuyerId = await mkBuyer('tierbuyer@test.local');
+    async function paidReferredOrder(shopId, buyerId, orderType, amountCents, paidAt = Date.now()) {
+      const id = await db.insert('orders', {
+        buyer_id: buyerId, order_type: orderType,
+        design_id: orderType === 'premade' ? tierDesignId : null,
+        amount_cents: amountCents,
+        amount_paid_cents: orderType === 'custom' ? Math.round(amountCents / 2) : amountCents,
+        fee_cents: orderType === 'custom' ? 267 : 312,
+        status: 'paid', referred_shop_id: shopId, paid_at: paidAt,
+      });
+      return db.get('SELECT * FROM orders WHERE id = ?', [id]);
+    }
+    const shopSums = async (orderId) => {
+      const rows = sdb.prepare(`SELECT recipient_type, SUM(amount_cents) AS t FROM commission_ledger
+        WHERE order_id = ? GROUP BY recipient_type`).all(orderId);
+      return Object.fromEntries(rows.map((r) => [r.recipient_type, r.t]));
+    };
+
+    // --- (a) volume tiers ---
+    for (let i = 0; i < 24; i++) await paidReferredOrder(tierShopId, tierBuyerId, 'premade', 7500);
+    ok((await inc.shopVolumeTierRate(tierShopId)) === 0.20, '24 verified referral sales: still the 20% base rate');
+    // The 25th sale earns 22%: net 7500-312=7188 -> designer 4313 (60%),
+    // shop 1581 (22%), owner 575 (8%), site 719 (10%).
+    const o25 = await paidReferredOrder(tierShopId, tierBuyerId, 'premade', 7500);
+    await comm.recordSaleCommissions(o25);
+    const t25 = await shopSums(o25.id);
+    ok(t25.artist === 4313, 'tier sale: designer keeps exactly 60% (percentages never move)');
+    ok(t25.shop === 1581, 'tier sale: shop earns 22% at 25+ monthly referral sales');
+    ok(t25.artist + t25.shop + (t25.site || 0) === 7188, 'tier sale: uplift funded from the owner share, ledger sums to net');
+    for (let i = 0; i < 25; i++) await paidReferredOrder(tierShopId, tierBuyerId, 'premade', 7500);
+    ok((await inc.shopVolumeTierRate(tierShopId)) === 0.25, '50 verified referral sales: 25% rate');
+    // The 51st sale earns 25%: shop 1797, designer still 4313.
+    const o51 = await paidReferredOrder(tierShopId, tierBuyerId, 'premade', 7500);
+    await comm.recordSaleCommissions(o51);
+    const t51 = await shopSums(o51.id);
+    ok(t51.shop === 1797, '51st referral sale earns 25%');
+    ok(t51.artist === 4313, 'tier-25% sale: designer still exactly 60%');
+    ok(t51.artist + t51.shop + (t51.site || 0) === 7188, 'tier-25% sale: ledger sums to net');
+    // Monthly reset: a sale from last month counts only in last month.
+    const [thisStart] = inc.chicagoMonthBounds(Date.now());
+    const lastMonthPaidAt = thisStart - 86400000;
+    await paidReferredOrder(tierShopId, tierBuyerId, 'premade', 7500, lastMonthPaidAt);
+    const [lmStart, lmEnd] = inc.chicagoMonthBounds(lastMonthPaidAt);
+    ok((await inc.monthlyReferralSales(tierShopId, lmStart, lmEnd)) === 1,
+      'last-month sale counted in last month only');
+    ok((await inc.monthlyReferralSales(tierShopId, thisStart, Date.now() + 86400000)) === 51,
+      'this-month count is 51 (last-month sale excluded)');
+
+    // --- shop dashboard shows current tier + progress ---
+    const shopJar = {};
+    async function shopLoginReq(method, p, opts = {}) {
+      const h = { ...(opts.headers || {}) };
+      const cookies = Object.entries(shopJar).map(([k, v]) => `${k}=${v}`).join('; ');
+      if (cookies) h.cookie = cookies;
+      let payload = opts.body;
+      if (payload && typeof payload === 'object') {
+        payload = new URLSearchParams(payload);
+        h['content-type'] = 'application/x-www-form-urlencoded';
+      }
+      const res = await fetch(`http://localhost:${PORT}${p}`, { method, headers: h, body: payload, redirect: 'manual' });
+      for (const c of (res.headers.getSetCookie ? res.headers.getSetCookie() : [])) {
+        const [k, v] = c.split(';')[0].split('=');
+        shopJar[k.trim()] = (v || '').trim();
+      }
+      return { status: res.status, text: await res.text() };
+    }
+    let sr2 = await shopLoginReq('POST', '/login', { body: { email: 'tiershop@test.local', password: 'ShopPass123!' } });
+    ok(sr2.status === 302, 'tier shop login ok');
+    sr2 = await shopLoginReq('GET', '/shop');
+    ok(sr2.status === 200 && sr2.text.includes('Referral volume tier') && sr2.text.includes('Top tier'),
+      'shop dashboard shows the current tier (top tier at 51 sales)');
+    const shopJar2 = {};
+    async function shopLoginReq2(method, p, opts = {}) {
+      const h = { ...(opts.headers || {}) };
+      const cookies = Object.entries(shopJar2).map(([k, v]) => `${k}=${v}`).join('; ');
+      if (cookies) h.cookie = cookies;
+      let payload = opts.body;
+      if (payload && typeof payload === 'object') {
+        payload = new URLSearchParams(payload);
+        h['content-type'] = 'application/x-www-form-urlencoded';
+      }
+      const res = await fetch(`http://localhost:${PORT}${p}`, { method, headers: h, body: payload, redirect: 'manual' });
+      for (const c of (res.headers.getSetCookie ? res.headers.getSetCookie() : [])) {
+        const [k, v] = c.split(';')[0].split('=');
+        shopJar2[k.trim()] = (v || '').trim();
+      }
+      return { status: res.status, text: await res.text() };
+    }
+    await shopLoginReq2('POST', '/login', { body: { email: 'bonusshop@test.local', password: 'ShopPass123!' } });
+    const sr3 = await shopLoginReq2('GET', '/shop');
+    ok(sr3.status === 200 && sr3.text.includes('20%') && sr3.text.includes('more verified referral sale(s) this month'),
+      'shop dashboard shows progress to the next tier (base 20%, 25 to go)');
+
+    // --- (b) booking-conversion bonus ---
+    async function confirmedBooking(shopId, customerId) {
+      const bId = await db.insert('bookings', {
+        shop_user_id: shopId, customer_user_id: customerId,
+        start_at: Date.now() + 86400000, end_at: Date.now() + 2 * 86400000,
+        status: 'pending_deposit',
+      });
+      const conf = await flow.confirmBooking(bId, { fees: computeBookingFees(5000), captureId: 'C-BONUS' });
+      return conf.booking;
+    }
+    const bonusCount = (orderId) => sdb.prepare(
+      `SELECT COUNT(*) AS n FROM commission_ledger WHERE order_id = ? AND commission_type = 'booking_bonus'`).get(orderId).n;
+
+    // Premade purchase -> confirmed booking at the same shop: $5 bonus.
+    const bBuyer1 = await mkBuyer('bb1@test.local');
+    const bOrd1 = await paidReferredOrder(bonusShopId, bBuyer1, 'premade', 7500);
+    const bk1 = await confirmedBooking(bonusShopId, bBuyer1);
+    ok(bk1.status === 'confirmed', 'bonus test booking confirmed');
+    const bb1 = sdb.prepare(`SELECT * FROM commission_ledger WHERE order_id = ? AND commission_type = 'booking_bonus'`).get(bOrd1.id);
+    ok(bb1 && bb1.amount_cents === 500 && bb1.recipient_id === bonusShopId && bb1.status === 'payable',
+      'premade purchase -> booking conversion earns the shop a $5 bonus (payable)');
+    // Second booking on the same order: still exactly one bonus.
+    await confirmedBooking(bonusShopId, bBuyer1);
+    ok(bonusCount(bOrd1.id) === 1, 'one bonus per order even with multiple bookings');
+    // Custom purchase -> booking: 5% of base (5% of $124.59 = $6.23).
+    const bBuyer2 = await mkBuyer('bb2@test.local');
+    const bOrd2 = await paidReferredOrder(bonusShopId, bBuyer2, 'custom', 12459);
+    await confirmedBooking(bonusShopId, bBuyer2);
+    const bb2 = sdb.prepare(`SELECT amount_cents FROM commission_ledger WHERE order_id = ? AND commission_type = 'booking_bonus'`).get(bOrd2.id);
+    ok(bb2 && bb2.amount_cents === 623, 'custom purchase -> booking conversion earns 5% of base ($6.23)');
+    // The bonus never replaces standard splits: record this custom order's
+    // commissions (owner-art branch: 80/20) and confirm the split rows are
+    // exactly the standard ones, with the bonus as an additional row.
+    const bFull2 = await db.get('SELECT * FROM orders WHERE id = ?', [bOrd2.id]);
+    await comm.recordSaleCommissions(bFull2);
+    const bSums = await shopSums(bOrd2.id);
+    // net = 6230 - 267 = 5963 -> shop 20% = 1193 (base rate, <25 sales),
+    // site 4770; the 623 bonus sits on top as its own row.
+    ok(bSums.shop === 1193 + 623, 'booking bonus adds to (never replaces) the shop share');
+    ok(bSums.site === 4770, 'site share on the bonus order is the standard 80%');
+    // Referred custom at the top tier: 25% of the deposit net.
+    const cOrd = await paidReferredOrder(tierShopId, tierBuyerId, 'custom', 15574);
+    await comm.recordSaleCommissions(cOrd);
+    const cSums = await shopSums(cOrd.id);
+    // net = 7787 - 267 = 7520 -> shop 25% = 1880, site 5640.
+    ok(cSums.shop === 1880, 'referred custom at 50+ monthly sales earns the shop 25%');
+    ok(cSums.site === 5640, 'referred custom: site keeps the remaining 75%');
+    // Purchase 35 days ago -> booking now: outside the 30-day window.
+    const bBuyer3 = await mkBuyer('bb3@test.local');
+    const bOrd3 = await paidReferredOrder(bonusShopId, bBuyer3, 'premade', 7500, Date.now() - 35 * 86400000);
+    await confirmedBooking(bonusShopId, bBuyer3);
+    ok(bonusCount(bOrd3.id) === 0, 'no bonus when the purchase is older than 30 days');
+    // Booking at a DIFFERENT shop than the referring shop: no bonus.
+    const bBuyer4 = await mkBuyer('bb4@test.local');
+    const bOrd4 = await paidReferredOrder(bonusShopId, bBuyer4, 'premade', 7500);
+    await confirmedBooking(tierShopId, bBuyer4);
+    ok(bonusCount(bOrd4.id) === 0, 'no bonus when the booking is at a different shop');
+    // Shop with no payout destination: bonus forfeited to the site.
+    const bBuyer5 = await mkBuyer('bb5@test.local');
+    const bOrd5 = await paidReferredOrder(noPayShopId, bBuyer5, 'premade', 7500);
+    await confirmedBooking(noPayShopId, bBuyer5);
+    const bb5 = sdb.prepare(`SELECT status FROM commission_ledger WHERE order_id = ? AND commission_type = 'booking_bonus'`).get(bOrd5.id);
+    ok(bb5 && bb5.status === 'site_kept', 'bonus forfeited to the site when the shop has no payout destination');
+  }
+
   // member-exclusive designs: hidden from non-members everywhere
   const moid = 'testdesignm01';
   sdb.prepare(`INSERT INTO designs (id, title, description, price_cents, status, color_path, linework_path, linework_wm_path, categories, sale_count, members_only, created_at)

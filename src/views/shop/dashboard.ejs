@@ -20,6 +20,17 @@
 </section>
 
 <section class="card">
+  <h2>Referral volume tier</h2>
+  <p>You earn <strong><%= Math.round(tier.rate * 100) %>%</strong> on verified referral sales — <%= tier.salesThisMonth %> verified sale(s) so far this month.</p>
+  <% if (tier.nextTierRate) { %>
+  <p><strong><%= tier.salesToNext %></strong> more verified referral sale(s) this month to reach <strong><%= Math.round(tier.nextTierRate * 100) %>%</strong>.</p>
+  <% } else { %>
+  <p><span class="badge ok">Top tier</span> — you're earning the maximum referral rate this month.</p>
+  <% } %>
+  <p class="muted">20% base, 22% at 25+ verified referral sales in a calendar month, 25% at 50+. Tiers reset on the 1st of each month. The tier uplift is funded from the site's share — designer commissions never change.</p>
+</section>
+
+<section class="card">
   <h2>Designer membership — included</h2>
   <p><span class="badge ok">Active</span> <span class="muted">— every shop subscription includes the full designer membership</span></p>
   <p class="muted">Upload your own designs through the <a href="/artist/portfolio">artist portfolio</a> and earn designer commissions on them (<% if (typeof dualBonus !== 'undefined' && dualBonus) { %>62% premade with a referring shop, 72% without, 72% custom, 57% linework-only — includes your +2% dual-subscription bonus<% } else { %>60% premade with a referring shop, 70% without, 70% custom, 55% linework-only<% } %>). Your public designer portfolio is live on the site. Note: referring your <em>own</em> designs earns no referral commission — those sales are booked as if there were no referring shop.</p>

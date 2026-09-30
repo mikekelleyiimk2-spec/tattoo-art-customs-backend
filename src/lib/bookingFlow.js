@@ -189,6 +189,10 @@ async function confirmBooking(bookingId, { kind = 'deposit', fees, captureId = n
     refId: bookingId, commissionType: 'booking',
   });
   const fresh = await db.get('SELECT * FROM bookings WHERE id = ?', [bookingId]);
+  // Booking-conversion bonus (owner rule 2026-09-29): a referred purchase
+  // that converts into this confirmed booking earns the shop its bonus.
+  // One bonus per order, even with multiple bookings (enforced inside).
+  await require('./shopIncentives').maybeAwardBookingBonus(fresh);
   await notifyBookingConfirmed(fresh, fees);
   return {
     booking: fresh,

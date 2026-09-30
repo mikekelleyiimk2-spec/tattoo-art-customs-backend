@@ -129,6 +129,31 @@ const config = {
     paidSalesCap: 150,
   },
 
+  // Shop purchase incentives (owner rule 2026-09-29).
+  // Referral volume tiers: a shop's referral commission rises with its
+  // VERIFIED (paid, unrefunded) referral sales in a calendar month —
+  // 20% base, 22% at 25+, 25% at 50+. Tiers reset on the 1st of each
+  // month. The uplift comes ONLY from the owner's share; designer
+  // percentages never move.
+  referralTiers: {
+    baseRate: 0.20,
+    tiers: [
+      { minMonthlySales: 50, rate: 0.25 },
+      { minMonthlySales: 25, rate: 0.22 },
+    ],
+  },
+  // Booking-conversion bonus: a referred purchase (orders.referred_shop_id)
+  // that converts into a confirmed booking at the same shop, by the same
+  // buyer, within 30 days earns the shop a bonus — flat $5 on premade
+  // orders, 5% of the order base on customs. One bonus per order, even
+  // with multiple bookings. Funded from site operations; designer and
+  // base shop splits are untouched.
+  bookingBonus: {
+    premadeFlatCents: 500,
+    customRate: 0.05,
+    windowDays: 30,
+  },
+
   // Founding tattoo-shop window: shops that join before this date pay
   // $79.99 for their first year instead of $99.99. Set FOUNDING_SHOP_WINDOW_END
   // to an ISO date in production; the fallback is a FIXED date (2027-03-01)

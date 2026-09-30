@@ -34,6 +34,9 @@ router.get('/', async (req, res) => {
   const me = await db.get(
     'SELECT is_founding_shop, founding_shop_ends_at FROM users WHERE id = ?', [req.user.id]);
   const dualBonus = await dualSubBonusActive(req.user.id);
+  // Referral volume tier: current rate + progress to the next tier.
+  const { shopReferralTier } = require('../lib/shopIncentives');
+  const tier = await shopReferralTier(req.user.id);
   res.render('shop/dashboard', {
     title: 'Shop Dashboard — Tattoo Art Customs',
     profile, balance, payouts, ledger, refLink,
@@ -41,6 +44,7 @@ router.get('/', async (req, res) => {
     isFoundingShop: !!(me && me.is_founding_shop),
     foundingEndsAt: me && me.founding_shop_ends_at,
     dualBonus,
+    tier,
     metaDescription: '',
     ...payout,
   });
