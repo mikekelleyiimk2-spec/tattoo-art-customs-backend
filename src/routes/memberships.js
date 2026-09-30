@@ -141,11 +141,6 @@ router.get('/approve', requireLogin, async (req, res) => {
       try { await grantReferralReward(sub.user_id, sub.id); } catch (e) {
         console.error('referral reward failed:', e.message);
       }
-      // Early-subscriber raffle: first paid subscription inside the window
-      // earns exactly one entry (idempotent — safe if the webhook runs too).
-      try { await require('../lib/founding').maybeEnterRaffle(sub.user_id, sub.id); } catch (e) {
-        console.error('raffle entry failed:', e.message);
-      }
       // First-sale watch: the owner gets a notification on every new paid
       // membership (idempotent — only on a fresh activation).
       if (!wasActive) {
@@ -253,10 +248,6 @@ router.post('/webhook', async (req, res) => {
       // Refer-a-friend reward (idempotent — safe if /approve already ran it).
       try { await grantReferralReward(sub.user_id, sub.id); } catch (e) {
         console.error('referral reward failed:', e.message);
-      }
-      // Early-subscriber raffle entry (idempotent — safe if /approve ran it).
-      try { await require('../lib/founding').maybeEnterRaffle(sub.user_id, sub.id); } catch (e) {
-        console.error('raffle entry failed:', e.message);
       }
       // First-sale watch: notify the owner on a fresh activation only.
       if (!wasActive) {

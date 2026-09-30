@@ -182,67 +182,48 @@ async function runDbTests(ok) {
     `SELECT recipient_id, amount_cents FROM commission_ledger WHERE order_id = ? AND recipient_type = 'artist'`, [o8]);
   ok(l8.length === 1 && l8[0].amount_cents === 12000, 'founding artist custom commission is 80%');
 
-  // --- Raffle entries ---
+  // --- Raffle entries (free entry: free account while entries are open) ---
   const rUser = await mkUser('raffle1@test.local');
-  const rSub = await mkSub(rUser, customerPlan);
-  const e1 = await founding.maybeEnterRaffle(rUser, rSub);
-  ok(e1.entered, 'first subscription inside the window earns a raffle entry');
-  const e2 = await founding.maybeEnterRaffle(rUser, rSub);
+  const e1 = await founding.enterRaffleOnSignup(rUser);
+  ok(e1.entered, 'free account signup earns a raffle entry');
+  const e2 = await founding.enterRaffleOnSignup(rUser);
   ok(!e2.entered && e2.reason === 'already entered', 'raffle entry is idempotent');
   ok((await db.all('SELECT id FROM raffle_entries WHERE user_id = ?', [rUser])).length === 1,
     'exactly one raffle row per user');
 
-  // A returning subscriber's new subscription does not earn an entry.
-  const oldUser = await mkUser('raffleold@test.local');
-  await mkSub(oldUser, customerPlan, 'canceled');
-  const newSub = await mkSub(oldUser, customerPlan);
-  const e3 = await founding.maybeEnterRaffle(oldUser, newSub);
-  ok(!e3.entered && e3.reason === 'not first subscription', 'returning subscriber gets no entry');
+  // Entries stay open through the minimum close date regardless of count.
+  const openNow = await founding.raffleEntriesOpen();
+  ok(openNow.open && openNow.entries >= 1, 'entries open before the minimum close date');
 
-  // Window closed (participant target reached): no entry.
-  const realTarget = await founding.getRaffleTarget();
-  const { n: entryCount } = await db.get('SELECT COUNT(*) AS n FROM raffle_entries');
-  await founding.setRaffleTarget(Math.max(1, entryCount)); // target reached -> closed
+  // After the minimum close date, entries stay open (extended) until a
+  // close condition hits — 1M entries or $2,700 owner subscription
+  // profits, neither of which is reachable in the test DB.
   const lateUser = await mkUser('rafflelate@test.local');
-  const lateSub = await mkSub(lateUser, customerPlan);
-  const e4 = await founding.maybeEnterRaffle(lateUser, lateSub);
-  ok(!e4.entered && e4.reason === 'target reached', 'no entry after the target is reached');
-  await founding.setRaffleTarget(realTarget);
+  const e4 = await founding.enterRaffleOnSignup(lateUser, founding.RAFFLE_ENTRY_MIN_CLOSE_AT + 1);
+  ok(e4.entered, 'entry still granted after the minimum close date when close conditions are unmet');
 
   // --- Draw ---
-  const entrants = [rUser];
-  for (let i = 0; i < 19; i++) {
+  const entrants = [rUser, lateUser];
+  for (let i = 0; i < 4; i++) {
     const u = await mkUser(`draw${i}@test.local`);
-    await mkSub(u, customerPlan);
-    const e = await founding.maybeEnterRaffle(u, (await db.get(
-      'SELECT id FROM subscriptions WHERE user_id = ? ORDER BY created_at ASC', [u])).id);
+    const e = await founding.enterRaffleOnSignup(u);
     if (!e.entered) throw new Error(`entrant ${i} failed to enter`);
     entrants.push(u);
   }
-  ok((await db.get('SELECT COUNT(*) AS n FROM raffle_entries')).n === 20, '20 raffle entries banked');
+  ok((await db.get('SELECT COUNT(*) AS n FROM raffle_entries')).n === 6, '6 raffle entries banked');
   const draw = await founding.drawRaffle();
-  ok(draw.winners.length === 14, 'draw picks 14 winners from 20 entries');
+  ok(draw.winners.length === 3, 'draw picks 3 winners from 6 entries');
   const winnerIds = draw.winners.map((w) => w.user_id);
-  ok(new Set(winnerIds).size === 14, 'all winners are distinct users');
+  ok(new Set(winnerIds).size === 3, 'all winners are distinct users');
   const prizeCount = {};
   for (const w of draw.winners) prizeCount[w.prize] = (prizeCount[w.prize] || 0) + 1;
-  ok(prizeCount.grand === 1 && prizeCount.annual === 3 && prizeCount.credit === 10,
-    'prize mix is 1 grand + 3 annual + 10 credit');
+  ok(prizeCount.grand === 1 && prizeCount.runnerup === 2,
+    'prize mix is 1 grand + 2 runners-up');
 
   const grand = draw.winners.find((w) => w.prize === 'grand');
-  const grandOrder = await db.get(`SELECT * FROM orders WHERE buyer_id = ? AND order_type = 'custom'
-    ORDER BY created_at DESC LIMIT 1`, [grand.user_id]);
-  ok(grandOrder && grandOrder.amount_cents === 15000 && grandOrder.amount_paid_cents === 0 &&
-    grandOrder.status === 'paid', 'grand prize creates a $150 custom order, $0 paid');
-
-  const nowDraw = Date.now();
-  for (const w of draw.winners.filter((x) => x.prize === 'annual')) {
-    const u = await db.get('SELECT membership_extended_until FROM users WHERE id = ?', [w.user_id]);
-    ok(u.membership_extended_until && u.membership_extended_until > nowDraw,
-      'annual prize extends the membership');
-  }
-  const creditRows = await db.all(`SELECT * FROM account_credits WHERE kind = 'raffle_prize' AND amount_cents = 2500`);
-  ok(creditRows.length === 10, 'ten $25 site-credit prizes recorded');
+  const gu = await db.get('SELECT membership_extended_until FROM users WHERE id = ?', [grand.user_id]);
+  ok(gu.membership_extended_until && gu.membership_extended_until > Date.now(),
+    'grand prize grants one free month of membership');
 
   let drewTwice = '';
   try { await founding.drawRaffle(); } catch (e) { drewTwice = e.message; }
@@ -251,7 +232,7 @@ async function runDbTests(ok) {
   const publicWinners = await db.all(
     `SELECT u.display_name, r.prize_won FROM raffle_entries r
      JOIN users u ON u.id = r.user_id WHERE r.prize_won IS NOT NULL`);
-  ok(publicWinners.length === 14, 'public results list all 14 winners');
+  ok(publicWinners.length === 3, 'public results list all 3 winners');
 
   // --- Shared role-grant path (website checkout + Google Play) ---
   // src/lib/planRoles.js is used by the Play verification flow, so a
@@ -267,10 +248,9 @@ async function runDbTests(ok) {
     'shared grantPlanRole grants the design_artist role and creates the profile (Play parity)');
   ok(playRole.is_founding_artist === 0,
     'founding claim through grantPlanRole no-ops cleanly when the cap is full');
-  const playSub = await mkSub(playUser, customerPlan);
-  const re = await founding.maybeEnterRaffle(playUser, playSub);
+  const re = await founding.enterRaffleOnSignup(playUser);
   ok(re.entered === true || re.entered === false,
-    'raffle entry callable from the Play activation path (idempotent)');
+    'raffle entry on signup is callable and idempotent');
 }
 
 // HTTP phase: badges, public raffle page, founding-status API, admin page.
@@ -286,8 +266,8 @@ async function runHttpTests(ok, req, areq) {
   ok(r.status === 200 && r.text.includes('Founding Artist'), 'public artist page shows the Founding Artist badge');
 
   r = await req('GET', '/raffle');
-  ok(r.status === 200 && r.text.includes('Raffle') && r.text.includes('Winners'),
-    'public raffle page renders with winners after the draw');
+  ok(r.status === 200 && r.text.includes('Tattoo Art Customs Opening Raffle') && r.text.includes('Winners'),
+    'public raffle page renders the opening raffle with winners after the draw');
 
   r = await req('GET', '/api/founding-status');
   const fs = JSON.parse(r.text);
@@ -300,7 +280,7 @@ async function runHttpTests(ok, req, areq) {
     'app API exposes the founding-artist flag');
 
   r = await areq('GET', '/admin/founding');
-  ok(r.status === 200 && r.text.includes('Founding design artists') && r.text.includes('raffle'),
+  ok(r.status === 200 && r.text.includes('Founding design artists') && r.text.includes('Opening raffle'),
     'admin founding page renders counters and raffle controls');
 
   // Badge rendering on the auth-gated pages (own jar per role). Manual

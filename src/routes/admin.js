@@ -744,27 +744,15 @@ router.get('/founding', async (req, res) => {
   });
 });
 
-// Set the raffle participant target (entries close when it is reached — the
-// raffle has no time deadline).
-router.post('/founding/raffle-target', formLimiter, checkHoneypot, async (req, res) => {
-  const n = parseInt(String(req.body.raffle_target || ''), 10);
-  if (!Number.isInteger(n) || n <= 0) {
-    req.session.flash = 'Invalid target — raffle participant target not changed.';
-    return res.redirect('/admin/founding');
-  }
-  await require('../lib/founding').setRaffleTarget(n);
-  req.session.flash = `Raffle entries now close at ${n} participants.`;
-  res.redirect('/admin/founding');
-});
-
-// Draw the early-subscriber raffle (one draw ever).
+// Draw the opening raffle (one draw ever). Winners are notified on-site
+// and by email, and announced publicly.
 router.post('/raffle/draw', formLimiter, checkHoneypot, async (req, res) => {
   try {
     const result = await require('../lib/founding').drawRaffle();
     const counts = {};
     for (const w of result.winners) counts[w.prize] = (counts[w.prize] || 0) + 1;
     req.session.flash = `Raffle drawn: ${result.winners.length} winners ` +
-      `(${(counts.grand || 0)} grand, ${(counts.annual || 0)} annual, ${(counts.credit || 0)} credit). Winners notified on-site and by email.`;
+      `(${(counts.grand || 0)} grand, ${(counts.runnerup || 0)} runners-up). Winners notified on-site and by email.`;
   } catch (e) {
     req.session.flash = 'Draw failed: ' + e.message;
   }

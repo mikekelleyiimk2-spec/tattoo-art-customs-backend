@@ -7,10 +7,13 @@
 // - Founding tattoo shops (first 100): $79.99 first year instead of $99.99,
 //   plus 25% referral commission instead of 20% for 6 months (the extra
 //   5pts come from the owner's share).
-// - Early Subscriber Raffle: anyone whose FIRST subscription activates
-//   inside the raffle window gets exactly one entry. Draw: 1 grand prize
-//   (free custom design), 3 annual prizes (12-month membership extension),
-//   10 credit prizes ($25 site credit).
+// - Opening Raffle: anyone who creates a free account while entries are
+//   open gets exactly one entry. Entries run at least through November 29,
+//   2026; after that the raffle closes when it hits 1,000,000 entries or
+//   $2,700 in owner subscription profits. Drawing within 7 days of close,
+//   announced publicly. Draw: 1 grand prize (winner's choice of any
+//   premade design + 1 free month of site membership), 2 runners-up (one
+//   free premade design of their choice each).
 //
 // Caps are enforced inside a real transaction with row locks
 // (db.transaction: SELECT ... FOR UPDATE on Postgres, BEGIN IMMEDIATE on
@@ -22,62 +25,60 @@ const db = require('../db');
 const FOUNDING_ARTIST_CAP = 50;
 const FOUNDING_SHOP_CAP = 100;
 const FOUNDING_BOOST_MS = 6 * 30 * 86400000; // ~6 months
-const RAFFLE_GRAND_CENTS = 15000; // free custom design ($150 value)
-const RAFFLE_CREDIT_CENTS = 2500; // $25 site credit
-const ANNUAL_PRIZE_MS = 365 * 86400000; // 12 months
+// --- Opening Raffle (free entry, long campaign) ---
+// Entries are open from launch and run at least through November 29, 2026
+// (November is CST = UTC-6, so the minimum close is Nov 30 05:59:59 UTC).
+// After that date the raffle closes when ANY of the close conditions hits:
+// 1,000,000 entries, or $2,700 in owner subscription profits. The drawing
+// happens within 7 days of close; winners are announced publicly.
+const RAFFLE_ENTRY_MIN_CLOSE_AT = Date.UTC(2026, 10, 30, 5, 59, 59);
+const RAFFLE_ENTRY_TARGET = 1000000;
+const RAFFLE_OWNER_PROFIT_TARGET_CENTS = 270000; // $2,700
+const RAFFLE_FREE_MONTH_MS = 30 * 86400000; // grand prize: 1 free month
 
-// --- Raffle entry rules (participant-count based) ---
-// The raffle has NO time deadline: entries stay open until the participant
-// target is reached (or the admin draws early). The admin sets the target
-// on /admin/founding; default 100 participants.
-const RAFFLE_DEFAULT_TARGET = 100;
-// One raffle ticket costs $2.00 (processing fee added at checkout).
-const RAFFLE_TICKET_CENTS = 200;
-
-async function getRaffleTarget() {
-  const row = await db.get(`SELECT value FROM settings WHERE key = 'raffle_target_participants'`);
-  const n = row ? parseInt(String(row.value), 10) : NaN;
-  return Number.isInteger(n) && n > 0 ? n : RAFFLE_DEFAULT_TARGET;
+// Owner's subscription-profit meter for the raffle close condition.
+// Subscriptions are tracked without per-payment revenue rows, so there is
+// no clean ledger query yet — returns null and the page lists the profit
+// condition as text until a real meter is wired in.
+async function raffleOwnerSubscriptionProfits() {
+  return null;
 }
 
-async function setRaffleTarget(n) {
-  if (!Number.isInteger(n) || n <= 0) throw new Error('Invalid raffle participant target.');
-  // Manual upsert: the settings table's PK is `key` (no `id` column), so
-  // db.upsert/db.insert can't be used here (they inject an id).
-  const existing = await db.get(`SELECT key FROM settings WHERE key = 'raffle_target_participants'`);
-  if (existing) {
-    await db.updateWhere('settings', { value: String(n) }, 'key', 'raffle_target_participants');
-  } else {
-    await db.query(`INSERT INTO settings (key, value) VALUES ('raffle_target_participants', ?)`, [String(n)]);
-  }
-}
-
-// Are raffle entries currently open? Closed once drawn, or once the
-// participant target is reached.
-async function raffleEntriesOpen() {
+// Are raffle entries currently open? Closed once drawn. Otherwise open at
+// least until the minimum close date; after that, closed when any close
+// condition (1M entries or $2,700 owner subscription profits) is met.
+async function raffleEntriesOpen(now = Date.now()) {
   const drawn = await db.get(`SELECT id FROM raffle_entries WHERE drawn_at IS NOT NULL LIMIT 1`);
   if (drawn) return { open: false, reason: 'already drawn' };
-  const target = await getRaffleTarget();
   const { n } = await db.get(`SELECT COUNT(*) AS n FROM raffle_entries`);
-  if (n >= target) return { open: false, reason: 'target reached' };
-  return { open: true, target, entries: n };
+  const info = { entries: n, minClosesAt: RAFFLE_ENTRY_MIN_CLOSE_AT,
+    entryTarget: RAFFLE_ENTRY_TARGET, profitTargetCents: RAFFLE_OWNER_PROFIT_TARGET_CENTS };
+  if (now < RAFFLE_ENTRY_MIN_CLOSE_AT) return { open: true, ...info };
+  if (n >= RAFFLE_ENTRY_TARGET) return { open: false, reason: 'entry target reached', ...info };
+  const profits = await raffleOwnerSubscriptionProfits();
+  if (profits != null && profits >= RAFFLE_OWNER_PROFIT_TARGET_CENTS) {
+    return { open: false, reason: 'profit target reached', ...info, ownerSubProfits: profits };
+  }
+  return { open: true, reason: 'extended — close conditions not yet met', ...info, ownerSubProfits: profits };
 }
 
 // --- Counters / status ---
-async function getFoundingStatus() {
+async function getFoundingStatus(now = Date.now()) {
   const c = await db.get(`SELECT artists_claimed, shops_claimed FROM founding_counters WHERE id = 'global'`);
   const entries = await db.get(`SELECT COUNT(*) AS n FROM raffle_entries`);
   const drawn = await db.get(`SELECT COUNT(*) AS n FROM raffle_entries WHERE drawn_at IS NOT NULL`);
-  const target = await getRaffleTarget();
+  const open = (await raffleEntriesOpen(now)).open;
   return {
     artistsClaimed: c ? c.artists_claimed : 0,
     shopsClaimed: c ? c.shops_claimed : 0,
     artistsLeft: Math.max(0, FOUNDING_ARTIST_CAP - (c ? c.artists_claimed : 0)),
     shopsLeft: Math.max(0, FOUNDING_SHOP_CAP - (c ? c.shops_claimed : 0)),
-    raffleTarget: target,
     raffleEntries: entries.n,
     raffleDrawn: drawn.n > 0,
-    raffleOpen: !(drawn.n > 0) && entries.n < target,
+    raffleOpen: open,
+    raffleMinClosesAt: RAFFLE_ENTRY_MIN_CLOSE_AT,
+    raffleEntryTarget: RAFFLE_ENTRY_TARGET,
+    raffleProfitTargetCents: RAFFLE_OWNER_PROFIT_TARGET_CENTS,
   };
 }
 
@@ -139,30 +140,11 @@ async function claimFoundingShop(userId, now = Date.now()) {
 }
 
 // --- Raffle ---
-// One entry per user, ever (UNIQUE on user_id), only when their FIRST
-// subscription activates while entries are open. Safe to call from both
-// the approve flow and the PayPal webhook — the second call is a no-op.
-async function maybeEnterRaffle(userId, subscriptionId, now = Date.now()) {
-  const open = await raffleEntriesOpen();
-  if (!open.open) return { entered: false, reason: open.reason };
-  const other = await db.get(
-    `SELECT id FROM subscriptions WHERE user_id = ? AND id != ? AND status != 'pending' LIMIT 1`,
-    [userId, subscriptionId]);
-  if (other) return { entered: false, reason: 'not first subscription' };
-  try {
-    await db.insert('raffle_entries', { user_id: userId, entered_at: now });
-    return { entered: true };
-  } catch (e) {
-    if (/UNIQUE/i.test(e.message)) return { entered: false, reason: 'already entered' };
-    throw e;
-  }
-}
-
-// Paid raffle ticket entry ($2): one entry per user, ever, only while
-// entries are open. Buying a ticket when the user already has an entry
-// (e.g. from a subscription) is a no-op — never double-enters.
-async function enterRaffleViaTicket(userId, now = Date.now()) {
-  const open = await raffleEntriesOpen();
+// One entry per user, ever (UNIQUE on user_id), granted automatically when
+// a free account is created while entries are open. Safe to call twice —
+// the second call is a no-op.
+async function enterRaffleOnSignup(userId, now = Date.now()) {
+  const open = await raffleEntriesOpen(now);
   if (!open.open) return { entered: false, reason: open.reason };
   try {
     await db.insert('raffle_entries', { user_id: userId, entered_at: now });
@@ -173,7 +155,7 @@ async function enterRaffleViaTicket(userId, now = Date.now()) {
   }
 }
 
-// Draw the raffle: grand prize first, then 3 annual, then 10 credit.
+// Draw the raffle: grand prize first, then 2 runners-up.
 // One prize per user. Throws if the raffle was already drawn.
 async function drawRaffle({ now = Date.now() } = {}) {
   const already = await db.get(`SELECT id FROM raffle_entries WHERE drawn_at IS NOT NULL LIMIT 1`);
@@ -196,10 +178,8 @@ async function drawRaffle({ now = Date.now() } = {}) {
     winners.push({ user_id: entry.user_id, prize });
   };
 
-  // Lazily required to avoid load-time cycles (credits -> commissions ->
-  // founding, colorization used by referrals, etc.).
-  const { routeCustomOrder } = require('./customFulfillment');
-  const { addCredit } = require('./credits');
+  // Lazily required to avoid load-time cycles (colorization used by
+  // referrals, etc.).
   const { sendConversation } = require('./colorization');
   const { sendMail } = require('./mail');
   const { ownerUserId } = require('./commissions');
@@ -217,51 +197,33 @@ async function drawRaffle({ now = Date.now() } = {}) {
     }
   };
 
-  // Grand prize: a $0 custom-design order routed into the normal 48-hour
-  // fulfillment pipeline (the winner provides their brief via messages).
+  // Grand prize: winner's choice of ANY premade design (full color +
+  // clean linework, delivered by the owner) plus one free month of site
+  // membership. The premade is fulfilled manually by the owner once the
+  // winner names their design; the free month uses the same
+  // membership_extended_until machinery as referral free months.
   if (pool.length >= 1) {
     await award(pool[0], 'grand', async (entry) => {
-      const orderId = await db.insert('orders', {
-        buyer_id: entry.user_id, order_type: 'custom',
-        amount_cents: RAFFLE_GRAND_CENTS, deposit_cents: 0, amount_paid_cents: 0,
-        status: 'paid', payment_method: 'raffle_prize',
-        custom_brief: 'RAFFLE GRAND PRIZE — free custom tattoo design. Winner: please send your design brief via Messages.',
-        delivery_due: now + 48 * 3600000, custom_status: 'new',
-      });
-      const order = await db.get('SELECT * FROM orders WHERE id = ?', [orderId]);
-      await routeCustomOrder(order);
-      await notify(entry, 'You won the Tattoo Art Customs raffle grand prize!',
-        `Congratulations! You won a FREE custom tattoo design (a $150 value) in the early-subscriber raffle.\n\n` +
-        `Reply to this message with your design brief and our artists will deliver your custom piece within 48 hours.\n\n` +
-        `Warmly,\nTattoo Art Customs`);
-    });
-  }
-  // Annual prizes: 12-month membership extension (uses the same
-  // membership_extended_until machinery as referral free months).
-  for (const entry of pool.slice(1, 4)) {
-    await award(entry, 'annual', async (e2) => {
-      const u = await db.get('SELECT membership_extended_until FROM users WHERE id = ?', [e2.user_id]);
+      const u = await db.get('SELECT membership_extended_until FROM users WHERE id = ?', [entry.user_id]);
       const base = Math.max(now, (u && u.membership_extended_until) || 0);
-      const until = base + ANNUAL_PRIZE_MS;
-      await db.update('users', e2.user_id, { membership_extended_until: until });
-      await notify(e2, 'You won a free year of membership!',
-        `Congratulations! You won a FREE YEAR of your Tattoo Art Customs membership in the early-subscriber raffle.\n\n` +
-        `Your membership is now active through ${new Date(until).toLocaleDateString()}. ` +
-        `If you pay via PayPal you may cancel the recurring billing — your membership stays active through that date.\n\n` +
-        `Warmly,\nTattoo Art Customs`);
+      const until = base + RAFFLE_FREE_MONTH_MS;
+      await db.update('users', entry.user_id, { membership_extended_until: until });
+      await notify(entry, 'You won the Tattoo Art Customs Opening Raffle grand prize!',
+        'Congratulations! You won the GRAND PRIZE in the Tattoo Art Customs Opening Raffle:\n\n' +
+        '- Any premade design of your choice (full color + clean linework, delivered to you)\n' +
+        '- One free month of site membership (active through ' + new Date(until).toLocaleDateString() + ')\n\n' +
+        'Reply to this message with the premade design you want and we will deliver your files.\n\n' +
+        'Warmly,\nTattoo Art Customs');
     });
   }
-  // Credit prizes: $25 site credit via the wallet ledger.
-  for (const entry of pool.slice(4, 14)) {
-    await award(entry, 'credit', async (e3) => {
-      await addCredit({
-        userId: e3.user_id, amountCents: RAFFLE_CREDIT_CENTS,
-        kind: 'raffle_prize', note: 'Early-subscriber raffle — $25 site credit',
-      });
-      await notify(e3, 'You won $25 in site credit!',
-        `Congratulations! You won $25 in Tattoo Art Customs site credit in the early-subscriber raffle.\n\n` +
-        `The credit is in your wallet now and works toward any design or custom order.\n\n` +
-        `Warmly,\nTattoo Art Customs`);
+  // Runners-up (2): one free premade design of their choice each.
+  for (const entry of pool.slice(1, 3)) {
+    await award(entry, 'runnerup', async (e2) => {
+      await notify(e2, 'You won a premade design in the Tattoo Art Customs Opening Raffle!',
+        'Congratulations! You are a RUNNER-UP in the Tattoo Art Customs Opening Raffle.\n\n' +
+        'You won a free premade design of your choice (full color + clean linework, delivered to you).\n\n' +
+        'Reply to this message with the design you want and we will deliver your files.\n\n' +
+        'Warmly,\nTattoo Art Customs');
     });
   }
   return { winners };
@@ -269,10 +231,11 @@ async function drawRaffle({ now = Date.now() } = {}) {
 
 module.exports = {
   FOUNDING_ARTIST_CAP, FOUNDING_SHOP_CAP, FOUNDING_BOOST_MS,
-  RAFFLE_DEFAULT_TARGET, RAFFLE_TICKET_CENTS,
-  getRaffleTarget, setRaffleTarget, raffleEntriesOpen, getFoundingStatus,
+  RAFFLE_ENTRY_MIN_CLOSE_AT, RAFFLE_ENTRY_TARGET, RAFFLE_OWNER_PROFIT_TARGET_CENTS,
+  RAFFLE_FREE_MONTH_MS,
+  raffleEntriesOpen, getFoundingStatus,
   foundingArtistsAvailable, foundingShopsAvailable,
   foundingArtistActive, foundingShopActive,
   claimFoundingArtist, claimFoundingShop,
-  maybeEnterRaffle, enterRaffleViaTicket, drawRaffle,
+  enterRaffleOnSignup, drawRaffle,
 };

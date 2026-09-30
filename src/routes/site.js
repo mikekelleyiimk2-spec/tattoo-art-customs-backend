@@ -344,147 +344,32 @@ router.post('/report-bug', formLimiter, checkHoneypot, async (req, res) => {
   res.redirect('/report-bug');
 });
 
-// Public early-subscriber raffle page: prizes + winners once drawn.
+// Public opening-raffle page: prizes, entry progress, winners once drawn.
 router.get('/raffle', async (req, res) => {
   const founding = require('../lib/founding');
+  const open = await founding.raffleEntriesOpen();
   const status = await founding.getFoundingStatus();
-  const winners = status.raffleDrawn ? await db.all(
+  const drawn = status.raffleDrawn;
+  const winners = drawn ? await db.all(
     `SELECT r.prize_won, r.drawn_at, u.display_name
      FROM raffle_entries r JOIN users u ON u.id = r.user_id
      WHERE r.prize_won IS NOT NULL ORDER BY
-       CASE r.prize_won WHEN 'grand' THEN 0 WHEN 'annual' THEN 1 ELSE 2 END`) : [];
+       CASE r.prize_won WHEN 'grand' THEN 0 ELSE 1 END`) : [];
   res.render('site/raffle', {
-    title: 'Early Subscriber Raffle — Tattoo Art Customs',
-    metaDescription: 'Tattoo Art Customs early-subscriber raffle: prizes, participant target, and winners.',
-    ...status, winners,
-    ticketCents: founding.RAFFLE_TICKET_CENTS,
-    ticketFeeCents: processingFeeCents(founding.RAFFLE_TICKET_CENTS),
-    money,
+    title: 'Tattoo Art Customs Opening Raffle — Free Entry',
+    metaDescription: 'The Tattoo Art Customs Opening Raffle: free entry with a free account. Grand prize is any premade design of your choice plus a free month of membership; two runners-up win a free premade design each.',
+    raffleOpen: status.raffleOpen,
+    raffleDrawn: drawn,
+    raffleEntries: open.entries || 0,
+    entryTarget: founding.RAFFLE_ENTRY_TARGET,
+    minClosesAt: founding.RAFFLE_ENTRY_MIN_CLOSE_AT,
+    profitTargetCents: founding.RAFFLE_OWNER_PROFIT_TARGET_CENTS,
+    winners,
     alreadyEntered: req.user ? !!(await db.get(
       'SELECT id FROM raffle_entries WHERE user_id = ?', [req.user.id])) : false,
   });
 });
 
-// --- Raffle tickets: $2 for an entry (one entry per person, ever) ---
-// The entry window is participant-count based — no time deadline. Ticket
-// revenue goes 100% to the site (the prize pool).
-router.post('/raffle/tickets', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
-  const founding = require('../lib/founding');
-  const open = await founding.raffleEntriesOpen();
-  if (!open.open) {
-    req.session.flash = 'Raffle entries are closed — ' +
-      (open.reason === 'target reached' ? 'we hit the participant target.' : 'the raffle has been drawn.');
-    return res.redirect('/raffle');
-  }
-  const hasEntry = await db.get('SELECT id FROM raffle_entries WHERE user_id = ?', [req.user.id]);
-  if (hasEntry) {
-    req.session.flash = "You're already in the raffle — one entry per person.";
-    return res.redirect('/raffle');
-  }
-  const existing = await db.get(
-    `SELECT id FROM orders WHERE buyer_id = ? AND order_type = 'raffle_ticket' AND status = 'pending' LIMIT 1`,
-    [req.user.id]);
-  if (existing) return res.redirect(`/raffle/tickets/manual/${existing.id}`);
-  const price = founding.RAFFLE_TICKET_CENTS;
-  const fee = processingFeeCents(price);
-  const orderId = await db.insert('orders', {
-    buyer_id: req.user.id, order_type: 'raffle_ticket',
-    amount_cents: price, fee_cents: fee, status: 'pending', payment_method: 'paypal',
-    created_at: db.now(),
-  });
-  try {
-    const paypal = require('../lib/paypal');
-    const pp = await paypal.createCheckoutOrder({
-      amountCents: price + fee,
-      description: 'Tattoo Art Customs — raffle ticket',
-      returnUrl: `${config.baseUrl}/raffle/tickets/approve/${orderId}`,
-      cancelUrl: `${config.baseUrl}/raffle`,
-    });
-    await db.update('orders', orderId, { paypal_order_id: pp.id });
-    const approve = pp.links.find((l) => l.rel === 'approve');
-    res.redirect(approve.href);
-  } catch (e) {
-    console.error('PayPal order create failed (raffle ticket):', e.message);
-    req.session.flash = 'PayPal checkout is unavailable right now — you can pay manually below.';
-    res.redirect(`/raffle/tickets/manual/${orderId}`);
-  }
-});
-
-// PayPal return: capture the ticket payment and record the raffle entry.
-router.get('/raffle/tickets/approve/:orderId', requireLogin, async (req, res) => {
-  const order = await db.get(
-    `SELECT * FROM orders WHERE id = ? AND buyer_id = ? AND order_type = 'raffle_ticket'`,
-    [req.params.orderId, req.user.id]);
-  if (!order) return res.redirect('/raffle');
-  if (order.status === 'paid') return res.redirect('/raffle');
-  try {
-    const paypal = require('../lib/paypal');
-    const capture = await paypal.captureCheckoutOrder(order.paypal_order_id);
-    const captured = capture.purchase_units?.[0]?.payments?.captures?.[0];
-    const paidCents = Math.round(parseFloat(captured?.amount?.value || '0') * 100);
-    await db.update('orders', order.id, {
-      status: 'paid', amount_paid_cents: paidCents, paid_at: db.now(),
-    });
-    const fresh = await db.get('SELECT * FROM orders WHERE id = ?', [order.id]);
-    const { recordSaleCommissions } = require('../lib/commissions');
-    await recordSaleCommissions(fresh);
-    const entry = await require('../lib/founding').enterRaffleViaTicket(req.user.id);
-    try { await require('../lib/saleWatch').watchOrderPaid(fresh); } catch (e) { console.error('sale watch failed:', e.message); }
-    req.session.flash = entry.entered
-      ? "You're in the raffle — good luck!"
-      : 'Payment received. ' + (entry.reason === 'already entered'
-        ? 'You were already entered, so no second entry was added.'
-        : 'Entries just closed, so your payment will be refunded — contact us.');
-    res.redirect('/raffle');
-  } catch (e) {
-    req.session.flash = 'Payment capture failed: ' + e.message;
-    res.redirect('/raffle');
-  }
-});
-
-// Manual ticket payment (CashApp / Venmo / PayPal exact-amount).
-router.get('/raffle/tickets/manual/:orderId', requireLogin, async (req, res) => {
-  const order = await db.get(
-    `SELECT * FROM orders WHERE id = ? AND buyer_id = ? AND order_type = 'raffle_ticket'`,
-    [req.params.orderId, req.user.id]);
-  if (!order) return res.status(404).render('error', { title: 'Not found', message: 'Ticket order not found.' });
-  res.render('orders/manual', {
-    title: 'Pay manually — Tattoo Art Customs', order, metaDescription: '',
-    basePath: '/raffle/tickets/manual', money,
-  });
-});
-router.post('/raffle/tickets/manual/:orderId', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
-  const order = await db.get(
-    `SELECT * FROM orders WHERE id = ? AND buyer_id = ? AND order_type = 'raffle_ticket'`,
-    [req.params.orderId, req.user.id]);
-  if (!order || order.status !== 'pending') return res.redirect('/raffle');
-  const method = ['cashapp', 'venmo', 'paypal'].includes(req.body.method) ? req.body.method : 'manual';
-  await db.update('orders', order.id, { payment_method: method });
-  req.session.flash = 'Recorded. An admin will confirm your manual payment, then your raffle entry is recorded.';
-  res.redirect('/raffle');
-});
-router.post('/raffle/tickets/manual/:orderId/paypal', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
-  const order = await db.get(
-    `SELECT * FROM orders WHERE id = ? AND buyer_id = ? AND order_type = 'raffle_ticket'`,
-    [req.params.orderId, req.user.id]);
-  if (!order || order.status !== 'pending') return res.redirect('/raffle');
-  try {
-    const paypal = require('../lib/paypal');
-    const pp = await paypal.createCheckoutOrder({
-      amountCents: order.amount_cents + (order.fee_cents || 0),
-      description: 'Tattoo Art Customs — raffle ticket',
-      returnUrl: `${config.baseUrl}/raffle/tickets/approve/${order.id}`,
-      cancelUrl: `${config.baseUrl}/raffle/tickets/manual/${order.id}`,
-    });
-    await db.update('orders', order.id, { paypal_order_id: pp.id, payment_method: 'paypal' });
-    const approve = pp.links.find((l) => l.rel === 'approve');
-    return res.redirect(approve.href);
-  } catch (e) {
-    console.error('PayPal order create failed (raffle ticket manual page):', e.message);
-    req.session.flash = 'PayPal checkout is unavailable right now — please use CashApp or Venmo below, or try again later.';
-    return res.redirect(`/raffle/tickets/manual/${order.id}`);
-  }
-});
 
 router.get('/notifications', requireLogin, async (req, res) => {
   const { unreadCount } = require('../lib/notify');

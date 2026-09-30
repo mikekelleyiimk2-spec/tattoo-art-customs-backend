@@ -52,8 +52,14 @@ router.post('/signup', authLimiter, checkHoneypot, async (req, res) => {
   // Every account gets its own referral code; record who referred them.
   await ensureReferralCode(id);
   await recordSignupReferral(id, req.body.referral_code || req.cookies?.ref_code);
+  // Opening raffle: a free account created while entries are open gets one
+  // entry (idempotent, one entry per person ever).
+  try {
+    const entry = await require('../lib/founding').enterRaffleOnSignup(id);
+    if (entry.entered) req.session.flash = "Welcome to Tattoo Art Customs! You're entered in the Opening Raffle — good luck!";
+  } catch (e) { console.error('raffle entry on signup failed:', e.message); }
   req.session.userId = id;
-  req.session.flash = 'Welcome to Tattoo Art Customs!';
+  if (!req.session.flash) req.session.flash = 'Welcome to Tattoo Art Customs!';
   res.redirect(req.session.returnTo || '/account');
 });
 

@@ -15,20 +15,14 @@
 </div>
 
 <section class="card">
-  <h2>Early-subscriber raffle</h2>
-  <p><strong><%= raffleEntries %> / <%= raffleTarget %></strong> participants.
+  <h2>Opening raffle</h2>
+  <p><strong><%= raffleEntries.toLocaleString('en-US') %> / <%= raffleEntryTarget.toLocaleString('en-US') %></strong> entries.
     <% if (raffleDrawn) { %><span class="badge ok">drawn</span><% } else if (!raffleOpen) { %>
-    <span class="badge ok">target reached — ready to draw</span><% } else { %>
-    Entries close at <strong><%= raffleTarget %></strong> participants (no time deadline).<% } %></p>
+    <span class="badge ok">closed — ready to draw</span><% } else { %>
+    Entries run at least through November 29, 2026, then close at <%= raffleEntryTarget.toLocaleString('en-US') %> entries or $<%= (raffleProfitTargetCents / 100).toFixed(0) %> in owner subscription profits.<% } %></p>
   <% if (!raffleDrawn) { %>
-  <form method="post" action="/admin/founding/raffle-target" class="form" style="max-width:26rem">
-    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-    <label for="raffle_target">Participant target (entries close when reached)</label>
-    <input type="number" id="raffle_target" name="raffle_target" min="1" value="<%= raffleTarget %>" required>
-    <button class="btn btn-secondary" type="submit">Set target</button>
-  </form>
   <form method="post" action="/admin/raffle/draw" style="margin-top:1rem"
-        onsubmit="return confirm('Draw the raffle now? This can only be done once: 1 grand prize, 3 annual, 10 credit. Winners are notified immediately.')">
+        onsubmit="return confirm('Draw the raffle now? This can only be done once: 1 grand prize + 2 runners-up. Winners are notified immediately.')">
     <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
     <button class="btn" type="submit" <%= raffleEntries === 0 ? 'disabled' : '' %>>Draw the raffle</button>
   </form>
@@ -44,9 +38,8 @@
     <% winners.forEach(function(w) { %>
       <tr>
         <td><%= w.display_name || w.email %></td>
-        <td><% if (w.prize_won === 'grand') { %>Grand — free custom design
-            <% } else if (w.prize_won === 'annual') { %>Free year of membership
-            <% } else { %>$25 site credit<% } %></td>
+        <td><% if (w.prize_won === 'grand') { %>Grand — premade of choice + 1 free month membership
+            <% } else { %>Runner-up — free premade of choice<% } %></td>
         <td><%= new Date(w.drawn_at).toLocaleString() %></td>
       </tr>
     <% }); %>

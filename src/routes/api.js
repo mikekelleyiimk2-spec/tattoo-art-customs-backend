@@ -186,9 +186,12 @@ router.get('/founding-status', async (req, res) => {
     ok: true,
     artists_left: s.artistsLeft,
     shops_left: s.shopsLeft,
-    raffle_target: s.raffleTarget,
     raffle_entries: s.raffleEntries,
+    raffle_entry_target: s.raffleEntryTarget,
+    raffle_min_closes_at: s.raffleMinClosesAt,
+    raffle_profit_target_cents: s.raffleProfitTargetCents,
     raffle_open: s.raffleOpen,
+    raffle_drawn: s.raffleDrawn,
   });
 });
 
