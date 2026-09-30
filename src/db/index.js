@@ -147,7 +147,7 @@ async function all(sql, params = []) {
 }
 
 // Insert a row; id/created_at defaulted when the table uses them.
-const NO_CREATED_AT = new Set(['migrations', 'plans', 'conversation_participants', 'sessions', 'settings']);
+const NO_CREATED_AT = new Set(['migrations', 'plans', 'conversation_participants', 'sessions', 'settings', 'first_custom_redemptions']);
 async function insert(table, data) {
   const row = { id: newId(), ...data };
   if (!NO_CREATED_AT.has(table) && row.created_at === undefined) row.created_at = now();

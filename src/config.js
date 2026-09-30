@@ -120,6 +120,15 @@ const config = {
     },
   },
 
+  // Campaign caps — reusable mechanism for opening sales and future promos.
+  // The first-custom 20% "Opening sale" auto-disables when EITHER cap is
+  // reached, whichever comes first. "Sales" = orders reaching paid status
+  // (all order types); "visitors" = one count per session (see lib/visitors).
+  campaignCaps: {
+    visitorCap: 5500,
+    paidSalesCap: 150,
+  },
+
   // Founding tattoo-shop window: shops that join before this date pay
   // $79.99 for their first year instead of $99.99. Set FOUNDING_SHOP_WINDOW_END
   // to an ISO date in production; the fallback is a FIXED date (2027-03-01)

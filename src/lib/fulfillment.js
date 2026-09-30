@@ -9,6 +9,7 @@
 const crypto = require('crypto');
 const db = require('../db');
 const config = require('../config');
+const { withFeeCents } = require('./pricing');
 const { sendMail } = require('./mail');
 
 const DOWNLOAD_TTL_MS = 24 * 3600 * 1000;
@@ -77,4 +78,49 @@ async function fulfillPremadeOrder(order) {
   return dl;
 }
 
-module.exports = { fulfillPremadeOrder, issueDownloadToken, DOWNLOAD_TTL_MS };
+// Buyer receipt for a paid custom deposit (the 50% checkout). Carries the
+// "First custom — 20% off" line item when the one-time subscriber discount
+// priced the order. Safe to call for any order; no-ops unless it is a paid
+// custom. SMTP-absent dev/test mode just logs (sendMail handles it); a send
+// failure never breaks the order flow.
+async function sendCustomDepositReceipt(order) {
+  if (!order || order.order_type !== 'custom' || order.status !== 'paid') return null;
+  const buyer = await db.get('SELECT email, display_name FROM users WHERE id = ?', [order.buyer_id]);
+  if (!buyer || !buyer.email) return null;
+  const money = (c) => `$${(Number(c || 0) / 100).toFixed(2)}`;
+  const first = String(buyer.display_name || '').split(' ')[0] || 'there';
+  const depositTotal = Number(order.deposit_cents || 0) + Number(order.fee_cents || 0);
+  const fullTotal = withFeeCents(Number(order.amount_cents || 0));
+  const lines = [
+    `Hi ${first},`,
+    ``,
+    `Your custom design request is in — deposit received!`,
+    ``,
+    `Order: ${order.id.slice(0, 8)}`,
+  ];
+  if (order.discount_applied === 'first_custom_20') {
+    lines.push(`Opening sale — first custom 20% off: ${money(order.amount_cents)} (regular ${money(15574)})`);
+  } else {
+    lines.push(`Design price: ${money(order.amount_cents)}`);
+  }
+  lines.push(
+    `Deposit paid: ${money(depositTotal)} (includes ${money(order.fee_cents)} processing fee)`,
+    `Balance of ${money(fullTotal - depositTotal)} due when your design is delivered (within 48 hours).`,
+    ``,
+    `View your order: ${config.baseUrl}/orders/${order.id}`,
+    ``,
+    `— Tattoo Art Customs`
+  );
+  try {
+    await sendMail({
+      to: buyer.email,
+      subject: `Custom deposit received — order ${order.id.slice(0, 8)} (Tattoo Art Customs)`,
+      text: lines.join('\n'),
+    });
+  } catch (e) {
+    console.error('custom deposit receipt email failed:', e.message);
+  }
+  return true;
+}
+
+module.exports = { fulfillPremadeOrder, issueDownloadToken, sendCustomDepositReceipt, DOWNLOAD_TTL_MS };

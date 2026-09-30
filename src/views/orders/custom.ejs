@@ -1,4 +1,7 @@
 <h1>Request a custom design</h1>
+<% if (typeof firstCustom !== 'undefined' && firstCustom) { %>
+<p class="notice"><strong>Opening sale — 20% off your first custom!</strong> Limited time — future sales will be announced. Your price: <strong><%= money(full) %></strong> (regular <%= money(15574) %>).</p>
+<% } %>
 <p>Custom designs are <strong><%= money(fullTotal) %></strong>. Pay a <strong><%= money(depositTotal) %></strong> deposit now <span class="muted">(includes <%= money(depositFee) %> processing fee)</span> — your design is delivered within <strong>48 hours</strong>, and the download unlocks in your account.</p>
 <form method="post" action="/orders/custom" class="form">
   <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">

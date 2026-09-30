@@ -15,7 +15,8 @@ const { recordSaleCommissions } = require('../lib/commissions');
 const { routeCustomOrder } = require('../lib/customFulfillment');
 const { onCustomPieceSold } = require('../lib/replacements');
 const { onOrderPaid } = require('../lib/printful');
-const { fulfillPremadeOrder } = require('../lib/fulfillment');
+const { fulfillPremadeOrder, sendCustomDepositReceipt } = require('../lib/fulfillment');
+const firstCustom = require('../lib/firstCustom');
 
 const router = express.Router();
 
@@ -90,11 +91,13 @@ router.post('/buy/:designId', requireLogin, formLimiter, checkHoneypot, async (r
   }
 });
 
-// --- Custom design request: brief + 50% deposit (Saturday-aware pricing) ---
+// --- Custom design request: brief + 50% deposit (Saturday-aware pricing,
+// plus the one-time 20%-off-first-custom subscriber discount: best-deal-wins,
+// never stacked) ---
 router.get('/custom', requireLogin, async (req, res) => {
-  const member = await isActiveMember(req.user);
-  const full = pricing.customFullCents(new Date(), member);
-  const deposit = pricing.customDepositCents(new Date(), member);
+  const quote = await firstCustom.customPriceQuote(req.user);
+  const full = quote.full;
+  const deposit = quote.deposit;
   // Tier-2 commission-suspended designers are hidden from the request-artist
   // dropdown (their listings stay up; only new commissions pause).
   // Shops opted into the free designer membership are listed as designers.
@@ -107,7 +110,8 @@ router.get('/custom', requireLogin, async (req, res) => {
      ORDER BY u.display_name`, [nowMs]);
   res.render('orders/custom', {
     title: 'Request a Custom Design — Tattoo Art Customs',
-    deposit, full, sale: await salePriceActive(req.user), artists,
+    deposit, full, sale: quote.sale, artists,
+    firstCustom: quote.discount === firstCustom.FIRST_CUSTOM_DISCOUNT_CODE,
     depositFee: pricing.processingFeeCents(deposit),
     depositTotal: pricing.withFeeCents(deposit),
     fullTotal: pricing.withFeeCents(full),
@@ -132,9 +136,24 @@ router.post('/custom', requireLogin, formLimiter, checkHoneypot, async (req, res
     return res.redirect(`/orders/${dupe.id}`);
   }
   const refCode = referralFromReq(req);
-  const member = await isActiveMember(req.user);
-  const full = pricing.customFullCents(new Date(), member);
-  const deposit = pricing.customDepositCents(new Date(), member);
+  // Best-deal-wins custom quote: regular, Saturday sale, or the one-time
+  // 20%-off-first-custom subscriber discount — never stacked. The order id
+  // is minted up front so the discount redemption can be recorded atomically
+  // with order creation (exactly-once via UNIQUE(user_id)).
+  const newOrderId = db.newId();
+  let quote = await firstCustom.customPriceQuote(req.user);
+  let discountApplied = quote.discount;
+  if (discountApplied === firstCustom.FIRST_CUSTOM_DISCOUNT_CODE) {
+    const redeemed = await firstCustom.redeemFirstCustomDiscount(req.user.id, newOrderId);
+    if (!redeemed) {
+      // Lost a redemption race (already redeemed elsewhere): fall back to
+      // the non-discounted price — the discount is never double-issued.
+      quote = await firstCustom.customPriceQuote(req.user);
+      discountApplied = quote.discount;
+    }
+  }
+  const full = quote.full;
+  const deposit = quote.deposit;
   // Optional: customer requests a specific design artist.
   let requestedArtistId = null;
   const wantArtist = String(req.body.requested_artist_id || '').trim();
@@ -148,10 +167,12 @@ router.post('/custom', requireLogin, formLimiter, checkHoneypot, async (req, res
     if (a) requestedArtistId = a.id;
   }
   const orderId = await db.insert('orders', {
+    id: newOrderId,
     buyer_id: req.user.id, order_type: 'custom',
     amount_cents: full,
     deposit_cents: deposit,
     fee_cents: pricing.processingFeeCents(deposit), // fee on the deposit (the amount actually charged)
+    discount_applied: discountApplied,
     status: 'pending', payment_method: 'paypal',
     referral_code: refCode, referred_shop_id: await resolveReferral(refCode),
     custom_brief: brief,
@@ -248,6 +269,7 @@ router.get('/approve/:orderId', requireLogin, async (req, res) => {
     await routeCustomOrder(fresh);
     await onCustomPieceSold(fresh); // sold custom pieces delist + queue a replacement
     await fulfillPremadeOrder(fresh); // premades deliver instantly: token + receipt email
+    if (fresh.order_type === 'custom') await sendCustomDepositReceipt(fresh); // deposit receipt (+ first-custom line item)
     try { await require('../lib/saleWatch').watchOrderPaid(fresh); } catch (e) { console.error('sale watch failed:', e.message); }
     req.session.flash = order.order_type === 'custom'
       ? 'Deposit received — your custom request is in. Your design will be delivered within 48 hours.'

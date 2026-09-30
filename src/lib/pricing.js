@@ -76,6 +76,26 @@ function lineworkOnlyPriceCents(fullCents) {
 // + $0.49 PayPal/card fee); in-app membership sales carry +15% (covers
 // Google Play's 15% cut). Any new processing charge gets added the same way.
 
+// One-time first-custom discount (owner rule 2026-09-29): an eligible
+// subscriber's FIRST custom commission is 20% off the advertised custom
+// price ($155.74 -> $124.59 base). The processing fee is computed on the
+// discounted amount, never absorbed; splits keep their percentages on the
+// discounted base. Never stackable with the Saturday sale or any other
+// discount — best-deal-wins (see customPriceQuote in lib/firstCustom.js).
+const FIRST_CUSTOM_DISCOUNT_RATE = 0.20;
+const FIRST_CUSTOM_DISCOUNT_CODE = 'first_custom_20';
+
+// Discounted base for an eligible first custom: 20% off the advertised
+// (fee-inclusive) regular custom price. = 12459 ($124.59).
+function firstCustomFullCents() {
+  return Math.round(withFeeCents(config.pricing.customFull) * (1 - FIRST_CUSTOM_DISCOUNT_RATE));
+}
+
+// First-custom deposit: always 50% of the discounted full price.
+function firstCustomDepositCents() {
+  return Math.round(firstCustomFullCents() / 2);
+}
+
 // Processing fee added to a web transaction (cents): 3.5% of the base + 49c.
 function processingFeeCents(baseCents) {
   return Math.round(baseCents * 0.035) + 49;
@@ -91,4 +111,4 @@ function withPlayFeeCents(baseCents) {
   return Math.round(baseCents * 1.15);
 }
 
-module.exports = { isSaleWindow, isMemberSaleWindow, salePriceActive, premadePriceCents, customFullCents, customDepositCents, money, chicagoParts, LINEWORK_ONLY_DISCOUNT, lineworkOnlyPriceCents, processingFeeCents, withFeeCents, withPlayFeeCents };
+module.exports = { isSaleWindow, isMemberSaleWindow, salePriceActive, premadePriceCents, customFullCents, customDepositCents, money, chicagoParts, LINEWORK_ONLY_DISCOUNT, lineworkOnlyPriceCents, processingFeeCents, withFeeCents, withPlayFeeCents, FIRST_CUSTOM_DISCOUNT_RATE, FIRST_CUSTOM_DISCOUNT_CODE, firstCustomFullCents, firstCustomDepositCents };

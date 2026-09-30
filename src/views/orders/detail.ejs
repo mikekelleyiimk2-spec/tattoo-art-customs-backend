@@ -4,6 +4,9 @@
     <tr><th>Type</th><td><%= order.order_type %></td></tr>
     <% if (design) { %><tr><th>Design</th><td><%= design.title %></td></tr><% } %>
     <tr><th>Amount</th><td><%= money(order.amount_cents) %></td></tr>
+    <% if (order.discount_applied === 'first_custom_20') { %>
+      <tr><th>Discount</th><td>Opening sale — first custom 20% off <span class="muted">(one-time subscriber perk)</span></td></tr>
+    <% } %>
     <% if (order.order_type === 'custom' && depositTotal != null) { %>
       <tr><th>Deposit due now</th><td><%= money(depositTotal) %> <span class="muted">(includes <%= money(order.fee_cents) %> processing fee)</span></td></tr>
       <tr><th>Total with fees</th><td><%= money(fullTotal) %> <span class="muted">(remainder billed on delivery)</span></td></tr>

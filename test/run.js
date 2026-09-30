@@ -829,6 +829,151 @@ async function main() {
     ok(stillLive && stillLive.status === 'approved', 'premade design stays approved/live after sale');
   }
 
+  // One-time 20%-off-first-custom OPENING SALE (owner rule 2026-09-29):
+  // eligible subscriber's first custom is 20% off the advertised $155.74
+  // price; never reusable, never stacked; auto-disables at 5,500 visitors
+  // or 150 paid sales (config.campaignCaps — internal only, never in
+  // buyer-facing copy).
+  {
+    const fc = require('../src/lib/firstCustom');
+    const fcp = require('../src/lib/pricing');
+    // The harness closed the test process's shared db handle before the HTTP
+    // phase; reopen it so lib-level checks can run (same as the suite's sdb
+    // handle: a second connection to the temp test DB).
+    await require('../src/db').init();
+    function jarredReq() {
+      const j = {};
+      return async function (method, p, { body, headers = {}, follow = true } = {}) {
+        const h = { ...headers };
+        const cookies = Object.entries(j).map(([k, v]) => `${k}=${v}`).join('; ');
+        if (cookies) h.cookie = cookies;
+        let payload;
+        if (body && typeof body === 'object' && !(body instanceof URLSearchParams)) {
+          payload = new URLSearchParams(body);
+          h['content-type'] = 'application/x-www-form-urlencoded';
+        } else payload = body;
+        const res = await fetch(`http://localhost:${PORT}${p}`, {
+          method, headers: h, body: payload, redirect: follow ? 'follow' : 'manual',
+        });
+        for (const c of (res.headers.getSetCookie ? res.headers.getSetCookie() : [])) {
+          const [k, v] = c.split(';')[0].split('=');
+          j[k.trim()] = (v || '').trim();
+        }
+        return { status: res.status, text: await res.text(), location: res.headers.get('location') };
+      };
+    }
+    const fcreq = jarredReq();   // eligible subscriber
+    const fcnreq = jarredReq(); // non-subscriber
+    const fcsreq = jarredReq(); // eligible subscriber (sale-window stacking)
+
+    // Discount math: 20% off the advertised $155.74 custom price.
+    ok(fcp.firstCustomFullCents() === 12459, 'first-custom discounted base is $124.59');
+    ok(fcp.firstCustomDepositCents() === 6230, 'first-custom deposit is 50% ($62.30)');
+    ok(fcp.processingFeeCents(6230) === 267, 'processing fee is computed on the discounted deposit');
+
+    // Eligible subscriber: active membership, no prior customs, caps not hit.
+    let fcr = await fcreq('POST', '/signup', { body: { display_name: 'FC Buyer', email: 'fcbuyer@test.local', password: 'password123' }, follow: false });
+    ok(fcr.status === 302, 'first-custom buyer signed up');
+    const fcBuyerId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('fcbuyer@test.local').id;
+    const fcPlan = sdb.prepare("SELECT id FROM plans WHERE slug = 'customer'").get().id;
+    sdb.prepare('INSERT INTO subscriptions (id, user_id, plan_id, status, created_at) VALUES (?,?,?,?,?)')
+      .run(randomUUID(), fcBuyerId, fcPlan, 'active', Date.now());
+    const fcUser = { id: fcBuyerId, role: 'customer' };
+    ok(await fc.firstCustomEligible(fcUser), 'active subscriber with no customs is eligible');
+    const q = await fc.customPriceQuote(fcUser);
+    ok(q.full === 12459 && q.deposit === 6230 && q.discount === 'first_custom_20',
+      'eligible quote: $124.59 base, $62.30 deposit, first_custom_20 code');
+
+    // Checkout page carries the Opening sale line item (no cap numbers shown).
+    fcr = await fcreq('GET', '/orders/custom');
+    ok(fcr.status === 200 && fcr.text.includes('Opening sale') && !fcr.text.includes('5,500') && !fcr.text.includes('150 sales'),
+      'custom page shows Opening sale copy without internal cap numbers');
+
+    // POST /custom creates the discounted order + records redemption once.
+    // (PayPal is unconfigured in tests, so checkout falls through to manual pay.)
+    const brief1 = 'First custom test brief: a koi fish swimming upstream, blackwork, forearm sized';
+    fcr = await fcreq('POST', '/orders/custom', { body: { brief: brief1 }, follow: false });
+    ok(fcr.status === 302 && (fcr.location || '').includes('/orders/manual/'), 'discounted custom order created (manual-pay fallback)');
+    const ordId1 = (fcr.location || '').split('/orders/manual/')[1];
+    const o1 = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(ordId1);
+    ok(o1 && o1.amount_cents === 12459 && o1.deposit_cents === 6230 && o1.fee_cents === 267,
+      'order stores discounted base, deposit, and fee-on-discounted-deposit');
+    ok(o1 && o1.discount_applied === 'first_custom_20', 'order records the first_custom_20 discount');
+    ok(sdb.prepare('SELECT COUNT(*) AS n FROM first_custom_redemptions WHERE user_id = ?').get(fcBuyerId).n === 1,
+      'redemption recorded exactly once');
+
+    // Idempotent double-submit: same brief within 2 minutes reuses the order.
+    fcr = await fcreq('POST', '/orders/custom', { body: { brief: brief1 }, follow: false });
+    ok(fcr.status === 302 && (fcr.location || '').includes(`/orders/${ordId1}`),
+      'double-submit redirects to the existing order (no duplicate)');
+    ok(sdb.prepare('SELECT COUNT(*) AS n FROM first_custom_redemptions WHERE user_id = ?').get(fcBuyerId).n === 1,
+      'no second redemption on double-submit');
+
+    // Second custom (different brief): no discount, redemption stays single.
+    const brief2 = 'Second custom test brief: a raven with spread wings, dotwork, back piece';
+    fcr = await fcreq('POST', '/orders/custom', { body: { brief: brief2 }, follow: false });
+    const ordId2 = (fcr.location || '').split('/orders/manual/')[1];
+    const o2 = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(ordId2);
+    ok(o2 && o2.discount_applied !== 'first_custom_20' && o2.amount_cents !== 12459,
+      'second custom gets no first-custom discount');
+    ok(sdb.prepare('SELECT COUNT(*) AS n FROM first_custom_redemptions WHERE user_id = ?').get(fcBuyerId).n === 1,
+      'redemption still exactly one row after second custom');
+    ok(!(await fc.firstCustomEligible(fcUser)), 'buyer with a prior custom is no longer eligible');
+
+    // Non-subscriber: no discount.
+    await fcnreq('POST', '/signup', { body: { display_name: 'FC NoSub', email: 'fcnosub@test.local', password: 'password123' }, follow: false });
+    const noSubId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('fcnosub@test.local').id;
+    const noSubUser = { id: noSubId, role: 'customer' };
+    ok(!(await fc.firstCustomEligible(noSubUser)), 'non-subscriber is not eligible');
+    ok((await fc.customPriceQuote(noSubUser)).discount !== 'first_custom_20',
+      'non-subscriber quote carries no first-custom discount');
+
+    // Never stacked with the Saturday sale: best-deal-wins, single discount.
+    await fcsreq('POST', '/signup', { body: { display_name: 'FC Sale', email: 'fcsale@test.local', password: 'password123' }, follow: false });
+    const saleId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('fcsale@test.local').id;
+    sdb.prepare('INSERT INTO subscriptions (id, user_id, plan_id, status, created_at) VALUES (?,?,?,?,?)')
+      .run(randomUUID(), saleId, fcPlan, 'active', Date.now());
+    const satNight = new Date('2026-10-03T20:00:00-05:00'); // Saturday 8 PM CT
+    ok(fcp.isSaleWindow(satNight), 'test Saturday night is inside the sale window');
+    const sq = await fc.customPriceQuote({ id: saleId, role: 'customer' }, satNight);
+    ok(sq.discount === 'first_custom_20' && sq.full === 12459,
+      'sale night + eligible: single best deal wins (first_custom_20, $124.59 — not stacked)');
+
+    // Splits are computed on the discounted base (deposit capture path).
+    const capId = 'ord-fc-cap-1';
+    sdb.prepare(`INSERT INTO orders (id, buyer_id, order_type, amount_cents, deposit_cents, fee_cents,
+      amount_paid_cents, status, payment_method, discount_applied, custom_brief, custom_status, created_at)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(capId, fcBuyerId, 'custom', 12459, 6230, 267,
+      6497, 'paid', 'paypal', 'first_custom_20', 'cap test brief: long enough to be valid here', 'new', Date.now());
+    await require('../src/lib/commissions').recordSaleCommissions(
+      sdb.prepare('SELECT * FROM orders WHERE id = ?').get(capId));
+    const ledRows = sdb.prepare(`SELECT recipient_type, SUM(amount_cents) AS t FROM commission_ledger
+      WHERE order_id = ? GROUP BY recipient_type`).all(capId);
+    const byType = Object.fromEntries(ledRows.map((r) => [r.recipient_type, r.t]));
+    // netPaid = 6497 - 267 = 6230; no design, no referring shop: 80/20 -> all to site.
+    ok(byType.site === 6230, 'commission ledger splits the discounted net ($62.30) entirely to the site');
+
+    // Campaign cap: 150 paid sales disables the sale...
+    sdb.prepare("INSERT OR REPLACE INTO site_counters (name, counter_value) VALUES ('visitors', 0)").run();
+    const capStmt = sdb.prepare(`INSERT INTO orders (id, buyer_id, order_type, amount_cents, status, created_at)
+      VALUES (?,?,?,?,?,?)`);
+    for (let i = 0; i < 150; i++) capStmt.run(`cap-sale-${i}`, fcBuyerId, 'premade', 7500, 'paid', Date.now());
+    ok(!(await fc.openingSaleActive()), 'opening sale disables at 150 paid sales');
+    ok(!(await fc.firstCustomEligible({ id: saleId, role: 'customer' })),
+      'eligible subscriber loses the discount once the sales cap is hit');
+    sdb.prepare("DELETE FROM orders WHERE id LIKE 'cap-sale-%'").run();
+    // ...and 5,500 visitors disables it too.
+    sdb.prepare("INSERT OR REPLACE INTO site_counters (name, counter_value) VALUES ('visitors', 5500)").run();
+    ok(!(await fc.openingSaleActive()), 'opening sale disables at 5,500 visitors');
+    ok(!(await fc.firstCustomEligible({ id: saleId, role: 'customer' })),
+      'eligible subscriber loses the discount once the visitor cap is hit');
+    // Before either cap: active.
+    sdb.prepare("INSERT OR REPLACE INTO site_counters (name, counter_value) VALUES ('visitors', 100)").run();
+    ok(await fc.openingSaleActive(), 'opening sale is active before either cap');
+    ok(await fc.firstCustomEligible({ id: saleId, role: 'customer' }),
+      'eligible subscriber keeps the discount before either cap');
+  }
+
   // member-exclusive designs: hidden from non-members everywhere
   const moid = 'testdesignm01';
   sdb.prepare(`INSERT INTO designs (id, title, description, price_cents, status, color_path, linework_path, linework_wm_path, categories, sale_count, members_only, created_at)

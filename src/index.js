@@ -92,6 +92,16 @@ app.use(session({
 
 app.use(loadUser);
 
+// Opening-sale visitor counter: one count per session (lib/visitors).
+// Fire-and-forget so the counter write never slows the response; the
+// session flag is set synchronously so a session can never double-count.
+app.use((req, res, next) => {
+  if (req.session) {
+    try { require('./lib/visitors').countVisitor(req.session).catch(() => {}); } catch (e) { /* never break a request */ }
+  }
+  next();
+});
+
 // Flash messages (one-shot notices).
 app.use((req, res, next) => {
   res.locals.flash = req.session.flash || null;

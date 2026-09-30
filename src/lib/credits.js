@@ -161,9 +161,11 @@ async function payOrderWithCredit({ userId, orderId }) {
   });
   const fresh = await db.get('SELECT * FROM orders WHERE id = ?', [order.id]);
   await recordSaleCommissions(fresh);
+  const { fulfillPremadeOrder, sendCustomDepositReceipt } = require('./fulfillment');
   const fulfil = await onOrderPaid(fresh);
   await routeCustomOrder(fresh);
   await fulfillPremadeOrder(fresh); // premades deliver instantly: token + receipt email
+  if (fresh.order_type === 'custom') await sendCustomDepositReceipt(fresh); // deposit receipt (+ first-custom line item)
   try { await require('./saleWatch').watchOrderPaid(fresh); } catch (e) { console.error('sale watch failed:', e.message); }
   return { order: fresh, printSubmitted: fulfil.submitted };
 }
