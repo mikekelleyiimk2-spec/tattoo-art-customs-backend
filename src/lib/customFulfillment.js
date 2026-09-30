@@ -36,7 +36,7 @@ async function routeCustomOrder(order) {
     let artist = await db.get(
       `SELECT u.id, u.email, u.display_name FROM users u
        LEFT JOIN shop_profiles sp ON sp.user_id = u.id
-       WHERE u.id = ? AND (u.role = 'design_artist' OR u.role = 'tattoo_shop')`,
+       WHERE u.id = ? AND u.role IN ('design_artist','tattoo_shop','admin','head_admin')`,
       [order.requested_artist_id]);
     if (artist && await commissionSuspended(artist.id, Date.now())) artist = null;
     if (artist) {

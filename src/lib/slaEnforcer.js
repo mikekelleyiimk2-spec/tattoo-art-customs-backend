@@ -422,7 +422,7 @@ async function offenderWatch({ now = Date.now() } = {}) {
        AND o.deadline_missed = 1
        AND o.deadline_missed_at >= ?
        AND o.deadline_missed_at > COALESCE(u.sla_forgiven_at, 0)
-     WHERE (u.role = 'design_artist' OR u.role = 'tattoo_shop')
+     WHERE u.role IN ('design_artist','tattoo_shop','admin','head_admin')
      GROUP BY u.id`,
     [now - REPEAT_WINDOW_MS]);
   const watch = [];

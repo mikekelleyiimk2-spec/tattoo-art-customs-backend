@@ -102,7 +102,7 @@ router.get('/custom', requireLogin, async (req, res) => {
   const artists = await db.all(
     `SELECT u.id, u.display_name FROM users u
      LEFT JOIN shop_profiles sp ON sp.user_id = u.id
-     WHERE (u.role = 'design_artist' OR u.role = 'tattoo_shop')
+     WHERE u.role IN ('design_artist','tattoo_shop','admin','head_admin')
      AND (u.commission_suspended_until IS NULL OR u.commission_suspended_until <= ?)
      ORDER BY u.display_name`, [nowMs]);
   res.render('orders/custom', {
@@ -142,7 +142,7 @@ router.post('/custom', requireLogin, formLimiter, checkHoneypot, async (req, res
     const a = await db.get(
       `SELECT u.id FROM users u
        LEFT JOIN shop_profiles sp ON sp.user_id = u.id
-       WHERE u.id = ? AND (u.role = 'design_artist' OR u.role = 'tattoo_shop')
+       WHERE u.id = ? AND u.role IN ('design_artist','tattoo_shop','admin','head_admin')
        AND (u.commission_suspended_until IS NULL OR u.commission_suspended_until <= ?)`,
       [wantArtist, Date.now()]);
     if (a) requestedArtistId = a.id;

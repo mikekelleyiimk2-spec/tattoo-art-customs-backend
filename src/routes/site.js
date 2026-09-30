@@ -102,7 +102,7 @@ router.get('/sitemap.xml', async (req, res) => {
     const artists = await db.all(
       `SELECT DISTINCT u.id FROM users u JOIN designs d ON d.artist_id = u.id
        LEFT JOIN shop_profiles sp ON sp.user_id = u.id
-       WHERE (u.role = 'design_artist' OR u.role = 'tattoo_shop')
+       WHERE u.role IN ('design_artist','tattoo_shop','admin','head_admin')
        AND d.status = 'approved' LIMIT 5000`);
     for (const a of artists) {
       urls.push({ loc: `${base}/artists/${a.id}`, changefreq: 'weekly', priority: '0.7' });
