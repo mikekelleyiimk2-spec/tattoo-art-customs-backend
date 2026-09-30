@@ -34,7 +34,7 @@ router.get('/', async (req, res) => {
     ownedCount = r ? r.c : 0;
   }
   res.render('merch/index', {
-    title: 'Merch — Tattoo Art Customs',
+    title: "Mike's Custom Tees",
     configured,
     sizes: pricing.TEE_SIZES,
     colors: pricing.TEE_COLORS,
@@ -42,7 +42,7 @@ router.get('/', async (req, res) => {
     withFee: (c) => pricing.withFeeCents(c),
     money: pricing.money,
     ownedCount,
-    metaDescription: 'Tattoo Art Customs merch — your purchased designs on premium Bella + Canvas tees.',
+    metaDescription: "Mike's Custom Tees — your purchased Tattoo Art Customs designs on premium Bella + Canvas tees, printed on demand.",
   });
 });
 
@@ -71,7 +71,7 @@ async function ownsDesign(userId, designId) {
 // --- Tee order form for one owned design ---
 router.get('/tee/:designId', requireLogin, formLimiter, async (req, res) => {
   if (!printfulConfigured()) {
-    req.session.flash = 'Merch is coming soon — join the notify list below.';
+    req.session.flash = "Mike's Custom Tees are coming soon — join the notify list below.";
     return res.redirect('/merch');
   }
   const design = await db.get("SELECT id, title, color_source FROM designs WHERE id = ? AND status = 'approved'", [req.params.designId]);
@@ -81,7 +81,7 @@ router.get('/tee/:designId', requireLogin, formLimiter, async (req, res) => {
     return res.redirect(`/design/${design.id}`);
   }
   res.render('merch/tee-order', {
-    title: `Tee — ${design.title} — Tattoo Art Customs`,
+    title: `Mike's Custom Tees — ${design.title}`,
     design,
     sizes: pricing.TEE_SIZES,
     colors: pricing.TEE_COLORS,
@@ -94,7 +94,7 @@ router.get('/tee/:designId', requireLogin, formLimiter, async (req, res) => {
 
 router.post('/tee', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
   try {
-    if (!printfulConfigured()) throw new Error('Merch is coming soon.');
+    if (!printfulConfigured()) throw new Error("Mike's Custom Tees are coming soon.");
     const designId = String(req.body.design_id || '');
     const design = await db.get("SELECT id, title FROM designs WHERE id = ? AND status = 'approved'", [designId]);
     if (!design || !(await ownsDesign(req.user.id, design.id))) {
