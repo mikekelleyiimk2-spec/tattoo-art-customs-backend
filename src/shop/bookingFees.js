@@ -11,7 +11,7 @@
 // platform fee stays with the platform. Later phases must never refund it.
 //
 // Invariant: total - processing === base + platformFee.
-const { money } = require('./pricing');
+const { money } = require('../lib/pricing');
 
 function computeBookingFees(baseCents) {
   if (!Number.isInteger(baseCents) || baseCents < 0) {

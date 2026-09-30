@@ -6,7 +6,7 @@ const db = require('../db');
 const {
   joinWaitlist, claimOffer,
   getWaitlistForShop, getWaitlistForCustomer, cancelWaitlistEntry,
-} = require('../lib/waitlist');
+} = require('./waitlist');
 
 const router = express.Router();
 
@@ -101,7 +101,7 @@ router.get('/list', requireLogin, requireSubscription('tattoo_shop'), async (req
 
 // Shop: manually offer the next person in line (no concrete slot — "next opening").
 router.post('/offer-next', requireLogin, requireSubscription('tattoo_shop'), formLimiter, checkHoneypot, async (req, res) => {
-  const { offerNextInLine } = require('../lib/waitlist');
+  const { offerNextInLine } = require('./waitlist');
   const offered = await offerNextInLine({ shopUserId: req.user.id, staffId: req.body.staff_id || null });
   req.session.flash = offered
     ? 'Offer sent — the next person in line has 24 hours to claim.'

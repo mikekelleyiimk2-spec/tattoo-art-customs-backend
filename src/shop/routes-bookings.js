@@ -18,9 +18,9 @@ const config = require('../config');
 const paypal = require('../lib/paypal');
 const { requireLogin, requireSubscription, hasActiveSubscription, isAdminRole } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
-const { formatReceiptLines } = require('../lib/bookingFees');
-const { getOpenSlots } = require('../lib/bookingSlots');
-const flow = require('../lib/bookingFlow');
+const { formatReceiptLines } = require('./bookingFees');
+const { getOpenSlots } = require('./bookingSlots');
+const flow = require('./bookingFlow');
 const { money } = require('../lib/pricing');
 
 const router = express.Router();

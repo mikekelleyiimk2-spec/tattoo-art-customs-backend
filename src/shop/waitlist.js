@@ -10,7 +10,7 @@
 // when a confirmed booking is cancelled, so the freed slot goes to the
 // waitlist before it goes public:
 //
-//   const { offerNextInLine } = require('../lib/waitlist');
+//   const { offerNextInLine } = require('./waitlist');
 //   await offerNextInLine({
 //     shopUserId: booking.shop_user_id,
 //     staffId: booking.staff_id,      // may be null
@@ -27,8 +27,8 @@
 // re-verified by whoever creates the booking (Phase 2).
 const db = require('../db');
 const config = require('../config');
-const { notifyUser } = require('./notify');
-const { sendMail } = require('./mail');
+const { notifyUser } = require('../lib/notify');
+const { sendMail } = require('../lib/mail');
 
 const OFFER_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours to claim
 

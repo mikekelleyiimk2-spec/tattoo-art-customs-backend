@@ -26,9 +26,9 @@
 const db = require('../db');
 const { computeBookingFees, flatBookingFee, formatReceiptLines } = require('./bookingFees');
 const { isSlotFree } = require('./bookingSlots');
-const { recipientEligible, verifyOrderCommissions } = require('./commissions');
-const { notifyUser } = require('./notify');
-const { sendMail } = require('./mail');
+const { recipientEligible, verifyOrderCommissions } = require('../lib/commissions');
+const { notifyUser } = require('../lib/notify');
+const { sendMail } = require('../lib/mail');
 
 const DAY_MS = 86400000;
 
@@ -339,7 +339,7 @@ async function cancelBooking(bookingId, { byShop = false, now = Date.now() } = {
       let refundError = null;
       if (money.captureId) {
         try {
-          const paypal = require('./paypal');
+          const paypal = require('../lib/paypal');
           await paypal.refundCheckoutCapture(money.captureId, money.base);
           refunded = true;
         } catch (e) { refundError = e.message; }

@@ -44,8 +44,8 @@ async function buyCard(lib, { purchaser, amountCents, recipientEmail, shopUserId
 
 async function runDbTests(ok) {
   console.log('phase3 gift cards:');
-  const gc = require('../src/lib/giftcards');
-  const { computeBookingFees } = require('../src/lib/bookingFees');
+  const gc = require('../src/shop/giftcards');
+  const { computeBookingFees } = require('../src/shop/bookingFees');
 
   P3.cust1 = await mkUser('p3cust1@test.local', 'customer');
   P3.cust2 = await mkUser('p3cust2@test.local', 'customer');
@@ -132,7 +132,7 @@ async function runDbTests(ok) {
   ok(threw, 'custom amount below minimum rejected');
 
   console.log('phase3 intake forms:');
-  const intakeLib = require('../src/lib/intake');
+  const intakeLib = require('../src/shop/intake');
   P3.bIntake = await mkBooking(P3.cust1, P3.shop);
   const tmp1 = path.join(os.tmpdir(), 'p3photo1.jpg');
   const tmp2 = path.join(os.tmpdir(), 'p3photo2.jpg');
@@ -167,7 +167,7 @@ async function runDbTests(ok) {
   ok(threw, "another customer cannot save to someone else's booking");
 
   console.log('phase3 waitlist:');
-  const wl = require('../src/lib/waitlist');
+  const wl = require('../src/shop/waitlist');
   const w1 = await wl.joinWaitlist({ shopUserId: P3.shop, staffId: null, customerUserId: P3.cust1, notes: 'flexible' });
   ok(!!w1, 'customer joins the waitlist');
   threw = false;
@@ -208,7 +208,7 @@ async function runDbTests(ok) {
   ok(mine.length === 1 && mine[0].shop_name, 'customer sees own entries with shop name');
 
   console.log('phase3 booking reminders:');
-  const rem = require('../src/lib/bookingReminders');
+  const rem = require('../src/shop/bookingReminders');
   const now = Date.now();
   P3.bRemDay = await mkBooking(P3.cust1, P3.shop, { start_at: now + 24 * 3600 * 1000, end_at: now + 25 * 3600 * 1000 });
   P3.bRemDayOf = await mkBooking(P3.cust1, P3.shop, { start_at: now + 2 * 3600 * 1000, end_at: now + 3 * 3600 * 1000 });

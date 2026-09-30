@@ -12,6 +12,7 @@ const pricing = require('../lib/pricing');
 const { premadePriceCents, isSaleWindow, salePriceActive } = pricing;
 const { requireLogin, isActiveMember } = require('../middleware/auth');
 const { recordSaleCommissions } = require('../lib/commissions');
+const { resolveShopReferral } = require('../shop/attribution');
 const { routeCustomOrder } = require('../lib/customFulfillment');
 const { onCustomPieceSold } = require('../lib/replacements');
 const { onOrderPaid } = require('../lib/printful');
@@ -22,12 +23,6 @@ const router = express.Router();
 
 function referralFromReq(req) {
   return String(req.cookies?.ref_code || req.body.referral_code || '').slice(0, 32);
-}
-
-async function resolveReferral(code) {
-  if (!code) return null;
-  const shop = await db.get('SELECT user_id FROM shop_profiles WHERE referral_code = ?', [code]);
-  return shop ? shop.user_id : null;
 }
 
 // --- Premade + portfolio pieces: start checkout for a design ---
@@ -59,7 +54,7 @@ router.post('/buy/:designId', requireLogin, formLimiter, checkHoneypot, async (r
   const orderId = await db.insert('orders', {
     buyer_id: req.user.id, design_id: design.id, order_type: 'premade',
     amount_cents: price, fee_cents: fee, status: 'pending', payment_method: 'paypal',
-    referral_code: refCode, referred_shop_id: await resolveReferral(refCode),
+    referral_code: refCode, referred_shop_id: await resolveShopReferral(refCode),
     linework_only: lineworkOnly ? 1 : 0,
     created_at: db.now(),
   });
@@ -174,7 +169,7 @@ router.post('/custom', requireLogin, formLimiter, checkHoneypot, async (req, res
     fee_cents: pricing.processingFeeCents(deposit), // fee on the deposit (the amount actually charged)
     discount_applied: discountApplied,
     status: 'pending', payment_method: 'paypal',
-    referral_code: refCode, referred_shop_id: await resolveReferral(refCode),
+    referral_code: refCode, referred_shop_id: await resolveShopReferral(refCode),
     custom_brief: brief,
     requested_artist_id: requestedArtistId,
     custom_status: 'new',

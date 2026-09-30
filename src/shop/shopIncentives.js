@@ -132,7 +132,7 @@ async function maybeAwardBookingBonus(booking) {
   // Funded from site operations; designer and base shop splits untouched.
   // Payable when the shop can receive payouts, otherwise forfeited to
   // the site per the standing forfeiture rule (no payout destination).
-  const { recipientEligible } = require('./commissions');
+  const { recipientEligible } = require('../lib/commissions');
   const eligible = await recipientEligible(shopId, 'shop');
   await db.insert('commission_ledger', {
     order_id: order.id,

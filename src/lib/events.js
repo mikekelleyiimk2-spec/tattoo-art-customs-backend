@@ -5,7 +5,7 @@
 // UNIQUE(event_id, customer_user_id) pair plus an explicit check reject
 // duplicate signups.
 const db = require('../db');
-const { computeBookingFees, formatReceiptLines } = require('./bookingFees');
+const { computeBookingFees, formatReceiptLines } = require('../shop/bookingFees');
 
 function parsePriceCents(v) {
   if (v == null || String(v).trim() === '') return 0;
@@ -152,7 +152,7 @@ async function confirmEventSignupPayment(paymentId, { captureId = null, orderId 
     }),
     shop_receives_cents: fees.base, customer_total_cents: fees.total, created_at: now,
   });
-  const { creditShopForBase } = require('./bookingFlow');
+  const { creditShopForBase } = require('../shop/bookingFlow');
   await creditShopForBase({
     shopUserId: ev.shop_user_id, baseCents: fees.base,
     refId: 'event:' + pay.signup_id, commissionType: 'event_registration',
@@ -189,7 +189,7 @@ async function leaveEvent({ eventId, customerUserId }) {
       } catch (e) { console.error('event refund failed:', e.message); }
       if (refunded) {
         await db.update('event_signup_payments', pay.id, { status: 'refunded', refunded_cents: pay.base_cents });
-        const { reduceShopCredit } = require('./bookingFlow');
+        const { reduceShopCredit } = require('../shop/bookingFlow');
         await reduceShopCredit('event:' + signup.id, pay.base_cents);
         outcome = 'refunded_base';
       } else {

@@ -1,6 +1,6 @@
 // Gift cards (shop toolset, Phase 3).
 //
-// Purchase model mirrors shop bookings (src/lib/bookingFees.js): the BUYER
+// Purchase model mirrors shop bookings (src/shop/bookingFees.js): the BUYER
 // pays amount + 5% platform fee + grossed-up processing. Redemption is
 // fee-FREE — the full amount_cents applies against the booking balance.
 //
@@ -13,10 +13,10 @@ const crypto = require('crypto');
 const db = require('../db');
 const config = require('../config');
 const { computeBookingFees } = require('./bookingFees');
-const { money } = require('./pricing');
-const paypal = require('./paypal');
-const { notifyUser } = require('./notify');
-const { sendMail } = require('./mail');
+const { money } = require('../lib/pricing');
+const paypal = require('../lib/paypal');
+const { notifyUser } = require('../lib/notify');
+const { sendMail } = require('../lib/mail');
 
 const GIFT_CARD_AMOUNTS = [2500, 5000, 10000]; // $25 / $50 / $100 presets
 const MIN_CUSTOM_CENTS = 1000;   // $10

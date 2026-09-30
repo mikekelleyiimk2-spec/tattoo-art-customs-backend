@@ -16,6 +16,7 @@ const { onCustomPieceSold } = require('../lib/replacements');
 const { fulfillPremadeOrder } = require('../lib/fulfillment');
 const { colorizationQueue, attachColorVersion, notifyDesignLive } = require('../lib/colorization');
 const { recordTask: recordAdminTask } = require('../lib/adminTaskPay');
+const { verifyShop } = require('../shop/verification');
 
 const router = express.Router();
 router.use(requireLogin, requireRole('admin'));
@@ -702,7 +703,7 @@ router.post('/members/:id/cancel-membership', formLimiter, checkHoneypot, async 
 
 // Verify a tattoo shop (allows the limited shop profile fields).
 router.post('/members/:id/verify-shop', formLimiter, checkHoneypot, async (req, res) => {
-  await db.updateWhere('shop_profiles', { verified: 1 }, 'user_id', req.params.id);
+  await verifyShop(req.params.id);
   await payAdmin(req, 'shop_verify', 'user', req.params.id);
   req.session.flash = 'Shop verified.';
   res.redirect('/admin/members');

@@ -25,8 +25,8 @@ async function mkUser(email, role) {
 async function runDbTests(ok) {
   console.log('phase5 website-only payment routing:');
   const events = require('../src/lib/events');
-  const flow = require('../src/lib/bookingFlow');
-  const { computeBookingFees } = require('../src/lib/bookingFees');
+  const flow = require('../src/shop/bookingFlow');
+  const { computeBookingFees } = require('../src/shop/bookingFees');
 
   P5.cust = await mkUser('p5cust@test.local', 'customer');
   P5.cust2 = await mkUser('p5cust2@test.local', 'customer');
@@ -152,8 +152,8 @@ async function runDbTests(ok) {
 
   // --- static: no tool payment path may touch Google Play Billing ---
   const toolFiles = [
-    'src/routes/bookings.js', 'src/routes/events.js', 'src/routes/giftcards.js',
-    'src/lib/bookingFlow.js', 'src/lib/events.js', 'src/lib/giftcards.js',
+    'src/shop/routes-bookings.js', 'src/routes/events.js', 'src/shop/routes-giftcards.js',
+    'src/shop/bookingFlow.js', 'src/lib/events.js', 'src/shop/giftcards.js',
   ];
   // Real integration identifiers only — plain-English mentions of Play Billing
   // in comments ("never Google Play Billing") are the policy, not usage.
@@ -166,7 +166,7 @@ async function runDbTests(ok) {
     }
   }
   const paywalled = [
-    'src/routes/bookings.js', 'src/routes/events.js', 'src/routes/giftcards.js',
+    'src/shop/routes-bookings.js', 'src/routes/events.js', 'src/shop/routes-giftcards.js',
   ];
   for (const f of paywalled) {
     const src = fs.readFileSync(path.join(__dirname, '..', f), 'utf8');

@@ -11,7 +11,7 @@ const { screenText } = require('../lib/screening');
 const { payableBalance } = require('../lib/commissions');
 const { registerPayoutRoutes, payoutDashboardData } = require('../lib/payoutRoutes');
 const { upsertProfile } = require('../lib/profiles');
-const { dualSubBonusActive } = require('../lib/shopDesigner');
+const { dualSubBonusActive } = require('./shopDesigner');
 
 const router = express.Router();
 router.use(requireLogin, requireSubscription('tattoo_shop'));
@@ -35,7 +35,7 @@ router.get('/', async (req, res) => {
     'SELECT is_founding_shop, founding_shop_ends_at FROM users WHERE id = ?', [req.user.id]);
   const dualBonus = await dualSubBonusActive(req.user.id);
   // Referral volume tier: current rate + progress to the next tier.
-  const { shopReferralTier } = require('../lib/shopIncentives');
+  const { shopReferralTier } = require('./shopIncentives');
   const tier = await shopReferralTier(req.user.id);
   res.render('shop/dashboard', {
     title: 'Shop Dashboard — Tattoo Art Customs',

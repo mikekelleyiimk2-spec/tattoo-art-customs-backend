@@ -8,7 +8,7 @@ const {
   giftCardFees, giftCardReceiptLines,
   createPendingGiftCard, activateGiftCard, redeemGiftCard,
   getGiftCardsForShop, getGiftCardsForPurchaser,
-} = require('../lib/giftcards');
+} = require('./giftcards');
 const db = require('../db');
 
 const router = express.Router();

@@ -38,8 +38,8 @@
 const db = require('../db');
 const config = require('../config');
 const founding = require('./founding');
-const shopIncentives = require('./shopIncentives');
-const { shopDesignerActive, dualSubBonusActive } = require('./shopDesigner');
+const shopIncentives = require('../shop/shopIncentives');
+const { shopDesignerActive, dualSubBonusActive } = require('../shop/shopDesigner');
 
 // Site owner lookup (for payable-balance redirects).
 async function ownerUserId() {

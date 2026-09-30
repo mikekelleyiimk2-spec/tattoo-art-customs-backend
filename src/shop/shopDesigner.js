@@ -14,7 +14,7 @@
 // 10%) — a shop can never pay itself the 20% shop referral cut.
 const db = require('../db');
 const { hasActiveSubscription, isAdminRole } = require('../middleware/auth');
-const { upsertProfile } = require('./profiles');
+const { upsertProfile } = require('../lib/profiles');
 
 // Live check: an active tattoo_shop subscription carries the designer
 // membership with it.

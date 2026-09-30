@@ -11,7 +11,7 @@ const path = require('path');
 const fs = require('fs');
 const db = require('../db');
 const config = require('../config');
-const { screenText } = require('./screening');
+const { screenText } = require('../lib/screening');
 
 const MAX_PHOTOS = 5;
 const INTAKE_DIR = 'uploads/intake'; // relative to config.assetDir

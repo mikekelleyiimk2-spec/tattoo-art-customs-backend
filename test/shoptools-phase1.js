@@ -1,6 +1,6 @@
 // Phase 1 shop toolset: booking fee engine unit tests.
 // The coordinator (test/run.js) wires this in; do not run from here.
-const { computeBookingFees, flatBookingFee, formatReceiptLines } = require('../src/lib/bookingFees');
+const { computeBookingFees, flatBookingFee, formatReceiptLines } = require('../src/shop/bookingFees');
 
 function runUnitTests(ok) {
   console.log('bookingFees:');

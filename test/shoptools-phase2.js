@@ -2,9 +2,9 @@
 // "Get this tattooed" + shop booking settings.
 // The coordinator (test/run.js) wires this in; do not run from here.
 const db = require('../src/db');
-const flow = require('../src/lib/bookingFlow');
-const slots = require('../src/lib/bookingSlots');
-const { computeBookingFees, flatBookingFee } = require('../src/lib/bookingFees');
+const flow = require('../src/shop/bookingFlow');
+const slots = require('../src/shop/bookingSlots');
+const { computeBookingFees, flatBookingFee } = require('../src/shop/bookingFees');
 const { upsertProfile } = require('../src/lib/profiles');
 
 const DAY_MS = 86400000;

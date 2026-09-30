@@ -11,7 +11,7 @@ const { requireLogin, requireSubscription } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const config = require('../config');
 const db = require('../db');
-const { MAX_PHOTOS, saveIntake, getIntakeForBooking } = require('../lib/intake');
+const { MAX_PHOTOS, saveIntake, getIntakeForBooking } = require('./intake');
 
 const router = express.Router();
 

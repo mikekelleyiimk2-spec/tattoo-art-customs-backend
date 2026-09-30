@@ -155,7 +155,7 @@ async function main() {
   db.get = realGet; db.insert = realInsert;
 
   console.log('dual-sub bonus:');
-  const { dualSubBonusActive } = require('../src/lib/shopDesigner');
+  const { dualSubBonusActive } = require('../src/shop/shopDesigner');
   const { upsertProfile: upsertTestProfile } = require('../src/lib/profiles');
   const dualId = await db.insert('users', { email: 'dual@test.local', password_hash: 'x', role: 'tattoo_shop', display_name: 'Dual' });
   await upsertTestProfile('artist_profiles', dualId, { payout_paypal_email: 'dual@x.com' });
@@ -1016,10 +1016,10 @@ async function main() {
   // a confirmed booking at the same shop within 30 days earns the shop
   // $5 (premade) or 5% of base (custom), one bonus per order.
   {
-    const inc = require('../src/lib/shopIncentives');
+    const inc = require('../src/shop/shopIncentives');
     const { upsertProfile } = require('../src/lib/profiles');
-    const { computeBookingFees } = require('../src/lib/bookingFees');
-    const flow = require('../src/lib/bookingFlow');
+    const { computeBookingFees } = require('../src/shop/bookingFees');
+    const flow = require('../src/shop/bookingFlow');
     const bcryptjs = require('bcryptjs');
     // db handle already reopened in the block above (same HTTP phase).
 
@@ -2556,7 +2556,7 @@ async function main() {
 
   // ===== Shop subscription includes the designer membership (owner rule 2026-09-29) =====
   console.log('shop-designer-included:');
-  const { shopDesignerActive, designerAccess } = require('../src/lib/shopDesigner');
+  const { shopDesignerActive, designerAccess } = require('../src/shop/shopDesigner');
   const shopDesId = await db.insert('users', {
     email: 'shopdesigner@test.local', password_hash: await bcrypt.hash('ShopPass123!', 10),
     role: 'tattoo_shop', display_name: 'Shop Designer',

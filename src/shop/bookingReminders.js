@@ -4,7 +4,7 @@
 // creates/confirms a booking. PHASE 2 INTEGRATION: call it from the booking
 // creation path:
 //
-//   const { sendBookingConfirmation } = require('../lib/bookingReminders');
+//   const { sendBookingConfirmation } = require('./bookingReminders');
 //   await sendBookingConfirmation(booking.id);
 //
 // runReminderSweep() — called by cron every ~15 minutes. Sends:
@@ -29,8 +29,8 @@
 // sweep (every 15 min, same cadence).
 const cron = require('node-cron');
 const db = require('../db');
-const { notifyUser } = require('./notify');
-const { sendMail } = require('./mail');
+const { notifyUser } = require('../lib/notify');
+const { sendMail } = require('../lib/mail');
 const { expireOffers } = require('./waitlist');
 
 const DAY_BEFORE_KIND = 'reminder-day-before';
