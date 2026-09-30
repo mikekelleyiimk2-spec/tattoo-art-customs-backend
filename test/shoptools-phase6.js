@@ -247,6 +247,16 @@ async function runDbTests(ok) {
   // --- 12. db.query exposes affected-row counts ---
   const noMatch = await db.query("UPDATE bookings SET status = 'confirmed' WHERE id = ? AND status = 'nope-never'", [bookingId]);
   ok(noMatch.changes === 0, 'conditional update reports 0 changes when nothing matches');
+
+  // --- 13. slot listing is range-bounded (public endpoint, no DoS) ---
+  const far = await slots.getOpenSlots(shopA.id, {
+    fromTs: shopA.day, toTs: shopA.day + 365 * DAY_MS,
+  });
+  const near = await slots.getOpenSlots(shopA.id, {
+    fromTs: shopA.day, toTs: shopA.day + 93 * DAY_MS,
+  });
+  ok(far.length === near.length && far.length > 0,
+    `getOpenSlots clamps a 1-year range to the 93-day horizon (${far.length} slots)`);
 }
 
 async function runHttpTests(ok, req) {

@@ -77,6 +77,11 @@ function bookingBlocksSlot(slot, booking) {
 // NULL = any). Slots already held by bookings are removed.
 async function getOpenSlots(shopUserId, { staffId = null, chairId = null, fromTs, toTs, now = Date.now() } = {}) {
   if (!shopUserId || !Number.isFinite(fromTs) || !Number.isFinite(toTs) || toTs <= fromTs) return [];
+  // Bound the queryable range: /slots is public, and an unbounded from/to
+  // (e.g. years) would burn CPU/memory expanding slots. Clamp to the
+  // booking horizon (~3 months).
+  const MAX_RANGE_MS = 93 * DAY_MS;
+  if (toTs - fromTs > MAX_RANGE_MS) toTs = fromTs + MAX_RANGE_MS;
   const rules = await matchingRules(shopUserId, staffId, chairId);
   const candidates = [];
   for (let d = dayStartUtc(fromTs); d < toTs; d += DAY_MS) {
