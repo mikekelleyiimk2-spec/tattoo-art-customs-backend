@@ -81,15 +81,25 @@ async function handlePortfolioUpload(req, res, backUrl) {
   // PRE-DESIGN opt-in: also listed on the main gallery at the premade price.
   const listingType = req.body.listing_type === 'predesign' ? 'predesign' : 'custom';
   const listingScope = listingType === 'predesign' ? 'gallery' : 'portfolio';
-  // Watermark choice: default 'site'. 'custom' requires an uploaded image.
+  // Watermark choice: default 'site'. 'custom' uses the uploaded file, or the
+  // mark the artist built on-site (dark-on-transparent, rendered inverted so
+  // the dark ink shows) when no file was attached.
   const watermarkChoice = req.body.watermark_choice === 'custom' ? 'custom' : 'site';
   let customWatermarkPath = '';
+  let customWatermarkInvert = false;
   if (watermarkChoice === 'custom') {
-    if (!files.watermark || !files.watermark[0]) {
-      req.session.flash = 'Upload your watermark image, or choose the site watermark instead.';
-      return res.redirect(backUrl);
+    if (files.watermark && files.watermark[0]) {
+      customWatermarkPath = path.relative(config.assetDir, files.watermark[0].path);
+    } else {
+      const builder = require('./watermarkBuilder');
+      if (builder.defaultMarkExists(req.user.id)) {
+        customWatermarkPath = builder.defaultMarkRel(req.user.id);
+        customWatermarkInvert = true;
+      } else {
+        req.session.flash = 'Upload your watermark image, or build a theft-resistant mark on-site first — then pick "my own watermark" with no file needed.';
+        return res.redirect(backUrl);
+      }
     }
-    customWatermarkPath = path.relative(config.assetDir, files.watermark[0].path);
   }
 
   const screen = screenText(`${title}\n${description}`);
@@ -149,6 +159,7 @@ async function handlePortfolioUpload(req, res, backUrl) {
       choice: watermarkChoice,
       customWatermarkAbs: customWatermarkPath
         ? path.join(config.assetDir, customWatermarkPath) : null,
+      customInvert: customWatermarkInvert,
     });
     await db.update('designs', id, { linework_wm_path: wmRel });
     // Explicit content: also bake a blurred public preview (watermark stays

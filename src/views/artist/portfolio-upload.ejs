@@ -28,10 +28,24 @@
   <p class="muted">Public visitors only ever see watermarked linework. <strong>The site's solid-black anti-trace marks are applied in both cases.</strong></p>
   <label><input type="radio" name="watermark_choice" value="site" checked>
     <strong>Site watermark</strong> — our standard watermark is applied automatically.</label>
-  <label><input type="radio" name="watermark_choice" value="custom">
-    <strong>My own watermark</strong> — upload your watermark image below (works best with a dark background).</label>
-  <label for="watermark">Your watermark image (only needed if you chose your own above — JPG/PNG/WebP, max 15 MB)</label>
+  <label><input type="radio" name="watermark_choice" value="custom" id="wm-custom">
+    <strong>My own watermark</strong> — upload your watermark image below, or leave it blank to use the mark you built on-site.</label>
+  <div id="wm-warn" class="card" style="display:none;border:2px solid #b3541e">
+    <strong>Warning:</strong> basic see-through marks or light colors can be cleaned off — then your art can be traced or stolen with no pay to you. For real protection, <a href="/artist/watermark-builder"><strong>build your mark on-site</strong></a>: signature + studio name, dark colors, multiple overlapping lines. The site's solid-black anti-trace marks are applied either way.
+  </div>
+  <label for="watermark">Your watermark image (only needed if you chose your own above <em>and</em> haven't built one on-site — JPG/PNG/WebP, max 15 MB)</label>
   <input type="file" id="watermark" name="watermark" accept="image/jpeg,image/png,image/webp">
+  <script>
+  (function () {
+    var radio = document.getElementById('wm-custom');
+    var warn = document.getElementById('wm-warn');
+    function sync() { warn.style.display = radio.checked ? '' : 'none'; }
+    document.querySelectorAll('input[name="watermark_choice"]').forEach(function (r) {
+      r.addEventListener('change', sync);
+    });
+    sync();
+  })();
+  </script>
 
   <h2>Content rating</h2>
   <p class="muted">Rate your piece honestly. Linework-only pieces are fine. Nudity is allowed with a watermark. Sexual acts or highly offensive content show a blurred preview (age-verified users may opt in to view them unblurred). Hateful/racist content is held for review by an administrator.</p>

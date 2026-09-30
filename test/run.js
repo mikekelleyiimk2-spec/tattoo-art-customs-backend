@@ -1672,6 +1672,35 @@ async function main() {
   fs.mkdirSync(wmDstDir, { recursive: true });
   for (const f of fs.readdirSync(wmSrcDir)) fs.copyFileSync(path.join(wmSrcDir, f), path.join(wmDstDir, f));
 
+  // Density-aware randomized placement (owner rule 2026-09-29): marks aim
+  // at the densest linework, vary per design, stay deterministic per design.
+  const { planMarkPositions, lineDensityGrid } = require('../src/lib/watermark');
+  const denseSvg = `<svg width="800" height="800"><rect width="800" height="800" fill="white"/>` +
+    `<circle cx="150" cy="150" r="30" fill="none" stroke="black" stroke-width="4"/>` +
+    Array.from({ length: 40 }, (_, i) => {
+      const x1 = 420 + (i * 37) % 360, y1 = 420 + (i * 53) % 360;
+      const x2 = 420 + (i * 91) % 360, y2 = 420 + (i * 67) % 360;
+      return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="black" stroke-width="8"/>`;
+    }).join('') + `</svg>`;
+  await sharp(Buffer.from(denseSvg)).jpeg().toFile(path.join(wmTestDir, 'denselw.jpg'));
+  const dgrid = await lineDensityGrid(path.join(wmTestDir, 'denselw.jpg'));
+  const pA1 = planMarkPositions({ designId: 'densA', grid: dgrid });
+  const pA2 = planMarkPositions({ designId: 'densA', grid: dgrid });
+  ok(pA1.length === 2, 'two anti-trace marks planned');
+  ok(JSON.stringify(pA1) === JSON.stringify(pA2), 'mark placement is deterministic per design');
+  const pB = planMarkPositions({ designId: 'densB', grid: dgrid });
+  ok(JSON.stringify(pA1) !== JSON.stringify(pB), 'mark placement varies across designs');
+  ok(pA1[0].x > 0.3 && pA1[0].y > 0.3, 'first mark targets the densest linework region');
+  const psep = Math.hypot(pA1[0].x - pA1[1].x, pA1[0].y - pA1[1].y);
+  ok(psep >= 0.25, 'marks keep minimum separation');
+  // Pipeline-level: same design -> byte-identical output; new design -> different.
+  const dpRel1 = await applyWatermarkedLinework({ designId: 'denspipe1', lineworkAbs: path.join(wmTestDir, 'denselw.jpg'), choice: 'site' });
+  const dpBuf1 = fs.readFileSync(path.join(process.env.ASSET_DIR, dpRel1));
+  const dpRel2 = await applyWatermarkedLinework({ designId: 'denspipe1', lineworkAbs: path.join(wmTestDir, 'denselw.jpg'), choice: 'site' });
+  ok(dpBuf1.equals(fs.readFileSync(path.join(process.env.ASSET_DIR, dpRel2))), 'pipeline output is deterministic per design');
+  const dpRel3 = await applyWatermarkedLinework({ designId: 'denspipe2', lineworkAbs: path.join(wmTestDir, 'denselw.jpg'), choice: 'site' });
+  ok(!dpBuf1.equals(fs.readFileSync(path.join(process.env.ASSET_DIR, dpRel3))), 'pipeline output varies across designs');
+
   // multipart POST helper (fresh jar per caller)
   async function mpost(p, fields, files, jarObj) {
     const form = new FormData();
@@ -1754,6 +1783,48 @@ async function main() {
   ok(grow && grow.listing_scope === 'gallery' && grow.listing_type === 'predesign', 'pre-design opt-in is gallery scoped');
   ok(grow.style === 'animals' && JSON.parse(grow.categories).includes('animals'), 'pre-design category fixed at upload');
   ok(grow.watermark_choice === 'custom' && grow.custom_watermark_path, 'custom watermark choice + file stored');
+
+  // On-site watermark builder (owner rule 2026-09-29): only strong marks.
+  const wbuilder = require('../src/lib/watermarkBuilder');
+  r = await artreq('GET', '/artist/watermark-builder');
+  ok(r.status === 200 && r.text.includes('Build your watermark'), 'builder page renders for subscribed artist');
+  r = await artreq('POST', '/artist/watermark-builder', { body: { line1: 'Solo', line2: '', line3: '', color: '#000000' } });
+  ok(r.status === 200 && r.text.includes('at least 2 lines'), 'builder refuses a single-line mark');
+  r = await artreq('POST', '/artist/watermark-builder', { body: { line1: 'Banner Artist', line2: 'Test Studio', line3: '', color: '#ffffff' } });
+  ok(r.status === 200 && r.text.includes('not allowed'), 'builder refuses off-palette light colors');
+  r = await artreq('POST', '/artist/watermark-builder', { body: { line1: 'Banner Artist', line2: 'Test Studio', line3: '', color: '#000000' } });
+  ok(r.status === 302 && r.location === '/artist/watermark-builder', 'valid builder submission saves and redirects');
+  const bMarkAbs = path.join(process.env.ASSET_DIR, 'watermarks', 'custom', `${bannerArtistId}.png`);
+  ok(fs.existsSync(bMarkAbs), 'builder mark saved as the artist default');
+  const bCov = await wbuilder.inkCoverage(fs.readFileSync(bMarkAbs));
+  ok(bCov >= 0.10, 'saved mark clears the ink-coverage minimum');
+  r = await artreq('GET', '/artist/watermark-builder/preview');
+  ok(r.status === 200, 'artist can preview their own mark');
+  r = await unsubreq('GET', '/artist/watermark-builder', {});
+  ok(r.status === 302 && (r.location || '').includes('/membership'), 'unsubscribed artist blocked from builder');
+
+  // Upload form warns about weak marks and links the builder.
+  r = await artreq('GET', '/artist/portfolio/upload');
+  ok(r.text.includes('/artist/watermark-builder'), 'upload form links the on-site watermark builder');
+  ok(r.text.includes('see-through'), 'upload form warns against weak see-through marks');
+
+  // 'My own watermark' with no file falls back to the on-site built mark.
+  r = await mpost('/artist/portfolio/upload',
+    { title: 'Builder Default WM', description: '', style: 'animals', listing_type: 'custom', watermark_choice: 'custom' },
+    { color: { buffer: colorBuf, filename: 'c.jpg', type: 'image/jpeg' }, linework: { buffer: lwBuf, filename: 'l.jpg', type: 'image/jpeg' } },
+    artJar);
+  ok(r.status === 302 && r.location === '/artist/portfolio', 'custom choice with no file uses the built mark');
+  const brow = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('Builder Default WM');
+  ok(brow && brow.custom_watermark_path === `watermarks/custom/${bannerArtistId}.png`, 'builder default mark recorded on the design');
+  ok(brow.linework_wm_path && fs.existsSync(path.join(process.env.ASSET_DIR, brow.linework_wm_path)), 'watermarked linework generated with the builder mark');
+  // No file and no built mark -> bounced back to the form, nothing stored.
+  fs.rmSync(bMarkAbs, { force: true });
+  r = await mpost('/artist/portfolio/upload',
+    { title: 'No Mark Upload', description: '', style: 'animals', listing_type: 'custom', watermark_choice: 'custom' },
+    { color: { buffer: colorBuf, filename: 'c.jpg', type: 'image/jpeg' }, linework: { buffer: lwBuf, filename: 'l.jpg', type: 'image/jpeg' } },
+    artJar);
+  ok(r.status === 302 && r.location === '/artist/portfolio/upload', 'custom choice with no mark and no file bounces to the form');
+  ok(!sdb.prepare('SELECT id FROM designs WHERE title = ?').get('No Mark Upload'), 'no design row created without a watermark source');
 
   // Approve both via admin.
   r = await areq('POST', `/admin/designs/${prow.id}/approve`);

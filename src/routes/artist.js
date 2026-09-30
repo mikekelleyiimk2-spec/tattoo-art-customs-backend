@@ -77,6 +77,57 @@ router.post('/portfolio/upload', formLimiter, (req, res, next) => {
   await handlePortfolioUpload(req, res, '/artist/portfolio/upload');
 });
 
+// On-site watermark builder (owner rule 2026-09-29): the builder only
+// produces dense dark marks — protection is not opt-in, and it refuses to
+// make weak ones. The saved mark becomes the artist's default custom
+// watermark for uploads where they pick "my own watermark".
+router.get('/watermark-builder', async (req, res) => {
+  const builder = require('../lib/watermarkBuilder');
+  res.render('artist/watermark-builder', {
+    title: 'Build your watermark — Tattoo Art Customs',
+    palette: builder.DARK_PALETTE,
+    hasMark: builder.defaultMarkExists(req.user.id),
+    error: null,
+    values: { line1: '', line2: '', line3: '', color: builder.DARK_PALETTE[0].hex },
+    metaDescription: '',
+  });
+});
+
+router.post('/watermark-builder', formLimiter, checkHoneypot, async (req, res) => {
+  const builder = require('../lib/watermarkBuilder');
+  const values = {
+    line1: String(req.body.line1 || ''),
+    line2: String(req.body.line2 || ''),
+    line3: String(req.body.line3 || ''),
+    color: String(req.body.color || ''),
+  };
+  try {
+    await builder.buildAndSave({
+      artistId: req.user.id,
+      lines: [values.line1, values.line2, values.line3],
+      color: values.color,
+    });
+    req.session.flash = 'Your theft-resistant mark is saved — it will be used automatically whenever you choose "my own watermark" on an upload.';
+    return res.redirect('/artist/watermark-builder');
+  } catch (e) {
+    res.render('artist/watermark-builder', {
+      title: 'Build your watermark — Tattoo Art Customs',
+      palette: builder.DARK_PALETTE,
+      hasMark: builder.defaultMarkExists(req.user.id),
+      error: e.message,
+      values,
+      metaDescription: '',
+    });
+  }
+});
+
+// The artist's own saved mark (private to them — never mounted publicly).
+router.get('/watermark-builder/preview', async (req, res) => {
+  const builder = require('../lib/watermarkBuilder');
+  if (!builder.defaultMarkExists(req.user.id)) return res.status(404).send('No mark built yet.');
+  res.type('png').send(fs.readFileSync(builder.defaultMarkAbs(req.user.id)));
+});
+
 router.get('/portfolio/:id/edit', async (req, res) => {
   const design = await db.get('SELECT * FROM designs WHERE id = ? AND artist_id = ?', [req.params.id, req.user.id]);
   if (!design) return res.status(404).render('error', { title: 'Not found', message: 'That piece is not in your portfolio.' });

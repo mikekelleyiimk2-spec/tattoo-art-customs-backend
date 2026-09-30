@@ -1,0 +1,38 @@
+<h1>Build your watermark</h1>
+<p class="muted">Your public gallery images only ever show watermarked linework — never your clean art. This builder makes you a mark that is genuinely hard to steal: <strong>dark colors only, large text, several overlapping angles</strong>, so it crosses your linework instead of floating over it. Basic see-through or light-colored marks can be cleaned off and your art traced without you being paid — this builder won't make one of those.</p>
+
+<% if (typeof error !== 'undefined' && error) { %>
+<p class="card" style="border:2px solid #b3402e"><strong>Couldn't build that mark:</strong> <%= error %></p>
+<% } %>
+
+<% if (typeof hasMark !== 'undefined' && hasMark) { %>
+<div class="card">
+  <p><strong>Your current mark:</strong></p>
+  <p><img src="/artist/watermark-builder/preview" alt="Your current watermark mark" style="max-width:100%;background:#eee"></p>
+  <p class="muted">Building a new one replaces it. Your existing uploads keep the watermark they were published with.</p>
+</div>
+<% } %>
+
+<form method="post" action="/artist/watermark-builder" class="form">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <label for="line1">Line 1 — your signature or artist name (required)</label>
+  <input type="text" id="line1" name="line1" maxlength="48" required value="<%= values.line1 %>">
+  <label for="line2">Line 2 — your studio name (required)</label>
+  <input type="text" id="line2" name="line2" maxlength="48" required value="<%= values.line2 %>">
+  <label for="line3">Line 3 — optional (city, tagline, "est." year…)</label>
+  <input type="text" id="line3" name="line3" maxlength="48" value="<%= values.line3 %>">
+
+  <h2>Ink color — dark only</h2>
+  <p class="muted">Light colors wash out and get cleaned off. Pick a dark ink:</p>
+  <% palette.forEach(function(p) { %>
+  <label style="display:inline-flex;align-items:center;gap:6px;margin:0 12px 8px 0">
+    <input type="radio" name="color" value="<%= p.hex %>" <%= values.color === p.hex ? 'checked' : '' %> required>
+    <span style="display:inline-block;width:22px;height:22px;border-radius:4px;background:<%= p.hex %>;border:1px solid #999"></span>
+    <%= p.name %>
+  </label>
+  <% }); %>
+
+  <p class="muted">Your mark is stamped large, at several overlapping angles, across the whole piece — and the site's solid-black anti-trace marks are still applied on top of every public image.</p>
+  <p><button class="btn" type="submit">Build my mark</button></p>
+</form>
+<p><a href="/artist/portfolio/upload">Back to upload</a></p>
