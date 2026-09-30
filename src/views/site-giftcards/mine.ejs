@@ -1,0 +1,16 @@
+<h1>My Gift Cards</h1>
+<% if (!cards.length) { %><p class="muted">You haven't bought any gift cards yet. <a href="/gift-cards/buy">Buy one</a>.</p><% } %>
+<% for (const c of cards) { %>
+<div class="card">
+  <p><strong><%= money(c.amount_cents) %></strong>
+    <span class="badge"><%= c.status %></span>
+    <% if (c.ship_pending && !c.shipped_at) { %><span class="badge">mailing soon</span><% } %>
+    <% if (c.shipped_at) { %><span class="badge ok">mailed</span><% } %>
+  </p>
+  <p class="muted">Bought <%= new Date(c.created_at).toLocaleDateString() %> · paid <%= money(c.total_paid_cents) %> (incl. <%= money(c.fee_cents) %> fee<% if (c.shipping_cents > 0) { %> + <%= money(c.shipping_cents) %> shipping<% } %>)</p>
+  <% if (c.recipient_email) { %><p class="muted">Recipient: <%= c.recipient_email %></p><% } %>
+  <% if (c.status === 'active') { %><p>Code: <strong style="letter-spacing:2px"><%= c.code %></strong></p><% } %>
+  <% if (c.status === 'pending') { %><p class="muted">Awaiting payment confirmation.</p><% } %>
+</div>
+<% } %>
+<p><a class="btn" href="/gift-cards/buy">Buy a gift card</a></p>

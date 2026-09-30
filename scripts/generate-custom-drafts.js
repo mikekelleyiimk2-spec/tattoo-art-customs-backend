@@ -27,14 +27,15 @@ function arg(name) {
 
 async function listNeedingDrafts() {
   const rows = await db.all(
-    `SELECT o.id, o.custom_brief, o.delivery_due, u.email AS buyer_email
+    `SELECT o.id, o.custom_brief, o.delivery_due, o.rush_fee_cents, u.email AS buyer_email
      FROM orders o JOIN users u ON u.id = o.buyer_id
      WHERE o.order_type = 'custom' AND o.status = 'paid' AND o.custom_status = 'needs_drafts'
-     ORDER BY o.delivery_due ASC`);
+     ORDER BY (o.rush_fee_cents > 0) DESC, o.delivery_due ASC`);
   if (!rows.length) { console.log('No custom orders need drafts.'); return; }
   for (const r of rows) {
     const leftH = r.delivery_due ? Math.round((r.delivery_due - Date.now()) / 3600000) : '?';
-    console.log(`${r.id}  SLA ${leftH}h left  buyer ${r.buyer_email}`);
+    const rushTag = (r.rush_fee_cents || 0) > 0 ? '  ⚡RUSH' : '';
+    console.log(`${r.id}  SLA ${leftH}h left${rushTag}  buyer ${r.buyer_email}`);
     console.log(`  brief: ${(r.custom_brief || '').slice(0, 160)}`);
   }
 }

@@ -1011,6 +1011,268 @@ async function main() {
       'eligible subscriber keeps the discount before either cap');
   }
 
+  // --- Rush customs (owner rule 2026-09-30): +$30 for 24-hour delivery ---
+  // The $30 rush fee splits 60/40: $18 to the fulfilling designer/admin as
+  // the rush incentive, $12 to site overhead. Standard orders stay 48h.
+  {
+    const pricing = require('../src/lib/pricing');
+    const comm = require('../src/lib/commissions');
+    const credits = require('../src/lib/credits');
+    ok(pricing.RUSH_FEE_CENTS === 3000 && pricing.RUSH_DESIGNER_CENTS === 1800 && pricing.RUSH_SITE_CENTS === 1200,
+      'rush constants: $30 fee = $18 designer incentive + $12 site overhead');
+    ok(pricing.RUSH_SLA_HOURS === 24 && pricing.STANDARD_SLA_HOURS === 48, 'rush SLA 24h, standard SLA 48h');
+
+    const rreq = jarredReq();
+    await rreq('POST', '/signup', { body: { display_name: 'Rush Buyer', email: 'rushbuyer@test.local', password: 'password123' }, follow: false });
+    const rushBuyerId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('rushbuyer@test.local').id;
+
+    // Checkout page discloses the rush option and the $30 fee.
+    let r = await rreq('GET', '/orders/custom');
+    ok(r.status === 200 && r.text.includes('Rush my design') && r.text.includes('$30.00') && r.text.includes('24-hour'),
+      'custom checkout page discloses the $30 rush option with 24-hour delivery');
+
+    // POST with rush=1: order stores the rush fee, fee-on-(deposit+rush), 24h due.
+    r = await rreq('POST', '/orders/custom', { body: { brief: 'Rush custom test brief: a lightning bolt through a rose, forearm sized', rush: '1' }, follow: false });
+    ok(r.status === 302 && (r.location || '').includes('/orders/manual/'), 'rush custom order created (manual-pay fallback)');
+    const rushOrdId = (r.location || '').split('/orders/manual/')[1];
+    const ro = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(rushOrdId);
+    ok(ro && ro.rush_fee_cents === 3000, 'rush order stores the $30 rush fee');
+    ok(ro.fee_cents === pricing.processingFeeCents(ro.deposit_cents + 3000),
+      'processing fee computed on deposit + rush (passed through, never absorbed)');
+    const dueIn = ro.delivery_due - ro.created_at;
+    ok(dueIn > 23.9 * 3600 * 1000 && dueIn <= 24 * 3600 * 1000 + 60000, 'rush order SLA is 24 hours');
+
+    // Standard order: no rush fee, 48h SLA.
+    r = await rreq('POST', '/orders/custom', { body: { brief: 'Standard custom test brief: a calm ocean wave, shoulder sized' }, follow: false });
+    const stdOrdId = (r.location || '').split('/orders/manual/')[1];
+    const so = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(stdOrdId);
+    ok(so && so.rush_fee_cents === 0, 'standard order has no rush fee');
+    const stdDue = so.delivery_due - so.created_at;
+    ok(stdDue > 47.9 * 3600 * 1000 && stdDue <= 48 * 3600 * 1000 + 60000, 'standard order SLA stays 48 hours');
+
+    // Manual-pay page total includes the rush fee.
+    r = await rreq('GET', `/orders/manual/${rushOrdId}`);
+    const rushTotal = ro.deposit_cents + 3000 + ro.fee_cents;
+    ok(r.status === 200 && r.text.includes('$' + (rushTotal / 100).toFixed(2)),
+      'manual-pay page shows deposit + rush + fee as the exact total');
+
+    // Commission base excludes the rush fee: net 10000-399 with a $30 rush
+    // books 6601 to the base splits, and the ledger sums exactly to net.
+    const baseId = 'ord-rush-base-1';
+    sdb.prepare(`INSERT INTO orders (id, buyer_id, order_type, amount_cents, deposit_cents, rush_fee_cents,
+      fee_cents, amount_paid_cents, status, payment_method, custom_brief, custom_status, created_at)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(baseId, rushBuyerId, 'custom', 15000, 7500, 3000,
+      399, 10000, 'paid', 'paypal', 'base exclusion test brief, long enough here', 'new', Date.now());
+    await comm.recordSaleCommissions(sdb.prepare('SELECT * FROM orders WHERE id = ?').get(baseId));
+    const baseSum = sdb.prepare(`SELECT COALESCE(SUM(amount_cents),0) AS t FROM commission_ledger
+      WHERE order_id = ? AND (commission_type IS NULL OR commission_type != 'rush_fee')`).get(baseId).t;
+    ok(baseSum === 6601, 'sale commissions exclude the rush fee (net 9601 - 3000 rush = 6601 base)');
+
+    // Payout-eligible designer for the rush incentive path.
+    const rushDesId = await db.insert('users', {
+      email: 'rushdes@test.local', password_hash: 'x', role: 'design_artist', display_name: 'Rush Designer',
+    });
+    const desPlanId = sdb.prepare("SELECT id FROM plans WHERE slug = 'design_artist'").get().id;
+    await db.insert('subscriptions', { user_id: rushDesId, plan_id: desPlanId, status: 'active', current_period_end: Date.now() + 86400000 });
+    const { upsertProfile } = require('../src/lib/profiles');
+    await upsertProfile('artist_profiles', rushDesId, { payout_paypal_email: 'rushdes@pay.test' });
+    ok(await comm.recipientEligible(rushDesId, 'design_artist'), 'rush designer is payout-eligible');
+
+    // Approve the rush order (stubbed PayPal capture) with a requested
+    // artist: routes to the artist and books the 60/40 rush split.
+    sdb.prepare("UPDATE orders SET requested_artist_id = ?, paypal_order_id = ? WHERE id = ?")
+      .run(rushDesId, 'pp-rush-' + Date.now(), rushOrdId);
+    r = await rreq('GET', `/orders/approve/${rushOrdId}`, { follow: false });
+    ok(r.status === 302 && (r.location || '').includes(`/orders/${rushOrdId}`), 'rush order approved via stubbed capture');
+    const paid = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(rushOrdId);
+    ok(paid.status === 'paid' && paid.custom_status === 'routed_to_artist', 'rush order paid and routed to the requested artist');
+    const rushRows = sdb.prepare(`SELECT recipient_type, recipient_id, amount_cents, status FROM commission_ledger
+      WHERE order_id = ? AND commission_type = 'rush_fee'`).all(rushOrdId);
+    const desRow = rushRows.find((x) => x.recipient_type === 'artist');
+    const siteRow = rushRows.find((x) => x.recipient_type === 'site');
+    ok(rushRows.length === 2, 'exactly two rush-fee ledger rows');
+    ok(desRow && desRow.amount_cents === 1800 && desRow.status === 'payable' && desRow.recipient_id === rushDesId,
+      'rush incentive $18 is payable to the fulfilling designer');
+    ok(siteRow && siteRow.amount_cents === 1200 && siteRow.status === 'site_kept',
+      'rush overhead $12 goes to the site');
+
+    // Idempotent: a second split attempt books nothing new.
+    const again = await comm.recordRushFeeSplit(sdb.prepare('SELECT * FROM orders WHERE id = ?').get(rushOrdId), rushDesId);
+    ok(again === null && sdb.prepare(`SELECT COUNT(*) AS n FROM commission_ledger
+      WHERE order_id = ? AND commission_type = 'rush_fee'`).get(rushOrdId).n === 2,
+      'rush split is idempotent (no duplicate rows)');
+
+    // Pipeline fulfillment (no requested artist): the $18 incentive stays
+    // with the site; the draft queue lists rush orders first.
+    const pipeId = 'ord-rush-pipe-1';
+    sdb.prepare(`INSERT INTO orders (id, buyer_id, order_type, amount_cents, deposit_cents, rush_fee_cents,
+      fee_cents, amount_paid_cents, status, payment_method, custom_brief, custom_status, delivery_due, created_at)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(pipeId, rushBuyerId, 'custom', 15000, 7500, 3000,
+      417, 10917, 'paid', 'paypal', 'pipeline rush brief: a compass rose, chest sized', 'new',
+      Date.now() + 24 * 3600 * 1000, Date.now());
+    const { routeCustomOrder } = require('../src/lib/customFulfillment');
+    const routed = await routeCustomOrder(sdb.prepare('SELECT * FROM orders WHERE id = ?').get(pipeId));
+    ok(routed.custom_status === 'needs_drafts', 'unrequested rush order enters the draft pipeline');
+    const pipeRows = sdb.prepare(`SELECT recipient_type, recipient_id, amount_cents, status FROM commission_ledger
+      WHERE order_id = ? AND commission_type = 'rush_fee'`).all(pipeId);
+    ok(pipeRows.length === 2 && pipeRows.every((x) => x.status === 'site_kept') &&
+      pipeRows.reduce((a, x) => a + x.amount_cents, 0) === 3000,
+      'pipeline rush: full $30 stays with the site (incentive funds the in-house team)');
+    const queue = await db.all(
+      `SELECT id, rush_fee_cents FROM orders WHERE order_type = 'custom' AND status = 'paid' AND custom_status = 'needs_drafts'
+       ORDER BY (rush_fee_cents > 0) DESC, delivery_due ASC`);
+    ok(queue.length > 0 && (queue[0].rush_fee_cents || 0) > 0, 'draft queue orders rush orders first');
+
+    // Site credit pays deposit + rush together.
+    await credits.addCredit({ userId: rushBuyerId, amountCents: 20000, kind: 'topup', note: 'rush credit test' });
+    r = await rreq('POST', '/orders/custom', { body: { brief: 'Credit rush brief: a phoenix rising, full back sized', rush: '1', use_credit: '1' }, follow: false });
+    ok(r.status === 302 && (r.location || '').includes('/orders/'), 'rush order paid with site credit');
+    const credOrdId = (r.location || '').split('/orders/')[1];
+    const co = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(credOrdId);
+    ok(co && co.status === 'paid' && co.amount_paid_cents === co.deposit_cents + 3000,
+      'site credit charge = deposit + $30 rush fee');
+    const bal = await credits.getCreditBalance(rushBuyerId);
+    ok(bal === 20000 - (co.deposit_cents + 3000), 'credit balance reduced by deposit + rush');
+  }
+
+  // --- Site gift cards (owner rule 2026-09-30): $25-$150 denominations ---
+  // $1.95 flat purchase fee, free email delivery, +$4.95 physical mail
+  // shipping, processing passed through to the buyer (never absorbed).
+  // Redeeming converts the card to site credit; credit buys memberships.
+  {
+    const sgc = require('../src/lib/siteGiftCards');
+    const { getCreditBalance } = require('../src/lib/credits');
+
+    // Quote math: amount + $1.95 fee (+ $4.95 physical shipping), then the
+    // processing-fee pass-through on the whole charge.
+    const q1 = sgc.siteGiftCardQuote(5000, false);
+    ok(q1.fee === 195, 'gift quote: $1.95 flat purchase fee');
+    ok(q1.shipping === 0, 'gift quote: email delivery is free');
+    ok(q1.total === 5426, 'gift quote: $50 email card = $54.26 total');
+    const q2 = sgc.siteGiftCardQuote(10000, true);
+    ok(q2.fee === 195 && q2.shipping === 495, 'gift quote: $100 mail card has fee + $4.95 shipping');
+    ok(q2.total === 11113, 'gift quote: $100 mail card = $111.13 total');
+    let threw = false;
+    try { sgc.siteGiftCardQuote(6000, false); } catch (e) { threw = true; }
+    ok(threw, 'gift quote: non-denomination amount rejected');
+
+    const greq = jarredReq();
+    await greq('POST', '/signup', { body: { display_name: 'Gift Buyer', email: 'giftbuyer@test.local', password: 'password123' }, follow: false });
+    const giftBuyerId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('giftbuyer@test.local').id;
+
+    // Buy page discloses fee, shipping, and denominations.
+    let r = await greq('GET', '/gift-cards/buy');
+    ok(r.status === 200 && r.text.includes('$1.95') && r.text.includes('$4.95') && r.text.includes('$25'),
+      'gift buy page discloses the $1.95 fee, $4.95 mail shipping, and denominations');
+
+    // POST buy: pending row + redirect to PayPal (stub) approval.
+    r = await greq('POST', '/gift-cards/buy', { body: { amount_cents: '5000', delivery: 'email', recipient_email: 'friend@test.local', recipient_name: 'Friend' }, follow: false });
+    ok(r.status === 302 && (r.location || '').includes('paypal.test/approve/stub'),
+      'gift buy redirects to PayPal approval (stub)');
+    const token = new URL(r.location).searchParams.get('token');
+    ok(!!token, 'gift buy approval URL carries the PayPal order token');
+    const pend = sdb.prepare("SELECT id, status, total_paid_cents, recipient_email FROM site_gift_cards WHERE purchaser_user_id = ? ORDER BY id DESC LIMIT 1").get(giftBuyerId);
+    ok(pend && pend.status === 'pending' && pend.total_paid_cents === 5426 && pend.recipient_email === 'friend@test.local',
+      'gift buy stores a pending card with the exact quoted total');
+
+    // Capture (stub): activates, issues an unguessable code, renders the code.
+    r = await greq('GET', `/gift-cards/capture/${pend.id}?token=${token}`);
+    ok(r.status === 200, 'gift capture renders the success page');
+    const act = sdb.prepare('SELECT * FROM site_gift_cards WHERE id = ?').get(pend.id);
+    ok(act.status === 'active' && act.amount_cents === 5000 && /^[A-Z2-9]{12}$/.test(act.code || ''),
+      'gift capture activates the card with an unguessable XXXX-XXXX-XXXX code');
+    ok(r.text.includes(act.code), 'success page displays the gift card code');
+
+    // Double capture: idempotent (no second activation, code unchanged).
+    r = await greq('GET', `/gift-cards/capture/${pend.id}?token=${token}`);
+    const still = sdb.prepare('SELECT status, code FROM site_gift_cards WHERE id = ?').get(pend.id);
+    ok(r.status === 200 && still.status === 'active' && still.code === act.code, 'gift double-capture is idempotent');
+
+    // Redeem: converts the card to site credit.
+    r = await greq('POST', '/gift-cards/redeem', { body: { code: act.code }, follow: false });
+    ok(r.status === 302 && (r.location || '').includes('/account'), 'gift redeem redirects to the account page');
+    ok(await getCreditBalance(giftBuyerId) === 5000, 'gift redeem adds the full $50 to site credit');
+    ok(sdb.prepare('SELECT status FROM site_gift_cards WHERE id = ?').get(pend.id).status === 'redeemed',
+      'gift card marked redeemed after use');
+
+    // Double redeem and unknown codes are rejected.
+    r = await greq('POST', '/gift-cards/redeem', { body: { code: act.code }, follow: false });
+    ok(r.status === 302 && (await getCreditBalance(giftBuyerId)) === 5000, 'gift double-redeem rejected (balance unchanged)');
+    r = await greq('POST', '/gift-cards/redeem', { body: { code: 'ZZZZ-1111-AAAA' }, follow: false });
+    ok(r.status === 302 && (await getCreditBalance(giftBuyerId)) === 5000, 'gift unknown code rejected');
+
+    // Expired card rejected.
+    await db.insert('site_gift_cards', {
+      purchaser_user_id: giftBuyerId, amount_cents: 2500, fee_cents: 195, shipping_cents: 0,
+      total_paid_cents: 2794, status: 'active', code: 'EXP1-RED2-EMPT',
+      expires_at: Date.now() - 1000, created_at: db.now(),
+    });
+    r = await greq('POST', '/gift-cards/redeem', { body: { code: 'EXP1-RED2-EMPT' }, follow: false });
+    ok(r.status === 302 && (await getCreditBalance(giftBuyerId)) === 5000,
+      'gift expired code rejected');
+
+    // Physical mail card: +$4.95 shipping, admin unshipped queue + ship button.
+    r = await greq('POST', '/gift-cards/buy', { body: { amount_cents: '10000', delivery: 'mail', recipient_name: 'Mail Friend', ship_address: '1 Test St, Abbeville LA 70510' }, follow: false });
+    ok(r.status === 302, 'gift mail-card buy redirects to approval');
+    const mailToken = new URL(r.location).searchParams.get('token');
+    const mailPend = sdb.prepare("SELECT id, ship_pending, total_paid_cents FROM site_gift_cards WHERE purchaser_user_id = ? AND recipient_name = 'Mail Friend'").get(giftBuyerId);
+    ok(mailPend.ship_pending === 1 && mailPend.total_paid_cents === 11113, 'mail card stores ship_pending and the exact $111.13 total');
+    await greq('GET', `/gift-cards/capture/${mailPend.id}?token=${mailToken}`);
+    ok(sdb.prepare('SELECT status FROM site_gift_cards WHERE id = ?').get(mailPend.id).status === 'active',
+      'mail card activates on capture');
+    const areq = jarredReq();
+    await areq('POST', '/login', { body: { email: 'admin@test.local', password: 'AdminTest123!' }, follow: false });
+    r = await areq('GET', '/admin/site-gift-cards?filter=unshipped');
+    ok(r.status === 200 && r.text.includes('Mail Friend'), 'admin unshipped queue lists the mail card');
+    r = await areq('POST', `/admin/site-gift-cards/${mailPend.id}/ship`, { body: { website: '' }, follow: false });
+    ok(r.status === 302 && sdb.prepare('SELECT shipped_at FROM site_gift_cards WHERE id = ?').get(mailPend.id).shipped_at > 0,
+      'admin ship marks the mail card shipped');
+
+    // Manual-payment path: pending card confirmed by admin on verified CashApp/Venmo.
+    r = await greq('POST', '/gift-cards/buy', { body: { amount_cents: '2500', delivery: 'email', recipient_email: 'manual@test.local' }, follow: false });
+    const manPend = sdb.prepare("SELECT id FROM site_gift_cards WHERE purchaser_user_id = ? AND recipient_email = 'manual@test.local'").get(giftBuyerId).id;
+    r = await greq('POST', `/gift-cards/manual/${manPend}`, { body: { method: 'cashapp', note: 'paid, cashapp ref TEST123' }, follow: false });
+    ok(r.status === 302 && (r.location || '').includes('/gift-cards/mine'), 'gift manual-pay step records the payment claim');
+    r = await areq('POST', `/admin/site-gift-cards/${manPend}/confirm`, { body: { website: '' }, follow: false });
+    const manAct = sdb.prepare('SELECT status, code, payment_method FROM site_gift_cards WHERE id = ?').get(manPend);
+    ok(r.status === 302 && manAct.status === 'active' && !!manAct.code && manAct.payment_method === 'cashapp',
+      'admin confirm activates the manual-payment card with a code');
+
+    // Mine page lists the buyer's cards.
+    r = await greq('GET', '/gift-cards/mine');
+    ok(r.status === 200 && r.text.includes('My Gift Cards'), 'gift mine page renders');
+
+    // Membership via site credit: full term, no PayPal, no auto-renewal.
+    const memPlanId = sdb.prepare("SELECT id FROM plans WHERE slug = 'customer'").get().id;
+    await require('../src/lib/credits').addCredit({ userId: giftBuyerId, amountCents: 10000, kind: 'topup', note: 'membership credit test' });
+    const before = Date.now();
+    r = await greq('POST', '/membership/credit/customer', { body: { website: '' }, follow: false });
+    ok(r.status === 302 && (r.location || '').includes('/membership'), 'membership via credit redirects back to membership');
+    const csub = sdb.prepare('SELECT * FROM subscriptions WHERE user_id = ? AND plan_id = ? ORDER BY id DESC LIMIT 1').get(giftBuyerId, memPlanId);
+    ok(csub && csub.status === 'active' && Number(csub.paid_with_credit) === 1 && !csub.paypal_subscription_id,
+      'membership via credit: active, paid_with_credit, no PayPal id (never auto-renews)');
+    const endIn = csub.current_period_end - before;
+    ok(endIn > 29 * 86400000 && endIn <= 31 * 86400000, 'membership via credit: one ~30-day term');
+    // Customer plan grants member standing via the active subscription
+    // (roles only change for design_artist / tattoo_shop plans).
+    const { hasAnyActiveSubscription } = require('../src/middleware/auth');
+    ok(await hasAnyActiveSubscription(giftBuyerId), 'membership via credit: buyer counts as an active member');
+    ok((await getCreditBalance(giftBuyerId)) === 15000 - 500, 'membership via credit: base $5.00 charged (no added fee)');
+    // Double-click: extends the existing row instead of stacking a second sub.
+    r = await greq('POST', '/membership/credit/customer', { body: { website: '' }, follow: false });
+    const subCount = sdb.prepare("SELECT COUNT(*) AS n FROM subscriptions WHERE user_id = ? AND plan_id = ? AND status = 'active'").get(giftBuyerId, memPlanId).n;
+    ok(r.status === 302 && subCount === 1, 'membership via credit: double-click extends, never stacks');
+    const csub2 = sdb.prepare('SELECT current_period_end FROM subscriptions WHERE id = ?').get(csub.id);
+    ok(csub2.current_period_end > csub.current_period_end, 'membership via credit: second payment extends the term');
+    // Broke buyer: refused.
+    await require('../src/lib/credits').addCredit({ userId: giftBuyerId, amountCents: -14000, kind: 'adjustment', note: 'drain for test' });
+    r = await greq('POST', '/membership/credit/tattoo_shop', { body: { website: '' }, follow: false });
+    ok(r.status === 302, 'membership via credit: insufficient balance refused with redirect');
+    // Plans page shows the pay-with-credit option.
+    r = await greq('GET', '/membership');
+    ok(r.status === 200 && r.text.includes('with site credit'), 'membership plans page shows the pay-with-site-credit option');
+  }
+
   // Shop purchase incentives (owner rule 2026-09-29):
   // (a) referral volume tiers — 20% base, 22% at 25+ verified referral
   // sales in the calendar month, 25% at 50+; uplift only from the owner's

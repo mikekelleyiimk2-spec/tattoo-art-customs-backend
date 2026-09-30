@@ -18,7 +18,7 @@
        var urgent = left !== null && left >= 0 && left < 24 * 3600 * 1000;
   %>
     <tr<%= overdue ? ' class="row-overdue"' : (urgent ? ' class="row-urgent"' : '') %>>
-      <td><a href="/admin/custom-orders/<%= o.id %>"><%= o.id.slice(0, 8) %></a></td>
+      <td><a href="/admin/custom-orders/<%= o.id %>"><%= o.id.slice(0, 8) %></a><% if ((o.rush_fee_cents || 0) > 0) { %> <strong class="sla-urgent">&#9889;RUSH</strong><% } %></td>
       <td><%= o.buyer_name || o.buyer_email %></td>
       <td><%= o.artist_name || '—' %></td>
       <td><span class="badge <%= o.custom_status === 'delivered' || o.custom_status === 'approved' ? 'ok' : '' %>"><%= o.custom_status.replace(/_/g, ' ') %></span></td>

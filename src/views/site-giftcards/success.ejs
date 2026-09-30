@@ -1,0 +1,11 @@
+<h1>Your gift card is ready!</h1>
+<p class="muted">Payment received — the code below was emailed<%= card.ship_pending ? ' and the physical card will be mailed' : '' %><%= card.recipient_email ? ' to ' + card.recipient_email : '' %>.</p>
+<div class="card">
+  <h2><%= money(card.amount_cents) %> gift card</h2>
+  <p>Code: <strong style="font-size:1.4em;letter-spacing:2px"><%= code %></strong></p>
+  <p class="muted">Single-use · expires <%= new Date(card.expires_at).toLocaleDateString() %></p>
+</div>
+<% if (card.ship_pending) { %>
+<p class="muted">Physical card: we'll mail it to the address you gave us.</p>
+<% } %>
+<p><a class="btn" href="/gift-cards/redeem">Redeem a code</a> <a class="btn btn-secondary" href="/gift-cards/buy">Buy another</a></p>

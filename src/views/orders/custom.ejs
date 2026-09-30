@@ -16,7 +16,24 @@
     <% }); %>
   </select>
   <% } %>
+  <% if (typeof rushFee !== 'undefined' && rushFee > 0) { %>
+  <p class="rush-box" style="border:2px solid #e8a13d;border-radius:8px;padding:10px 12px;background:#fff8ec;">
+    <label for="rush"><input type="checkbox" id="rush" name="rush" value="1"> <strong>&#9889; Rush my design &mdash; 24-hour delivery (+<%= money(rushFee) %>)</strong></label><br>
+    <span class="muted">Add a <%= money(rushFee) %> rush fee to your deposit (<%= money(rushDepositTotal) %> total today, processing fee included). Your design jumps to the front of the line and is delivered within <strong>24 hours</strong> instead of 48. $18 of the fee goes straight to your designer as a rush incentive.</span>
+  </p>
+  <script>
+  (function () {
+    var box = document.getElementById('rush');
+    var btn = document.getElementById('custom-submit-btn');
+    if (!box || !btn) return;
+    var std = btn.textContent;
+    box.addEventListener('change', function () {
+      btn.textContent = box.checked ? 'Pay <%= money(rushDepositTotal) %> deposit (rush)' : std;
+    });
+  })();
+  </script>
+  <% } %>
   <p><label><input type="checkbox" name="use_credit" value="1"> Pay the deposit with my site credit</label></p>
-  <p><button class="btn" type="submit">Pay <%= money(depositTotal) %> deposit</button></p>
+  <p><button class="btn" id="custom-submit-btn" type="submit">Pay <%= money(depositTotal) %> deposit</button></p>
 </form>
 <p class="muted">All sales are final. Prefer to pay another way? Place the request, then choose manual payment (CashApp/Venmo) on the order page.</p>

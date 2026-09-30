@@ -1,0 +1,9 @@
+<h1>Redeem a Gift Card</h1>
+<p class="muted">Enter your gift card code — the full value becomes <strong>site credit</strong> you can spend on premade designs, custom designs, and memberships. Codes are single-use.</p>
+<form method="post" action="/gift-cards/redeem" class="form">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <label for="code">Gift card code</label>
+  <input type="text" id="code" name="code" required maxlength="32" autocomplete="off" placeholder="Your 12-character code" style="text-transform:uppercase">
+  <p><button class="btn" type="submit">Redeem</button></p>
+</form>
+<p class="muted">Don't have a code? <a href="/gift-cards/buy">Buy a gift card</a>.</p>

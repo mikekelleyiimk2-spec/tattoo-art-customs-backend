@@ -198,7 +198,7 @@ router.get('/custom-orders', async (req, res) => {
             a.display_name AS artist_name
      FROM orders o JOIN users u ON u.id = o.buyer_id
      LEFT JOIN users a ON a.id = o.requested_artist_id
-     WHERE ${where} ORDER BY o.delivery_due ASC`, params);
+     WHERE ${where} ORDER BY (o.rush_fee_cents > 0) DESC, o.delivery_due ASC`, params);
   const counts = {};
   for (const s of FULFILLMENT_STATUSES) {
     const r = await db.get(
@@ -245,6 +245,44 @@ router.post('/custom-orders/:id/approve', formLimiter, checkHoneypot, async (req
   await payAdmin(req, 'custom_approve', 'custom_order', order.id);
   req.session.flash = 'Drafts approved — attach the final files from the sales log to deliver.';
   res.redirect(`/admin/custom-orders/${order.id}`);
+});
+
+// --- Site-wide gift cards (owner rule 2026-09-30) ---
+// Admin: review pending manual payments, confirm them (activates the card:
+// code issued + emailed), and track physical-mail shipments.
+router.get('/site-gift-cards', async (req, res) => {
+  const filter = String(req.query.filter || 'all');
+  let where = '1 = 1';
+  if (filter === 'unshipped') where = 'g.ship_pending = 1 AND g.shipped_at IS NULL AND g.status = \'active\'';
+  else if (filter === 'pending') where = 'g.status = \'pending\'';
+  const cards = await db.all(
+    `SELECT g.*, u.email AS purchaser_email, u.display_name AS purchaser_name
+     FROM site_gift_cards g JOIN users u ON u.id = g.purchaser_user_id
+     WHERE ${where} ORDER BY g.created_at DESC LIMIT 200`);
+  res.render('admin/site-gift-cards', {
+    title: 'Site Gift Cards — Admin', cards, filter, metaDescription: '',
+  });
+});
+
+// Confirm a manual (CashApp/Venmo) payment: activates the card — the
+// unguessable code is issued and emailed only now that payment is verified.
+router.post('/site-gift-cards/:id/confirm', formLimiter, checkHoneypot, async (req, res) => {
+  const { activateSiteGiftCardManual } = require('../lib/siteGiftCards');
+  try {
+    const card = await activateSiteGiftCardManual(req.params.id);
+    req.session.flash = `Gift card confirmed — code ${card.code} issued and emailed.`;
+  } catch (e) {
+    req.session.flash = 'Could not confirm: ' + e.message;
+  }
+  res.redirect('/admin/site-gift-cards?filter=pending');
+});
+
+// Mark a physical card as mailed.
+router.post('/site-gift-cards/:id/ship', formLimiter, checkHoneypot, async (req, res) => {
+  const { markSiteGiftCardShipped } = require('../lib/siteGiftCards');
+  await markSiteGiftCardShipped(req.params.id);
+  req.session.flash = 'Gift card marked as shipped.';
+  res.redirect('/admin/site-gift-cards?filter=unshipped');
 });
 
 router.post('/custom-orders/:id/request-changes', formLimiter, checkHoneypot, async (req, res) => {

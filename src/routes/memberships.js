@@ -36,10 +36,88 @@ router.get('/', requireLogin, async (req, res) => {
     firstMonthEligible: await firstMonthDiscountEligible(req.user.id),
     firstMonthPrice: config.pricing.firstMonth.priceCents,
     customerPlanPrice: (plans.find((x) => x.slug === 'customer') || {}).price_cents || config.pricing.plans.customer.priceCents,
+    // Site-credit price per plan: base price with no processing fee (the
+    // credit was already fee-paid when acquired). Shown on the "pay with
+    // site credit" option (gift-card redemption path, owner rule 2026-09-30).
+    creditBaseBySlug: Object.fromEntries(plans.map((p) => [p.slug, Math.round((p.price_cents - 49) / 1.035)])),
+    creditBalance: await require('../lib/credits').getCreditBalance(req.user.id),
     referralCode, redemptions, money: require('../lib/pricing').money,
     baseUrl: config.baseUrl,
     metaDescription: 'Tattoo Art Customs membership plans.',
   });
+});
+
+// Pay for one membership term with site credit (gift-card redemption path,
+// owner rule 2026-09-30). No PayPal, no recurring billing: grants a single
+// active term (current_period_end = now + interval) and never auto-renews
+// (paid_with_credit = 1). The credit was already fee-paid when it was
+// acquired (top-up or gift card purchase), so the BASE plan price is charged
+// with no added processing fee.
+router.post('/credit/:slug', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
+  const plan = await db.get('SELECT * FROM plans WHERE slug = ? AND active = 1', [req.params.slug]);
+  if (!plan) return res.status(404).render('error', { title: 'Not found', message: 'Unknown plan.' });
+  // Population-admin guard mirrors /subscribe: those accounts are never
+  // billed (their access is already covered).
+  try {
+    await require('../middleware/auth').assertNotPopulationAdmin(req.user.id);
+  } catch (e) {
+    req.session.flash = 'Population-admin accounts are never billed for memberships — your access is already covered.';
+    return res.redirect('/membership');
+  }
+  // Base price: invert the fee pass-through (priceCents = round(base*1.035)+49).
+  const pricing = require('../lib/pricing');
+  const baseCents = Math.round((plan.price_cents - 49) / 1.035);
+  const { getCreditBalance, addCredit } = require('../lib/credits');
+  const balance = await getCreditBalance(req.user.id);
+  if (balance < baseCents) {
+    req.session.flash = `Not enough site credit — one ${plan.interval} of ${plan.name} is ${pricing.money(baseCents)} and you have ${pricing.money(balance)}. Top up or redeem a gift card first.`;
+    return res.redirect('/membership');
+  }
+  // Extend an existing active sub for this plan, else create a fresh
+  // one-term subscription. Idempotent on double-click: the second POST finds
+  // the row the first one just created and extends it instead of stacking.
+  const termMs = plan.interval === 'year' ? 365 * 86400000 : 30 * 86400000;
+  const nowMs = Date.now();
+  const existing = await db.get(
+    `SELECT * FROM subscriptions WHERE user_id = ? AND plan_id = ? AND status = 'active'
+     AND (current_period_end IS NULL OR current_period_end > ?)`, [req.user.id, plan.id, nowMs]);
+  await addCredit({
+    userId: req.user.id, amountCents: -baseCents, kind: 'membership_spend', refId: plan.id,
+    note: `One ${plan.interval} of ${plan.name} paid with site credit`,
+  });
+  let subId;
+  if (existing && Number(existing.paid_with_credit) === 1) {
+    const from = Math.max(Number(existing.current_period_end) || nowMs, nowMs);
+    await db.update('subscriptions', existing.id, { current_period_end: from + termMs });
+    subId = existing.id;
+  } else if (existing) {
+    // A PayPal-billed subscription already covers this plan — don't stack.
+    req.session.flash = 'You already have an active subscription for this plan — complete or cancel it below.';
+    return res.redirect('/membership');
+  } else {
+    subId = await db.insert('subscriptions', {
+      user_id: req.user.id, plan_id: plan.id, status: 'active',
+      paypal_subscription_id: '', current_period_end: nowMs + termMs,
+      paid_with_credit: 1, created_at: db.now(),
+    });
+  }
+  const { grantPlanRole } = require('../lib/planRoles');
+  await grantPlanRole(req.user.id, plan.slug);
+  // Revenue recognition on the same meter as PayPal/Play activations.
+  try {
+    const { recordSubscriptionRevenue } = require('../lib/subscriptionRevenue');
+    await recordSubscriptionRevenue({
+      userId: req.user.id, plan: plan.slug, amountCents: baseCents,
+      provider: 'credit', providerRef: `credit-sub:${subId}:${nowMs}`,
+    });
+  } catch (e) { console.error('credit subscription revenue record failed:', e.message); }
+  try { await grantReferralReward(req.user.id, subId); } catch (e) { console.error('referral reward failed:', e.message); }
+  try {
+    await require('../lib/saleWatch').watchSubscriptionActive(
+      await db.get('SELECT * FROM subscriptions WHERE id = ?', [subId]));
+  } catch (e) { console.error('sale watch failed:', e.message); }
+  req.session.flash = `${plan.name} active for one ${plan.interval} — paid with site credit.`;
+  res.redirect('/membership');
 });
 
 // Start a PayPal subscription for a plan.

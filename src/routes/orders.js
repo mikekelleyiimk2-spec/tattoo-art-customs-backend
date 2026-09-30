@@ -110,7 +110,10 @@ router.get('/custom', requireLogin, async (req, res) => {
     depositFee: pricing.processingFeeCents(deposit),
     depositTotal: pricing.withFeeCents(deposit),
     fullTotal: pricing.withFeeCents(full),
-    metaDescription: `Order a custom tattoo design — ${pricing.money(full)}, 50% deposit, 48-hour delivery.`,
+    rushFee: pricing.RUSH_FEE_CENTS,
+    rushSlaHours: pricing.RUSH_SLA_HOURS,
+    rushDepositTotal: pricing.withFeeCents(deposit + pricing.RUSH_FEE_CENTS),
+    metaDescription: `Order a custom tattoo design — ${pricing.money(full)}, 50% deposit, 48-hour delivery (24-hour rush available).`,
   });
 });
 router.post('/custom', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
@@ -149,6 +152,12 @@ router.post('/custom', requireLogin, formLimiter, checkHoneypot, async (req, res
   }
   const full = quote.full;
   const deposit = quote.deposit;
+  // Rush option (owner rule 2026-09-30): +$30 for 24-hour delivery instead
+  // of the standard 48h. The rush fee is disclosed at checkout and included
+  // in the processing-fee pass-through.
+  const rush = req.body.rush === '1';
+  const rushFee = rush ? pricing.RUSH_FEE_CENTS : 0;
+  const depositCharge = deposit + rushFee;
   // Optional: customer requests a specific design artist.
   let requestedArtistId = null;
   const wantArtist = String(req.body.requested_artist_id || '').trim();
@@ -166,14 +175,15 @@ router.post('/custom', requireLogin, formLimiter, checkHoneypot, async (req, res
     buyer_id: req.user.id, order_type: 'custom',
     amount_cents: full,
     deposit_cents: deposit,
-    fee_cents: pricing.processingFeeCents(deposit), // fee on the deposit (the amount actually charged)
+    rush_fee_cents: rushFee,
+    fee_cents: pricing.processingFeeCents(depositCharge), // fee on the amount actually charged (deposit + rush)
     discount_applied: discountApplied,
     status: 'pending', payment_method: 'paypal',
     referral_code: refCode, referred_shop_id: await resolveShopReferral(refCode),
     custom_brief: brief,
     requested_artist_id: requestedArtistId,
     custom_status: 'new',
-    delivery_due: Date.now() + 48 * 3600 * 1000,
+    delivery_due: Date.now() + (rush ? pricing.RUSH_SLA_HOURS : pricing.STANDARD_SLA_HOURS) * 3600 * 1000,
     created_at: db.now(),
   });
   // Pay the deposit with site credit when requested.
@@ -181,7 +191,9 @@ router.post('/custom', requireLogin, formLimiter, checkHoneypot, async (req, res
     try {
       const { payOrderWithCredit } = require('../lib/credits');
       const { order: paid } = await payOrderWithCredit({ userId: req.user.id, orderId });
-      req.session.flash = 'Deposit paid with site credit — your custom request is in.';
+      req.session.flash = rush
+        ? 'Deposit paid with site credit — your RUSH custom request is in. Your design will be delivered within 24 hours.'
+        : 'Deposit paid with site credit — your custom request is in.';
       return res.redirect(`/orders/${paid.id}`);
     } catch (e) {
       req.session.flash = e.message + ' Continuing with PayPal below.';
@@ -189,8 +201,10 @@ router.post('/custom', requireLogin, formLimiter, checkHoneypot, async (req, res
   }
   try {
     const pp = await paypal.createCheckoutOrder({
-      amountCents: deposit + pricing.processingFeeCents(deposit),
-      description: 'Tattoo Art Customs — custom design deposit (50%)',
+      amountCents: depositCharge + pricing.processingFeeCents(depositCharge),
+      description: rush
+        ? 'Tattoo Art Customs — custom design deposit (50%) + 24-hour rush'
+        : 'Tattoo Art Customs — custom design deposit (50%)',
       returnUrl: `${config.baseUrl}/orders/approve/${orderId}`,
       cancelUrl: `${config.baseUrl}/orders/custom`,
     });
@@ -227,7 +241,8 @@ router.post('/manual/:orderId', requireLogin, formLimiter, checkHoneypot, async 
 router.post('/manual/:orderId/paypal', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
   const order = await db.get('SELECT * FROM orders WHERE id = ? AND buyer_id = ?', [req.params.orderId, req.user.id]);
   if (!order || order.status !== 'pending') return res.redirect('/account');
-  const total = (order.order_type === 'custom' ? order.deposit_cents : order.amount_cents) + (order.fee_cents || 0);
+  const total = (order.order_type === 'custom' ? order.deposit_cents : order.amount_cents)
+    + (order.fee_cents || 0) + (order.rush_fee_cents || 0);
   const design = order.design_id ? await db.get('SELECT title FROM designs WHERE id = ?', [order.design_id]) : null;
   try {
     const pp = await paypal.createCheckoutOrder({
@@ -266,8 +281,9 @@ router.get('/approve/:orderId', requireLogin, async (req, res) => {
     await fulfillPremadeOrder(fresh); // premades deliver instantly: token + receipt email
     if (fresh.order_type === 'custom') await sendCustomDepositReceipt(fresh); // deposit receipt (+ first-custom line item)
     try { await require('../lib/saleWatch').watchOrderPaid(fresh); } catch (e) { console.error('sale watch failed:', e.message); }
+    const orderRush = (order.rush_fee_cents || 0) > 0;
     req.session.flash = order.order_type === 'custom'
-      ? 'Deposit received — your custom request is in. Your design will be delivered within 48 hours.'
+      ? `Deposit received — your custom request is in. Your design will be delivered within ${orderRush ? '24' : '48'} hours.`
       : 'Payment received — your download is ready.';
     req.session.flash +=
       (fulfil.submitted ? ' Your print was sent to the printer automatically.' : '');

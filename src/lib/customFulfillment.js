@@ -5,7 +5,8 @@ const path = require('path');
 const db = require('../db');
 const config = require('../config');
 const { screenText } = require('./screening');
-const { recordCustomDesignerCommission } = require('./commissions');
+const { recordCustomDesignerCommission, recordRushFeeSplit } = require('./commissions');
+const pricing = require('./pricing');
 
 const FULFILLMENT_STATUSES = [
   'new', 'routed_to_artist', 'needs_drafts', 'drafts_ready',
@@ -42,22 +43,33 @@ async function routeCustomOrder(order) {
     if (artist) {
       await db.update('orders', order.id, { custom_status: 'routed_to_artist' });
       await recordCustomDesignerCommission(order, artist.id);
+      // Rush orders: book the 60/40 rush-fee split ($18 designer incentive /
+      // $12 site overhead) now that the fulfiller is known.
+      try { await recordRushFeeSplit(order, artist.id); }
+      catch (e) { console.error('rush fee split failed:', e.message); }
       await notifyArtist(order, artist);
       return { ...order, custom_status: 'routed_to_artist' };
     }
     // Requested artist is gone/invalid — fall through to the draft pipeline.
   }
   await db.update('orders', order.id, { custom_status: 'needs_drafts' });
+  // In-house pipeline fulfills: the rush incentive stays with the site (the
+  // site's own design team earns it, funding the admin-pay tiers).
+  try { await recordRushFeeSplit(order, null); }
+  catch (e) { console.error('rush fee split failed:', e.message); }
   return { ...order, custom_status: 'needs_drafts' };
 }
 
 async function notifyArtist(order, artist) {
   const buyer = await db.get('SELECT display_name, email FROM users WHERE id = ?', [order.buyer_id]);
-  const due = order.delivery_due ? new Date(order.delivery_due).toLocaleString() : 'within 48 hours';
-  const subject = `Custom order ${order.id.slice(0, 8)} assigned to you`;
+  const rush = (order.rush_fee_cents || 0) > 0;
+  const slaText = rush ? 'within 24 hours (RUSH)' : 'within 48 hours';
+  const due = order.delivery_due ? new Date(order.delivery_due).toLocaleString() : slaText;
+  const subject = `${rush ? 'RUSH \u2014 ' : ''}Custom order ${order.id.slice(0, 8)} assigned to you`;
   const body =
     `Hi ${artist.display_name || 'artist'},\n\n` +
     `A customer requested you for a custom tattoo design (deposit paid).\n\n` +
+    (rush ? `\u26a1 RUSH ORDER \u2014 $18 rush incentive included. Deliver within 24 hours.\n\n` : '') +
     `Brief: ${order.custom_brief || '(no brief)'}\n\n` +
     `Delivery due: ${due}.\n\n` +
     `Reply in this thread to coordinate with ${buyer.display_name || 'your customer'}.`;

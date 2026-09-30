@@ -39,6 +39,13 @@
       <button class="btn" type="submit">Subscribe</button>
     </form>
     <% } %>
+    <% if (typeof creditBaseBySlug !== 'undefined' && creditBaseBySlug[p.slug]) { %>
+    <form method="post" action="/membership/credit/<%= p.slug %>" onsubmit="return confirm('Pay one <%= p.interval %> of <%= p.name %> with site credit (<%= money(creditBaseBySlug[p.slug]) %>)? No auto-renewal.')">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <p><button class="btn btn-secondary" type="submit">Pay <%= money(creditBaseBySlug[p.slug]) %> with site credit</button><br>
+      <span class="muted">One <%= p.interval %>, no auto-renewal. Your credit: <%= money(typeof creditBalance !== 'undefined' ? creditBalance : 0) %>. <a href="/gift-cards/redeem">Redeem a gift card</a>.</span></p>
+    </form>
+    <% } %>
   </div>
   <% }); %>
 </div>

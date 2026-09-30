@@ -89,8 +89,11 @@ async function sendCustomDepositReceipt(order) {
   if (!buyer || !buyer.email) return null;
   const money = (c) => `$${(Number(c || 0) / 100).toFixed(2)}`;
   const first = String(buyer.display_name || '').split(' ')[0] || 'there';
-  const depositTotal = Number(order.deposit_cents || 0) + Number(order.fee_cents || 0);
-  const fullTotal = withFeeCents(Number(order.amount_cents || 0));
+  const rush = Number(order.rush_fee_cents || 0);
+  const depositTotal = Number(order.deposit_cents || 0) + rush + Number(order.fee_cents || 0);
+  // Balance due at delivery: the remaining 50% of the design price plus its
+  // processing fee. The rush fee is fully collected with the deposit.
+  const balanceDue = withFeeCents(Number(order.amount_cents || 0) - Number(order.deposit_cents || 0));
   const lines = [
     `Hi ${first},`,
     ``,
@@ -103,9 +106,10 @@ async function sendCustomDepositReceipt(order) {
   } else {
     lines.push(`Design price: ${money(order.amount_cents)}`);
   }
+  if (rush > 0) lines.push(`Rush (24-hour delivery): ${money(rush)}`);
   lines.push(
     `Deposit paid: ${money(depositTotal)} (includes ${money(order.fee_cents)} processing fee)`,
-    `Balance of ${money(fullTotal - depositTotal)} due when your design is delivered (within 48 hours).`,
+    `Balance of ${money(balanceDue)} due when your design is delivered (${rush > 0 ? 'within 24 hours' : 'within 48 hours'}).`,
     ``,
     `View your order: ${config.baseUrl}/orders/${order.id}`,
     ``,

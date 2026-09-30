@@ -37,6 +37,7 @@
 //   paid     — included in a completed payout run
 const db = require('../db');
 const config = require('../config');
+const pricing = require('./pricing');
 const founding = require('./founding');
 const shopIncentives = require('../shop/shopIncentives');
 const { shopDesignerActive, dualSubBonusActive } = require('../shop/shopDesigner');
@@ -145,6 +146,15 @@ function netPaidCents(order) {
   return Math.max(0, (order.amount_paid_cents || 0) - (order.fee_cents || 0));
 }
 
+// Commission base: net paid MINUS any rush fee. The rush fee is split
+// separately via recordRushFeeSplit() (60% fulfilling-designer incentive /
+// 40% site overhead) and must never inflate the designer's 70% custom
+// commission or the site's 80% owner-art share. For non-rush orders the
+// base is identical to netPaidCents().
+function commissionBaseCents(order) {
+  return Math.max(0, netPaidCents(order) - (order.rush_fee_cents || 0));
+}
+
 async function recordSaleCommissions(order) {
   // Idempotent: a booking_bonus row (awarded later, at booking-confirm
   // time) must not block the sale splits from being recorded.
@@ -161,7 +171,7 @@ async function recordSaleCommissions(order) {
   if (order.order_type === 'raffle_ticket') {
     await db.insert('commission_ledger', {
       order_id: order.id, recipient_type: 'site', recipient_id: null,
-      amount_cents: netPaidCents(order), status: 'site_kept',
+      amount_cents: commissionBaseCents(order), status: 'site_kept',
       commission_type: 'raffle', created_at: t,
     });
     return;
@@ -192,7 +202,7 @@ async function recordSaleCommissions(order) {
     // 10% owner / 10% site (stated splits sum to 100%).
     // No referring shop: the 20% shop share splits 50/50 designer /
     // owner (designer 70%, owner 20%); the site retains its 10% overhead.
-    const total = netPaidCents(order);
+    const total = commissionBaseCents(order);
     let designerRate = (noDesignerColor ? 0.55 : 0.60) + (foundingBoost ? 0.10 : 0);
     const colorFeeRate = noDesignerColor ? 0.05 : 0;
     let ownerRate = foundingBoost ? 0 : 0.10;
@@ -305,8 +315,8 @@ async function recordSaleCommissions(order) {
       const tierRate = await shopIncentives.shopVolumeTierRate(shopId);
       if (tierRate > shopPct) shopPct = tierRate;
     }
-    const shopAmt = Math.round(netPaidCents(order) * shopPct);
-    const siteAmt = netPaidCents(order) - shopAmt;
+    const shopAmt = Math.round(commissionBaseCents(order) * shopPct);
+    const siteAmt = commissionBaseCents(order) - shopAmt;
     entries.push({
       order_id: order.id, recipient_type: 'site', recipient_id: null,
       amount_cents: siteAmt, status: 'site_kept', created_at: t,
@@ -375,7 +385,7 @@ async function recordCustomDesignerCommission(order, artistId) {
   // the business residual, i.e. the owner's cut.
   let rate = await founding.foundingArtistActive(artistId, db.now()) ? 0.80 : 0.70;
   if (await dualSubBonusActive(artistId)) rate += 0.02;
-  const designerAmt = Math.round(netPaidCents(order) * rate);
+  const designerAmt = Math.round(commissionBaseCents(order) * rate);
   if (designerAmt <= 0) return 0;
   // Take it out of the site's share (the largest site_kept 'site' row).
   const siteRow = await db.get(
@@ -396,9 +406,56 @@ async function recordCustomDesignerCommission(order, artistId) {
   return designerAmt;
 }
 
+// Record the rush-fee split for a paid custom order (owner rule 2026-09-30).
+// The $30 rush fee splits 60/40: $18 to the fulfilling designer/admin as the
+// rush incentive, $12 to site overhead. Called at routing time so the
+// fulfilling artist is known; idempotent (one split per order, ever).
+//
+// fulfillerArtistId is the routed/requested designer, or null when the
+// in-house pipeline / an admin fulfills. When the pipeline fulfills, the
+// $18 incentive row is booked as site_kept (the site's own design team earns
+// it, funding the admin-pay tiers). Suspended or payout-ineligible
+// designers get an explicit 0c row (site keeps the incentive); their
+// listings and other commissions are untouched.
+async function recordRushFeeSplit(order, fulfillerArtistId) {
+  if (!order || order.order_type !== 'custom' || !(order.rush_fee_cents > 0)) return null;
+  const existing = await db.get(
+    `SELECT id FROM commission_ledger WHERE order_id = ? AND commission_type = 'rush_fee' LIMIT 1`,
+    [order.id]);
+  if (existing) return null;
+  const t = db.now();
+  const rows = [];
+  const designerShare = Math.min(pricing.RUSH_DESIGNER_CENTS, order.rush_fee_cents - pricing.RUSH_SITE_CENTS);
+  const siteShare = order.rush_fee_cents - designerShare;
+  if (fulfillerArtistId && !(await commissionSuspended(fulfillerArtistId, t))) {
+    const eligible = await recipientEligible(fulfillerArtistId, 'design_artist');
+    rows.push({
+      order_id: order.id, recipient_type: 'artist', recipient_id: fulfillerArtistId,
+      amount_cents: designerShare, status: eligible ? 'payable' : 'site_kept',
+      commission_type: 'rush_fee', created_at: t,
+    });
+  } else {
+    // Pipeline/admin fulfillment — or a suspended designer: the site keeps
+    // the incentive. An explicit 0c row records a suspended designer's
+    // forfeiture so the books stay auditable.
+    rows.push({
+      order_id: order.id, recipient_type: 'artist', recipient_id: fulfillerArtistId,
+      amount_cents: fulfillerArtistId ? 0 : designerShare,
+      status: 'site_kept', commission_type: 'rush_fee', created_at: t,
+    });
+  }
+  rows.push({
+    order_id: order.id, recipient_type: 'site', recipient_id: null,
+    amount_cents: siteShare, status: 'site_kept', commission_type: 'rush_fee', created_at: t,
+  });
+  for (const r of rows) await db.insert('commission_ledger', r);
+  return rows;
+}
+
 module.exports = {
   recipientEligible, recordSaleCommissions, verifyOrderCommissions, payableBalance,
-  recordCustomDesignerCommission, ownerUserId, netPaidCents,
+  recordCustomDesignerCommission, recordRushFeeSplit, ownerUserId, netPaidCents,
+  commissionBaseCents,
   TIER2_WINDOW_MS, TIER2_MISSES, TIER2_DURATION_MS,
   missTimes, commissionSuspended, commissionSuspendedUntil, refreshCommissionSuspensions,
 };

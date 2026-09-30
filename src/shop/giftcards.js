@@ -257,6 +257,7 @@ module.exports = {
   GIFT_CARD_AMOUNTS, MIN_CUSTOM_CENTS, MAX_CUSTOM_CENTS,
   normalizeCode, generateGiftCardCode, generateUniqueCode,
   giftCardFees, giftCardReceiptLines, validateAmount,
+  gcCreateCheckoutOrder, gcCaptureCheckoutOrder,
   createPendingGiftCard, activateGiftCard, redeemGiftCard,
   getGiftCardsForShop, getGiftCardsForPurchaser,
 };

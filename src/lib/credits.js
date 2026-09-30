@@ -149,8 +149,10 @@ async function payOrderWithCredit({ userId, orderId }) {
   const order = await db.get('SELECT * FROM orders WHERE id = ? AND buyer_id = ?', [orderId, userId]);
   if (!order) throw new Error('Order not found.');
   if (order.status !== 'pending') throw new Error('This order is already paid.');
-  // Custom orders collect only the 50% deposit at checkout.
-  const chargeCents = order.order_type === 'custom' && order.deposit_cents > 0 ? order.deposit_cents : order.amount_cents;
+  // Custom orders collect only the 50% deposit at checkout (+ any rush fee).
+  const chargeCents = order.order_type === 'custom' && order.deposit_cents > 0
+    ? order.deposit_cents + (order.rush_fee_cents || 0)
+    : order.amount_cents;
   const balance = await getCreditBalance(userId);
   if (balance < chargeCents) {
     throw new Error(`Not enough site credit — you need $${(chargeCents / 100).toFixed(2)} and have $${(balance / 100).toFixed(2)}.`);

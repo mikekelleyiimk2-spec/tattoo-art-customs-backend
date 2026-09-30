@@ -1,0 +1,62 @@
+<h1>Buy a Gift Card</h1>
+<p class="muted">Give tattoo art — redeemable for premade designs, custom designs, and memberships. The price includes a <strong>$1.95 purchase fee</strong> plus the processing fee; the recipient gets the <strong>full card value</strong>, always fee-free. Email delivery is free; physical mail is +$4.95.</p>
+
+<form method="post" action="/gift-cards/buy" class="form">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <fieldset>
+    <legend>Amount</legend>
+    <% for (const p of presets) { %>
+    <label><input type="radio" name="amount_cents" value="<%= p %>" <%= p === 5000 ? 'checked' : '' %>> <%= money(p) %></label>
+    <% } %>
+  </fieldset>
+
+  <fieldset>
+    <legend>Delivery</legend>
+    <label><input type="radio" name="delivery" value="email" checked> Email — free, code arrives by email</label>
+    <label><input type="radio" name="delivery" value="mail"> Physical card by mail — +<%= money(shipping) %></label>
+  </fieldset>
+
+  <label>Recipient name (optional)
+    <input type="text" name="recipient_name" maxlength="120" placeholder="Alex">
+  </label>
+  <label>Recipient email (optional — we'll email them the code)
+    <input type="email" name="recipient_email" maxlength="200" placeholder="friend@example.com">
+  </label>
+  <label id="ship-address-label" style="display:none">Mailing address (required for physical cards)
+    <textarea name="ship_address" rows="3" maxlength="500" placeholder="Full name, street, city, state, ZIP"></textarea>
+  </label>
+
+  <div class="card">
+    <h2>What you'll pay</h2>
+    <p>Card value: <strong id="fp-amount"><%= money(defaultQuote.amount) %></strong><br>
+    Purchase fee: <span id="fp-fee"><%= money(defaultQuote.fee) %></span><br>
+    <span id="fp-ship-row" style="display:none">Mail shipping: <span id="fp-ship"><%= money(defaultQuote.shipping) %></span><br></span>
+    Processing: <span id="fp-proc"><%= money(defaultQuote.processing) %></span><br>
+    <strong>Total: <span id="fp-total"><%= money(defaultQuote.total) %></span></strong></p>
+  </div>
+
+  <p><button class="btn" type="submit">Continue to PayPal</button></p>
+</form>
+<p class="muted">Prefer to pay another way? Place the order, then choose manual payment (CashApp/Venmo) on the next page.</p>
+
+<script>
+(function () {
+  var FEE = <%= fee %>;
+  var SHIP = <%= shipping %>;
+  function proc(base) { return Math.round(base * 0.035) + 49; }
+  function fmt(c) { return '$' + (c / 100).toFixed(2); }
+  function refresh() {
+    var amt = parseInt((document.querySelector('input[name="amount_cents"]:checked') || {}).value || '0', 10);
+    var mail = (document.querySelector('input[name="delivery"]:checked') || {}).value === 'mail';
+    var base = amt + FEE + (mail ? SHIP : 0);
+    var p = proc(base);
+    document.getElementById('fp-amount').textContent = fmt(amt);
+    document.getElementById('fp-ship-row').style.display = mail ? '' : 'none';
+    document.getElementById('fp-proc').textContent = fmt(p);
+    document.getElementById('fp-total').textContent = fmt(base + p);
+    document.getElementById('ship-address-label').style.display = mail ? '' : 'none';
+  }
+  var els = document.querySelectorAll('input[name="amount_cents"], input[name="delivery"]');
+  for (var i = 0; i < els.length; i++) els[i].addEventListener('change', refresh);
+})();
+</script>

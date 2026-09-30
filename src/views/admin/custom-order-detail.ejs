@@ -7,7 +7,7 @@
     <h2>Brief</h2>
     <p style="white-space:pre-wrap"><%= order.custom_brief || '(no brief)' %></p>
     <p class="muted">Buyer: <strong><%= order.buyer_name || order.buyer_email %></strong> (<%= order.buyer_email %>)</p>
-    <p class="muted">Deposit paid: <%= money(order.amount_paid_cents) %> via <%= order.payment_method %></p>
+    <p class="muted">Deposit paid: <%= money(order.amount_paid_cents) %> via <%= order.payment_method %><% if ((order.rush_fee_cents || 0) > 0) { %> &mdash; <strong class="sla-urgent">&#9889;RUSH (<%= money(order.rush_fee_cents) %> rush fee, 24-hour SLA)</strong><% } %></p>
     <p>Status: <span class="badge"><%= order.custom_status.replace(/_/g, ' ') %></span></p>
     <p>Deadline:
       <% if (left === null) { %>—<% } else if (left < 0) { %>

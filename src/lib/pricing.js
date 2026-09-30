@@ -111,4 +111,18 @@ function withPlayFeeCents(baseCents) {
   return Math.round(baseCents * 1.15);
 }
 
-module.exports = { isSaleWindow, isMemberSaleWindow, salePriceActive, premadePriceCents, customFullCents, customDepositCents, money, chicagoParts, LINEWORK_ONLY_DISCOUNT, lineworkOnlyPriceCents, processingFeeCents, withFeeCents, withPlayFeeCents, FIRST_CUSTOM_DISCOUNT_RATE, FIRST_CUSTOM_DISCOUNT_CODE, firstCustomFullCents, firstCustomDepositCents };
+// Rush custom option (owner rule 2026-09-30): at custom checkout the buyer
+// may add a $30 rush fee for 24-hour delivery instead of the standard 48h.
+// The fee is split 60/40 — $18 to the fulfilling designer/admin as the rush
+// incentive (a 0c explicit row when the designer is suspended or ineligible,
+// the site keeps it), $12 to site overhead — booked as
+// dedicated commission_ledger rows (commission_type 'rush_fee') at routing
+// time, NEVER folded into the 70/30 custom designer commission. The rush fee
+// is disclosed at checkout and included in the processing-fee pass-through.
+const RUSH_FEE_CENTS = 3000;
+const RUSH_DESIGNER_CENTS = 1800;
+const RUSH_SITE_CENTS = 1200;
+const RUSH_SLA_HOURS = 24;
+const STANDARD_SLA_HOURS = 48;
+
+module.exports = { isSaleWindow, isMemberSaleWindow, salePriceActive, premadePriceCents, customFullCents, customDepositCents, money, chicagoParts, LINEWORK_ONLY_DISCOUNT, lineworkOnlyPriceCents, processingFeeCents, withFeeCents, withPlayFeeCents, FIRST_CUSTOM_DISCOUNT_RATE, FIRST_CUSTOM_DISCOUNT_CODE, firstCustomFullCents, firstCustomDepositCents, RUSH_FEE_CENTS, RUSH_DESIGNER_CENTS, RUSH_SITE_CENTS, RUSH_SLA_HOURS, STANDARD_SLA_HOURS };

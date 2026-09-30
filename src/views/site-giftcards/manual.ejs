@@ -1,0 +1,14 @@
+<h1>Pay manually</h1>
+<p>Gift card <strong><%= money(card.amount_cents) %></strong> — amount due: <strong><%= money(card.total_paid_cents) %></strong> <span class="muted">(includes <%= money(card.fee_cents) %> purchase fee<% if (card.shipping_cents > 0) { %> + <%= money(card.shipping_cents) %> mail shipping<% } %> + processing)</span></p>
+<p class="muted">Send payment via PayPal, CashApp, or Venmo, then record it here. An admin confirms every manual payment before the gift card code is emailed.</p>
+
+<h2>Pay with CashApp or Venmo</h2>
+<p class="muted">Use the payment links on our socials, then record it here.</p>
+<form method="post" action="/gift-cards/manual/<%= card.id %>" class="form">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <label for="method">Payment method</label>
+  <select id="method" name="method"><option value="cashapp">CashApp</option><option value="venmo">Venmo</option><option value="paypal">PayPal</option></select>
+  <label for="note">Note (e.g. your $Cashtag or transaction memo)</label>
+  <input type="text" id="note" name="note" maxlength="300">
+  <p><button class="btn" type="submit">I've sent payment</button></p>
+</form>

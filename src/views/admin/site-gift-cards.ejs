@@ -1,0 +1,39 @@
+<h1>Site Gift Cards</h1>
+<p><a href="/admin/site-gift-cards">All</a> · <a href="/admin/site-gift-cards?filter=pending">Pending payment</a> · <a href="/admin/site-gift-cards?filter=unshipped">Unshipped mail</a></p>
+<% if (!cards.length) { %><p class="muted">No gift cards in this view.</p><% } %>
+<table>
+  <thead><tr><th>Bought</th><th>Purchaser</th><th>Value</th><th>Paid</th><th>Status</th><th>Recipient</th><th>Mail</th><th></th></tr></thead>
+  <tbody>
+  <% cards.forEach(function(c) { %>
+    <tr>
+      <td><%= new Date(c.created_at).toLocaleString() %></td>
+      <td><%= c.purchaser_name || c.purchaser_email %></td>
+      <td><strong><%= c.amount_cents / 100 %></strong></td>
+      <td><%= (c.total_paid_cents / 100).toFixed(2) %> via <%= c.payment_method || (c.paypal_order_id ? 'paypal' : '—') %></td>
+      <td><span class="badge"><%= c.status %></span></td>
+      <td><%= [c.recipient_name, c.recipient_email].filter(Boolean).join(' — ') || '—' %></td>
+      <td><% if (c.ship_pending && !c.shipped_at) { %>awaiting mail<% } else if (c.shipped_at) { %>mailed <%= new Date(c.shipped_at).toLocaleDateString() %><% } else { %>—<% } %></td>
+      <td>
+        <% if (c.status === 'pending') { %>
+        <form method="post" action="/admin/site-gift-cards/<%= c.id %>/confirm" style="display:inline">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn btn-secondary" type="submit">Confirm payment</button>
+        </form>
+        <% } %>
+        <% if (c.status === 'active' && c.ship_pending && !c.shipped_at) { %>
+        <form method="post" action="/admin/site-gift-cards/<%= c.id %>/ship" style="display:inline">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn btn-secondary" type="submit">Mark shipped</button>
+        </form>
+        <% } %>
+      </td>
+    </tr>
+  <% }); %>
+  </tbody>
+</table>
+<% if (cards.some(function(c){ return c.manual_note; })) { %>
+<h2>Manual payment notes</h2>
+<% cards.forEach(function(c) { if (c.manual_note) { %>
+<p class="muted"><strong><%= c.purchaser_email %></strong> (<%= (c.total_paid_cents/100).toFixed(2) %> via <%= c.payment_method %>): <%= c.manual_note %></p>
+<% } }); %>
+<% } %>
