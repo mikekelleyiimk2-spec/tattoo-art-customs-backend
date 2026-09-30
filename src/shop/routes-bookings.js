@@ -128,6 +128,7 @@ router.post('/hold', requireLogin, formLimiter, checkHoneypot, async (req, res) 
       shopUserId: shopId, customerUserId: req.user.id,
       staffId, chairId, startAt, endAt,
       source: 'shop_page', designId: req.body.design_id || null,
+      attributionSource: req.body.ref === 'tac' ? 'tac_marketplace' : null,
     });
     res.redirect(`/bookings/checkout/${bookingId}`);
   } catch (e) {
@@ -383,6 +384,7 @@ router.post('/deposit-first/:depositId/book', requireLogin, formLimiter, checkHo
       staffId: req.body.staff_id || null, chairId: req.body.chair_id || null,
       startAt, endAt,
       designId: req.body.design_id || null,
+      attributionSource: req.body.ref === 'tac' ? 'tac_marketplace' : null,
     });
     req.session.flash = 'Appointment confirmed — your deposit credit was applied.';
     res.redirect(`/bookings/receipt/${booking.id}`);

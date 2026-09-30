@@ -18,6 +18,13 @@ const config = {
   databaseUrl: process.env.DATABASE_URL || '',
   sqlitePath: process.env.SQLITE_PATH || path.join(__dirname, '..', 'data', 'app.db'),
   assetDir: process.env.ASSET_DIR || path.join(__dirname, '..', 'assets'),
+  // AES-256-GCM key for shop waiver ID photos (64 hex chars = 32 bytes).
+  // Generate: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+  // NEVER commit the value. When missing, ID capture endpoints fail closed.
+  idDocKey: (process.env.ID_DOC_KEY || '').trim(),
+  idDocConfigured() {
+    return /^[0-9a-fA-F]{64}$/.test(this.idDocKey);
+  },
 
   paypal: {
     clientId: process.env.PAYPAL_CLIENT_ID || '',

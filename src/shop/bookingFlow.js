@@ -60,6 +60,8 @@ const SETTING_COLS = [
   'deposit_before_booking', 'deposit_amount_cents', 'deposit_policy_text',
   'noshow_forfeit_deposit', 'cancel_window_hours', 'slot_hold_minutes',
   'deposit_credit_expiry_days', 'booking_instructions',
+  'autofill_enabled', 'autofill_audience', 'autofill_expiry_minutes',
+  'id_retention_days', 'reactivation_enabled', 'reactivation_lapse_days',
 ];
 
 async function getBookingSettings(shopUserId) {
@@ -146,7 +148,7 @@ async function verifyBookingCommissions(refId) {
 // Throws {code:'DEPOSIT_FIRST'} when the shop runs the reversed flow,
 // {code:'SLOT_TAKEN'} when the slot is not free.
 async function createPendingBooking({ shopUserId, customerUserId, staffId = null, chairId = null,
-  startAt, endAt, source = 'shop_page', designId = null, now = Date.now() }) {
+  startAt, endAt, source = 'shop_page', designId = null, attributionSource = null, now = Date.now() }) {
   return withShopBookingLock(shopUserId, async () => {
     const settings = await getBookingSettings(shopUserId);
     if (Number(settings.deposit_before_booking) === 1) {
@@ -159,7 +161,9 @@ async function createPendingBooking({ shopUserId, customerUserId, staffId = null
       staff_id: staffId || null, chair_id: chairId || null,
       start_at: startAt, end_at: endAt, status: 'pending_deposit',
       deposit_cents: depositBaseCents(settings),
-      source, design_id: designId || null, created_at: now,
+      source, design_id: designId || null,
+      attribution_source: attributionSource || (designId ? 'tac_marketplace' : 'direct'),
+      created_at: now,
     });
   });
 }
@@ -297,7 +301,7 @@ async function captureDeposit(depositId, captureId = null) {
 // Step 3: spend a paid, unexpired, unlinked deposit on a slot -> booking
 // created directly 'confirmed'.
 async function bookWithDeposit({ depositId, staffId = null, chairId = null,
-  startAt, endAt, designId = null, now = Date.now() }) {
+  startAt, endAt, designId = null, attributionSource = null, now = Date.now() }) {
   const dep = await db.get('SELECT * FROM booking_deposits WHERE id = ?', [depositId]);
   if (!dep) throw err('NOT_FOUND', 'Deposit not found.');
   if (dep.status !== 'paid') throw err('DEPOSIT_UNPAID', 'That deposit has not been paid yet.');
@@ -318,7 +322,9 @@ async function bookWithDeposit({ depositId, staffId = null, chairId = null,
       staff_id: staffId || null, chair_id: chairId || null,
       start_at: startAt, end_at: endAt, status: 'confirmed',
       deposit_cents: dep.amount_cents, source: 'deposit_first',
-      design_id: designId || null, created_at: now,
+      design_id: designId || null,
+      attribution_source: attributionSource || (designId ? 'tac_marketplace' : 'direct'),
+      created_at: now,
     });
     const claimed = await db.query(
       'UPDATE booking_deposits SET booking_id = ? WHERE id = ? AND booking_id IS NULL',
@@ -416,14 +422,20 @@ async function cancelBooking(bookingId, { byShop = false, now = Date.now() } = {
   }
   await db.update('bookings', bookingId, { status: 'cancelled', cancelled_at: now });
   await notifyBookingCanceled(booking, outcome, byShop);
-  // Freed slot -> offer it to the waitlist head (never breaks cancellation).
+  // Freed slot -> auto-fill broadcast (first-claim-wins) when the shop enabled
+  // it, else the classic one-at-a-time 24h waitlist offer. Never breaks cancellation.
   try {
-    const { offerNextInLine } = require('./waitlist');
-    await offerNextInLine({
-      shopUserId: booking.shop_user_id, staffId: booking.staff_id,
-      startAt: booking.start_at, endAt: booking.end_at,
-    });
-  } catch (e) { console.error('waitlist offer failed:', e.message); }
+    if (Number(settings.autofill_enabled) === 1) {
+      const { maybeAutofill } = require('./autofill');
+      await maybeAutofill({ booking: { ...booking, status: 'cancelled' } });
+    } else {
+      const { offerNextInLine } = require('./waitlist');
+      await offerNextInLine({
+        shopUserId: booking.shop_user_id, staffId: booking.staff_id,
+        startAt: booking.start_at, endAt: booking.end_at,
+      });
+    }
+  } catch (e) { console.error('autofill/waitlist offer failed:', e.message); }
   return { booking: await db.get('SELECT * FROM bookings WHERE id = ?', [bookingId]), outcome };
 }
 
@@ -471,6 +483,11 @@ async function markCompleted(bookingId, { now = Date.now() } = {}) {
     body: `Your appointment at ${shop ? shop.display_name : 'the shop'} is marked complete. Thanks for booking through Tattoo Art Customs!`,
     link: `/bookings/receipt/${booking.id}`,
   });
+  // Aftercare autopilot (F3): schedule day-3/7/14 healing check-ins.
+  try {
+    const { scheduleAftercare } = require('./aftercare');
+    await scheduleAftercare(bookingId);
+  } catch (e) { console.error('scheduleAftercare failed:', e.message); }
   return fresh;
 }
 
