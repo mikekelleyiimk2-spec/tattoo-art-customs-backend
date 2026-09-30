@@ -3038,6 +3038,12 @@ async function main() {
     tr = await treq('GET', '/merch/tee/design-x', { follow: false });
     ok(tr.status === 302 && (tr.location || '').includes('/merch'), 'tee order form redirects to merch when Printful is unconfigured');
 
+    // Aftercare guide: public page with affiliate links wired to the owner's tracking ID.
+    tr = await treq('GET', '/aftercare');
+    ok(tr.status === 200 && tr.text.includes('Tattoo Aftercare Guide'), 'aftercare page renders');
+    ok(tr.text.includes('tag=tattooartcust-20'), 'aftercare links carry the Amazon Associates tracking ID');
+    ok(tr.text.includes('As an Amazon Associate'), 'aftercare page shows the affiliate disclosure');
+
     // Printful variant mapping (lib-level): PRINTFUL_VARIANT_TEE_<COLOR>_<SIZE>.
     ok(!printful.printfulConfigured(), 'printful not configured in the test env');
     process.env.PRINTFUL_VARIANT_TEE_BLACK_M = '4011';

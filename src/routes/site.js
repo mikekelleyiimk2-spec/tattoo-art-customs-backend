@@ -296,6 +296,14 @@ router.get('/about', (req, res) => res.render('site/about', {
   metaDescription: 'About Tattoo Art Customs marketplace.',
 }));
 
+// Aftercare guide with affiliate product picks (owner-approved 2026-09-30).
+// Tag is the owner's Amazon Associates tracking ID.
+router.get('/aftercare', (req, res) => res.render('site/aftercare', {
+  title: 'Tattoo Aftercare Guide — Tattoo Art Customs',
+  metaDescription: 'How to heal your new tattoo, plus the aftercare products we recommend.',
+  affTag: 'tattooartcust-20',
+}));
+
 // Tester bug reports: anyone (signed in or not) can file one. Each report is
 // saved and emailed to the owner the moment it lands.
 router.get('/report-bug', (req, res) => {
