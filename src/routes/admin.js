@@ -13,6 +13,7 @@ const { recordSaleCommissions, verifyOrderCommissions } = require('../lib/commis
 const { onOrderPaid } = require('../lib/printful');
 const { routeCustomOrder } = require('../lib/customFulfillment');
 const { onCustomPieceSold } = require('../lib/replacements');
+const { fulfillPremadeOrder } = require('../lib/fulfillment');
 const { colorizationQueue, attachColorVersion, notifyDesignLive } = require('../lib/colorization');
 const { recordTask: recordAdminTask } = require('../lib/adminTaskPay');
 
@@ -127,6 +128,7 @@ router.post('/orders/:id/confirm-manual', formLimiter, checkHoneypot, async (req
   const fulfil = await onOrderPaid(fresh);
   await routeCustomOrder(fresh);
   await onCustomPieceSold(fresh); // sold custom pieces delist + queue a replacement
+  await fulfillPremadeOrder(fresh); // premades deliver instantly: token + receipt email
   try { await require('../lib/saleWatch').watchOrderPaid(fresh); } catch (e) { console.error('sale watch failed:', e.message); }
   await payAdmin(req, 'order_confirm_manual', 'order', order.id);
   req.session.flash = 'Manual payment confirmed — buyer download unlocked, commissions recorded.' +

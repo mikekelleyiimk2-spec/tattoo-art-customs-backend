@@ -545,9 +545,12 @@ async function main() {
   const server = spawn('node', [path.join(ROOT, 'src', 'index.js')], {
     cwd: ROOT, env: { ...process.env, PORT: String(PORT) }, stdio: ['ignore', 'pipe', 'pipe'],
   });
+  // Accumulate server stdout so tests can assert on dev-mode mail output
+  // (SMTP is unconfigured in tests; mail.js logs `[mail:dev]` lines here).
+  let serverLog = '';
   await new Promise((resolve, reject) => {
     const t = setTimeout(() => reject(new Error('server did not start')), 15000);
-    server.stdout.on('data', (d) => { if (String(d).includes('listening')) { clearTimeout(t); resolve(); } });
+    server.stdout.on('data', (d) => { serverLog += String(d); if (String(d).includes('listening')) { clearTimeout(t); resolve(); } });
     server.stderr.on('data', (d) => process.stderr.write(d));
   });
 
@@ -708,6 +711,123 @@ async function main() {
   ok(r.status === 404, 'private color file not reachable via public static');
   r = await req('GET', '/img/designs/w.jpg');
   ok(r.status === 404, 'private color file not reachable via img mount');
+
+  // --- Premade instant delivery (owner rule 2026-09-29) ---
+  // On verified payment capture the buyer must INSTANTLY get the clean files:
+  // a download token is auto-issued (shown on the order page + emailed in the
+  // receipt). Customs keep the 48h waiting flow — no auto token for them.
+  {
+    const buyerRow = sdb.prepare("SELECT id, email FROM users WHERE email = 'buyer@test.local'").get();
+    // Fresh design with real files for both color + linework.
+    const fdid = 'testdesigninstant1';
+    sdb.prepare(`INSERT INTO designs (id, title, description, price_cents, status, color_path, linework_path, linework_wm_path, categories, sale_count, created_at)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?)`).run(fdid, 'Instant Rose', 'desc', 7500, 'approved',
+      'designs/color/instant.jpg', 'designs/linework/instant.jpg', 'designs/linework-wm/instant-wm.jpg', '[]', 0, Date.now());
+    fs.mkdirSync(path.join(process.env.ASSET_DIR, 'designs', 'linework'), { recursive: true });
+    fs.writeFileSync(path.join(process.env.ASSET_DIR, 'designs', 'color', 'instant.jpg'), 'fake-color');
+    fs.writeFileSync(path.join(process.env.ASSET_DIR, 'designs', 'linework', 'instant.jpg'), 'fake-linework');
+
+    // Simulate the PayPal return: pending order with a PayPal order id, then
+    // capture via /orders/approve/:id (capture is stubbed COMPLETED in tests).
+    const ppOrderId = 'pp-instant-' + Date.now();
+    const premadeOrderId = sdb.prepare(`INSERT INTO orders
+      (id, buyer_id, design_id, order_type, amount_cents, fee_cents, status, payment_method, paypal_order_id, referral_code, created_at)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?)`).run(
+      'ord-instant-1', buyerRow.id, fdid, 'premade', 7500, 312, 'pending', 'paypal', ppOrderId, '', Date.now()).lastInsertRowid;
+    void premadeOrderId;
+    const mailBefore = serverLog.length;
+    r = await req('GET', `/orders/approve/ord-instant-1`, { follow: false });
+    ok(r.status === 302 && (r.location || '').includes('/orders/ord-instant-1'), 'premade PayPal capture redirects to the order page');
+    const paid = sdb.prepare('SELECT * FROM orders WHERE id = ?').get('ord-instant-1');
+    ok(paid && paid.status === 'paid', 'premade order marked paid on capture');
+
+    // (a) token auto-issued at capture time, 24h expiry
+    const dl = sdb.prepare('SELECT * FROM downloads WHERE order_id = ?').get('ord-instant-1');
+    ok(!!dl && /^[0-9a-f]{48}$/.test(dl.token), 'download token auto-issued on premade capture');
+    ok(dl && dl.expires_at > Date.now() && dl.expires_at <= Date.now() + 24 * 3600 * 1000 + 60000,
+      'auto-issued token expires ~24h out');
+
+    // (b) confirmation page shows the download link immediately
+    r = await req('GET', '/orders/ord-instant-1');
+    ok(r.status === 200 && r.text.includes(`/orders/download/${dl.token}/view`),
+      'order confirmation page shows the download link');
+
+    // (c) receipt email carries the download link (dev-mode mail log)
+    const mailOut = serverLog.slice(mailBefore);
+    ok(mailOut.includes('[mail:dev]') && mailOut.includes('buyer@test.local') &&
+      mailOut.includes(`/orders/download/${dl.token}/view`),
+      'payment receipt email sent with the download link');
+
+    // (d) the token serves the CLEAN files
+    r = await req('GET', `/orders/download/${dl.token}?file=color`);
+    ok(r.status === 200 && r.text === 'fake-color', 'token downloads the clean color file');
+    r = await req('GET', `/orders/download/${dl.token}?file=linework`);
+    ok(r.status === 200 && r.text === 'fake-linework', 'token downloads the clean linework file');
+
+    // (e) links expire
+    sdb.prepare('UPDATE downloads SET expires_at = ? WHERE id = ?').run(Date.now() - 1000, dl.id);
+    r = await req('GET', `/orders/download/${dl.token}?file=color`);
+    ok(r.status === 410, 'expired download link returns 410');
+    r = await req('GET', `/orders/download/${dl.token}/view`);
+    ok(r.status === 410, 'expired download landing page returns 410');
+    r = await req('GET', '/orders/download/deadbeef/view');
+    ok(r.status === 410, 'unknown download token returns 410');
+
+    // (f) buyer-scoping: another buyer cannot see or mint links for this order
+    const otherJar = {};
+    async function oreq(method, p, opts = {}) {
+      const h = { ...(opts.headers || {}) };
+      const cookies = Object.entries(otherJar).map(([k, v]) => `${k}=${v}`).join('; ');
+      if (cookies) h.cookie = cookies;
+      let payload = opts.body;
+      if (payload && typeof payload === 'object') { payload = new URLSearchParams(payload); h['content-type'] = 'application/x-www-form-urlencoded'; }
+      const res = await fetch(`http://localhost:${PORT}${p}`, { method, headers: h, body: payload, redirect: 'manual' });
+      for (const c of (res.headers.getSetCookie ? res.headers.getSetCookie() : [])) {
+        const [k, v] = c.split(';')[0].split('='); otherJar[k.trim()] = (v || '').trim();
+      }
+      return { status: res.status, text: await res.text(), location: res.headers.get('location') };
+    }
+    let or = await oreq('POST', '/signup', { body: { display_name: 'Other', email: 'other@test.local', password: 'password123' } });
+    ok(or.status === 302 || or.status === 200, 'second buyer signed up');
+    or = await oreq('GET', '/orders/ord-instant-1');
+    ok(or.status === 404, 'another buyer cannot open someone else\u2019s order page');
+    or = await oreq('POST', '/orders/ord-instant-1/download-token', { follow: false });
+    ok(or.status === 302 && !(or.location || '').includes('/orders/download/'),
+      'another buyer cannot mint a download token for someone else\u2019s order');
+
+    // (g) idempotency: re-requesting a link reuses the live token (no duplicates).
+    // (The old token was expired in (e), so the first re-request mints one
+    // fresh token; the second must reuse it.)
+    r = await req('POST', '/orders/ord-instant-1/download-token', { follow: false });
+    const tokA = (r.location || '').split('/orders/download/')[1].replace('/view', '');
+    r = await req('POST', '/orders/ord-instant-1/download-token', { follow: false });
+    const tokB = (r.location || '').split('/orders/download/')[1].replace('/view', '');
+    const liveCount = sdb.prepare('SELECT COUNT(*) AS n FROM downloads WHERE order_id = ? AND expires_at > ?')
+      .get('ord-instant-1', Date.now()).n;
+    ok(/^[0-9a-f]{48}$/.test(tokA) && tokA === tokB && liveCount === 1,
+      'repeat link requests reuse the live token (no duplicates)');
+
+    // (h) customs are untouched: capture issues NO token, waiting flow intact
+    const custOrderId = 'ord-custom-1';
+    sdb.prepare(`INSERT INTO orders
+      (id, buyer_id, order_type, amount_cents, deposit_cents, fee_cents, status, payment_method, paypal_order_id, referral_code, custom_brief, custom_status, delivery_due, created_at)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
+      custOrderId, buyerRow.id, 'custom', 15000, 7500, 312, 'pending', 'paypal', 'pp-custom-1', '',
+      'A phoenix rising over mountains, blackwork style please', 'new', Date.now() + 48 * 3600 * 1000, Date.now());
+    r = await req('GET', `/orders/approve/${custOrderId}`, { follow: false });
+    ok(r.status === 302 && (r.location || '').includes(`/orders/${custOrderId}`), 'custom deposit capture redirects to the order page');
+    const custPaid = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(custOrderId);
+    ok(custPaid && custPaid.status === 'paid' && custPaid.custom_status === 'needs_drafts',
+      'custom order enters the 48h draft pipeline after deposit');
+    const custDl = sdb.prepare('SELECT COUNT(*) AS n FROM downloads WHERE order_id = ?').get(custOrderId).n;
+    ok(custDl === 0, 'no download token auto-issued for custom orders');
+    const custNone = await require('../src/lib/fulfillment').fulfillPremadeOrder(custPaid);
+    ok(custNone === null, 'fulfillPremadeOrder passes custom orders through untouched');
+
+    // (i) premades are never delisted by selling
+    const stillLive = sdb.prepare("SELECT status FROM designs WHERE id = ?").get(fdid);
+    ok(stillLive && stillLive.status === 'approved', 'premade design stays approved/live after sale');
+  }
 
   // member-exclusive designs: hidden from non-members everywhere
   const moid = 'testdesignm01';

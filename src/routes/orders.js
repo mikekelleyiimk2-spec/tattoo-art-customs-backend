@@ -4,7 +4,6 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const crypto = require('crypto');
 const db = require('../db');
 const config = require('../config');
 const paypal = require('../lib/paypal');
@@ -16,6 +15,7 @@ const { recordSaleCommissions } = require('../lib/commissions');
 const { routeCustomOrder } = require('../lib/customFulfillment');
 const { onCustomPieceSold } = require('../lib/replacements');
 const { onOrderPaid } = require('../lib/printful');
+const { fulfillPremadeOrder } = require('../lib/fulfillment');
 
 const router = express.Router();
 
@@ -247,6 +247,7 @@ router.get('/approve/:orderId', requireLogin, async (req, res) => {
     const fulfil = await onOrderPaid(fresh);
     await routeCustomOrder(fresh);
     await onCustomPieceSold(fresh); // sold custom pieces delist + queue a replacement
+    await fulfillPremadeOrder(fresh); // premades deliver instantly: token + receipt email
     try { await require('../lib/saleWatch').watchOrderPaid(fresh); } catch (e) { console.error('sale watch failed:', e.message); }
     req.session.flash = order.order_type === 'custom'
       ? 'Deposit received — your custom request is in. Your design will be delivered within 48 hours.'
@@ -293,11 +294,9 @@ router.post('/:orderId/download-token', requireLogin, formLimiter, checkHoneypot
     req.session.flash = 'Downloads unlock once the order is paid.';
     return res.redirect('/account');
   }
-  const token = crypto.randomBytes(24).toString('hex');
-  await db.insert('downloads', {
-    order_id: order.id, token, expires_at: Date.now() + 24 * 3600 * 1000, created_at: db.now(),
-  });
-  res.redirect(`/orders/download/${token}/view`);
+  // Reuses the still-valid auto-issued token when one exists (idempotent).
+  const dl = await require('../lib/fulfillment').issueDownloadToken(order.id);
+  res.redirect(`/orders/download/${dl.token}/view`);
 });
 
 // Serves the CLEAN color + linework files. Never linked publicly; the token

@@ -9,6 +9,7 @@ const cashout = require('./cashout');
 const { recordSaleCommissions } = require('./commissions');
 const { onOrderPaid } = require('./printful');
 const { routeCustomOrder } = require('./customFulfillment');
+const { fulfillPremadeOrder } = require('./fulfillment');
 
 const MIN_TOPUP_CENTS = 500; // $5 minimum top-up
 
@@ -162,6 +163,7 @@ async function payOrderWithCredit({ userId, orderId }) {
   await recordSaleCommissions(fresh);
   const fulfil = await onOrderPaid(fresh);
   await routeCustomOrder(fresh);
+  await fulfillPremadeOrder(fresh); // premades deliver instantly: token + receipt email
   try { await require('./saleWatch').watchOrderPaid(fresh); } catch (e) { console.error('sale watch failed:', e.message); }
   return { order: fresh, printSubmitted: fulfil.submitted };
 }
