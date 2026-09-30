@@ -96,6 +96,11 @@ async function gcCreateCheckoutOrder({ amountCents, description, returnUrl }) {
 // Returns the captured total in cents.
 async function gcCaptureCheckoutOrder(paypalOrderId) {
   if (process.env.TAC_TEST_PAYPAL_STUB === '1') {
+    // Reliability test hook: simulate a previous capture that crashed before
+    // we recorded it (PayPal would report ORDER_ALREADY_CAPTURED on retry).
+    if (String(paypalOrderId || '').startsWith('ALREADY-CAPTURED')) {
+      throw new Error(`PayPal API POST /v2/checkout/orders/${paypalOrderId}/capture failed: Order already captured.`);
+    }
     const amountCents = stubGcOrders.get(String(paypalOrderId || ''));
     if (amountCents == null) throw new Error(`PayPal stub: unknown order ${paypalOrderId}`);
     return amountCents;
@@ -149,7 +154,22 @@ async function activateGiftCard({ pendingId, purchaserUserId, paypalOrderId }) {
   if (!row) throw new Error('Gift card purchase not found.');
   if (row.status === 'active') return { code: row.code, amount_cents: row.amount_cents, already: true };
   if (row.status !== 'pending') throw new Error('This gift card purchase is no longer pending.');
-  const paidCents = await gcCaptureCheckoutOrder(paypalOrderId);
+  // Capture is idempotent-safe: if a previous attempt captured the money but
+  // we crashed before recording it, PayPal reports ORDER_ALREADY_CAPTURED —
+  // recover by verifying the earlier capture instead of charging twice.
+  let paidCents;
+  try {
+    paidCents = await gcCaptureCheckoutOrder(paypalOrderId);
+  } catch (e) {
+    if (!paypal.isAlreadyCapturedError(e)) throw e;
+    console.error(`[giftcards] already-captured recovery for pending ${pendingId} (order ${paypalOrderId})`);
+    const order = await paypal.getCheckoutOrder(paypalOrderId);
+    const cap = order.purchase_units?.[0]?.payments?.captures?.[0];
+    paidCents = Math.round(parseFloat(cap?.amount?.value || '0', 10) * 100);
+    if (!(paidCents > 0)) {
+      throw new Error('Payment was already captured but could not be verified — contact support.');
+    }
+  }
   const fees = giftCardFees(row.amount_cents);
   if (paidCents !== fees.total) {
     throw new Error(`Captured ${money(paidCents)} but expected ${money(fees.total)} — card not activated.`);

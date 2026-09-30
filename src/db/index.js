@@ -125,15 +125,17 @@ function now() { return Date.now(); }
 async function query(sql, params = []) {
   if (mode === 'pg') {
     const res = await pgPool.query(placeholdersToPg(sql), params);
-    return { rows: res.rows };
+    return { rows: res.rows, changes: res.rowCount };
   }
   const stmt = sqliteDb.prepare(sql);
   const trimmed = sql.trim().toUpperCase();
   if (trimmed.startsWith('SELECT') || trimmed.startsWith('WITH')) {
-    return { rows: stmt.all(...params) };
+    return { rows: stmt.all(...params), changes: 0 };
   }
   const info = stmt.run(...params);
-  return { rows: [], info };
+  // `changes` = rows affected — used for race-safe conditional updates
+  // (UPDATE ... WHERE status=...); 0 means someone else won the race.
+  return { rows: [], info, changes: info.changes };
 }
 
 async function get(sql, params = []) {

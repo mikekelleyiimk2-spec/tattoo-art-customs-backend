@@ -528,6 +528,7 @@ async function main() {
   await require('./shoptools-phase3').runDbTests(ok);
   await require('./shoptools-phase4').runDbTests(ok);
   await require('./shoptools-phase5').runDbTests(ok);
+  await require('./shoptools-phase6').runDbTests(ok);
 
   await db.close();
 
@@ -688,6 +689,7 @@ async function main() {
   await require('./shoptools-phase3').runHttpTests(ok, req);
   await require('./shoptools-phase4').runHttpTests(ok, req);
   await require('./shoptools-phase5').runHttpTests(ok, req);
+  await require('./shoptools-phase6').runHttpTests(ok, req);
   r = await areq('POST', `/admin/orders/${orderId}/confirm-manual`);
   ok(r.status === 302, 'admin confirms manual payment');
 

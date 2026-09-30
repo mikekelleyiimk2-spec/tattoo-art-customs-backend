@@ -112,38 +112,46 @@ async function maybeAwardBookingBonus(booking) {
   const shopId = booking.shop_user_id;
   const buyerId = booking.customer_user_id;
   if (!shopId || !buyerId) return null;
-  const windowStart = booking.created_at - config.bookingBonus.windowDays * 86400000;
-  // The most recent qualifying purchase: paid, attributed to this shop,
-  // inside the window, of a bonus-eligible type, with no bonus yet.
-  const order = await db.get(
-    `SELECT * FROM orders
-     WHERE buyer_id = ? AND referred_shop_id = ?
-       AND status = 'paid' AND paid_at >= ? AND paid_at <= ?
-       AND order_type IN ('premade', 'custom')
-       AND NOT EXISTS (SELECT 1 FROM commission_ledger
-                       WHERE order_id = orders.id AND commission_type = 'booking_bonus')
-     ORDER BY paid_at DESC LIMIT 1`,
-    [buyerId, shopId, windowStart, booking.created_at]);
-  if (!order) return null;
-  const bonus = order.order_type === 'custom'
-    ? Math.round(order.amount_cents * config.bookingBonus.customRate)
-    : config.bookingBonus.premadeFlatCents;
-  if (!(bonus > 0)) return null;
-  // Funded from site operations; designer and base shop splits untouched.
-  // Payable when the shop can receive payouts, otherwise forfeited to
-  // the site per the standing forfeiture rule (no payout destination).
-  const { recipientEligible } = require('../lib/commissions');
-  const eligible = await recipientEligible(shopId, 'shop');
-  await db.insert('commission_ledger', {
-    order_id: order.id,
-    recipient_type: 'shop',
-    recipient_id: shopId,
-    amount_cents: bonus,
-    commission_type: 'booking_bonus',
-    status: eligible ? 'payable' : 'site_kept',
-    created_at: db.now(),
+  // Race-safe: the select-check and the bonus insert run in one transaction
+  // holding the chosen order row, so two concurrent confirmations award
+  // exactly one bonus per order.
+  return db.transaction(async (tx) => {
+    const lock = db.getMode() === 'pg' ? ' FOR UPDATE' : '';
+    const windowStart = booking.created_at - config.bookingBonus.windowDays * 86400000;
+    // The most recent qualifying purchase: paid, attributed to this shop,
+    // inside the window, of a bonus-eligible type, with no bonus yet.
+    const order = await tx.get(
+      `SELECT * FROM orders
+       WHERE buyer_id = ? AND referred_shop_id = ?
+         AND status = 'paid' AND paid_at >= ? AND paid_at <= ?
+         AND order_type IN ('premade', 'custom')
+         AND NOT EXISTS (SELECT 1 FROM commission_ledger
+                         WHERE order_id = orders.id AND commission_type = 'booking_bonus')
+       ORDER BY paid_at DESC LIMIT 1${lock}`,
+      [buyerId, shopId, windowStart, booking.created_at]);
+    if (!order) return null;
+    // Re-check after acquiring the row lock: the concurrent winner's
+    // insert lands before we proceed.
+    const taken = await tx.get(
+      "SELECT 1 AS one FROM commission_ledger WHERE order_id = ? AND commission_type = 'booking_bonus'",
+      [order.id]);
+    if (taken) return null;
+    const bonus = order.order_type === 'custom'
+      ? Math.round(order.amount_cents * config.bookingBonus.customRate)
+      : config.bookingBonus.premadeFlatCents;
+    if (!(bonus > 0)) return null;
+    // Funded from site operations; designer and base shop splits untouched.
+    // Payable when the shop can receive payouts, otherwise forfeited to
+    // the site per the standing forfeiture rule (no payout destination).
+    const { recipientEligible } = require('../lib/commissions');
+    const eligible = await recipientEligible(shopId, 'shop');
+    await tx.query(
+      `INSERT INTO commission_ledger
+         (id, order_id, recipient_type, recipient_id, amount_cents, commission_type, status, created_at)
+       VALUES (?, ?, 'shop', ?, ?, 'booking_bonus', ?, ?)`,
+      [db.newId(), order.id, shopId, bonus, eligible ? 'payable' : 'site_kept', db.now()]);
+    return bonus;
   });
-  return bonus;
 }
 
 module.exports = {

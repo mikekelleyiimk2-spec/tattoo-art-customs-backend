@@ -32,7 +32,7 @@ async function getAccessToken() {
   assertConfigured();
   if (tokenCache.token && Date.now() < tokenCache.expiresAt - 60000) return tokenCache.token;
   const creds = Buffer.from(`${config.paypal.clientId}:${config.paypal.clientSecret}`).toString('base64');
-  const res = await fetch(`${config.paypalBaseUrl()}/v1/oauth2/token`, {
+  const res = await fetchWithTimeout(`${config.paypalBaseUrl()}/v1/oauth2/token`, {
     method: 'POST',
     headers: { Authorization: `Basic ${creds}`, 'Content-Type': 'application/x-www-form-urlencoded' },
     body: 'grant_type=client_credentials',
@@ -43,9 +43,36 @@ async function getAccessToken() {
   return tokenCache.token;
 }
 
+// fetch with a hard timeout: a hung PayPal must never hang a request
+// forever (stalled checkouts during an outage invite double-clicks and
+// retries, which cause duplicate charges and duplicate rows downstream).
+const PAYPAL_TIMEOUT_MS = 25000;
+async function fetchWithTimeout(url, options = {}) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), PAYPAL_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...options, signal: ctrl.signal });
+  } catch (e) {
+    if (e && e.name === 'AbortError') {
+      throw new Error(`PayPal request timed out after ${PAYPAL_TIMEOUT_MS / 1000}s: ${url}`);
+    }
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Idempotent-capture support. PayPal rejects a second capture of the same
+// order ("ORDER_ALREADY_CAPTURED"). That error means the money ALREADY moved:
+// a crash between a successful capture and our local bookkeeping must be
+// recovered, never re-charged or lost.
+function isAlreadyCapturedError(e) {
+  return /already.?captured/i.test(String((e && e.message) || ''));
+}
+
 async function api(path, method = 'GET', body = null) {
   const token = await getAccessToken();
-  const res = await fetch(`${config.paypalBaseUrl()}${path}`, {
+  const res = await fetchWithTimeout(`${config.paypalBaseUrl()}${path}`, {
     method,
     headers: {
       Authorization: `Bearer ${token}`,
@@ -91,6 +118,14 @@ async function captureCheckoutOrder(paypalOrderId) {
   }
   assertConfigured();
   return api(`/v2/checkout/orders/${paypalOrderId}/capture`, 'POST', {});
+}
+
+// Read a checkout order (status + captures). Used to recover the capture id
+// after an ORDER_ALREADY_CAPTURED error: the money moved on a previous
+// attempt that crashed before we recorded it.
+async function getCheckoutOrder(paypalOrderId) {
+  assertConfigured();
+  return api(`/v2/checkout/orders/${encodeURIComponent(paypalOrderId)}`, 'GET');
 }
 
 // Refund a captured checkout payment (partial or full). Used by booking
@@ -283,6 +318,8 @@ module.exports = {
   assertConfigured,
   createCheckoutOrder,
   captureCheckoutOrder,
+  getCheckoutOrder,
+  isAlreadyCapturedError,
   refundCheckoutCapture,
   createSubscription,
   createBillingPlan,

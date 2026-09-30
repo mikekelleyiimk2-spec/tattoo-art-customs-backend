@@ -171,11 +171,21 @@ router.post('/checkout/:id', requireLogin, formLimiter, checkHoneypot, async (re
   const fees = flow.depositFees(settings);
   const kind = fees.base === 100 ? 'booking_fee' : 'deposit';
   try {
-    const paymentId = await db.insert('booking_payments', {
-      booking_id: booking.id, kind,
-      base_cents: fees.base, platform_fee_cents: fees.platformFee,
-      processing_cents: fees.processing, total_cents: fees.total,
-      status: 'pending', created_at: db.now(),
+    // Idempotent on double-click: reuse the still-pending payment row instead
+    // of creating a second one (two pending rows = two PayPal orders, and a
+    // customer paying both would be charged twice).
+    const { paymentId } = await flow.withShopBookingLock(booking.shop_user_id, async () => {
+      const existing = await db.get(
+        "SELECT id FROM booking_payments WHERE booking_id = ? AND kind = ? AND status = 'pending' ORDER BY created_at DESC LIMIT 1",
+        [booking.id, kind]);
+      if (existing) return { paymentId: existing.id };
+      const pid = await db.insert('booking_payments', {
+        booking_id: booking.id, kind,
+        base_cents: fees.base, platform_fee_cents: fees.platformFee,
+        processing_cents: fees.processing, total_cents: fees.total,
+        status: 'pending', created_at: db.now(),
+      });
+      return { paymentId: pid };
     });
     const pp = await paypal.createCheckoutOrder({
       amountCents: fees.total,
@@ -206,7 +216,17 @@ async function doCapture(paymentId, user) {
     return { booking, already: true };
   }
   if (!payment.paypal_order_id) throw Object.assign(new Error('No PayPal order on this payment.'), { code: 'NO_ORDER' });
-  const capture = await paypal.captureCheckoutOrder(payment.paypal_order_id);
+  // Idempotent capture: if a previous attempt captured the money but we
+  // crashed before recording it, PayPal reports ORDER_ALREADY_CAPTURED —
+  // recover the capture details instead of failing (or worse, charging again).
+  let capture;
+  try {
+    capture = await paypal.captureCheckoutOrder(payment.paypal_order_id);
+  } catch (e) {
+    if (!paypal.isAlreadyCapturedError(e)) throw e;
+    console.error(`[bookings] already-captured recovery for payment ${payment.id} (order ${payment.paypal_order_id})`);
+    capture = await paypal.getCheckoutOrder(payment.paypal_order_id);
+  }
   const captured = capture.purchase_units?.[0]?.payments?.captures?.[0];
   let paidCents = Math.round(parseFloat(captured?.amount?.value || '0') * 100);
   if (!paidCents) paidCents = payment.total_cents; // test stub reports 0.00
@@ -259,7 +279,16 @@ router.get('/deposit-first/approve/:depositId', requireLogin, async (req, res) =
     if (dep.status !== 'paid') {
       const orderId = req.session['deposit_order_' + depositId];
       if (!orderId) throw new Error('No PayPal order found for this deposit.');
-      const capture = await paypal.captureCheckoutOrder(orderId);
+      let capture;
+      try {
+        capture = await paypal.captureCheckoutOrder(orderId);
+      } catch (e) {
+        if (!paypal.isAlreadyCapturedError(e)) throw e;
+        // Recovery: the money moved on a previous attempt that crashed
+        // before we recorded it — verify and continue, never re-charge.
+        console.error(`[bookings] already-captured recovery for deposit ${depositId} (order ${orderId})`);
+        capture = await paypal.getCheckoutOrder(orderId);
+      }
       const captured = capture.purchase_units?.[0]?.payments?.captures?.[0];
       await flow.captureDeposit(depositId, (captured && captured.id) || null);
       delete req.session['deposit_order_' + depositId];
@@ -294,7 +323,21 @@ router.post('/deposit-first/:shopId', requireLogin, formLimiter, checkHoneypot, 
     return res.redirect(`/bookings/shop/${req.params.shopId}`);
   }
   try {
-    const { deposit, fees } = await flow.startDepositFirst(shop.id, req.user.id);
+    // Idempotent on double-click: reuse the customer's still-pending deposit
+    // credit instead of opening a second one (two pending deposits = two
+    // PayPal orders = a possible double charge).
+    const { deposit, fees } = await flow.withShopBookingLock(shop.id, async () => {
+      const open = await db.get(
+        `SELECT * FROM booking_deposits
+         WHERE shop_user_id = ? AND customer_user_id = ? AND status = 'pending' AND booking_id IS NULL
+         ORDER BY created_at DESC LIMIT 1`,
+        [shop.id, req.user.id]);
+      if (open) {
+        const s = await flow.getBookingSettings(shop.id);
+        return { deposit: open, fees: flow.depositFees(s) };
+      }
+      return flow.startDepositFirst(shop.id, req.user.id);
+    });
     const pp = await paypal.createCheckoutOrder({
       amountCents: fees.total,
       description: `Tattoo Art Customs — booking deposit credit (${deposit.id.slice(0, 8)})`,

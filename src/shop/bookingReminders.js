@@ -102,17 +102,23 @@ async function runReminderSweep() {
          AND ${matchCompleted ? 'b.completed_at' : 'b.start_at'} < ?`,
       [fromMs, toMs]);
     for (const b of rows) {
-      const link = bookingLink(b.id);
-      if (await reminderSent(b.customer_user_id, kind, link)) continue;
-      const title = titleFor(b);
-      const body = bodyFor(b);
-      await notifyUser(b.customer_user_id, { kind, title, body, link });
-      if (b.customer_email) {
-        await sendMail({ to: b.customer_email, subject: title, text: `${body}\n\n— Tattoo Art Customs` });
+      // Fault isolation: one booking's failure (bad email, broken notify row)
+      // must not abort the sweep and skip everyone after it.
+      try {
+        const link = bookingLink(b.id);
+        if (await reminderSent(b.customer_user_id, kind, link)) continue;
+        const title = titleFor(b);
+        const body = bodyFor(b);
+        await notifyUser(b.customer_user_id, { kind, title, body, link });
+        if (b.customer_email) {
+          await sendMail({ to: b.customer_email, subject: title, text: `${body}\n\n— Tattoo Art Customs` });
+        }
+        if (kind === DAY_BEFORE_KIND) sent.dayBefore++;
+        else if (kind === DAY_OF_KIND) sent.dayOf++;
+        else sent.aftercare++;
+      } catch (e) {
+        console.error(`[scheduler] booking reminder failed for booking ${b.id}:`, e.message);
       }
-      if (kind === DAY_BEFORE_KIND) sent.dayBefore++;
-      else if (kind === DAY_OF_KIND) sent.dayOf++;
-      else sent.aftercare++;
     }
   }
 

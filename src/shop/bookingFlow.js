@@ -38,6 +38,22 @@ function err(code, message) {
   return e;
 }
 
+// Serialize slot-sensitive mutations per shop. Two concurrent requests that
+// both pass isSlotFree() and then insert would double-book the slot — so the
+// whole check-then-write section runs while holding the shop's settings row.
+// pg: SELECT ... FOR UPDATE on the shop's row; sqlite: the transaction queue
+// (BEGIN IMMEDIATE) serializes everything anyway.
+async function withShopBookingLock(shopUserId, fn) {
+  return db.transaction(async (tx) => {
+    await tx.query(
+      'INSERT INTO shop_booking_settings (shop_user_id) VALUES (?) ON CONFLICT(shop_user_id) DO NOTHING',
+      [shopUserId]);
+    const lock = db.getMode() === 'pg' ? ' FOR UPDATE' : '';
+    await tx.get(`SELECT shop_user_id FROM shop_booking_settings WHERE shop_user_id = ?${lock}`, [shopUserId]);
+    return fn();
+  });
+}
+
 // --- Settings -------------------------------------------------------------
 // WARNING: shop_booking_settings has no id column — never db.insert() it.
 const SETTING_COLS = [
@@ -86,17 +102,20 @@ function depositFees(settings) {
 // Credit the shop 100% of base for a booking/deposit. The 5% platform fee
 // NEVER enters the ledger and is NEVER refunded. Idempotent per refId.
 async function creditShopForBase({ shopUserId, baseCents, refId, commissionType }) {
-  const existing = await db.get(
-    `SELECT id FROM commission_ledger WHERE order_id = ? AND recipient_type = 'shop' AND commission_type = ?`,
-    [refId, commissionType]);
-  if (existing) return { already: true };
   const eligible = await recipientEligible(shopUserId, 'tattoo_shop');
-  await db.insert('commission_ledger', {
-    order_id: refId, recipient_type: 'shop', recipient_id: shopUserId,
-    amount_cents: baseCents,
-    status: eligible ? 'pending' : 'site_kept',
-    commission_type: commissionType, created_at: db.now(),
-  });
+  // Conditional insert (not check-then-insert): two concurrent callers for
+  // the same refId produce exactly one ledger row — the loser gets
+  // already:true instead of a duplicate credit.
+  const inserted = await db.query(
+    `INSERT INTO commission_ledger (id, order_id, recipient_type, recipient_id, amount_cents, status, commission_type, created_at)
+     SELECT ?, ?, 'shop', ?, ?, ?, ?, ?
+     WHERE NOT EXISTS (
+       SELECT 1 FROM commission_ledger
+       WHERE order_id = ? AND recipient_type = 'shop' AND commission_type = ?
+     )`,
+    [db.newId(), refId, shopUserId, baseCents, eligible ? 'pending' : 'site_kept',
+     commissionType, db.now(), refId, commissionType]);
+  if (!inserted.changes) return { already: true };
   await verifyOrderCommissions(refId); // pending -> payable
   return { already: false, status: eligible ? 'payable' : 'site_kept' };
 }
@@ -128,25 +147,28 @@ async function verifyBookingCommissions(refId) {
 // {code:'SLOT_TAKEN'} when the slot is not free.
 async function createPendingBooking({ shopUserId, customerUserId, staffId = null, chairId = null,
   startAt, endAt, source = 'shop_page', designId = null, now = Date.now() }) {
-  const settings = await getBookingSettings(shopUserId);
-  if (Number(settings.deposit_before_booking) === 1) {
-    throw err('DEPOSIT_FIRST', 'This shop collects the deposit before booking — start at the deposit page.');
-  }
-  const free = await isSlotFree(shopUserId, { staffId, chairId, startAt, endAt, now });
-  if (!free) throw err('SLOT_TAKEN', 'That slot is no longer available.');
-  return db.insert('bookings', {
-    shop_user_id: shopUserId, customer_user_id: customerUserId,
-    staff_id: staffId || null, chair_id: chairId || null,
-    start_at: startAt, end_at: endAt, status: 'pending_deposit',
-    deposit_cents: depositBaseCents(settings),
-    source, design_id: designId || null, created_at: now,
+  return withShopBookingLock(shopUserId, async () => {
+    const settings = await getBookingSettings(shopUserId);
+    if (Number(settings.deposit_before_booking) === 1) {
+      throw err('DEPOSIT_FIRST', 'This shop collects the deposit before booking — start at the deposit page.');
+    }
+    const free = await isSlotFree(shopUserId, { staffId, chairId, startAt, endAt, now });
+    if (!free) throw err('SLOT_TAKEN', 'That slot is no longer available.');
+    return db.insert('bookings', {
+      shop_user_id: shopUserId, customer_user_id: customerUserId,
+      staff_id: staffId || null, chair_id: chairId || null,
+      start_at: startAt, end_at: endAt, status: 'pending_deposit',
+      deposit_cents: depositBaseCents(settings),
+      source, design_id: designId || null, created_at: now,
+    });
   });
 }
 
 // Confirm a booking on payment capture. Creates the booking_payments row,
 // the receipt, credits the shop 100% of base, and notifies both sides.
-// Idempotent: a second call for an already-confirmed booking returns the
-// existing rows without double-crediting.
+// Race-safe: the pending->confirmed flip is a conditional UPDATE, so two
+// concurrent captures for the same booking produce exactly one receipt and
+// one ledger credit — the loser returns the existing rows with already:true.
 async function confirmBooking(bookingId, { kind = 'deposit', fees, captureId = null, orderId = null, paymentId = null } = {}) {
   if (!fees || !Number.isInteger(fees.base)) throw err('BAD_FEES', 'fees required');
   const booking = await db.get('SELECT * FROM bookings WHERE id = ?', [bookingId]);
@@ -158,6 +180,18 @@ async function confirmBooking(bookingId, { kind = 'deposit', fees, captureId = n
   }
   if (!['pending_deposit'].includes(booking.status)) {
     throw err('BAD_STATUS', `Booking cannot be confirmed from status '${booking.status}'.`);
+  }
+  // Claim the booking: exactly one concurrent caller wins this flip.
+  const claimed = await db.query(
+    "UPDATE bookings SET status = 'confirmed' WHERE id = ? AND status = 'pending_deposit'", [bookingId]);
+  if (!claimed.changes) {
+    const fresh = await db.get('SELECT * FROM bookings WHERE id = ?', [bookingId]);
+    if (fresh && fresh.status === 'confirmed') {
+      const payment = await db.get('SELECT * FROM booking_payments WHERE booking_id = ? ORDER BY created_at DESC LIMIT 1', [bookingId]);
+      const receipt = await db.get('SELECT * FROM receipts WHERE booking_id = ? ORDER BY created_at DESC LIMIT 1', [bookingId]);
+      return { booking: fresh, payment, receipt, already: true };
+    }
+    throw err('BAD_STATUS', `Booking cannot be confirmed from status '${fresh ? fresh.status : 'gone'}'.`);
   }
   const now = db.now();
   let payId = paymentId;
@@ -175,7 +209,6 @@ async function confirmBooking(bookingId, { kind = 'deposit', fees, captureId = n
       created_at: now,
     });
   }
-  await db.update('bookings', bookingId, { status: 'confirmed' });
   const receiptId = await db.insert('receipts', {
     booking_id: bookingId, kind: 'booking',
     lines_json: JSON.stringify({
@@ -222,7 +255,8 @@ async function startDepositFirst(shopUserId, customerUserId) {
 }
 
 // Step 2: capture the deposit payment -> status 'paid', shop credited,
-// receipt issued. Idempotent.
+// receipt issued. Race-safe: the pending->paid flip is conditional, so two
+// concurrent captures produce exactly one receipt and one ledger credit.
 async function captureDeposit(depositId, captureId = null) {
   const dep = await db.get('SELECT * FROM booking_deposits WHERE id = ?', [depositId]);
   if (!dep) throw err('NOT_FOUND', 'Deposit not found.');
@@ -230,7 +264,14 @@ async function captureDeposit(depositId, captureId = null) {
     return { deposit: dep, already: true };
   }
   if (dep.status !== 'pending') throw err('BAD_STATUS', `Deposit cannot be captured from status '${dep.status}'.`);
-  await db.update('booking_deposits', depositId, { status: 'paid', paypal_capture_id: captureId || null });
+  const claimed = await db.query(
+    "UPDATE booking_deposits SET status = 'paid', paypal_capture_id = ? WHERE id = ? AND status = 'pending'",
+    [captureId || null, depositId]);
+  if (!claimed.changes) {
+    const fresh = await db.get('SELECT * FROM booking_deposits WHERE id = ?', [depositId]);
+    if (fresh && fresh.status === 'paid') return { deposit: fresh, already: true };
+    throw err('BAD_STATUS', `Deposit cannot be captured from status '${fresh ? fresh.status : 'gone'}'.`);
+  }
   const fees = {
     base: dep.amount_cents, platformFee: dep.platform_fee_cents,
     processing: dep.processing_cents, total: dep.total_cents,
@@ -266,28 +307,41 @@ async function bookWithDeposit({ depositId, staffId = null, chairId = null,
   if (Number(dep.created_at) + expiryDays * DAY_MS < now) {
     throw err('DEPOSIT_EXPIRED', 'That deposit credit has expired.');
   }
-  const free = await isSlotFree(dep.shop_user_id, { staffId, chairId, startAt, endAt, now });
-  if (!free) throw err('SLOT_TAKEN', 'That slot is no longer available.');
-  const bookingId = await db.insert('bookings', {
-    shop_user_id: dep.shop_user_id, customer_user_id: dep.customer_user_id,
-    staff_id: staffId || null, chair_id: chairId || null,
-    start_at: startAt, end_at: endAt, status: 'confirmed',
-    deposit_cents: dep.amount_cents, source: 'deposit_first',
-    design_id: designId || null, created_at: now,
+  // Slot claim + deposit claim run under the shop lock: two concurrent
+  // requests can't book the same slot, and two tabs double-clicking the
+  // same paid deposit can't spend it twice.
+  return withShopBookingLock(dep.shop_user_id, async () => {
+    const free = await isSlotFree(dep.shop_user_id, { staffId, chairId, startAt, endAt, now });
+    if (!free) throw err('SLOT_TAKEN', 'That slot is no longer available.');
+    const bookingId = await db.insert('bookings', {
+      shop_user_id: dep.shop_user_id, customer_user_id: dep.customer_user_id,
+      staff_id: staffId || null, chair_id: chairId || null,
+      start_at: startAt, end_at: endAt, status: 'confirmed',
+      deposit_cents: dep.amount_cents, source: 'deposit_first',
+      design_id: designId || null, created_at: now,
+    });
+    const claimed = await db.query(
+      'UPDATE booking_deposits SET booking_id = ? WHERE id = ? AND booking_id IS NULL',
+      [bookingId, depositId]);
+    if (!claimed.changes) {
+      // Lost the race: the deposit was spent by the other request. The
+      // just-inserted booking row is voided so it can never be paid on.
+      await db.update('bookings', bookingId, { status: 'cancelled' });
+      throw err('DEPOSIT_USED', 'That deposit is already linked to a booking.');
+    }
+    // Attach the deposit receipt (created with booking_id NULL at capture time)
+    // to the new booking so /bookings/receipt/:id can find it.
+    await db.query(
+      `UPDATE receipts SET booking_id = ? WHERE kind = 'booking_deposit' AND booking_id IS NULL AND lines_json LIKE ?`,
+      [bookingId, `%"deposit_id":"${String(depositId).replace(/"/g, '')}"%`]
+    );
+    const booking = await db.get('SELECT * FROM bookings WHERE id = ?', [bookingId]);
+    await notifyBookingConfirmed(booking, {
+      base: dep.amount_cents, platformFee: dep.platform_fee_cents,
+      processing: dep.processing_cents, total: dep.total_cents,
+    });
+    return booking;
   });
-  await db.update('booking_deposits', depositId, { booking_id: bookingId });
-  // Attach the deposit receipt (created with booking_id NULL at capture time)
-  // to the new booking so /bookings/receipt/:id can find it.
-  await db.query(
-    `UPDATE receipts SET booking_id = ? WHERE kind = 'booking_deposit' AND booking_id IS NULL AND lines_json LIKE ?`,
-    [bookingId, `%"deposit_id":"${String(depositId).replace(/"/g, '')}"%`]
-  );
-  const booking = await db.get('SELECT * FROM bookings WHERE id = ?', [bookingId]);
-  await notifyBookingConfirmed(booking, {
-    base: dep.amount_cents, platformFee: dep.platform_fee_cents,
-    processing: dep.processing_cents, total: dep.total_cents,
-  });
-  return booking;
 }
 
 // --- Cancel / no-show / complete ------------------------------------------
@@ -430,8 +484,11 @@ async function expireStaleHolds(now = Date.now()) {
   for (const p of pendings) {
     const holdMs = (Number(p.hold_min) > 0 ? Number(p.hold_min) : 30) * 60000;
     if (Number(p.created_at) + holdMs <= now) {
-      await db.update('bookings', p.id, { status: 'expired' });
-      expired += 1;
+      // Conditional: a payment captured between our SELECT and this UPDATE
+      // must win — never expire a booking that just got paid for.
+      const done = await db.query(
+        "UPDATE bookings SET status = 'expired' WHERE id = ? AND status = 'pending_deposit'", [p.id]);
+      if (done.changes) expired += 1;
     }
   }
   return expired;
@@ -522,32 +579,37 @@ async function notifyBookingCanceled(booking, outcome, byShop) {
 // customer pays it through the website PayPal/card checkout (never Google
 // Play Billing). Idempotent; the shop nets exactly `base`.
 async function recordBalanceDue({ bookingId, shopUserId, amountCents, now = Date.now() }) {
-  const booking = await db.get('SELECT * FROM bookings WHERE id = ?', [String(bookingId)]);
-  if (!booking) throw err('NOT_FOUND', 'Booking not found.');
-  if (booking.shop_user_id !== String(shopUserId)) throw err('FORBIDDEN', 'Not your booking.');
-  if (!['confirmed', 'completed'].includes(booking.status)) {
-    throw err('BAD_STATUS', 'A balance can only be recorded on a confirmed booking.');
-  }
-  const amt = Number(amountCents);
-  if (!Number.isInteger(amt) || amt < 100) throw err('BAD_AMOUNT', 'Balance must be at least $1.00.');
-  const existing = await db.get(
-    "SELECT id FROM booking_payments WHERE booking_id = ? AND kind = 'balance' AND status IN ('pending', 'paid')",
-    [booking.id]);
-  if (existing) throw err('EXISTS', 'A balance payment already exists for this booking.');
-  const fees = computeBookingFees(amt);
-  const paymentId = await db.insert('booking_payments', {
-    booking_id: booking.id, kind: 'balance',
-    base_cents: fees.base, platform_fee_cents: fees.platformFee,
-    processing_cents: fees.processing, total_cents: fees.total,
-    status: 'pending', created_at: now,
+  // Serialize per booking: a double-clicked "record balance" must not create
+  // two pending balance rows (the customer could then be charged twice).
+  return db.transaction(async (tx) => {
+    const lock = db.getMode() === 'pg' ? ' FOR UPDATE' : '';
+    const booking = await tx.get(`SELECT * FROM bookings WHERE id = ?${lock}`, [String(bookingId)]);
+    if (!booking) throw err('NOT_FOUND', 'Booking not found.');
+    if (booking.shop_user_id !== String(shopUserId)) throw err('FORBIDDEN', 'Not your booking.');
+    if (!['confirmed', 'completed'].includes(booking.status)) {
+      throw err('BAD_STATUS', 'A balance can only be recorded on a confirmed booking.');
+    }
+    const amt = Number(amountCents);
+    if (!Number.isInteger(amt) || amt < 100) throw err('BAD_AMOUNT', 'Balance must be at least $1.00.');
+    const existing = await tx.get(
+      "SELECT id FROM booking_payments WHERE booking_id = ? AND kind = 'balance' AND status IN ('pending', 'paid')",
+      [booking.id]);
+    if (existing) throw err('EXISTS', 'A balance payment already exists for this booking.');
+    const fees = computeBookingFees(amt);
+    const paymentId = await db.insert('booking_payments', {
+      booking_id: booking.id, kind: 'balance',
+      base_cents: fees.base, platform_fee_cents: fees.platformFee,
+      processing_cents: fees.processing, total_cents: fees.total,
+      status: 'pending', created_at: now,
+    });
+    const shopName = await shopDisplayName(booking.shop_user_id);
+    await notifyUser(booking.customer_user_id, {
+      kind: 'booking', title: 'Session balance due',
+      body: `${shopName} recorded a session balance of ${(fees.total / 100).toFixed(2)} on your booking — pay it on the website whenever you're ready.`,
+      link: `/bookings/receipt/${booking.id}`,
+    });
+    return { paymentId, fees };
   });
-  const shopName = await shopDisplayName(booking.shop_user_id);
-  await notifyUser(booking.customer_user_id, {
-    kind: 'booking', title: 'Session balance due',
-    body: `${shopName} recorded a session balance of ${(fees.total / 100).toFixed(2)} on your booking — pay it on the website whenever you're ready.`,
-    link: `/bookings/receipt/${booking.id}`,
-  });
-  return { paymentId, fees };
 }
 
 // Capture a pending balance payment after website checkout. The booking stays
@@ -565,15 +627,21 @@ async function captureBalancePayment(paymentId, { captureId = null, orderId = nu
   if (payment.status !== 'pending') throw err('BAD_STATUS', 'This balance payment is no longer pending.');
   const booking = await db.get('SELECT * FROM bookings WHERE id = ?', [payment.booking_id]);
   if (!booking) throw err('NOT_FOUND', 'Booking not found.');
+  // Race-safe flip: exactly one concurrent capture wins; the loser reports
+  // already:true instead of writing a second receipt/ledger credit.
+  const claimed = await db.query(
+    'UPDATE booking_payments SET status = ?, paypal_capture_id = ?, paypal_order_id = ? WHERE id = ? AND status = ?',
+    ['paid', captureId || null, orderId || payment.paypal_order_id || null, payment.id, 'pending']);
+  if (!claimed.changes) {
+    const fresh = await db.get('SELECT * FROM booking_payments WHERE id = ?', [payment.id]);
+    if (fresh && fresh.status === 'paid') return { payment: fresh, already: true };
+    throw err('BAD_STATUS', 'This balance payment is no longer pending.');
+  }
   const fees = {
     base: payment.base_cents, platformFee: payment.platform_fee_cents,
     processing: payment.processing_cents, total: payment.total_cents,
   };
   const now = db.now();
-  await db.update('booking_payments', payment.id, {
-    status: 'paid', paypal_capture_id: captureId || null,
-    paypal_order_id: orderId || payment.paypal_order_id || null,
-  });
   const receiptId = await db.insert('receipts', {
     booking_id: booking.id, kind: 'balance',
     lines_json: JSON.stringify({
@@ -600,6 +668,7 @@ async function captureBalancePayment(paymentId, { captureId = null, orderId = nu
 
 module.exports = {
   getBookingSettings, saveBookingSettings, depositBaseCents, depositFees,
+  withShopBookingLock,
   createPendingBooking, confirmBooking,
   startDepositFirst, captureDeposit, bookWithDeposit,
   cancelBooking, markNoShow, markCompleted, expireStaleHolds,

@@ -59,51 +59,75 @@ async function joinWaitlist({ shopUserId, staffId, customerUserId, notes }) {
 // (staff_id set) only match their own staff's slots; general entries
 // (staff_id NULL) match any slot at the shop.
 async function offerNextInLine({ shopUserId, staffId = null, startAt = null, endAt = null }) {
-  const entry = await db.get(
-    `SELECT w.*, u.email AS customer_email, u.display_name AS customer_name
-     FROM waitlist w JOIN users u ON u.id = w.customer_user_id
-     WHERE w.shop_user_id = ? AND w.status = 'waiting'
-       AND (w.staff_id IS NULL OR w.staff_id = ? OR ? IS NULL)
-     ORDER BY w.created_at ASC LIMIT 1`,
-    [String(shopUserId), staffId, staffId]);
-  if (!entry) return null;
-  const expiresAt = Date.now() + OFFER_TTL_MS;
-  await db.update('waitlist', entry.id, { status: 'offered', offer_expires_at: expiresAt });
-  const shop = await db.get('SELECT display_name FROM users WHERE id = ?', [String(shopUserId)]);
-  const shopName = (shop && shop.display_name) || 'the shop';
-  const slotText = startAt && endAt
-    ? ` for ${new Date(Number(startAt)).toLocaleString('en-US', { timeZone: 'America/Chicago' })}`
-    : '';
-  let claimLink = `/waitlist/claim/${entry.id}`;
-  if (startAt && endAt) claimLink += `?start=${Number(startAt)}&end=${Number(endAt)}`;
-  const body = `${shopName} has a spot open${slotText}! Claim it within 24 hours or it goes to the next person in line.`;
-  await notifyUser(entry.customer_user_id, {
-    kind: 'waitlist-offer', title: 'A spot opened up!',
-    body, link: claimLink,
-  });
-  if (entry.customer_email) {
-    await sendMail({
-      to: entry.customer_email,
-      subject: `A spot opened up at ${shopName}!`,
-      text: `Hi ${entry.customer_name || 'there'},\n\n${body}\n\nClaim it here: ${config.baseUrl}${claimLink}\n\n— Tattoo Art Customs`,
+  // Race-safe: the waiting->offered flip is conditional. If two callers pick
+  // the same entry concurrently, exactly one wins the flip; the loser moves
+  // on to the next waiting entry instead of offering the same spot twice.
+  for (let attempt = 0; attempt < 25; attempt += 1) {
+    const entry = await db.get(
+      `SELECT w.*, u.email AS customer_email, u.display_name AS customer_name
+       FROM waitlist w JOIN users u ON u.id = w.customer_user_id
+       WHERE w.shop_user_id = ? AND w.status = 'waiting'
+         AND (w.staff_id IS NULL OR w.staff_id = ? OR ? IS NULL)
+       ORDER BY w.created_at ASC LIMIT 1`,
+      [String(shopUserId), staffId, staffId]);
+    if (!entry) return null;
+    const expiresAt = Date.now() + OFFER_TTL_MS;
+    const flipped = await db.query(
+      "UPDATE waitlist SET status = 'offered', offer_expires_at = ? WHERE id = ? AND status = 'waiting'",
+      [expiresAt, entry.id]);
+    if (!flipped.changes) continue; // lost the race — try the next entry
+    const shop = await db.get('SELECT display_name FROM users WHERE id = ?', [String(shopUserId)]);
+    const shopName = (shop && shop.display_name) || 'the shop';
+    const slotText = startAt && endAt
+      ? ` for ${new Date(Number(startAt)).toLocaleString('en-US', { timeZone: 'America/Chicago' })}`
+      : '';
+    let claimLink = `/waitlist/claim/${entry.id}`;
+    if (startAt && endAt) claimLink += `?start=${Number(startAt)}&end=${Number(endAt)}`;
+    const body = `${shopName} has a spot open${slotText}! Claim it within 24 hours or it goes to the next person in line.`;
+    await notifyUser(entry.customer_user_id, {
+      kind: 'waitlist-offer', title: 'A spot opened up!',
+      body, link: claimLink,
     });
+    if (entry.customer_email) {
+      await sendMail({
+        to: entry.customer_email,
+        subject: `A spot opened up at ${shopName}!`,
+        text: `Hi ${entry.customer_name || 'there'},\n\n${body}\n\nClaim it here: ${config.baseUrl}${claimLink}\n\n— Tattoo Art Customs`,
+      });
+    }
+    return { entryId: entry.id, customerUserId: entry.customer_user_id, claimLink, startAt, endAt };
   }
-  return { entryId: entry.id, customerUserId: entry.customer_user_id, claimLink, startAt, endAt };
+  return null;
 }
 
 // Customer claims their offered slot. Returns the slot info for booking.
+// Race-safe: the offered->claimed flip is conditional, so a double-clicked
+// (or replayed) claim can never be counted twice.
 async function claimOffer({ id, customerUserId, startAt = null, endAt = null }) {
   const entry = await db.get('SELECT * FROM waitlist WHERE id = ?', [String(id)]);
   if (!entry || entry.customer_user_id !== customerUserId) throw new Error('Offer not found.');
   if (entry.status === 'claimed') return { already: true, startAt, endAt, entry };
   if (entry.status !== 'offered') throw new Error('This offer is no longer available.');
   if (entry.offer_expires_at && entry.offer_expires_at <= Date.now()) {
-    await db.update('waitlist', entry.id, { status: 'expired' });
-    // Keep the line moving: immediately offer the next person.
-    await expireOffers();
-    throw new Error('This offer expired — the next person in line has been offered the spot.');
+    // Conditional: a concurrent claim that just won must not be clobbered.
+    const expired = await db.query(
+      "UPDATE waitlist SET status = 'expired' WHERE id = ? AND status = 'offered'", [entry.id]);
+    if (expired.changes) {
+      // Keep the line moving: immediately offer the next person.
+      await expireOffers();
+      throw new Error('This offer expired — the next person in line has been offered the spot.');
+    }
+    const fresh = await db.get('SELECT * FROM waitlist WHERE id = ?', [entry.id]);
+    if (fresh && fresh.status === 'claimed') return { already: true, startAt, endAt, entry: fresh };
+    throw new Error('This offer is no longer available.');
   }
-  await db.update('waitlist', entry.id, { status: 'claimed' });
+  const claimed = await db.query(
+    "UPDATE waitlist SET status = 'claimed' WHERE id = ? AND status = 'offered'", [entry.id]);
+  if (!claimed.changes) {
+    const fresh = await db.get('SELECT * FROM waitlist WHERE id = ?', [entry.id]);
+    if (fresh && fresh.status === 'claimed') return { already: true, startAt, endAt, entry: fresh };
+    throw new Error('This offer is no longer available.');
+  }
   const shop = await db.get('SELECT display_name FROM users WHERE id = ?', [entry.shop_user_id]);
   await notifyUser(entry.shop_user_id, {
     kind: 'waitlist-claimed', title: 'Waitlist spot claimed',
@@ -123,7 +147,10 @@ async function expireOffers() {
     [Date.now()]);
   const results = [];
   for (const entry of stale) {
-    await db.update('waitlist', entry.id, { status: 'expired' });
+    // Conditional: a claim that just won the race must not be expired here.
+    const done = await db.query(
+      "UPDATE waitlist SET status = 'expired' WHERE id = ? AND status = 'offered'", [entry.id]);
+    if (!done.changes) continue;
     await notifyUser(entry.customer_user_id, {
       kind: 'waitlist-expired', title: 'Waitlist offer expired',
       body: 'Your 24-hour claim window passed. You are back in line for the next opening.',
