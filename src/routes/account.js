@@ -9,7 +9,7 @@ const config = require('../config');
 const { requireLogin } = require('../middleware/auth');
 const { hasActiveSubscription } = require('../middleware/auth');
 const { designerAccess } = require('../lib/shopDesigner');
-const { DESIGN_STYLES, portfolioUploadMulter, handlePortfolioUpload } = require('../lib/portfolioUpload');
+const { DESIGN_STYLES, portfolioUploadMulter, handlePortfolioUpload, maybeBookReviewFee } = require('../lib/portfolioUpload');
 const pricing = require('../lib/pricing');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { registerPayoutRoutes, payoutDashboardData } = require('../lib/payoutRoutes');
@@ -295,9 +295,20 @@ router.post('/upload', requireLogin, formLimiter, (req, res, next) => {
       status: 'open', created_at: db.now(),
     });
   }
-  req.session.flash = screen.ok
+  // Tier-1 funding: this free path also creates reviewable designs, so it
+  // books the same quota/fee as the portfolio pipeline — a reviewer's $0.25
+  // must always be prepaid by the uploader's fee, never leak from the pool.
+  // maybeBookReviewFee never throws, so fee bookkeeping can't break the upload.
+  let reviewFeeNote = '';
+  try {
+    const fee = await maybeBookReviewFee(req.user.id, id);
+    if (fee.note) reviewFeeNote = fee.note;
+  } catch (e) {
+    console.error('review fee hook failed for design', id, e.message);
+  }
+  req.session.flash = (screen.ok
     ? 'Art uploaded — it goes live after admin approval.'
-    : 'Art uploaded but flagged for review (possible contact info). An admin will review it.';
+    : 'Art uploaded but flagged for review (possible contact info). An admin will review it.') + reviewFeeNote;
   res.redirect('/account');
 });
 

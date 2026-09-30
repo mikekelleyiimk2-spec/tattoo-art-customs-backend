@@ -90,9 +90,10 @@ async function hasActiveSubscription(userId, planSlug) {
 
 // Lifetime subscription holder (any plan): the owner-granted inner circle.
 // Represented as an active subscriptions row with current_period_end IS NULL
-// (lifetime grants never expire). Owner rule 2026-09-29: lifetime holders
-// never pay upload review fees and their uploads never count against quota
-// (charging them is the owner charging himself).
+// (lifetime grants never expire). Note: lifetime status alone NO LONGER
+// exempts uploads from review fees — that exemption is now the explicit
+// population_admin flag (see isPopulationAdmin); other lifetime holders
+// follow normal quota/fee rules.
 async function hasLifetimeSubscription(userId) {
   const row = await db.get(
     `SELECT s.id FROM subscriptions s

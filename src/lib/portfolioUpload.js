@@ -179,9 +179,9 @@ async function handlePortfolioUpload(req, res, backUrl) {
       status: 'open', created_at: db.now(),
     });
   }
-  // Tier-1 funding: the fee guard runs the lifetime exemption first, then
-  // quota/fees for everyone else. It never throws, so fee bookkeeping can
-  // never break the upload itself.
+  // Tier-1 funding: the fee guard runs the population_admin exemption
+  // first, then quota/fees for everyone else. It never throws, so fee
+  // bookkeeping can never break the upload itself.
   let reviewFeeNote = '';
   try {
     const fee = await maybeBookReviewFee(req.user.id, id);

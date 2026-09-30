@@ -1570,6 +1570,8 @@ async function main() {
   ok(upRes.status === 302 && upRes.headers.get('location') === '/account', 'customer uploads art free, no subscription needed');
   const upDesign = sdb.prepare('SELECT status, artist_id FROM designs WHERE title = ?').get('Customer Doodle');
   ok(upDesign && upDesign.status === 'pending' && upDesign.artist_id === custId, 'upload held pending admin approval');
+  const freeQuota = sdb.prepare('SELECT count FROM artist_upload_usage WHERE user_id = ?').get(custId);
+  ok(freeQuota && freeQuota.count === 1, 'free-path upload counts toward monthly quota (fee hook wired)');
   const galCount = sdb.prepare("SELECT COUNT(*) AS n FROM designs WHERE title = 'Customer Doodle' AND status = 'approved'").get().n;
   ok(galCount === 0, 'unapproved upload is not live');
 
