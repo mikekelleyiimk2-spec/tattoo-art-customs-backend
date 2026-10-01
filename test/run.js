@@ -21,6 +21,8 @@ process.env.TAC_TEST_PAYPAL_STUB = '1';
 // Enables the /__test_async_crash route (proves handler failures can't kill
 // the server process).
 process.env.TAC_TEST_ROUTES = '1';
+// Muse service pipe token for /api/muse/notify tests (inherited by the app at spawn).
+process.env.MUSE_SERVICE_TOKEN = 'test-muse-pipe-token';
 
 const PORT = 4137;
 let failures = 0;
@@ -682,6 +684,33 @@ async function main() {
       method: 'POST', headers: { 'x-api-token': linkBody.api_token },
     });
     ok(qbBadDesign.status === 404, 'quick-buy with unknown design is 404');
+  }
+
+  // Muse service pipe: POST /api/muse/notify drops a message into a user's
+  // in-app notification inbox through the product itself (Muse-to-Muse bus).
+  // (Token is set at the top of this file so the spawned app inherits it;
+  // the pipe 404s when the env var is unset — verified by code path.)
+  {
+    const PIPE_TOKEN = 'test-muse-pipe-token';
+    const musePost = (body, token) => fetch(`http://localhost:${PORT}/api/muse/notify`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify(body),
+    });
+    let mr = await musePost({ to: 'buyer@test.local', title: 'x' });
+    ok(mr.status === 401, 'muse pipe rejects missing bearer token');
+    mr = await musePost({ to: 'buyer@test.local', title: 'x' }, 'wrong-token');
+    ok(mr.status === 401, 'muse pipe rejects wrong bearer token');
+    mr = await musePost({ to: 'buyer@test.local' }, PIPE_TOKEN);
+    ok(mr.status === 400, 'muse pipe requires to and title');
+    mr = await musePost({ to: 'buyer@test.local', title: 'Muse voice test', body: 'pipe check', kind: 'muse' }, PIPE_TOKEN);
+    const mj = await mr.json();
+    ok(mr.status === 200 && mj.ok && mj.notified.length === 1, 'muse pipe accepts valid bearer and reports recipient');
+    const buyerId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('buyer@test.local').id;
+    ok(!!sdb.prepare("SELECT id FROM notifications WHERE user_id = ? AND kind = 'muse' AND title = 'Muse voice test'").get(buyerId),
+      'muse pipe writes the brief into the target user inbox');
+    mr = await musePost({ to: 'nobody@test.local', title: 'x' }, PIPE_TOKEN);
+    ok(mr.status === 404, 'muse pipe 404s unknown recipient');
   }
 
   // tester bug reports: public form saves + emails the owner (dev-logged here)
