@@ -2343,6 +2343,22 @@ async function main() {
     prodServer.kill();
   }
 
+  // /contact: a normal email passes validation, creates a notification row,
+  // and the success flash fires. Invalid emails are rejected with the
+  // validation flash and create nothing (regression: double-escaped regex
+  // rejected every real email, and the success flash fired on mail failure).
+  const contactName = 'REGRESSION-7733 Tester';
+  r = await req('POST', '/contact', { follow: false, body: { name: contactName, email: 'regression-7733@test.local', topic: 'order', message: 'Contact form end-to-end check.' } });
+  ok(r.status === 302 && r.location === '/contact', 'valid contact email accepted (redirects)');
+  r = await req('GET', '/contact');
+  ok(r.status === 200 && r.text.includes('your message was sent'), 'contact success flash shown for valid email');
+  ok(!!sdb.prepare("SELECT id FROM notifications WHERE kind = 'contact' AND body LIKE ?").get('%REGRESSION-7733%'), 'contact submission creates a contact notification row');
+  r = await req('POST', '/contact', { follow: false, body: { name: 'Nope', email: 'not-an-email', topic: 'other', message: 'x' } });
+  ok(r.status === 302 && r.location === '/contact', 'invalid contact email rejected (redirects)');
+  r = await req('GET', '/contact');
+  ok(r.status === 200 && r.text.includes('a valid email'), 'contact validation flash shown for bad email');
+  ok(!sdb.prepare("SELECT id FROM notifications WHERE kind = 'contact' AND body LIKE ?").get('%not-an-email%'), 'rejected contact creates no notification');
+
   // Design page: custom piece shows the custom price.
   r = await req('GET', `/design/${prow.id}`);
   ok(r.status === 200 && r.text.includes(pricing.money(pricing.withFeeCents(pricing.customFullCents()))), 'design page shows custom price for portfolio piece');

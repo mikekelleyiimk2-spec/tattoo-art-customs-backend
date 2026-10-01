@@ -297,6 +297,9 @@ router.get('/about', (req, res) => res.render('site/about', {
   metaDescription: 'About Tattoo Art Customs marketplace.',
 }));
 
+// Shared email validator (single-backslash escapes). Used by /contact and /app-notify.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
 // Contact page: public form + business email. Emailed straight to the owner.
 router.get('/contact', (req, res) => res.render('site/contact', {
   title: 'Contact Us — Tattoo Art Customs',
@@ -307,11 +310,13 @@ router.post('/contact', formLimiter, checkHoneypot, async (req, res) => {
   const email = String(req.body.email || '').trim().slice(0, 120);
   const topic = ['order', 'custom', 'artist', 'shop', 'other'].includes(req.body.topic) ? req.body.topic : 'other';
   const message = String(req.body.message || '').trim().slice(0, 2000);
-  if (!name || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(email) || !message) {
+  if (!name || !EMAIL_RE.test(email) || !message) {
+    console.error('contact validation rejected', { name: name.slice(0, 40), email, messageLen: message.length });
     req.session.flash = 'Please include your name, a valid email, and a message.';
     return res.redirect('/contact');
   }
   const body = `From: ${name} <${email}>\nTopic: ${topic}\n\n${message}`;
+  let sent = 0;
   try {
     const { sendMail } = require('../lib/mail');
     let to = [config.adminEmail].filter(Boolean);
@@ -320,7 +325,10 @@ router.post('/contact', formLimiter, checkHoneypot, async (req, res) => {
       to = heads.map((h) => h.email);
     }
     for (const addr of to) {
-      await sendMail({ to: addr, subject: `[Contact: ${topic}] ${name}`, text: body });
+      try {
+        await sendMail({ to: addr, subject: `[Contact: ${topic}] ${name}`, text: body });
+        sent += 1;
+      } catch (e) { console.error('contact email failed:', addr, e.message); }
     }
   } catch (e) { console.error('contact email failed:', e.message); }
   try {
@@ -329,7 +337,13 @@ router.post('/contact', formLimiter, checkHoneypot, async (req, res) => {
       body: `${name} <${email}>`, link: '/contact',
     });
   } catch (e) { console.error('contact notify failed:', e.message); }
-  req.session.flash = 'Thanks — your message was sent. We\'ll reply soon.';
+  // Never claim success unless at least one email actually went out.
+  if (sent > 0) {
+    req.session.flash = 'Thanks — your message was sent. We\'ll reply soon.';
+  } else {
+    console.error('contact email failed: no recipients received the message', { name: name.slice(0, 40), email });
+    req.session.flash = 'Sorry — we couldn\'t send your message right now. Please email us directly from the address on this page and we\'ll reply soon.';
+  }
   res.redirect('/contact');
 });
 
@@ -397,7 +411,7 @@ router.post('/report-bug', formLimiter, checkHoneypot, async (req, res) => {
 router.post('/app-notify', formLimiter, checkHoneypot, async (req, res) => {
   const raw = String(req.body.email || '').trim().toLowerCase().slice(0, 120);
   const platform = ['ios', 'android'].includes(req.body.platform) ? req.body.platform : 'any';
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(raw)) {
+  if (!EMAIL_RE.test(raw)) {
     req.session.flash = 'Please enter a valid email address.';
     return res.redirect('/#app');
   }
