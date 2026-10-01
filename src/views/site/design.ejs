@@ -3,53 +3,55 @@
 <% } %>
 <div class="two-col">
   <div>
-    <img class="detail-img" src="/img/designs/<%= imgFile || design.linework_wm_path.split('/').pop() %>" alt="Tattoo design linework: <%= design.title %>">
+    <img class="detail-img" src="/img/designs/<%= imgFile || design.linework_wm_path.split('/').pop() %>" alt="<%= t('design.linework_alt', {title: design.title}) %>" decoding="async">
     <% if (blurred) { %>
-    <p class="muted"><strong>This preview is blurred</strong> — the piece is rated explicit.
-      <a href="/account#content">Verify your age and opt in</a> to view it unblurred, or purchase it to receive the full files.</p>
+    <p class="muted"><strong><%= t('design.blurred_note') %></strong>
+      <a href="/account#content"><%= t('design.verify_age') %></a> <%= t('design.blurred_tail') %></p>
     <% } else { %>
-    <p class="muted">Linework preview shown. Full color delivered after purchase.</p>
+    <p class="muted"><%= t('design.linework_note') %></p>
     <% } %>
   </div>
   <div>
     <h1><%= design.title %></h1>
     <% design.categories.forEach(function(c) { %><span class="tag"><%= c %></span><% }); %>
     <p><%= design.description %></p>
-    <% if (artist) { %><p class="muted">By <a href="/artists/<%= design.artist_id %>"><%= artist.display_name %></a>
+    <% if (artist) { %><p class="muted"><%= t('design.by') %> <a href="/artists/<%= design.artist_id %>"><%= artist.display_name %></a>
       <% if (currentUser && currentUser.id !== design.artist_id) { %>
       <form method="post" action="/messages/start" style="display:inline">
         <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
         <input type="hidden" name="to_user_id" value="<%= design.artist_id %>">
         <input type="hidden" name="subject" value="Question about &quot;<%= design.title %>&quot;">
-        <button class="linklike" type="submit">Message the artist</button>
+        <button class="linklike" type="submit"><%= t('design.message_artist') %></button>
       </form>
       <% } %></p><% } %>
-    <p><strong><%= money(priceTotal) %></strong> <span class="muted">(includes <%= money(priceFee) %> processing fee)</span> <% if (sale) { %><span class="badge ok">Saturday sale price</span><% } %> <% if (typeof isCustom !== 'undefined' && isCustom) { %><span class="badge">custom portfolio piece — delivered instantly</span><% } %></p>
+    <p><strong><%= fmtMoney(priceTotal) %></strong> <span class="muted"><%= t('design.price_includes', {fee: fmtMoney(priceFee)}) %></span> <% if (sale) { %><span class="badge ok"><%= t('design.sale_price') %></span><% } %> <% if (typeof isCustom !== 'undefined' && isCustom) { %><span class="badge"><%= t('design.custom_portfolio') %></span><% } %></p>
+    <% if (vatNote) { %><p class="muted fineprint"><%= vatNote %></p><% } %>
     <% if (currentUser) { %>
     <form method="post" action="/orders/buy/<%= design.id %>">
       <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
       <% if (design.color_source === 'none') { %>
-      <p class="muted">This piece has no color version — you get the clean linework at 3% off.</p>
+      <p class="muted"><%= t('design.no_color') %></p>
       <label><input type="radio" name="linework_only" value="1" checked>
-        <strong>Clean linework only — <%= money(lineworkTotal) %></strong> <span class="muted">(incl. fee)</span></label>
+        <strong><%= t('design.linework_only', {price: fmtMoney(lineworkTotal)}) %></strong> <span class="muted"><%= t('design.incl_fee') %></span></label>
       <% } else { %>
       <label><input type="radio" name="linework_only" value="0" checked>
-        <strong>Full color + clean linework — <%= money(priceTotal) %></strong> <span class="muted">(incl. fee)</span></label>
+        <strong><%= t('design.full_color', {price: fmtMoney(priceTotal)}) %></strong> <span class="muted"><%= t('design.incl_fee') %></span></label>
       <label><input type="radio" name="linework_only" value="1">
-        <strong>Clean linework only — <%= money(lineworkTotal) %></strong>
-        <span class="muted">(3% off, incl. fee)</span></label>
+        <strong><%= t('design.linework_only', {price: fmtMoney(lineworkTotal)}) %></strong>
+        <span class="muted"><%= t('design.linework_off') %></span></label>
       <% } %>
-      <p><button class="btn" type="submit">Buy now</button></p>
+      <% const _fx = fxNote(priceTotal); if (_fx) { %><p class="muted fineprint"><%= _fx %></p><% } %>
+      <p><button class="btn" type="submit"><%= t('design.buy_now') %></button></p>
       <% if (typeof creditBalance !== 'undefined' && creditBalance >= lineworkPrice) { %>
-      <p><button class="btn btn-secondary" type="submit" name="use_credit" value="1">Pay with site credit (<%= money(creditBalance) %> available)</button></p>
+      <p><button class="btn btn-secondary" type="submit" name="use_credit" value="1"><%= t('design.pay_credit', {balance: fmtMoney(creditBalance)}) %></button></p>
       <% } %>
     </form>
     <% } else { %>
-    <p><a class="btn" href="/login?next=<%= encodeURIComponent('/design/' + design.id) %>">Log in to buy</a></p>
+    <p><a class="btn" href="/login?next=<%= encodeURIComponent('/design/' + design.id) %>"><%= t('design.login_to_buy') %></a></p>
     <% } %>
     <% if (typeof owned !== 'undefined' && owned) { %>
-    <p><a class="btn btn-secondary" href="/prints/order/design/<%= design.id %>">Order a print</a>
-    <a class="btn btn-secondary" href="/merch/tee/<%= design.id %>">Get this on a tee</a></p>
+    <p><a class="btn btn-secondary" href="/prints/order/design/<%= design.id %>"><%= t('design.order_print') %></a>
+    <a class="btn btn-secondary" href="/merch/tee/<%= design.id %>"><%= t('design.get_tee') %></a></p>
     <% } %>
   </div>
 </div>

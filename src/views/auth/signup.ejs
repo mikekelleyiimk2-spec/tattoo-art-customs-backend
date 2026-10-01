@@ -1,15 +1,15 @@
-<h1>Create your account</h1>
-<p class="muted">Free to join — no card needed. After signup you can upload art free, order custom designs, and pick a membership plan only if you want to earn commission.</p>
+<h1><%= t('auth.signup_title') %></h1>
+<p class="muted"><%= t('auth.signup_sub') %></p>
 <form method="post" action="/signup" class="form">
   <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-  <label for="display_name">Display name</label>
+  <label for="display_name"><%= t('auth.display_name') %></label>
   <input type="text" id="display_name" name="display_name" maxlength="60" required>
-  <label for="email">Email</label>
+  <label for="email"><%= t('auth.email') %></label>
   <input type="email" id="email" name="email" required autocomplete="email">
-  <label for="password">Password (8+ characters)</label>
+  <label for="password"><%= t('auth.password8') %></label>
   <input type="password" id="password" name="password" minlength="8" required autocomplete="new-password">
-  <label for="referral_code">Friend's referral code (optional)</label>
-  <input type="text" id="referral_code" name="referral_code" maxlength="16" value="<%= referralCode || '' %>" placeholder="e.g. TAC-ABC123">
-  <p><button class="btn" type="submit">Sign up</button></p>
+  <label for="referral_code"><%= t('auth.referral') %></label>
+  <input type="text" id="referral_code" name="referral_code" maxlength="16" value="<%= referralCode || '' %>" placeholder="<%= t('auth.referral_ph') %>">
+  <p><button class="btn" type="submit"><%= t('auth.signup_btn') %></button></p>
 </form>
-<p>Already have an account? <a href="/login">Log in</a></p>
+<p><%= t('auth.have_account') %> <a href="/login"><%= t('auth.login_btn') %></a></p>

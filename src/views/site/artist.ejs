@@ -1,32 +1,32 @@
 <div class="two-col">
   <div>
-    <h1><%= artist.display_name || 'Artist' %></h1>
-    <% if (artist.is_founding_artist) { %><p><span class="badge ok">Founding Artist</span></p><% } %>
-    <% if (bio) { %><p><%= bio %></p><% } else { %><p class="muted">Tattoo design artist on Tattoo Art Customs.</p><% } %>
+    <h1><%= artist.display_name || t('artist_page.default_bio') %></h1>
+    <% if (artist.is_founding_artist) { %><p><span class="badge ok"><%= t('artist_page.founding') %></span></p><% } %>
+    <% if (bio) { %><p><%= bio %></p><% } else { %><p class="muted"><%= t('artist_page.default_bio') %></p><% } %>
   </div>
   <div>
-    <p class="muted">Custom portfolio pieces sell at the custom-design price and are delivered instantly after payment. Pre-designs are also listed on the main gallery.</p>
+    <p class="muted"><%= t('artist_page.portfolio_note') %></p>
     <% if (currentUser && currentUser.id !== artist.id) { %>
     <form method="post" action="/messages/start" style="display:inline">
       <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
       <input type="hidden" name="to_user_id" value="<%= artist.id %>">
       <input type="hidden" name="subject" value="Question for <%= artist.display_name || 'Artist' %>">
-      <button class="btn" type="submit">Message <%= artist.display_name || 'artist' %></button>
+      <button class="btn" type="submit"><%= t('artist_page.message', {name: artist.display_name || 'artist'}) %></button>
     </form>
     <% } %>
   </div>
 </div>
 <% if (!pieces.length) { %>
-<p class="muted">No pieces published yet — check back soon.</p>
+<p class="muted"><%= t('artist_page.no_pieces') %></p>
 <% } %>
 <div class="grid">
 <% pieces.forEach(function(p) { %>
   <div class="card">
-    <a href="/design/<%= p.id %>"><img src="/img/designs/<%= p.thumb || p.linework_wm_path.split('/').pop() %>" alt="Tattoo design linework: <%= p.title %>" loading="lazy"></a>
+    <a href="/design/<%= p.id %>"><img src="/img/designs/<%= p.thumb || p.linework_wm_path.split('/').pop() %>" alt="<%= t('home.design_alt', {title: p.title}) %>" loading="lazy" decoding="async"></a>
     <h3><a href="/design/<%= p.id %>"><%= p.title %></a></h3>
-    <p><strong><%= money(p.price) %></strong>
-      <% if (p.listing_type === 'custom') { %><span class="badge">custom piece</span><% } else { %><span class="badge">pre-design</span><% } %>
-      <% if (sale) { %><span class="badge ok">sale</span><% } %>
+    <p><strong><%= fmtMoney(p.price) %></strong>
+      <% if (p.listing_type === 'custom') { %><span class="badge"><%= t('design.custom_portfolio') %></span><% } else { %><span class="badge"><%= t('design.pre_design') %></span><% } %>
+      <% if (sale) { %><span class="badge ok"><%= t('common.sale') %></span><% } %>
     </p>
   </div>
 <% }); %>

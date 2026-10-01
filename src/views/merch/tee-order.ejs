@@ -1,7 +1,7 @@
-<h1>Mike's Custom Tees</h1>
-<h2>Custom tee</h2>
-<p class="muted">Printing: <strong><%= design.title %></strong> (your purchased design)</p>
-<p class="muted">Bella + Canvas 3001 — premium ring-spun cotton tee. Prices include the 3.5% + $0.49 processing fee.</p>
+<h1><%= t('merch.title') %></h1>
+<h2><%= t('merch.order_title') %></h2>
+<p class="muted"><%= t('merch.printing', {title: design.title}) %></p>
+<p class="muted"><%= t('merch.fee_note') %></p>
 
 <form method="post" action="/merch/tee">
   <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
@@ -9,15 +9,15 @@
 
   <div class="two-col">
     <div>
-      <label for="tee-size">Size</label>
+      <label for="tee-size"><%= t('merch.size') %></label>
       <select id="tee-size" name="size" required>
         <% sizes.forEach(function(s) { %>
-        <option value="<%= s %>"<%= s === 'M' ? ' selected' : '' %>><%= s %> — <%= money(withFee(priceFor(s))) %></option>
+        <option value="<%= s %>"<%= s === 'M' ? ' selected' : '' %>><%= s %> — <%= fmtMoney(withFee(priceFor(s))) %></option>
         <% }); %>
       </select>
     </div>
     <div>
-      <label for="tee-color">Color</label>
+      <label for="tee-color"><%= t('merch.color') %></label>
       <select id="tee-color" name="color" required>
         <% colors.forEach(function(c) { %>
         <option value="<%= c %>"><%= c.charAt(0).toUpperCase() + c.slice(1) %></option>
@@ -28,52 +28,53 @@
 
   <div class="two-col">
     <div>
-      <label for="tee-qty">Quantity (max 10)</label>
+      <label for="tee-qty"><%= t('merch.qty') %></label>
       <input type="number" id="tee-qty" name="quantity" value="1" min="1" max="10" required>
     </div>
     <div>
-      <label for="tee-style">Artwork style</label>
+      <label for="tee-style"><%= t('merch.style_label') %></label>
       <select id="tee-style" name="style">
-        <option value="color">Full color</option>
-        <option value="linework">Clean linework</option>
+        <option value="color"><%= t('merch.style_color') %></option>
+        <option value="linework"><%= t('merch.style_linework') %></option>
       </select>
     </div>
   </div>
 
-  <h2>Shipping address</h2>
+  <h2><%= t('merch.ship_h') %></h2>
   <div>
-    <label for="ship-name">Full name</label>
+    <label for="ship-name"><%= t('merch.full_name') %></label>
     <input type="text" id="ship-name" name="ship_name" required maxlength="120" autocomplete="name">
   </div>
   <div>
-    <label for="ship-address1">Street address</label>
+    <label for="ship-address1"><%= t('merch.street') %></label>
     <input type="text" id="ship-address1" name="ship_address1" required maxlength="160" autocomplete="street-address">
   </div>
   <div>
-    <label for="ship-address2">Apt / suite (optional)</label>
+    <label for="ship-address2"><%= t('merch.apt') %></label>
     <input type="text" id="ship-address2" name="ship_address2" maxlength="160">
   </div>
   <div class="two-col">
     <div>
-      <label for="ship-city">City</label>
+      <label for="ship-city"><%= t('merch.city') %></label>
       <input type="text" id="ship-city" name="ship_city" required maxlength="80" autocomplete="address-level2">
     </div>
     <div>
-      <label for="ship-state">State / region</label>
+      <label for="ship-state"><%= t('merch.state') %></label>
       <input type="text" id="ship-state" name="ship_state" maxlength="80" autocomplete="address-level1">
     </div>
   </div>
   <div class="two-col">
     <div>
-      <label for="ship-zip">ZIP / postal code</label>
+      <label for="ship-zip"><%= t('merch.zip') %></label>
       <input type="text" id="ship-zip" name="ship_zip" required maxlength="20" autocomplete="postal-code">
     </div>
     <div>
-      <label for="ship-country">Country</label>
+      <label for="ship-country"><%= t('merch.country') %></label>
       <input type="text" id="ship-country" name="ship_country" value="US" maxlength="60" autocomplete="country-name">
     </div>
   </div>
 
-  <p><button class="btn" type="submit">Continue to payment</button></p>
+  <p><button class="btn" type="submit"><%= t('merch.continue_payment') %></button></p>
 </form>
-<p class="muted">Tees are made to order and ship within 5–7 business days. All merch sales are final.</p>
+<% if (vatNote) { %><p class="muted fineprint"><%= vatNote %></p><% } %>
+<p class="muted"><%= t('merch.made_order') %></p>

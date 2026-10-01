@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= locale %>">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -13,6 +13,8 @@
 <meta name="p:domain_verify" content="29d0a3d3520145229ad9e0301b3dc5b1">
 <% if (typeof canonical !== 'undefined' && canonical) { %>
 <link rel="canonical" href="<%= canonical %>">
+<% supportedLocales.forEach(function(l) { %><link rel="alternate" hreflang="<%= l %>" href="<%= canonical %>?hl=<%= l %>">
+<% }); %><link rel="alternate" hreflang="x-default" href="<%= canonical %>">
 <% } %>
 <meta property="og:site_name" content="Tattoo Art Customs">
 <meta property="og:type" content="<%= typeof ogType !== 'undefined' ? ogType : 'website' %>">
@@ -40,33 +42,33 @@
 <% } %>
 </head>
 <body>
-<a class="skip" href="#main">Skip to main content</a>
+<a class="skip" href="#main"><%= t('nav.skip') %></a>
 <header class="site-header">
-  <nav class="nav" aria-label="Main navigation">
+  <nav class="nav" aria-label="<%= t('nav.main') %>">
     <a class="brand" href="/">Tattoo Art Customs™</a>
-    <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false" onclick="document.querySelector('.nav').classList.toggle('open');this.setAttribute('aria-expanded',document.querySelector('.nav').classList.contains('open'))">☰</button>
+    <button class="nav-toggle" aria-label="<%= t('nav.toggle_menu') %>" aria-expanded="false" onclick="document.querySelector('.nav').classList.toggle('open');this.setAttribute('aria-expanded',document.querySelector('.nav').classList.contains('open'))">☰</button>
     <div class="nav-links">
-      <a href="/gallery">Gallery</a>
-      <a href="/orders/custom">Custom Design</a>
-      <a href="/membership">Membership</a>
-      <a href="/gift-cards/buy">Gift Cards</a>
-      <a href="/merch">Custom Tees</a>
-      <a href="/contests">Contests</a>
-      <a href="/about">About</a>
-      <% if (playStoreUrl) { %><a class="btn" href="<%= playStoreUrl %>" target="_blank" rel="noopener">Get the app</a><% } %>
+      <a href="/gallery"><%= t('nav.gallery') %></a>
+      <a href="/orders/custom"><%= t('nav.custom_design') %></a>
+      <a href="/membership"><%= t('nav.membership') %></a>
+      <a href="/gift-cards/buy"><%= t('nav.gift_cards') %></a>
+      <a href="/merch"><%= t('nav.custom_tees') %></a>
+      <a href="/contests"><%= t('nav.contests') %></a>
+      <a href="/about"><%= t('nav.about') %></a>
+      <% if (playStoreUrl) { %><a class="btn" href="<%= playStoreUrl %>" target="_blank" rel="noopener"><%= t('nav.get_app') %></a><% } %>
       <% if (currentUser) { %>
-        <a href="/account">Account</a>
-        <a href="/wallet">Wallet</a>
-        <a href="/studio">Design Studio</a>
-        <% if (currentUser.role === 'design_artist') { %><a href="/artist">Artist</a><% } %>
-        <% if (currentUser.role === 'tattoo_shop') { %><a href="/shop">Shop</a><% } %>
-        <% if (currentUser.role === 'admin' || currentUser.role === 'head_admin') { %><a href="/admin">Admin</a><% } %>
-        <a href="/messages">Messages</a>
-        <a href="/notifications">Notifications<% if (typeof notifCount !== 'undefined' && notifCount > 0) { %> <span class="badge warn"><%= notifCount %></span><% } %></a>
-        <a href="/logout">Log out</a>
+        <a href="/account"><%= t('nav.account') %></a>
+        <a href="/wallet"><%= t('nav.wallet') %></a>
+        <a href="/studio"><%= t('nav.studio') %></a>
+        <% if (currentUser.role === 'design_artist') { %><a href="/artist"><%= t('nav.artist') %></a><% } %>
+        <% if (currentUser.role === 'tattoo_shop') { %><a href="/shop"><%= t('nav.shop') %></a><% } %>
+        <% if (currentUser.role === 'admin' || currentUser.role === 'head_admin') { %><a href="/admin"><%= t('nav.admin') %></a><% } %>
+        <a href="/messages"><%= t('nav.messages') %></a>
+        <a href="/notifications"><%= t('nav.notifications') %><% if (typeof notifCount !== 'undefined' && notifCount > 0) { %> <span class="badge warn"><%= notifCount %></span><% } %></a>
+        <a href="/logout"><%= t('nav.logout') %></a>
       <% } else { %>
-        <a href="/login">Log in</a>
-        <a class="btn" href="/signup">Sign up</a>
+        <a href="/login"><%= t('nav.login') %></a>
+        <a class="btn" href="/signup"><%= t('nav.signup') %></a>
       <% } %>
     </div>
   </nav>
@@ -86,29 +88,29 @@
   <div class="container footer-grid">
     <div>
       <strong>Tattoo Art Customs™</strong>
-      <p>Original tattoo designs. Custom work with 48-hour delivery.</p>
+      <p><%= t('footer.tagline') %></p>
     </div>
-    <nav aria-label="Footer navigation">
-      <a href="/gallery">Gallery</a>
-      <a href="/membership">Membership</a>
-      <a href="/gift-cards/buy">Gift Cards</a>
-      <a href="/merch">Custom Tees</a>
-      <a href="/contests">Contests</a>
-      <a href="/aftercare">Aftercare</a>
-      <a href="/advertise">Advertise</a>
-      <a href="/terms">Terms</a>
-      <a href="/privacy">Privacy</a>
-      <a href="/about">About</a>
-      <a href="/contact">Contact</a>
-      <% if (youtubeUrl) { %><a href="<%= youtubeUrl %>" target="_blank" rel="noopener">YouTube</a><% } %>
-      <% if (playStoreUrl) { %><a href="<%= playStoreUrl %>" target="_blank" rel="noopener">Get the app</a><% } %>
+    <nav aria-label="<%= t('footer.nav') %>">
+      <a href="/gallery"><%= t('nav.gallery') %></a>
+      <a href="/membership"><%= t('nav.membership') %></a>
+      <a href="/gift-cards/buy"><%= t('nav.gift_cards') %></a>
+      <a href="/merch"><%= t('nav.custom_tees') %></a>
+      <a href="/contests"><%= t('nav.contests') %></a>
+      <a href="/aftercare"><%= t('footer.aftercare') %></a>
+      <a href="/advertise"><%= t('footer.advertise') %></a>
+      <a href="/terms"><%= t('footer.terms') %></a>
+      <a href="/privacy"><%= t('footer.privacy') %></a>
+      <a href="/about"><%= t('nav.about') %></a>
+      <a href="/contact"><%= t('footer.contact') %></a>
+      <% if (youtubeUrl) { %><a href="<%= youtubeUrl %>" target="_blank" rel="noopener"><%= t('footer.youtube') %></a><% } %>
+      <% if (playStoreUrl) { %><a href="<%= playStoreUrl %>" target="_blank" rel="noopener"><%= t('nav.get_app') %></a><% } %>
     </nav>
   </div>
-  <p class="fineprint">© <%= new Date().getFullYear() %> Tattoo Art Customs. All sales, subscriptions, and memberships are final.</p>
+  <p class="fineprint">© <%= new Date().getFullYear() %> Tattoo Art Customs. <%= t('footer.rights') %></p>
 </footer>
 <div id="cookie-banner" style="display:none;position:fixed;left:0;right:0;bottom:0;background:#1a1a1a;color:#fff;padding:12px 16px;gap:12px;align-items:center;justify-content:space-between;z-index:9999;font-size:14px;">
-  <span>We use cookies for sign-in, preferences, and — once enabled — Google advertising. See our <a href="/privacy" style="color:#ffd166;">Privacy Policy</a>.</span>
-  <button id="cookie-ok" class="btn" style="white-space:nowrap;">Got it</button>
+  <span><%- t('cookie.text', {privacy: '<a href="/privacy" style="color:#ffd166;">' + t('cookie.privacy') + '</a>'}) %></span>
+  <button id="cookie-ok" class="btn" style="white-space:nowrap;"><%= t('cookie.got_it') %></button>
 </div>
 <script>
 (function () {
@@ -124,6 +126,7 @@
     b.style.display = 'none';
   });
 })();
+var TAC_WORKING_LABEL = <%- JSON.stringify(t('common.working')) %>;
 // Double-submit protection + feedback: every POST form disables its submit
 // buttons on submit so rapid clicks can't stack duplicate orders or
 // subscriptions, and the user sees that something is happening.
@@ -137,7 +140,7 @@ document.addEventListener('submit', function (ev) {
     el.disabled = true;
     if (el.tagName === 'BUTTON' && !el.dataset.label) {
       el.dataset.label = el.textContent;
-      el.textContent = 'Working…';
+      el.textContent = TAC_WORKING_LABEL;
     }
   });
 });

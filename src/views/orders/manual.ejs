@@ -1,25 +1,27 @@
-<h1>Pay manually</h1>
+<h1><%= t('orders.manual_title') %></h1>
 <% const base = order.order_type === 'custom' ? order.deposit_cents : order.amount_cents; const fee = order.fee_cents || 0; const rush = order.rush_fee_cents || 0; const mp = typeof basePath !== 'undefined' ? basePath : '/orders/manual'; const isTicket = order.order_type === 'raffle_ticket'; %>
-<p>Order <strong><%= order.id.slice(0,8) %></strong> — amount due: <strong><%= money(base + fee + rush) %></strong> <span class="muted">(includes <%= money(fee) %> processing fee<% if (rush > 0) { %> + <%= money(rush) %> rush fee<% } %>)</span></p>
-<p class="muted">Send payment via PayPal, CashApp, or Venmo, then record it here. An admin confirms every manual payment before <%= isTicket ? 'your raffle entry is recorded' : 'your download unlocks' %>.</p>
+<p><%- t('orders.manual_due', {id: '<strong>' + order.id.slice(0,8) + '</strong>', amount: '<strong>' + fmtMoney(base + fee + rush) + '</strong>', fee_note: t(rush > 0 ? 'orders.fee_incl_rush' : 'orders.fee_incl', {fee: fmtMoney(fee), rush: fmtMoney(rush)})}) %></p>
+<p class="muted"><%= t('orders.manual_note', {tail: t(isTicket ? 'orders.tail_raffle' : 'orders.tail_download')}) %></p>
 
-<h2>Pay with PayPal</h2>
+<h2><%= t('orders.pay_with_paypal') %></h2>
 <div class="card">
-  <p>Pay the exact order total of <strong><%= money(base + fee + rush) %></strong> securely through PayPal — no account needed.</p>
+  <p><%- t('orders.pay_exact', {amount: '<strong>' + fmtMoney(base + fee + rush) + '</strong>'}) %></p>
   <form method="post" action="<%= mp %>/<%= order.id %>/paypal" class="form">
     <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-    <p><button class="btn" type="submit">Pay <%= money(base + fee + rush) %> with PayPal</button></p>
+    <% const _ppfx = fxNote(base + fee + rush); if (_ppfx) { %><p class="muted fineprint"><%= _ppfx %></p><% } %>
+    <p><button class="btn" type="submit"><%= t('orders.pay_with', {amount: fmtMoney(base + fee + rush)}) %></button></p>
   </form>
-  <p class="muted">You'll be taken to PayPal to approve the one-time payment, then returned here automatically.</p>
+  <p class="muted"><%= t('orders.paypal_redirect') %></p>
 </div>
 
-<h2>Pay with CashApp or Venmo</h2>
-<p class="muted">Use the payment links on our socials, then record it here.</p>
+<h2><%= t('orders.pay_cashapp') %></h2>
+<p class="muted"><%= t('orders.socials_note') %></p>
 <form method="post" action="<%= mp %>/<%= order.id %>" class="form">
   <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-  <label for="method">Payment method</label>
+  <label for="method"><%= t('orders.method') %></label>
   <select id="method" name="method"><option value="cashapp">CashApp</option><option value="venmo">Venmo</option><option value="paypal">PayPal</option></select>
-  <label for="note">Note (e.g. your $Cashtag or transaction memo)</label>
+  <label for="note"><%= t('orders.note_label') %></label>
   <input type="text" id="note" name="note" maxlength="300">
-  <p><button class="btn" type="submit">I've sent payment</button></p>
+  <% if (vatNote) { %><p class="muted fineprint"><%= vatNote %></p><% } %>
+  <p><button class="btn" type="submit"><%= t('orders.sent_payment') %></button></p>
 </form>

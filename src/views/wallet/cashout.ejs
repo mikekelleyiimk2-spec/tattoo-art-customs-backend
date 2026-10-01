@@ -1,51 +1,51 @@
-<h1>Cashout</h1>
-<p><a href="/wallet/app">Refresh</a></p>
+<h1><%= t('wallet.title') %></h1>
+<p><a href="/wallet/app"><%= t('wallet.refresh') %></a></p>
 
 <section class="card">
-  <h2>Your commission balance</h2>
-  <p><strong><%= money(balance) %></strong> payable</p>
-  <p class="muted">Payouts go out automatically every Monday morning, or cash out below anytime (3% early fee).</p>
+  <h2><%= t('wallet.balance_h') %></h2>
+  <p><strong><%= t('wallet.payable', {balance: money(balance)}) %></strong></p>
+  <p class="muted"><%= t('wallet.auto_note') %></p>
 </section>
 
 <% if (!destinations.length) { %>
 <section class="card">
-  <h2>Set up your payouts</h2>
-  <p>Commission payout setup happens on the Tattoo Art Customs website — add and verify your payout destinations (PayPal, Cash App, Zelle, Venmo, bank account) there. Once that's done, you can cash out right here in the app anytime.</p>
+  <h2><%= t('wallet.setup_h') %></h2>
+  <p><%= t('wallet.setup_text') %></p>
 </section>
 <% } else { %>
 <section class="card">
-  <h2>Cash out now</h2>
-  <p class="muted">Cashing out to your default destination: <strong><%= destinations[0].summary %></strong></p>
+  <h2><%= t('wallet.cashout_h') %></h2>
+  <p class="muted"><%- t('wallet.cashout_to', {dest: '<strong>' + destinations[0].summary + '</strong>'}) %></p>
   <% if (earlyQuote) { %>
-  <p>Balance <%= money(balance) %> − 3% early fee <%= money(earlyQuote.penaltyCents) %> = <strong><%= money(earlyQuote.netCents) %></strong></p>
+  <p><%- t('wallet.cashout_math', {balance: money(balance), fee: money(earlyQuote.penaltyCents), net: '<strong>' + money(earlyQuote.netCents) + '</strong>'}) %></p>
   <form method="post" action="<%= payoutBase %>/cashout-now" onsubmit="return confirm('Cash out <%= money(earlyQuote.netCents) %> now? A 3% early-cashout fee (<%= money(earlyQuote.penaltyCents) %>) applies.')">
     <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
     <input type="hidden" name="destination_id" value="<%= destinations[0].id %>">
-    <button class="btn" type="submit">Cash out <%= money(earlyQuote.netCents) %> now</button>
+    <button class="btn" type="submit"><%= t('wallet.cashout_now', {net: money(earlyQuote.netCents)}) %></button>
   </form>
-  <p class="muted">Or keep it on the site — no fee:</p>
+  <p class="muted"><%= t('wallet.keep') %></p>
   <form method="post" action="<%= payoutBase %>/commissions-to-credit" onsubmit="return confirm('Move <%= money(balance) %> to your site credit? No fee — spend it on the site anytime.')">
     <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-    <button class="btn btn-secondary" type="submit">Keep <%= money(balance) %> as site credit</button>
+    <button class="btn btn-secondary" type="submit"><%= t('wallet.keep_credit', {balance: money(balance)}) %></button>
   </form>
   <% } else { %>
-  <p class="muted">You need at least <%= money(minCashoutCents) %> payable to cash out.</p>
+  <p class="muted"><%= t('wallet.min_cashout', {min: money(minCashoutCents)}) %></p>
   <% } %>
-  <p class="muted">To add, change, or verify payout destinations, set them up on the Tattoo Art Customs website — commission payout setup is website-only.</p>
+  <p class="muted"><%= t('wallet.setup_note') %></p>
 </section>
 <% } %>
 
 <% if (cashoutRequests.length) { %>
 <section class="card">
-  <h2>Cashout requests</h2>
+  <h2><%= t('wallet.requests_h') %></h2>
   <table>
-    <thead><tr><th>Date</th><th>Amount</th><th>Fee</th><th>You get</th><th>To</th><th>Status</th><th></th></tr></thead>
+    <thead><tr><th><%= t('wallet.th_date') %></th><th><%= t('wallet.th_amount') %></th><th><%= t('wallet.th_fee') %></th><th><%= t('wallet.th_you_get') %></th><th><%= t('wallet.th_to') %></th><th><%= t('wallet.th_status') %></th><th></th></tr></thead>
     <tbody>
     <% cashoutRequests.forEach(function(c) {
       var snap = {}; try { snap = JSON.parse(c.dest_snapshot || '{}'); } catch (e) {}
     %>
       <tr>
-        <td><%= new Date(c.created_at).toLocaleDateString() %></td>
+        <td><%= new Date(c.created_at).toLocaleDateString(localeTag) %></td>
         <td><%= money(c.amount_cents) %></td>
         <td><%= money(c.penalty_cents) %></td>
         <td><strong><%= money(c.net_cents) %></strong></td>
@@ -55,7 +55,7 @@
           <% if (c.status === 'pending') { %>
           <form method="post" action="<%= payoutBase %>/cashout/<%= c.id %>/cancel" style="display:inline">
             <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-            <button class="btn btn-secondary" type="submit">Cancel</button>
+            <button class="btn btn-secondary" type="submit"><%= t('wallet.cancel') %></button>
           </form>
           <% } %>
         </td>

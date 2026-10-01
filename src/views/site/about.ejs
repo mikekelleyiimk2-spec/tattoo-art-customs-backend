@@ -1,13 +1,13 @@
-<h1>About Tattoo Art Customs</h1>
-<p>Tattoo Art Customs is a marketplace for original tattoo designs — hundreds of premade pieces plus custom designs drawn to order ($155.74, or $129.87 during the Saturday sale; 50% deposit, 48-hour delivery).</p>
-<h2>For design artists</h2>
-<p>Join for <strong>$5.67/month</strong>: upload your art, write an artist bio, and earn <strong>60% commission</strong> on every sale of your designs. You must be registered, subscribed, and have a payout method set up to receive payouts.</p>
-<h2>For tattoo shops</h2>
-<p>Join for <strong>$103.98/year</strong>: get a referral link and earn <strong>20% on every verified sale</strong> you refer. Verified shops may list their business location, hours, and appointment requirements.</p>
-<h2>House rules</h2>
+<h1><%= t('about.title') %></h1>
+<p><%= t('about.intro', {custom: fmtMoney(15574), sale: fmtMoney(12987)}) %></p>
+<h2><%= t('about.for_artists') %></h2>
+<p><%= t('about.artists_text', {price: fmtMoney(567)}) %></p>
+<h2><%= t('about.for_shops') %></h2>
+<p><%= t('about.shops_text', {price: fmtMoney(10398)}) %></p>
+<h2><%= t('about.house_rules') %></h2>
 <ul>
-  <li>All contact stays through the site — no off-site emails, phones, socials, or payment info in bios, profiles, or messages.</li>
-  <li>Off-site sales mean membership cancellation with no refund.</li>
-  <li>All sales, subscriptions, and memberships are final.</li>
+  <li><%= t('about.rule1') %></li>
+  <li><%= t('about.rule2') %></li>
+  <li><%= t('about.rule3') %></li>
 </ul>
-<p><a class="btn" href="/membership">See membership plans</a></p>
+<p><a class="btn" href="/membership"><%= t('about.see_plans') %></a></p>

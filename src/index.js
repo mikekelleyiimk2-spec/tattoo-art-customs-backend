@@ -12,6 +12,7 @@ const db = require('./db');
 const { migrate } = require('./db/migrate');
 const { DbStore } = require('./middleware/sessionStore');
 const { loadUser } = require('./middleware/auth');
+const { i18nMiddleware } = require('./i18n');
 
 // Safety net: Express 4 does NOT forward async handler rejections to error
 // middleware — one bad query (e.g. a Postgres-incompatible GROUP_CONCAT on
@@ -118,6 +119,11 @@ app.use((req, res, next) => {
   next();
 });
 
+// i18n: locale detection (?hl= > tac_locale cookie > Accept-Language) plus
+// t(), fmtMoney(), fxNote(), vatNote exposed to every EJS view. The legacy
+// `money` helper above stays USD so untranslated views keep working.
+app.use(i18nMiddleware);
+
 // Active direct-sold ads, available to every view (see partials/ad-slot).
 // Counts one impression per page view for each live ad (directional stats).
 app.use(async (req, res, next) => {
@@ -147,8 +153,11 @@ const uploadWmDir = path.join(config.uploadDir, 'designs', 'linework-wm');
 const photosDir = path.join(config.uploadDir, 'photos');
 const adsDir = path.join(config.uploadDir, 'ads');
 for (const d of [wmDir, uploadWmDir, photosDir, adsDir]) fs.mkdirSync(d, { recursive: true });
-app.use('/img/designs', express.static(uploadWmDir));
-app.use('/img/designs', express.static(wmDir));
+// Gallery previews change rarely (watermarked files can be regenerated in
+// place on re-approval), so allow a week of caching with ETag revalidation.
+const imgCacheOpts = { maxAge: '7d' };
+app.use('/img/designs', express.static(uploadWmDir, imgCacheOpts));
+app.use('/img/designs', express.static(wmDir, imgCacheOpts));
 app.use('/img/photos', express.static(photosDir));
 app.use('/img/ads', express.static(adsDir));
 

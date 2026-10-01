@@ -1,14 +1,14 @@
-<h1>Your download</h1>
+<h1><%= t('orders.download_title') %></h1>
 <% if (lineworkOnly) { %>
-<p class="muted">This link is private to you. You purchased the clean linework only:</p>
+<p class="muted"><%= t('orders.linework_only_note') %></p>
 <ul>
-  <li><a class="btn" href="/orders/download/<%= token %>?file=linework">Download clean linework</a></li>
+  <li><a class="btn" href="/orders/download/<%= token %>?file=linework"><%= t('orders.dl_linework') %></a></li>
 </ul>
 <% } else { %>
-<p class="muted">This link is private to you. Full-color and clean linework files:</p>
+<p class="muted"><%= t('orders.both_note') %></p>
 <ul>
-  <li><a class="btn" href="/orders/download/<%= token %>?file=color">Download full color</a></li>
-  <li><a class="btn btn-secondary" href="/orders/download/<%= token %>?file=linework">Download clean linework</a></li>
+  <li><a class="btn" href="/orders/download/<%= token %>?file=color"><%= t('orders.dl_color') %></a></li>
+  <li><a class="btn btn-secondary" href="/orders/download/<%= token %>?file=linework"><%= t('orders.dl_linework') %></a></li>
 </ul>
 <% } %>
-<p class="muted">Please don't share these files — they're licensed to you only.</p>
+<p class="muted"><%= t('orders.dont_share') %></p>

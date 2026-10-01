@@ -1,9 +1,9 @@
-<h1>My Gift Cards</h1>
-<% if (!cards.length) { %><p class="muted">You haven't bought any gift cards yet. <a href="/giftcards/buy">Buy one</a>.</p><% } %>
+<h1><%= t('giftcards.mine_title') %></h1>
+<% if (!cards.length) { %><p class="muted"><%- t('giftcards.mine_empty', {buy: '<a href="/giftcards/buy">' + t('giftcards.buy_one') + '</a>'}) %></p><% } %>
 <% for (const c of cards) { %>
 <section class="card">
-  <h2><%= money(c.amount_cents) %> — <code><%= c.code %></code></h2>
-  <p class="muted">Status: <%= c.status %><% if (c.recipient_email) { %> · sent to <%= c.recipient_email %><% } %></p>
-  <% if (c.status === 'active') { %><p><a href="/giftcards/redeem">Redeem</a></p><% } %>
+  <h2><%= fmtMoney(c.amount_cents) %> — <code><%= c.code %></code></h2>
+  <p class="muted"><%= t('giftcards.status') %> <%= c.status %><% if (c.recipient_email) { %> <%= t('giftcards.sent_to', {email: c.recipient_email}) %><% } %></p>
+  <% if (c.status === 'active') { %><p><a href="/giftcards/redeem"><%= t('giftcards.redeem_link') %></a></p><% } %>
 </section>
 <% } %>

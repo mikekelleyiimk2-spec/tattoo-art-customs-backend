@@ -1,56 +1,57 @@
-<h1>Tattoo Art Customs Opening Raffle</h1>
+<h1><%= t('raffle.title') %></h1>
 
 <% if (raffleDrawn) { %>
-<p><span class="badge ok">Drawn</span> The raffle has been drawn — congratulations to our winners!</p>
+<p><span class="badge ok"><%= t('raffle.drawn') %></span> <%= t('raffle.drawn_text') %></p>
 <% } else if (raffleOpen) { %>
-<p><span class="badge ok">Entries open</span> This raffle runs <strong>at least through November 29, 2026</strong>. It closes after that date when we hit <strong>1,000,000 entries</strong> or <strong>$2,700 in owner subscription profits</strong> — whichever comes first.</p>
+<p><span class="badge ok"><%= t('raffle.entries_open') %></span> <%= t('raffle.open_text') %></p>
 <% } else { %>
-<p><span class="badge ok">Closed</span> Entries are closed — the drawing is happening within 7 days. Winners will be announced right here, on Instagram, and on Threads.</p>
+<p><span class="badge ok"><%= t('raffle.closed') %></span> <%= t('raffle.closed_text') %></p>
 <% } %>
 
 <section class="card">
-  <h2>How to enter</h2>
-  <p><strong>Entry is free</strong> — just <a href="/signup">create a free Tattoo Art Customs account</a> and you're in. That's it. No purchase, no membership, no ticket to buy.</p>
-  <p>No purchase necessary. 18+ to enter. One entry per person. Winners chosen at random and announced publicly.</p>
+  <h2><%= t('raffle.how_title') %></h2>
+  <p><a href="/signup"><%= t('raffle.create_enter') %></a></p>
+  <p><%= t('raffle.how_text') %></p>
+  <p><%= t('raffle.how_fine') %></p>
 </section>
 
 <section class="card">
-  <h2>Entry progress</h2>
-  <p><strong><%= raffleEntries.toLocaleString('en-US') %> / <%= entryTarget.toLocaleString('en-US') %></strong> entries so far.</p>
+  <h2><%= t('raffle.progress_title') %></h2>
+  <p><strong><%= t('raffle.entries_so_far', {entries: fmtNum(raffleEntries), target: fmtNum(entryTarget)}) %></strong></p>
   <% const pct = Math.min(100, (raffleEntries / entryTarget) * 100); %>
   <div style="background:#eee;border-radius:6px;height:14px;overflow:hidden">
     <div style="background:#2a7;height:100%;width:<%= pct.toFixed(4) %>%"></div>
   </div>
-  <p class="muted">This raffle runs at least through November 29, 2026. After that it closes when we reach 1,000,000 entries or $2,700 in owner subscription profits — whichever comes first. Drawing happens within 7 days after close, and winners are announced publicly on this site, Instagram, and Threads.</p>
+  <p class="muted"><%= t('raffle.progress_note') %></p>
 </section>
 
 <section class="card">
-  <h2>Prizes</h2>
+  <h2><%= t('raffle.prizes_title') %></h2>
   <ul>
-    <li><strong>Grand prize:</strong> your choice of <strong>any premade design</strong> (full color + clean linework, delivered) <strong>plus one free month of site membership</strong></li>
-    <li><strong>2 runners-up:</strong> each gets one free premade design of their choice</li>
+    <li><strong><%= t('raffle.grand') %></strong> <%= t('raffle.grand_text') %></li>
+    <li><strong><%= t('raffle.runners') %></strong> <%= t('raffle.runners_text') %></li>
   </ul>
 </section>
 
 <% if (!raffleDrawn && raffleOpen) { %>
 <section class="card">
-  <h2>Get in the raffle</h2>
+  <h2><%= t('raffle.get_in') %></h2>
   <% if (alreadyEntered) { %>
-  <p><span class="badge ok">You're in!</span> One entry per person — you're already entered. Good luck!</p>
+  <p><span class="badge ok"><%= t('raffle.youre_in') %></span> <%= t('raffle.already') %></p>
   <% } else { %>
-  <p><a class="btn" href="/signup">Create a free account and enter →</a></p>
+  <p><a class="btn" href="/signup"><%= t('raffle.create_enter') %></a></p>
   <% } %>
 </section>
 <% } %>
 
 <% if (winners && winners.length) { %>
 <section class="card">
-  <h2>Winners</h2>
+  <h2><%= t('raffle.winners') %></h2>
   <ul>
   <% winners.forEach(function(w) { %>
-    <li><strong><%= w.display_name || 'A lucky member' %></strong> —
-      <% if (w.prize_won === 'grand') { %>Grand prize: any premade design of choice + 1 free month of membership
-      <% } else { %>Runner-up: free premade design of choice<% } %></li>
+    <li><strong><%= w.display_name || t('raffle.lucky') %></strong> —
+      <% if (w.prize_won === 'grand') { %><%= t('raffle.grand_won') %>
+      <% } else { %><%= t('raffle.runner_won') %><% } %></li>
   <% }); %>
   </ul>
 </section>

@@ -1,43 +1,45 @@
-<h1>Order <%= order.id.slice(0,8) %></h1>
+<h1><%= t('orders.title', {id: order.id.slice(0,8)}) %></h1>
 <table>
   <tbody>
-    <tr><th>Type</th><td><%= order.order_type %></td></tr>
-    <% if (design) { %><tr><th>Design</th><td><%= design.title %></td></tr><% } %>
-    <tr><th>Amount</th><td><%= money(order.amount_cents) %></td></tr>
+    <tr><th><%= t('orders.type') %></th><td><%= order.order_type %></td></tr>
+    <% if (design) { %><tr><th><%= t('orders.design') %></th><td><%= design.title %></td></tr><% } %>
+    <tr><th><%= t('orders.amount') %></th><td><%= fmtMoney(order.amount_cents) %></td></tr>
     <% if (order.discount_applied === 'first_custom_20') { %>
-      <tr><th>Discount</th><td>Opening sale — first custom 20% off <span class="muted">(one-time subscriber perk)</span></td></tr>
+      <tr><th><%= t('orders.discount') %></th><td><%= t('orders.discount_first') %> <span class="muted"><%= t('orders.discount_sub') %></span></td></tr>
     <% } %>
     <% if (order.order_type === 'custom' && depositTotal != null) { %>
-      <tr><th>Deposit due now</th><td><%= money(depositTotal) %> <span class="muted">(includes <%= money(order.fee_cents) %> processing fee)</span></td></tr>
-      <tr><th>Total with fees</th><td><%= money(fullTotal) %> <span class="muted">(remainder billed on delivery)</span></td></tr>
+      <tr><th><%= t('orders.deposit_due') %></th><td><%= fmtMoney(depositTotal) %> <span class="muted"><%= t('orders.deposit_includes', {fee: fmtMoney(order.fee_cents)}) %></span></td></tr>
+      <tr><th><%= t('orders.total_fees') %></th><td><%= fmtMoney(fullTotal) %> <span class="muted"><%= t('orders.remainder') %></span></td></tr>
     <% } %>
-    <tr><th>Paid</th><td><%= money(order.amount_paid_cents) %></td></tr>
-    <tr><th>Status</th><td><span class="badge"><%= order.status %></span></td></tr>
-    <% if (order.delivery_due) { %><tr><th>Delivery due</th><td><%= new Date(order.delivery_due).toLocaleString() %></td></tr><% } %>
+    <tr><th><%= t('orders.paid') %></th><td><%= fmtMoney(order.amount_paid_cents) %></td></tr>
+    <tr><th><%= t('orders.status') %></th><td><span class="badge"><%= order.status %></span></td></tr>
+    <% if (order.delivery_due) { %><tr><th><%= t('orders.delivery_due') %></th><td><%= new Date(order.delivery_due).toLocaleString(localeTag) %></td></tr><% } %>
   </tbody>
 </table>
+<% if (vatNote) { %><p class="muted fineprint"><%= vatNote %></p><% } %>
 
 <% if (order.status === 'paid') { %>
 <section class="card">
-  <h2>Your download</h2>
+  <h2><%= t('orders.your_download') %></h2>
   <form method="post" action="/orders/<%= order.id %>/download-token">
     <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-    <button class="btn" type="submit">Generate download link (valid 24h)</button>
+    <button class="btn" type="submit"><%= t('orders.gen_link') %></button>
   </form>
   <% if (downloads.length) { %>
   <ul><% downloads.forEach(function(d) { %>
-    <li><a href="/orders/download/<%= d.token %>/view">Download files</a> <span class="muted">(expires <%= new Date(d.expires_at).toLocaleString() %>)</span></li>
+    <li><a href="/orders/download/<%= d.token %>/view"><%= t('orders.download_files') %></a> <span class="muted"><%= t('orders.expires', {date: new Date(d.expires_at).toLocaleString(localeTag)}) %></span></li>
   <% }); %></ul>
   <% } %>
 </section>
 <% } else if (order.status === 'pending') { %>
 <section class="card">
-  <h2>Complete payment</h2>
-  <p><a class="btn" href="/orders/manual/<%= order.id %>">Pay with CashApp / Venmo</a></p>
+  <h2><%= t('orders.complete_payment') %></h2>
+  <% const _ofx = fxNote(order.amount_cents); if (_ofx) { %><p class="muted fineprint"><%= _ofx %></p><% } %>
+  <p><a class="btn" href="/orders/manual/<%= order.id %>"><%= t('orders.pay_manual') %></a></p>
   <% if (Number(order.amount_paid_cents || 0) === 0) { %>
   <form method="post" action="/orders/<%= order.id %>/cancel" class="form" onsubmit="return confirm('Cancel this order?');">
     <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-    <p><button class="linklike" type="submit">Cancel this order</button></p>
+    <p><button class="linklike" type="submit"><%= t('orders.cancel_order') %></button></p>
   </form>
   <% } %>
 </section>

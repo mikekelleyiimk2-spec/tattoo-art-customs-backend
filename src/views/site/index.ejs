@@ -1,69 +1,70 @@
 <section class="hero">
-  <h1>Buy original tattoo designs online</h1>
-  <p><% if (designCount > 0) { %>Browse <%= designCount %>+ original tattoo designs from independent artists.<% } else { %>New original designs landing daily.<% } %> Custom tattoo designs are <strong><%= money(customPrice) %></strong><% if (sale) { %> — Saturday sale price<% } %> — 50% deposit, 48-hour delivery.</p>
+  <h1><%= t('home.hero_title') %></h1>
+  <p><% if (designCount > 0) { %><%= t('home.hero_sub', {count: fmtNum(designCount)}) %><% } else { %><%= t('home.hero_sub_empty') %><% } %> <%= t(sale ? 'home.hero_custom_sale' : 'home.hero_custom', {price: fmtMoney(customPrice)}) %></p>
   <% if (sale) { %>
-  <div class="sale-banner" role="status">🔥 Saturday sale is ON — premade designs $52.24 until 5 AM CT Sunday.</div>
+  <div class="sale-banner" role="status"><%= t('home.sale_banner', {price: fmtMoney(premadePrice)}) %></div>
   <% } %>
-  <p><a class="btn" href="/gallery">Browse the gallery</a> <a class="btn btn-secondary" href="/orders/custom">Order a custom design</a></p>
+  <p><a class="btn" href="/gallery"><%= t('home.browse_gallery') %></a> <a class="btn btn-secondary" href="/orders/custom"><%= t('home.order_custom') %></a></p>
+  <% if (vatNote) { %><p class="muted fineprint"><%= vatNote %></p><% } %>
 </section>
 
 <section class="card" id="app">
   <% if (playStoreUrl || appStoreUrl) { %>
-  <h2>📱 Our app is now available</h2>
-  <p>The Tattoo Art Customs app is live — browse the gallery, order custom designs, and manage your collection on the go.</p>
-  <p><% if (playStoreUrl) { %><a class="btn" href="<%= playStoreUrl %>">Get it on Google Play</a><% } %> <% if (appStoreUrl) { %><a class="btn" href="<%= appStoreUrl %>">Download on the App Store</a><% } %></p>
+  <h2><%= t('home.app_title_live') %></h2>
+  <p><%= t('home.app_text_live') %></p>
+  <p><% if (playStoreUrl) { %><a class="btn" href="<%= playStoreUrl %>"><%= t('home.get_play') %></a><% } %> <% if (appStoreUrl) { %><a class="btn" href="<%= appStoreUrl %>"><%= t('home.get_appstore') %></a><% } %></p>
   <% if (!appStoreUrl) { %>
-  <p class="muted">iPhone version coming soon — drop your email and we'll tell you the moment it lands:</p>
+  <p class="muted"><%= t('home.ios_soon') %></p>
   <form method="post" action="/app-notify" class="form">
     <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
     <input type="hidden" name="platform" value="ios">
-    <input type="email" name="email" maxlength="120" required placeholder="you@example.com" aria-label="Email for iPhone app launch notification">
-    <button type="submit">Notify me</button>
+    <input type="email" name="email" maxlength="120" required placeholder="you@example.com" aria-label="<%= t('home.ios_soon') %>">
+    <button type="submit"><%= t('home.notify_me') %></button>
   </form>
   <% } %>
   <% } else { %>
-  <h2>📱 Our app is coming soon</h2>
-  <p>The Tattoo Art Customs mobile app is on its way — the gallery, custom orders, and your collection, in your pocket. Drop your email and we'll tell you the moment it launches.</p>
+  <h2><%= t('home.app_title_soon') %></h2>
+  <p><%= t('home.app_text_soon') %></p>
   <form method="post" action="/app-notify" class="form">
     <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-    <input type="email" name="email" maxlength="120" required placeholder="you@example.com" aria-label="Email for app launch notification">
-    <button type="submit">Notify me</button>
+    <input type="email" name="email" maxlength="120" required placeholder="you@example.com" aria-label="<%= t('home.notify_me') %>">
+    <button type="submit"><%= t('home.notify_me') %></button>
   </form>
   <% } %>
 </section>
 
 <% if (youtubeUrl) { %>
 <section class="card" id="youtube">
-  <h2>🎥 We're on YouTube — subscribe</h2>
-  <p>Daily flash drops, custom design timelapses, and aftercare guides. New videos every day — hit subscribe so you never miss a drop.</p>
-  <p><a class="btn" href="<%= youtubeUrl %>?sub_confirmation=1" target="_blank" rel="noopener">Subscribe on YouTube</a></p>
+  <h2><%= t('home.yt_title') %></h2>
+  <p><%= t('home.yt_text') %></p>
+  <p><a class="btn" href="<%= youtubeUrl %>?sub_confirmation=1" target="_blank" rel="noopener"><%= t('home.yt_subscribe') %></a></p>
 </section>
 <% } %>
 
-<h2>Fresh designs</h2>
+<h2><%= t('home.fresh') %></h2>
 <div class="grid">
   <% designs.forEach(function(d) { %>
   <article class="design-card">
-    <a href="/design/<%= d.id %>"><img src="/img/designs/<%= d.thumb || d.linework_wm_path.split('/').pop() %>" alt="Tattoo design: <%= d.title %>" loading="lazy"></a>
+    <a href="/design/<%= d.id %>"><img src="/img/designs/<%= d.thumb || d.linework_wm_path.split('/').pop() %>" alt="<%= t('home.design_alt', {title: d.title}) %>" loading="lazy" decoding="async"></a>
     <div class="pad">
       <h3><a href="/design/<%= d.id %>"><%= d.title %></a></h3>
-      <p class="muted"><%= money(premadePrice) %><% if (sale) { %> <span class="badge ok">Sale</span><% } %></p>
+      <p class="muted"><%= fmtMoney(premadePrice) %><% if (sale) { %> <span class="badge ok"><%= t('common.sale') %></span><% } %></p>
     </div>
   </article>
   <% }); %>
 </div>
 
 <section class="card">
-  <h2>Artists &amp; shops: join and earn</h2>
+  <h2><%= t('home.artists_title') %></h2>
   <ul>
-    <li><strong>Design artists</strong> — $5.67/month to upload your art, write a bio, and earn <strong>60% commission</strong> per sale.</li>
-    <li><strong>Tattoo shops</strong> — $103.98/year, earn <strong>20% on every verified sale</strong> you refer.</li>
+    <li><%= t('home.artists_designer', {price: fmtMoney(567)}) %></li>
+    <li><%= t('home.artists_shop', {price: fmtMoney(10398)}) %></li>
   </ul>
-  <p><a class="btn" href="/membership">Join as a design artist</a> <a class="btn btn-secondary" href="/membership">Join as a tattoo shop</a></p>
+  <p><a class="btn" href="/membership"><%= t('home.join_artist') %></a> <a class="btn btn-secondary" href="/membership"><%= t('home.join_shop') %></a></p>
 </section>
 
 <section class="card">
-  <h2>Custom tattoo designs, drawn for you</h2>
-  <p>Want something one-of-a-kind? Order a custom tattoo design online and a professional designer draws it for you within 48 hours. Every purchase includes the full-color artwork and the clean linework stencil your tattoo artist needs. Prefer ready-made? Our gallery of original tattoo designs is searchable by style — blackwork, fine line, traditional, realism, and more.</p>
-  <p><a class="btn btn-secondary" href="/orders/custom">Start a custom design</a></p>
+  <h2><%= t('home.custom_section_title') %></h2>
+  <p><%= t('home.custom_section_text') %></p>
+  <p><a class="btn btn-secondary" href="/orders/custom"><%= t('home.start_custom') %></a></p>
 </section>

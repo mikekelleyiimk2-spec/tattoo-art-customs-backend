@@ -1,8 +1,8 @@
-<h1>Gift Card Ready</h1>
-<% if (already) { %><p class="muted">This purchase was already activated.</p><% } %>
+<h1><%= t('giftcards.success_title') %></h1>
+<% if (already) { %><p class="muted"><%= t('giftcards.already') %></p><% } %>
 <section class="card">
-  <h2><%= amount %> gift card</h2>
-  <p>Your code:</p>
-  <p><input type="text" readonly value="<%= code %>" onclick="this.select()" aria-label="Gift card code" style="font-size:1.4rem;letter-spacing:.15em"></p>
-  <p class="muted">We've emailed the code to you<%= typeof recipient !== 'undefined' && recipient ? ' and the recipient' : '' %>. Redeem it when booking: <a href="/giftcards/redeem">redeem a gift card</a>.</p>
+  <h2><%= t('giftcards.gift_card', {amount: fmtMoney(amount_cents)}) %></h2>
+  <p><%= t('giftcards.your_code') %></p>
+  <p><input type="text" readonly value="<%= code %>" onclick="this.select()" aria-label="<%= t('giftcards.code_label') %>" style="font-size:1.4rem;letter-spacing:.15em"></p>
+  <p class="muted"><%- t('giftcards.emailed', {recipient: (typeof recipient !== 'undefined' && recipient) ? t('giftcards.recipient_tail') : '', redeem: '<a href="/giftcards/redeem">' + t('giftcards.redeem_a') + '</a>'}) %></p>
 </section>

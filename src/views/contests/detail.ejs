@@ -1,51 +1,51 @@
 <h1><%= c.title %></h1>
 <p class="muted">
-  <strong><%= money(c.prize_cents) %></strong> prize
+  <strong><%= t('contests.prize', {price: fmtMoney(c.prize_cents)}) %></strong>
   <% if (c.style) { %> · <%= c.style %><% } %>
-  <% if (c.status === 'open') { %> · <%= fmtLeft(leftMs) %> left<% } %>
-  <% if (c.status === 'judging') { %> · <span class="badge warn">past deadline — awaiting winner pick</span><% } %>
-  <% if (c.status === 'awarded') { %> · <span class="badge ok">awarded</span><% } %>
-  <% if (c.status === 'refunded') { %> · <span class="badge">expired — prize refunded</span><% } %>
-  <% if (c.status === 'pending_payment') { %> · <span class="badge warn">awaiting prize payment</span><% } %>
+  <% if (c.status === 'open') { %> · <%= t('contests.time_left', {time: fmtLeft(leftMs)}) %><% } %>
+  <% if (c.status === 'judging') { %> · <span class="badge warn"><%= t('contests.status_judging') %></span><% } %>
+  <% if (c.status === 'awarded') { %> · <span class="badge ok"><%= t('contests.status_awarded') %></span><% } %>
+  <% if (c.status === 'refunded') { %> · <span class="badge"><%= t('contests.status_refunded') %></span><% } %>
+  <% if (c.status === 'pending_payment') { %> · <span class="badge warn"><%= t('contests.status_pending') %></span><% } %>
 </p>
 
-<h2>The brief</h2>
+<h2><%= t('contests.brief_h') %></h2>
 <p><%= c.description %></p>
-<% if (c.size_placement) { %><p class="muted"><strong>Size / placement:</strong> <%= c.size_placement %></p><% } %>
-<p class="muted">Posted by <%= c.customer_name || 'a customer' %></p>
+<% if (c.size_placement) { %><p class="muted"><strong><%= t('contests.size_placement') %></strong> <%= c.size_placement %></p><% } %>
+<p class="muted"><%= t('contests.posted_by', {name: c.customer_name || t('contests.a_customer')}) %></p>
 
 <% if (c.status === 'awarded') { %>
-<h2>Winner</h2>
+<h2><%= t('contests.winner_h') %></h2>
 <% const w = entries.find(function(e) { return e.id === c.winner_entry_id; }); %>
 <% if (w) { %>
-<p><img src="/contests/entry/<%= w.id %>/file" alt="Winning entry" style="max-width:420px"></p>
-<p class="muted">Won by <%= w.designer_name || 'a designer' %></p>
+<p><img src="/contests/entry/<%= w.id %>/file" alt="<%= t('contests.winning_alt') %>" style="max-width:420px"></p>
+<p class="muted"><%= t('contests.by_designer', {name: w.designer_name || t('contests.a_designer')}) %></p>
 <% } %>
 <% } %>
 
-<h2>Entries (<%= entryCount %>)</h2>
+<h2><%= t('contests.entries_h', {count: fmtNum(entryCount)}) %></h2>
 <% if (!entryCount) { %>
-<p class="muted">No entries yet.</p>
+<p class="muted"><%= t('contests.no_entries') %></p>
 <% } %>
 <% entries.forEach(function(e) { %>
 <div class="card">
   <% if (e.visible) { %>
-  <p><img src="/contests/entry/<%= e.id %>/file" alt="Contest entry" style="max-width:320px"></p>
+  <p><img src="/contests/entry/<%= e.id %>/file" alt="<%= t('contests.entry_alt') %>" style="max-width:320px"></p>
   <% if (e.note) { %><p><%= e.note %></p><% } %>
-  <p class="muted">by <%= e.designer_name || 'a designer' %><%= e.mine ? ' (you)' : '' %></p>
+  <p class="muted"><%= t('contests.entry_by', {name: e.designer_name || t('contests.a_designer')}) %><%= e.mine ? ' ' + t('contests.you') : '' %></p>
   <% } else { %>
-  <p class="muted">Entry submitted — entries are revealed to the contest holder only until a winner is picked.</p>
+  <p class="muted"><%= t('contests.hidden_entry') %></p>
   <% } %>
   <% if (canPick && ['open', 'judging'].includes(c.status)) { %>
   <form method="post" action="/contests/<%= c.id %>/pick/<%= e.id %>" style="display:inline">
     <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-    <button class="btn" type="submit" onclick="return confirm('Pick this entry as the winner? This pays out the prize and cannot be undone.')">Pick winner</button>
+    <button class="btn" type="submit" onclick="return confirm('Pick this entry as the winner? This pays out the prize and cannot be undone.')"><%= t('contests.pick_winner') %></button>
   </form>
   <% } %>
 </div>
 <% }); %>
 
 <% if (canEnter) { %>
-<p><a class="btn" href="/contests/<%= c.id %>/enter">Submit an entry</a></p>
+<p><a class="btn" href="/contests/<%= c.id %>/enter"><%= t('contests.submit_entry') %></a></p>
 <% } %>
-<p class="muted">The winner receives <%= money(Math.round(c.prize_cents * 0.88)) %> (prize minus 12% platform fee). Non-winning entries remain the designer's property. Winners transfer rights to the contest holder.</p>
+<p class="muted"><%= t('contests.winner_gets', {amount: fmtMoney(Math.round(c.prize_cents * 0.88))}) %></p>

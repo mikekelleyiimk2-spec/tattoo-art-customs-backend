@@ -1,7 +1,7 @@
-<h1>Choose a new password</h1>
+<h1><%= t('auth.reset_title') %></h1>
 <form method="post" action="/reset/<%= token %>" class="form">
   <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-  <label for="password">New password (8+ characters)</label>
+  <label for="password"><%= t('auth.new_password') %></label>
   <input type="password" id="password" name="password" minlength="8" required autocomplete="new-password">
-  <p><button class="btn" type="submit">Update password</button></p>
+  <p><button class="btn" type="submit"><%= t('auth.update_password') %></button></p>
 </form>

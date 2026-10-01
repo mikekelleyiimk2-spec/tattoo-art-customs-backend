@@ -1,39 +1,41 @@
-<h1>Buy a Gift Card</h1>
-<p class="muted">Give tattoo art. The buyer pays the card value + a 5% platform fee + processing — redemption is always fee-free.</p>
+<h1><%= t('giftcards.buy_title') %></h1>
+<p class="muted"><%= t('giftcards.buy_sub') %></p>
 
 <form method="post" action="/giftcards/buy" class="form">
   <fieldset>
-    <legend>Amount</legend>
+    <legend><%= t('giftcards.amount') %></legend>
     <% for (const p of presets) { %>
-    <label><input type="radio" name="preset" value="<%= p %>" <%= p === 5000 ? 'checked' : '' %>> <%= money(p) %></label>
+    <label><input type="radio" name="preset" value="<%= p %>" <%= p === 5000 ? 'checked' : '' %>> <%= fmtMoney(p) %></label>
     <% } %>
-    <label><input type="radio" name="preset" value="" id="custom-radio"> Custom
+    <label><input type="radio" name="preset" value="" id="custom-radio"> <%= t('giftcards.custom') %>
       <input type="number" name="custom_amount" id="custom-amount" min="<%= minCustom / 100 %>" max="<%= maxCustom / 100 %>" step="1" placeholder="<%= minCustom / 100 %>–<%= maxCustom / 100 %>">
     </label>
   </fieldset>
 
   <div id="fee-preview" class="card">
-    <h2>What you'll pay</h2>
-    <p>Card value: <strong id="fp-base"><%= money(defaultFees.base) %></strong><br>
-    Platform fee (5%): <span id="fp-fee"><%= money(defaultFees.platformFee) %></span><br>
-    Processing: <span id="fp-proc"><%= money(defaultFees.processing) %></span><br>
-    <strong>Total: <span id="fp-total"><%= money(defaultFees.total) %></span></strong></p>
+    <h2><%= t('giftcards.what_pay') %></h2>
+    <p><%= t('giftcards.card_value') %> <strong id="fp-base"><%= fmtMoney(defaultFees.base) %></strong><br>
+    <%= t('giftcards.platform_fee') %> <span id="fp-fee"><%= fmtMoney(defaultFees.platformFee) %></span><br>
+    <%= t('giftcards.processing') %> <span id="fp-proc"><%= fmtMoney(defaultFees.processing) %></span><br>
+    <strong><%= t('giftcards.total') %> <span id="fp-total"><%= fmtMoney(defaultFees.total) %></span></strong></p>
   </div>
 
-  <label>Recipient email (optional — we'll email them the code)
+  <label><%= t('giftcards.recipient') %>
     <input type="email" name="recipient_email" maxlength="200" placeholder="friend@example.com">
   </label>
 
-  <label>For a specific shop (optional)
+  <label><%= t('giftcards.for_shop') %>
     <select name="shop_user_id">
-      <option value="">Any shop on Tattoo Art Customs</option>
+      <option value=""><%= t('giftcards.any_shop') %></option>
       <% for (const s of shops) { %>
       <option value="<%= s.id %>"><%= s.display_name %></option>
       <% } %>
     </select>
   </label>
 
-  <button type="submit">Continue to PayPal</button>
+  <% const _gfx = fxNote(defaultFees.total); if (_gfx) { %><p class="muted fineprint"><%= _gfx %></p><% } %>
+  <% if (vatNote) { %><p class="muted fineprint"><%= vatNote %></p><% } %>
+  <button type="submit"><%= t('giftcards.continue_paypal') %></button>
 </form>
 
 <script>

@@ -1,16 +1,17 @@
-<h1>Request a custom design</h1>
+<h1><%= t('customs.title') %></h1>
 <% if (typeof firstCustom !== 'undefined' && firstCustom) { %>
-<p class="notice"><strong>Opening sale — 20% off your first custom!</strong> Limited time — future sales will be announced. Your price: <strong><%= money(full) %></strong> (regular <%= money(15574) %>).</p>
+<p class="notice"><strong><%= t('customs.first_sale') %></strong> <%= t('customs.first_sale_tail', {price: fmtMoney(full), regular: fmtMoney(15574)}) %></p>
 <% } %>
-<p>Custom designs are <strong><%= money(fullTotal) %></strong>. Pay a <strong><%= money(depositTotal) %></strong> deposit now <span class="muted">(includes <%= money(depositFee) %> processing fee)</span> — your design is delivered within <strong>48 hours</strong>, and the download unlocks in your account.</p>
+<p><%= t('customs.intro', {full: fmtMoney(fullTotal), deposit: fmtMoney(depositTotal), fee_note: t('customs.fee_note', {fee: fmtMoney(depositFee)})}) %></p>
+<% if (vatNote) { %><p class="muted fineprint"><%= vatNote %></p><% } %>
 <form method="post" action="/orders/custom" class="form">
   <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-  <label for="brief">Describe your design (subject, style, size, placement, colors…)</label>
-  <textarea id="brief" name="brief" required minlength="20" maxlength="4000" placeholder="e.g. A black-and-grey wolf howling at a full moon for my upper arm, about 6 inches tall…"></textarea>
+  <label for="brief"><%= t('customs.brief_label') %></label>
+  <textarea id="brief" name="brief" required minlength="20" maxlength="4000" placeholder="<%= t('customs.brief_ph') %>"></textarea>
   <% if (typeof artists !== 'undefined' && artists.length) { %>
-  <label for="requested_artist_id">Request a specific artist (optional)</label>
+  <label for="requested_artist_id"><%= t('customs.artist_label') %></label>
   <select id="requested_artist_id" name="requested_artist_id">
-    <option value="">No preference — our team will create it</option>
+    <option value=""><%= t('customs.no_pref') %></option>
     <% artists.forEach(function(a) { %>
     <option value="<%= a.id %>"><%= a.display_name || 'Artist' %></option>
     <% }); %>
@@ -18,8 +19,8 @@
   <% } %>
   <% if (typeof rushFee !== 'undefined' && rushFee > 0) { %>
   <p class="rush-box" style="border:2px solid #e8a13d;border-radius:8px;padding:10px 12px;background:#fff8ec;">
-    <label for="rush"><input type="checkbox" id="rush" name="rush" value="1"> <strong>&#9889; Rush my design &mdash; 24-hour delivery (+<%= money(rushFee) %>)</strong></label><br>
-    <span class="muted">Add a <%= money(rushFee) %> rush fee to your deposit (<%= money(rushDepositTotal) %> total today, processing fee included). Your design jumps to the front of the line and is delivered within <strong>24 hours</strong> instead of 48. $18 of the fee goes straight to your designer as a rush incentive.</span>
+    <label for="rush"><input type="checkbox" id="rush" name="rush" value="1"> <strong><%= t('customs.rush_title', {fee: fmtMoney(rushFee)}) %></strong></label><br>
+    <span class="muted"><%= t('customs.rush_text', {fee: fmtMoney(rushFee), total: fmtMoney(rushDepositTotal), cut: fmtMoney(typeof rushDesignerCents !== 'undefined' ? rushDesignerCents : 1800)}) %></span>
   </p>
   <script>
   (function () {
@@ -27,13 +28,15 @@
     var btn = document.getElementById('custom-submit-btn');
     if (!box || !btn) return;
     var std = btn.textContent;
+    var rushLabel = <%- JSON.stringify(t('customs.pay_deposit_rush', {deposit: fmtMoney(typeof rushDepositTotal !== 'undefined' ? rushDepositTotal : 0)})) %>;
     box.addEventListener('change', function () {
-      btn.textContent = box.checked ? 'Pay <%= money(rushDepositTotal) %> deposit (rush)' : std;
+      btn.textContent = box.checked ? rushLabel : std;
     });
   })();
   </script>
   <% } %>
-  <p><label><input type="checkbox" name="use_credit" value="1"> Pay the deposit with my site credit</label></p>
-  <p><button class="btn" id="custom-submit-btn" type="submit">Pay <%= money(depositTotal) %> deposit</button></p>
+  <p><label><input type="checkbox" name="use_credit" value="1"> <%= t('customs.pay_credit_deposit') %></label></p>
+  <% const _cfx = fxNote(depositTotal); if (_cfx) { %><p class="muted fineprint"><%= _cfx %></p><% } %>
+  <p><button class="btn" id="custom-submit-btn" type="submit"><%= t('customs.pay_deposit', {deposit: fmtMoney(depositTotal)}) %></button></p>
 </form>
-<p class="muted">All sales are final. Prefer to pay another way? Place the request, then choose manual payment (CashApp/Venmo) on the order page.</p>
+<p class="muted"><%= t('customs.final_note') %></p>

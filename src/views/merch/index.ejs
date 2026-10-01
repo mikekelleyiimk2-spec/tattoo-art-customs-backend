@@ -1,35 +1,38 @@
-<h1>Mike's Custom Tees™</h1>
+<h1><%= t('merch.title') %></h1>
 
 <% if (configured) { %>
-<p>Your purchased Tattoo Art Customs designs, printed on premium <strong>Bella + Canvas 3001</strong> tees and shipped to your door.</p>
+<p><%= t('merch.intro') %></p>
 
-<h2>Custom tee — Bella + Canvas 3001</h2>
+<h2><%= t('merch.tee_h') %></h2>
 <ul>
   <% sizes.forEach(function(s) { %>
-  <li><strong><%= s %></strong> — <%= money(withFee(priceFor(s))) %> <span class="muted">(includes processing fee)</span></li>
+  <li><strong><%= s %></strong> — <%= fmtMoney(withFee(priceFor(s))) %> <span class="muted"><%= t('merch.includes_fee') %></span></li>
   <% }); %>
 </ul>
-<p class="muted">Colors: <%= colors.join(', ') %>. Made to order, ships in 5–7 business days. All tee sales are final.</p>
+<p class="muted"><%= t('merch.colors', {colors: colors.join(', ')}) %></p>
+<% if (vatNote) { %><p class="muted fineprint"><%= vatNote %></p><% } %>
 
 <% if (typeof currentUser !== 'undefined' && currentUser) { %>
   <% if (ownedCount > 0) { %>
-  <p>You own <%= ownedCount %> design<%= ownedCount === 1 ? '' : 's' %> — open any of them from your <a href="/account">account</a> and hit <strong>"Get this on a tee"</strong>.</p>
+  <p><%- t(ownedCount === 1 ? 'merch.owned_one' : 'merch.owned_many', {count: fmtNum(ownedCount), account: '<a href="/account">' + t('merch.account') + '</a>'}) %></p>
   <% } else { %>
-  <p><a class="btn" href="/gallery">Browse the gallery</a> — buy a design, then put it on a tee.</p>
+  <p><a class="btn" href="/gallery"><%= t('home.browse_gallery') %></a> <%= t('merch.browse_tail') %></p>
   <% } %>
 <% } else { %>
-<p><a class="btn" href="/login?next=<%= encodeURIComponent('/merch') %>">Log in</a> to order — tees are available for designs you've purchased.</p>
+<p><a class="btn" href="/login?next=<%= encodeURIComponent('/merch') %>"><%= t('merch.login') %></a> <%= t('merch.login_tail') %></p>
 <% } %>
 
 <% } else { %>
-<h2>Custom tees are coming soon</h2>
-<p>Mike's Custom Tees is setting up print-on-demand fulfillment for premium Bella + Canvas tees printed with your purchased Tattoo Art Customs designs. Drop your email and we'll let you know the moment tees drop.</p>
+<h2><%= t('merch.soon_title') %></h2>
+<p><%= t('merch.soon_text') %></p>
 <form method="post" action="/merch/notify">
   <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
   <div>
-    <label for="notify-email">Email</label>
+    <label for="notify-email"><%= t('merch.notify_email') %></label>
     <input type="email" id="notify-email" name="email" required maxlength="160" autocomplete="email">
   </div>
-  <p><button class="btn" type="submit">Notify me</button></p>
+  <p><button class="btn" type="submit"><%= t('merch.notify_me') %></button></p>
 </form>
 <% } %>
+
+<p class="muted"><%= t('merch.made_order') %></p>

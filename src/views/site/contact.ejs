@@ -1,25 +1,25 @@
-<h1>Contact Us</h1>
-<p>Questions about an order, a custom design, selling your art, or anything else — send us a message and we'll get back to you.</p>
-<p>Prefer email? Reach us directly at <a href="mailto:tattoo.art.customs@gmail.com">tattoo.art.customs@gmail.com</a>.</p>
+<h1><%= t('contact.title') %></h1>
+<p><%= t('contact.intro') %></p>
+<p><%- t('contact.prefer_email', {email: '<a href="mailto:tattoo.art.customs@gmail.com">tattoo.art.customs@gmail.com</a>'}) %></p>
 <form method="post" action="/contact" class="stack">
   <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
-  <label>Your name
+  <label><%= t('contact.name') %>
     <input type="text" name="name" maxlength="120" required>
   </label>
-  <label>Your email
+  <label><%= t('contact.email') %>
     <input type="email" name="email" maxlength="120" required>
   </label>
-  <label>Topic
+  <label><%= t('contact.topic') %>
     <select name="topic">
-      <option value="order">Order question</option>
-      <option value="custom">Custom design request</option>
-      <option value="artist">Selling my art / artist signup</option>
-      <option value="shop">Tattoo shop signup</option>
-      <option value="other">Something else</option>
+      <option value="order"><%= t('contact.topic_order') %></option>
+      <option value="custom"><%= t('contact.topic_custom') %></option>
+      <option value="artist"><%= t('contact.topic_artist') %></option>
+      <option value="shop"><%= t('contact.topic_shop') %></option>
+      <option value="other"><%= t('contact.topic_other') %></option>
     </select>
   </label>
-  <label>Message
+  <label><%= t('contact.message') %>
     <textarea name="message" rows="6" maxlength="2000" required></textarea>
   </label>
-  <button class="btn" type="submit">Send message</button>
+  <button class="btn" type="submit"><%= t('contact.send') %></button>
 </form>

@@ -1,29 +1,29 @@
-<h1>Design Contests</h1>
-<p class="muted">Real bounties for real art. Post a brief with a cash prize — designers submit entries, you pick the winner. The prize is held in escrow the moment you post.</p>
-<p><a class="btn" href="/contests/new">Post a contest</a></p>
+<h1><%= t('contests.title') %></h1>
+<p class="muted"><%= t('contests.sub') %></p>
+<p><a class="btn" href="/contests/new"><%= t('contests.post') %></a></p>
 
-<h2>Open bounties</h2>
+<h2><%= t('contests.open_bounties') %></h2>
 <% if (!open.length) { %>
-<p class="muted">No open contests right now — post the first bounty.</p>
+<p class="muted"><%= t('contests.none_open') %></p>
 <% } %>
 <% open.forEach(function(c) { %>
 <div class="card">
   <h3><a href="/contests/<%= c.id %>"><%= c.title %></a></h3>
-  <p class="muted"><%= c.style ? c.style + ' · ' : '' %><%= c.entry_count %> <%= c.entry_count === 1 ? 'entry' : 'entries' %> · <%= fmtLeft(timeLeftMs(c)) %><% if (c.status === 'judging') { %> · <span class="badge warn">judging</span><% } %></p>
-  <p><strong><%= money(c.prize_cents) %></strong> prize</p>
+  <p class="muted"><%= c.style ? c.style + ' · ' : '' %><%= t('contests.entries_h', {count: fmtNum(c.entry_count)}) %> · <%= t('contests.time_left', {time: fmtLeft(timeLeftMs(c))}) %><% if (c.status === 'judging') { %> · <span class="badge warn"><%= t('contests.judging') %></span><% } %></p>
+  <p><strong><%= t('contests.prize', {price: fmtMoney(c.prize_cents)}) %></strong></p>
   <p><%= c.description.slice(0, 160) %><%= c.description.length > 160 ? '…' : '' %></p>
 </div>
 <% }); %>
 
 <% if (recent.length) { %>
-<h2>Recently awarded</h2>
+<h2><%= t('contests.awarded_recently') %></h2>
 <% recent.forEach(function(c) { %>
 <div class="card">
   <h3><a href="/contests/<%= c.id %>"><%= c.title %></a></h3>
-  <p class="muted">Won by <%= c.winner_name || 'a designer' %> — <%= money(c.prize_cents) %> prize</p>
-  <% if (c.winner_entry_id) { %><p><img src="/contests/entry/<%= c.winner_entry_id %>/file" alt="Winning entry" style="max-width:300px"></p><% } %>
+  <p class="muted"><%= t('contests.won_by', {name: c.winner_name || t('contests.a_designer'), prize: fmtMoney(c.prize_cents)}) %></p>
+  <% if (c.winner_entry_id) { %><p><img src="/contests/entry/<%= c.winner_entry_id %>/file" alt="<%= t('contests.winning_alt') %>" style="max-width:300px" loading="lazy" decoding="async"></p><% } %>
 </div>
 <% }); %>
 <% } %>
 
-<p class="muted">How it works: prizes start at $30 and are paid up front into escrow. Designers keep full rights to every entry that doesn't win — and can list those as premade designs. The winning design's rights go to the contest holder.</p>
+<p class="muted"><%= t('contests.how', {min: fmtMoney(3000)}) %></p>

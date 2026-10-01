@@ -1,16 +1,16 @@
-<h1>Redeem a Gift Card</h1>
-<p class="muted">The full card value applies to your booking — no fees on redemption.</p>
+<h1><%= t('giftcards.redeem_title') %></h1>
+<p class="muted"><%= t('giftcards.redeem_sub') %></p>
 <form method="post" action="/giftcards/redeem" class="form">
-  <label>Gift card code
+  <label><%= t('giftcards.code_label') %>
     <input type="text" name="code" maxlength="20" required placeholder="XXXX-XXXX-XXXX" style="text-transform:uppercase">
   </label>
-  <label>Apply to booking
+  <label><%= t('giftcards.apply_to') %>
     <select name="booking_id" required>
-      <% if (!bookings.length) { %><option value="">No upcoming bookings</option><% } %>
+      <% if (!bookings.length) { %><option value=""><%= t('giftcards.no_bookings') %></option><% } %>
       <% for (const b of bookings) { %>
-      <option value="<%= b.id %>"><%= b.shop_name %> — <%= new Date(b.start_at).toLocaleString('en-US', { timeZone: 'America/Chicago' }) %></option>
+      <option value="<%= b.id %>"><%= b.shop_name %> — <%= new Date(b.start_at).toLocaleString(localeTag, { timeZone: 'America/Chicago' }) %></option>
       <% } %>
     </select>
   </label>
-  <button type="submit">Redeem</button>
+  <button type="submit"><%= t('giftcards.redeem_btn') %></button>
 </form>

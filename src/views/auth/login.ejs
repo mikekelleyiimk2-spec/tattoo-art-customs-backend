@@ -1,10 +1,10 @@
-<h1>Log in</h1>
+<h1><%= t('auth.login_title') %></h1>
 <form method="post" action="/login" class="form">
   <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-  <label for="email">Email</label>
+  <label for="email"><%= t('auth.email') %></label>
   <input type="email" id="email" name="email" required autocomplete="email">
-  <label for="password">Password</label>
+  <label for="password"><%= t('auth.password') %></label>
   <input type="password" id="password" name="password" required autocomplete="current-password">
-  <p><button class="btn" type="submit">Log in</button></p>
+  <p><button class="btn" type="submit"><%= t('auth.login_btn') %></button></p>
 </form>
-<p><a href="/forgot">Forgot your password?</a> · <a href="/signup">Create an account</a></p>
+<p><a href="/forgot"><%= t('auth.forgot') %></a> · <a href="/signup"><%= t('auth.create_account') %></a></p>

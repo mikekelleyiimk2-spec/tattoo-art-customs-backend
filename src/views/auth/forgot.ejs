@@ -1,8 +1,8 @@
-<h1>Reset your password</h1>
-<p>Enter your account email and we'll send you a reset link.</p>
+<h1><%= t('auth.forgot_title') %></h1>
+<p><%= t('auth.forgot_sub') %></p>
 <form method="post" action="/forgot" class="form">
   <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-  <label for="email">Email</label>
+  <label for="email"><%= t('auth.email') %></label>
   <input type="email" id="email" name="email" required autocomplete="email">
-  <p><button class="btn" type="submit">Send reset link</button></p>
+  <p><button class="btn" type="submit"><%= t('auth.send_link') %></button></p>
 </form>

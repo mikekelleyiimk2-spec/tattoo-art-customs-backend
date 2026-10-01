@@ -1,91 +1,93 @@
-<h1>Membership</h1>
+<h1><%= t('membership.title') %></h1>
 <div class="card">
-  <h2>Which plan is for me?</h2>
+  <h2><%= t('membership.which') %></h2>
   <ul>
-    <li><strong>I want to sell my art and earn 60% per sale</strong> → Design artist, $5.67/month.</li>
-    <li><strong>I own a tattoo shop and want 20% on every sale I refer</strong> → Tattoo shop, $103.98/year. <strong>Includes the full Design Artist membership</strong> — upload your art, write an artist bio, and earn designer commissions too.</li>
-    <li><strong>I just want custom designs, pre-made designs, and early access</strong> → Customer, $5.67/month.</li>
+    <li><strong><%= t('membership.sell_art') %></strong> <%= t('membership.sell_art_tail', {price: fmtMoney(567)}) %></li>
+    <li><strong><%= t('membership.own_shop') %></strong> <%= t('membership.own_shop_tail', {price: fmtMoney(10398)}) %> <strong><%= t('membership.includes_artist') %></strong></li>
+    <li><strong><%= t('membership.just_customer') %></strong> <%= t('membership.just_customer_tail', {price: fmtMoney(567)}) %></li>
   </ul>
-  <p class="muted">Uploading art is free for every account — a plan is only needed to earn commission.</p>
+  <p class="muted"><%= t('membership.upload_free') %></p>
 </div>
 <% if (!paypalReady) { %>
-<div class="card"><p><strong>Payments are being set up.</strong> Membership checkout via PayPal will be available soon — your account works for browsing in the meantime.</p></div>
+<div class="card"><p><strong><%= t('membership.payments_setup') %></strong> <%= t('membership.payments_setup_tail') %></p></div>
 <% } %>
 
-<h2>Plans</h2>
+<h2><%= t('membership.plans') %></h2>
 <% if (firstMonthEligible) { %>
-<div class="card"><p><strong>New here?</strong> Your first month of the Customer monthly plan is <strong><%= money(firstMonthPrice) %></strong>, then <%= money(customerPlanPrice) %>/month. One per account.</p></div>
+<div class="card"><p><strong><%= t('membership.new_here') %></strong> <%= t('membership.first_month_tail', {first: fmtMoney(firstMonthPrice), price: fmtMoney(customerPlanPrice)}) %></p></div>
 <% } %>
 <% if (foundingShop) { %>
-<div class="card"><p><strong>Founding tattoo shops:</strong> join now and your first year is <strong><%= money(foundingPrice) %></strong> (normally $103.98/year). Only <strong><%= shopsLeft %> of 100</strong> founding spots left. Renews at the regular price. Offer ends <%= new Date(foundingEnds).toLocaleDateString() %>.</p></div>
+<div class="card"><p><strong><%= t('membership.founding') %></strong> <%= t('membership.founding_tail', {price: fmtMoney(foundingPrice), regular: fmtMoney(10398), left: fmtNum(shopsLeft), date: new Date(foundingEnds).toLocaleDateString(localeTag)}) %></p></div>
 <% } %>
 <div class="grid">
   <% plans.forEach(function(p) { %>
   <div class="card">
     <h3><%= p.name %></h3>
-    <p><strong><%= money(p.price_cents) %></strong> / <%= p.interval %></p>
+    <p><strong><%= fmtMoney(p.price_cents) %></strong> / <%= p.interval === 'month' ? t('membership.per_month') : t('membership.per_year') %></p>
     <p class="muted"><%= p.description %></p>
     <% if (p.slug === 'tattoo_shop' && foundingShop) { %>
-    <p><strong>First year <%= money(foundingPrice) %></strong> for founding shops — renews at <%= money(p.price_cents) %>/year.</p>
+    <p><strong><%= t('membership.first_year', {price: fmtMoney(foundingPrice)}) %></strong> — <%= t('membership.renews_at', {price: fmtMoney(p.price_cents)}) %></p>
     <% } %>
     <% if (p.slug === 'customer' && firstMonthEligible) { %>
-    <p><strong>First month <%= money(firstMonthPrice) %></strong>, then <%= money(p.price_cents) %>/month.</p>
+    <p><strong><%= t('membership.first_month_plan', {price: fmtMoney(firstMonthPrice)}) %></strong><%= t('membership.then', {price: fmtMoney(p.price_cents)}) %></p>
     <% } %>
+    <% if (vatNote) { %><p class="muted fineprint"><%= vatNote %></p><% } %>
     <% if (p.slug === 'customer_annual' && !annualReady) { %>
-    <p class="muted"><strong>Annual plan coming soon</strong> — the yearly plan is being set up. The monthly plan is ready now.</p>
+    <p class="muted"><strong><%= t('membership.annual_soon') %></strong> <%= t('membership.annual_soon_tail') %></p>
     <% } else if (paypalReady) { %>
+    <% const _pfx = fxNote(p.price_cents); if (_pfx) { %><p class="muted fineprint"><%= _pfx %></p><% } %>
     <form method="post" action="/membership/subscribe/<%= p.slug %>">
       <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-      <button class="btn" type="submit">Subscribe</button>
+      <button class="btn" type="submit"><%= t('membership.subscribe') %></button>
     </form>
     <% } %>
     <% if (typeof creditBaseBySlug !== 'undefined' && creditBaseBySlug[p.slug]) { %>
-    <form method="post" action="/membership/credit/<%= p.slug %>" onsubmit="return confirm('Pay one <%= p.interval %> of <%= p.name %> with site credit (<%= money(creditBaseBySlug[p.slug]) %>)? No auto-renewal.')">
+    <form method="post" action="/membership/credit/<%= p.slug %>" onsubmit="return confirm('Pay one <%= p.interval %> of <%= p.name %> with site credit (<%= fmtMoney(creditBaseBySlug[p.slug]) %>)? No auto-renewal.')">
       <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-      <p><button class="btn btn-secondary" type="submit">Pay <%= money(creditBaseBySlug[p.slug]) %> with site credit</button><br>
-      <span class="muted">One <%= p.interval %>, no auto-renewal. Your credit: <%= money(typeof creditBalance !== 'undefined' ? creditBalance : 0) %>. <a href="/gift-cards/redeem">Redeem a gift card</a>.</span></p>
+      <p><button class="btn btn-secondary" type="submit"><%= t('membership.pay_credit', {price: fmtMoney(creditBaseBySlug[p.slug])}) %></button><br>
+      <span class="muted"><%- t('membership.credit_note', {interval: p.interval === 'month' ? t('membership.per_month') : t('membership.per_year'), credit: fmtMoney(typeof creditBalance !== 'undefined' ? creditBalance : 0), redeem: '<a href="/gift-cards/redeem">' + t('membership.redeem') + '</a>'}) %></span></p>
     </form>
     <% } %>
   </div>
   <% }); %>
 </div>
 
-<h2>Refer a friend — earn a free month</h2>
+<h2><%= t('membership.refer') %></h2>
 <div class="card">
-  <p>Share your personal link. When a friend becomes a paying member, <strong>you get one free month</strong> of membership.</p>
-  <p><strong>Your link:</strong> <input type="text" readonly value="<%= baseUrl %>/signup?ref=<%= referralCode %>" onclick="this.select()" style="width:100%"></p>
-  <p class="muted">Your code: <strong><%= referralCode %></strong></p>
+  <p><%= t('membership.refer_text') %></p>
+  <p><strong><%= t('membership.your_link') %></strong> <input type="text" readonly value="<%= baseUrl %>/signup?ref=<%= referralCode %>" onclick="this.select()" style="width:100%"></p>
+  <p class="muted"><%= t('membership.your_code') %> <strong><%= referralCode %></strong></p>
   <% if (redemptions.length) { %>
-  <h3>Free months earned</h3>
+  <h3><%= t('membership.free_months') %></h3>
   <ul>
     <% redemptions.forEach(function(r) { %>
-    <li>One free month (through <%= new Date(r.free_month_end).toLocaleDateString() %>) — <span class="badge <%= r.status === 'active' ? 'ok' : '' %>"><%= r.status %></span></li>
+    <li><%= t('membership.free_month', {date: new Date(r.free_month_end).toLocaleDateString(localeTag)}) %> <span class="badge <%= r.status === 'active' ? 'ok' : '' %>"><%= r.status %></span></li>
     <% }); %>
   </ul>
   <% } %>
 </div>
 
-<h2>Your subscriptions</h2>
-<% if (!subs.length) { %><p class="muted">No subscriptions yet.</p><% } %>
+<h2><%= t('membership.your_subs') %></h2>
+<% if (!subs.length) { %><p class="muted"><%= t('membership.no_subs') %></p><% } %>
 <table>
-  <thead><tr><th>Plan</th><th>Status</th><th>Renews</th><th></th></tr></thead>
+  <thead><tr><th><%= t('membership.th_plan') %></th><th><%= t('membership.th_status') %></th><th><%= t('membership.th_renews') %></th><th></th></tr></thead>
   <tbody>
   <% subs.forEach(function(s) { %>
     <tr>
       <td><%= s.plan_name %></td>
       <td><span class="badge <%= s.status === 'active' ? 'ok' : 'warn' %>"><%= s.status %></span></td>
-      <td><%= s.current_period_end ? new Date(s.current_period_end).toLocaleDateString() : '—' %></td>
+      <td><%= s.current_period_end ? new Date(s.current_period_end).toLocaleDateString(localeTag) : '—' %></td>
       <td>
         <% if (s.status === 'active') { %>
         <form method="post" action="/membership/cancel/<%= s.id %>" onsubmit="return confirm('Cancel this membership? All memberships are final and non-refundable.')">
           <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-          <button class="btn btn-secondary" type="submit">Cancel</button>
+          <button class="btn btn-secondary" type="submit"><%= t('membership.cancel') %></button>
         </form>
         <% } else if (s.status === 'pending') { %>
-        <a class="btn" href="/membership/resume/<%= s.id %>">Complete payment</a>
+        <a class="btn" href="/membership/resume/<%= s.id %>"><%= t('membership.complete_payment') %></a>
         <form method="post" action="/membership/cancel/<%= s.id %>" onsubmit="return confirm('Cancel this pending subscription?')" style="display:inline">
           <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-          <button class="btn btn-secondary" type="submit">Cancel</button>
+          <button class="btn btn-secondary" type="submit"><%= t('membership.cancel') %></button>
         </form>
         <% } %>
       </td>
@@ -93,4 +95,4 @@
   <% }); %>
   </tbody>
 </table>
-<p class="muted">All memberships are final and non-refundable. Canceling stops renewal; access continues until the period ends.</p>
+<p class="muted"><%= t('membership.final_note') %></p>

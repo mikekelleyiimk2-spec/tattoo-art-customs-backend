@@ -56,7 +56,7 @@ router.get('/capture/:pendingId', requireLogin, async (req, res) => {
     delete req.session.gc_pending;
     res.render('giftcards/success', {
       title: 'Gift Card Ready — Tattoo Art Customs',
-      code, amount: money(amount_cents), already: !!already, metaDescription: '',
+      code, amount: money(amount_cents), amount_cents, already: !!already, metaDescription: '',
     });
   } catch (e) {
     req.session.flash = 'Gift card activation failed: ' + e.message;
@@ -123,11 +123,12 @@ router.get('/fees', requireLogin, async (req, res) => {
   const cents = parseInt(req.query.amount_cents, 10);
   if (!Number.isInteger(cents) || cents <= 0) return res.status(400).json({ ok: false });
   const f = giftCardFees(cents);
+  const fmt = res.locals.fmtMoney || money;
   res.json({
     ok: true, base: f.base, platformFee: f.platformFee, processing: f.processing,
     total: f.total, lines: giftCardReceiptLines(f).map((l) => l),
-    baseFmt: money(f.base), platformFeeFmt: money(f.platformFee),
-    processingFmt: money(f.processing), totalFmt: money(f.total),
+    baseFmt: fmt(f.base), platformFeeFmt: fmt(f.platformFee),
+    processingFmt: fmt(f.processing), totalFmt: fmt(f.total),
   });
 });
 
