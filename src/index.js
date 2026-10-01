@@ -79,6 +79,7 @@ app.use((req, res, next) => {
   res.locals.currentUser = null;
   res.locals.flash = null;
   res.locals.money = money;
+  res.locals.safeJson = require('./lib/safeJson').safeJson;
   next();
 });
 
@@ -135,14 +136,18 @@ app.use(async (req, res, next) => {
 app.use(express.static(path.join(__dirname, 'public')));
 
 // PUBLIC gallery images: ONLY watermarked linework is ever served publicly.
-// Clean color + clean linework live under ASSET_DIR but are NOT mounted here;
-// buyers receive them through time-limited secure download links (/orders).
+// Clean color + clean linework live under the upload dir but are NOT mounted
+// here; buyers receive them through time-limited secure download links.
+// Baked gallery images ship in the Docker image under ASSET_DIR; user uploads
+// (including newly watermarked pieces) live under UPLOAD_DIR — the persistent
+// disk on Render. /img/designs checks the upload dir first, then falls
+// through to the baked set (express.static calls next() on a miss).
 const wmDir = path.join(config.assetDir, 'designs', 'linework-wm');
-const photosDir = path.join(config.assetDir, 'uploads', 'photos');
-const adsDir = path.join(config.assetDir, 'uploads', 'ads');
-fs.mkdirSync(wmDir, { recursive: true });
-fs.mkdirSync(photosDir, { recursive: true });
-fs.mkdirSync(adsDir, { recursive: true });
+const uploadWmDir = path.join(config.uploadDir, 'designs', 'linework-wm');
+const photosDir = path.join(config.uploadDir, 'photos');
+const adsDir = path.join(config.uploadDir, 'ads');
+for (const d of [wmDir, uploadWmDir, photosDir, adsDir]) fs.mkdirSync(d, { recursive: true });
+app.use('/img/designs', express.static(uploadWmDir));
 app.use('/img/designs', express.static(wmDir));
 app.use('/img/photos', express.static(photosDir));
 app.use('/img/ads', express.static(adsDir));
@@ -198,25 +203,117 @@ app.use((err, req, res, next) => {
   });
 });
 
+// --- Graceful shutdown state (module scope so signal handlers reach it) ---
+let server = null;
+let shuttingDown = false;
+let sessionCleanupTimer = null;
+let contestExpiryTimer = null;
+const openSockets = new Set();
+
+// Destroy sockets that have no in-flight request (idle keep-alives) so
+// server.close() can complete promptly instead of waiting on them.
+function drainIdleSockets() {
+  for (const socket of openSockets) {
+    if (!socket._inFlight) {
+      try { socket.destroy(); } catch (e) { /* already gone */ }
+    }
+  }
+}
+
+// Bounded drain window: Render sends SIGTERM ~30s before killing the
+// container. In-flight requests get up to SHUTDOWN_DRAIN_MS, then any
+// lingering sockets are destroyed, the DB pool is closed, and we exit.
+const SHUTDOWN_DRAIN_MS = 25000;
+
+async function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`Received ${signal} — shutting down gracefully…`);
+  if (sessionCleanupTimer) clearInterval(sessionCleanupTimer);
+  if (contestExpiryTimer) clearInterval(contestExpiryTimer);
+  try { require('./lib/scheduler').stopScheduler(); } catch (e) {
+    console.error('scheduler stop failed:', e.message);
+  }
+  if (server) {
+    server.close(); // stop accepting new connections
+    drainIdleSockets(); // drop idle keep-alives right away when nothing is busy
+    await Promise.race([
+      new Promise((resolve) => server.once('close', resolve)),
+      new Promise((resolve) => setTimeout(resolve, SHUTDOWN_DRAIN_MS).unref()),
+    ]);
+    // Whatever is still hanging around gets destroyed — never hang shutdown.
+    for (const socket of openSockets) {
+      try { socket.destroy(); } catch (e) { /* already gone */ }
+    }
+    await new Promise((resolve) => {
+      if (!server.listening) return resolve();
+      server.once('close', resolve);
+      setTimeout(resolve, 2000).unref(); // final backstop
+    });
+  }
+  try {
+    await db.close();
+  } catch (e) {
+    console.error('db close failed:', e.message);
+  }
+  console.log('Shutdown complete.');
+  process.exit(0);
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+
 async function start() {
   await migrate();
   // Periodic cleanup of expired sessions.
-  setInterval(() => {
+  sessionCleanupTimer = setInterval(() => {
     db.query('DELETE FROM sessions WHERE expires_at < ?', [Date.now()]).catch(() => {});
   }, 3600 * 1000).unref();
   // Design-contest expiry (hourly): past-deadline contests -> refund to site
   // credit when no entries, or 'judging' when entries await a winner pick.
-  setInterval(() => {
+  // .unref()'d so this timer never holds the process open by itself.
+  contestExpiryTimer = setInterval(() => {
     require('./lib/contests').expireContests(Date.now())
       .catch((e) => console.error('contest expiry failed:', e.message));
   }, 3600 * 1000).unref();
   // Weekly automated commission payouts (Mondays ~9am CT).
   require('./lib/scheduler').startScheduler();
-  app.listen(config.port, () => {
+  server = app.listen(config.port, () => {
     console.log(`Tattoo Art Customs listening on port ${config.port} (${db.getMode()})`);
+    // Upload-disk self-report: proves in the deploy logs whether UPLOAD_DIR
+    // sits on the persistent Render disk (~1GB total) or the ephemeral
+    // container filesystem. No PII, just mount facts for ops.
+    try {
+      const st = fs.statfsSync(config.uploadDir);
+      const gb = (n) => (n / 1073741824).toFixed(2) + 'GB';
+      console.log(`[disk] uploadDir=${config.uploadDir} total=${gb(st.blocks * st.bsize)} free=${gb(st.bfree * st.bsize)}`);
+    } catch (e) {
+      console.log(`[disk] uploadDir=${config.uploadDir} statfs unavailable (${e.message}); dir exists=${fs.existsSync(config.uploadDir)}`);
+    }
     if (!config.paypalConfigured()) {
       console.log('NOTE: PayPal credentials are not set — checkout and subscriptions are disabled until configured (see SETUP.md).');
     }
+  });
+  // Track open sockets (with per-socket in-flight request counts) so
+  // shutdown can tell a busy request apart from an idle keep-alive
+  // connection — server.close() alone waits on idle keep-alives forever.
+  server.on('connection', (socket) => {
+    socket._inFlight = 0;
+    openSockets.add(socket);
+    socket.on('close', () => openSockets.delete(socket));
+  });
+  server.on('request', (req, res) => {
+    const socket = req.socket;
+    socket._inFlight = (socket._inFlight || 0) + 1;
+    let settled = false;
+    const settle = () => {
+      if (settled) return;
+      settled = true;
+      socket._inFlight = Math.max(0, (socket._inFlight || 1) - 1);
+      if (shuttingDown) drainIdleSockets();
+    };
+    res.on('finish', settle);
+    res.on('close', settle);
   });
 }
 

@@ -6,6 +6,7 @@ const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const db = require('../db');
 const config = require('../config');
+const { resolveStoredPath } = require('../lib/storage');
 const { requireLogin } = require('../middleware/auth');
 const { hasActiveSubscription } = require('../middleware/auth');
 const { designerAccess } = require('../shop/shopDesigner');
@@ -20,7 +21,7 @@ registerPayoutRoutes(router, 'customer');
 
 const photoStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const dir = path.join(config.assetDir, 'uploads', 'photos');
+    const dir = path.join(config.uploadDir, 'photos');
     fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },
@@ -201,8 +202,8 @@ router.post('/photos', requireLogin, formLimiter, (req, res, next) => {
 router.post('/photos/:id/delete', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
   const photo = await db.get('SELECT * FROM member_photos WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
   if (photo) {
-    const abs = path.join(config.assetDir, 'uploads', 'photos', path.basename(photo.path));
-    fs.unlink(abs, () => {});
+    const abs = resolveStoredPath(path.join('photos', path.basename(photo.path)));
+    if (abs) fs.unlink(abs, () => {});
     await db.query('DELETE FROM member_photos WHERE id = ?', [photo.id]);
     req.session.flash = 'Photo removed.';
   }
@@ -217,7 +218,7 @@ router.post('/photos/:id/delete', requireLogin, formLimiter, checkHoneypot, asyn
 const { screenText } = require('../lib/screening');
 const designStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const dir = path.join(config.assetDir, 'uploads', 'designs');
+    const dir = path.join(config.uploadDir, 'designs');
     fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },
@@ -282,8 +283,8 @@ router.post('/upload', requireLogin, formLimiter, (req, res, next) => {
   const screen = screenText(`${title}\n${description}`);
   const id = await db.insert('designs', {
     title, description, categories: JSON.stringify(categories),
-    color_path: path.relative(config.assetDir, files.color[0].path),
-    linework_path: path.relative(config.assetDir, files.linework[0].path),
+    color_path: path.relative(config.uploadDir, files.color[0].path),
+    linework_path: path.relative(config.uploadDir, files.linework[0].path),
     linework_wm_path: '', // set by the watermarking step before approval
     price_cents: 7500, artist_id: req.user.id,
     status: screen.ok ? 'pending' : 'flagged', created_at: db.now(), sale_count: 0,

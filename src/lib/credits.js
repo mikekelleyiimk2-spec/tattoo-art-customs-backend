@@ -58,10 +58,10 @@ async function completeTopup({ userId, topupId }) {
   if (topup.status === 'completed') return getCreditBalance(userId);
   if (topup.status !== 'pending') throw new Error('This top-up is no longer valid.');
   const capture = await paypal.captureCheckoutOrder(topup.paypal_order_id);
-  const captured = capture.purchase_units?.[0]?.payments?.captures?.[0];
-  const paidCents = Math.round(parseFloat(captured?.amount?.value || '0') * 100);
   const expected = topup.amount_cents + (topup.fee_cents || 0);
-  if (paidCents < expected) throw new Error('Captured amount did not match the top-up.');
+  // Throws unless the captured amount exactly matches — a short capture
+  // leaves the top-up pending instead of crediting phantom money.
+  paypal.assertCaptureAmount(capture, expected);
   await addCredit({ userId, amountCents: topup.amount_cents, kind: 'topup', refId: topupId, note: 'PayPal top-up' });
   await db.update('credit_topups', topupId, { status: 'completed', completed_at: db.now() });
   return getCreditBalance(userId);

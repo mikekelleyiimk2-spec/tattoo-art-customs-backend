@@ -10,6 +10,7 @@ const fs = require('fs');
 const { requireLogin, requireSubscription } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const config = require('../config');
+const { resolveStoredPath } = require('../lib/storage');
 const db = require('../db');
 const { MAX_PHOTOS, saveIntake, getIntakeForBooking } = require('./intake');
 
@@ -20,7 +21,7 @@ const router = express.Router();
 const upload = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
-      const dir = path.join(config.assetDir, 'uploads', 'intake-tmp');
+      const dir = path.join(config.uploadDir, 'intake-tmp');
       fs.mkdirSync(dir, { recursive: true });
       cb(null, dir);
     },
@@ -136,9 +137,9 @@ router.get('/photo/:bookingId/:idx', requireLogin, async (req, res) => {
   }
   const rel = photos[parseInt(req.params.idx, 10)];
   if (!rel) return res.status(404).send('Not found.');
-  const abs = path.resolve(config.assetDir, rel);
-  const root = path.resolve(config.assetDir, 'uploads', 'intake');
-  if (!abs.startsWith(root + path.sep) || !fs.existsSync(abs)) return res.status(404).send('Not found.');
+  const abs = resolveStoredPath(rel);
+  const root = path.resolve(config.uploadDir, 'intake');
+  if (!abs || !abs.startsWith(root + path.sep)) return res.status(404).send('Not found.');
   res.sendFile(abs);
 });
 

@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const db = require('../db');
 const config = require('../config');
+const { resolveStoredPath } = require('../lib/storage');
 const { requireLogin, requireAnySubscription, isAdminRole } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { combine } = require('../lib/combine');
@@ -56,10 +57,10 @@ router.post('/combine', formLimiter, checkHoneypot, async (req, res) => {
     const buffer = await combine(picked, { layout, style, background });
 
     const id = db.newId();
-    const dir = path.join(config.assetDir, 'uploads', 'combos', req.user.id);
+    const dir = path.join(config.uploadDir, 'combos', req.user.id);
     fs.mkdirSync(dir, { recursive: true });
-    const relPath = path.join('uploads', 'combos', req.user.id, `combo-${id}.jpg`);
-    fs.writeFileSync(path.join(config.assetDir, relPath), buffer);
+    const relPath = path.join('combos', req.user.id, `combo-${id}.jpg`);
+    fs.writeFileSync(path.join(config.uploadDir, relPath), buffer);
 
     await db.insert('combos', {
       id, user_id: req.user.id, name,
@@ -86,8 +87,8 @@ router.get('/combos/:id/download', async (req, res) => {
   if (!combo || (combo.user_id !== req.user.id && !isAdminRole(req.user.role))) {
     return res.status(404).render('error', { title: 'Not found', message: 'Combination not found.' });
   }
-  const abs = path.join(config.assetDir, combo.output_path);
-  if (!fs.existsSync(abs)) {
+  const abs = resolveStoredPath(combo.output_path);
+  if (!abs) {
     return res.status(404).render('error', { title: 'Not found', message: 'File is missing.' });
   }
   res.download(abs, `${combo.name.replace(/[^a-z0-9-_]+/gi, '-').slice(0, 60) || 'combo'}.jpg`);
@@ -96,7 +97,8 @@ router.get('/combos/:id/download', async (req, res) => {
 router.post('/combos/:id/delete', formLimiter, checkHoneypot, async (req, res) => {
   const combo = await db.get('SELECT * FROM combos WHERE id = ?', [req.params.id]);
   if (combo && (combo.user_id === req.user.id || isAdminRole(req.user.role))) {
-    try { fs.unlinkSync(path.join(config.assetDir, combo.output_path)); } catch { /* gone */ }
+    const delAbs = resolveStoredPath(combo.output_path);
+    if (delAbs) { try { fs.unlinkSync(delAbs); } catch { /* gone */ } }
     await db.query('DELETE FROM combos WHERE id = ?', [combo.id]);
     req.session.flash = 'Combination deleted.';
   }

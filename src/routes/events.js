@@ -75,12 +75,13 @@ router.get('/signup/approve/:paymentId', requireLogin, async (req, res) => {
     }
     if (!pay.paypal_order_id) throw new Error('No PayPal order on this payment.');
     const capture = await paypal.captureCheckoutOrder(pay.paypal_order_id);
-    const captured = capture.purchase_units?.[0]?.payments?.captures?.[0];
-    let paidCents = Math.round(parseFloat(captured?.amount?.value || '0') * 100);
-    if (!paidCents) paidCents = pay.total_cents; // test stub reports 0.00
-    if (paidCents < pay.total_cents) throw new Error('Captured amount is less than the amount due.');
+    // Must match the amount due exactly (the test stub reports 0.00 and is
+    // accommodated inside assertCaptureAmount — never live in production).
+    paypal.assertCaptureAmount(capture, pay.total_cents);
+    const firstCapture = (capture.purchase_units || [])
+      .flatMap((pu) => (pu.payments && pu.payments.captures) || [])[0] || null;
     await confirmEventSignupPayment(pay.id, {
-      captureId: (captured && captured.id) || null,
+      captureId: (firstCapture && firstCapture.id) || null,
       orderId: pay.paypal_order_id, customerUserId: req.user.id,
     });
     req.session.flash = 'Registration paid — you are signed up!';

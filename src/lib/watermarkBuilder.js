@@ -69,7 +69,8 @@ function defaultMarkRel(artistId) {
 }
 
 function defaultMarkAbs(artistId) {
-  return path.join(config.assetDir, defaultMarkRel(artistId));
+  return require('./storage').resolveStoredPath(defaultMarkRel(artistId))
+    || path.join(config.uploadDir, defaultMarkRel(artistId));
 }
 
 function defaultMarkExists(artistId) {
@@ -145,7 +146,7 @@ async function buildMarkBuffer({ lines, color }) {
 async function buildAndSave({ artistId, lines, color }) {
   const { buffer } = await buildMarkBuffer({ lines, color });
   const rel = defaultMarkRel(artistId);
-  const abs = path.join(config.assetDir, rel);
+  const abs = path.join(config.uploadDir, rel);
   fs.mkdirSync(path.dirname(abs), { recursive: true });
   fs.writeFileSync(abs, buffer);
   return rel;

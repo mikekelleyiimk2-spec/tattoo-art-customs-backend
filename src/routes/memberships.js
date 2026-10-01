@@ -76,24 +76,31 @@ router.post('/credit/:slug', requireLogin, formLimiter, checkHoneypot, async (re
   // Extend an existing active sub for this plan, else create a fresh
   // one-term subscription. Idempotent on double-click: the second POST finds
   // the row the first one just created and extends it instead of stacking.
+  //
+  // ORDER MATTERS: the existing-subscription checks run BEFORE any credit is
+  // debited. A PayPal-billed subscription already covering this plan must
+  // redirect WITHOUT touching credit — debiting first meant the user lost
+  // credit and got nothing.
   const termMs = plan.interval === 'year' ? 365 * 86400000 : 30 * 86400000;
   const nowMs = Date.now();
   const existing = await db.get(
     `SELECT * FROM subscriptions WHERE user_id = ? AND plan_id = ? AND status = 'active'
      AND (current_period_end IS NULL OR current_period_end > ?)`, [req.user.id, plan.id, nowMs]);
+  if (existing && Number(existing.paid_with_credit) !== 1) {
+    // A PayPal-billed subscription already covers this plan — don't stack,
+    // and crucially don't charge.
+    req.session.flash = 'You already have an active subscription for this plan — complete or cancel it below.';
+    return res.redirect('/membership');
+  }
   await addCredit({
     userId: req.user.id, amountCents: -baseCents, kind: 'membership_spend', refId: plan.id,
     note: `One ${plan.interval} of ${plan.name} paid with site credit`,
   });
   let subId;
-  if (existing && Number(existing.paid_with_credit) === 1) {
+  if (existing) {
     const from = Math.max(Number(existing.current_period_end) || nowMs, nowMs);
     await db.update('subscriptions', existing.id, { current_period_end: from + termMs });
     subId = existing.id;
-  } else if (existing) {
-    // A PayPal-billed subscription already covers this plan — don't stack.
-    req.session.flash = 'You already have an active subscription for this plan — complete or cancel it below.';
-    return res.redirect('/membership');
   } else {
     subId = await db.insert('subscriptions', {
       user_id: req.user.id, plan_id: plan.id, status: 'active',

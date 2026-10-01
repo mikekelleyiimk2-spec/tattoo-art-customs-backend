@@ -7,6 +7,7 @@ const fs = require('fs');
 const multer = require('multer');
 const db = require('../db');
 const config = require('../config');
+const { resolveStoredPath } = require('../lib/storage');
 const { requireLogin, requireRole, requireHeadAdmin, isAdminRole, isHeadAdmin } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { recordSaleCommissions, verifyOrderCommissions } = require('../lib/commissions');
@@ -158,7 +159,7 @@ router.post('/orders/:id/verify-referral', formLimiter, checkHoneypot, async (re
 // Attach finished custom-design files to an order.
 const customStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const dir = path.join(config.assetDir, 'uploads', 'designs');
+    const dir = path.join(config.uploadDir, 'designs');
     fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },
@@ -185,8 +186,8 @@ router.post('/orders/:id/attach', formLimiter, (req, res, next) => {
   const order = await db.get('SELECT * FROM orders WHERE id = ?', [req.params.id]);
   if (!order) return res.redirect('/admin/orders');
   const data = {};
-  if (req.files?.color) data.custom_color_path = path.relative(config.assetDir, req.files.color[0].path);
-  if (req.files?.linework) data.custom_linework_path = path.relative(config.assetDir, req.files.linework[0].path);
+  if (req.files?.color) data.custom_color_path = path.relative(config.uploadDir, req.files.color[0].path);
+  if (req.files?.linework) data.custom_linework_path = path.relative(config.uploadDir, req.files.linework[0].path);
   if (Object.keys(data).length) {
     await db.update('orders', order.id, data);
     req.session.flash = 'Custom design files attached — the buyer can now download them.';
@@ -611,7 +612,8 @@ router.post('/designs/:id/delete', formLimiter, checkHoneypot, async (req, res) 
     return res.redirect('/admin/designs');
   }
   for (const p of [design.color_path, design.linework_path, design.linework_wm_path, design.custom_watermark_path]) {
-    if (p) { try { fs.unlinkSync(path.join(config.assetDir, p)); } catch { /* already gone */ } }
+    const abs = p ? resolveStoredPath(p) : null;
+    if (abs) { try { fs.unlinkSync(abs); } catch { /* already gone */ } }
   }
   await db.query('DELETE FROM designs WHERE id = ?', [design.id]);
   req.session.flash = 'Piece deleted.';
@@ -631,7 +633,7 @@ router.post('/designs/:id/members-only', formLimiter, checkHoneypot, async (req,
 // is ever served publicly.
 const wmStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const dir = path.join(config.assetDir, 'designs', 'linework-wm');
+    const dir = path.join(config.uploadDir, 'designs', 'linework-wm');
     fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },
@@ -657,7 +659,7 @@ router.post('/designs/:id/watermark', formLimiter, (req, res, next) => {
 }, checkHoneypot, async (req, res) => {
   if (!req.file) { req.session.flash = 'Choose a watermarked linework image first.'; return res.redirect('/admin/designs'); }
   await db.update('designs', req.params.id, {
-    linework_wm_path: path.relative(config.assetDir, req.file.path),
+    linework_wm_path: path.relative(config.uploadDir, req.file.path),
   });
   req.session.flash = 'Watermarked linework saved — the design can now be approved.';
   res.redirect('/admin/designs');
@@ -680,7 +682,7 @@ router.get('/colorization', async (req, res) => {
 });
 const colorStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const dir = path.join(config.assetDir, 'designs', 'color');
+    const dir = path.join(config.uploadDir, 'designs', 'color');
     fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },
@@ -703,7 +705,9 @@ const uploadColor = multer({
 router.get('/colorization/:id/preview', async (req, res) => {
   const d = await db.get('SELECT color_path FROM designs WHERE id = ?', [req.params.id]);
   if (!d || !d.color_path) return res.status(404).send('Not found.');
-  res.sendFile(path.join(config.assetDir, d.color_path));
+  const colorAbs = resolveStoredPath(d.color_path);
+  if (!colorAbs) return res.status(404).send('Not found.');
+  res.sendFile(colorAbs);
 });
 
 router.post('/colorization/:id/attach', formLimiter, (req, res, next) => {
@@ -986,8 +990,10 @@ router.post('/ads/:id/deactivate', formLimiter, checkHoneypot, async (req, res) 
 router.post('/ads/:id/delete', formLimiter, checkHoneypot, async (req, res) => {
   const ad = await db.get('SELECT * FROM ads WHERE id = ?', [req.params.id]);
   if (ad && ad.image_path) {
-    const file = path.join(config.assetDir, 'uploads', 'ads', path.basename(ad.image_path));
-    fs.unlink(file, () => {});
+    const file = ad.image_path.startsWith('/img/ads/')
+      ? resolveStoredPath(path.join('ads', path.basename(ad.image_path)))
+      : resolveStoredPath(ad.image_path);
+    if (file) fs.unlink(file, () => {});
   }
   await db.query('DELETE FROM ads WHERE id = ?', [req.params.id]);
   req.session.flash = 'Ad deleted.';
@@ -1030,8 +1036,8 @@ router.get('/prints/:id/file', async (req, res) => {
     const c = await db.get('SELECT output_path FROM combos WHERE id = ?', [po.combo_id]);
     if (c) rel = c.output_path;
   }
-  const abs = rel ? path.join(config.assetDir, rel) : null;
-  if (!abs || !fs.existsSync(abs)) {
+  const abs = rel ? resolveStoredPath(rel) : null;
+  if (!abs) {
     return res.status(404).render('error', { title: 'Not found', message: 'Print file is missing.' });
   }
   res.download(abs);

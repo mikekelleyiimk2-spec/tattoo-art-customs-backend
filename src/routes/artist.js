@@ -8,6 +8,7 @@ const path = require('path');
 const fs = require('fs');
 const db = require('../db');
 const config = require('../config');
+const { resolveStoredPath } = require('../lib/storage');
 const { requireLogin } = require('../middleware/auth');
 const { requireDesignerAccess, dualSubBonusActive } = require('../shop/shopDesigner');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
@@ -176,7 +177,8 @@ router.post('/portfolio/:id/delete', formLimiter, checkHoneypot, async (req, res
     return res.redirect('/artist/portfolio');
   }
   for (const p of [design.color_path, design.linework_path, design.linework_wm_path, design.custom_watermark_path]) {
-    if (p) { try { fs.unlinkSync(path.join(config.assetDir, p)); } catch { /* already gone */ } }
+    const abs = p ? resolveStoredPath(p) : null;
+    if (abs) { try { fs.unlinkSync(abs); } catch { /* already gone */ } }
   }
   await db.query('DELETE FROM designs WHERE id = ?', [design.id]);
   req.session.flash = 'Piece deleted.';

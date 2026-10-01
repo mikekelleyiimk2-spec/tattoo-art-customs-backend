@@ -530,6 +530,38 @@ async function main() {
   await require('./shoptools-phase5').runDbTests(ok);
   await require('./shoptools-phase6').runDbTests(ok);
 
+  // Mail retry (unit-level, no live SMTP): a transient failure is retried
+  // with backoff and eventually delivered; a permanent failure exhausts all
+  // 3 attempts and surfaces the error; dev mode still short-circuits.
+  {
+    const mail = require('../src/lib/mail');
+    let attempts = 0;
+    mail.__setTransporter({
+      sendMail: async () => {
+        attempts += 1;
+        if (attempts === 1) { const e = new Error('ECONNRESET: transient'); e.code = 'ECONNRESET'; throw e; }
+        return { messageId: 'stub-1', accepted: ['retry@test.local'] };
+      },
+    });
+    try {
+      const info = await mail.sendMail({ to: 'retry@test.local', subject: 'retry test', text: 'hi' });
+      ok(attempts === 2, 'transient SMTP failure retried (2 attempts)');
+      ok(info && info.messageId === 'stub-1', 'mail delivered after transient retry');
+      let failAttempts = 0;
+      mail.__setTransporter({ sendMail: async () => { failAttempts += 1; throw new Error('550 rejected'); } });
+      let threw = null;
+      try { await mail.sendMail({ to: 'fail@test.local', subject: 'fail test', text: 'hi' }); }
+      catch (e) { threw = e; }
+      ok(failAttempts === 3, 'permanent SMTP failure exhausts 3 attempts');
+      ok(threw && /550 rejected/.test(threw.message), 'final SMTP error surfaces to the caller');
+      mail.__setTransporter(null);
+      const dev = await mail.sendMail({ to: 'dev@test.local', subject: 'dev test', text: 'hi' });
+      ok(dev && dev.dev === true, 'dev mode (no SMTP) still logs and returns {dev:true} without throwing');
+    } finally {
+      mail.__setTransporter(null);
+    }
+  }
+
   await db.close();
 
   // --- template static checks ---
@@ -1201,6 +1233,58 @@ async function main() {
     r = await greq('POST', '/gift-cards/redeem', { body: { code: 'ZZZZ-1111-AAAA' }, follow: false });
     ok(r.status === 302 && (await getCreditBalance(giftBuyerId)) === 5000, 'gift unknown code rejected');
 
+    // Concurrent redemption race: two users redeem the SAME active code at
+    // the same time — exactly one must win; the card must credit exactly once.
+    // (Codes are stored normalized — dashes stripped — so insert the
+    // normalized form, exactly as the buy flow does. Throwaway users keep
+    // this test from polluting giftBuyerId's balance for later tests.)
+    const raceCode = sgc.normalizeCode('RAC3-COND-TEST');
+    await db.insert('site_gift_cards', {
+      purchaser_user_id: giftBuyerId, amount_cents: 2500, fee_cents: 195, shipping_cents: 0,
+      total_paid_cents: 2794, status: 'active', code: raceCode,
+      expires_at: Date.now() + 3600000, created_at: db.now(),
+    });
+    const mkRaceUser = async (email) => db.insert('users', {
+      email, password_hash: 'x', role: 'customer', display_name: 'Race',
+    });
+    const raceA = await mkRaceUser('racea@test.local');
+    const raceB = await mkRaceUser('raceb@test.local');
+    const balBeforeA = await getCreditBalance(raceA);
+    const balBeforeB = await getCreditBalance(raceB);
+    const raceResults = await Promise.allSettled([
+      sgc.redeemSiteGiftCard({ userId: raceA, code: 'RAC3-COND-TEST' }),
+      sgc.redeemSiteGiftCard({ userId: raceB, code: 'RAC3-COND-TEST' }),
+    ]);
+    const wins = raceResults.filter((x) => x.status === 'fulfilled').length;
+    const creditedTotal = (await getCreditBalance(raceA)) - balBeforeA
+      + ((await getCreditBalance(raceB)) - balBeforeB);
+    ok(wins === 1, 'gift concurrent redeem: exactly one redeemer wins');
+    ok(creditedTotal === 2500, 'gift concurrent redeem: card value credited exactly once');
+    ok(sdb.prepare('SELECT status FROM site_gift_cards WHERE code = ?').get(raceCode).status === 'redeemed',
+      'gift concurrent redeem: card ends redeemed');
+
+    // PayPal capture-amount guard: exact match only, multi-capture aware.
+    // (The suite-wide TAC_TEST_PAYPAL_STUB bypass is lifted here so the
+    // real guard logic is exercised.)
+    const paypal = require('../src/lib/paypal');
+    const stubFlag = process.env.TAC_TEST_PAYPAL_STUB;
+    delete process.env.TAC_TEST_PAYPAL_STUB;
+    const mkCapture = (values) => ({
+      purchase_units: [{ payments: { captures: values.map((v) => ({ id: 'c', status: 'COMPLETED', amount: { value: v } })) } }],
+    });
+    ok(paypal.assertCaptureAmount(mkCapture(['25.00']), 2500) === 2500, 'capture guard: exact match passes');
+    ok(paypal.assertCaptureAmount(mkCapture(['10.00', '15.00']), 2500) === 2500, 'capture guard: split captures summed');
+    threw = false;
+    try { paypal.assertCaptureAmount(mkCapture(['24.99']), 2500); } catch (e) { threw = true; }
+    ok(threw, 'capture guard: short capture throws (order stays unpaid)');
+    threw = false;
+    try { paypal.assertCaptureAmount(mkCapture(['25.01']), 2500); } catch (e) { threw = true; }
+    ok(threw, 'capture guard: over capture throws (order stays unpaid)');
+    threw = false;
+    try { paypal.assertCaptureAmount(mkCapture([]), 2500); } catch (e) { threw = true; }
+    ok(threw, 'capture guard: empty capture throws');
+    if (stubFlag !== undefined) process.env.TAC_TEST_PAYPAL_STUB = stubFlag;
+
     // Expired card rejected.
     await db.insert('site_gift_cards', {
       purchaser_user_id: giftBuyerId, amount_cents: 2500, fee_cents: 195, shipping_cents: 0,
@@ -1264,6 +1348,17 @@ async function main() {
     ok(r.status === 302 && subCount === 1, 'membership via credit: double-click extends, never stacks');
     const csub2 = sdb.prepare('SELECT current_period_end FROM subscriptions WHERE id = ?').get(csub.id);
     ok(csub2.current_period_end > csub.current_period_end, 'membership via credit: second payment extends the term');
+    // PayPal-billed active sub + pay-with-credit attempt: the "already
+    // subscribed" check must run BEFORE any debit — credit stays untouched.
+    await require('../src/lib/credits').addCredit({ userId: giftBuyerId, amountCents: 1000, kind: 'topup', note: 'already-sub test' });
+    sdb.prepare('UPDATE subscriptions SET paid_with_credit = 0, paypal_subscription_id = ? WHERE id = ?')
+      .run('I-PAYPALBILLED', csub.id);
+    const balBeforeDup = await getCreditBalance(giftBuyerId);
+    r = await greq('POST', '/membership/credit/customer', { body: { website: '' }, follow: false });
+    ok(r.status === 302 && (await getCreditBalance(giftBuyerId)) === balBeforeDup,
+      'membership via credit: PayPal-billed active sub debits NOTHING');
+    ok(sdb.prepare("SELECT COUNT(*) AS n FROM subscriptions WHERE user_id = ? AND plan_id = ? AND status = 'active'").get(giftBuyerId, memPlanId).n === 1,
+      'membership via credit: no duplicate subscription created');
     // Broke buyer: refused.
     await require('../src/lib/credits').addCredit({ userId: giftBuyerId, amountCents: -14000, kind: 'adjustment', note: 'drain for test' });
     r = await greq('POST', '/membership/credit/tattoo_shop', { body: { website: '' }, follow: false });
@@ -2065,16 +2160,19 @@ async function main() {
   fs.mkdirSync(wmTestDir, { recursive: true });
   await testJpeg(path.join(wmTestDir, 'lw.jpg'), 700, 900);
   await testJpeg(path.join(wmTestDir, 'mywm.jpg'), 400, 300);
+  // The pipeline now writes under config.uploadDir (persistent disk in prod).
+  // With UPLOAD_DIR unset in tests, uploadDir === ASSET_DIR/uploads.
+  const wmOutRoot = path.join(process.env.ASSET_DIR, 'uploads');
   let wmRel = await applyWatermarkedLinework({ designId: 'wmunit1', lineworkAbs: path.join(wmTestDir, 'lw.jpg'), choice: 'site' });
-  ok(wmRel === 'designs/linework-wm/wmunit1-auto.jpg' && fs.existsSync(path.join(process.env.ASSET_DIR, wmRel)), 'site watermark pipeline generates public linework');
+  ok(wmRel === 'designs/linework-wm/wmunit1-auto.jpg' && fs.existsSync(path.join(wmOutRoot, wmRel)), 'site watermark pipeline generates public linework');
   wmRel = await applyWatermarkedLinework({ designId: 'wmunit2', lineworkAbs: path.join(wmTestDir, 'lw.jpg'), choice: 'custom', customWatermarkAbs: path.join(wmTestDir, 'mywm.jpg') });
-  ok(fs.existsSync(path.join(process.env.ASSET_DIR, wmRel)), 'custom watermark pipeline generates public linework');
-  const wmMeta = await sharp(path.join(process.env.ASSET_DIR, wmRel)).metadata();
+  ok(fs.existsSync(path.join(wmOutRoot, wmRel)), 'custom watermark pipeline generates public linework');
+  const wmMeta = await sharp(path.join(wmOutRoot, wmRel)).metadata();
   ok(wmMeta.width === 700 && wmMeta.height === 900, 'watermarked output keeps linework dimensions');
   // Repo-bundled fallback: pipeline still works when ASSET_DIR has no copies.
   fs.rmSync(wmDstDir, { recursive: true, force: true });
   wmRel = await applyWatermarkedLinework({ designId: 'wmunit3', lineworkAbs: path.join(wmTestDir, 'lw.jpg'), choice: 'site' });
-  ok(fs.existsSync(path.join(process.env.ASSET_DIR, wmRel)), 'site watermark falls back to repo-bundled copies');
+  ok(fs.existsSync(path.join(wmOutRoot, wmRel)), 'site watermark falls back to repo-bundled copies');
   fs.mkdirSync(wmDstDir, { recursive: true });
   for (const f of fs.readdirSync(wmSrcDir)) fs.copyFileSync(path.join(wmSrcDir, f), path.join(wmDstDir, f));
 
@@ -2101,11 +2199,11 @@ async function main() {
   ok(psep >= 0.25, 'marks keep minimum separation');
   // Pipeline-level: same design -> byte-identical output; new design -> different.
   const dpRel1 = await applyWatermarkedLinework({ designId: 'denspipe1', lineworkAbs: path.join(wmTestDir, 'denselw.jpg'), choice: 'site' });
-  const dpBuf1 = fs.readFileSync(path.join(process.env.ASSET_DIR, dpRel1));
+  const dpBuf1 = fs.readFileSync(path.join(wmOutRoot, dpRel1));
   const dpRel2 = await applyWatermarkedLinework({ designId: 'denspipe1', lineworkAbs: path.join(wmTestDir, 'denselw.jpg'), choice: 'site' });
-  ok(dpBuf1.equals(fs.readFileSync(path.join(process.env.ASSET_DIR, dpRel2))), 'pipeline output is deterministic per design');
+  ok(dpBuf1.equals(fs.readFileSync(path.join(wmOutRoot, dpRel2))), 'pipeline output is deterministic per design');
   const dpRel3 = await applyWatermarkedLinework({ designId: 'denspipe2', lineworkAbs: path.join(wmTestDir, 'denselw.jpg'), choice: 'site' });
-  ok(!dpBuf1.equals(fs.readFileSync(path.join(process.env.ASSET_DIR, dpRel3))), 'pipeline output varies across designs');
+  ok(!dpBuf1.equals(fs.readFileSync(path.join(wmOutRoot, dpRel3))), 'pipeline output varies across designs');
 
   // multipart POST helper (fresh jar per caller)
   async function mpost(p, fields, files, jarObj) {
@@ -2175,7 +2273,7 @@ async function main() {
   const prow = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('Portfolio Dragon');
   ok(prow && prow.listing_scope === 'portfolio' && prow.listing_type === 'custom', 'default upload is portfolio-only custom');
   ok(prow.watermark_choice === 'site', 'watermark choice stored');
-  ok(prow.linework_wm_path && fs.existsSync(path.join(process.env.ASSET_DIR, prow.linework_wm_path)), 'watermarked linework auto-generated at upload');
+  ok(prow.linework_wm_path && require('../src/lib/storage').resolveStoredPath(prow.linework_wm_path), 'watermarked linework auto-generated at upload');
   ok(prow.status === 'pending', 'upload waits for admin approval');
   ok(prow.style === 'japanese', 'style stored at upload');
 
@@ -2200,8 +2298,8 @@ async function main() {
   ok(r.status === 200 && r.text.includes('not allowed'), 'builder refuses off-palette light colors');
   r = await artreq('POST', '/artist/watermark-builder', { body: { line1: 'Banner Artist', line2: 'Test Studio', line3: '', color: '#000000' } });
   ok(r.status === 302 && r.location === '/artist/watermark-builder', 'valid builder submission saves and redirects');
-  const bMarkAbs = path.join(process.env.ASSET_DIR, 'watermarks', 'custom', `${bannerArtistId}.png`);
-  ok(fs.existsSync(bMarkAbs), 'builder mark saved as the artist default');
+  const bMarkAbs = require('../src/lib/storage').resolveStoredPath(path.join('watermarks', 'custom', `${bannerArtistId}.png`));
+  ok(bMarkAbs && fs.existsSync(bMarkAbs), 'builder mark saved as the artist default');
   const bCov = await wbuilder.inkCoverage(fs.readFileSync(bMarkAbs));
   ok(bCov >= 0.10, 'saved mark clears the ink-coverage minimum');
   r = await artreq('GET', '/artist/watermark-builder/preview');
@@ -2226,7 +2324,7 @@ async function main() {
   ok(r.status === 302 && r.location === '/artist/portfolio', 'custom choice with no file uses the built mark');
   const brow = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('Builder Default WM');
   ok(brow && brow.custom_watermark_path === `watermarks/custom/${bannerArtistId}.png`, 'builder default mark recorded on the design');
-  ok(brow.linework_wm_path && fs.existsSync(path.join(process.env.ASSET_DIR, brow.linework_wm_path)), 'watermarked linework generated with the builder mark');
+  ok(brow.linework_wm_path && require('../src/lib/storage').resolveStoredPath(brow.linework_wm_path), 'watermarked linework generated with the builder mark');
   // No file and no built mark -> bounced back to the form, nothing stored.
   fs.rmSync(bMarkAbs, { force: true });
   r = await mpost('/artist/portfolio/upload',
@@ -2363,6 +2461,18 @@ async function main() {
   r = await req('GET', `/design/${prow.id}`);
   ok(r.status === 200 && r.text.includes(pricing.money(pricing.withFeeCents(pricing.customFullCents()))), 'design page shows custom price for portfolio piece');
   ok(r.text.includes('custom portfolio piece'), 'design page labels custom piece');
+
+  // Stored XSS: a malicious design title must render inert in the JSON-LD
+  // block — the literal </script> must never appear unescaped in the HTML.
+  const xssTitle = '</script><script>alert(1)</script>';
+  const xssId = randomUUID();
+  sdb.prepare(`INSERT INTO designs (id, title, description, style, categories, status, listing_type, listing_scope, artist_id, price_cents, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    .run(xssId, xssTitle, 'xss desc', 'blackwork', '[]', 'approved', 'premade', 'gallery', bannerArtistId, 7500, Date.now());
+  r = await req('GET', `/design/${xssId}`);
+  ok(r.status === 200, 'design page with hostile title renders');
+  ok(!r.text.includes('</script><script>'), 'hostile title cannot break out of the JSON-LD script block');
+  ok(r.text.includes('\\u003c/script\\u003e'), 'JSON-LD escapes the hostile title as unicode escapes');
 
   // Portfolio edit + delete rules (before any sales on these pieces).
   r = await artreq('POST', `/artist/portfolio/${grow.id}/edit`, { body: { title: 'Gallery Koi v2', description: 'Koi v2.', style: 'animals', categories: 'fish' } });
@@ -2524,7 +2634,7 @@ async function main() {
   ok(r.status === 302 && r.location === '/admin/colorization', 'admin attaches the color version');
   const afterAttach = sdb.prepare('SELECT * FROM designs WHERE id = ?').get(lwRow.id);
   ok(afterAttach.status === 'approved' && afterAttach.color_pending === 0 && afterAttach.color_source === 'site'
-    && afterAttach.color_path && fs.existsSync(path.join(process.env.ASSET_DIR, afterAttach.color_path)),
+    && afterAttach.color_path && require('../src/lib/storage').resolveStoredPath(afterAttach.color_path),
     'attaching the color clears color_pending, sets color_source=site, and keeps the piece live');
   ok(afterAttach.color_path.includes('sitecolor'), 'site-created color stored under its own filename');
   // Designer is notified for information only — there is no approval gate.
@@ -2575,7 +2685,7 @@ async function main() {
   ok(r.status === 302 && r.location === '/artist/portfolio', 'explicit upload accepted');
   const expRow = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('Explicit Piece');
   ok(expRow && expRow.sensitivity === 'explicit' && expRow.linework_blur_path
-    && fs.existsSync(path.join(process.env.ASSET_DIR, expRow.linework_blur_path)),
+    && require('../src/lib/storage').resolveStoredPath(expRow.linework_blur_path),
     'explicit piece stored with a blurred preview variant');
   const admNotif = sdb.prepare(
     "SELECT COUNT(*) AS c FROM notifications WHERE kind = 'design_pending' AND link = '/admin/designs'").get();

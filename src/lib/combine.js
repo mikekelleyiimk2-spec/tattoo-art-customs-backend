@@ -1,9 +1,6 @@
 // Design combiner: merges multiple owned designs into one sheet with sharp.
 // Layouts: row (side-by-side), stack (vertical), grid (2 columns).
-const path = require('path');
-const fs = require('fs');
 const sharp = require('sharp');
-const config = require('../config');
 
 const CELL = 1400;   // normalized cell dimension (px)
 const GAP = 40;      // gap between designs (px)
@@ -16,8 +13,7 @@ function bgColor(background) {
 function sourceFile(design, style) {
   const rel = style === 'linework' ? design.linework_path : design.color_path;
   if (!rel) return null;
-  const abs = path.join(config.assetDir, rel);
-  return fs.existsSync(abs) ? abs : null;
+  return require('./storage').resolveStoredPath(rel);
 }
 
 async function combine(designs, { layout = 'row', style = 'color', background = 'white' } = {}) {

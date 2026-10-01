@@ -40,7 +40,7 @@
 </section>
 <script>
 (function () {
-  var shopId = <%= JSON.stringify(shopId) %>;
+  var shopId = <%- safeJson(shopId) %>;
   var dateEl = document.getElementById('sp-date');
   var d = new Date(); d.setUTCDate(d.getUTCDate() + 1);
   dateEl.value = d.toISOString().slice(0, 10);

@@ -28,7 +28,22 @@ async function init() {
     // as $75,003.12 and new Date("...") as Invalid Date. All values fit
     // safely in a JS number, so parse int8 as int globally.
     types.setTypeParser(20, (v) => parseInt(v, 10));
-    pgPool = new Pool({ connectionString: config.databaseUrl });
+    pgPool = new Pool({
+      connectionString: config.databaseUrl,
+      // Bound how long a request waits for a free connection instead of
+      // hanging forever when the DB is unreachable or saturated.
+      connectionTimeoutMillis: 10000,
+      // Recycle idle clients so a stale/firewalled connection can't sit in
+      // the pool indefinitely.
+      idleTimeoutMillis: 30000,
+    });
+    // A pool-level error (e.g. the DB server dropping an idle connection)
+    // must NEVER crash the process — log it and let the pool replace the
+    // client. Without this listener node-postgres rethrows and the whole
+    // service 502s until Render restarts it.
+    pgPool.on('error', (err) => {
+      console.error('pg pool error (client will be replaced by the pool):', err.message);
+    });
     await pgPool.query('SELECT 1');
     mode = 'pg';
   } else {

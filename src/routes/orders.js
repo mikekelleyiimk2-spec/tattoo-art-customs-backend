@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const db = require('../db');
 const config = require('../config');
+const { resolveStoredPath } = require('../lib/storage');
 const paypal = require('../lib/paypal');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const pricing = require('../lib/pricing');
@@ -268,8 +269,11 @@ router.get('/approve/:orderId', requireLogin, async (req, res) => {
   if (order.status === 'paid') return res.redirect(`/orders/${order.id}`);
   try {
     const capture = await paypal.captureCheckoutOrder(order.paypal_order_id);
-    const captured = capture.purchase_units?.[0]?.payments?.captures?.[0];
-    const paidCents = Math.round(parseFloat(captured?.amount?.value || '0') * 100);
+    // The charged total (price/deposit + processing fee + rush fee). The
+    // capture must match it exactly — never mark paid on a short capture.
+    const expectedTotal = (order.order_type === 'custom' ? order.deposit_cents : order.amount_cents)
+      + (order.fee_cents || 0) + (order.rush_fee_cents || 0);
+    const paidCents = paypal.assertCaptureAmount(capture, expectedTotal);
     await db.update('orders', order.id, {
       status: 'paid', amount_paid_cents: paidCents, paid_at: db.now(),
     });
@@ -355,15 +359,15 @@ router.get('/download/:token', async (req, res) => {
     const design = await db.get('SELECT color_path, linework_path FROM designs WHERE id = ?', [order.design_id]);
     if (!design) return res.status(404).render('error', { title: 'Not found', message: 'Design files are missing.' });
     const rel = which === 'linework' ? design.linework_path : design.color_path;
-    absPath = path.join(config.assetDir, rel);
+    absPath = resolveStoredPath(rel);
   } else {
     // Custom orders: admin attaches the finished files to the order record
     // (stored under uploads/designs/); served the same secure way.
     const rel = which === 'linework' ? order.custom_linework_path : order.custom_color_path;
     if (!rel) return res.status(404).render('error', { title: 'Not ready', message: 'Your custom design is still being created — check back soon.' });
-    absPath = path.join(config.assetDir, rel);
+    absPath = resolveStoredPath(rel);
   }
-  if (!absPath || !fs.existsSync(absPath)) {
+  if (!absPath) {
     return res.status(404).render('error', { title: 'Not found', message: 'Design files are missing.' });
   }
   res.download(absPath);

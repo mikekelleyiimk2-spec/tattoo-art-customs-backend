@@ -313,11 +313,47 @@ async function createPayoutBatch({ items, note }) {
   });
 }
 
+// Sum COMPLETED captures across all purchase units, in cents. A capture
+// response can legally contain several units / partial captures; only the
+// first capture was being read, which understated multi-capture payments.
+function capturedCents(capture) {
+  let total = 0;
+  for (const pu of (capture && capture.purchase_units) || []) {
+    for (const c of ((pu.payments && pu.payments.captures) || [])) {
+      if (c.status === 'COMPLETED') {
+        total += Math.round(parseFloat((c.amount && c.amount.value) || '0') * 100);
+      }
+    }
+  }
+  return total;
+}
+
+// Throw unless the captured amount EXACTLY equals what was due. Never mark
+// an order paid on a short (or over) capture — a mismatch means the money
+// that moved is not the money we charged for, so the order stays unpaid and
+// the discrepancy gets logged instead of silently booked.
+// The automated-test stub (TAC_TEST_PAYPAL_STUB=1, never active in
+// production) reports 0.00 captures; there the check is skipped and the
+// expected amount is returned so the buy flows stay exercisable.
+function assertCaptureAmount(capture, expectedCents) {
+  if (process.env.TAC_TEST_PAYPAL_STUB === '1') return expectedCents;
+  const paid = capturedCents(capture);
+  if (paid !== expectedCents) {
+    const money = (c) => `$${(c / 100).toFixed(2)}`;
+    throw new Error(
+      `Captured ${money(paid)} did not match the ${money(expectedCents)} due — ` +
+      'order left unpaid for manual review.');
+  }
+  return paid;
+}
+
 module.exports = {
   PayPalNotConfigured,
   assertConfigured,
   createCheckoutOrder,
   captureCheckoutOrder,
+  capturedCents,
+  assertCaptureAmount,
   getCheckoutOrder,
   isAlreadyCapturedError,
   refundCheckoutCapture,

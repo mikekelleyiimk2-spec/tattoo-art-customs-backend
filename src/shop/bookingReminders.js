@@ -142,7 +142,8 @@ async function runReminderSweep() {
 // startScheduler() in src/lib/scheduler.js (see the wiring note at the top).
 function registerBookingReminderJobs() {
   // Every 15 minutes: booking reminders + waitlist offer expiry.
-  cron.schedule('*/15 * * * *', async () => {
+  // Returns the cron task so the scheduler can stop it on shutdown.
+  const task = cron.schedule('*/15 * * * *', async () => {
     try {
       const sent = await runReminderSweep();
       if (sent.dayBefore || sent.dayOf || sent.aftercare) {
@@ -161,6 +162,7 @@ function registerBookingReminderJobs() {
     }
   }, { timezone: 'America/Chicago' });
   console.log('Booking reminders + waitlist expiry scheduled: every 15 minutes.');
+  return task;
 }
 
 module.exports = {

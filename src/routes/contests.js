@@ -10,6 +10,7 @@ const fs = require('fs');
 const multer = require('multer');
 const db = require('../db');
 const config = require('../config');
+const { resolveStoredPath } = require('../lib/storage');
 const paypal = require('../lib/paypal');
 const pricing = require('../lib/pricing');
 const { requireLogin } = require('../middleware/auth');
@@ -27,7 +28,7 @@ const router = express.Router();
 const contestUpload = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
-      const dir = path.join(config.assetDir, 'uploads', 'contests');
+      const dir = path.join(config.uploadDir, 'contests');
       fs.mkdirSync(dir, { recursive: true });
       cb(null, dir);
     },
@@ -128,8 +129,9 @@ router.get('/capture/:id', requireLogin, async (req, res) => {
     );
     if (!order || !order.paypal_order_id) throw new Error('No pending prize payment found.');
     const capture = await paypal.captureCheckoutOrder(order.paypal_order_id);
-    const captured = capture.purchase_units?.[0]?.payments?.captures?.[0];
-    const paidCents = Math.round(parseFloat(captured?.amount?.value || '0') * 100);
+    // Prize + fee must be captured exactly — never open the contest on a
+    // short escrow payment.
+    const paidCents = paypal.assertCaptureAmount(capture, order.amount_cents + (order.fee_cents || 0));
     await openContest(c.id, { paidCents, paymentMethod: 'paypal', paypalOrderId: order.paypal_order_id });
     req.session.flash = 'Prize escrow received — your contest is live for 7 days.';
     res.redirect(`/contests/${c.id}`);
@@ -186,8 +188,8 @@ router.get('/entry/:entryId/file', async (req, res) => {
   const publicWinner = c.status === 'awarded' && c.winner_entry_id === e.id;
   const allowed = publicWinner || (me && (me.id === c.customer_id || me.id === e.designer_id || me.role === 'admin' || me.role === 'head_admin'));
   if (!allowed) return res.status(403).send('Not allowed');
-  const abs = path.join(config.assetDir, e.image_path);
-  if (!fs.existsSync(abs)) return res.status(404).send('File missing');
+  const abs = resolveStoredPath(e.image_path);
+  if (!abs) return res.status(404).send('File missing');
   res.sendFile(abs);
 });
 
@@ -207,7 +209,7 @@ router.post('/:id/enter', requireLogin, requireDesignerAccess(), formLimiter, (r
 }, async (req, res) => {
   try {
     if (!req.file) throw new Error('Attach your entry image (JPG, PNG, or WebP).');
-    const rel = path.relative(config.assetDir, req.file.path);
+    const rel = path.relative(config.uploadDir, req.file.path);
     await enterContest({
       contestId: req.params.id, designerId: req.user.id,
       imagePath: rel, note: req.body.note,

@@ -191,26 +191,47 @@ async function activateSiteGiftCardManual(cardId) {
 
 // Redeem an active code: single-use, converts to site credit. The code is
 // entered by the RECIPIENT (any logged-in user), not just the purchaser.
+//
+// Race-safe: the whole claim runs inside a transaction — SELECT ... FOR
+// UPDATE on Postgres (BEGIN IMMEDIATE's reserved lock on SQLite serializes
+// writers) — so two concurrent redeems of the same code cannot both pass
+// the status check. The status flip is additionally conditional
+// (active -> redeemed only), so a lost race can never double-credit.
 async function redeemSiteGiftCard({ userId, code }) {
   const norm = normalizeCode(code);
   if (!norm) throw new Error('Enter your gift card code.');
-  const card = await db.get('SELECT * FROM site_gift_cards WHERE code = ?', [norm]);
-  if (!card) throw new Error('That gift card code was not found — check it and try again.');
-  if (card.status === 'redeemed') throw new Error('This gift card has already been redeemed.');
-  if (card.status !== 'active') throw new Error('This gift card is not active yet.');
-  if (card.expires_at && card.expires_at < Date.now()) {
-    await db.update('site_gift_cards', card.id, { status: 'expired' });
+  // The expiry marking must COMMIT (it happens via a separate auto-commit
+  // query after the transaction releases its row lock — never inside it,
+  // where it would deadlock against our own FOR UPDATE on Postgres).
+  const result = await db.transaction(async (tx) => {
+    const lock = db.getMode() === 'pg' ? ' FOR UPDATE' : '';
+    const card = await tx.get(`SELECT * FROM site_gift_cards WHERE code = ?${lock}`, [norm]);
+    if (!card) throw new Error('That gift card code was not found — check it and try again.');
+    if (card.status === 'redeemed') throw new Error('This gift card has already been redeemed.');
+    if (card.status !== 'active') throw new Error('This gift card is not active yet.');
+    if (card.expires_at && card.expires_at < Date.now()) return { expiredCard: card };
+    // Atomic claim: only the holder of the row lock can flip active->redeemed.
+    await tx.query(
+      `UPDATE site_gift_cards SET status = 'redeemed', redeemed_by_user_id = ?, redeemed_at = ?
+       WHERE id = ? AND status = 'active'`,
+      [userId, db.now(), card.id]
+    );
+    // Credit inside the same transaction: a crash between claim and credit
+    // can no longer strand the card value.
+    await tx.query(
+      `INSERT INTO account_credits (id, user_id, amount_cents, kind, ref_id, note, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [db.newId(), userId, card.amount_cents, 'gift_card', card.id,
+       `Redeemed gift card ${norm.slice(0, 4)}…${norm.slice(-4)}`, db.now()]
+    );
+    return { card };
+  });
+  if (result.expiredCard) {
+    await db.query("UPDATE site_gift_cards SET status = 'expired' WHERE id = ? AND status = 'active'",
+      [result.expiredCard.id]);
     throw new Error('This gift card has expired.');
   }
-  await db.update('site_gift_cards', card.id, {
-    status: 'redeemed', redeemed_by_user_id: userId, redeemed_at: db.now(),
-  });
-  const { addCredit } = require('./credits');
-  await addCredit({
-    userId, amountCents: card.amount_cents, kind: 'gift_card', refId: card.id,
-    note: `Redeemed gift card ${norm.slice(0, 4)}…${norm.slice(-4)}`,
-  });
-  return card;
+  return result.card;
 }
 
 async function getSiteGiftCardsForPurchaser(userId) {

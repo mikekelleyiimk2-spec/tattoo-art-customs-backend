@@ -9,6 +9,7 @@ const fs = require('fs');
 const multer = require('multer');
 const db = require('../db');
 const config = require('../config');
+const { resolveStoredPath } = require('./storage');
 const pricing = require('./pricing');
 const { screenText } = require('./screening');
 const { applyWatermarkedLinework, applyBlurredVariant } = require('./watermark');
@@ -25,8 +26,8 @@ const DESIGN_STYLES = [
 const portfolioStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     const dir = file.fieldname === 'watermark'
-      ? path.join(config.assetDir, 'uploads', 'watermarks')
-      : path.join(config.assetDir, 'uploads', 'designs');
+      ? path.join(config.uploadDir, 'watermarks')
+      : path.join(config.uploadDir, 'designs');
     fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },
@@ -127,7 +128,7 @@ async function handlePortfolioUpload(req, res, backUrl) {
   let customWatermarkInvert = false;
   if (watermarkChoice === 'custom') {
     if (files.watermark && files.watermark[0]) {
-      customWatermarkPath = path.relative(config.assetDir, files.watermark[0].path);
+      customWatermarkPath = path.relative(config.uploadDir, files.watermark[0].path);
     } else {
       const builder = require('./watermarkBuilder');
       if (builder.defaultMarkExists(req.user.id)) {
@@ -152,10 +153,10 @@ async function handlePortfolioUpload(req, res, backUrl) {
     description,
     style,
     categories: JSON.stringify([style, ...extraCats]),
-    color_path: hasColor ? path.relative(config.assetDir, files.color[0].path) : '',
+    color_path: hasColor ? path.relative(config.uploadDir, files.color[0].path) : '',
     color_source: colorSource,
     color_pending: colorSource === 'none' ? 1 : 0,
-    linework_path: path.relative(config.assetDir, files.linework[0].path),
+    linework_path: path.relative(config.uploadDir, files.linework[0].path),
     linework_wm_path: '', // set by the watermark pipeline below
     sensitivity,
     price_cents: listingType === 'custom' ? pricing.customFullCents() : pricing.premadePriceCents(),
@@ -206,7 +207,7 @@ async function handlePortfolioUpload(req, res, backUrl) {
       lineworkAbs: files.linework[0].path,
       choice: watermarkChoice,
       customWatermarkAbs: customWatermarkPath
-        ? path.join(config.assetDir, customWatermarkPath) : null,
+        ? resolveStoredPath(customWatermarkPath) : null,
       customInvert: customWatermarkInvert,
     });
     await db.update('designs', id, { linework_wm_path: wmRel });
@@ -217,7 +218,7 @@ async function handlePortfolioUpload(req, res, backUrl) {
       try {
         const blurRel = await applyBlurredVariant({
           designId: id,
-          watermarkedAbs: path.join(config.assetDir, wmRel),
+          watermarkedAbs: resolveStoredPath(wmRel),
         });
         await db.update('designs', id, { linework_blur_path: blurRel });
       } catch (e) {

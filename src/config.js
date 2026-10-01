@@ -2,10 +2,25 @@
 // See .env.example and SETUP.md. Nothing sensitive is hardcoded here.
 require('dotenv').config();
 const path = require('path');
+const fs = require('fs');
 
 function required(name, fallback = '') {
   const v = process.env[name] || fallback;
   return v;
+}
+
+const assetDir = process.env.ASSET_DIR || path.join(__dirname, '..', 'assets');
+// User uploads live here. On Render UPLOAD_DIR=/var/data/uploads points at
+// the persistent disk (tac-uploads). When UPLOAD_DIR is unset the legacy
+// local path is kept, so dev/test and existing deploys behave exactly as
+// before (migration-safe).
+const uploadDir = process.env.UPLOAD_DIR || path.join(assetDir, 'uploads');
+try {
+  fs.mkdirSync(uploadDir, { recursive: true });
+} catch (e) {
+  // Loud but non-fatal: individual write sites also mkdirSync and will
+  // surface the real error per request.
+  console.error('[config] could not create upload dir', uploadDir, e.message);
 }
 
 const config = {
@@ -18,7 +33,8 @@ const config = {
   sessionSecret: process.env.SESSION_SECRET || 'dev-only-secret-change-me',
   databaseUrl: process.env.DATABASE_URL || '',
   sqlitePath: process.env.SQLITE_PATH || path.join(__dirname, '..', 'data', 'app.db'),
-  assetDir: process.env.ASSET_DIR || path.join(__dirname, '..', 'assets'),
+  assetDir,
+  uploadDir,
 
   paypal: {
     clientId: process.env.PAYPAL_CLIENT_ID || '',

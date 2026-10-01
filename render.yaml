@@ -6,9 +6,15 @@ services:
     runtime: docker
     plan: starter
     healthCheckPath: /health
+    disk:
+      name: tac-uploads
+      mountPath: /var/data
+      sizeGB: 1
     envVars:
       - key: NODE_ENV
         value: production
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
       - key: DATABASE_URL
         fromDatabase:
           name: tattoo-art-customs-db

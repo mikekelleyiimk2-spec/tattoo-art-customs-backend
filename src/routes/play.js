@@ -13,7 +13,7 @@
 const express = require('express');
 const db = require('../db');
 const { userFromToken } = require('./api');
-const { verifyPurchase, MEMBERSHIP_PLAN_BY_PRODUCT } = require('../lib/playverify');
+const { verifyPurchase, acknowledgePurchase, MEMBERSHIP_PLAN_BY_PRODUCT } = require('../lib/playverify');
 const { grantPlanRole } = require('../lib/planRoles');
 
 const router = express.Router();
@@ -92,6 +92,21 @@ router.post('/verify', express.json(), async (req, res) => {
 
   // Verified membership purchase on a linked account -> activate website membership.
   let membershipActivated = false;
+  let acknowledged = false;
+  // Acknowledge ONLY after the membership is actually granted: the ack tells
+  // Google "goods delivered", which stops the 3-day auto-refund. Acking before
+  // the grant (or on a failed grant) would trade one revenue leak for a
+  // support nightmare. Failures are retried by the hourly scheduler sweep.
+  async function acknowledgeNow() {
+    if (acknowledged || !verification.needsAcknowledge) return;
+    const r = await acknowledgePurchase({ productId, purchaseToken, type });
+    if (r.ok) {
+      acknowledged = true;
+      if (purchaseId) await db.update('play_purchases', purchaseId, { acknowledged_at: db.now() });
+    } else {
+      console.error(`PLAY ACKNOWLEDGE FAILED for purchase ${purchaseId || purchaseToken.slice(0, 12)}: ${r.reason} — hourly sweep will retry; Google auto-refunds in ~3 days if never acked`);
+    }
+  }
   const planSlug = MEMBERSHIP_PLAN_BY_PRODUCT[productId];
   if (verified && user && planSlug) {
     const plan = await db.get('SELECT * FROM plans WHERE slug = ? AND active = 1', [planSlug]);
@@ -122,11 +137,13 @@ router.post('/verify', express.json(), async (req, res) => {
         // plan role (+ founding-program claim). Idempotent.
         try { await grantPlanRole(user.id, planSlug); }
         catch (e) { console.error('play role grant failed:', e.message); }
+        await acknowledgeNow();
         // Raffle entries come from free account signup only — no membership path.
       } else if (verification.expiryTime && purchaseId) {
         await db.update('subscriptions', existing.id, { current_period_end: verification.expiryTime });
         await db.update('play_purchases', purchaseId, { linked_membership_id: existing.id });
         membershipActivated = true;
+        await acknowledgeNow();
       }
     }
   }

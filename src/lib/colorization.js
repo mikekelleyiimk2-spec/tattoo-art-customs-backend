@@ -70,7 +70,7 @@ async function notifyColorizationNeeded(designId) {
 async function attachColorVersion(designId, colorAbsPath) {
   const d = await db.get('SELECT * FROM designs WHERE id = ?', [designId]);
   if (!d) throw new Error('Design not found.');
-  const rel = path.relative(config.assetDir, colorAbsPath);
+  const rel = path.relative(config.uploadDir, colorAbsPath);
   await db.update('designs', designId, {
     color_path: rel,
     color_source: 'site',

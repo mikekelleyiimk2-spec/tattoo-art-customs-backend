@@ -3,6 +3,7 @@
 const express = require('express');
 const db = require('../db');
 const config = require('../config');
+const { resolveStoredPath } = require('../lib/storage');
 const paypal = require('../lib/paypal');
 const pricing = require('../lib/pricing');
 const { requireLogin } = require('../middleware/auth');
@@ -30,8 +31,8 @@ router.get('/file/:id', async (req, res) => {
     const c = await db.get('SELECT output_path FROM combos WHERE id = ?', [po.combo_id]);
     if (c) rel = c.output_path;
   }
-  const abs = rel ? path.join(config.assetDir, rel) : null;
-  if (!abs || !fs.existsSync(abs)) return res.status(404).send('File missing');
+  const abs = rel ? resolveStoredPath(rel) : null;
+  if (!abs) return res.status(404).send('File missing');
   res.download(abs);
 });
 

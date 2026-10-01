@@ -178,18 +178,40 @@ async function removeStored(stored) {
       await r2Client().send(new DeleteObjectCommand({ Bucket: process.env.R2_PUBLIC_BUCKET, Key: key }));
       return;
     }
-    // Local: map /img/<kind>/<file> back to its asset dir, else treat as a
-    // path relative to ASSET_DIR. Stay inside ASSET_DIR.
+    // Local: map /img/<kind>/<file> back to its upload dir, else treat as a
+    // stored relative path (resolved across uploadDir then assetDir).
     let rel = String(stored);
     const m = rel.match(/^\/img\/(designs|photos|ads)\/(.+)$/);
     if (m) {
-      const dirMap = { designs: path.join('designs', 'linework-wm'), photos: path.join('uploads', 'photos'), ads: path.join('uploads', 'ads') };
+      const dirMap = { designs: path.join('designs', 'linework-wm'), photos: 'photos', ads: 'ads' };
       rel = path.join(dirMap[m[1]], path.basename(m[2]));
     }
-    const abs = path.resolve(config.assetDir, rel);
-    if (!abs.startsWith(path.resolve(config.assetDir) + path.sep)) return; // refuse escapes
+    const abs = resolveStoredPath(rel);
+    if (!abs) return;
     await fs.promises.unlink(abs);
   } catch { /* already gone / not ours */ }
+}
+
+// ---------------------------------------------------------------------------
+// Stored-path resolution (local mode)
+// ---------------------------------------------------------------------------
+
+// Resolve a DB-stored relative file reference to an absolute path.
+// Uploads written since the persistent-disk move live under uploadDir;
+// older rows and Docker-baked assets live under assetDir. uploadDir is
+// checked first so mixed-era rows keep resolving. Traversal outside both
+// roots is refused. Returns null when the file isn't under either root.
+function resolveStoredPath(rel) {
+  if (!rel || typeof rel !== 'string') return null;
+  for (const root of [config.uploadDir, config.assetDir]) {
+    const rootAbs = path.resolve(root);
+    const abs = path.resolve(rootAbs, rel);
+    if (abs !== rootAbs && !abs.startsWith(rootAbs + path.sep)) continue; // traversal guard
+    try {
+      if (fs.existsSync(abs) && fs.statSync(abs).isFile()) return abs;
+    } catch { /* unreadable — try the other root */ }
+  }
+  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -231,9 +253,8 @@ async function servePrivateFile(res, stored, { downloadName = null, inline = fal
       return res.redirect(url);
     }
     if (isHttpUrl(stored)) return res.redirect(stored);
-    const abs = path.resolve(config.assetDir, String(stored));
-    if (!abs.startsWith(path.resolve(config.assetDir) + path.sep)) return res.status(403).send('Forbidden.');
-    if (!fs.existsSync(abs)) return res.status(404).send('File missing.');
+    const abs = resolveStoredPath(stored);
+    if (!abs) return res.status(404).send('File missing.');
     if (inline) return res.sendFile(abs);
     return res.download(abs, downloadName || path.basename(abs));
   } catch (e) {
@@ -246,7 +267,9 @@ async function servePrivateFile(res, stored, { downloadName = null, inline = fal
 // Capacity monitoring
 // ---------------------------------------------------------------------------
 
-// Total stored bytes: both R2 buckets in r2 mode, ASSET_DIR walk in local.
+// Total stored bytes: both R2 buckets in r2 mode; in local mode the upload
+// dir plus the baked asset dir (skipping the upload dir when it already
+// lives inside the asset dir, i.e. the dev default).
 async function usageBytes() {
   if (provider() === 'r2') {
     const { ListObjectsV2Command } = require('@aws-sdk/client-s3');
@@ -270,7 +293,19 @@ async function usageBytes() {
       else if (e.isFile()) { try { total += fs.statSync(p).size; } catch { /* gone */ } }
     }
   };
-  try { walk(config.assetDir); } catch { /* no dir yet */ }
+  try {
+    const roots = [config.uploadDir, config.assetDir];
+    const seen = new Set();
+    for (const root of roots) {
+      const abs = path.resolve(root);
+      if (seen.has(abs)) continue;
+      seen.add(abs);
+      // Skip a root nested inside an already-walked root (dev default:
+      // uploadDir = <assetDir>/uploads).
+      if ([...seen].some((s) => s !== abs && abs.startsWith(s + path.sep))) continue;
+      walk(abs);
+    }
+  } catch { /* no dir yet */ }
   return total;
 }
 
@@ -286,6 +321,7 @@ module.exports = {
   isR2Ref,
   parseR2Ref,
   designImgUrl,
+  resolveStoredPath,
   storeFile,
   removeStored,
   servePrivateFile,

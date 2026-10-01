@@ -256,7 +256,7 @@ async function applyWatermarkedLinework({ designId, lineworkAbs, choice = 'site'
   }
 
   const outRel = `designs/linework-wm/${designId}-auto.jpg`;
-  const outAbs = path.join(config.assetDir, outRel);
+  const outAbs = path.join(config.uploadDir, outRel);
   fs.mkdirSync(path.dirname(outAbs), { recursive: true });
   await sharp(lineworkAbs).composite(overlays).jpeg({ quality: 88 }).toFile(outAbs);
   return outRel;
@@ -272,7 +272,7 @@ async function applyBlurredVariant({ designId, watermarkedAbs }) {
     throw new Error('watermarked linework not found for blur: ' + watermarkedAbs);
   }
   const outRel = `designs/linework-wm/${designId}-blur.jpg`;
-  const outAbs = path.join(config.assetDir, outRel);
+  const outAbs = path.join(config.uploadDir, outRel);
   fs.mkdirSync(path.dirname(outAbs), { recursive: true });
   await sharp(watermarkedAbs).blur(40).jpeg({ quality: 82 }).toFile(outAbs);
   return outRel;

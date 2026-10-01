@@ -360,8 +360,8 @@ async function runHttpTests(ok, req) {
   ok(up.status === 302, 'multipart healed upload accepted');
   r = await jarReq(jar, 'GET', '/social/healed', null, { accept: 'application/json' });
   const uploaded = JSON.parse(r.text).posts.find((p) => p.caption === 'Freshly healed upload');
-  ok(uploaded && uploaded.photo_path && uploaded.photo_path.includes('uploads/photos/'),
-    'uploaded healed post stored under uploads/photos');
+  ok(uploaded && uploaded.photo_path && uploaded.photo_path.startsWith('photos/'),
+    'uploaded healed post stored under the upload-dir photos dir');
 
   // Shop login -> announce -> a follower's feed shows it.
   const shopJar = {};

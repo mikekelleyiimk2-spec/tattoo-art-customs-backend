@@ -14,7 +14,7 @@ const FULFILLMENT_STATUSES = [
 ];
 
 function draftsDir(orderId) {
-  return path.join(config.assetDir, 'uploads', 'custom-drafts', String(orderId));
+  return path.join(config.uploadDir, 'custom-drafts', String(orderId));
 }
 
 function parseDrafts(order) {

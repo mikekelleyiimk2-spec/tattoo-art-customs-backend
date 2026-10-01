@@ -1,5 +1,5 @@
 <% if (typeof jsonLd !== 'undefined' && jsonLd) { %>
-<script type="application/ld+json"><%- JSON.stringify(jsonLd) %></script>
+<script type="application/ld+json"><%- safeJson(jsonLd) %></script>
 <% } %>
 <div class="two-col">
   <div>

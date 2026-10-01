@@ -7,7 +7,7 @@ const fs = require('fs');
 const multer = require('multer');
 const config = require('../config');
 
-const photosDir = path.join(config.assetDir, 'uploads', 'photos');
+const photosDir = path.join(config.uploadDir, 'photos');
 
 const photoStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -39,7 +39,7 @@ function handlePhotoUpload(req, res) {
 
 // Asset-relative path for storing in photo_path columns.
 function photoRelPath(file) {
-  return path.relative(config.assetDir, file.path);
+  return path.relative(config.uploadDir, file.path);
 }
 
 module.exports = { uploadPhoto, handlePhotoUpload, photoRelPath, photosDir };

@@ -14,10 +14,10 @@ const config = require('../config');
 const { screenText } = require('../lib/screening');
 
 const MAX_PHOTOS = 5;
-const INTAKE_DIR = 'uploads/intake'; // relative to config.assetDir
+const INTAKE_DIR = 'intake'; // relative to config.uploadDir
 
 function intakeAbsDir() {
-  const dir = path.join(config.assetDir, INTAKE_DIR);
+  const dir = path.join(config.uploadDir, INTAKE_DIR);
   fs.mkdirSync(dir, { recursive: true });
   return dir;
 }

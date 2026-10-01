@@ -12,7 +12,7 @@ const router = express.Router();
 
 const adStorage = multer.diskStorage({
   destination(req, file, cb) {
-    const dir = path.join(config.assetDir, 'uploads', 'ads');
+    const dir = path.join(config.uploadDir, 'ads');
     fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },
