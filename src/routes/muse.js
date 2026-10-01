@@ -35,10 +35,21 @@ function authorized(req) {
 
 // POST /api/muse/notify
 // body: { to, kind, title, body, link, sendEmail }
-//   to: user id, email address, or "admins" (every admin/head_admin —
-//       broadcasts only, owner approves each use)
+//   to: user id, email address, "team" (the five population-team members —
+//       the Muse-to-Muse channel; Adolfo and any other admins excluded), or
+//       "admins" (every admin/head_admin — broadcasts only, owner approves each use)
 //   kind: notification kind, defaults to "muse"
 //   sendEmail: also deliver via the site's transactional mailer
+//
+// Population team: the five admins whose Muse assistants are on the special
+// Muse-to-Muse channel. Adolfo is deliberately excluded from this channel.
+const POPULATION_TEAM_EMAILS = [
+  'caylicradic@gmail.com',             // Cayli
+  'christopherstclairjones@yahoo.com', // Chris
+  'alieshak85@gmail.com',              // Lesha
+  'darkguitar6769@gmail.com',          // Aiden
+  'c0rruptc0rtexx03@gmail.com',        // Carina
+];
 router.post('/notify', messageLimiter, async (req, res) => {
   if (!serviceToken()) return res.status(404).json({ ok: false });
   if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
@@ -53,7 +64,13 @@ router.post('/notify', messageLimiter, async (req, res) => {
 
   let users = [];
   try {
-    if (to === 'admins') {
+    if (to === 'team') {
+      const placeholders = POPULATION_TEAM_EMAILS.map(() => '?').join(',');
+      users = await db.all(
+        `SELECT id, email FROM users WHERE lower(email) IN (${placeholders})`,
+        POPULATION_TEAM_EMAILS
+      );
+    } else if (to === 'admins') {
       users = await db.all("SELECT id, email FROM users WHERE role IN ('admin','head_admin')");
     } else {
       const u = await db.get(

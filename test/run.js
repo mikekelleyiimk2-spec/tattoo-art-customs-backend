@@ -711,6 +711,21 @@ async function main() {
       'muse pipe writes the brief into the target user inbox');
     mr = await musePost({ to: 'nobody@test.local', title: 'x' }, PIPE_TOKEN);
     ok(mr.status === 404, 'muse pipe 404s unknown recipient');
+    // Population-team scope: "team" hits exactly the five team members, nobody else.
+    // (Uses sdb directly: the harness closes the db handle before the HTTP phase.)
+    const teamEmails = ['caylicradic@gmail.com', 'christopherstclairjones@yahoo.com', 'alieshak85@gmail.com', 'darkguitar6769@gmail.com', 'c0rruptc0rtexx03@gmail.com'];
+    const teamIds = teamEmails.map((em, i) => `teamuser${i}`);
+    const insUser = sdb.prepare('INSERT INTO users (id, email, password_hash, role, display_name, created_at) VALUES (?,?,?,?,?,?)');
+    teamEmails.forEach((em, i) => insUser.run(teamIds[i], em, 'x', 'customer', em.split('@')[0], Date.now()));
+    const outsiderId = 'outsider-adolfo';
+    insUser.run(outsiderId, 'adolfo@test.local', 'x', 'customer', 'Adolfo', Date.now());
+    mr = await musePost({ to: 'team', title: 'Team scope check', body: 'scope', kind: 'muse' }, PIPE_TOKEN);
+    const tm = await mr.json();
+    ok(mr.status === 200 && tm.ok && tm.notified.length === teamEmails.length, 'muse pipe "team" notifies exactly the population team');
+    const teamHit = sdb.prepare(`SELECT COUNT(*) AS c FROM notifications WHERE kind = 'muse' AND title = 'Team scope check' AND user_id IN (${teamIds.map(() => '?').join(',')})`).get(...teamIds).c;
+    ok(teamHit === teamEmails.length, 'muse pipe "team" wrote to every team inbox');
+    ok(!sdb.prepare("SELECT id FROM notifications WHERE kind = 'muse' AND title = 'Team scope check' AND user_id = ?").get(outsiderId),
+      'muse pipe "team" excludes non-team admins (Adolfo)');
   }
 
   // tester bug reports: public form saves + emails the owner (dev-logged here)
