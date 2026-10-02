@@ -37,11 +37,22 @@
 <meta name="twitter:image" content="<%= ogImage %>">
 <% } %>
 <link rel="stylesheet" href="/css/style.css">
+<style>
+/* Sitewide rotating linework background: one of 12 collage tiles, picked per
+   page render below. Fixed div (never background-attachment:fixed — iOS) at
+   z-index:-1 so it sits behind all content without disturbing stacking. */
+.site-bg { position: fixed; inset: 0; background-repeat: repeat;
+  background-size: 1600px auto; opacity: .12; pointer-events: none; z-index: -1; }
+</style>
 <% if (typeof adsenseId !== 'undefined' && adsenseId) { %>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=<%= adsenseId %>" crossorigin="anonymous"></script>
 <% } %>
 </head>
 <body>
+<% /* Rotating sitewide linework background — one of 12 tiles per page render. */ %>
+<% const bgTiles = ['/img/landing/linework-bg.webp','/img/landing/linework-bg-02.webp','/img/landing/linework-bg-03.webp','/img/landing/linework-bg-04.webp','/img/landing/linework-bg-05.webp','/img/landing/linework-bg-06.webp','/img/landing/linework-bg-07.webp','/img/landing/linework-bg-08.webp','/img/landing/linework-bg-09.webp','/img/landing/linework-bg-10.webp','/img/landing/linework-bg-11.webp','/img/landing/linework-bg-12.webp']; %>
+<% const bgTile = bgTiles[Math.floor(Math.random() * bgTiles.length)]; %>
+<div class="site-bg" aria-hidden="true" style="background-image:url('<%= bgTile %>')"></div>
 <a class="skip" href="#main"><%= t('nav.skip') %></a>
 <header class="site-header">
   <nav class="nav" aria-label="<%= t('nav.main') %>">
