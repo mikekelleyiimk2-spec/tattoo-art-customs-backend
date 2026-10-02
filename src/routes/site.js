@@ -142,6 +142,15 @@ router.use((req, res, next) => {
   next();
 });
 
+router.get('/landing-preview', async (req, res) => {
+  res.render('site/landing-preview', {
+    title: 'Tattoo Art Customs — Original Tattoo Designs, Custom Art & Verified Shops',
+    metaDescription: 'Tattoo Art Customs: buy original premade tattoo designs, commission custom artwork, find verified tattoo shops, and shop tattoo merch.',
+    canonical: `${config.baseUrl.replace(/\/$/, '')}/landing-preview`,
+    noindex: true,
+  });
+});
+
 router.get('/', async (req, res) => {
   const member = await isActiveMember(req.user);
   const all = await approvedDesigns(member);

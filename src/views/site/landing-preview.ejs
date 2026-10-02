@@ -1,0 +1,115 @@
+<% /* Landing page preview — English-only draft for owner review (i18n pass before go-live). */ %>
+<style>
+.lp-hero { position: relative; border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; }
+.lp-hero img { width: 100%; height: 340px; object-fit: cover; display: block; }
+.lp-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.78), rgba(0,0,0,.15)); display: flex; flex-direction: column; justify-content: flex-end; padding: 1.5rem; color: #fff; }
+.lp-hero-overlay h1 { margin: 0 0 .4rem; font-size: 2rem; color: #fff; }
+.lp-hero-overlay p { margin: 0 0 1rem; max-width: 34rem; }
+.lp-search { display: flex; gap: .5rem; max-width: 34rem; }
+.lp-search input { flex: 1; padding: .7rem 1rem; border-radius: 8px; border: none; font-size: 1rem; }
+.lp-offer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin: 1rem 0 1.5rem; }
+.lp-offer { border: 1px solid var(--border); border-radius: 10px; padding: 1rem; background: var(--surface); }
+.lp-offer h3 { margin: 0 0 .35rem; }
+.lp-offer p { margin: 0 0 .7rem; }
+.lp-offer .price { font-weight: bold; }
+.lp-showcase { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin: 1rem 0 1.5rem; }
+.lp-showcase figure { margin: 0; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+.lp-showcase img { width: 100%; height: 220px; object-fit: cover; display: block; }
+.lp-showcase figcaption { padding: .7rem 1rem; }
+.lp-steps { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0 1.5rem; }
+.lp-step { text-align: center; padding: 1rem; }
+.lp-step .num { display: inline-block; width: 2.2rem; height: 2.2rem; line-height: 2.2rem; border-radius: 50%; background: var(--accent); color: #fff; font-weight: bold; margin-bottom: .5rem; }
+.lp-cta-band { text-align: center; padding: 2rem 1rem; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); margin-bottom: 1.5rem; }
+</style>
+
+<div class="lp-hero">
+  <img src="/img/landing/hero.webp" alt="Vibrant full-color tattoo art showcase">
+  <div class="lp-hero-overlay">
+    <h1>Tattoo Art Customs&trade;</h1>
+    <p>Original tattoo designs, custom artwork made for you, and the shops to ink them &mdash; the whole pipeline in one place.</p>
+    <form class="lp-search" method="get" action="/gallery">
+      <input type="search" name="q" placeholder="Find your next tattoo&hellip; try &quot;koi&quot;, &quot;rose&quot;, &quot;skull&quot;" aria-label="Search designs">
+      <button class="btn" type="submit">Search</button>
+    </form>
+  </div>
+</div>
+
+<h2>Everything we do</h2>
+<div class="lp-offer-grid">
+  <div class="lp-offer">
+    <h3>Premade designs</h3>
+    <p>Hundreds of original designs, ready to buy and take to your artist. Full color + clean linework included.</p>
+    <p class="price">$75 <span class="muted">($50 Saturday sale)</span></p>
+    <p><a class="btn" href="/gallery">Browse the gallery</a></p>
+  </div>
+  <div class="lp-offer">
+    <h3>Custom designs</h3>
+    <p>Your idea, drawn just for you by a real designer. One-of-a-kind &mdash; never resold, made to your specs.</p>
+    <p class="price">$150 <span class="muted">($125 Saturday sale)</span></p>
+    <p><a class="btn" href="/orders/custom">Request custom art</a></p>
+  </div>
+  <div class="lp-offer">
+    <h3>Memberships</h3>
+    <p>Lower prices on customs, early access to new designs, and pre-design perks for collectors.</p>
+    <p class="price">$5.67/mo</p>
+    <p><a class="btn" href="/membership">See plans</a></p>
+  </div>
+  <div class="lp-offer">
+    <h3>Tattoo shops</h3>
+    <p>Find verified shops near you, book appointments, and check healed work &mdash; plus pro tools for shop owners.</p>
+    <p class="price">Shop plans $103.98/yr</p>
+    <p><a class="btn" href="/shop">Find a shop</a></p>
+  </div>
+  <div class="lp-offer">
+    <h3>Mike's Custom Tees&trade;</h3>
+    <p>Our designs on premium tees. Wear the art.</p>
+    <p><a class="btn" href="/merch">Shop tees</a></p>
+  </div>
+  <div class="lp-offer">
+    <h3>Contests &amp; raffle</h3>
+    <p>Design contests with cash prizes, plus a free-entry raffle &mdash; win free designs and membership months.</p>
+    <p><a class="btn" href="/contests">Contests</a> <a class="btn btn-secondary" href="/raffle">Raffle</a></p>
+  </div>
+  <div class="lp-offer">
+    <h3>Gift cards</h3>
+    <p>Give ink. Gift cards good for designs, customs, and merch.</p>
+    <p><a class="btn" href="/gift-cards">Buy a gift card</a></p>
+  </div>
+  <div class="lp-offer">
+    <h3>The app</h3>
+    <p>The full marketplace in your pocket &mdash; browse, buy, and manage your collection on the go.</p>
+    <p class="price">$1.99 one-time</p>
+    <p><a class="btn" href="/#app">Get the app</a></p>
+  </div>
+</div>
+
+<h2>See the work</h2>
+<div class="lp-showcase">
+  <figure>
+    <img src="/img/landing/premade.webp" alt="Colorful premade tattoo flash designs" loading="lazy">
+    <figcaption><strong>Premade flash</strong> &mdash; original designs in every style, ready today.</figcaption>
+  </figure>
+  <figure>
+    <img src="/img/landing/custom.webp" alt="Designer sketching a custom tattoo" loading="lazy">
+    <figcaption><strong>Made for you</strong> &mdash; custom pieces drawn to your exact idea.</figcaption>
+  </figure>
+  <figure>
+    <img src="/img/landing/shop.webp" alt="Professional tattoo shop at work" loading="lazy">
+    <figcaption><strong>Inked right</strong> &mdash; verified shops to bring the art to skin.</figcaption>
+  </figure>
+</div>
+
+<h2>How it works</h2>
+<div class="lp-steps">
+  <div class="lp-step"><span class="num">1</span><h3>Find your art</h3><p>Search the gallery or describe your dream piece.</p></div>
+  <div class="lp-step"><span class="num">2</span><h3>Buy it</h3><p>Instant download of full color + linework, or commission a custom.</p></div>
+  <div class="lp-step"><span class="num">3</span><h3>Get inked</h3><p>Take it to your artist &mdash; or book a verified shop right here.</p></div>
+</div>
+
+<div class="lp-cta-band">
+  <h2>Are you an artist or shop?</h2>
+  <p>Sell your designs to thousands of collectors, keep up to 80% of every sale, and get discovered by clients looking for their next piece.</p>
+  <p><a class="btn" href="/membership">Join as a designer &mdash; $5.67/mo</a> <a class="btn btn-secondary" href="/membership">List your shop &mdash; $103.98/yr</a></p>
+</div>
+
+<p class="muted fineprint">Preview page &mdash; not yet linked from the site navigation.</p>
