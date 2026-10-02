@@ -282,6 +282,104 @@
     "yt_text": "Daily flash drops, custom design timelapses, and aftercare guides. New videos every day — hit subscribe so you never miss a drop.",
     "yt_title": "🎥 We're on YouTube — subscribe"
   },
+  "landing": {
+    "hero": {
+      "brand": "Tattoo Art Customs™",
+      "sub": "Original tattoo designs and custom artwork made for you — the whole pipeline in one place.",
+      "search_placeholder": "Find your next tattoo… try \"koi\", \"rose\", \"skull\"",
+      "search_aria": "Search designs",
+      "search_btn": "Search",
+      "img_alt": "Vibrant full-color tattoo art showcase"
+    },
+    "offers": {
+      "title": "Everything we do",
+      "premade": {
+        "title": "Premade designs",
+        "text": "Hundreds of original designs, ready to buy and take to your artist. Full color + clean linework included.",
+        "price": "{price} ({sale} Saturday sale)",
+        "btn": "Browse the gallery"
+      },
+      "custom": {
+        "title": "Custom designs",
+        "text": "Your idea, drawn just for you by a real designer. One-of-a-kind — never resold, made to your specs.",
+        "price": "{price} ({sale} Saturday sale)",
+        "btn": "Request custom art"
+      },
+      "membership": {
+        "title": "Memberships",
+        "text": "Lower prices on customs, early access to new designs, and pre-design perks for collectors.",
+        "price": "{price}/mo",
+        "btn": "See plans"
+      },
+      "shops": {
+        "title": "Tattoo shops",
+        "text": "A verified home for your shop — earn 20% on every verified referral, with pro booking tools and healed-work galleries being built for owners.",
+        "price": "Shop plans {price}/yr",
+        "btn": "Shop dashboard"
+      },
+      "tees": {
+        "title": "Mike's Custom Tees™",
+        "text": "Our designs on premium tees. Wear the art.",
+        "btn": "Shop tees"
+      },
+      "contests": {
+        "title": "Contests & raffle",
+        "text": "Design contests with cash prizes, plus a free-entry raffle — win free designs and membership months.",
+        "btn1": "Contests",
+        "btn2": "Raffle"
+      },
+      "giftcards": {
+        "title": "Gift cards",
+        "text": "Give ink. Gift cards good for designs, customs, and memberships.",
+        "btn": "Buy a gift card"
+      },
+      "app": {
+        "title": "The app",
+        "text": "The full marketplace in your pocket — browse, buy, and manage your collection on the go.",
+        "price": "{price} one-time",
+        "btn": "Get the app"
+      }
+    },
+    "showcase": {
+      "title": "See the work",
+      "premade": {
+        "alt": "Colorful premade tattoo flash designs",
+        "cap_title": "Premade flash",
+        "cap_text": "original designs in every style, ready today."
+      },
+      "custom": {
+        "alt": "Designer sketching a custom tattoo",
+        "cap_title": "Made for you",
+        "cap_text": "custom pieces drawn to your exact idea."
+      },
+      "shop": {
+        "alt": "Professional tattoo shop at work",
+        "cap_title": "Inked right",
+        "cap_text": "verified shops to bring the art to skin."
+      }
+    },
+    "steps": {
+      "title": "How it works",
+      "s1": {
+        "title": "Find your art",
+        "text": "Search the gallery or describe your dream piece."
+      },
+      "s2": {
+        "title": "Buy it",
+        "text": "Instant download of full color + linework, or commission a custom."
+      },
+      "s3": {
+        "title": "Get inked",
+        "text": "Take it to your artist — your ink, your story, ready for skin."
+      }
+    },
+    "cta": {
+      "title": "Are you an artist or shop?",
+      "text": "Sell your designs to collectors worldwide, keep up to 80% of every sale, and get discovered by clients looking for their next piece.",
+      "designer_btn": "Join as a designer — {price}/mo",
+      "shop_btn": "List your shop — {price}/yr"
+    }
+  },
   "membership": {
     "annual_soon": "Annual plan coming soon",
     "annual_soon_tail": "— the yearly plan is being set up. The monthly plan is ready now.",

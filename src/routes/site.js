@@ -142,29 +142,13 @@ router.use((req, res, next) => {
   next();
 });
 
-router.get('/landing-preview', async (req, res) => {
-  res.render('site/landing-preview', {
+router.get('/', async (req, res) => {
+  const base = config.baseUrl.replace(/\/$/, '');
+  res.render('site/landing', {
     title: 'Tattoo Art Customs — Original Tattoo Designs, Custom Art & Verified Shops',
     metaDescription: 'Tattoo Art Customs: buy original premade tattoo designs, commission custom artwork, find verified tattoo shops, and shop tattoo merch.',
-    canonical: `${config.baseUrl.replace(/\/$/, '')}/landing-preview`,
-    noindex: true,
-  });
-});
-
-router.get('/', async (req, res) => {
-  const member = await isActiveMember(req.user);
-  const all = await approvedDesigns(member);
-  const viewer = await viewerFor(req.user);
-  const designs = all.slice(0, 12).map((d) => ({ ...d, thumb: displayImgFile(d, viewer) }));
-  const base = config.baseUrl.replace(/\/$/, '');
-  const ogImg = designs.length && designs[0].thumb ? `${base}/img/designs/${designs[0].thumb}` : '';
-  res.render('site/index', {
-    title: 'Buy Original Tattoo Designs Online — Custom Tattoo Designs | Tattoo Art Customs',
-    designs, designCount: all.length, sale: await salePriceActive(req.user),
-    premadePrice: withFeeCents(premadePriceCents(new Date(), member)), customPrice: withFeeCents(customFullCents(new Date(), member)),
-    metaDescription: 'Buy original tattoo designs online from independent artists. 900+ ready-made designs plus custom tattoo designs with 48-hour delivery.',
     canonical: `${base}/`,
-    ogImage: ogImg,
+    ogImage: `${base}/img/landing/hero.webp`,
     playStoreUrl: config.playStoreUrl,
     appStoreUrl: config.appStoreUrl,
   });

@@ -282,6 +282,104 @@
     "yt_text": "Dagliga flashdrops, customdesign-timelapses och aftercareguider. Nya videor varje dag — prenumerera så missar du ingen drop.",
     "yt_title": "🎥 Vi finns på YouTube — prenumerera"
   },
+  "landing": {
+    "hero": {
+      "brand": "Tattoo Art Customs™",
+      "sub": "Originella tatueringsdesigner och specialritad konst bara för dig — hela kedjan på ett ställe.",
+      "search_placeholder": "Hitta din nästa tatuering… prova \"koi\", \"rose\", \"skull\"",
+      "search_aria": "Sök designer",
+      "search_btn": "Sök",
+      "img_alt": "Färgstark tatueringskonst i fullfärg"
+    },
+    "offers": {
+      "title": "Allt vi gör",
+      "premade": {
+        "title": "Färdiga designer",
+        "text": "Hundratals originella designer, redo att köpa och ta med till din tatuerare. Fullfärg + rent linjearbete ingår.",
+        "price": "{price} ({sale} lördagsrea)",
+        "btn": "Bläddra i galleriet"
+      },
+      "custom": {
+        "title": "Specialritade designer",
+        "text": "Din idé, ritad bara för dig av en riktig designer. Unik — säljs aldrig vidare, gjord efter dina önskemål.",
+        "price": "{price} ({sale} lördagsrea)",
+        "btn": "Beställ specialritat"
+      },
+      "membership": {
+        "title": "Medlemskap",
+        "text": "Lägre priser på specialritat, tidig tillgång till nya designer och förmåner för samlare.",
+        "price": "{price}/mån",
+        "btn": "Se planer"
+      },
+      "shops": {
+        "title": "Tatueringsstudior",
+        "text": "Ett verifierat hem för din studio — tjäna 20 % på varje verifierad rekommendation; proffsverktyg för bokning och gallerier med läkta arbeten byggs för studioägare.",
+        "price": "Studioplaner {price}/år",
+        "btn": "Studiopanel"
+      },
+      "tees": {
+        "title": "Mike's Custom Tees™",
+        "text": "Våra designer på premiumtröjor. Bär konsten.",
+        "btn": "Köp tröjor"
+      },
+      "contests": {
+        "title": "Tävlingar & lotteri",
+        "text": "Designtävlingar med kontantpriser plus ett gratis lotteri — vinn gratis designer och medlemsmånader.",
+        "btn1": "Tävlingar",
+        "btn2": "Lotteri"
+      },
+      "giftcards": {
+        "title": "Presentkort",
+        "text": "Ge bläck i present. Presentkort gäller för designer, specialritat och medlemskap.",
+        "btn": "Köp presentkort"
+      },
+      "app": {
+        "title": "Appen",
+        "text": "Hela marknadsplatsen i fickan — bläddra, köp och hantera din samling var du än är.",
+        "price": "{price} engångsbelopp",
+        "btn": "Hämta appen"
+      }
+    },
+    "showcase": {
+      "title": "Se arbetet",
+      "premade": {
+        "alt": "Färgstarka färdiga tatueringsflashdesigner",
+        "cap_title": "Färdiga flash",
+        "cap_text": "originella designer i alla stilar, redo idag."
+      },
+      "custom": {
+        "alt": "Designer skissar en specialritad tatuering",
+        "cap_title": "Gjord för dig",
+        "cap_text": "specialritade verk efter just din idé."
+      },
+      "shop": {
+        "alt": "Professionell tatueringsstudio i arbete",
+        "cap_title": "Rätt tatuerat",
+        "cap_text": "verifierade studior som för konsten till huden."
+      }
+    },
+    "steps": {
+      "title": "Så funkar det",
+      "s1": {
+        "title": "Hitta din konst",
+        "text": "Sök i galleriet eller beskriv ditt drömmotiv."
+      },
+      "s2": {
+        "title": "Köp den",
+        "text": "Direktnedladdning i fullfärg + linjearbete, eller beställ specialritat."
+      },
+      "s3": {
+        "title": "Tatuera dig",
+        "text": "Ta den till din tatuerare — ditt bläck, din historia, redo för huden."
+      }
+    },
+    "cta": {
+      "title": "Är du artist eller studio?",
+      "text": "Sälj dina designer till samlare världen över, behåll upp till 80 % av varje försäljning och bli upptäckt av kunder som letar efter sitt nästa verk.",
+      "designer_btn": "Gå med som designer — {price}/mån",
+      "shop_btn": "Lista din studio — {price}/år"
+    }
+  },
   "membership": {
     "annual_soon": "Årsplan kommer snart",
     "annual_soon_tail": "— årsplanen håller på att sättas upp. Månadsplanen är redo nu.",

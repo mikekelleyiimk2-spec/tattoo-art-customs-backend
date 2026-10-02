@@ -282,6 +282,104 @@
     "yt_text": "Flash drops diários, timelapses de customs e guias de aftercare. Vídeos novos todo dia — inscreva-se para não perder nenhum drop.",
     "yt_title": "🎥 Estamos no YouTube — inscreva-se"
   },
+  "landing": {
+    "hero": {
+      "brand": "Tattoo Art Customs™",
+      "sub": "Designs de tatuagem originais e arte personalizada feita para você — o processo inteiro num só lugar.",
+      "search_placeholder": "Ache sua próxima tattoo… tente \"koi\", \"rose\", \"skull\"",
+      "search_aria": "Buscar designs",
+      "search_btn": "Buscar",
+      "img_alt": "Mostra vibrante de arte tattoo em cores"
+    },
+    "offers": {
+      "title": "Tudo o que fazemos",
+      "premade": {
+        "title": "Designs prontos",
+        "text": "Centenas de designs originais, prontos para comprar e levar ao seu tatuador. Cor cheia + traço limpo inclusos.",
+        "price": "{price} ({sale} na promo de sábado)",
+        "btn": "Ver a galeria"
+      },
+      "custom": {
+        "title": "Designs personalizados",
+        "text": "Sua ideia, desenhada só para você por um designer de verdade. Peça única — nunca revendida, feita sob medida.",
+        "price": "{price} ({sale} na promo de sábado)",
+        "btn": "Pedir arte personalizada"
+      },
+      "membership": {
+        "title": "Assinaturas",
+        "text": "Preços menores nos personalizados, acesso antecipado a designs novos e vantagens para colecionadores.",
+        "price": "{price}/mês",
+        "btn": "Ver planos"
+      },
+      "shops": {
+        "title": "Estúdios de tatuagem",
+        "text": "Um lar verificado para o seu estúdio — ganhe 20% em cada indicação verificada; ferramentas pro de agendamento e galerias de trabalhos cicatrizados em construção para os donos.",
+        "price": "Planos para estúdios {price}/ano",
+        "btn": "Painel do estúdio"
+      },
+      "tees": {
+        "title": "Mike's Custom Tees™",
+        "text": "Nossos designs em camisetas premium. Vista a arte.",
+        "btn": "Comprar camisetas"
+      },
+      "contests": {
+        "title": "Concursos & sorteio",
+        "text": "Concursos de design com prêmios em dinheiro, mais um sorteio grátis — ganhe designs grátis e meses de assinatura.",
+        "btn1": "Concursos",
+        "btn2": "Sorteio"
+      },
+      "giftcards": {
+        "title": "Vale-presentes",
+        "text": "Dê tinta de presente. Vales válidos para designs, personalizados e assinaturas.",
+        "btn": "Comprar vale-presente"
+      },
+      "app": {
+        "title": "O app",
+        "text": "O marketplace inteiro no seu bolso — explore, compre e gerencie sua coleção onde estiver.",
+        "price": "{price} pagamento único",
+        "btn": "Baixar o app"
+      }
+    },
+    "showcase": {
+      "title": "Veja o trabalho",
+      "premade": {
+        "alt": "Designs flash de tatuagem prontos, coloridos",
+        "cap_title": "Flash prontos",
+        "cap_text": "designs originais em todos os estilos, prontos hoje."
+      },
+      "custom": {
+        "alt": "Designer esboçando uma tatuagem personalizada",
+        "cap_title": "Feito para você",
+        "cap_text": "peças personalizadas desenhadas na sua ideia exata."
+      },
+      "shop": {
+        "alt": "Estúdio profissional de tatuagem trabalhando",
+        "cap_title": "Bem tatuado",
+        "cap_text": "estúdios verificados para levar a arte à pele."
+      }
+    },
+    "steps": {
+      "title": "Como funciona",
+      "s1": {
+        "title": "Ache sua arte",
+        "text": "Busque na galeria ou descreva a peça dos seus sonhos."
+      },
+      "s2": {
+        "title": "Compre",
+        "text": "Download instantâneo em cores + traço, ou encomende um personalizado."
+      },
+      "s3": {
+        "title": "Tatue-se",
+        "text": "Leve ao seu tatuador — sua tinta, sua história, pronta para a pele."
+      }
+    },
+    "cta": {
+      "title": "Você é artista ou estúdio?",
+      "text": "Venda seus designs para colecionadores do mundo todo, fique com até 80% de cada venda e seja descoberto por clientes em busca da próxima peça.",
+      "designer_btn": "Entrar como designer — {price}/mês",
+      "shop_btn": "Cadastrar meu estúdio — {price}/ano"
+    }
+  },
   "membership": {
     "annual_soon": "Plano anual em breve",
     "annual_soon_tail": "— o plano anual está sendo configurado. O plano mensal já está pronto.",

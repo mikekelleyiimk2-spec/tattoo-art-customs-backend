@@ -282,6 +282,104 @@
     "yt_text": "Flash drops quotidiens, timelapses de customs et guides aftercare. De nouvelles vidéos chaque jour — abonne-toi pour ne rater aucun drop.",
     "yt_title": "🎥 On est sur YouTube — abonne-toi"
   },
+  "landing": {
+    "hero": {
+      "brand": "Tattoo Art Customs™",
+      "sub": "Des designs de tatouage originaux et des créations sur mesure rien que pour vous — toute la chaîne au même endroit.",
+      "search_placeholder": "Trouvez votre prochain tatouage… essayez « koi », « rose », « skull »",
+      "search_aria": "Rechercher des designs",
+      "search_btn": "Rechercher",
+      "img_alt": "Vitrine éclatante d'art du tatouage en couleurs"
+    },
+    "offers": {
+      "title": "Tout ce que nous faisons",
+      "premade": {
+        "title": "Designs prêts à l'emploi",
+        "text": "Des centaines de designs originaux, prêts à acheter et à apporter à votre tatoueur. Couleur + tracés nets inclus.",
+        "price": "{price} ({sale} promo du samedi)",
+        "btn": "Voir la galerie"
+      },
+      "custom": {
+        "title": "Designs sur mesure",
+        "text": "Votre idée, dessinée rien que pour vous par un vrai designer. Pièce unique — jamais revendue, réalisée selon vos envies.",
+        "price": "{price} ({sale} promo du samedi)",
+        "btn": "Commander une création"
+      },
+      "membership": {
+        "title": "Abonnements",
+        "text": "Des prix réduits sur le sur-mesure, un accès anticipé aux nouveautés et des avantages pour les collectionneurs.",
+        "price": "{price}/mois",
+        "btn": "Voir les formules"
+      },
+      "shops": {
+        "title": "Shops de tatouage",
+        "text": "Un foyer vérifié pour votre shop — touchez 20 % sur chaque parrainage vérifié ; outils de réservation pro et galeries de tatouages cicatrisés en préparation pour les gérants.",
+        "price": "Formules shops {price}/an",
+        "btn": "Tableau de bord shop"
+      },
+      "tees": {
+        "title": "Mike's Custom Tees™",
+        "text": "Nos designs sur des tees premium. Portez l'art.",
+        "btn": "Voir les tees"
+      },
+      "contests": {
+        "title": "Concours & tombola",
+        "text": "Des concours de design avec des prix en cash, plus une tombola gratuite — gagnez des designs et des mois d'abonnement.",
+        "btn1": "Concours",
+        "btn2": "Tombola"
+      },
+      "giftcards": {
+        "title": "Cartes cadeaux",
+        "text": "Offrez de l'encre. Cartes valables pour les designs, le sur-mesure et les abonnements.",
+        "btn": "Acheter une carte cadeau"
+      },
+      "app": {
+        "title": "L'appli",
+        "text": "Tout le marketplace dans votre poche — parcourez, achetez et gérez votre collection où que vous soyez.",
+        "price": "{price} en une fois",
+        "btn": "Télécharger l'appli"
+      }
+    },
+    "showcase": {
+      "title": "Voyez le travail",
+      "premade": {
+        "alt": "Designs flash de tatouage prêts, en couleurs",
+        "cap_title": "Flash prêts",
+        "cap_text": "des designs originaux dans tous les styles, prêts aujourd'hui."
+      },
+      "custom": {
+        "alt": "Designer esquissant un tatouage sur mesure",
+        "cap_title": "Fait pour vous",
+        "cap_text": "des pièces sur mesure dessinées selon votre idée exacte."
+      },
+      "shop": {
+        "alt": "Shop de tatouage professionnel au travail",
+        "cap_title": "Bien encré",
+        "cap_text": "des shops vérifiés pour porter l'art sur la peau."
+      }
+    },
+    "steps": {
+      "title": "Comment ça marche",
+      "s1": {
+        "title": "Trouvez votre art",
+        "text": "Cherchez dans la galerie ou décrivez la pièce de vos rêves."
+      },
+      "s2": {
+        "title": "Achetez",
+        "text": "Téléchargement instantané couleur + tracés, ou commandez du sur-mesure."
+      },
+      "s3": {
+        "title": "Faites-vous tatouer",
+        "text": "Apportez-le à votre tatoueur — votre encre, votre histoire, prête pour la peau."
+      }
+    },
+    "cta": {
+      "title": "Vous êtes artiste ou shop ?",
+      "text": "Vendez vos designs à des collectionneurs du monde entier, gardez jusqu'à 80 % de chaque vente et faites-vous découvrir par des clients en quête de leur prochaine pièce.",
+      "designer_btn": "Rejoindre comme designer — {price}/mois",
+      "shop_btn": "Référencer votre shop — {price}/an"
+    }
+  },
   "membership": {
     "annual_soon": "Formule annuelle bientôt dispo",
     "annual_soon_tail": "— la formule annuelle est en cours de mise en place. La formule mensuelle est déjà prête.",

@@ -282,6 +282,104 @@
     "yt_text": "Tägliche Flash-Drops, Custom-Design-Timelapses und Aftercare-Guides. Jeden Tag neue Videos — abonnieren, damit du keinen Drop verpasst.",
     "yt_title": "🎥 Wir sind auf YouTube — abonnieren"
   },
+  "landing": {
+    "hero": {
+      "brand": "Tattoo Art Customs™",
+      "sub": "Originelle Tattoo-Designs und Custom-Artworks nur für dich — die komplette Pipeline an einem Ort.",
+      "search_placeholder": "Finde dein nächstes Tattoo… probier „koi“, „rose“, „skull“",
+      "search_aria": "Designs suchen",
+      "search_btn": "Suchen",
+      "img_alt": "Farbenfrohe Tattoo-Kunst in Vollfarbe"
+    },
+    "offers": {
+      "title": "Alles, was wir machen",
+      "premade": {
+        "title": "Fertige Designs",
+        "text": "Hunderte originelle Designs — kaufen und direkt zum Tätowierer mitnehmen. Vollfarbe + saubere Linework inklusive.",
+        "price": "{price} ({sale} Samstags-Sale)",
+        "btn": "Galerie entdecken"
+      },
+      "custom": {
+        "title": "Custom-Designs",
+        "text": "Deine Idee, gezeichnet nur für dich von einem echten Designer. Ein Unikat — wird nie weiterverkauft, ganz nach deinen Wünschen.",
+        "price": "{price} ({sale} Samstags-Sale)",
+        "btn": "Custom-Art anfragen"
+      },
+      "membership": {
+        "title": "Mitgliedschaften",
+        "text": "Günstigere Preise für Customs, früher Zugang zu neuen Designs und Pre-Design-Vorteile für Sammler.",
+        "price": "{price}/Monat",
+        "btn": "Pläne ansehen"
+      },
+      "shops": {
+        "title": "Tattoo-Studios",
+        "text": "Ein verifiziertes Zuhause für dein Studio — verdiene 20 % an jeder verifizierten Empfehlung; Profi-Buchungstools und Galerien geheilter Arbeiten sind für Inhaber in Arbeit.",
+        "price": "Studio-Pläne {price}/Jahr",
+        "btn": "Studio-Dashboard"
+      },
+      "tees": {
+        "title": "Mike's Custom Tees™",
+        "text": "Unsere Designs auf Premium-Shirts. Trag die Kunst.",
+        "btn": "Shirts shoppen"
+      },
+      "contests": {
+        "title": "Contests & Verlosung",
+        "text": "Design-Contests mit Geldpreisen plus Gratis-Verlosung — gewinne Gratis-Designs und Mitgliedsmonate.",
+        "btn1": "Contests",
+        "btn2": "Verlosung"
+      },
+      "giftcards": {
+        "title": "Geschenkkarten",
+        "text": "Schenk Tinte. Geschenkkarten für Designs, Customs und Mitgliedschaften.",
+        "btn": "Geschenkkarte kaufen"
+      },
+      "app": {
+        "title": "Die App",
+        "text": "Der komplette Marktplatz in deiner Tasche — stöbern, kaufen und deine Sammlung verwalten, überall.",
+        "price": "{price} einmalig",
+        "btn": "App holen"
+      }
+    },
+    "showcase": {
+      "title": "Sieh dir die Arbeiten an",
+      "premade": {
+        "alt": "Farbige fertige Tattoo-Flash-Designs",
+        "cap_title": "Fertige Flashs",
+        "cap_text": "originelle Designs in jedem Stil, sofort verfügbar."
+      },
+      "custom": {
+        "alt": "Designer skizziert ein Custom-Tattoo",
+        "cap_title": "Nur für dich gemacht",
+        "cap_text": "Custom-Stücke, gezeichnet nach deiner exakten Idee."
+      },
+      "shop": {
+        "alt": "Professionelles Tattoo-Studio bei der Arbeit",
+        "cap_title": "Richtig gestochen",
+        "cap_text": "verifizierte Studios, die die Kunst auf die Haut bringen."
+      }
+    },
+    "steps": {
+      "title": "So funktioniert's",
+      "s1": {
+        "title": "Finde deine Kunst",
+        "text": "Durchsuche die Galerie oder beschreibe dein Traum-Motiv."
+      },
+      "s2": {
+        "title": "Kauf es",
+        "text": "Sofort-Download in Vollfarbe + Linework — oder beauftrage ein Custom."
+      },
+      "s3": {
+        "title": "Lass dich tätowieren",
+        "text": "Nimm es mit zu deinem Künstler — deine Tinte, deine Story, bereit für die Haut."
+      }
+    },
+    "cta": {
+      "title": "Bist du Künstler oder Studio?",
+      "text": "Verkaufe deine Designs an Sammler weltweit, behalte bis zu 80 % pro Verkauf und werde von Kunden entdeckt, die ihr nächstes Motiv suchen.",
+      "designer_btn": "Als Designer beitreten — {price}/Monat",
+      "shop_btn": "Studio listen — {price}/Jahr"
+    }
+  },
   "membership": {
     "annual_soon": "Jahresplan kommt bald",
     "annual_soon_tail": "— der Jahresplan wird gerade eingerichtet. Der Monatsplan ist schon bereit.",

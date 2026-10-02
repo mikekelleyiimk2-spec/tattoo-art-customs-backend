@@ -282,6 +282,104 @@
     "yt_text": "Drop flash quotidiani, timelapse di custom design e guide aftercare. Nuovi video ogni giorno — iscriviti per non perdere nessun drop.",
     "yt_title": "🎥 Siamo su YouTube — iscriviti"
   },
+  "landing": {
+    "hero": {
+      "brand": "Tattoo Art Customs™",
+      "sub": "Design originali per tatuaggi e arte personalizzata creata per te — l'intera filiera in un unico posto.",
+      "search_placeholder": "Trova il tuo prossimo tatuaggio… prova «koi», «rose», «skull»",
+      "search_aria": "Cerca design",
+      "search_btn": "Cerca",
+      "img_alt": "Vetrina vibrante di arte tattoo a colori"
+    },
+    "offers": {
+      "title": "Tutto quello che facciamo",
+      "premade": {
+        "title": "Design pronti",
+        "text": "Centinaia di design originali, pronti da acquistare e portare al tuo tatuatore. Colore pieno + linework pulito inclusi.",
+        "price": "{price} ({sale} saldi del sabato)",
+        "btn": "Sfoglia la galleria"
+      },
+      "custom": {
+        "title": "Design personalizzati",
+        "text": "La tua idea, disegnata solo per te da un vero designer. Pezzo unico — mai rivenduto, fatto su misura per te.",
+        "price": "{price} ({sale} saldi del sabato)",
+        "btn": "Richiedi arte personalizzata"
+      },
+      "membership": {
+        "title": "Abbonamenti",
+        "text": "Prezzi più bassi sui personalizzati, accesso anticipato ai nuovi design e vantaggi per collezionisti.",
+        "price": "{price}/mese",
+        "btn": "Vedi i piani"
+      },
+      "shops": {
+        "title": "Studi tattoo",
+        "text": "Una casa verificata per il tuo studio — guadagna il 20% su ogni segnalazione verificata; strumenti pro per le prenotazioni e gallerie di lavori guariti in arrivo per i titolari.",
+        "price": "Piani studio {price}/anno",
+        "btn": "Pannello studio"
+      },
+      "tees": {
+        "title": "Mike's Custom Tees™",
+        "text": "I nostri design su magliette premium. Indossa l'arte.",
+        "btn": "Acquista magliette"
+      },
+      "contests": {
+        "title": "Contest & lotteria",
+        "text": "Contest di design con premi in denaro, più una lotteria gratuita — vinci design gratis e mesi di abbonamento.",
+        "btn1": "Contest",
+        "btn2": "Lotteria"
+      },
+      "giftcards": {
+        "title": "Buoni regalo",
+        "text": "Regala inchiostro. Buoni validi per design, personalizzati e abbonamenti.",
+        "btn": "Acquista un buono"
+      },
+      "app": {
+        "title": "L'app",
+        "text": "L'intero marketplace in tasca — sfoglia, acquista e gestisci la tua collezione ovunque.",
+        "price": "{price} una tantum",
+        "btn": "Scarica l'app"
+      }
+    },
+    "showcase": {
+      "title": "Guarda i lavori",
+      "premade": {
+        "alt": "Design flash tattoo pronti, a colori",
+        "cap_title": "Flash pronti",
+        "cap_text": "design originali in ogni stile, pronti oggi."
+      },
+      "custom": {
+        "alt": "Designer che abbozza un tatuaggio personalizzato",
+        "cap_title": "Fatto per te",
+        "cap_text": "pezzi personalizzati disegnati sulla tua idea esatta."
+      },
+      "shop": {
+        "alt": "Studio tattoo professionale al lavoro",
+        "cap_title": "Tatuato bene",
+        "cap_text": "studi verificati per portare l'arte sulla pelle."
+      }
+    },
+    "steps": {
+      "title": "Come funziona",
+      "s1": {
+        "title": "Trova la tua arte",
+        "text": "Cerca nella galleria o descrivi il pezzo dei tuoi sogni."
+      },
+      "s2": {
+        "title": "Acquistalo",
+        "text": "Download istantaneo a colori + linework, oppure commissiona un personalizzato."
+      },
+      "s3": {
+        "title": "Fatti tatuare",
+        "text": "Portalo dal tuo tatuatore — il tuo inchiostro, la tua storia, pronti per la pelle."
+      }
+    },
+    "cta": {
+      "title": "Sei un artista o uno studio?",
+      "text": "Vendi i tuoi design a collezionisti in tutto il mondo, trattieni fino all'80% di ogni vendita e fatti scoprire da clienti in cerca del loro prossimo pezzo.",
+      "designer_btn": "Unisciti come designer — {price}/mese",
+      "shop_btn": "Registra il tuo studio — {price}/anno"
+    }
+  },
   "membership": {
     "annual_soon": "Piano annuale in arrivo",
     "annual_soon_tail": "— il piano annuale è in allestimento. Il piano mensile è già pronto.",

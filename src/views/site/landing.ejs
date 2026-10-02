@@ -1,0 +1,137 @@
+<style>
+.lp-hero { position: relative; border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; }
+.lp-hero img { width: 100%; height: 340px; object-fit: cover; display: block; }
+.lp-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.78), rgba(0,0,0,.15)); display: flex; flex-direction: column; justify-content: flex-end; padding: 1.5rem; color: #fff; }
+.lp-hero-overlay h1 { margin: 0 0 .4rem; font-size: 2rem; color: #fff; }
+.lp-hero-overlay p { margin: 0 0 1rem; max-width: 34rem; }
+.lp-search { display: flex; gap: .5rem; max-width: 34rem; }
+.lp-search input { flex: 1; padding: .7rem 1rem; border-radius: 8px; border: none; font-size: 1rem; }
+.lp-offer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin: 1rem 0 1.5rem; }
+.lp-offer { border: 1px solid var(--border); border-radius: 10px; padding: 1rem; background: var(--surface); }
+.lp-offer h3 { margin: 0 0 .35rem; }
+.lp-offer p { margin: 0 0 .7rem; }
+.lp-offer .price { font-weight: bold; }
+.lp-showcase { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin: 1rem 0 1.5rem; }
+.lp-showcase figure { margin: 0; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+.lp-showcase img { width: 100%; height: 220px; object-fit: cover; display: block; }
+.lp-showcase figcaption { padding: .7rem 1rem; }
+.lp-steps { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0 1.5rem; }
+.lp-step { text-align: center; padding: 1rem; }
+.lp-step .num { display: inline-block; width: 2.2rem; height: 2.2rem; line-height: 2.2rem; border-radius: 50%; background: var(--accent); color: #fff; font-weight: bold; margin-bottom: .5rem; }
+.lp-cta-band { text-align: center; padding: 2rem 1rem; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); margin-bottom: 1.5rem; }
+</style>
+
+<div class="lp-hero">
+  <img src="/img/landing/hero.webp" alt="<%= t('landing.hero.img_alt') %>">
+  <div class="lp-hero-overlay">
+    <h1><%= t('landing.hero.brand') %></h1>
+    <p><%= t('landing.hero.sub') %></p>
+    <form class="lp-search" method="get" action="/gallery">
+      <input type="search" name="q" placeholder="<%= t('landing.hero.search_placeholder') %>" aria-label="<%= t('landing.hero.search_aria') %>">
+      <button class="btn" type="submit"><%= t('landing.hero.search_btn') %></button>
+    </form>
+  </div>
+</div>
+
+<h2><%= t('landing.offers.title') %></h2>
+<div class="lp-offer-grid">
+  <div class="lp-offer">
+    <h3><%= t('landing.offers.premade.title') %></h3>
+    <p><%= t('landing.offers.premade.text') %></p>
+    <p class="price"><%= t('landing.offers.premade.price', {price: fmtMoney(7500), sale: fmtMoney(5000)}) %></p>
+    <p><a class="btn" href="/gallery"><%= t('landing.offers.premade.btn') %></a></p>
+  </div>
+  <div class="lp-offer">
+    <h3><%= t('landing.offers.custom.title') %></h3>
+    <p><%= t('landing.offers.custom.text') %></p>
+    <p class="price"><%= t('landing.offers.custom.price', {price: fmtMoney(15000), sale: fmtMoney(12500)}) %></p>
+    <p><a class="btn" href="/orders/custom"><%= t('landing.offers.custom.btn') %></a></p>
+  </div>
+  <div class="lp-offer">
+    <h3><%= t('landing.offers.membership.title') %></h3>
+    <p><%= t('landing.offers.membership.text') %></p>
+    <p class="price"><%= t('landing.offers.membership.price', {price: fmtMoney(567)}) %></p>
+    <p><a class="btn" href="/membership"><%= t('landing.offers.membership.btn') %></a></p>
+  </div>
+  <div class="lp-offer">
+    <h3><%= t('landing.offers.shops.title') %></h3>
+    <p><%= t('landing.offers.shops.text') %></p>
+    <p class="price"><%= t('landing.offers.shops.price', {price: fmtMoney(10398)}) %></p>
+    <p><a class="btn" href="/shop"><%= t('landing.offers.shops.btn') %></a></p>
+  </div>
+  <div class="lp-offer">
+    <h3><%= t('landing.offers.tees.title') %></h3>
+    <p><%= t('landing.offers.tees.text') %></p>
+    <p><a class="btn" href="/merch"><%= t('landing.offers.tees.btn') %></a></p>
+  </div>
+  <div class="lp-offer">
+    <h3><%= t('landing.offers.contests.title') %></h3>
+    <p><%= t('landing.offers.contests.text') %></p>
+    <p><a class="btn" href="/contests"><%= t('landing.offers.contests.btn1') %></a> <a class="btn btn-secondary" href="/raffle"><%= t('landing.offers.contests.btn2') %></a></p>
+  </div>
+  <div class="lp-offer">
+    <h3><%= t('landing.offers.giftcards.title') %></h3>
+    <p><%= t('landing.offers.giftcards.text') %></p>
+    <p><a class="btn" href="/gift-cards/buy"><%= t('landing.offers.giftcards.btn') %></a></p>
+  </div>
+  <div class="lp-offer">
+    <h3><%= t('landing.offers.app.title') %></h3>
+    <p><%= t('landing.offers.app.text') %></p>
+    <p class="price"><%= t('landing.offers.app.price', {price: fmtMoney(199)}) %></p>
+    <p><a class="btn" href="#app"><%= t('landing.offers.app.btn') %></a></p>
+  </div>
+</div>
+
+<h2><%= t('landing.showcase.title') %></h2>
+<div class="lp-showcase">
+  <figure>
+    <img src="/img/landing/premade.webp" alt="<%= t('landing.showcase.premade.alt') %>" loading="lazy">
+    <figcaption><strong><%= t('landing.showcase.premade.cap_title') %></strong> &mdash; <%= t('landing.showcase.premade.cap_text') %></figcaption>
+  </figure>
+  <figure>
+    <img src="/img/landing/custom.webp" alt="<%= t('landing.showcase.custom.alt') %>" loading="lazy">
+    <figcaption><strong><%= t('landing.showcase.custom.cap_title') %></strong> &mdash; <%= t('landing.showcase.custom.cap_text') %></figcaption>
+  </figure>
+  <figure>
+    <img src="/img/landing/shop.webp" alt="<%= t('landing.showcase.shop.alt') %>" loading="lazy">
+    <figcaption><strong><%= t('landing.showcase.shop.cap_title') %></strong> &mdash; <%= t('landing.showcase.shop.cap_text') %></figcaption>
+  </figure>
+</div>
+
+<h2><%= t('landing.steps.title') %></h2>
+<div class="lp-steps">
+  <div class="lp-step"><span class="num">1</span><h3><%= t('landing.steps.s1.title') %></h3><p><%= t('landing.steps.s1.text') %></p></div>
+  <div class="lp-step"><span class="num">2</span><h3><%= t('landing.steps.s2.title') %></h3><p><%= t('landing.steps.s2.text') %></p></div>
+  <div class="lp-step"><span class="num">3</span><h3><%= t('landing.steps.s3.title') %></h3><p><%= t('landing.steps.s3.text') %></p></div>
+</div>
+
+<div class="lp-cta-band">
+  <h2><%= t('landing.cta.title') %></h2>
+  <p><%= t('landing.cta.text') %></p>
+  <p><a class="btn" href="/membership"><%= t('landing.cta.designer_btn', {price: fmtMoney(567)}) %></a> <a class="btn btn-secondary" href="/membership"><%= t('landing.cta.shop_btn', {price: fmtMoney(10398)}) %></a></p>
+</div>
+
+<section class="card" id="app">
+  <% if (playStoreUrl || appStoreUrl) { %>
+  <h2><%= t('home.app_title_live') %></h2>
+  <p><%= t('home.app_text_live') %></p>
+  <p><% if (playStoreUrl) { %><a class="btn" href="<%= playStoreUrl %>"><%= t('home.get_play') %></a><% } %> <% if (appStoreUrl) { %><a class="btn" href="<%= appStoreUrl %>"><%= t('home.get_appstore') %></a><% } %></p>
+  <% if (!appStoreUrl) { %>
+  <p class="muted"><%= t('home.ios_soon') %></p>
+  <form method="post" action="/app-notify" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <input type="hidden" name="platform" value="ios">
+    <input type="email" name="email" maxlength="120" required placeholder="you@example.com" aria-label="<%= t('home.ios_soon') %>">
+    <button type="submit"><%= t('home.notify_me') %></button>
+  </form>
+  <% } %>
+  <% } else { %>
+  <h2><%= t('home.app_title_soon') %></h2>
+  <p><%= t('home.app_text_soon') %></p>
+  <form method="post" action="/app-notify" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <input type="email" name="email" maxlength="120" required placeholder="you@example.com" aria-label="<%= t('home.notify_me') %>">
+    <button type="submit"><%= t('home.notify_me') %></button>
+  </form>
+  <% } %>
+</section>

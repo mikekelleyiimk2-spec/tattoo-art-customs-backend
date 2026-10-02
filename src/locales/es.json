@@ -282,6 +282,104 @@
     "yt_text": "Flash drops diarios, timelapses de customs y guías de aftercare. Videos nuevos cada día — suscríbete para no perderte ningún drop.",
     "yt_title": "🎥 Estamos en YouTube — suscríbete"
   },
+  "landing": {
+    "hero": {
+      "brand": "Tattoo Art Customs™",
+      "sub": "Diseños de tatuaje originales y arte personalizado hecho para ti: todo el proceso en un solo lugar.",
+      "search_placeholder": "Encuentra tu próximo tatuaje… prueba «koi», «rose», «skull»",
+      "search_aria": "Buscar diseños",
+      "search_btn": "Buscar",
+      "img_alt": "Muestra vibrante de arte de tatuaje a todo color"
+    },
+    "offers": {
+      "title": "Todo lo que hacemos",
+      "premade": {
+        "title": "Diseños listos",
+        "text": "Cientos de diseños originales, listos para comprar y llevar a tu tatuador. A todo color + linework limpio incluidos.",
+        "price": "{price} ({sale} en la venta del sábado)",
+        "btn": "Ver la galería"
+      },
+      "custom": {
+        "title": "Diseños personalizados",
+        "text": "Tu idea, dibujada solo para ti por un diseñador de verdad. Pieza única: nunca se revende, hecha a tu medida.",
+        "price": "{price} ({sale} en la venta del sábado)",
+        "btn": "Pedir arte personalizado"
+      },
+      "membership": {
+        "title": "Membresías",
+        "text": "Precios más bajos en personalizados, acceso anticipado a nuevos diseños y ventajas para coleccionistas.",
+        "price": "{price}/mes",
+        "btn": "Ver planes"
+      },
+      "shops": {
+        "title": "Estudios de tatuaje",
+        "text": "Un hogar verificado para tu estudio: gana el 20 % en cada referido verificado; herramientas pro de reservas y galerías de trabajos cicatrizados en camino para los dueños.",
+        "price": "Planes para estudios {price}/año",
+        "btn": "Panel del estudio"
+      },
+      "tees": {
+        "title": "Mike's Custom Tees™",
+        "text": "Nuestros diseños en playeras premium. Viste el arte.",
+        "btn": "Comprar playeras"
+      },
+      "contests": {
+        "title": "Concursos y rifa",
+        "text": "Concursos de diseño con premios en efectivo, más una rifa gratuita: gana diseños gratis y meses de membresía.",
+        "btn1": "Concursos",
+        "btn2": "Rifa"
+      },
+      "giftcards": {
+        "title": "Tarjetas de regalo",
+        "text": "Regala tinta. Tarjetas válidas para diseños, personalizados y membresías.",
+        "btn": "Comprar tarjeta de regalo"
+      },
+      "app": {
+        "title": "La app",
+        "text": "Todo el marketplace en tu bolsillo: explora, compra y gestiona tu colección donde sea.",
+        "price": "{price} pago único",
+        "btn": "Descargar la app"
+      }
+    },
+    "showcase": {
+      "title": "Mira el trabajo",
+      "premade": {
+        "alt": "Diseños flash de tatuaje listos, a todo color",
+        "cap_title": "Flash listos",
+        "cap_text": "diseños originales en todos los estilos, listos hoy."
+      },
+      "custom": {
+        "alt": "Diseñador bocetando un tatuaje personalizado",
+        "cap_title": "Hecho para ti",
+        "cap_text": "piezas personalizadas dibujadas según tu idea exacta."
+      },
+      "shop": {
+        "alt": "Estudio profesional de tatuaje trabajando",
+        "cap_title": "Bien tatuado",
+        "cap_text": "estudios verificados que llevan el arte a la piel."
+      }
+    },
+    "steps": {
+      "title": "Cómo funciona",
+      "s1": {
+        "title": "Encuentra tu arte",
+        "text": "Busca en la galería o describe la pieza de tus sueños."
+      },
+      "s2": {
+        "title": "Cómpralo",
+        "text": "Descarga instantánea a todo color + linework, o encarga un personalizado."
+      },
+      "s3": {
+        "title": "Tatúate",
+        "text": "Llévalo a tu tatuador: tu tinta, tu historia, lista para la piel."
+      }
+    },
+    "cta": {
+      "title": "¿Eres artista o estudio?",
+      "text": "Vende tus diseños a coleccionistas de todo el mundo, quédate hasta el 80 % de cada venta y deja que te descubran clientes buscando su próxima pieza.",
+      "designer_btn": "Unirme como diseñador: {price}/mes",
+      "shop_btn": "Registrar mi estudio: {price}/año"
+    }
+  },
   "membership": {
     "annual_soon": "Plan anual próximamente",
     "annual_soon_tail": "— el plan anual se está configurando. El plan mensual ya está listo.",
