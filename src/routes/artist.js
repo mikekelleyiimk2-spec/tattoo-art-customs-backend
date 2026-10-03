@@ -19,7 +19,7 @@ const { commissionSuspendedUntil } = require('../lib/commissions');
 const { registerPayoutRoutes, payoutDashboardData } = require('../lib/payoutRoutes');
 const { upsertProfile } = require('../lib/profiles');
 const pricing = require('../lib/pricing');
-const { DESIGN_STYLES, portfolioUploadMulter, handlePortfolioUpload } = require('../lib/portfolioUpload');
+const { DESIGN_STYLES, portfolioUploadMulter, batchUploadMulter, BATCH_MAX_ITEMS, handlePortfolioUpload, uploadOneDesign } = require('../lib/portfolioUpload');
 // notifyColorizationNeeded/notifyDesignLive are called by the admin-side
 // colorization workflow (src/lib/colorization.js); the designer side only
 // receives informational notifications — there is no approval gate here.
@@ -66,6 +66,66 @@ router.get('/portfolio/upload', async (req, res) => {
     styles: DESIGN_STYLES, action: '/artist/portfolio/upload',
     customPrice: pricing.customFullCents(), premadePrice: pricing.premadePriceCents(),
     metaDescription: '', remake,
+  });
+});
+
+// ---- Batch upload: up to BATCH_MAX_ITEMS designs in one submission.
+// Per-item: linework_N (required), color_N (optional), title_N, style_N.
+// Shared across the batch: description, categories, listing_type,
+// watermark_choice (+ one shared watermark file), sensitivity.
+router.get('/portfolio/upload-batch', async (req, res) => {
+  res.render('artist/portfolio-upload-batch', {
+    title: 'Batch upload — Tattoo Art Customs',
+    styles: DESIGN_STYLES, maxItems: BATCH_MAX_ITEMS,
+    customPrice: pricing.customFullCents(), premadePrice: pricing.premadePriceCents(),
+    metaDescription: '',
+  });
+});
+
+router.post('/portfolio/upload-batch', formLimiter, (req, res, next) => {
+  batchUploadMulter(req, res, (err) => {
+    if (err) { req.session.flash = err.message; return res.redirect('/artist/portfolio/upload-batch'); }
+    next();
+  });
+}, checkHoneypot, async (req, res) => {
+  const byField = {};
+  for (const f of (req.files || [])) byField[f.fieldname] = f;
+  const shared = {
+    description: req.body.description,
+    categories: req.body.categories,
+    listing_type: req.body.listing_type,
+    watermark_choice: req.body.watermark_choice,
+    sensitivity: req.body.sensitivity,
+    remake: '',
+  };
+  const results = [];
+  for (let i = 0; i < BATCH_MAX_ITEMS; i++) {
+    const lw = byField[`linework_${i}`];
+    if (!lw) continue; // empty row — skip
+    const fields = {
+      ...shared,
+      title: req.body[`title_${i}`],
+      style: req.body[`style_${i}`],
+    };
+    try {
+      const r = await uploadOneDesign(req.user, {
+        linework: lw,
+        color: byField[`color_${i}`] || null,
+        watermark: byField['watermark'] || null,
+      }, fields);
+      results.push({ index: i, ...r });
+    } catch (e) {
+      console.error('batch upload item failed:', e.message);
+      results.push({ index: i, ok: false, error: 'Upload failed — please try this one again.' });
+    }
+  }
+  if (!results.length) {
+    req.session.flash = 'Add at least one linework image to upload.';
+    return res.redirect('/artist/portfolio/upload-batch');
+  }
+  res.render('artist/portfolio-upload-result', {
+    title: 'Batch upload results — Tattoo Art Customs',
+    results, metaDescription: '',
   });
 });
 

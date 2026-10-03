@@ -1,0 +1,22 @@
+<h1>Batch upload results</h1>
+<% const good = results.filter(function(r) { return r.ok; }); %>
+<% const bad = results.filter(function(r) { return !r.ok; }); %>
+<p class="card"><strong><%= good.length %></strong> piece<%= good.length === 1 ? '' : 's' %> uploaded<%= bad.length ? `, <strong>${bad.length}</strong> failed` : '' %>.</p>
+<% if (good.length) { %>
+<h2>Uploaded</h2>
+<ul>
+  <% good.forEach(function(r) { %>
+  <li><strong><%= r.title %></strong> — <%= r.selfApproved ? 'live now' : (r.finalStatus === 'on_hold' ? 'on hold for admin review' : 'sent for review') %></li>
+  <% }); %>
+</ul>
+<% } %>
+<% if (bad.length) { %>
+<h2>Needs attention</h2>
+<ul>
+  <% bad.forEach(function(r) { %>
+  <li><strong>Piece <%= r.index + 1 %></strong>: <%= r.error %></li>
+  <% }); %>
+</ul>
+<p class="muted">Fix the rows above and upload them again — everything that succeeded is already saved.</p>
+<% } %>
+<p><a class="btn" href="/artist/portfolio">Go to my portfolio</a> <a class="btn btn-secondary" href="/artist/portfolio/upload-batch">Upload another batch</a></p>

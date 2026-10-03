@@ -2932,6 +2932,35 @@ async function main() {
   // per-admin notification fanout (sale watch) see the original admin set.
   sdb.prepare("UPDATE users SET role = 'customer' WHERE email = 'plainadmin@test.local'").run();
 
+  // Batch upload: one submission, several designs. Two valid rows + one
+  // row missing its title (fails validation) + one empty row (skipped).
+  // Partial failure saves what succeeded and reports the failure per item.
+  r = await artreq('GET', '/artist/portfolio/upload-batch');
+  ok(r.status === 200 && r.text.includes('Batch upload'), 'batch upload form renders');
+  r = await mpost('/artist/portfolio/upload-batch',
+    {
+      title_0: 'Batch Piece One', style_0: 'japanese',
+      title_1: 'Batch Piece Two', style_1: 'traditional',
+      title_2: '', style_2: 'japanese', // missing title -> per-item error
+      description: 'Batch test run.', listing_type: 'predesign',
+      watermark_choice: 'site', sensitivity: 'normal',
+    },
+    {
+      linework_0: { buffer: lwBuf, filename: 'b0.png', type: 'image/png' },
+      color_0: { buffer: colorBuf, filename: 'b0c.jpg', type: 'image/jpeg' },
+      linework_1: { buffer: lwBuf, filename: 'b1.png', type: 'image/png' },
+      linework_2: { buffer: lwBuf, filename: 'b2.png', type: 'image/png' },
+    },
+    artJar);
+  ok(r.status === 200 && r.text.includes('Batch upload results'), 'batch upload renders a results page');
+  const b1 = sdb.prepare('SELECT status FROM designs WHERE title = ?').get('Batch Piece One');
+  const b2 = sdb.prepare('SELECT status FROM designs WHERE title = ?').get('Batch Piece Two');
+  const b3 = sdb.prepare("SELECT COUNT(*) AS c FROM designs WHERE title = ''").get().c;
+  ok(b1 && b2, 'both valid batch rows were saved');
+  ok(b3 === 0, 'the row missing its title was not saved');
+  ok(r.text.includes('Give your design a title.'), 'per-item validation error reported on the results page');
+  ok(r.text.includes('1 failed') || r.text.includes('<strong>1</strong> failed'), 'results page counts the failure');
+
   // First-sale watcher: every paid order notifies the owner with a
   // verification report; the ledger must sum exactly to the net sale.
   const { watchOrderPaid, watchSubscriptionActive } = require('../src/lib/saleWatch');

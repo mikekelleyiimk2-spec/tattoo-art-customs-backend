@@ -95,36 +95,53 @@ async function maybeBookReviewFee(userId, designId) {
   }
 }
 
-async function handlePortfolioUpload(req, res, backUrl) {
-  const files = req.files || {};
-  if (!files.linework) {
-    req.session.flash = 'A clean linework image is required.';
-    return res.redirect(backUrl);
-  }
+// Batch upload limits: at most BATCH_MAX_ITEMS designs per submission.
+const BATCH_MAX_ITEMS = 10;
+
+// Multer for the batch form: files arrive as linework_0..N, color_0..N plus
+// one shared `watermark` file. .any() keeps the indexed field names flexible.
+const batchUploadMulter = multer({
+  storage: portfolioStorage,
+  limits: { fileSize: 15 * 1024 * 1024, files: BATCH_MAX_ITEMS * 3 + 1 },
+  fileFilter: (req, file, cb) => {
+    if (/^image\/(jpeg|png|webp)$/.test(file.mimetype)) cb(null, true);
+    else cb(new Error('Only JPG, PNG, or WebP images are allowed.'));
+  },
+}).any();
+
+// Core single-design upload, shared by the single-file and batch flows.
+// user: the logged-in user object.
+// fileSet: { linework, color?, watermark? } — multer file objects.
+// fields: { title, style, description, categories, listing_type,
+//   watermark_choice, sensitivity, remake }.
+// Returns { ok:true, id, title, listingType, finalStatus, selfApproved,
+//   holdForHate, screenOk, colorSource, sensitivity, wmNote, reviewFeeNote }
+// or { ok:false, error }. Never redirects — callers decide the response.
+async function uploadOneDesign(user, fileSet, fields) {
+  const files = {
+    linework: fileSet.linework ? [fileSet.linework] : null,
+    color: fileSet.color ? [fileSet.color] : null,
+    watermark: fileSet.watermark ? [fileSet.watermark] : null,
+  };
+  if (!files.linework) return { ok: false, error: 'A clean linework image is required.' };
   const hasColor = !!(files.color && files.color[0]);
   const colorSource = hasColor ? 'designer' : 'none';
-  const title = String(req.body.title || '').trim().slice(0, 120);
-  if (!title) {
-    req.session.flash = 'Give your design a title.';
-    return res.redirect(backUrl);
-  }
-  const style = String(req.body.style || '').trim().toLowerCase();
-  if (!DESIGN_STYLES.includes(style)) {
-    req.session.flash = 'Pick a style for your design.';
-    return res.redirect(backUrl);
-  }
-  const description = String(req.body.description || '').trim().slice(0, 2000);
-  const extraCats = String(req.body.categories || '').split(',')
+  const title = String(fields.title || '').trim().slice(0, 120);
+  if (!title) return { ok: false, error: 'Give your design a title.' };
+  const style = String(fields.style || '').trim().toLowerCase();
+  if (!DESIGN_STYLES.includes(style)) return { ok: false, error: 'Pick a style for your design.' };
+  const description = String(fields.description || '').trim().slice(0, 2000);
+  const extraCats = String(fields.categories || '').split(',')
     .map((c) => c.trim().toLowerCase().replace(/[^a-z0-9- ]/g, '').slice(0, 40))
     .filter(Boolean).filter((c) => c !== style).slice(0, 11);
   // Listing type: default CUSTOM (portfolio only, custom-design price).
   // PRE-DESIGN opt-in: also listed on the main gallery at the premade price.
-  const listingType = req.body.listing_type === 'predesign' ? 'predesign' : 'custom';
+  const listingType = fields.listing_type === 'predesign' ? 'predesign' : 'custom';
   const listingScope = listingType === 'predesign' ? 'gallery' : 'portfolio';
   // Watermark choice: default 'site'. 'custom' uses the uploaded file, or the
   // mark the artist built on-site (dark-on-transparent, rendered inverted so
   // the dark ink shows) when no file was attached.
-  const watermarkChoice = req.body.watermark_choice === 'custom' ? 'custom' : 'site';
+  const watermarkChoice = fields.watermark_choice === 'custom' ? 'custom' : 'site';
   let customWatermarkPath = '';
   let customWatermarkInvert = false;
   if (watermarkChoice === 'custom') {
@@ -132,12 +149,11 @@ async function handlePortfolioUpload(req, res, backUrl) {
       customWatermarkPath = path.relative(config.uploadDir, files.watermark[0].path);
     } else {
       const builder = require('./watermarkBuilder');
-      if (builder.defaultMarkExists(req.user.id)) {
-        customWatermarkPath = builder.defaultMarkRel(req.user.id);
+      if (builder.defaultMarkExists(user.id)) {
+        customWatermarkPath = builder.defaultMarkRel(user.id);
         customWatermarkInvert = true;
       } else {
-        req.session.flash = 'Upload your watermark image, or build a theft-resistant mark on-site first — then pick "my own watermark" with no file needed.';
-        return res.redirect(backUrl);
+        return { ok: false, error: 'Upload your watermark image, or build a theft-resistant mark on-site first — then pick "my own watermark" with no file needed.' };
       }
     }
   }
@@ -146,9 +162,9 @@ async function handlePortfolioUpload(req, res, backUrl) {
   // Content rating (owner policy): nudity allowed; sexual acts / highly
   // offensive content is blurred for the public preview; racist material is
   // held for admin-only review. Artist self-declares; admins can adjust.
-  const sensitivity = SENSITIVITIES.includes(String(req.body.sensitivity || '').toLowerCase())
-    ? String(req.body.sensitivity).toLowerCase() : 'normal';
-  const holdForHate = String(req.body.sensitivity || '').toLowerCase() === 'racist';
+  const sensitivity = SENSITIVITIES.includes(String(fields.sensitivity || '').toLowerCase())
+    ? String(fields.sensitivity).toLowerCase() : 'normal';
+  const holdForHate = String(fields.sensitivity || '').toLowerCase() === 'racist';
   const id = await db.insert('designs', {
     title,
     description,
@@ -161,7 +177,7 @@ async function handlePortfolioUpload(req, res, backUrl) {
     linework_wm_path: '', // set by the watermark pipeline below
     sensitivity,
     price_cents: listingType === 'custom' ? pricing.customFullCents() : pricing.premadePriceCents(),
-    artist_id: req.user.id,
+    artist_id: user.id,
     listing_scope: listingScope,
     listing_type: listingType,
     watermark_choice: watermarkChoice,
@@ -186,16 +202,16 @@ async function handlePortfolioUpload(req, res, backUrl) {
   // bookkeeping can never break the upload itself.
   let reviewFeeNote = '';
   try {
-    const fee = await maybeBookReviewFee(req.user.id, id);
+    const fee = await maybeBookReviewFee(user.id, id);
     if (fee.note) reviewFeeNote = fee.note;
   } catch (e) {
     console.error('review fee hook failed for design', id, e.message);
   }
   // Remake upload: link this new piece to the sold custom piece it replaces.
   // The replacement request closes when the remake is approved.
-  if (req.body.remake) {
+  if (fields.remake) {
     const { linkRemake } = require('./replacements');
-    await linkRemake(String(req.body.remake), id, req.user.id);
+    await linkRemake(String(fields.remake), id, user.id);
   }
   // Generate the public watermarked linework now, with the artist's choice.
   // If generation fails, the design stays pending and the admin can attach
@@ -241,17 +257,17 @@ async function handlePortfolioUpload(req, res, backUrl) {
   let finalStatus = holdForHate ? 'on_hold' : (screen.ok ? 'pending' : 'flagged');
   let selfApproved = false;
   try {
-    const uploader = await db.get('SELECT auto_approve_uploads FROM users WHERE id = ?', [req.user.id]);
-    if ((uploader && uploader.auto_approve_uploads) || isHeadAdmin(req.user)) {
+    const uploader = await db.get('SELECT auto_approve_uploads FROM users WHERE id = ?', [user.id]);
+    if ((uploader && uploader.auto_approve_uploads) || isHeadAdmin(user)) {
       finalStatus = 'approved';
       selfApproved = true;
-      await db.update('designs', id, { status: 'approved', approved_by: req.user.id });
+      await db.update('designs', id, { status: 'approved', approved_by: user.id });
       try { await notifyDesignLive(id, 'self-approved'); } catch (e) { console.error('self-approve live notify failed:', e.message); }
     }
   } catch (e) { console.error('self-approve check failed:', e.message); }
   if (!selfApproved) {
   try {
-    const artistName = (req.user.display_name || req.user.email || 'A designer');
+    const artistName = (user.display_name || user.email || 'A designer');
     await notifyAdmins({
       kind: 'design_pending',
       title: `New piece needs review: "${title}"`,
@@ -269,17 +285,6 @@ async function handlePortfolioUpload(req, res, backUrl) {
     console.error('admin notify failed for design', id, e.message);
   }
   }
-  req.session.flash = (selfApproved
-    ? 'Art uploaded \u2014 it\u2019s live now (you approve your own pieces).'
-    : (holdForHate
-    ? 'Art uploaded and placed on hold — an admin will personally review it and decide.'
-    : (screen.ok
-      ? ((listingType === 'predesign'
-        ? 'Pre-design uploaded — it goes live in the gallery and your portfolio after approval (within 2 hours).'
-        : 'Custom portfolio piece uploaded — it goes live in your portfolio after approval (within 2 hours).') +
-        (colorSource === 'none' ? ' It posts with your linework; we\u2019ll create the color version too.' : '') +
-        (sensitivity === 'explicit' ? ' Rated explicit — the public preview is blurred.' : ''))
-      : 'Art uploaded but flagged for review (possible contact info). An admin will review it.'))) + wmNote + reviewFeeNote;
   if (colorSource === 'none' && screen.ok) {
     // Tell the owner a color version needs creating (the assistant creates
     // it in a work session; attaching happens in /admin/colorization).
@@ -290,7 +295,53 @@ async function handlePortfolioUpload(req, res, backUrl) {
       console.error('colorization notify failed for design', id, e.message);
     }
   }
+  return {
+    ok: true, id, title, listingType, finalStatus, selfApproved,
+    holdForHate, screenOk: screen.ok, colorSource, sensitivity, wmNote, reviewFeeNote,
+  };
+}
+
+// Flash message for a single upload result — the exact wording the
+// single-file flow has always shown.
+function uploadFlash(r) {
+  return (r.selfApproved
+    ? 'Art uploaded — it\u2019s live now (you approve your own pieces).'
+    : (r.holdForHate
+    ? 'Art uploaded and placed on hold — an admin will personally review it and decide.'
+    : (r.screenOk
+      ? ((r.listingType === 'predesign'
+        ? 'Pre-design uploaded — it goes live in the gallery and your portfolio after approval (within 2 hours).'
+        : 'Custom portfolio piece uploaded — it goes live in your portfolio after approval (within 2 hours).') +
+        (r.colorSource === 'none' ? ' It posts with your linework; we\u2019ll create the color version too.' : '') +
+        (r.sensitivity === 'explicit' ? ' Rated explicit — the public preview is blurred.' : ''))
+      : 'Art uploaded but flagged for review (possible contact info). An admin will review it.'))) + r.wmNote + r.reviewFeeNote;
+}
+
+// Single-file flow: thin wrapper around uploadOneDesign. Redirects back with
+// a flash message on validation errors, and to the portfolio on success —
+// exactly as before.
+async function handlePortfolioUpload(req, res, backUrl) {
+  const files = req.files || {};
+  const r = await uploadOneDesign(req.user, {
+    linework: files.linework && files.linework[0],
+    color: files.color && files.color[0],
+    watermark: files.watermark && files.watermark[0],
+  }, {
+    title: req.body.title,
+    style: req.body.style,
+    description: req.body.description,
+    categories: req.body.categories,
+    listing_type: req.body.listing_type,
+    watermark_choice: req.body.watermark_choice,
+    sensitivity: req.body.sensitivity,
+    remake: req.body.remake,
+  });
+  if (!r.ok) {
+    req.session.flash = r.error;
+    return res.redirect(backUrl);
+  }
+  req.session.flash = uploadFlash(r);
   res.redirect('/artist/portfolio');
 }
 
-module.exports = { DESIGN_STYLES, portfolioUploadMulter, handlePortfolioUpload, maybeBookReviewFee };
+module.exports = { DESIGN_STYLES, portfolioUploadMulter, batchUploadMulter, BATCH_MAX_ITEMS, handlePortfolioUpload, uploadOneDesign, uploadFlash, maybeBookReviewFee };

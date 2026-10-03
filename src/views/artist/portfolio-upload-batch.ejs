@@ -1,0 +1,54 @@
+<h1>Batch upload</h1>
+<p class="muted">Upload up to <strong><%= maxItems %></strong> pieces in one go. Each row needs its own linework image and title — everything below the rows is shared across the whole batch. Rows you leave empty are skipped.</p>
+<p><a href="/artist/portfolio/upload">&larr; Single upload</a></p>
+<form method="post" action="/artist/portfolio/upload-batch" enctype="multipart/form-data" class="form">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <% for (let i = 0; i < maxItems; i++) { %>
+  <fieldset class="card" style="margin-bottom:1rem">
+    <legend><strong>Piece <%= i + 1 %></strong></legend>
+    <label for="linework_<%= i %>">Linework image (JPG/PNG/WebP, max 15 MB)</label>
+    <input type="file" id="linework_<%= i %>" name="linework_<%= i %>" accept="image/jpeg,image/png,image/webp">
+    <label for="color_<%= i %>">Color image (optional)</label>
+    <input type="file" id="color_<%= i %>" name="color_<%= i %>" accept="image/jpeg,image/png,image/webp">
+    <label for="title_<%= i %>">Title</label>
+    <input type="text" id="title_<%= i %>" name="title_<%= i %>" maxlength="120">
+    <label for="style_<%= i %>">Style</label>
+    <select id="style_<%= i %>" name="style_<%= i %>">
+      <option value="">— pick a style —</option>
+      <% styles.forEach(function(s) { %><option value="<%= s %>"><%= s %></option><% }); %>
+    </select>
+  </fieldset>
+  <% } %>
+
+  <h2>Shared for the whole batch</h2>
+  <label for="description">Description (applies to every piece)</label>
+  <textarea id="description" name="description" maxlength="2000"></textarea>
+  <label for="categories">Extra categories (comma-separated, optional)</label>
+  <input type="text" id="categories" name="categories" maxlength="300">
+
+  <h2>Listing type</h2>
+  <label><input type="radio" name="listing_type" value="custom" checked>
+    <strong>Custom portfolio pieces</strong> — sell at the custom-design price (currently <%= money(customPrice) %>), shown <strong>only in your portfolio</strong>.</label>
+  <label><input type="radio" name="listing_type" value="predesign">
+    <strong>Pre-designs</strong> — also listed on the <strong>main design gallery</strong> at the pre-design price (currently <%= money(premadePrice) %>).</label>
+
+  <h2>Watermark</h2>
+  <p class="muted"><strong>The site's solid-black anti-trace marks are applied in both cases.</strong></p>
+  <label><input type="radio" name="watermark_choice" value="site" checked>
+    <strong>Site watermark</strong> — applied automatically to every piece.</label>
+  <label><input type="radio" name="watermark_choice" value="custom">
+    <strong>My own watermark</strong> — upload your watermark image below, or leave blank to use your on-site mark.</label>
+  <label for="watermark">Your watermark image (JPG/PNG/WebP, max 15 MB)</label>
+  <input type="file" id="watermark" name="watermark" accept="image/jpeg,image/png,image/webp">
+
+  <h2>Content rating</h2>
+  <label for="sensitivity">Content rating (applies to every piece)</label>
+  <select id="sensitivity" name="sensitivity">
+    <option value="normal" selected>Normal</option>
+    <option value="nude">Contains nudity</option>
+    <option value="explicit">Explicit — sexual acts or highly offensive content (preview blurred)</option>
+    <option value="racist">Contains racist/hateful content (held for admin review)</option>
+  </select>
+
+  <p><button class="btn" type="submit">Upload batch</button></p>
+</form>

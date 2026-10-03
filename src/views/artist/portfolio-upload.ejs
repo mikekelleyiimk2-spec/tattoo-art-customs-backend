@@ -3,6 +3,7 @@
 <p class="card" style="border:2px solid #6a4fb3"><strong>Remake upload:</strong> this piece will replace your sold custom piece <strong><%= remake.title %></strong> once approved. Keep it a custom portfolio piece in the same style.</p>
 <% } %>
 <p class="muted">Your piece goes live in <strong>your portfolio</strong> after admin approval. Choose below whether it also appears on the main gallery as a pre-design.</p>
+<p><a href="/artist/portfolio/upload-batch">Uploading several pieces? Use the batch uploader &rarr;</a></p>
 <form method="post" action="<%= action %>" enctype="multipart/form-data" class="form">
   <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
   <% if (typeof remake !== 'undefined' && remake) { %><input type="hidden" name="remake" value="<%= remake.id %>"><% } %>
