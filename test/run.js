@@ -3658,9 +3658,67 @@ async function main() {
     const ar = await areq('GET', '/admin/contests');
     ok(ar.status === 200 && ar.text.includes('Design contests'), 'admin contest list renders');
   }
+
+  console.log('email-to-upload ingestion:');
+  const INGEST_URL = `http://localhost:${PORT}/api/ingest/email-upload`;
+  const SERVICE_TOKEN = process.env.MUSE_SERVICE_TOKEN;
+  function ingestPost(fields, files, token) {
+    const fd = new FormData();
+    for (const [k, v] of Object.entries(fields || {})) fd.append(k, v);
+    for (const f of files || []) fd.append('files', new Blob([f.buf], { type: f.type }), f.name);
+    const headers = {};
+    if (token !== undefined) headers.authorization = `Bearer ${token}`;
+    return fetch(INGEST_URL, { method: 'POST', headers, body: fd })
+      .then(async (res) => ({ status: res.status, json: await res.json() }));
+  }
+  // happy path: single image from a designer account → pending listing attributed to sender
+  r = await ingestPost(
+    { sender_email: 'banner@test.local', subject: 'Flash Pack', body_text: 'Email batch.' },
+    [{ buf: lwBuf, type: 'image/png', name: 'mail-art.png' }],
+    SERVICE_TOKEN);
+  ok(r.status === 200 && r.json.ok === true, 'email-upload happy path: 200 ok:true');
+  ok(r.json.results.length === 1 && r.json.results[0].ok === true, 'email-upload happy path: one per-item success');
+  ok(r.json.results[0].title.includes('Flash Pack'), 'email-upload: subject used as title prefix');
+  const ingestDesignId = r.json.results[0].id;
+  const ingestRow = sdb.prepare('SELECT artist_id, title, description, status FROM designs WHERE id = ?').get(ingestDesignId);
+  ok(ingestRow && ingestRow.artist_id === bannerArtistId && ingestRow.status === 'pending',
+    'email-upload: design attributed to sender, pending for non-owner designer');
+  ok(ingestRow.title.includes('Flash Pack') && ingestRow.description === 'Email batch.',
+    'email-upload: title prefix and shared description persisted');
+  // zip via the endpoint: images extracted, non-images ignored
+  const emailZip = makeZip([
+    { name: 'inbox-flower.jpg', data: lwBuf, deflate: 1 },
+    { name: 'notes.txt', data: Buffer.from('not an image') },
+  ]);
+  r = await ingestPost({ sender_email: 'banner@test.local' },
+    [{ buf: emailZip, type: 'application/zip', name: 'inbox.zip' }], SERVICE_TOKEN);
+  ok(r.status === 200 && r.json.results.length === 1 && r.json.results[0].ok === true,
+    'email-upload zip: image extracted into a listing, non-image ignored');
+  ok(r.json.results[0].title.includes('inbox-flower'), 'email-upload zip: title from filename');
+  // unknown sender → 422
+  r = await ingestPost({ sender_email: 'nobody@test.local' },
+    [{ buf: lwBuf, type: 'image/png', name: 'x.png' }], SERVICE_TOKEN);
+  ok(r.status === 422 && r.json.error === 'unknown_sender', 'email-upload: unknown sender → 422 unknown_sender');
+  // sender without upload rights → 422
+  await db.insert('users', { email: 'norights@test.local', password_hash: 'x', role: 'customer', display_name: 'NR' });
+  r = await ingestPost({ sender_email: 'norights@test.local' },
+    [{ buf: lwBuf, type: 'image/png', name: 'y.png' }], SERVICE_TOKEN);
+  ok(r.status === 422 && r.json.error === 'no_upload_rights', 'email-upload: sender without rights → 422 no_upload_rights');
+  // bad / missing token → 401
+  r = await ingestPost({ sender_email: 'banner@test.local' },
+    [{ buf: lwBuf, type: 'image/png', name: 'z.png' }], 'wrong-token');
+  ok(r.status === 401 && r.json.error === 'unauthorized', 'email-upload: bad token → 401');
+  r = await ingestPost({ sender_email: 'banner@test.local' },
+    [{ buf: lwBuf, type: 'image/png', name: 'z2.png' }], undefined);
+  ok(r.status === 401, 'email-upload: missing token → 401');
+  // NOTE: the 404-when-MUSE_SERVICE_TOKEN-is-unset path cannot be toggled
+  // from here — the app runs in a child process with a copied env — but it
+  // is the same live-read serviceToken() check as /api/muse/notify.
+
   sdb.close();
   server.kill();
   await new Promise((res2) => server.on('exit', res2));
+
 
   console.log(failures === 0 ? '\nALL TESTS PASSED' : `\n${failures} TEST(S) FAILED`);
   process.exit(failures === 0 ? 0 : 1);
