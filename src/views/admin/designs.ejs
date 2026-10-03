@@ -55,9 +55,9 @@
           <button class="btn btn-secondary" type="submit">Hold</button>
         </form>
         <% } %>
-        <form method="post" action="/admin/designs/<%= d.id %>/delete" style="display:inline" onsubmit="return confirm('Delete this piece permanently? This cannot be undone.');">
+        <form method="post" action="/admin/designs/<%= d.id %>/delete" style="display:inline" class="del-form">
           <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-          <button class="linklike" type="submit">Delete</button>
+          <button class="linklike del-btn" type="submit">Delete</button>
         </form>
         <% } %>
       </td>
@@ -65,4 +65,20 @@
   <% }); %>
   </tbody>
 </table>
+<script>
+// Two-step delete confirmation (no native confirm() dialog, so it works with
+// keyboard, automation, and mobile browsers): first click arms, second submits.
+document.querySelectorAll('form.del-form').forEach(function(f) {
+  f.addEventListener('submit', function(e) {
+    if (!f.dataset.armed) {
+      e.preventDefault();
+      f.dataset.armed = '1';
+      var btn = f.querySelector('.del-btn');
+      btn.textContent = 'Confirm delete?';
+      btn.style.color = '#c00';
+      btn.style.fontWeight = 'bold';
+    }
+  });
+});
+</script>
 <p class="muted">Before approving an artist upload, make sure its watermarked linework was generated (the pipeline stores it under the uploads dir, served at <code>/img/designs/</code>) and the <code>linework_wm_path</code> is set.</p>
