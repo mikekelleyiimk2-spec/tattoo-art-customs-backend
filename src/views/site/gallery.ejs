@@ -1,5 +1,9 @@
 <h1><%= t('gallery.title') %></h1>
 <p class="muted"><%= t('gallery.sub') %></p>
+<p>
+  <a class="btn<%= sort === 'newest' ? '' : ' btn-secondary' %>" href="<%= newestUrl %>"><%= t('gallery.sort_newest') %></a>
+  <a class="btn<%= sort === 'newest' ? ' btn-secondary' : '' %>" href="<%= allUrl %>"><%= t('gallery.sort_all') %></a>
+</p>
 <% if (sale) { %><div class="sale-banner" role="status"><%= t('gallery.sale_banner', {price: fmtMoney(premadePrice)}) %></div><% } %>
 <% if (vatNote) { %><p class="muted fineprint"><%= vatNote %></p><% } %>
 

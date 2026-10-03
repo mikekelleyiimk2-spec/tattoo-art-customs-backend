@@ -644,6 +644,32 @@ async function main() {
   ok(r.status === 200 && r.text.includes('HTTP Wolf'), 'design page renders');
   ok(!r.text.includes('designs/color/w.jpg'), 'clean color path never leaks to public page');
 
+  // Newest arrivals: ?sort=newest shows only designs posted within the last
+  // 3 months, newest first, with the sort chips rendered and linked.
+  {
+    const now = Date.now(), day = 24 * 3600 * 1000;
+    const ins = sdb.prepare(`INSERT INTO designs
+      (id, title, description, categories, linework_path, linework_wm_path, status, created_at)
+      VALUES (?, ?, '', '[]', 'lw/x.png', 'wm/x.png', 'approved', ?)`);
+    ins.run('newest-old', 'ZZZ Old Design', now - 100 * day); // outside the window
+    ins.run('newest-mid', 'ZZZ Mid Design', now - 30 * day);
+    ins.run('newest-new', 'ZZZ New Design', now - 1 * day);
+    r = await req('GET', '/gallery?sort=newest');
+    ok(r.status === 200, 'gallery newest sort renders');
+    ok(r.text.includes('Newest arrivals'), 'newest arrivals chip rendered');
+    ok(r.text.includes('sort=newest'), 'chip link carries the sort param');
+    const iNew = r.text.indexOf('ZZZ New Design');
+    const iMid = r.text.indexOf('ZZZ Mid Design');
+    ok(iNew !== -1 && iMid !== -1 && iNew < iMid, 'newest arrivals ordered newest first');
+    ok(!r.text.includes('ZZZ Old Design'), 'designs older than 3 months excluded from newest arrivals');
+    r = await req('GET', '/gallery');
+    ok(r.text.includes('ZZZ Old Design'), 'old design still shown in the full gallery');
+    r = await req('GET', '/gallery?sort=newest&q=zzz');
+    ok(r.text.includes('ZZZ New Design') && r.text.includes('q=zzz'),
+      'newest sort composes with the search filter and preserves it in chip links');
+    sdb.prepare("DELETE FROM designs WHERE id LIKE 'newest-%'").run();
+  }
+
   // buy flow (PayPal unconfigured -> manual payment page)
   r = await req('POST', `/orders/buy/${did}`, { follow: false });
   ok(r.status === 302 && r.location.includes('/orders/manual/'), 'buy falls back to manual payment when PayPal is off');

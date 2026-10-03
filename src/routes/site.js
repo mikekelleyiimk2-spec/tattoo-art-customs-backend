@@ -157,9 +157,15 @@ router.get('/', async (req, res) => {
 router.get('/gallery', async (req, res) => {
   const q = (req.query.q || '').trim().toLowerCase();
   const cat = (req.query.cat || '').trim().toLowerCase();
+  // Newest arrivals: posted within the last 3 months, newest first.
+  const newestOnly = (req.query.sort || '').trim().toLowerCase() === 'newest';
   const member = await isActiveMember(req.user);
   let designs = await approvedDesigns(member);
   const allCats = [...new Set(designs.flatMap((d) => d.categories))].sort();
+  if (newestOnly) {
+    const cutoff = Date.now() - 90 * 24 * 3600 * 1000;
+    designs = designs.filter((d) => Number(d.created_at || 0) >= cutoff);
+  }
   if (cat) designs = designs.filter((d) => d.categories.some((c) => c.toLowerCase() === cat));
   if (q) {
     designs = designs.filter((d) =>
@@ -168,10 +174,21 @@ router.get('/gallery', async (req, res) => {
   }
   const viewer = await viewerFor(req.user);
   const thumbs = designs.map((d) => ({ ...d, thumb: displayImgFile(d, viewer) }));
+  // Sort-chip links keep the current search/category filters.
+  const galleryUrl = (sortVal) => {
+    const p = new URLSearchParams();
+    if (req.query.q) p.set('q', req.query.q);
+    if (req.query.cat) p.set('cat', req.query.cat);
+    if (sortVal) p.set('sort', sortVal);
+    const s = p.toString();
+    return '/gallery' + (s ? `?${s}` : '');
+  };
   res.render('site/gallery', {
     title: 'Tattoo Design Gallery — Buy Original Tattoo Designs | Tattoo Art Customs',
     designs: thumbs, allCats, q: req.query.q || '', cat: req.query.cat || '', sale: await salePriceActive(req.user),
     premadePrice: withFeeCents(premadePriceCents(new Date(), member)),
+    sort: newestOnly ? 'newest' : '',
+    newestUrl: galleryUrl('newest'), allUrl: galleryUrl(''),
     metaDescription: 'Search 900+ original tattoo designs by style and category. Buy ready-made tattoo designs from independent artists — full color and linework included.',
     canonical: `${config.baseUrl.replace(/\/$/, '')}/gallery`,
   });
