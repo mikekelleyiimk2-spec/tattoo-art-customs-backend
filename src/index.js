@@ -197,6 +197,7 @@ app.use('/admin', require('./routes/admin'));
 app.use('/bookings', require('./shop/routes-bookings'));
 app.use('/giftcards', require('./shop/routes-giftcards'));
 app.use('/gift-cards', require('./routes/siteGiftCards'));
+app.use('/ios-app', require('./routes/iosApp'));
 app.use('/intake', require('./shop/routes-intake'));
 app.use('/waitlist', require('./shop/routes-waitlist'));
 app.use('/events', require('./routes/events'));

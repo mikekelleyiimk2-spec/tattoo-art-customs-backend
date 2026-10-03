@@ -1,0 +1,23 @@
+<h1>Get the iOS App</h1>
+<p class="muted">Tattoo Art Customs for iPhone — sideload via SideStore. No App Store needed.</p>
+
+<div class="card">
+  <h2>$1.67 one-time</h2>
+  <p>Full app with gallery, custom orders, memberships, and shop tools. Works on iOS 14+.</p>
+  <h3>How it works</h3>
+  <ol>
+    <li>Buy here with PayPal ($1.67).</li>
+    <li>Download the IPA file.</li>
+    <li>Install SideStore on your iPhone (free).</li>
+    <li>Open the IPA in SideStore — it signs and installs the app with your Apple ID.</li>
+  </ol>
+  <p class="muted fineprint">Sideloaded apps refresh automatically every 7 days via SideStore. This is separate from the App Store version (coming soon).</p>
+  <% if (user) { %>
+  <form method="post" action="/ios-app/buy" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p><button class="btn" type="submit">Buy for $1.67</button></p>
+  </form>
+  <% } else { %>
+  <p><a class="btn" href="/login?next=/ios-app">Log in to buy</a></p>
+  <% } %>
+</div>

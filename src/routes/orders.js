@@ -355,6 +355,15 @@ router.get('/download/:token', async (req, res) => {
     });
   }
   let absPath = null;
+  if (order.order_type === 'ios_app') {
+    // iOS app IPA: served from the configured path.
+    const ipaPath = process.env.IOS_APP_IPA_PATH || 'uploads/ios-app/tattoo-art-customs.ipa';
+    absPath = resolveStoredPath(ipaPath);
+    if (!absPath) {
+      return res.status(404).render('error', { title: 'Not ready', message: 'The iOS app file is being prepared — check back soon.' });
+    }
+    return res.download(absPath, 'tattoo-art-customs.ipa');
+  }
   if (order.order_type === 'premade' && order.design_id) {
     const design = await db.get('SELECT color_path, linework_path FROM designs WHERE id = ?', [order.design_id]);
     if (!design) return res.status(404).render('error', { title: 'Not found', message: 'Design files are missing.' });
