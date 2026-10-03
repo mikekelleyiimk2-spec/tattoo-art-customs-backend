@@ -25,9 +25,9 @@
         </form>
         <% } %>
         <% if (isHead && u.role !== 'admin' && u.role !== 'head_admin') { %>
-        <form method="post" action="/admin/members/<%= u.id %>/impersonate" style="display:inline" onsubmit="return confirm('Switch to this account? You will browse the site as them until you stop.')">
+        <form method="post" action="/admin/members/<%= u.id %>/impersonate" style="display:inline">
           <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-          <button class="btn btn-secondary" type="submit">Impersonate</button>
+          <button class="btn btn-secondary" type="submit" title="Browse the site as this account">Impersonate</button>
         </form>
         <form method="post" action="/admin/members/<%= u.id %>/grant-comp" style="display:inline" onsubmit="return confirm('Grant a complimentary membership? No charge is made.')">
           <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
