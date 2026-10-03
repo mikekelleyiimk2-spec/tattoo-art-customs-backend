@@ -16,6 +16,7 @@ const { applyWatermarkedLinework, applyBlurredVariant } = require('./watermark')
 const { SENSITIVITIES } = require('./contentPolicy');
 const { notifyAdmins } = require('./notify');
 const { notifyDesignLive } = require('./colorization');
+const { isHeadAdmin } = require('../middleware/auth');
 
 const DESIGN_STYLES = [
   'blackwork', 'traditional', 'japanese', 'realism', 'fine-line', 'floral',
@@ -233,13 +234,15 @@ async function handlePortfolioUpload(req, res, backUrl) {
   // of them may decide the piece's status. Trusted self-approved uploaders
   // (Adolfo, Chris, Cayli) skip the queue entirely: every upload goes live
   // immediately, approved by themselves, wherever it was headed (gallery
-  // for pre-designs, portfolio for customs). Screening flags are still
-  // logged to the review queue for audit, but they don't block posting.
+  // for pre-designs, portfolio for customs). The site owner (head_admin)
+  // always skips it too — owner uploads go live immediately. Screening
+  // flags are still logged to the review queue for audit, but they don't
+  // block posting. Plain admins still go through the normal review queue.
   let finalStatus = holdForHate ? 'on_hold' : (screen.ok ? 'pending' : 'flagged');
   let selfApproved = false;
   try {
     const uploader = await db.get('SELECT auto_approve_uploads FROM users WHERE id = ?', [req.user.id]);
-    if (uploader && uploader.auto_approve_uploads) {
+    if ((uploader && uploader.auto_approve_uploads) || isHeadAdmin(req.user)) {
       finalStatus = 'approved';
       selfApproved = true;
       await db.update('designs', id, { status: 'approved', approved_by: req.user.id });

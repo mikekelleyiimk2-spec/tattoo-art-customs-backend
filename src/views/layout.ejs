@@ -82,6 +82,13 @@
         <a class="btn" href="/signup"><%= t('nav.signup') %></a>
       <% } %>
     </div>
+    <% if (currentUser) { %>
+    <% const chipName = currentUser.display_name || currentUser.email || ''; %>
+    <a class="user-chip" href="/account" aria-label="<%= t('nav.account') %>">
+      <span class="user-avatar" aria-hidden="true"><%= (chipName.charAt(0) || '?').toUpperCase() %></span>
+      <span class="user-name"><%= chipName %></span>
+    </a>
+    <% } %>
   </nav>
 </header>
 

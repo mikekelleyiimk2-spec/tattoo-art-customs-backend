@@ -2884,6 +2884,54 @@ async function main() {
   ok(adFlag && adFlag.status === 'approved' && adFlag.approved_by === adolfoId,
     'even a flagged upload goes live immediately for a trusted self-approver');
 
+  // Owner uploads skip the review queue: the head_admin's pieces go live
+  // immediately, approved by themselves — no admin review notification.
+  const headAdminId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('admin@test.local').id;
+  const pendBeforeOwner = sdb.prepare("SELECT COUNT(*) AS c FROM notifications WHERE kind = 'design_pending'").get().c;
+  r = await mpost('/artist/portfolio/upload',
+    { title: 'Owner Live Piece', description: 'No review needed.', style: 'japanese', listing_type: 'predesign', watermark_choice: 'site' },
+    { linework: { buffer: lwBuf, filename: 'l.jpg', type: 'image/jpeg' } },
+    adminJar);
+  const ownerRow = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('Owner Live Piece');
+  ok(ownerRow && ownerRow.status === 'approved' && ownerRow.approved_by === headAdminId,
+    'owner (head_admin) upload goes live immediately, approved by the owner');
+  ok(sdb.prepare("SELECT COUNT(*) AS c FROM notifications WHERE kind = 'design_pending'").get().c === pendBeforeOwner,
+    'no admin review notification for an owner upload');
+  r = await req('GET', '/gallery');
+  ok(r.text.includes('Owner Live Piece'), 'owner piece is in the gallery');
+  // A plain admin (not head_admin) still goes through the review queue —
+  // the auto-approve is scoped to the owner only. (Uses a fresh admin:
+  // the earlier normadmin fixture was demoted back to customer.)
+  const plainJar = {};
+  async function plainPost(pp, body) {
+    const h = { 'content-type': 'application/x-www-form-urlencoded' };
+    const cookies = Object.entries(plainJar).map(([k, v]) => `${k}=${v}`).join('; ');
+    if (cookies) h.cookie = cookies;
+    const res = await fetch(`http://localhost:${PORT}${pp}`, {
+      method: 'POST', headers: h, body: new URLSearchParams(body), redirect: 'manual',
+    });
+    for (const c of (res.headers.getSetCookie ? res.headers.getSetCookie() : [])) {
+      const [k, v] = c.split(';')[0].split('=');
+      plainJar[k.trim()] = (v || '').trim();
+    }
+    return res;
+  }
+  await plainPost('/signup', { display_name: 'PlainAdmin', email: 'plainadmin@test.local', password: 'password123' });
+  r = await areq('POST', '/admin/admins/add', { body: { email: 'plainadmin@test.local' } });
+  ok(sdb.prepare('SELECT role FROM users WHERE email = ?').get('plainadmin@test.local').role === 'admin',
+    'plainadmin fixture promoted to normal admin');
+  await plainPost('/login', { email: 'plainadmin@test.local', password: 'password123' });
+  r = await mpost('/artist/portfolio/upload',
+    { title: 'PlainAdmin Queued Piece', description: 'Needs review.', style: 'japanese', listing_type: 'predesign', watermark_choice: 'site' },
+    { linework: { buffer: lwBuf, filename: 'l.jpg', type: 'image/jpeg' } },
+    plainJar);
+  const plainRow = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('PlainAdmin Queued Piece');
+  ok(plainRow && plainRow.status === 'pending',
+    'plain admin upload still lands in the review queue (owner-only auto-approve)');
+  // Restore the admin roster: demote the fixture so later tests that count
+  // per-admin notification fanout (sale watch) see the original admin set.
+  sdb.prepare("UPDATE users SET role = 'customer' WHERE email = 'plainadmin@test.local'").run();
+
   // First-sale watcher: every paid order notifies the owner with a
   // verification report; the ledger must sum exactly to the net sale.
   const { watchOrderPaid, watchSubscriptionActive } = require('../src/lib/saleWatch');
