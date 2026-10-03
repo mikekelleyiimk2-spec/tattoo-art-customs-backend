@@ -2073,6 +2073,68 @@ async function main() {
   r = await areq('POST', '/admin/admins/remove', { body: { id: sdb.prepare('SELECT id FROM users WHERE email = ?').get('normadmin@test.local').id } });
   ok(sdb.prepare('SELECT role FROM users WHERE email = ?').get('normadmin@test.local').role === 'customer', 'head admin removes normal admin');
 
+  // Complimentary membership grants (head-admin only): demo/review accounts
+  // get full premium access without PayPal or site credit.
+  r = await req('POST', '/signup', { body: { display_name: 'CompUser', email: 'compuser@test.local', password: 'password123' }, follow: false });
+  ok(r.status === 302, 'comp user signup ok');
+  const compId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('compuser@test.local').id;
+  const custPlan = sdb.prepare("SELECT id FROM plans WHERE slug = 'customer' AND active = 1").get();
+  // (a) head admin grants a customer comp → active subscription row exists
+  const beforeGrant = Date.now();
+  r = await areq('POST', `/admin/members/${compId}/grant-comp`, { body: { plan: 'customer', months: '24' }, follow: false });
+  ok(r.status === 302 && (r.location || '').includes('/admin/members'), 'head admin grants comp, redirects to members');
+  let compSubs = sdb.prepare("SELECT s.* FROM subscriptions s WHERE s.user_id = ? AND s.plan_id = ? AND s.status = 'active'").all(compId, custPlan.id);
+  const expectedEnd = beforeGrant + 24 * 30 * 86400000;
+  ok(compSubs.length === 1 && Math.abs(compSubs[0].current_period_end - expectedEnd) < 120000, 'comp grant creates one active subscription with ~24-month period end');
+  ok(sdb.prepare('SELECT role FROM users WHERE id = ?').get(compId).role === 'customer', 'customer comp leaves role as customer');
+  // (b) re-granting extends rather than stacking
+  const firstEnd = compSubs[0].current_period_end;
+  r = await areq('POST', `/admin/members/${compId}/grant-comp`, { body: { plan: 'customer', months: '24' }, follow: false });
+  compSubs = sdb.prepare("SELECT s.* FROM subscriptions s WHERE s.user_id = ? AND s.plan_id = ? AND s.status = 'active'").all(compId, custPlan.id);
+  ok(compSubs.length === 1 && Math.abs((compSubs[0].current_period_end - firstEnd) - 24 * 30 * 86400000) < 120000, 're-grant extends the existing row instead of stacking');
+  // members page shows the grant form to the head admin
+  r = await areq('GET', '/admin/members');
+  ok(r.status === 200 && r.text.includes('Grant comp') && r.text.includes('/grant-comp'), 'members page shows the comp grant form to head admin');
+  // (c) a normal admin is blocked from granting comps
+  r = await req('POST', '/signup', { body: { display_name: 'PlainAdmin2', email: 'plainadmin2@test.local', password: 'password123' }, follow: false });
+  ok(r.status === 302, 'plainadmin2 signup ok');
+  r = await areq('POST', '/admin/admins/add', { body: { email: 'plainadmin2@test.local' } });
+  const plain2Id = sdb.prepare('SELECT id FROM users WHERE email = ?').get('plainadmin2@test.local').id;
+  const p2Jar = {};
+  async function p2req(method, p, opts = {}) {
+    const h = { ...(opts.headers || {}) };
+    const cookies = Object.entries(p2Jar).map(([k, v]) => `${k}=${v}`).join('; ');
+    if (cookies) h.cookie = cookies;
+    let payload = opts.body;
+    if (payload && typeof payload === 'object') {
+      payload = new URLSearchParams(payload);
+      h['content-type'] = 'application/x-www-form-urlencoded';
+    }
+    const res = await fetch(`http://localhost:${PORT}${p}`, { method, headers: h, body: payload, redirect: 'manual' });
+    for (const c of (res.headers.getSetCookie ? res.headers.getSetCookie() : [])) {
+      const [k, v] = c.split(';')[0].split('=');
+      p2Jar[k.trim()] = (v || '').trim();
+    }
+    return { status: res.status, text: await res.text(), location: res.headers.get('location') };
+  }
+  r = await p2req('POST', '/login', { body: { email: 'plainadmin2@test.local', password: 'password123' } });
+  ok(r.status === 302, 'plain admin login ok');
+  r = await p2req('GET', '/admin/members');
+  ok(r.status === 200 && !r.text.includes('Grant comp'), 'normal admin sees no comp grant form');
+  r = await p2req('POST', `/admin/members/${compId}/grant-comp`, { body: { plan: 'customer', months: '12' }, follow: false });
+  ok(r.status === 403, 'normal admin is blocked from granting comps (403)');
+  ok(sdb.prepare("SELECT COUNT(*) AS n FROM subscriptions WHERE user_id = ? AND plan_id = ? AND status = 'active'").get(compId, custPlan.id).n === 1, 'blocked grant creates nothing');
+  // (d) granting to an admin-role target is refused
+  r = await areq('POST', `/admin/members/${plain2Id}/grant-comp`, { body: { plan: 'customer', months: '12' }, follow: false });
+  ok(r.status === 400, 'grant to an admin-role target is refused (400)');
+  ok(sdb.prepare("SELECT COUNT(*) AS n FROM subscriptions WHERE user_id = ? AND status = 'active'").get(plain2Id).n === 0, 'refused grant creates no subscription');
+  // invalid plan/months refused cleanly
+  r = await areq('POST', `/admin/members/${compId}/grant-comp`, { body: { plan: 'nope', months: '99' }, follow: false });
+  ok(r.status === 302 && sdb.prepare("SELECT COUNT(*) AS n FROM subscriptions WHERE user_id = ? AND plan_id = ? AND status = 'active'").get(compId, custPlan.id).n === 1, 'invalid plan/months refused, existing grant untouched');
+  // cleanup: demote the plain admin back to customer
+  r = await areq('POST', '/admin/admins/remove', { body: { id: plain2Id } });
+  ok(sdb.prepare('SELECT role FROM users WHERE email = ?').get('plainadmin2@test.local').role === 'customer', 'head admin removes plain admin 2');
+
   // cashout options: destinations + early cashout with 3% fee
   const cashout = require('../src/lib/cashout');
   await db.init(); // re-open: the commissions unit test closed the handle above

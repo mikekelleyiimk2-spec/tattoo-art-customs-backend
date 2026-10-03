@@ -734,7 +734,7 @@ router.get('/members', async (req, res) => {
      LEFT JOIN subscriptions s ON s.user_id = u.id AND s.status = 'active'
      LEFT JOIN plans p ON p.id = s.plan_id
      ORDER BY u.created_at DESC LIMIT 200`);
-  res.render('admin/members', { title: 'Members — Admin', users });
+  res.render('admin/members', { title: 'Members — Admin', users, isHead: isHeadAdmin(req.user) });
 });
 
 // Cancel a member's membership (off-site sales rule enforcement).
@@ -758,6 +758,54 @@ router.post('/members/:id/verify-shop', formLimiter, checkHoneypot, async (req, 
   await verifyShop(req.params.id);
   await payAdmin(req, 'shop_verify', 'user', req.params.id);
   req.session.flash = 'Shop verified.';
+  res.redirect('/admin/members');
+});
+
+// Complimentary membership grant (head-admin only): gives a non-admin user
+// an active subscription row without PayPal or site credit — used for demo /
+// review accounts (e.g. the Google Play review account must have full access
+// to every premium feature on every update submission). Idempotent:
+// re-granting extends the existing active row instead of stacking.
+router.post('/members/:id/grant-comp', requireHeadAdmin, formLimiter, checkHoneypot, async (req, res) => {
+  const slug = String(req.body.plan || '');
+  const months = parseInt(req.body.months, 10);
+  const plan = await db.get('SELECT * FROM plans WHERE slug = ? AND active = 1', [slug]);
+  if (!plan || !['customer', 'customer_annual', 'design_artist', 'tattoo_shop'].includes(slug)
+      || !Number.isInteger(months) || months < 1 || months > 36) {
+    req.session.flash = 'Choose a valid plan and a term of 1–36 months.';
+    return res.redirect('/admin/members');
+  }
+  const user = await db.get('SELECT id, role FROM users WHERE id = ?', [req.params.id]);
+  if (!user) return res.redirect('/admin/members');
+  if (isAdminRole(user.role)) {
+    req.session.flash = 'Complimentary grants are for non-admin accounts only — admins already have full access.';
+    return res.status(400).render('error', {
+      title: 'Cannot grant',
+      message: 'Complimentary grants are for non-admin accounts only — admins already have full access.',
+    });
+  }
+  // Monthly plans grant months × 30 days; annual plans grant months/12 × 365 days.
+  const termMs = plan.interval === 'year' ? 365 * 86400000 : 30 * 86400000;
+  const terms = plan.interval === 'year' ? months / 12 : months;
+  const nowMs = Date.now();
+  const existing = await db.get(
+    `SELECT * FROM subscriptions WHERE user_id = ? AND plan_id = ? AND status = 'active'
+     AND (current_period_end IS NULL OR current_period_end > ?)`, [user.id, plan.id, nowMs]);
+  if (existing) {
+    const from = Math.max(Number(existing.current_period_end) || nowMs, nowMs);
+    await db.update('subscriptions', existing.id, { current_period_end: from + terms * termMs });
+  } else {
+    await db.insert('subscriptions', {
+      user_id: user.id, plan_id: plan.id, status: 'active',
+      paypal_subscription_id: '', current_period_end: nowMs + terms * termMs,
+      paid_with_credit: 0, created_at: db.now(),
+    });
+  }
+  // Artist/shop plans also carry the matching role (idempotent, skips admins).
+  const { grantPlanRole } = require('../lib/planRoles');
+  await grantPlanRole(user.id, plan.slug);
+  await payAdmin(req, 'member_comp_grant', 'user', user.id);
+  req.session.flash = `Complimentary ${plan.name} granted for ${months} month${months === 1 ? '' : 's'}.`;
   res.redirect('/admin/members');
 });
 

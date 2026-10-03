@@ -24,6 +24,19 @@
           <button class="btn btn-secondary" type="submit">Cancel membership</button>
         </form>
         <% } %>
+        <% if (isHead && u.role !== 'admin' && u.role !== 'head_admin') { %>
+        <form method="post" action="/admin/members/<%= u.id %>/grant-comp" style="display:inline" onsubmit="return confirm('Grant a complimentary membership? No charge is made.')">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <select name="plan">
+            <option value="customer">Customer</option>
+            <option value="customer_annual">Customer Annual</option>
+            <option value="design_artist">Design Artist</option>
+            <option value="tattoo_shop">Tattoo Shop</option>
+          </select>
+          <input type="number" name="months" min="1" max="36" value="12">
+          <button class="btn btn-secondary" type="submit">Grant comp</button>
+        </form>
+        <% } %>
       </td>
     </tr>
   <% }); %>
