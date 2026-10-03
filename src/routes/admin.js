@@ -39,7 +39,7 @@ router.use(requireLogin, requireRole('admin'));
 // Start impersonating a user (head admin only): browse the site exactly as
 // that account. The original admin id is kept in the session so we can
 // switch back. Cannot impersonate another head_admin or yourself.
-router.post('/members/:id/impersonate', requireHeadAdmin, formLimiter, checkHoneypot, async (req, res) => {
+router.get('/members/:id/impersonate', requireHeadAdmin, async (req, res) => {
   const target = await db.get('SELECT id, email, role FROM users WHERE id = ?', [req.params.id]);
   if (!target || target.id === req.user.id || target.role === 'head_admin') {
     req.session.flash = 'You can\'t switch to that account.';

@@ -25,10 +25,7 @@
         </form>
         <% } %>
         <% if (isHead && u.role !== 'admin' && u.role !== 'head_admin') { %>
-        <form method="post" action="/admin/members/<%= u.id %>/impersonate" style="display:inline">
-          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-          <button class="btn btn-secondary" type="submit" title="Browse the site as this account">Impersonate</button>
-        </form>
+        <a class="btn btn-secondary" href="/admin/members/<%= u.id %>/impersonate" title="Browse the site as this account">Impersonate</a>
         <form method="post" action="/admin/members/<%= u.id %>/grant-comp" style="display:inline" onsubmit="return confirm('Grant a complimentary membership? No charge is made.')">
           <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
           <select name="plan">
