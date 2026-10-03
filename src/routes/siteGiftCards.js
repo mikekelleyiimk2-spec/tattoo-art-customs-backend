@@ -68,7 +68,7 @@ router.get('/capture/:pendingId', requireLogin, async (req, res) => {
     });
     res.render('site-giftcards/success', {
       title: 'Gift Card Ready — Tattoo Art Customs',
-      card, code: card.code, money, metaDescription: '',
+      card, code: card.code, money,
     });
   } catch (e) {
     req.session.flash = 'Gift card activation failed: ' + e.message;
@@ -82,7 +82,7 @@ router.get('/manual/:pendingId', requireLogin, async (req, res) => {
     [req.params.pendingId, req.user.id]);
   if (!card || card.status !== 'pending') return res.redirect('/gift-cards/buy');
   res.render('site-giftcards/manual', {
-    title: 'Pay for gift card manually — Tattoo Art Customs', card, money, metaDescription: '',
+    title: 'Pay for gift card manually — Tattoo Art Customs', card, money,
   });
 });
 
@@ -126,7 +126,7 @@ router.post('/redeem', requireLogin, formLimiter, checkHoneypot, async (req, res
 router.get('/mine', requireLogin, async (req, res) => {
   const cards = await getSiteGiftCardsForPurchaser(req.user.id);
   res.render('site-giftcards/mine', {
-    title: 'My Gift Cards — Tattoo Art Customs', cards, money, metaDescription: '',
+    title: 'My Gift Cards — Tattoo Art Customs', cards, money,
   });
 });
 

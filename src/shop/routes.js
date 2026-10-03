@@ -45,7 +45,6 @@ router.get('/', async (req, res) => {
     foundingEndsAt: me && me.founding_shop_ends_at,
     dualBonus,
     tier,
-    metaDescription: '',
     ...payout,
   });
 });

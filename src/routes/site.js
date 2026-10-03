@@ -29,14 +29,14 @@ router.get('/wallet/app', requireLogin, async (req, res) => {
   if (req.user.role === 'design_artist') {
     const payout = await payoutDashboardData(req.user.id, 'artist');
     return res.render('wallet/cashout', {
-      title: 'Cashout — Tattoo Art Customs', metaDescription: '',
+      title: 'Cashout — Tattoo Art Customs',
       payoutBase: '/artist', ...payout,
     });
   }
   if (req.user.role === 'tattoo_shop') {
     const payout = await payoutDashboardData(req.user.id, 'shop');
     return res.render('wallet/cashout', {
-      title: 'Cashout — Tattoo Art Customs', metaDescription: '',
+      title: 'Cashout — Tattoo Art Customs',
       payoutBase: '/shop', ...payout,
     });
   }
@@ -468,7 +468,6 @@ router.get('/notifications', requireLogin, async (req, res) => {
     'SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 100', [req.user.id]).catch(() => []);
   res.render('site/notifications', {
     title: 'Notifications — Tattoo Art Customs', notifications: notes,
-    metaDescription: '',
   });
   res.locals.notifCount = 0; // header badge refreshes on the next page
 });

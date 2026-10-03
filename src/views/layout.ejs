@@ -85,7 +85,11 @@
     <% if (currentUser) { %>
     <% const chipName = currentUser.display_name || currentUser.email || ''; %>
     <a class="user-chip" href="/account" aria-label="<%= t('nav.account') %>">
+      <% if (currentUser.avatar_url) { %>
+      <img class="user-avatar-img" src="<%= currentUser.avatar_url %>" alt="">
+      <% } else { %>
       <span class="user-avatar" aria-hidden="true"><%= (chipName.charAt(0) || '?').toUpperCase() %></span>
+      <% } %>
       <span class="user-name"><%= chipName %></span>
     </a>
     <% } %>

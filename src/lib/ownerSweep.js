@@ -87,4 +87,4 @@ async function runOwnerSweep({ now = Date.now() } = {}) {
   return { ...summary, report: lines };
 }
 
-module.exports = { runOwnerSweep, CLEARING_WINDOW_MS };
+module.exports = { runOwnerSweep };

@@ -620,6 +620,61 @@ async function main() {
   r = await req('GET', '/account');
   ok(r.status === 200 && r.text.includes('buyer@test.local'), 'logged in after signup');
 
+  // seed a design directly
+  const Database = require('better-sqlite3');
+  const sdb = new Database(process.env.SQLITE_PATH);
+
+  // Profile pictures: avatar upload sets avatar_url, header renders the photo,
+  // replacing the picture cleans up the old file, and the chip falls back to
+  // the initial circle when no picture is set.
+  {
+    const testUploadDir = process.env.UPLOAD_DIR || path.join(process.env.ASSET_DIR, 'uploads');
+    const col = sdb.prepare("SELECT name FROM pragma_table_info('users')").all().map((c) => c.name);
+    ok(col.includes('avatar_url'), 'migration 050 added users.avatar_url');
+    r = await req('GET', '/');
+    ok(r.status === 200 && r.text.includes('<span class="user-avatar"'), 'header chip falls back to initial circle without avatar');
+    ok(r.text.includes('id="avatar"') === false, 'account-only upload control not on homepage');
+    r = await req('GET', '/account');
+    ok(r.status === 200 && r.text.includes('action="/account/avatar"'), '/account renders the avatar upload form');
+    const png1x1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
+    const cookies = Object.entries(jar).map(([k, v]) => `${k}=${v}`).join('; ');
+    async function postAvatar(name) {
+      const fd = new FormData();
+      fd.append('avatar', new Blob([png1x1], { type: 'image/png' }), name);
+      const res = await fetch(`http://localhost:${PORT}/account/avatar`, {
+        method: 'POST', headers: { cookie: cookies }, body: fd, redirect: 'manual',
+      });
+      return res;
+    }
+    let ar = await postAvatar('pic.png');
+    ok(ar.status === 302 && (ar.headers.get('location') || '').includes('/account'), 'avatar upload redirects to /account');
+    let au = sdb.prepare('SELECT avatar_url FROM users WHERE email = ?').get('buyer@test.local');
+    ok(au && au.avatar_url && au.avatar_url.startsWith('/img/avatars/'), 'avatar_url stored on the user');
+    const firstFile = path.join(testUploadDir, 'avatars', path.basename(au.avatar_url));
+    ok(fs.existsSync(firstFile), 'avatar file written under the upload dir');
+    const dims = require('sharp')(firstFile);
+    const meta = await dims.metadata();
+    ok(meta.width === 256 && meta.height === 256, 'avatar square-cropped to 256x256');
+    r = await req('GET', '/');
+    ok(r.status === 200 && r.text.includes('<img class="user-avatar-img"'), 'header chip renders the avatar photo');
+    ok(r.text.includes(au.avatar_url.replace(/"/g, '&quot;')) || r.text.includes(au.avatar_url), 'header img uses the stored avatar url');
+    ar = await postAvatar('pic2.png');
+    ok(ar.status === 302, 'second avatar upload accepted');
+    const au2 = sdb.prepare('SELECT avatar_url FROM users WHERE email = ?').get('buyer@test.local');
+    ok(au2.avatar_url !== au.avatar_url, 're-upload replaces avatar_url');
+    ok(!fs.existsSync(firstFile), 'old avatar file deleted on replace');
+    ok(fs.existsSync(path.join(testUploadDir, 'avatars', path.basename(au2.avatar_url))), 'new avatar file exists');
+    // Non-image upload is rejected.
+    const bad = new FormData();
+    bad.append('avatar', new Blob(['not an image'], { type: 'text/plain' }), 'evil.txt');
+    ar = await fetch(`http://localhost:${PORT}/account/avatar`, {
+      method: 'POST', headers: { cookie: cookies }, body: bad, redirect: 'manual',
+    });
+    ok(ar.status === 302, 'non-image upload rejected back to /account');
+    const au3 = sdb.prepare('SELECT avatar_url FROM users WHERE email = ?').get('buyer@test.local');
+    ok(au3.avatar_url === au2.avatar_url, 'avatar_url unchanged after rejected upload');
+  }
+
   // auth: bad login rejected
   const jar2 = {};
   const badLogin = await fetch(`http://localhost:${PORT}/login`, {
@@ -628,9 +683,6 @@ async function main() {
   });
   ok(badLogin.status === 302 && badLogin.headers.get('location').includes('/login'), 'bad password rejected');
 
-  // seed a design directly
-  const Database = require('better-sqlite3');
-  const sdb = new Database(process.env.SQLITE_PATH);
   const did = 'testdesign0001';
   sdb.prepare(`INSERT INTO designs (id, title, description, price_cents, status, color_path, linework_path, linework_wm_path, categories, sale_count, created_at)
     VALUES (?,?,?,?,?,?,?,?,?,?,?)`).run(did, 'HTTP Wolf', 'desc', 7500, 'approved',

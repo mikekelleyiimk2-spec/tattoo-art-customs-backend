@@ -223,7 +223,7 @@ router.post('/custom', requireLogin, formLimiter, checkHoneypot, async (req, res
 router.get('/manual/:orderId', requireLogin, async (req, res) => {
   const order = await db.get('SELECT * FROM orders WHERE id = ? AND buyer_id = ?', [req.params.orderId, req.user.id]);
   if (!order) return res.status(404).render('error', { title: 'Not found', message: 'Order not found.' });
-  res.render('orders/manual', { title: 'Pay manually — Tattoo Art Customs', order, metaDescription: '' });
+  res.render('orders/manual', { title: 'Pay manually — Tattoo Art Customs', order });
 });
 router.post('/manual/:orderId', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
   const order = await db.get('SELECT * FROM orders WHERE id = ? AND buyer_id = ?', [req.params.orderId, req.user.id]);
@@ -310,7 +310,7 @@ router.get('/:orderId', requireLogin, async (req, res) => {
   const depositTotal = order.order_type === 'custom' && order.deposit_cents != null
     ? Number(order.deposit_cents) + Number(order.fee_cents || 0) : null;
   const fullTotal = order.order_type === 'custom' ? pricing.withFeeCents(Number(order.amount_cents)) : null;
-  res.render('orders/detail', { title: `Order ${order.id.slice(0, 8)} — Tattoo Art Customs`, order, design, downloads, depositTotal, fullTotal, metaDescription: '' });
+  res.render('orders/detail', { title: `Order ${order.id.slice(0, 8)} — Tattoo Art Customs`, order, design, downloads, depositTotal, fullTotal });
 });
 
 // Cancel your own pending, unpaid order (e.g. an accidental duplicate).
@@ -382,7 +382,7 @@ router.get('/download/:token/view', async (req, res) => {
   const order = await db.get('SELECT linework_only FROM orders WHERE id = ?', [dl.order_id]);
   res.render('orders/download', {
     title: 'Your download — Tattoo Art Customs', token: req.params.token,
-    lineworkOnly: !!(order && order.linework_only), metaDescription: '',
+    lineworkOnly: !!(order && order.linework_only),
   });
 });
 

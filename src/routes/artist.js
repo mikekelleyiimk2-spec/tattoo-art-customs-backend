@@ -47,7 +47,6 @@ router.get('/portfolio', async (req, res) => {
     isFoundingArtist: !!(me && me.is_founding_artist),
     foundingEndsAt: me && me.founding_artist_ends_at,
     customPrice: pricing.customFullCents(), premadePrice: pricing.premadePriceCents(),
-    metaDescription: '',
   });
 });
 
@@ -65,7 +64,7 @@ router.get('/portfolio/upload', async (req, res) => {
     title: 'Upload a new piece — Tattoo Art Customs',
     styles: DESIGN_STYLES, action: '/artist/portfolio/upload',
     customPrice: pricing.customFullCents(), premadePrice: pricing.premadePriceCents(),
-    metaDescription: '', remake,
+    remake,
   });
 });
 
@@ -78,7 +77,6 @@ router.get('/portfolio/upload-batch', async (req, res) => {
     title: 'Batch upload — Tattoo Art Customs',
     styles: DESIGN_STYLES, maxItems: BATCH_MAX_ITEMS,
     customPrice: pricing.customFullCents(), premadePrice: pricing.premadePriceCents(),
-    metaDescription: '',
   });
 });
 
@@ -185,7 +183,7 @@ router.post('/portfolio/upload-batch', formLimiter, (req, res, next) => {
   }
   res.render('artist/portfolio-upload-result', {
     title: 'Batch upload results — Tattoo Art Customs',
-    results, note: zipNote, metaDescription: '',
+    results, note: zipNote,
   });
 });
 
@@ -210,7 +208,6 @@ router.get('/watermark-builder', async (req, res) => {
     hasMark: builder.defaultMarkExists(req.user.id),
     error: null,
     values: { line1: '', line2: '', line3: '', color: builder.DARK_PALETTE[0].hex },
-    metaDescription: '',
   });
 });
 
@@ -237,7 +234,6 @@ router.post('/watermark-builder', formLimiter, checkHoneypot, async (req, res) =
       hasMark: builder.defaultMarkExists(req.user.id),
       error: e.message,
       values,
-      metaDescription: '',
     });
   }
 });
@@ -257,7 +253,6 @@ router.get('/portfolio/:id/edit', async (req, res) => {
     title: 'Edit piece — Tattoo Art Customs',
     design, styles: DESIGN_STYLES,
     extraCats: cats.filter((c) => c !== design.style).join(', '),
-    metaDescription: '',
   });
 });
 
@@ -414,7 +409,7 @@ router.get('/', async (req, res) => {
   res.render('artist/dashboard', {
     title: 'Artist Dashboard — Tattoo Art Customs',
     designs: designs.map((d) => ({ ...d, categories: JSON.parse(d.categories || '[]') })),
-    profile, balance, payouts, ledger, metaDescription: '',
+    profile, balance, payouts, ledger,
     slaOrders, slaRepeat, repeatNotice: slaEnforcer.REPEAT_OFFENDER_NOTICE, nowMs,
     commissionPausedUntil, remakeRequests,
     dualBonus: await dualSubBonusActive(req.user.id),

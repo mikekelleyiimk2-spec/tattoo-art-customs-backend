@@ -88,7 +88,6 @@ router.get('/tee/:designId', requireLogin, formLimiter, async (req, res) => {
     priceFor: pricing.teePriceCents,
     withFee: (c) => pricing.withFeeCents(c),
     money: pricing.money,
-    metaDescription: '',
   });
 });
 

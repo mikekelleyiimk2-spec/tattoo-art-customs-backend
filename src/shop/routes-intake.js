@@ -52,7 +52,7 @@ router.get('/:bookingId', requireLogin, async (req, res) => {
   }
   res.render('intake/form', {
     title: `Intake Form — ${booking.shop_name} — Tattoo Art Customs`,
-    booking, intake, photos, maxPhotos: MAX_PHOTOS, metaDescription: '',
+    booking, intake, photos, maxPhotos: MAX_PHOTOS,
   });
 });
 
@@ -118,7 +118,7 @@ router.get('/view/:bookingId', requireLogin, async (req, res) => {
   }
   res.render('intake/view', {
     title: `Intake — ${booking.customer_name} — Tattoo Art Customs`,
-    booking, intake, photos, metaDescription: '',
+    booking, intake, photos,
   });
 });
 

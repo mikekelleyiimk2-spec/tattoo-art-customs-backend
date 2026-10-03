@@ -17,7 +17,7 @@ async function loadUser(req, res, next) {
   res.locals.notifCount = 0;
   if (req.session && req.session.userId) {
     const user = await db.get(
-      'SELECT id, email, role, display_name FROM users WHERE id = ?', [req.session.userId]);
+      'SELECT id, email, role, display_name, avatar_url FROM users WHERE id = ?', [req.session.userId]);
     if (user) {
       res.locals.currentUser = user;
       req.user = user;

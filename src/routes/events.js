@@ -109,7 +109,7 @@ router.post('/:id/leave', requireLogin, formLimiter, checkHoneypot, async (req, 
 router.get('/manage', requireLogin, requireSubscription('tattoo_shop'), async (req, res) => {
   const events = await getShopEvents(req.user.id);
   res.render('events/manage', {
-    title: 'Manage Events — Tattoo Art Customs', events, money, metaDescription: '',
+    title: 'Manage Events — Tattoo Art Customs', events, money,
   });
 });
 
@@ -149,7 +149,7 @@ router.get('/manage/:id', requireLogin, requireSubscription('tattoo_shop'), asyn
   }
   const signups = await getEventAttendees(ev.id);
   res.render('events/attendees', {
-    title: `Attendees — ${ev.title} — Tattoo Art Customs`, event: ev, signups, metaDescription: '',
+    title: `Attendees — ${ev.title} — Tattoo Art Customs`, event: ev, signups,
   });
 });
 

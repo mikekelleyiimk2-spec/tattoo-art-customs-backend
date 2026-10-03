@@ -5,6 +5,25 @@ https://tattoo-art-customs.onrender.com.
 **Versioning:** the deployed git commit (reported by `/health`) is the
 website's version — package.json stays 1.0.0 between releases.
 
+## 2026-10-02
+
+### Changed — codebase optimization pass (no behavior changes)
+- Removed dead code: old homepage view (`site/index.ejs`, replaced by the
+  landing page), old upload form (`artist/upload.ejs`, replaced by
+  `artist/portfolio-upload`), and the superseded `fulfillmentProvider` /
+  `submitToProvider` stubs in `lib/print.js` (live Printful fulfillment runs
+  through `lib/printful.js`).
+- Trimmed unused exports: `AUTO_APPROVER`, `ONE_HOUR_MS` (autoApprove),
+  `sourceFile` (combine), `sendToBankAccount` (wise),
+  `DOWNLOAD_TTL_MS` (fulfillment), `CLEARING_WINDOW_MS` (ownerSweep),
+  `isMemberSaleWindow`, `customDepositCents`, `chicagoParts`,
+  `FIRST_CUSTOM_DISCOUNT_RATE`, `TEE_PRICE_CENTS` (pricing), `uploadFlash`
+  (portfolioUpload). All remain defined/used internally where needed.
+- Removed 70+ redundant `metaDescription: ''` render params (the layout
+  already omits the tag when no description is set).
+- Audit: all 88 internal view links resolve, all 131 POST forms hit real
+  routes, all 490 i18n keys used in views exist — no broken links found.
+
 ## 2026-09-29
 
 ### Added

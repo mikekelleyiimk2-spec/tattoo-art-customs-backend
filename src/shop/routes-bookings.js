@@ -61,7 +61,6 @@ router.get('/shop/:shopId', async (req, res) => {
     designId: String(req.query.design_id || ''),
     depositFirst: Number(settings.deposit_before_booking) === 1,
     bookingActive: await shopActive(shop.id),
-    metaDescription: '',
   });
 });
 
@@ -92,7 +91,7 @@ router.get('/start', requireLogin, async (req, res) => {
      ORDER BY u.display_name`, [now]);
   res.render('bookings/start', {
     title: 'Get this tattooed — Tattoo Art Customs',
-    shops, designId: String(req.query.design_id || ''), money, metaDescription: '',
+    shops, designId: String(req.query.design_id || ''), money,
   });
 });
 
@@ -158,7 +157,7 @@ router.get('/checkout/:id', requireLogin, async (req, res) => {
   const shop = await db.get('SELECT display_name FROM users WHERE id = ?', [booking.shop_user_id]);
   res.render('bookings/checkout', {
     title: 'Checkout — Tattoo Art Customs',
-    booking, shop, fees, lines: formatReceiptLines(fees), money, metaDescription: '',
+    booking, shop, fees, lines: formatReceiptLines(fees), money,
   });
 });
 
@@ -312,7 +311,7 @@ router.get('/deposit-first/:shopId', async (req, res) => {
   const fees = flow.depositFees(settings);
   res.render('bookings/deposit-first', {
     title: `Deposit — ${shop.display_name} — Tattoo Art Customs`,
-    shop, settings, fees, lines: formatReceiptLines(fees), money, metaDescription: '',
+    shop, settings, fees, lines: formatReceiptLines(fees), money,
   });
 });
 
@@ -367,7 +366,7 @@ router.get('/deposit-first/:depositId/slots', requireLogin, async (req, res) => 
   res.render('bookings/deposit-slots', {
     title: `Pick your slot — ${shop ? shop.display_name : ''} — Tattoo Art Customs`,
     shop, deposit: dep, settings, staff, chairs, money,
-    designId: String(req.query.design_id || ''), metaDescription: '',
+    designId: String(req.query.design_id || ''),
   });
 });
 
@@ -432,7 +431,7 @@ router.get('/receipt/:id', requireLogin, async (req, res) => {
   res.render('bookings/receipt', {
     title: 'Receipt — Tattoo Art Customs',
     booking, receipt, payment, balancePayment, deposit, shop, customer, money,
-    isCustomer: booking.customer_user_id === req.user.id, metaDescription: '',
+    isCustomer: booking.customer_user_id === req.user.id,
   });
 });
 
@@ -471,7 +470,7 @@ router.get('/balance/:paymentId', requireLogin, async (req, res) => {
   const shop = await db.get('SELECT display_name FROM users WHERE id = ?', [booking.shop_user_id]);
   res.render('bookings/balance-checkout', {
     title: 'Pay session balance — Tattoo Art Customs',
-    booking, payment, shop, fees, lines: formatReceiptLines(fees), money, metaDescription: '',
+    booking, payment, shop, fees, lines: formatReceiptLines(fees), money,
   });
 });
 
@@ -552,7 +551,7 @@ router.get('/manage', requireSubscription('tattoo_shop'), async (req, res) => {
      ORDER BY d.created_at DESC`, [shopId]);
   res.render('bookings/manage', {
     title: 'Manage bookings — Tattoo Art Customs',
-    upcoming, past, deposits, money, metaDescription: '',
+    upcoming, past, deposits, money,
   });
 });
 
@@ -584,7 +583,7 @@ router.post('/:id/complete', requireSubscription('tattoo_shop'), formLimiter, ch
 
 router.get('/settings', requireSubscription('tattoo_shop'), async (req, res) => {
   const settings = await flow.getBookingSettings(req.user.id);
-  res.render('bookings/settings', { title: 'Booking settings — Tattoo Art Customs', settings, money, metaDescription: '' });
+  res.render('bookings/settings', { title: 'Booking settings — Tattoo Art Customs', settings, money });
 });
 
 router.post('/settings', requireSubscription('tattoo_shop'), formLimiter, checkHoneypot, async (req, res) => {
@@ -611,7 +610,7 @@ router.post('/settings', requireSubscription('tattoo_shop'), formLimiter, checkH
 
 router.get('/chairs', requireSubscription('tattoo_shop'), async (req, res) => {
   const chairs = await db.all('SELECT * FROM shop_chairs WHERE shop_user_id = ? ORDER BY name', [req.user.id]);
-  res.render('bookings/resources', { title: 'Chairs, staff & availability — Tattoo Art Customs', tab: 'chairs', chairs, staff: [], rules: [], money, metaDescription: '' });
+  res.render('bookings/resources', { title: 'Chairs, staff & availability — Tattoo Art Customs', tab: 'chairs', chairs, staff: [], rules: [], money });
 });
 router.post('/chairs', requireSubscription('tattoo_shop'), formLimiter, checkHoneypot, async (req, res) => {
   const name = String(req.body.name || '').trim().slice(0, 80);
@@ -630,7 +629,7 @@ router.post('/chairs/:id/delete', requireSubscription('tattoo_shop'), formLimite
 
 router.get('/staff', requireSubscription('tattoo_shop'), async (req, res) => {
   const staff = await db.all('SELECT * FROM shop_staff WHERE shop_user_id = ? ORDER BY name', [req.user.id]);
-  res.render('bookings/resources', { title: 'Chairs, staff & availability — Tattoo Art Customs', tab: 'staff', chairs: [], staff, rules: [], money, metaDescription: '' });
+  res.render('bookings/resources', { title: 'Chairs, staff & availability — Tattoo Art Customs', tab: 'staff', chairs: [], staff, rules: [], money });
 });
 router.post('/staff', requireSubscription('tattoo_shop'), formLimiter, checkHoneypot, async (req, res) => {
   const name = String(req.body.name || '').trim().slice(0, 80);
@@ -671,7 +670,7 @@ router.get('/availability', requireSubscription('tattoo_shop'), async (req, res)
   res.render('bookings/resources', {
     title: 'Chairs, staff & availability — Tattoo Art Customs', tab: 'availability',
     chairs: [], staff, rules, money,
-    staffList: staff, chairList: chairs, metaDescription: '',
+    staffList: staff, chairList: chairs,
   });
 });
 router.post('/availability', requireSubscription('tattoo_shop'), formLimiter, checkHoneypot, async (req, res) => {

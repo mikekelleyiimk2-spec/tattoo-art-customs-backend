@@ -78,4 +78,4 @@ async function combine(designs, { layout = 'row', style = 'color', background = 
     .toBuffer();
 }
 
-module.exports = { combine, sourceFile };
+module.exports = { combine };

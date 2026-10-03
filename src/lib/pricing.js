@@ -148,4 +148,4 @@ function teeColorLabel(color) {
   return TEE_COLORS.includes(c) ? c : 'black';
 }
 
-module.exports = { isSaleWindow, isMemberSaleWindow, salePriceActive, premadePriceCents, customFullCents, customDepositCents, money, chicagoParts, LINEWORK_ONLY_DISCOUNT, lineworkOnlyPriceCents, processingFeeCents, withFeeCents, withPlayFeeCents, FIRST_CUSTOM_DISCOUNT_RATE, FIRST_CUSTOM_DISCOUNT_CODE, firstCustomFullCents, firstCustomDepositCents, RUSH_FEE_CENTS, RUSH_DESIGNER_CENTS, RUSH_SITE_CENTS, RUSH_SLA_HOURS, STANDARD_SLA_HOURS, TEE_SIZES, TEE_COLORS, TEE_PRICE_CENTS, teePriceCents, teeSizeLabel, teeColorLabel };
+module.exports = { isSaleWindow, salePriceActive, premadePriceCents, customFullCents, money, LINEWORK_ONLY_DISCOUNT, lineworkOnlyPriceCents, processingFeeCents, withFeeCents, withPlayFeeCents, FIRST_CUSTOM_DISCOUNT_CODE, firstCustomFullCents, firstCustomDepositCents, RUSH_FEE_CENTS, RUSH_DESIGNER_CENTS, RUSH_SITE_CENTS, RUSH_SLA_HOURS, STANDARD_SLA_HOURS, TEE_SIZES, TEE_COLORS, teePriceCents, teeSizeLabel, teeColorLabel };

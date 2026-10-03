@@ -54,7 +54,7 @@ router.get('/', async (req, res) => {
      WHERE o.designer_contract_terminated = 1 AND o.custom_status NOT IN ('delivered')
      ORDER BY o.delivery_due ASC`);
   res.render('admin/dashboard', {
-    title: 'Admin — Tattoo Art Customs', stats, designerWatch, terminatedOrders, metaDescription: '',
+    title: 'Admin — Tattoo Art Customs', stats, designerWatch, terminatedOrders,
   });
 });
 
@@ -112,7 +112,7 @@ router.get('/orders', async (req, res) => {
     `SELECT o.*, u.email AS buyer_email, d.title AS design_title FROM orders o
      JOIN users u ON u.id = o.buyer_id LEFT JOIN designs d ON d.id = o.design_id
      ORDER BY o.created_at DESC LIMIT 100`);
-  res.render('admin/orders', { title: 'Orders — Admin', orders, metaDescription: '' });
+  res.render('admin/orders', { title: 'Orders — Admin', orders });
 });
 
 // Confirm a manual (CashApp/Venmo) payment.
@@ -217,7 +217,7 @@ router.get('/custom-orders', async (req, res) => {
     counts[s] = r.n;
   }
   res.render('admin/custom-orders', {
-    title: 'Custom orders — Admin', orders, counts, filter, now: Date.now(), metaDescription: '',
+    title: 'Custom orders — Admin', orders, counts, filter, now: Date.now(),
   });
 });
 
@@ -244,7 +244,7 @@ router.get('/custom-orders/:id', async (req, res) => {
     [order.id, order.requested_artist_id]) : [];
   res.render('admin/custom-order-detail', {
     title: `Custom order ${order.id.slice(0, 8)} — Admin`,
-    order, artists, drafts: parseDrafts(order), now: Date.now(), metaDescription: '',
+    order, artists, drafts: parseDrafts(order), now: Date.now(),
     penalties, penaltyTotals, designerLedger,
   });
 });
@@ -271,7 +271,7 @@ router.get('/site-gift-cards', async (req, res) => {
      FROM site_gift_cards g JOIN users u ON u.id = g.purchaser_user_id
      WHERE ${where} ORDER BY g.created_at DESC LIMIT 200`);
   res.render('admin/site-gift-cards', {
-    title: 'Site Gift Cards — Admin', cards, filter, metaDescription: '',
+    title: 'Site Gift Cards — Admin', cards, filter,
   });
 });
 
@@ -417,7 +417,7 @@ router.get('/custom-orders/:id/draft/:file', async (req, res) => {
 // --- Review queue (flagged designs, bios, messages, shop profiles) ---
 router.get('/reviews', async (req, res) => {
   const items = await db.all("SELECT * FROM review_queue WHERE status = 'open' ORDER BY created_at DESC");
-  res.render('admin/reviews', { title: 'Review queue — Admin', items, metaDescription: '' });
+  res.render('admin/reviews', { title: 'Review queue — Admin', items });
 });
 
 router.post('/reviews/:id/approve', formLimiter, checkHoneypot, async (req, res) => {
@@ -549,7 +549,7 @@ router.get('/appeals', async (req, res) => {
      ORDER BY CASE WHEN a.status = 'open' THEN 0 ELSE 1 END, a.created_at DESC`).catch(() => []);
   res.render('admin/appeals', {
     title: 'Design appeals — Admin', appeals,
-    isOwner: isHeadAdmin(req.user), metaDescription: '',
+    isOwner: isHeadAdmin(req.user),
   });
 });
 
@@ -668,7 +668,7 @@ router.get('/designs', async (req, res) => {
   const designs = await db.all(
     `SELECT d.*, u.email AS artist_email FROM designs d LEFT JOIN users u ON u.id = d.artist_id
      ORDER BY d.created_at DESC LIMIT 100`);
-  res.render('admin/designs', { title: 'Designs — Admin', designs, metaDescription: '' });
+  res.render('admin/designs', { title: 'Designs — Admin', designs });
 });
 
 // --- Colorization queue: linework-only uploads waiting on the site-created
@@ -678,7 +678,7 @@ router.get('/designs', async (req, res) => {
 // publicly or added to the designer's portfolio.
 router.get('/colorization', async (req, res) => {
   const queue = await colorizationQueue();
-  res.render('admin/colorization', { title: 'Colorization queue — Admin', queue, metaDescription: '' });
+  res.render('admin/colorization', { title: 'Colorization queue — Admin', queue });
 });
 const colorStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -734,7 +734,7 @@ router.get('/members', async (req, res) => {
      LEFT JOIN subscriptions s ON s.user_id = u.id AND s.status = 'active'
      LEFT JOIN plans p ON p.id = s.plan_id
      ORDER BY u.created_at DESC LIMIT 200`);
-  res.render('admin/members', { title: 'Members — Admin', users, metaDescription: '' });
+  res.render('admin/members', { title: 'Members — Admin', users });
 });
 
 // Cancel a member's membership (off-site sales rule enforcement).
@@ -765,7 +765,7 @@ router.post('/members/:id/verify-shop', formLimiter, checkHoneypot, async (req, 
 router.get('/bugs', async (req, res) => {
   const bugs = await db.all('SELECT * FROM bug_reports ORDER BY created_at DESC LIMIT 200');
   res.render('admin/bugs', {
-    title: 'Bug Reports — Admin', metaDescription: '', bugs,
+    title: 'Bug Reports — Admin', bugs,
   });
 });
 router.post('/bugs/:id/status', formLimiter, checkHoneypot, async (req, res) => {
@@ -791,7 +791,7 @@ router.get('/founding', async (req, res) => {
     `SELECT display_name, email, founding_shop_ends_at FROM users
      WHERE is_founding_shop = 1 ORDER BY founding_shop_ends_at DESC LIMIT 100`);
   res.render('admin/founding', {
-    title: 'Founding Program — Admin', metaDescription: '',
+    title: 'Founding Program — Admin',
     ...status, winners, foundingArtists, foundingShops,
     money: require('../lib/pricing').money,
   });
@@ -877,7 +877,7 @@ router.get('/payouts', async (req, res) => {
     grantedCents: await adminTaskPay.grantedCents(),
   };
 
-  res.render('admin/payouts', { title: 'Payouts — Admin', balances, runs, cashouts, cashoutHistory, finance, adminEarnings, adminTaskMeta, metaDescription: '' });
+  res.render('admin/payouts', { title: 'Payouts — Admin', balances, runs, cashouts, cashoutHistory, finance, adminEarnings, adminTaskMeta });
 });
 
 // --- Manual cashout processing ---
@@ -938,7 +938,7 @@ router.get('/ads', async (req, res) => {
   const ads = await db.all('SELECT * FROM ads ORDER BY created_at DESC');
   const rev = await adRevenueTotals();
   res.render('admin/ads', {
-    title: 'Ad space — Admin', ads, slots: AD_SLOTS, metaDescription: '',
+    title: 'Ad space — Admin', ads, slots: AD_SLOTS,
     isHead: isHeadAdmin(req.user), adPayouts: rev.payouts,
     adGrossCents: rev.grossCents, adSiteCents: rev.siteCents,
   });
@@ -1012,7 +1012,7 @@ router.get('/prints', async (req, res) => {
     LEFT JOIN designs d ON d.id = po.design_id
     LEFT JOIN combos c ON c.id = po.combo_id
     ORDER BY po.created_at DESC`);
-  res.render('admin/prints', { title: 'Print queue — Admin', prints, products: PRINT_PRODUCTS, metaDescription: '' });
+  res.render('admin/prints', { title: 'Print queue — Admin', prints, products: PRINT_PRODUCTS });
 });
 
 router.post('/prints/:id/fulfill', formLimiter, checkHoneypot, async (req, res) => {
@@ -1054,7 +1054,7 @@ router.get('/contests', async (req, res) => {
     ORDER BY c.created_at DESC`);
   res.render('admin/contests', {
     title: 'Design contests — Admin', contests,
-    money: require('../lib/pricing').money, metaDescription: '',
+    money: require('../lib/pricing').money,
   });
 });
 
@@ -1069,7 +1069,7 @@ router.get('/contests/:id', async (req, res) => {
     [c.id]);
   res.render('admin/contest-detail', {
     title: `Contest — ${c.title} — Admin`, c, entries,
-    money: require('../lib/pricing').money, metaDescription: '',
+    money: require('../lib/pricing').money,
   });
 });
 
@@ -1096,7 +1096,7 @@ router.get('/admins', requireHeadAdmin, async (req, res) => {
   const admins = await db.all(
     "SELECT id, email, display_name, role, created_at FROM users WHERE role IN ('admin', 'head_admin') ORDER BY role, created_at");
   res.render('admin/admins', {
-    title: 'Admins — Admin', admins, metaDescription: '',
+    title: 'Admins — Admin', admins,
     isHeadAdmin: isHeadAdmin(req.user),
   });
 });

@@ -23,7 +23,7 @@ async function userConversations(userId) {
 router.get('/', async (req, res) => {
   res.render('messages/inbox', {
     title: 'Messages — Tattoo Art Customs',
-    conversations: await userConversations(req.user.id), metaDescription: '',
+    conversations: await userConversations(req.user.id),
   });
 });
 
@@ -37,7 +37,7 @@ router.get('/:id', async (req, res) => {
     `SELECT m.*, u.display_name AS sender_name FROM messages m
      JOIN users u ON u.id = m.sender_id
      WHERE m.conversation_id = ? AND m.screened = 0 ORDER BY m.created_at`, [req.params.id]);
-  res.render('messages/thread', { title: 'Messages — Tattoo Art Customs', conv, messages, metaDescription: '' });
+  res.render('messages/thread', { title: 'Messages — Tattoo Art Customs', conv, messages });
 });
 
 // Start a conversation (e.g. "Message about this design" / custom request).

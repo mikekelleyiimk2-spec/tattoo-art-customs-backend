@@ -456,4 +456,4 @@ async function handlePortfolioUpload(req, res, backUrl) {
   res.redirect('/artist/portfolio');
 }
 
-module.exports = { DESIGN_STYLES, portfolioUploadMulter, batchUploadMulter, BATCH_MAX_ITEMS, ZIP_MAX_IMAGES, ZIP_MAX_FILE_MB, IMAGE_MAX_BYTES, handlePortfolioUpload, uploadOneDesign, uploadFlash, maybeBookReviewFee, extractZipImages, titleFromFilename };
+module.exports = { DESIGN_STYLES, portfolioUploadMulter, batchUploadMulter, BATCH_MAX_ITEMS, ZIP_MAX_IMAGES, ZIP_MAX_FILE_MB, IMAGE_MAX_BYTES, handlePortfolioUpload, uploadOneDesign, maybeBookReviewFee, extractZipImages, titleFromFilename };

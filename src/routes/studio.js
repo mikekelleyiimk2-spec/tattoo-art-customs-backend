@@ -26,7 +26,7 @@ async function ownedDesigns(userId) {
 
 router.get('/', async (req, res) => {
   const combos = await db.all('SELECT * FROM combos WHERE user_id = ? ORDER BY created_at DESC', [req.user.id]);
-  res.render('studio/index', { title: 'Design Studio — Tattoo Art Customs', combos, metaDescription: '' });
+  res.render('studio/index', { title: 'Design Studio — Tattoo Art Customs', combos });
 });
 
 router.get('/combine', async (req, res) => {
@@ -34,7 +34,6 @@ router.get('/combine', async (req, res) => {
   res.render('studio/combine', {
     title: 'Combine designs — Design Studio',
     designs,
-    metaDescription: '',
     result: null,
   });
 });
@@ -72,7 +71,6 @@ router.post('/combine', formLimiter, checkHoneypot, async (req, res) => {
     res.render('studio/combine', {
       title: 'Combine designs — Design Studio',
       designs,
-      metaDescription: '',
       result: combo,
     });
   } catch (e) {

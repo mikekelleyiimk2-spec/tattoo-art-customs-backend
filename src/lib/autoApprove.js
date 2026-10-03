@@ -47,4 +47,4 @@ async function autoApproveStaleDesigns() {
   return { approved, blocked };
 }
 
-module.exports = { autoApproveStaleDesigns, AUTO_APPROVER, ONE_HOUR_MS };
+module.exports = { autoApproveStaleDesigns };

@@ -87,4 +87,4 @@ async function sendToRecipient({ destType, details, amountCents, reference }) {
   throw new Error('No automated rail for this destination type.');
 }
 
-module.exports = { isConfigured, sendToBankAccount, sendToRecipient };
+module.exports = { isConfigured, sendToRecipient };

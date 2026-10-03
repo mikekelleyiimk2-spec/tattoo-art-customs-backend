@@ -39,6 +39,56 @@ const uploadPhoto = multer({
   },
 });
 
+// Profile pictures: one per user, square-cropped server-side. Stored under
+// <uploadDir>/avatars and served at /img/avatars/<file>.
+const avatarStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.join(config.uploadDir, 'avatars');
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${req.user.id}-${Date.now()}.jpg`);
+  },
+});
+const uploadAvatar = multer({
+  storage: avatarStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (/^image\/(jpeg|png|webp)$/.test(file.mimetype)) cb(null, true);
+    else cb(new Error('Only JPG, PNG, or WebP images are allowed.'));
+  },
+});
+
+router.post('/avatar', requireLogin, formLimiter, (req, res, next) => {
+  uploadAvatar.single('avatar')(req, res, (err) => {
+    if (err) { req.session.flash = err.message; return res.redirect('/account'); }
+    next();
+  });
+}, checkHoneypot, async (req, res) => {
+  if (!req.file) { req.session.flash = 'Choose a picture to upload.'; return res.redirect('/account'); }
+  const sharp = require('sharp');
+  const tmpPath = `${req.file.path}.tmp`;
+  try {
+    await sharp(req.file.path).resize(256, 256, { fit: 'cover' }).jpeg({ quality: 85 }).toFile(tmpPath);
+    fs.renameSync(tmpPath, req.file.path);
+  } catch (e) {
+    fs.unlink(req.file.path, () => {});
+    fs.unlink(tmpPath, () => {});
+    req.session.flash = 'Could not process that image — try a different file.';
+    return res.redirect('/account');
+  }
+  // Delete the previous picture so replaced avatars don't pile up on disk.
+  const old = await db.get('SELECT avatar_url FROM users WHERE id = ?', [req.user.id]);
+  if (old && old.avatar_url) {
+    const abs = resolveStoredPath(path.join('avatars', path.basename(old.avatar_url)));
+    if (abs && path.resolve(abs) !== path.resolve(req.file.path)) fs.unlink(abs, () => {});
+  }
+  await db.query('UPDATE users SET avatar_url = ? WHERE id = ?', [`/img/avatars/${path.basename(req.file.path)}`, req.user.id]);
+  req.session.flash = 'Profile picture updated.';
+  res.redirect('/account');
+});
+
 router.get('/', requireLogin, async (req, res) => {
   const photos = await db.all('SELECT * FROM member_photos WHERE user_id = ? ORDER BY created_at DESC', [req.user.id]);
   const subs = await db.all(

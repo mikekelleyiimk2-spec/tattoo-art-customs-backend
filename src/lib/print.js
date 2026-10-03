@@ -1,12 +1,8 @@
-// Print products + fulfillment provider hook.
+// Print products catalog.
 //
-// Fulfillment is manual in v1: paid print orders land in the admin print queue
-// with the full-resolution file and the shipping address; the admin prints/ships
-// (or forwards to a local print shop) and marks the order fulfilled.
-//
-// To plug in a print-on-demand API later (e.g. Printful), set PRINTFUL_API_KEY
-// and implement submitToProvider() below — the order flow already collects
-// everything a POD provider needs (file, product, quantity, address).
+// Fulfillment: paid print orders land in the admin print queue; live
+// print-on-demand fulfillment runs through lib/printful.js when
+// PRINTFUL_API_KEY is configured.
 const PRODUCTS = {
   print_8x10: {
     name: 'Fine-art print — 8×10"',
@@ -44,18 +40,4 @@ function productIds() {
   return Object.keys(PRODUCTS);
 }
 
-// Fulfillment provider selection. 'manual' until a POD API key is configured.
-function fulfillmentProvider() {
-  if (process.env.PRINTFUL_API_KEY) return 'printful';
-  return 'manual';
-}
-
-// Future hook: submit a paid print order to the POD provider.
-// Receives the print_orders row + absolute path of the print file.
-async function submitToProvider(printOrder, fileAbsPath) {
-  const provider = fulfillmentProvider();
-  if (provider === 'manual') return { provider, external_id: null };
-  throw new Error(`Fulfillment provider "${provider}" is not implemented yet.`);
-}
-
-module.exports = { PRODUCTS, productIds, fulfillmentProvider, submitToProvider };
+module.exports = { PRODUCTS, productIds };

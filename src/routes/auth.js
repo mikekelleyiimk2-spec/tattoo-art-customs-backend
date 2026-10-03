@@ -108,7 +108,7 @@ router.get('/reset/:token', async (req, res) => {
   const user = await db.get(
     'SELECT id FROM users WHERE reset_token = ? AND reset_expires > ?', [req.params.token, Date.now()]);
   if (!user) return res.status(400).render('error', { title: 'Invalid link', message: 'This reset link is invalid or expired.' });
-  res.render('auth/reset', { title: 'Choose a new password — Tattoo Art Customs', token: req.params.token, metaDescription: '' });
+  res.render('auth/reset', { title: 'Choose a new password — Tattoo Art Customs', token: req.params.token });
 });
 router.post('/reset/:token', authLimiter, checkHoneypot, async (req, res) => {
   const user = await db.get(

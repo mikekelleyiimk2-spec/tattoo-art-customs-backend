@@ -30,7 +30,7 @@ router.post('/join', requireLogin, formLimiter, checkHoneypot, async (req, res) 
 router.get('/mine', requireLogin, async (req, res) => {
   const entries = await getWaitlistForCustomer(req.user.id);
   res.render('waitlist/mine', {
-    title: 'My Waitlist — Tattoo Art Customs', entries, metaDescription: '',
+    title: 'My Waitlist — Tattoo Art Customs', entries,
   });
 });
 
@@ -59,7 +59,7 @@ router.get('/claim/:id', requireLogin, async (req, res) => {
   res.render('waitlist/claim', {
     title: 'Claim Your Spot — Tattoo Art Customs',
     entry, expired, usable: entry.status === 'offered' && !expired,
-    startAt, endAt, metaDescription: '',
+    startAt, endAt,
   });
 });
 
@@ -95,7 +95,7 @@ router.get('/list', requireLogin, requireSubscription('tattoo_shop'), async (req
   const waiting = entries.filter((e) => e.status === 'waiting').length;
   const offered = entries.filter((e) => e.status === 'offered').length;
   res.render('waitlist/list', {
-    title: 'Waitlist — Tattoo Art Customs', entries, waiting, offered, metaDescription: '',
+    title: 'Waitlist — Tattoo Art Customs', entries, waiting, offered,
   });
 });
 

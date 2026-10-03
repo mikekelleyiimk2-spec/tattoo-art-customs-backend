@@ -127,4 +127,4 @@ async function sendCustomDepositReceipt(order) {
   return true;
 }
 
-module.exports = { fulfillPremadeOrder, issueDownloadToken, sendCustomDepositReceipt, DOWNLOAD_TTL_MS };
+module.exports = { fulfillPremadeOrder, issueDownloadToken, sendCustomDepositReceipt };

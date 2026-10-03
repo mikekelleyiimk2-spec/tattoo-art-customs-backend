@@ -10,6 +10,16 @@
       <input type="text" id="display_name" name="display_name" value="<%= currentUser.display_name %>" maxlength="60">
       <p><button class="btn" type="submit">Save</button></p>
     </form>
+    <h2>Profile picture</h2>
+    <% if (currentUser.avatar_url) { %>
+      <p><img src="<%= currentUser.avatar_url %>" alt="Your profile picture" class="avatar-preview"></p>
+    <% } %>
+    <form method="post" action="/account/avatar" enctype="multipart/form-data" class="form">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <label for="avatar">Upload a profile picture (JPG, PNG, or WebP, max 5MB)</label>
+      <input type="file" id="avatar" name="avatar" accept="image/jpeg,image/png,image/webp" required>
+      <p><button class="btn" type="submit">Upload picture</button></p>
+    </form>
     <h2>Change password</h2>
     <form method="post" action="/account/password" class="form">
       <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">

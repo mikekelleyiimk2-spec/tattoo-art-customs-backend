@@ -151,14 +151,16 @@ app.use(express.static(path.join(__dirname, 'public')));
 const wmDir = path.join(config.assetDir, 'designs', 'linework-wm');
 const uploadWmDir = path.join(config.uploadDir, 'designs', 'linework-wm');
 const photosDir = path.join(config.uploadDir, 'photos');
+const avatarsDir = path.join(config.uploadDir, 'avatars');
 const adsDir = path.join(config.uploadDir, 'ads');
-for (const d of [wmDir, uploadWmDir, photosDir, adsDir]) fs.mkdirSync(d, { recursive: true });
+for (const d of [wmDir, uploadWmDir, photosDir, avatarsDir, adsDir]) fs.mkdirSync(d, { recursive: true });
 // Gallery previews change rarely (watermarked files can be regenerated in
 // place on re-approval), so allow a week of caching with ETag revalidation.
 const imgCacheOpts = { maxAge: '7d' };
 app.use('/img/designs', express.static(uploadWmDir, imgCacheOpts));
 app.use('/img/designs', express.static(wmDir, imgCacheOpts));
 app.use('/img/photos', express.static(photosDir));
+app.use('/img/avatars', express.static(avatarsDir));
 app.use('/img/ads', express.static(adsDir));
 
 // Routes

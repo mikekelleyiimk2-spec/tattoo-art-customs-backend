@@ -43,6 +43,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .user-chip { display: inline-flex; align-items: center; gap: .5rem; color: var(--paper); text-decoration: none; }
 .user-chip:hover { text-decoration: underline; }
 .user-avatar { width: 2rem; height: 2rem; border-radius: 50%; background: var(--accent); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: .95rem; flex: none; }
+.user-avatar-img { width: 2rem; height: 2rem; border-radius: 50%; object-fit: cover; flex: none; }
+.avatar-preview { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; }
 .user-name { max-width: 9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .95rem; }
 .btn {
   display: inline-block; background: var(--accent); color: #fff !important; border: none;

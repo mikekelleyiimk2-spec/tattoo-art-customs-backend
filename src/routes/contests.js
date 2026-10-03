@@ -80,7 +80,6 @@ router.get('/new', requireLogin, (req, res) => {
     styles: DESIGN_STYLES,
     suggestions: CONTEST_PRIZE_SUGGESTIONS.map((p) => ({ prize: p, quote: contestQuote(p) })),
     minPrize: CONTEST_MIN_PRIZE_CENTS, money: pricing.money,
-    metaDescription: '',
   });
 });
 
@@ -172,7 +171,6 @@ router.get('/:id', async (req, res) => {
     title: `${c.title} — Design Contest — Tattoo Art Customs`,
     c, entries, entryCount: all.length, isCustomer, isAdmin, canPick, canEnter, me,
     money: pricing.money, fmtLeft, timeLeftMs, leftMs: timeLeftMs(c),
-    metaDescription: '',
   });
 });
 
@@ -197,7 +195,7 @@ router.get('/entry/:entryId/file', async (req, res) => {
 router.get('/:id/enter', requireLogin, requireDesignerAccess(), (req, res) => {
   res.render('contests/enter', {
     title: 'Enter contest — Tattoo Art Customs',
-    contestId: req.params.id, metaDescription: '',
+    contestId: req.params.id,
   });
 });
 

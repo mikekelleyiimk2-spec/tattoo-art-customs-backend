@@ -65,7 +65,6 @@ async function renderOrderForm(req, res, source) {
     title: `Order a print — Tattoo Art Customs`,
     source,
     products: PRODUCTS,
-    metaDescription: '',
   });
 }
 

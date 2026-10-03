@@ -56,7 +56,7 @@ router.get('/capture/:pendingId', requireLogin, async (req, res) => {
     delete req.session.gc_pending;
     res.render('giftcards/success', {
       title: 'Gift Card Ready — Tattoo Art Customs',
-      code, amount: money(amount_cents), amount_cents, already: !!already, metaDescription: '',
+      code, amount: money(amount_cents), amount_cents, already: !!already,
     });
   } catch (e) {
     req.session.flash = 'Gift card activation failed: ' + e.message;
@@ -102,7 +102,7 @@ router.post('/redeem', requireLogin, formLimiter, checkHoneypot, async (req, res
 router.get('/mine', requireLogin, async (req, res) => {
   const cards = await getGiftCardsForPurchaser(req.user.id);
   res.render('giftcards/mine', {
-    title: 'My Gift Cards — Tattoo Art Customs', cards, money, metaDescription: '',
+    title: 'My Gift Cards — Tattoo Art Customs', cards, money,
   });
 });
 
@@ -114,7 +114,7 @@ router.get('/shop', requireLogin, requireSubscription('tattoo_shop'), async (req
   const redeemed = cards.filter((c) => c.status === 'redeemed');
   res.render('giftcards/shop', {
     title: 'Gift Card Sales — Tattoo Art Customs',
-    cards, totalSold, redeemedCount: redeemed.length, money, metaDescription: '',
+    cards, totalSold, redeemedCount: redeemed.length, money,
   });
 });
 
