@@ -14,7 +14,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const SUPPORTED = ['en', 'de', 'it', 'pt-BR', 'fr', 'es', 'sv'];
+const SUPPORTED = ['en', 'de', 'it', 'pt-BR', 'fr', 'es', 'sv', 'ja', 'ru', 'zh-CN', 'ko', 'th'];
 const NORMALIZED = new Map(SUPPORTED.map((l) => [l.toLowerCase(), l]));
 
 const LOCALE_NAMES = {
@@ -25,6 +25,11 @@ const LOCALE_NAMES = {
   fr: 'Français',
   es: 'Español',
   sv: 'Svenska',
+  ja: '日本語',
+  ru: 'Русский',
+  'zh-CN': '简体中文',
+  ko: '한국어',
+  th: 'ไทย',
 };
 
 // BCP 47 tags for Intl formatting.
@@ -36,6 +41,11 @@ const INTL_TAG = {
   fr: 'fr-FR',
   es: 'es-ES',
   sv: 'sv-SE',
+  ja: 'ja-JP',
+  ru: 'ru-RU',
+  'zh-CN': 'zh-CN',
+  ko: 'ko-KR',
+  th: 'th-TH',
 };
 
 // Locale -> display currency. en covers USA/UK/AU/CA: USD display with the

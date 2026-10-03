@@ -15,12 +15,21 @@ function isHeadAdmin(user) {
 async function loadUser(req, res, next) {
   res.locals.currentUser = null;
   res.locals.notifCount = 0;
+  res.locals.impersonator = null;
   if (req.session && req.session.userId) {
     const user = await db.get(
       'SELECT id, email, role, display_name, avatar_url FROM users WHERE id = ?', [req.session.userId]);
     if (user) {
       res.locals.currentUser = user;
       req.user = user;
+      // Head-admin impersonation: expose who is really behind the session
+      // so the layout can show a "viewing as" banner with a stop button.
+      if (req.session.impersonatorId && req.session.impersonatorId !== user.id) {
+        const admin = await db.get(
+          'SELECT id, email, display_name FROM users WHERE id = ?', [req.session.impersonatorId]);
+        if (admin) res.locals.impersonator = admin;
+        else delete req.session.impersonatorId;
+      }
       try {
         const { unreadCount } = require('../lib/notify');
         res.locals.notifCount = await unreadCount(user.id);

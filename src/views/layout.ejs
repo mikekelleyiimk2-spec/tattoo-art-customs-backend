@@ -96,6 +96,14 @@
   </nav>
 </header>
 
+<% if (typeof impersonator !== 'undefined' && impersonator) { %>
+<div class="flash" role="alert" style="background:#7c2d12;border-color:#f59e0b">
+  Viewing as <%= currentUser.email %> (<%= currentUser.role %>)
+  <form method="post" action="/admin/stop-impersonating" style="display:inline;margin-left:12px">
+    <button class="btn btn-secondary" type="submit">Stop impersonating</button>
+  </form>
+</div>
+<% } %>
 <% if (flash) { %>
 <div class="flash" role="alert"><%= flash %></div>
 <% } %>

@@ -20,7 +20,43 @@ const { recordTask: recordAdminTask } = require('../lib/adminTaskPay');
 const { verifyShop } = require('../shop/verification');
 
 const router = express.Router();
+
+// Stop impersonating — must be registered BEFORE the admin guard below,
+// because while impersonating a non-admin account req.user is that account
+// and would fail requireRole('admin').
+router.post('/stop-impersonating', requireLogin, async (req, res) => {
+  if (req.session.impersonatorId) {
+    const adminId = req.session.impersonatorId;
+    delete req.session.impersonatorId;
+    req.session.userId = adminId;
+    req.session.flash = 'Back to your admin account.';
+  }
+  res.redirect('/admin/members');
+});
+
 router.use(requireLogin, requireRole('admin'));
+
+// Start impersonating a user (head admin only): browse the site exactly as
+// that account. The original admin id is kept in the session so we can
+// switch back. Cannot impersonate another head_admin or yourself.
+router.post('/members/:id/impersonate', requireHeadAdmin, formLimiter, checkHoneypot, async (req, res) => {
+  const target = await db.get('SELECT id, email, role FROM users WHERE id = ?', [req.params.id]);
+  if (!target || target.id === req.user.id || target.role === 'head_admin') {
+    req.session.flash = 'You can\'t switch to that account.';
+    return res.redirect('/admin/members');
+  }
+  req.session.impersonatorId = req.user.id;
+  req.session.userId = target.id;
+  try {
+    await db.insert('review_queue', {
+      item_type: 'note', item_id: target.id,
+      reason: `Head admin ${req.user.email} started impersonating ${target.email}`,
+      status: 'closed', created_at: db.now(), reviewed_at: db.now(),
+    });
+  } catch (e) { console.error('impersonation audit log failed:', e.message); }
+  req.session.flash = `Now viewing as ${target.email}.`;
+  res.redirect('/account');
+});
 
 // Per-task admin pay (owner rule 2026-09-29): every paid admin action below
 // records task pay for the acting admin out of the site's overhead. A
