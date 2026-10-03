@@ -232,6 +232,19 @@ router.post('/push/unsubscribe', express.json(), async (req, res) => {
   res.json({ ok: true });
 });
 
+// Send a test push to the logged-in website user's own subscriptions, so
+// they can verify end-to-end delivery right after enabling.
+router.post('/push/test', express.json(), async (req, res) => {
+  if (!req.user) return res.status(401).json({ ok: false, error: 'login required' });
+  const { pushToUser } = require('../lib/push');
+  const sent = await pushToUser(req.user.id, {
+    title: 'Test push',
+    body: 'Push notifications are working on this device.',
+    url: '/notifications',
+  });
+  res.json({ ok: true, sent });
+});
+
 // Register the native app's Expo push token (x-api-token auth).
 router.post('/push/expo-token', express.json(), async (req, res) => {
   const user = await userFromToken(req);

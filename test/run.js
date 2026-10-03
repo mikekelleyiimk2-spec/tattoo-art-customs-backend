@@ -3026,6 +3026,40 @@ async function main() {
   r = await areq('POST', '/api/push/unsubscribe', { body: { endpoint: 'https://push.test.local/sub/1' } });
   ok(r.status === 200 && sdb.prepare("SELECT COUNT(*) AS c FROM push_subscriptions WHERE endpoint = 'https://push.test.local/sub/1'").get().c === 0,
     'web push subscription removed');
+  // Test-push endpoint: 401 without login; with login it dispatches and
+  // reports how many deliveries were attempted. End-to-end: register a
+  // web subscription over HTTP, then hit the test endpoint.
+  {
+    const nores = await fetch(`http://localhost:${PORT}/api/push/test`, { method: 'POST', redirect: 'manual' });
+    ok(nores.status === 401, 'push test requires login');
+    const cookies = Object.entries(adminJar).map(([k, v]) => `${k}=${v}`).join('; ');
+    const sres = await fetch(`http://localhost:${PORT}/api/push/subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', cookie: cookies },
+      body: JSON.stringify({ subscription: { endpoint: 'https://push.test.local/sub/2', keys: { p256dh: 'dh2', auth: 'auth2' } } }),
+    });
+    ok(sres.status === 200 && (await sres.json()).ok, 'web subscription registered for test push');
+    const tres = await fetch(`http://localhost:${PORT}/api/push/test`, {
+      method: 'POST', headers: { cookie: cookies },
+    });
+    const tdata = await tres.json();
+    ok(tres.status === 200 && tdata.ok && tdata.sent >= 1, 'push test endpoint dispatches and reports attempts');
+    sdb.prepare("DELETE FROM push_subscriptions WHERE endpoint = 'https://push.test.local/sub/2'").run();
+  }
+  // Web-channel delivery path, exercised directly in this process (same
+  // pattern as the expo test above): a saved subscription produces a
+  // logged web-push attempt with the right title.
+  {
+    const { pushToUser } = require('../src/lib/push');
+    const adminId = sdb.prepare("SELECT id FROM users WHERE email = 'admin@test.local'").get().id;
+    sdb.prepare('INSERT INTO push_subscriptions (id, user_id, endpoint, p256dh, auth, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+      .run('ps-test-web', adminId, 'https://push.test.local/sub/2', 'dh2', 'auth2', Date.now());
+    sentLog.length = 0;
+    const sent = await pushToUser(adminId, { title: 'Test push', body: 'Delivery check.', url: '/notifications' });
+    ok(sent >= 1 && sentLog.some((e) => e.channel === 'web' && e.title === 'Test push'),
+      'test push logged for the web channel');
+    sdb.prepare("DELETE FROM push_subscriptions WHERE endpoint = 'https://push.test.local/sub/2'").run();
+  }
   // Expo token registration via API token, then an admin push attempt is logged.
   {
     const linkRes = await fetch(`http://localhost:${PORT}/api/link-account`, {

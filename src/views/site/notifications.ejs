@@ -3,6 +3,8 @@
   <h3>Push notifications</h3>
   <p class="muted" id="push-status">Checking push status on this device…</p>
   <p><button class="btn btn-secondary" id="push-toggle" type="button" style="display:none">Enable push notifications</button></p>
+  <p><button class="btn" id="push-test" type="button" style="display:none">Send me a test push</button></p>
+  <p class="muted" id="push-test-status"></p>
 </div>
 <script>
 (function () {
@@ -21,6 +23,9 @@
     return outputArray;
   }
   var currentSub = null;
+  var pendingSub = null;
+  var testBtn = document.getElementById('push-test');
+  var testStatus = document.getElementById('push-test-status');
   function refresh() {
     navigator.serviceWorker.ready.then(function (reg) {
       return reg.pushManager.getSubscription();
@@ -29,15 +34,33 @@
       if (sub) {
         statusEl.textContent = 'Push notifications are ON for this device.';
         btn.textContent = 'Turn off push notifications';
+        testBtn.style.display = '';
       } else {
         statusEl.textContent = 'Push notifications are OFF for this device. Admins: turn them on to get pushed the moment a design needs review.';
         btn.textContent = 'Enable push notifications';
+        testBtn.style.display = 'none';
+        testStatus.textContent = '';
       }
       btn.style.display = '';
     }).catch(function () {
       statusEl.textContent = 'Could not check push status.';
     });
   }
+  testBtn.addEventListener('click', function () {
+    testStatus.textContent = 'Sending test push…';
+    fetch('/api/push/test', { method: 'POST' })
+      .then(function (r) { return r.json().then(function (d) { return { status: r.status, body: d }; }); })
+      .then(function (res) {
+        if (res.status === 200 && res.body.ok) {
+          testStatus.textContent = res.body.sent > 0
+            ? 'Test push sent — it should arrive on this device in a few seconds.'
+            : 'Test push accepted but no subscription was found on the server — try turning push off and on again.';
+        } else {
+          testStatus.textContent = 'Test push failed: ' + ((res.body && res.body.error) || ('server ' + res.status));
+        }
+      })
+      .catch(function (e) { testStatus.textContent = 'Test push failed: ' + e.message; });
+  });
   btn.addEventListener('click', function () {
     if (currentSub) {
       var endpoint = currentSub.endpoint;
@@ -61,12 +84,25 @@
         });
       });
     }).then(function (sub) {
+      pendingSub = sub;
       return fetch('/api/push/subscribe', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subscription: sub.toJSON() }),
       });
+    }).then(function (r) {
+      return r.json().then(function (d) {
+        if (!r.ok || !d.ok) throw new Error((d && d.error) || ('server ' + r.status));
+      });
     }).then(refresh).catch(function (e) {
-      statusEl.textContent = 'Could not enable push: ' + e.message;
+      // Never leave a lying browser-side subscription: if the server didn't
+      // save it, no push will ever arrive, so drop it and say what happened.
+      var drop = pendingSub ? pendingSub.unsubscribe().catch(function () {}) : Promise.resolve();
+      pendingSub = null;
+      return drop.then(function () {
+        currentSub = null;
+        statusEl.textContent = 'Could not enable push: ' + e.message;
+        btn.style.display = '';
+      });
     });
   });
   navigator.serviceWorker.register('/sw.js').then(refresh).catch(function () {
