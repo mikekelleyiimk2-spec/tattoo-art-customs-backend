@@ -10,12 +10,13 @@ const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const IOS_APP_PRICE_CENTS = 167;
 const IOS_APP_NAME = 'Tattoo Art Customs — iOS App (Sideload)';
 
-// Purchase page for the iOS app ($0.99 via website, sideload IPA).
+// Purchase page for the iOS app ($1.67 via website, sideload IPA).
 router.get('/', async (req, res) => {
   res.render('site/ios-app', {
     title: 'Get the iOS App — Tattoo Art Customs',
     price: IOS_APP_PRICE_CENTS,
-    metaDescription: 'Get Tattoo Art Customs for iPhone — $0.99, sideload via SideStore. No App Store needed.',
+    user: req.user || null,
+    metaDescription: 'Get Tattoo Art Customs for iPhone — $1.67, sideload via SideStore. No App Store needed.',
   });
 });
 
