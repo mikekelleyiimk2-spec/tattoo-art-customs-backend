@@ -57,7 +57,7 @@
         <% } %>
         <form method="post" action="/admin/designs/<%= d.id %>/delete" style="display:inline" class="del-form">
           <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-          <button class="linklike del-btn" type="submit">Delete</button>
+          <button class="linklike del-btn" type="button">Delete</button>
         </form>
         <% } %>
       </td>
@@ -68,15 +68,17 @@
 <script>
 // Two-step delete confirmation (no native confirm() dialog, so it works with
 // keyboard, automation, and mobile browsers): first click arms, second submits.
+// The button is type="button" (not submit) so arming never triggers a submit.
 document.querySelectorAll('form.del-form').forEach(function(f) {
-  f.addEventListener('submit', function(e) {
+  var btn = f.querySelector('.del-btn');
+  btn.addEventListener('click', function() {
     if (!f.dataset.armed) {
-      e.preventDefault();
       f.dataset.armed = '1';
-      var btn = f.querySelector('.del-btn');
       btn.textContent = 'Confirm delete?';
       btn.style.color = '#c00';
       btn.style.fontWeight = 'bold';
+    } else {
+      f.submit();
     }
   });
 });
