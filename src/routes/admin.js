@@ -768,11 +768,12 @@ router.post('/members/:id/verify-shop', formLimiter, checkHoneypot, async (req, 
 // re-granting extends the existing active row instead of stacking.
 router.post('/members/:id/grant-comp', requireHeadAdmin, formLimiter, checkHoneypot, async (req, res) => {
   const slug = String(req.body.plan || '');
+  const lifetime = req.body.lifetime === '1';
   const months = parseInt(req.body.months, 10);
   const plan = await db.get('SELECT * FROM plans WHERE slug = ? AND active = 1', [slug]);
   if (!plan || !['customer', 'customer_annual', 'design_artist', 'tattoo_shop'].includes(slug)
-      || !Number.isInteger(months) || months < 1 || months > 36) {
-    req.session.flash = 'Choose a valid plan and a term of 1–36 months.';
+      || (!lifetime && (!Number.isInteger(months) || months < 1 || months > 36))) {
+    req.session.flash = lifetime ? 'Choose a valid plan.' : 'Choose a valid plan and a term of 1–36 months.';
     return res.redirect('/admin/members');
   }
   const user = await db.get('SELECT id, role FROM users WHERE id = ?', [req.params.id]);
@@ -792,12 +793,16 @@ router.post('/members/:id/grant-comp', requireHeadAdmin, formLimiter, checkHoney
     `SELECT * FROM subscriptions WHERE user_id = ? AND plan_id = ? AND status = 'active'
      AND (current_period_end IS NULL OR current_period_end > ?)`, [user.id, plan.id, nowMs]);
   if (existing) {
-    const from = Math.max(Number(existing.current_period_end) || nowMs, nowMs);
-    await db.update('subscriptions', existing.id, { current_period_end: from + terms * termMs });
+    if (lifetime) {
+      await db.update('subscriptions', existing.id, { current_period_end: null });
+    } else {
+      const from = Math.max(Number(existing.current_period_end) || nowMs, nowMs);
+      await db.update('subscriptions', existing.id, { current_period_end: from + terms * termMs });
+    }
   } else {
     await db.insert('subscriptions', {
       user_id: user.id, plan_id: plan.id, status: 'active',
-      paypal_subscription_id: '', current_period_end: nowMs + terms * termMs,
+      paypal_subscription_id: '', current_period_end: lifetime ? null : nowMs + terms * termMs,
       paid_with_credit: 0, created_at: db.now(),
     });
   }
@@ -805,7 +810,9 @@ router.post('/members/:id/grant-comp', requireHeadAdmin, formLimiter, checkHoney
   const { grantPlanRole } = require('../lib/planRoles');
   await grantPlanRole(user.id, plan.slug);
   await payAdmin(req, 'member_comp_grant', 'user', user.id);
-  req.session.flash = `Complimentary ${plan.name} granted for ${months} month${months === 1 ? '' : 's'}.`;
+  req.session.flash = lifetime
+    ? `Complimentary ${plan.name} granted for life.`
+    : `Complimentary ${plan.name} granted for ${months} month${months === 1 ? '' : 's'}.`;
   res.redirect('/admin/members');
 });
 
