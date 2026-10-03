@@ -3,7 +3,8 @@
   <h2><%= t('membership.which') %></h2>
   <ul>
     <li><strong><%= t('membership.sell_art') %></strong> <%= t('membership.sell_art_tail', {price: fmtMoney(567)}) %></li>
-    <li><strong><%= t('membership.own_shop') %></strong> <%= t('membership.own_shop_tail', {price: fmtMoney(10398)}) %> <strong><%= t('membership.includes_artist') %></strong></li>
+    <li><strong><%= t('membership.own_shop') %></strong> <%= t('membership.own_shop_tail', {price: fmtMoney(10398)}) %> <strong><%= t('membership.includes_artist') %></strong>
+      <br><a href="/membership/shops"><%= t('membership.shop_page_link') %></a></li>
     <li><strong><%= t('membership.just_customer') %></strong> <%= t('membership.just_customer_tail', {price: fmtMoney(567)}) %></li>
   </ul>
   <p class="muted"><%= t('membership.upload_free') %></p>

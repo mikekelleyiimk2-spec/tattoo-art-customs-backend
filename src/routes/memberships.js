@@ -15,6 +15,19 @@ const { isAdminRole } = require('../middleware/auth');
 const { ensureReferralCode, firstMonthDiscountEligible, markFirstMonthUsed, grantReferralReward } = require('../lib/referrals');
 const { recordPaypalActivation, recordPaypalSale } = require('../lib/subscriptionRevenue');
 
+// Public landing page for the Tattoo Shop membership: shop-exclusive
+// benefits on top, the full included marketplace feature set below.
+router.get('/shops', async (req, res) => {
+  const shopPlan = await db.get("SELECT * FROM plans WHERE slug = 'tattoo_shop' AND active = 1");
+  res.render('membership/shops', {
+    title: 'Tattoo Shop Membership — Tattoo Art Customs',
+    shopPlan,
+    paypalReady: config.paypalPlansConfigured(),
+    loggedIn: !!req.user,
+    metaDescription: 'Tattoo Shop membership: verified directory listing, 20% referral commissions, shop toolkit in development, and full Design Artist access. $103.98/year.',
+  });
+});
+
 router.get('/', requireLogin, async (req, res) => {
   const plans = await db.all('SELECT * FROM plans WHERE active = 1 ORDER BY price_cents');
   const subs = await db.all(

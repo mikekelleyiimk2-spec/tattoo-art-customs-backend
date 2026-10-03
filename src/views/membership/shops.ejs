@@ -1,0 +1,110 @@
+<div class="hero">
+  <h1><%= t('membership.shops.title') %></h1>
+  <p class="tagline"><%= t('membership.shops.tagline') %></p>
+  <% if (shopPlan) { %>
+  <p class="price"><strong><%= fmtMoney(shopPlan.price_cents) %></strong> / <%= t('membership.per_year') %></p>
+  <% } %>
+  <% if (loggedIn && paypalReady) { %>
+  <form method="post" action="/membership/subscribe/tattoo_shop">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <button class="btn btn-primary" type="submit"><%= t('membership.shops.cta') %></button>
+  </form>
+  <% } else if (!loggedIn) { %>
+  <p><a class="btn btn-primary" href="/signup?plan=tattoo_shop"><%= t('membership.shops.cta') %></a></p>
+  <p class="muted"><%= t('membership.shops.login_note') %></p>
+  <% } %>
+</div>
+
+<h2><%= t('membership.shops.exclusive_title') %></h2>
+<div class="grid">
+  <div class="card">
+    <h3><%= t('membership.shops.ex1t') %></h3>
+    <p><%= t('membership.shops.ex1d') %></p>
+  </div>
+  <div class="card">
+    <h3><%= t('membership.shops.ex2t') %></h3>
+    <p><%= t('membership.shops.ex2d') %></p>
+  </div>
+  <div class="card">
+    <h3><%= t('membership.shops.ex3t') %></h3>
+    <p><%= t('membership.shops.ex3d') %></p>
+  </div>
+  <div class="card">
+    <h3><%= t('membership.shops.ex4t') %></h3>
+    <p><%= t('membership.shops.ex4d') %></p>
+  </div>
+  <div class="card">
+    <h3><%= t('membership.shops.ex5t') %></h3>
+    <p><%= t('membership.shops.ex5d') %></p>
+  </div>
+</div>
+
+<h2><%= t('membership.shops.toolkit_title') %></h2>
+<p class="muted"><%= t('membership.shops.toolkit_sub') %></p>
+<div class="grid">
+  <div class="card"><h3><%= t('membership.shops.tk1') %></h3></div>
+  <div class="card"><h3><%= t('membership.shops.tk2') %></h3></div>
+  <div class="card"><h3><%= t('membership.shops.tk3') %></h3></div>
+  <div class="card"><h3><%= t('membership.shops.tk4') %></h3></div>
+  <div class="card"><h3><%= t('membership.shops.tk5') %></h3></div>
+  <div class="card"><h3><%= t('membership.shops.tk6') %></h3></div>
+  <div class="card"><h3><%= t('membership.shops.tk7') %></h3></div>
+  <div class="card"><h3><%= t('membership.shops.tk8') %></h3></div>
+  <div class="card"><h3><%= t('membership.shops.tk9') %></h3></div>
+  <div class="card"><h3><%= t('membership.shops.tk10') %></h3></div>
+</div>
+
+<h2><%= t('membership.shops.all_title') %></h2>
+<p class="muted"><%= t('membership.shops.all_sub') %></p>
+<div class="grid">
+  <div class="card">
+    <h3><%= t('membership.shops.a1t') %></h3>
+    <p><%= t('membership.shops.a1d') %></p>
+  </div>
+  <div class="card">
+    <h3><%= t('membership.shops.a2t') %></h3>
+    <p><%= t('membership.shops.a2d') %></p>
+  </div>
+  <div class="card">
+    <h3><%= t('membership.shops.a3t') %></h3>
+    <p><%= t('membership.shops.a3d') %></p>
+  </div>
+  <div class="card">
+    <h3><%= t('membership.shops.a4t') %></h3>
+    <p><%= t('membership.shops.a4d') %></p>
+  </div>
+  <div class="card">
+    <h3><%= t('membership.shops.a5t') %></h3>
+    <p><%= t('membership.shops.a5d') %></p>
+  </div>
+  <div class="card">
+    <h3><%= t('membership.shops.a6t') %></h3>
+    <p><%= t('membership.shops.a6d') %></p>
+  </div>
+</div>
+
+<h2><%= t('membership.shops.price_title') %></h2>
+<div class="card">
+  <% if (shopPlan) { %>
+  <p><strong><%= fmtMoney(shopPlan.price_cents) %></strong> / <%= t('membership.per_year') %></p>
+  <% } %>
+  <p><%= t('membership.shops.price_detail') %></p>
+  <% if (loggedIn && paypalReady) { %>
+  <form method="post" action="/membership/subscribe/tattoo_shop">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <button class="btn btn-primary" type="submit"><%= t('membership.shops.cta') %></button>
+  </form>
+  <% } else if (!loggedIn) { %>
+  <p><a class="btn btn-primary" href="/signup?plan=tattoo_shop"><%= t('membership.shops.cta') %></a></p>
+  <% } %>
+</div>
+
+<h2><%= t('membership.shops.faq_title') %></h2>
+<div class="card">
+  <h3><%= t('membership.shops.q1') %></h3>
+  <p><%= t('membership.shops.a1') %></p>
+  <h3><%= t('membership.shops.q2') %></h3>
+  <p><%= t('membership.shops.a2') %></p>
+  <h3><%= t('membership.shops.q3') %></h3>
+  <p><%= t('membership.shops.a3') %></p>
+</div>

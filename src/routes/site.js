@@ -83,6 +83,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/`, changefreq: 'daily', priority: '1.0' },
     { loc: `${base}/gallery`, changefreq: 'daily', priority: '0.9' },
     { loc: `${base}/membership`, changefreq: 'weekly', priority: '0.7' },
+    { loc: `${base}/membership/shops`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/advertise`, changefreq: 'weekly', priority: '0.6' },
     { loc: `${base}/about`, changefreq: 'monthly', priority: '0.5' },
     { loc: `${base}/raffle`, changefreq: 'weekly', priority: '0.6' },
