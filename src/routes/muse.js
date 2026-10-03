@@ -103,4 +103,28 @@ router.post('/notify', messageLimiter, async (req, res) => {
   return res.json({ ok: true, notified });
 });
 
+// GET /api/muse/ios-sales?since=<order id>
+// Returns paid ios_app orders newer than `since` (newest first, max 50).
+// Powers the owner's "notify me on every iOS app sale" watcher.
+// Same service-token auth as /notify; 404s when MUSE_SERVICE_TOKEN unset.
+router.get('/ios-sales', async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  const since = parseInt(req.query.since, 10) || 0;
+  let rows = [];
+  try {
+    rows = await db.all(
+      `SELECT o.id, o.amount_cents, o.fee_cents, o.paid_at, u.email AS buyer_email
+       FROM orders o LEFT JOIN users u ON u.id = o.buyer_id
+       WHERE o.order_type = 'ios_app' AND o.status = 'paid' AND o.id > ?
+       ORDER BY o.id DESC LIMIT 50`,
+      [since]
+    );
+  } catch (e) {
+    console.error('[muse/ios-sales] query failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'query failed' });
+  }
+  return res.json({ ok: true, sales: rows });
+});
+
 module.exports = router;
