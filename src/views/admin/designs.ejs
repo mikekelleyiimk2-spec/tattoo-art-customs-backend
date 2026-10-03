@@ -33,11 +33,14 @@
           <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
           <button class="btn" type="submit">Approve</button>
         </form>
+        <% } %>
+        <% /* Reject doubles as takedown for live designs: unlists from gallery, reversible via re-approve. */ %>
         <form method="post" action="/admin/designs/<%= d.id %>/reject" style="display:inline" onsubmit="return this.reason.value.trim() ? true : (alert('Give a reason — the artist must be told why.'), false);">
           <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-          <input type="text" name="reason" placeholder="Rejection reason (sent to artist)" size="28" maxlength="1000">
-          <button class="btn btn-secondary" type="submit">Reject</button>
+          <input type="text" name="reason" placeholder="Reason (sent to artist)<%= d.status === 'approved' ? ' — takedown reason' : '' %>" size="28" maxlength="1000">
+          <button class="btn btn-secondary" type="submit"><%= d.status === 'approved' ? 'Take down' : 'Reject' %></button>
         </form>
+        <% if (d.status !== 'approved') { %>
         <% if (d.status !== 'on_hold') { %>
         <form method="post" action="/admin/designs/<%= d.id %>/hold" style="display:inline" onsubmit="return confirm('Place this piece on hold? Only a personal admin decision can approve or reject it afterwards — it will never be auto-approved.');">
           <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
