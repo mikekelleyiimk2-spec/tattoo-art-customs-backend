@@ -108,6 +108,12 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   res.locals.flash = req.session.flash || null;
   delete req.session.flash;
+  // Never let browsers cache pages rendered for a signed-in user: the nav
+  // user-chip and impersonation banner must always reflect the live session.
+  if (req.session && req.session.userId) {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.set('Pragma', 'no-cache');
+  }
   res.locals.paypalReady = config.paypalConfigured();
   res.locals.adsenseId = config.adsense.publisherId;
   res.locals.siteName = 'Tattoo Art Customs';
