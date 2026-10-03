@@ -2144,6 +2144,9 @@ async function main() {
   const custId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('cust@test.local').id;
   r = await req('GET', '/account/upload');
   ok(r.status === 200 && r.text.includes('Upload your art'), 'upload page open to any logged-in user');
+  ok(r.text.includes('approved by an administrator') && !r.text.includes('publish immediately'),
+    'plain member sees review-queue copy, not the owner instant-publish line');
+  ok(!r.text.includes('/artist/portfolio/upload-batch'), 'plain member is not offered the designer batch uploader');
   const upForm = new FormData();
   upForm.append('title', 'Customer Doodle');
   upForm.append('color', new Blob(['colorbytes'], { type: 'image/jpeg' }), 'c.jpg');
@@ -2354,6 +2357,8 @@ async function main() {
   ok(r.text.includes('anti-trace'), 'upload form states black anti-trace marks apply in both cases');
   r = await artreq('GET', '/artist');
   ok(r.text.includes('My portfolio') && r.text.includes('Upload new piece'), 'dashboard links portfolio prominently');
+  ok(r.text.includes('/artist/portfolio/upload-batch') && r.text.includes('Batch / Zip upload'),
+    'dashboard links the batch/zip uploader alongside single upload');
 
   // Message initiation UI: the public artist page exposes a message button
   // to logged-in visitors (not on your own page); the start route guards
@@ -2977,6 +2982,12 @@ async function main() {
     'no admin review notification for an owner upload');
   r = await req('GET', '/gallery');
   ok(r.text.includes('Owner Live Piece'), 'owner piece is in the gallery');
+  // Owner sees accurate copy on the upload page: instant publish, batch link.
+  r = await areq('GET', '/account/upload');
+  ok(r.status === 200 && r.text.includes('publish immediately') && !r.text.includes('approved by an administrator'),
+    'owner sees instant-publish copy instead of the review-queue line');
+  ok(r.text.includes('Publish now') && r.text.includes('/artist/portfolio/upload-batch'),
+    'owner gets Publish-now button and the batch/zip uploader link');
   // A plain admin (not head_admin) still goes through the review queue —
   // the auto-approve is scoped to the owner only. (Uses a fresh admin:
   // the earlier normadmin fixture was demoted back to customer.)

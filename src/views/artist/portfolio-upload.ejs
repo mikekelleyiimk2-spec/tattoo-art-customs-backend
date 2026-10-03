@@ -64,6 +64,6 @@
   <label for="color">Full-color image (JPG/PNG/WebP, max 15 MB) — optional</label>
   <input type="file" id="color" name="color" accept="image/jpeg,image/png,image/webp">
   <p class="muted">No color version? Leave the color file blank — your linework can still be approved and posted (with our watermark) while we create the full-color version. On sales of pieces where you did not supply the color, the designer's commission rate is 5 points lower and the website keeps a 5-point colorization fee — see your commission dashboard.</p>
-  <p class="muted">An administrator reviews every upload. Your piece enters your portfolio within <strong>2 hours</strong>, or you will receive a rejection reason.</p>
+  <p class="muted"><% if (currentUser && currentUser.role === 'head_admin') { %>Your uploads <strong>publish immediately</strong> — no administrator approval needed.<% } else { %>An administrator reviews every upload. Your piece enters your portfolio within <strong>2 hours</strong>, or you will receive a rejection reason.<% } %></p>
   <p><button class="btn" type="submit">Upload for review</button></p>
 </form>

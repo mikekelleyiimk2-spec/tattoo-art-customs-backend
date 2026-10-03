@@ -8,7 +8,7 @@ const db = require('../db');
 const config = require('../config');
 const { resolveStoredPath } = require('../lib/storage');
 const { requireLogin } = require('../middleware/auth');
-const { hasActiveSubscription } = require('../middleware/auth');
+const { hasActiveSubscription, isAdminRole } = require('../middleware/auth');
 const { designerAccess } = require('../shop/shopDesigner');
 const { DESIGN_STYLES, portfolioUploadMulter, handlePortfolioUpload, maybeBookReviewFee } = require('../lib/portfolioUpload');
 const pricing = require('../lib/pricing');
@@ -290,7 +290,11 @@ router.get('/upload', requireLogin, async (req, res) => {
   // Subscribed design artists get the portfolio upload form here too, so the
   // app's Upload tab (a WebView to this page) offers listing-type and
   // watermark choices with no app change.
-  if (await designerAccess(req.user.id)) {
+  const isDesigner = await designerAccess(req.user.id);
+  // Admins (incl. the owner) may use the batch uploader even without a
+  // designer subscription; it enforces its own access gate.
+  const canBatch = isDesigner || isAdminRole(req.user.role);
+  if (isDesigner) {
     return res.render('artist/portfolio-upload', {
       title: 'Upload a new piece — Tattoo Art Customs',
       styles: DESIGN_STYLES, action: '/account/upload',
@@ -300,6 +304,7 @@ router.get('/upload', requireLogin, async (req, res) => {
   }
   return res.render('account/upload', {
     title: 'Upload your art — Tattoo Art Customs', metaDescription: '',
+    canBatch,
   });
 });
 
