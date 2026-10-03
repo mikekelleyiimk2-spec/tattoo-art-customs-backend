@@ -275,6 +275,13 @@ async function shutdown(signal) {
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
+// A single unhandled promise rejection must never take down the worker:
+// Node's default is to crash the process, which 502s the entire site
+// until the platform restarts it. Log loudly so the underlying bug still
+// gets fixed, but keep serving traffic.
+process.on('unhandledRejection', (reason) => {
+  console.error('unhandledRejection (worker kept alive):', reason);
+});
 
 async function start() {
   await migrate();

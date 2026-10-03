@@ -3096,7 +3096,9 @@ async function main() {
       cd.writeUInt16LE(e.deflate ? 8 : 0, 10);
       cd.writeUInt32LE(crc, 16);
       cd.writeUInt32LE(comp.length, 20);
-      cd.writeUInt32LE(raw.length, 24);
+      // e.centralSize forges the central-directory uncompressed size (the
+      // stream byte cap must still catch the real payload).
+      cd.writeUInt32LE(e.centralSize != null ? e.centralSize : raw.length, 24);
       cd.writeUInt16LE(nameBuf.length, 28);
       cd.writeUInt32LE(offset, 42);
       central.push(cd, nameBuf);
@@ -3181,6 +3183,81 @@ async function main() {
     adminJar);
   const oz = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('owner zip piece');
   ok(oz && oz.status === 'approved', 'owner zip upload skips approval too');
+
+  // Zip pairing: _color/_linework files sharing a name key become ONE design
+  // (color attached to the linework); neutral names keep one-design-per-image;
+  // a lone color file is a clear per-item error, never a mislabeled design.
+  const pairZip = makeZip([
+    { name: 'pair_a_linework.png', data: lwBuf },
+    { name: 'pair_a_color.png', data: colorBuf },
+    { name: 'solo_piece.png', data: lwBuf },
+    { name: 'lone_color.png', data: colorBuf },
+  ]);
+  r = await mpost('/artist/portfolio/upload-batch',
+    { zip_style: 'blackwork', listing_type: 'predesign', watermark_choice: 'site' },
+    { zipfile: { buffer: pairZip, filename: 'pairs.zip', type: 'application/zip' } },
+    artJar);
+  ok(r.status === 200 && r.text.includes('Batch upload results'), 'paired zip batch renders a results page');
+  const pa = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('pair a');
+  ok(pa && pa.color_source === 'designer' && pa.color_path, 'paired color+linework becomes one design with the color attached');
+  const sp = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('solo piece');
+  ok(sp && sp.color_source === 'none', 'neutral zip image still becomes its own linework-only design');
+  ok(!sdb.prepare("SELECT COUNT(*) AS c FROM designs WHERE title = 'lone color'").get().c,
+    'lone color file creates no design');
+  ok(r.text.includes('needs a linework image'), 'lone color file gets a clear per-item error on the results page');
+
+  // Zip role classification + pairing keys (unit level).
+  const pu = require('../src/lib/portfolioUpload');
+  ok(pu.zipImageRole('01_x_color.png') === 'color', 'color suffix classifies as color');
+  ok(pu.zipImageRole('01_x_colour.png') === 'color', 'colour spelling classifies as color');
+  ok(pu.zipImageRole('01_x_linework.png') === 'linework', 'linework suffix classifies as linework');
+  ok(pu.zipImageRole('my-line-drawing.png') === 'linework', 'bare line classifies as linework');
+  ok(pu.zipImageRole('feline.png') === 'linework', 'feline does not false-positive as line');
+  ok(pu.zipImageRole('colorado.png') === 'linework', 'colorado does not false-positive as color');
+  ok(pu.zipImageRole('plain.png') === 'linework', 'neutral names default to linework');
+  ok(pu.designKeyFor('01_the-spores-gaze_color.png') === pu.designKeyFor('01_the-spores-gaze_linework.png'),
+    'color/linework versions share a pairing key');
+
+  // moveFileSync: EXDEV falls back to copy+unlink instead of failing.
+  const mvSrc = path.join(TMP, 'mv-src.bin');
+  const mvDst = path.join(TMP, 'mv-dst.bin');
+  fs.writeFileSync(mvSrc, 'move me');
+  const origRename = fs.renameSync;
+  fs.renameSync = () => { const e = new Error('cross-device'); e.code = 'EXDEV'; throw e; };
+  try { pu.moveFileSync(mvSrc, mvDst); } finally { fs.renameSync = origRename; }
+  ok(fs.readFileSync(mvDst, 'utf8') === 'move me' && !fs.existsSync(mvSrc),
+    'moveFileSync falls back to copy+unlink on EXDEV');
+
+  // Forged-header zip bomb: central directory claims tiny sizes while the
+  // stream carries far more — the size guards must reject it cleanly
+  // (yauzl validates streamed bytes against the header; our own stream
+  // byte cap is the backstop), never crash or write unbounded data.
+  const forgedZip = makeZip([{ name: 'f1.png', data: Buffer.alloc(64 * 1024, 7), deflate: true, centralSize: 10 }]);
+  const forgedPath = path.join(TMP, 'forged.zip');
+  fs.writeFileSync(forgedPath, forgedZip);
+  let forgedErr = '';
+  try { await pu.extractZipImages(forgedPath, { maxTotalUncompressed: 1024 }); }
+  catch (e) { forgedErr = e.message; }
+  ok(/too large|too many bytes/.test(forgedErr), 'forged-header zip bomb rejected by the size guards');
+  r = await req('GET', '/health');
+  ok(r.status === 200, 'server still alive after a forged zip bomb');
+
+  // The owner's real batch zips: extraction finds every image, pairing
+  // matches the known color/linework pairs, lone colors are flagged —
+  // and the temp dir lives on the upload filesystem (no EXDEV on move).
+  for (const [zp, expFiles, expPairs, expProblems] of [
+    ['/home/hatch/workspace/your_files/designs-batch-test-part1.zip', 19, 9, 1],
+    ['/home/hatch/workspace/your_files/designs-batch-test-part2.zip', 17, 8, 1],
+  ]) {
+    if (!fs.existsSync(zp)) { console.log('  skip - real zip fixture not present:', zp); continue; }
+    const ex = await pu.extractZipImages(zp);
+    const pr = pu.pairZipImages(ex.files);
+    ok(ex.files.length === expFiles && pr.pairs.length === expPairs && pr.problems.length === expProblems,
+      `real zip ${path.basename(zp)}: ${expFiles} images -> ${expPairs} pairs + ${expProblems} flagged`);
+    ok(ex.tmpDir.startsWith(require('../src/config').uploadDir),
+      'extraction temp dir lives on the upload filesystem (no EXDEV)');
+    fs.rmSync(ex.tmpDir, { recursive: true, force: true });
+  }
 
   // First-sale watcher: every paid order notifies the owner with a
   // verification report; the ledger must sum exactly to the net sale.
@@ -3757,7 +3834,7 @@ async function main() {
     [{ buf: emailZip, type: 'application/zip', name: 'inbox.zip' }], SERVICE_TOKEN);
   ok(r.status === 200 && r.json.results.length === 1 && r.json.results[0].ok === true,
     'email-upload zip: image extracted into a listing, non-image ignored');
-  ok(r.json.results[0].title.includes('inbox-flower'), 'email-upload zip: title from filename');
+  ok(r.json.results[0].title.includes('inbox flower'), 'email-upload zip: title from filename');
   // unknown sender → 422
   r = await ingestPost({ sender_email: 'nobody@test.local' },
     [{ buf: lwBuf, type: 'image/png', name: 'x.png' }], SERVICE_TOKEN);

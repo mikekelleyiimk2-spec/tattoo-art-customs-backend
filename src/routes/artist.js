@@ -19,7 +19,7 @@ const { commissionSuspendedUntil } = require('../lib/commissions');
 const { registerPayoutRoutes, payoutDashboardData } = require('../lib/payoutRoutes');
 const { upsertProfile } = require('../lib/profiles');
 const pricing = require('../lib/pricing');
-const { DESIGN_STYLES, portfolioUploadMulter, batchUploadMulter, BATCH_MAX_ITEMS, ZIP_MAX_IMAGES, ZIP_MAX_FILE_MB, IMAGE_MAX_BYTES, handlePortfolioUpload, uploadOneDesign, extractZipImages, titleFromFilename } = require('../lib/portfolioUpload');
+const { DESIGN_STYLES, portfolioUploadMulter, batchUploadMulter, BATCH_MAX_ITEMS, ZIP_MAX_IMAGES, ZIP_MAX_FILE_MB, IMAGE_MAX_BYTES, handlePortfolioUpload, uploadOneDesign, extractZipImages, moveFileSync, pairZipImages } = require('../lib/portfolioUpload');
 // notifyColorizationNeeded/notifyDesignLive are called by the admin-side
 // colorization workflow (src/lib/colorization.js); the designer side only
 // receives informational notifications — there is no approval gate here.
@@ -86,6 +86,10 @@ router.post('/portfolio/upload-batch', formLimiter, (req, res, next) => {
     next();
   });
 }, checkHoneypot, async (req, res) => {
+  // Whole-handler guard: an unexpected throw here must never become an
+  // unhandled rejection (which crashes the worker and 502s the whole
+  // site) — fail this upload with a clean flash instead.
+  try {
   const byField = {};
   for (const f of (req.files || [])) byField[f.fieldname] = f;
   // Non-zip files keep the 15 MB image cap (multer's per-file fileSize is
@@ -107,9 +111,13 @@ router.post('/portfolio/upload-batch', formLimiter, (req, res, next) => {
   const results = [];
   let zipEmptyMsg = '';
   let zipNote = '';
-  // Zip archive path: extract images server-side, one design per image.
-  // Shared metadata applies to every extracted piece; titles default to
-  // the (sanitized) filenames; style comes from the zip_style select.
+  // Zip archive path: extract images server-side, then pair them into
+  // designs — files sharing a name key (e.g. 01_foo_color.png +
+  // 01_foo_linework.png) become ONE design with the linework in the
+  // linework slot and the color version attached. Neutral names keep the
+  // historic one-design-per-image behavior. Shared metadata applies to
+  // every piece; titles default to the file names; style comes from the
+  // zip_style select.
   const zipFile = byField['zipfile'];
   if (zipFile) {
     let extraction = null;
@@ -128,27 +136,44 @@ router.post('/portfolio/upload-batch', formLimiter, (req, res, next) => {
       const designsDir = path.join(config.uploadDir, 'designs');
       fs.mkdirSync(designsDir, { recursive: true });
       const zipStyle = String(req.body.zip_style || '').trim().toLowerCase();
+      const { pairs, problems } = pairZipImages(extraction.files);
+      for (const p of problems) {
+        results.push({ index: `${p.title} (from zip)`, ok: false, error: p.error });
+      }
       let n = 0;
-      for (const img of extraction.files) {
+      for (const pair of pairs) {
         n++;
         // Move into the designs dir with a unique name so the stored
         // original lives where the pipeline expects it (same as multer).
-        const ext = path.extname(img.originalname).toLowerCase();
-        const stored = path.join(designsDir,
-          `${req.user.id}-${Date.now()}-zipbatch-${n}-${Math.random().toString(36).slice(2, 8)}${ext}`);
-        try { fs.renameSync(img.absPath, stored); }
-        catch (e) { console.error('zip image move failed:', e.message); continue; }
-        const fields = { ...shared, title: titleFromFilename(img.originalname), style: zipStyle };
+        // moveFileSync tolerates EXDEV (cross-mount temp dir).
+        const moveOne = (img, slot) => {
+          const ext = path.extname(img.originalname).toLowerCase();
+          const stored = path.join(designsDir,
+            `${req.user.id}-${Date.now()}-zipbatch-${n}-${slot}-${Math.random().toString(36).slice(2, 8)}${ext}`);
+          moveFileSync(img.absPath, stored);
+          return { path: stored, originalname: img.originalname, mimetype: img.mimetype, fieldname: slot };
+        };
+        let lwFile = null;
+        let colorFile = null;
+        try {
+          lwFile = moveOne(pair.linework, 'linework');
+          if (pair.color) colorFile = moveOne(pair.color, 'color');
+        } catch (e) {
+          console.error('zip image move failed:', e.message);
+          results.push({ index: `${pair.title} (from zip)`, ok: false, error: 'Could not store the image — please try this one again.' });
+          continue;
+        }
+        const fields = { ...shared, title: pair.title, style: zipStyle };
         try {
           const r = await uploadOneDesign(req.user, {
-            linework: { path: stored, originalname: img.originalname, mimetype: img.mimetype, fieldname: 'linework' },
-            color: null,
+            linework: lwFile,
+            color: colorFile,
             watermark: byField['watermark'] || null,
           }, fields);
-          results.push({ index: `${img.originalname} (from zip)`, ...r });
+          results.push({ index: `${pair.title} (from zip)`, ...r });
         } catch (e) {
           console.error('zip batch item failed:', e.message);
-          results.push({ index: `${img.originalname} (from zip)`, ok: false, error: 'Upload failed — please try this one again.' });
+          results.push({ index: `${pair.title} (from zip)`, ok: false, error: 'Upload failed — please try this one again.' });
         }
       }
       if (extraction.truncated) {
@@ -185,6 +210,11 @@ router.post('/portfolio/upload-batch', formLimiter, (req, res, next) => {
     title: 'Batch upload results — Tattoo Art Customs',
     results, note: zipNote,
   });
+  } catch (e) {
+    console.error('batch upload handler failed:', e);
+    req.session.flash = 'Something went wrong processing that upload — please try again.';
+    return res.redirect('/artist/portfolio/upload-batch');
+  }
 });
 
 router.post('/portfolio/upload', formLimiter, (req, res, next) => {

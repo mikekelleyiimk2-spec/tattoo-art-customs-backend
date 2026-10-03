@@ -149,23 +149,130 @@ function titleFromFilename(name) {
   return clean || 'Untitled design';
 }
 
+// Move a file, tolerating cross-device renames (EXDEV): os.tmpdir() and
+// config.uploadDir can live on different mounts (Render: /tmp is the
+// container filesystem, UPLOAD_DIR is the persistent disk). renameSync
+// throws EXDEV across mounts, so fall back to copy+unlink — an upload must
+// never fail with a bare EXDEV.
+function moveFileSync(src, dest) {
+  try {
+    fs.renameSync(src, dest);
+  } catch (e) {
+    if (e && e.code === 'EXDEV') {
+      fs.copyFileSync(src, dest);
+      fs.unlinkSync(src);
+    } else {
+      throw e;
+    }
+  }
+}
+
+// Zip image role classification: which slot does this archive entry fill?
+// - name contains "linework", or a separator-bounded "line" -> linework
+//   (separators required so words like "feline" don't false-positive)
+// - else name contains separator-bounded "color"/"colour" -> color
+// - else -> 'linework' (default: neutral single images keep the historic
+//   one-design-per-image behavior)
+const ZIP_LINEWORK_RE = /linework|(?:^|[_.\- ])line(?:[_.\- ]|$)/i;
+const ZIP_COLOR_RE = /(?:^|[_.\- ])colou?r(?:[_.\- ]|$)/i;
+function zipImageRole(originalname) {
+  const base = String(originalname || '');
+  if (ZIP_LINEWORK_RE.test(base)) return 'linework';
+  if (ZIP_COLOR_RE.test(base)) return 'color';
+  return 'linework';
+}
+
+// Grouping key for pairing _color/_linework versions of the same design:
+// strips the extension and any role tokens, normalizes separators.
+// Falls back to the full normalized basename when nothing is left.
+function designKeyFor(originalname) {
+  const noExt = String(originalname || '').replace(/\.[a-z0-9]+$/i, '');
+  const stripped = noExt
+    .replace(/linework/gi, ' ')
+    .replace(/(^|[_.\- ])(line|colou?r)(?=[_.\- ]|$)/gi, '$1')
+    .replace(/[^a-z0-9]+/gi, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase();
+  if (stripped) return stripped;
+  const fb = noExt.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase();
+  return fb || 'design';
+}
+
+// Pair extracted zip images into designs: files sharing a grouping key are
+// merged, the linework-role file filling the linework slot and the
+// color-role file the color slot. Groups with no linework file become
+// per-item problems (a design requires linework) instead of silently
+// mislabeling a color image as linework. Returns
+// { pairs: [{ key, title, linework, color }], problems: [{ title, error }] }.
+function pairZipImages(files) {
+  const groups = new Map();
+  const slotFor = (key, role) => {
+    let k = key;
+    let n = 1;
+    while (groups.has(k) && groups.get(k)[role]) { n++; k = `${key}-${n}`; }
+    if (!groups.has(k)) groups.set(k, { key: k, linework: null, color: null });
+    return groups.get(k);
+  };
+  for (const f of (files || [])) {
+    const key = designKeyFor(f.originalname);
+    const g = slotFor(key, zipImageRole(f.originalname));
+    if (zipImageRole(f.originalname) === 'color') g.color = f;
+    else g.linework = f;
+  }
+  const pairs = [];
+  const problems = [];
+  for (const g of groups.values()) {
+    const title = (g.key.replace(/-/g, ' ').slice(0, 120) || 'Untitled design');
+    if (!g.linework) {
+      problems.push({
+        title,
+        error: `"${title}" needs a linework image — only a color version was found in the zip. Add its linework file and upload again.`,
+      });
+      continue;
+    }
+    pairs.push({ key: g.key, title, linework: g.linework, color: g.color || null });
+  }
+  return { pairs, problems };
+}
+
 // Extract accepted images from a zip archive into a fresh temp dir.
 // Returns { files: [{ absPath, originalname, mimetype, size }],
 //           skipped: { nonImage, appleDouble, macosx, traversal, tooMany },
 //           truncated, tmpDir }.
 // Throws on unreadable archives, entry-count bombs, and uncompressed
 // totals over the zip-bomb cap (the temp dir is removed on throw).
-function extractZipImages(zipPath) {
+//
+// Hardening notes:
+// - The temp dir is created inside config.uploadDir (same filesystem as the
+//   final designs dir) so the later move never hits EXDEV; os.tmpdir() is
+//   only a fallback, and moveFileSync() additionally tolerates EXDEV.
+// - The uncompressed-size cap is enforced TWICE: a fast pre-check from the
+//   central-directory headers, and a byte counter on the actual decompressed
+//   stream (headers can be forged, so the stream cap is the real guard).
+// - opts lets tests override caps: { tmpParent, maxImages,
+//   maxTotalUncompressed }.
+function extractZipImages(zipPath, opts = {}) {
+  const maxImages = opts.maxImages || ZIP_MAX_IMAGES;
+  const maxTotalUncompressed = opts.maxTotalUncompressed || ZIP_MAX_TOTAL_UNCOMPRESSED;
   return new Promise((resolve, reject) => {
     // decodeStrings:false — yauzl would otherwise fail the WHOLE archive on
     // a single bad filename; we decode manually so traversal entries can be
     // skipped per-entry by zipEntryIsDangerous instead.
     yauzl.open(zipPath, { lazyEntries: true, autoClose: true, decodeStrings: false }, (err, zipfile) => {
       if (err || !zipfile) return reject(new Error('That file is not a valid zip archive.'));
-      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'zipbatch-'));
+      // Same-filesystem temp dir: avoids EXDEV when moving into the designs
+      // dir (Render: /tmp vs the persistent disk are different mounts).
+      let tmpDir;
+      try {
+        tmpDir = fs.mkdtempSync(path.join(opts.tmpParent || config.uploadDir, 'tmp-zipbatch-'));
+      } catch (e) {
+        try { tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'zipbatch-')); }
+        catch (e2) { return reject(new Error('Could not prepare the upload. Please try again.')); }
+      }
       const files = [];
       const skipped = { nonImage: 0, appleDouble: 0, macosx: 0, traversal: 0, tooMany: 0 };
-      let totalUncompressed = 0;
+      let totalUncompressed = 0; // header-based fast pre-check
+      let totalStreamed = 0; // actual decompressed bytes — the real bomb guard
       let entryCount = 0;
       let truncated = false;
       let settled = false;
@@ -196,16 +303,27 @@ function extractZipImages(zipPath) {
         const ext = path.extname(base).toLowerCase();
         if (!ZIP_IMAGE_EXTS.has(ext)) { skipped.nonImage++; return zipfile.readEntry(); }
         totalUncompressed += entry.uncompressedSize || 0;
-        if (totalUncompressed > ZIP_MAX_TOTAL_UNCOMPRESSED) {
+        if (totalUncompressed > maxTotalUncompressed) {
           return fail(new Error('Zip contents are too large (over 200 MB uncompressed).'));
         }
-        if (files.length >= ZIP_MAX_IMAGES) { truncated = true; skipped.tooMany++; return zipfile.readEntry(); }
+        if (files.length >= maxImages) { truncated = true; skipped.tooMany++; return zipfile.readEntry(); }
         zipfile.openReadStream(entry, (err2, rs) => {
           if (settled) return;
           if (err2 || !rs) return fail(err2 || new Error('Could not read a zip entry.'));
           const safeBase = base.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 100) || 'image';
           const dest = path.join(tmpDir, `${files.length}-${safeBase}`);
           const ws = fs.createWriteStream(dest);
+          // Stream byte cap: central-directory sizes can be forged, so count
+          // the actual decompressed bytes and abort mid-stream on overflow.
+          rs.on('data', (chunk) => {
+            if (settled) return;
+            totalStreamed += chunk.length;
+            if (totalStreamed > maxTotalUncompressed) {
+              try { rs.destroy(); } catch (_) {}
+              try { ws.destroy(); } catch (_) {}
+              fail(new Error('Zip contents are too large (over 200 MB uncompressed).'));
+            }
+          });
           rs.on('error', fail);
           ws.on('error', fail);
           ws.on('finish', () => {
@@ -456,4 +574,4 @@ async function handlePortfolioUpload(req, res, backUrl) {
   res.redirect('/artist/portfolio');
 }
 
-module.exports = { DESIGN_STYLES, portfolioUploadMulter, batchUploadMulter, BATCH_MAX_ITEMS, ZIP_MAX_IMAGES, ZIP_MAX_FILE_MB, IMAGE_MAX_BYTES, handlePortfolioUpload, uploadOneDesign, maybeBookReviewFee, extractZipImages, titleFromFilename };
+module.exports = { DESIGN_STYLES, portfolioUploadMulter, batchUploadMulter, BATCH_MAX_ITEMS, ZIP_MAX_IMAGES, ZIP_MAX_FILE_MB, IMAGE_MAX_BYTES, handlePortfolioUpload, uploadOneDesign, maybeBookReviewFee, extractZipImages, titleFromFilename, moveFileSync, zipImageRole, designKeyFor, pairZipImages };

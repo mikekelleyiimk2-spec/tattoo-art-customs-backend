@@ -22,7 +22,7 @@ const { designerAccess } = require('../shop/shopDesigner');
 const { messageLimiter } = require('../middleware/rateLimit');
 const {
   DESIGN_STYLES, IMAGE_MAX_BYTES, ZIP_MAX_FILE_MB, ZIP_MAX_IMAGES,
-  uploadOneDesign, extractZipImages, titleFromFilename,
+  uploadOneDesign, extractZipImages, titleFromFilename, moveFileSync, pairZipImages,
 } = require('../lib/portfolioUpload');
 
 const router = express.Router();
@@ -122,9 +122,12 @@ router.post('/email-upload', messageLimiter, (req, res, next) => {
 
   // Collect the linework items: direct images plus images extracted from zips
   // (same guards as the web batch flow — traversal rejected, 20-image cap,
-  // 200 MB uncompressed cap). Extracted files are moved into the designs
-  // dir; nothing is ever written outside config.uploadDir.
-  const items = []; // { file, title } or { skip: true, title, reason }
+  // 200 MB uncompressed cap). Zip images are paired into designs: matching
+  // _color/_linework files become one design (color attached); a lone color
+  // file without linework is reported, never mislabeled. Extracted files are
+  // moved into the designs dir with moveFileSync (EXDEV-safe); nothing is
+  // ever written outside config.uploadDir.
+  const items = []; // { file, colorFile, title } or { skip: true, title, reason }
   const notes = [];
   const tmpDirs = [];
   try {
@@ -140,20 +143,33 @@ router.post('/email-upload', messageLimiter, (req, res, next) => {
         }
         swallowUnlink(f.path);
         tmpDirs.push(extraction.tmpDir);
+        const { pairs, problems } = pairZipImages(extraction.files);
+        for (const p of problems) {
+          items.push({ skip: true, title: p.title, reason: p.error });
+        }
         let n = 0;
-        for (const img of extraction.files) {
-          n++;
+        const moveOne = (img, slot) => {
           const ext = path.extname(img.originalname).toLowerCase().slice(0, 5) || '.png';
           const stored = path.join(
             designsDir,
-            `${user.id}-${Date.now()}-ingest-${n}-${Math.random().toString(36).slice(2, 8)}${ext}`
+            `${user.id}-${Date.now()}-ingest-${n}-${slot}-${Math.random().toString(36).slice(2, 8)}${ext}`
           );
-          try { fs.renameSync(img.absPath, stored); }
-          catch (e) { continue; }
-          items.push({
-            file: { path: stored, originalname: img.originalname, mimetype: img.mimetype, fieldname: 'linework' },
-            title: titleFromFilename(img.originalname),
-          });
+          moveFileSync(img.absPath, stored);
+          return { path: stored, originalname: img.originalname, mimetype: img.mimetype, fieldname: slot };
+        };
+        for (const pair of pairs) {
+          n++;
+          let lwFile = null;
+          let colorFile = null;
+          try {
+            lwFile = moveOne(pair.linework, 'linework');
+            if (pair.color) colorFile = moveOne(pair.color, 'color');
+          } catch (e) {
+            items.push({ skip: true, title: pair.title, reason: 'Could not store the file.' });
+            continue;
+          }
+          const title = subjectPrefix ? `${subjectPrefix} — ${pair.title}`.slice(0, 120) : pair.title;
+          items.push({ file: lwFile, colorFile, title });
         }
         if (extraction.truncated) {
           notes.push(`Only the first ${ZIP_MAX_IMAGES} images in ${f.originalname} were used.`);
@@ -171,7 +187,7 @@ router.post('/email-upload', messageLimiter, (req, res, next) => {
         designsDir,
         `${user.id}-${Date.now()}-ingest-${Math.random().toString(36).slice(2, 8)}${ext}`
       );
-      try { fs.renameSync(f.path, stored); }
+      try { moveFileSync(f.path, stored); }
       catch (e) { items.push({ skip: true, title: f.originalname || 'image', reason: 'Could not store the file.' }); continue; }
       items.push({
         file: { path: stored, originalname: f.originalname || 'image', mimetype: f.mimetype, fieldname: 'linework' },
@@ -188,7 +204,7 @@ router.post('/email-upload', messageLimiter, (req, res, next) => {
       if (it.skip) { results.push({ ok: false, title: it.title, error: it.reason }); continue; }
       const title = subjectPrefix ? `${subjectPrefix} — ${it.title}`.slice(0, 120) : it.title;
       try {
-        const r = await uploadOneDesign(user, { linework: it.file, color: null, watermark: null }, {
+        const r = await uploadOneDesign(user, { linework: it.file, color: it.colorFile || null, watermark: null }, {
           title,
           style,
           description,
@@ -211,6 +227,9 @@ router.post('/email-upload', messageLimiter, (req, res, next) => {
       }
     }
     return res.json({ ok: true, results, notes, sender: user.email, userId: user.id });
+  } catch (e) {
+    console.error('email-upload handler failed:', e);
+    return res.status(500).json({ ok: false, error: 'ingest_failed', message: 'Something went wrong processing that upload — please try again.' });
   } finally {
     for (const d of tmpDirs) swallowRmDir(d);
   }
