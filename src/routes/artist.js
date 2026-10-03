@@ -19,7 +19,7 @@ const { commissionSuspendedUntil } = require('../lib/commissions');
 const { registerPayoutRoutes, payoutDashboardData } = require('../lib/payoutRoutes');
 const { upsertProfile } = require('../lib/profiles');
 const pricing = require('../lib/pricing');
-const { DESIGN_STYLES, portfolioUploadMulter, batchUploadMulter, BATCH_MAX_ITEMS, handlePortfolioUpload, uploadOneDesign } = require('../lib/portfolioUpload');
+const { DESIGN_STYLES, portfolioUploadMulter, batchUploadMulter, BATCH_MAX_ITEMS, ZIP_MAX_IMAGES, ZIP_MAX_FILE_MB, IMAGE_MAX_BYTES, handlePortfolioUpload, uploadOneDesign, extractZipImages, titleFromFilename } = require('../lib/portfolioUpload');
 // notifyColorizationNeeded/notifyDesignLive are called by the admin-side
 // colorization workflow (src/lib/colorization.js); the designer side only
 // receives informational notifications — there is no approval gate here.
@@ -90,6 +90,14 @@ router.post('/portfolio/upload-batch', formLimiter, (req, res, next) => {
 }, checkHoneypot, async (req, res) => {
   const byField = {};
   for (const f of (req.files || [])) byField[f.fieldname] = f;
+  // Non-zip files keep the 15 MB image cap (multer's per-file fileSize is
+  // the zip-sized cap now, so this is enforced manually — same flash UX).
+  for (const f of (req.files || [])) {
+    if (f.fieldname !== 'zipfile' && f.size > IMAGE_MAX_BYTES) {
+      req.session.flash = 'Each image must be under 15 MB.';
+      return res.redirect('/artist/portfolio/upload-batch');
+    }
+  }
   const shared = {
     description: req.body.description,
     categories: req.body.categories,
@@ -99,6 +107,58 @@ router.post('/portfolio/upload-batch', formLimiter, (req, res, next) => {
     remake: '',
   };
   const results = [];
+  let zipEmptyMsg = '';
+  let zipNote = '';
+  // Zip archive path: extract images server-side, one design per image.
+  // Shared metadata applies to every extracted piece; titles default to
+  // the (sanitized) filenames; style comes from the zip_style select.
+  const zipFile = byField['zipfile'];
+  if (zipFile) {
+    let extraction = null;
+    try {
+      extraction = await extractZipImages(zipFile.path);
+    } catch (e) {
+      console.error('zip batch extract failed:', e.message);
+      try { fs.unlinkSync(zipFile.path); } catch (_) {}
+      req.session.flash = e.message;
+      return res.redirect('/artist/portfolio/upload-batch');
+    }
+    try { fs.unlinkSync(zipFile.path); } catch (_) {} // archive itself is not kept
+    if (!extraction.files.length) {
+      zipEmptyMsg = 'No usable images found in that zip (JPG, PNG, or WebP only).';
+    } else {
+      const designsDir = path.join(config.uploadDir, 'designs');
+      fs.mkdirSync(designsDir, { recursive: true });
+      const zipStyle = String(req.body.zip_style || '').trim().toLowerCase();
+      let n = 0;
+      for (const img of extraction.files) {
+        n++;
+        // Move into the designs dir with a unique name so the stored
+        // original lives where the pipeline expects it (same as multer).
+        const ext = path.extname(img.originalname).toLowerCase();
+        const stored = path.join(designsDir,
+          `${req.user.id}-${Date.now()}-zipbatch-${n}-${Math.random().toString(36).slice(2, 8)}${ext}`);
+        try { fs.renameSync(img.absPath, stored); }
+        catch (e) { console.error('zip image move failed:', e.message); continue; }
+        const fields = { ...shared, title: titleFromFilename(img.originalname), style: zipStyle };
+        try {
+          const r = await uploadOneDesign(req.user, {
+            linework: { path: stored, originalname: img.originalname, mimetype: img.mimetype, fieldname: 'linework' },
+            color: null,
+            watermark: byField['watermark'] || null,
+          }, fields);
+          results.push({ index: `${img.originalname} (from zip)`, ...r });
+        } catch (e) {
+          console.error('zip batch item failed:', e.message);
+          results.push({ index: `${img.originalname} (from zip)`, ok: false, error: 'Upload failed — please try this one again.' });
+        }
+      }
+      if (extraction.truncated) {
+        zipNote = `Only the first ${ZIP_MAX_IMAGES} images in the zip were used.`;
+      }
+    }
+    try { fs.rmSync(extraction.tmpDir, { recursive: true, force: true }); } catch (_) {}
+  }
   for (let i = 0; i < BATCH_MAX_ITEMS; i++) {
     const lw = byField[`linework_${i}`];
     if (!lw) continue; // empty row — skip
@@ -120,12 +180,12 @@ router.post('/portfolio/upload-batch', formLimiter, (req, res, next) => {
     }
   }
   if (!results.length) {
-    req.session.flash = 'Add at least one linework image to upload.';
+    req.session.flash = zipEmptyMsg || 'Add at least one linework image to upload.';
     return res.redirect('/artist/portfolio/upload-batch');
   }
   res.render('artist/portfolio-upload-result', {
     title: 'Batch upload results — Tattoo Art Customs',
-    results, metaDescription: '',
+    results, note: zipNote, metaDescription: '',
   });
 });
 

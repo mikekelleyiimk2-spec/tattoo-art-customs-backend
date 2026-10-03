@@ -6,7 +6,9 @@
 // uploader holds an active design_artist subscription).
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const multer = require('multer');
+const yauzl = require('yauzl');
 const db = require('../db');
 const config = require('../config');
 const { resolveStoredPath } = require('./storage');
@@ -96,18 +98,128 @@ async function maybeBookReviewFee(userId, designId) {
 }
 
 // Batch upload limits: at most BATCH_MAX_ITEMS designs per submission.
+// A single .zip archive may also be attached (fieldname 'zipfile'):
+// up to ZIP_MAX_IMAGES images are extracted server-side and each becomes
+// a design through the same per-item pipeline.
+// Non-zip files keep the 15 MB image cap, enforced manually in the route
+// (multer's per-file fileSize limit is the zip-sized cap now).
 const BATCH_MAX_ITEMS = 10;
+const ZIP_MAX_FILE_MB = 50;
+const ZIP_MAX_IMAGES = 20;
+const ZIP_MAX_TOTAL_UNCOMPRESSED = 200 * 1024 * 1024; // zip-bomb guard
+const ZIP_MAX_ENTRIES = 2000; // entry-count bomb guard
+const ZIP_IMAGE_EXTS = new Set(['.png', '.jpg', '.jpeg', '.webp']);
+const ZIP_MIMES = new Set(['application/zip', 'application/x-zip-compressed', 'application/octet-stream']);
+const IMAGE_MAX_BYTES = 15 * 1024 * 1024;
 
-// Multer for the batch form: files arrive as linework_0..N, color_0..N plus
-// one shared `watermark` file. .any() keeps the indexed field names flexible.
+// Multer for the batch form: files arrive as linework_0..N, color_0..N,
+// one shared `watermark` file, plus an optional `zipfile` archive. .any()
+// keeps the indexed field names flexible.
 const batchUploadMulter = multer({
   storage: portfolioStorage,
-  limits: { fileSize: 15 * 1024 * 1024, files: BATCH_MAX_ITEMS * 3 + 1 },
+  limits: { fileSize: ZIP_MAX_FILE_MB * 1024 * 1024, files: BATCH_MAX_ITEMS * 3 + 2 },
   fileFilter: (req, file, cb) => {
+    if (file.fieldname === 'zipfile') {
+      if (ZIP_MIMES.has(file.mimetype) || /\.zip$/i.test(file.originalname || '')) return cb(null, true);
+      return cb(new Error('The archive must be a .zip file.'));
+    }
     if (/^image\/(jpeg|png|webp)$/.test(file.mimetype)) cb(null, true);
     else cb(new Error('Only JPG, PNG, or WebP images are allowed.'));
   },
 }).any();
+
+// Zip entry safety: absolute paths, Windows drive letters, and any '..'
+// segment are never extracted (we write with path.basename into a fresh
+// temp dir anyway, so traversal is structurally impossible — this rejects
+// the entry explicitly per policy).
+function zipEntryIsDangerous(name) {
+  if (!name || name.startsWith('/') || name.startsWith('\\')) return true;
+  if (/^[a-zA-Z]:[\\/]/.test(name)) return true;
+  return name.split(/[\\/]/).includes('..');
+}
+
+function zipMimeForExt(ext) {
+  return { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp' }[ext] || 'application/octet-stream';
+}
+
+// Default per-image title from the archive entry's filename.
+function titleFromFilename(name) {
+  const base = path.basename(String(name || ''), path.extname(String(name || '')));
+  const clean = base.replace(/[_+.]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120);
+  return clean || 'Untitled design';
+}
+
+// Extract accepted images from a zip archive into a fresh temp dir.
+// Returns { files: [{ absPath, originalname, mimetype, size }],
+//           skipped: { nonImage, appleDouble, macosx, traversal, tooMany },
+//           truncated, tmpDir }.
+// Throws on unreadable archives, entry-count bombs, and uncompressed
+// totals over the zip-bomb cap (the temp dir is removed on throw).
+function extractZipImages(zipPath) {
+  return new Promise((resolve, reject) => {
+    // decodeStrings:false — yauzl would otherwise fail the WHOLE archive on
+    // a single bad filename; we decode manually so traversal entries can be
+    // skipped per-entry by zipEntryIsDangerous instead.
+    yauzl.open(zipPath, { lazyEntries: true, autoClose: true, decodeStrings: false }, (err, zipfile) => {
+      if (err || !zipfile) return reject(new Error('That file is not a valid zip archive.'));
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'zipbatch-'));
+      const files = [];
+      const skipped = { nonImage: 0, appleDouble: 0, macosx: 0, traversal: 0, tooMany: 0 };
+      let totalUncompressed = 0;
+      let entryCount = 0;
+      let truncated = false;
+      let settled = false;
+      const fail = (e) => {
+        if (settled) return;
+        settled = true;
+        try { zipfile.close(); } catch (_) {}
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+        reject(e);
+      };
+      zipfile.on('error', fail);
+      zipfile.on('end', () => {
+        if (settled) return;
+        settled = true;
+        resolve({ files, skipped, truncated, tmpDir });
+      });
+      zipfile.on('entry', (entry) => {
+        if (settled) return;
+        entryCount++;
+        if (entryCount > ZIP_MAX_ENTRIES) return fail(new Error('Zip has too many entries.'));
+        const rawName = entry.fileName;
+        const name = Buffer.isBuffer(rawName) ? rawName.toString('utf8') : String(rawName || '');
+        if (/\/$/.test(name)) return zipfile.readEntry(); // directory
+        const base = name.split('/').pop();
+        if (name.startsWith('__MACOSX/') || name.includes('/__MACOSX/')) { skipped.macosx++; return zipfile.readEntry(); }
+        if (base.startsWith('._')) { skipped.appleDouble++; return zipfile.readEntry(); }
+        if (zipEntryIsDangerous(name)) { skipped.traversal++; return zipfile.readEntry(); }
+        const ext = path.extname(base).toLowerCase();
+        if (!ZIP_IMAGE_EXTS.has(ext)) { skipped.nonImage++; return zipfile.readEntry(); }
+        totalUncompressed += entry.uncompressedSize || 0;
+        if (totalUncompressed > ZIP_MAX_TOTAL_UNCOMPRESSED) {
+          return fail(new Error('Zip contents are too large (over 200 MB uncompressed).'));
+        }
+        if (files.length >= ZIP_MAX_IMAGES) { truncated = true; skipped.tooMany++; return zipfile.readEntry(); }
+        zipfile.openReadStream(entry, (err2, rs) => {
+          if (settled) return;
+          if (err2 || !rs) return fail(err2 || new Error('Could not read a zip entry.'));
+          const safeBase = base.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 100) || 'image';
+          const dest = path.join(tmpDir, `${files.length}-${safeBase}`);
+          const ws = fs.createWriteStream(dest);
+          rs.on('error', fail);
+          ws.on('error', fail);
+          ws.on('finish', () => {
+            if (settled) return;
+            files.push({ absPath: dest, originalname: base, mimetype: zipMimeForExt(ext), size: entry.uncompressedSize || 0 });
+            zipfile.readEntry();
+          });
+          rs.pipe(ws);
+        });
+      });
+      zipfile.readEntry();
+    });
+  });
+}
 
 // Core single-design upload, shared by the single-file and batch flows.
 // user: the logged-in user object.
@@ -344,4 +456,4 @@ async function handlePortfolioUpload(req, res, backUrl) {
   res.redirect('/artist/portfolio');
 }
 
-module.exports = { DESIGN_STYLES, portfolioUploadMulter, batchUploadMulter, BATCH_MAX_ITEMS, handlePortfolioUpload, uploadOneDesign, uploadFlash, maybeBookReviewFee };
+module.exports = { DESIGN_STYLES, portfolioUploadMulter, batchUploadMulter, BATCH_MAX_ITEMS, ZIP_MAX_IMAGES, ZIP_MAX_FILE_MB, IMAGE_MAX_BYTES, handlePortfolioUpload, uploadOneDesign, uploadFlash, maybeBookReviewFee, extractZipImages, titleFromFilename };

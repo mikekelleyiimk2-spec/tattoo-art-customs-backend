@@ -2962,7 +2962,8 @@ async function main() {
   // row missing its title (fails validation) + one empty row (skipped).
   // Partial failure saves what succeeded and reports the failure per item.
   r = await artreq('GET', '/artist/portfolio/upload-batch');
-  ok(r.status === 200 && r.text.includes('Batch upload'), 'batch upload form renders');
+  ok(r.status === 200 && r.text.includes('Batch upload') && r.text.includes('name="zipfile"'),
+    'batch upload form renders, with a zip archive option');
   r = await mpost('/artist/portfolio/upload-batch',
     {
       title_0: 'Batch Piece One', style_0: 'japanese',
@@ -2986,6 +2987,137 @@ async function main() {
   ok(b3 === 0, 'the row missing its title was not saved');
   ok(r.text.includes('Give your design a title.'), 'per-item validation error reported on the results page');
   ok(r.text.includes('1 failed') || r.text.includes('<strong>1</strong> failed'), 'results page counts the failure');
+
+  // Zip batch upload: one design per image in the archive. Non-images,
+  // __MACOSX entries and AppleDouble files are ignored; titles default
+  // to the sanitized filenames; shared metadata applies to every piece.
+  const zlib = require('zlib');
+  const crypto = require('crypto');
+  function crc32(buf) {
+    let t = crc32.table;
+    if (!t) {
+      t = crc32.table = new Int32Array(256);
+      for (let n = 0; n < 256; n++) {
+        let c = n;
+        for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+        t[n] = c;
+      }
+    }
+    let crc = 0xFFFFFFFF;
+    for (let i = 0; i < buf.length; i++) crc = t[(crc ^ buf[i]) & 0xFF] ^ (crc >>> 8);
+    return (crc ^ 0xFFFFFFFF) >>> 0;
+  }
+  // Minimal zip builder (stored + deflated entries) — no extra deps.
+  function makeZip(entries) {
+    const chunks = [], central = [];
+    let offset = 0;
+    for (const e of entries) {
+      const nameBuf = Buffer.from(e.name, 'utf8');
+      const raw = Buffer.from(e.data);
+      const comp = e.deflate ? zlib.deflateRawSync(raw) : raw;
+      const crc = crc32(raw);
+      const lh = Buffer.alloc(30);
+      lh.writeUInt32LE(0x04034b50, 0);
+      lh.writeUInt16LE(20, 4);
+      lh.writeUInt16LE(0x0800, 6);
+      lh.writeUInt16LE(e.deflate ? 8 : 0, 8);
+      lh.writeUInt32LE(crc, 14);
+      lh.writeUInt32LE(comp.length, 18);
+      lh.writeUInt32LE(raw.length, 22);
+      lh.writeUInt16LE(nameBuf.length, 26);
+      chunks.push(lh, nameBuf, comp);
+      const cd = Buffer.alloc(46);
+      cd.writeUInt32LE(0x02014b50, 0);
+      cd.writeUInt16LE(20, 4); cd.writeUInt16LE(20, 6);
+      cd.writeUInt16LE(0x0800, 8);
+      cd.writeUInt16LE(e.deflate ? 8 : 0, 10);
+      cd.writeUInt32LE(crc, 16);
+      cd.writeUInt32LE(comp.length, 20);
+      cd.writeUInt32LE(raw.length, 24);
+      cd.writeUInt16LE(nameBuf.length, 28);
+      cd.writeUInt32LE(offset, 42);
+      central.push(cd, nameBuf);
+      offset += lh.length + nameBuf.length + comp.length;
+    }
+    const cdBuf = Buffer.concat(central);
+    const cdStart = offset;
+    chunks.push(cdBuf);
+    const eocd = Buffer.alloc(22);
+    eocd.writeUInt32LE(0x06054b50, 0);
+    eocd.writeUInt16LE(entries.length, 8); eocd.writeUInt16LE(entries.length, 10);
+    eocd.writeUInt32LE(cdBuf.length, 12);
+    eocd.writeUInt32LE(cdStart, 16);
+    chunks.push(eocd);
+    return Buffer.concat(chunks);
+  }
+
+  const zipBuf = makeZip([
+    { name: 'zip_one.png', data: lwBuf },
+    { name: 'nested/zip_two.jpg', data: lwBuf },
+    { name: 'notes.txt', data: Buffer.from('not an image') },
+    { name: '__MACOSX/._zip_one.png', data: Buffer.from('appledouble') },
+    { name: '._zip_two.jpg', data: Buffer.from('appledouble') },
+  ]);
+  r = await mpost('/artist/portfolio/upload-batch',
+    { zip_style: 'japanese', description: 'Zip test.', listing_type: 'predesign', watermark_choice: 'site', sensitivity: 'normal' },
+    { zipfile: { buffer: zipBuf, filename: 'batch.zip', type: 'application/zip' } },
+    artJar);
+  ok(r.status === 200 && r.text.includes('Batch upload results'), 'zip batch upload renders a results page');
+  const z1 = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('zip one');
+  const z2 = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('zip two');
+  ok(z1 && z2, 'one design created per image in the zip, titles from filenames');
+  ok(z1 && z1.status === 'pending', 'zip pieces follow the normal review flow for non-owners');
+  ok(sdb.prepare("SELECT COUNT(*) AS c FROM designs WHERE title IN ('notes','._zip_one','._zip_two')").get().c === 0,
+    'non-images, __MACOSX and AppleDouble entries are ignored');
+
+  // Path traversal entries are skipped, never extracted; good entries in
+  // the same archive still upload.
+  const travZip = makeZip([
+    { name: '../evil.png', data: lwBuf },
+    { name: '/abs.png', data: lwBuf },
+    { name: 'good_three.png', data: lwBuf },
+  ]);
+  r = await mpost('/artist/portfolio/upload-batch',
+    { zip_style: 'traditional', listing_type: 'predesign', watermark_choice: 'site' },
+    { zipfile: { buffer: travZip, filename: 'trav.zip', type: 'application/zip' } },
+    artJar);
+  ok(sdb.prepare('SELECT * FROM designs WHERE title = ?').get('good three'), 'good image uploads despite traversal entries in the zip');
+  ok(sdb.prepare("SELECT COUNT(*) AS c FROM designs WHERE title IN ('evil', 'abs')").get().c === 0,
+    'traversal entries are skipped, not extracted');
+  ok(!fs.existsSync(path.join(os.tmpdir(), 'evil.png')), 'no file escaped the temp dir');
+
+  // Zip bomb: 220 MB of zeros in a tiny archive -> rejected, nothing saved.
+  const zeros = Buffer.alloc(110 * 1024 * 1024, 0);
+  const bombZip = makeZip([
+    { name: 'b1.png', data: zeros, deflate: true },
+    { name: 'b2.png', data: zeros, deflate: true },
+  ]);
+  r = await mpost('/artist/portfolio/upload-batch',
+    { zip_style: 'japanese', listing_type: 'predesign', watermark_choice: 'site' },
+    { zipfile: { buffer: bombZip, filename: 'bomb.zip', type: 'application/zip' } },
+    artJar);
+  ok(r.status === 302 && r.location === '/artist/portfolio/upload-batch', 'zip bomb rejected with a redirect');
+  ok(sdb.prepare("SELECT COUNT(*) AS c FROM designs WHERE title IN ('b1', 'b2')").get().c === 0,
+    'no designs created from an over-cap zip');
+
+  // Over-50MB archive rejected by the upload size cap.
+  const bigZip = makeZip([{ name: 'big.png', data: crypto.randomBytes(51 * 1024 * 1024) }]);
+  r = await mpost('/artist/portfolio/upload-batch',
+    { zip_style: 'japanese', listing_type: 'predesign', watermark_choice: 'site' },
+    { zipfile: { buffer: bigZip, filename: 'big.zip', type: 'application/zip' } },
+    artJar);
+  ok(r.status === 302 && r.location === '/artist/portfolio/upload-batch', 'over-50MB zip rejected by upload limits');
+  ok(!sdb.prepare("SELECT COUNT(*) AS c FROM designs WHERE title = 'big'").get().c,
+    'no design created from an oversized zip');
+
+  // Owner zip upload skips approval too.
+  const ownerZip = makeZip([{ name: 'owner_zip_piece.png', data: lwBuf }]);
+  r = await mpost('/artist/portfolio/upload-batch',
+    { zip_style: 'traditional', listing_type: 'predesign', watermark_choice: 'site' },
+    { zipfile: { buffer: ownerZip, filename: 'owner.zip', type: 'application/zip' } },
+    adminJar);
+  const oz = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('owner zip piece');
+  ok(oz && oz.status === 'approved', 'owner zip upload skips approval too');
 
   // First-sale watcher: every paid order notifies the owner with a
   // verification report; the ledger must sum exactly to the net sale.

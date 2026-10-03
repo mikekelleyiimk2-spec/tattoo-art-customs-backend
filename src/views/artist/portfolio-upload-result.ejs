@@ -1,7 +1,8 @@
 <h1>Batch upload results</h1>
+<% if (typeof note !== 'undefined' && note) { %><p class="card"><%= note %></p><% } %>
 <% const good = results.filter(function(r) { return r.ok; }); %>
 <% const bad = results.filter(function(r) { return !r.ok; }); %>
-<p class="card"><strong><%= good.length %></strong> piece<%= good.length === 1 ? '' : 's' %> uploaded<%= bad.length ? `, <strong>${bad.length}</strong> failed` : '' %>.</p>
+<p class="card"><strong><%= good.length %></strong> piece<%= good.length === 1 ? '' : 's' %> uploaded<%- bad.length ? `, <strong>${bad.length}</strong> failed` : '' %>.</p>
 <% if (good.length) { %>
 <h2>Uploaded</h2>
 <ul>
@@ -14,7 +15,7 @@
 <h2>Needs attention</h2>
 <ul>
   <% bad.forEach(function(r) { %>
-  <li><strong>Piece <%= r.index + 1 %></strong>: <%= r.error %></li>
+  <li><strong><%= typeof r.index === 'number' ? 'Piece ' + (r.index + 1) : r.index %></strong>: <%= r.error %></li>
   <% }); %>
 </ul>
 <p class="muted">Fix the rows above and upload them again — everything that succeeded is already saved.</p>

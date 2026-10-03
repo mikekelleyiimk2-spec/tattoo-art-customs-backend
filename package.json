@@ -15,7 +15,8 @@
     "nodemailer": "^6.9.14",
     "pg": "^8.13.1",
     "sharp": "^0.35.5",
-    "web-push": "^3.6.7"
+    "web-push": "^3.6.7",
+    "yauzl": "^3.4.0"
   },
   "description": "Tattoo Art Customs marketplace backend — Express + PostgreSQL (SQLite fallback), server-rendered, PayPal payments.",
   "engines": {

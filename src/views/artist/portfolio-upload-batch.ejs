@@ -1,8 +1,19 @@
 <h1>Batch upload</h1>
-<p class="muted">Upload up to <strong><%= maxItems %></strong> pieces in one go. Each row needs its own linework image and title — everything below the rows is shared across the whole batch. Rows you leave empty are skipped.</p>
+<p class="muted">Upload up to <strong><%= maxItems %></strong> pieces in one go — fill in the rows below, or attach a <strong>.zip</strong> archive (up to 20 images) instead. Each row needs its own linework image and title — everything below the rows is shared across the whole batch. Rows you leave empty are skipped.</p>
 <p><a href="/artist/portfolio/upload">&larr; Single upload</a></p>
 <form method="post" action="/artist/portfolio/upload-batch" enctype="multipart/form-data" class="form">
   <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <fieldset class="card" style="margin-bottom:1rem">
+    <legend><strong>Or upload a zip archive</strong></legend>
+    <p class="muted">A <strong>.zip</strong> file (max 50 MB) holding up to <strong>20</strong> JPG/PNG/WebP images — one piece is created per image. Titles default to the file names. The shared fields below (description, categories, listing type, watermark, content rating) apply to every piece in the zip.</p>
+    <label for="zipfile">Zip archive (.zip, max 50 MB)</label>
+    <input type="file" id="zipfile" name="zipfile" accept=".zip,application/zip">
+    <label for="zip_style">Style (applies to every piece in the zip)</label>
+    <select id="zip_style" name="zip_style">
+      <option value="">— pick a style —</option>
+      <% styles.forEach(function(s) { %><option value="<%= s %>"><%= s %></option><% }); %>
+    </select>
+  </fieldset>
   <% for (let i = 0; i < maxItems; i++) { %>
   <fieldset class="card" style="margin-bottom:1rem">
     <legend><strong>Piece <%= i + 1 %></strong></legend>
