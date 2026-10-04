@@ -145,8 +145,8 @@ app.use(async (req, res, next) => {
   next();
 });
 
-// Public static files.
-app.use(express.static(path.join(__dirname, 'public')));
+// Public static files (logos, css, etc.) — cache 7 days like gallery images.
+app.use(express.static(path.join(__dirname, 'public'), { maxAge: '7d' }));
 
 // PUBLIC gallery images: ONLY watermarked linework is ever served publicly.
 // Clean color + clean linework live under the upload dir but are NOT mounted
