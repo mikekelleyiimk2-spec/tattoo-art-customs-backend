@@ -127,6 +127,37 @@ router.get('/ios-sales', async (req, res) => {
   return res.json({ ok: true, sales: rows });
 });
 
+// GET /api/muse/money-stats
+// Returns production money totals for the owner's daily sweep: gross revenue,
+// order counts, commissions owed, and signups. Read-only.
+// Powers the daily money sweep so it reads PRODUCTION state over HTTPS
+// instead of the empty local dev SQLite DB.
+// Same service-token auth as /notify; 404s when MUSE_SERVICE_TOKEN unset.
+router.get('/money-stats', async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  const q = async (sql, col) => {
+    try { const r = await db.get(sql); return r ? (r[col] ?? 0) : 0; }
+    catch (e) { return 0; }
+  };
+  try {
+    const stats = {
+      users: await q('SELECT COUNT(*) AS n FROM users', 'n'),
+      designs: await q('SELECT COUNT(*) AS n FROM designs', 'n'),
+      orders: await q('SELECT COUNT(*) AS n FROM orders', 'n'),
+      paidOrders: await q("SELECT COUNT(*) AS n FROM orders WHERE status = 'paid'", 'n'),
+      grossCents: await q("SELECT COALESCE(SUM(amount_paid_cents),0) AS t FROM orders WHERE status = 'paid'", 't'),
+      payableCents: await q("SELECT COALESCE(SUM(amount_cents),0) AS t FROM commission_ledger WHERE status = 'payable'", 't'),
+      paidOutCents: await q("SELECT COALESCE(SUM(amount_cents),0) AS t FROM commission_ledger WHERE status = 'paid'", 't'),
+      raffleEntries: await q('SELECT COUNT(*) AS n FROM raffle_entries', 'n'),
+    };
+    return res.json({ ok: true, stats });
+  } catch (e) {
+    console.error('[muse/money-stats] query failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'query failed' });
+  }
+});
+
 // GET /api/muse/custom-orders-needing-drafts
 // Returns paid custom orders with custom_status='needs_drafts' (oldest due first, max 50).
 // Powers the owner's custom-draft worker so it can see PRODUCTION state over HTTPS

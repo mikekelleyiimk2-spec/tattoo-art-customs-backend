@@ -808,6 +808,22 @@ async function main() {
       'muse pipe "team" excludes non-team admins (Adolfo)');
   }
 
+  // Muse service pipe: GET /api/muse/money-stats returns production money totals (read-only).
+  {
+    const PIPE_TOKEN2 = process.env.MUSE_SERVICE_TOKEN;
+    const moneyGet = (token) => fetch(`http://localhost:${PORT}/api/muse/money-stats`, {
+      headers: { ...(token ? { authorization: `Bearer ${token}` } : {}) },
+    });
+    let mr = await moneyGet();
+    ok(mr.status === 401, 'money-stats rejects missing Bearer <redacted>');
+    mr = await moneyGet('wrong-token');
+    ok(mr.status === 401, 'money-stats rejects wrong Bearer <redacted>');
+    mr = await moneyGet(PIPE_TOKEN2);
+    const mj = await mr.json();
+    ok(mr.status === 200 && mj.ok && typeof mj.stats.grossCents === 'number' && typeof mj.stats.users === 'number',
+      'money-stats returns totals with valid Bearer <redacted>');
+  }
+
   // Production custom-draft fulfillment: POST /api/muse/custom-orders/:id/drafts
   // uploads 3-5 generated draft images, records them, flips the order to
   // drafts_ready — the production half of the 48h draft worker loop.
