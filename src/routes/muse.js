@@ -151,6 +151,102 @@ router.get('/custom-orders-needing-drafts', async (req, res) => {
   return res.json({ ok: true, orders: rows });
 });
 
+// POST /api/muse/custom-orders/:id/drafts
+// PRODUCTION fulfillment: the owner's draft worker generates 3-5 draft images
+// on the VM (media pipeline), then POSTs them here as multipart field "drafts"
+// (+ optional text field "note"). Files land in the order's drafts dir and the
+// row flips to drafts_ready — exactly what scripts/generate-custom-drafts.js
+// --record does locally, but against production so the 48h SLA can actually
+// close. Same service-token auth as the other /api/muse endpoints; 404s when
+// MUSE_SERVICE_TOKEN is unset.
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+const { draftsDir } = require('../lib/customFulfillment');
+
+const draftStageDir = path.join(os.tmpdir(), 'tac-draft-stage');
+try { fs.mkdirSync(draftStageDir, { recursive: true }); } catch { /* best effort */ }
+
+const draftUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, draftStageDir),
+    filename: (req, file, cb) => cb(null, `stg-${Date.now()}-${crypto.randomBytes(6).toString('hex')}`),
+  }),
+  limits: { fileSize: 12 * 1024 * 1024, files: 5 },
+  fileFilter: (req, file, cb) => {
+    if (/^image\/(jpeg|png|webp)$/.test(file.mimetype)) cb(null, true);
+    else cb(new Error('Only JPG, PNG, or WebP draft images are allowed.'));
+  },
+}).array('drafts', 5);
+
+// Magic-byte sniff: mimetype/extension can lie; read the real file header.
+function sniffImageType(buf) {
+  if (buf.length >= 8 && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) return 'png';
+  if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return 'jpg';
+  if (buf.length >= 12 && buf.toString('ascii', 0, 4) === 'RIFF' && buf.toString('ascii', 8, 12) === 'WEBP') return 'webp';
+  return null;
+}
+
+router.post('/custom-orders/:id/drafts', messageLimiter, (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  const orderId = String(req.params.id || '');
+  if (!/^[A-Za-z0-9_-]{1,64}$/.test(orderId)) return res.status(400).json({ ok: false, error: 'bad order id' });
+  draftUpload(req, res, async (err) => {
+    const staged = (req.files || []).map((f) => f.path);
+    const cleanup = () => { for (const p of staged) { try { fs.unlinkSync(p); } catch {} } };
+    if (err) { cleanup(); return res.status(400).json({ ok: false, error: 'upload failed' }); }
+    try {
+      const order = await db.get(
+        'SELECT id, order_type, status, custom_status FROM orders WHERE id = ?', [orderId]);
+      if (!order || order.order_type !== 'custom') {
+        cleanup();
+        return res.status(404).json({ ok: false, error: 'custom order not found' });
+      }
+      if (order.status !== 'paid' || order.custom_status !== 'needs_drafts') {
+        cleanup();
+        return res.status(422).json({ ok: false, error: 'order is not awaiting drafts' });
+      }
+      const files = req.files || [];
+      if (files.length < 3 || files.length > 5) {
+        cleanup();
+        return res.status(422).json({ ok: false, error: 'need 3-5 draft images' });
+      }
+      const note = String(req.body.note || '').slice(0, 500);
+      // Validate real image content BEFORE anything touches the drafts dir.
+      const kinds = [];
+      for (const f of files) {
+        const head = Buffer.alloc(12);
+        const fd = fs.openSync(f.path, 'r');
+        fs.readSync(fd, head, 0, 12, 0);
+        fs.closeSync(fd);
+        const kind = sniffImageType(head);
+        if (!kind) { cleanup(); return res.status(422).json({ ok: false, error: 'draft is not a real image' }); }
+        kinds.push(kind);
+      }
+      const dir = draftsDir(order.id);
+      fs.mkdirSync(dir, { recursive: true });
+      const drafts = files.map((f, i) => {
+        const ext = kinds[i] === 'jpg' ? '.jpg' : '.' + kinds[i];
+        const name = `draft-${i + 1}${ext}`;
+        fs.renameSync(f.path, path.join(dir, name));
+        return { file: name, note };
+      });
+      await db.update('orders', order.id, {
+        drafts_json: JSON.stringify(drafts),
+        custom_status: 'drafts_ready',
+      });
+      return res.json({ ok: true, order_id: order.id, count: drafts.length });
+    } catch (e) {
+      console.error('[muse/custom-orders-drafts] failed:', e.message);
+      return res.status(500).json({ ok: false, error: 'fulfillment failed' });
+    } finally {
+      cleanup();
+    }
+  });
+});
+
 // POST /api/muse/fix-design-title
 // One-off data repair: correct a design's title (e.g. the ingest.js
 // double-prefix bug). body: { id, title }.

@@ -807,6 +807,66 @@ async function main() {
       'muse pipe "team" excludes non-team admins (Adolfo)');
   }
 
+  // Production custom-draft fulfillment: POST /api/muse/custom-orders/:id/drafts
+  // uploads 3-5 generated draft images, records them, flips the order to
+  // drafts_ready — the production half of the 48h draft worker loop.
+  {
+    const pipeToken = process.env.MUSE_SERVICE_TOKEN;
+    const png1x1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
+    const buyerId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('buyer@test.local').id;
+    const mkOrder = (id, status, customStatus) => sdb.prepare(
+      'INSERT INTO orders (id, buyer_id, order_type, amount_cents, status, custom_status, custom_brief, created_at) VALUES (?,?,?,?,?,?,?,?)'
+    ).run(id, buyerId, 'custom', 12500, status, customStatus, 'test brief', Date.now());
+    const draftPost = (orderId, files, token, note) => {
+      const fd = new FormData();
+      if (note !== undefined) fd.append('note', note);
+      for (const f of files) fd.append('drafts', new Blob([f.buf], { type: f.type }), f.name);
+      const headers = {};
+      if (token !== undefined) headers.authorization = `Bearer ${token}`;
+      return fetch(`http://localhost:${PORT}/api/muse/custom-orders/${orderId}/drafts`,
+        { method: 'POST', headers, body: fd })
+        .then(async (res) => ({ status: res.status, json: await res.json() }));
+    };
+    const three = [0, 1, 2].map((i) => ({ buf: png1x1, type: 'image/png', name: `d${i}.png` }));
+    const { draftsDir } = require('../src/lib/customFulfillment');
+
+    mkOrder('draftorder1', 'paid', 'needs_drafts');
+    let dr = await draftPost('draftorder1', three, undefined);
+    ok(dr.status === 401, 'draft fulfillment rejects missing Bearer <redacted>');
+    dr = await draftPost('draftorder1', three, 'wrong-token');
+    ok(dr.status === 401, 'draft fulfillment rejects wrong Bearer <redacted>');
+
+    dr = await draftPost('draftorder1', three, pipeToken, 'test note');
+    ok(dr.status === 200 && dr.json.ok === true && dr.json.count === 3,
+      'draft fulfillment happy path: 200 ok, count 3');
+    const orow = sdb.prepare('SELECT custom_status, drafts_json FROM orders WHERE id = ?').get('draftorder1');
+    ok(orow.custom_status === 'drafts_ready', 'draft fulfillment flips order to drafts_ready');
+    const dj = JSON.parse(orow.drafts_json);
+    ok(dj.length === 3 && dj[0].file === 'draft-1.png' && dj[0].note === 'test note',
+      'draft fulfillment records drafts_json with filenames + note');
+    ok([1, 2, 3].every((i) => fs.existsSync(path.join(draftsDir('draftorder1'), `draft-${i}.png`))),
+      'draft fulfillment writes the PNGs into the order drafts dir');
+
+    mkOrder('draftorder2', 'paid', 'drafts_ready');
+    dr = await draftPost('draftorder2', three, pipeToken);
+    ok(dr.status === 422, 'draft fulfillment 422s when the order is not awaiting drafts');
+
+    dr = await draftPost('nope', three, pipeToken);
+    ok(dr.status === 404, 'draft fulfillment 404s an unknown order');
+
+    mkOrder('draftorder3', 'paid', 'needs_drafts');
+    dr = await draftPost('draftorder3', three.slice(0, 2), pipeToken);
+    ok(dr.status === 422, 'draft fulfillment 422s fewer than 3 draft images');
+
+    mkOrder('draftorder4', 'paid', 'needs_drafts');
+    dr = await draftPost('draftorder4',
+      [{ buf: Buffer.from('not an image at all'), type: 'image/png', name: 'fake.png' }, three[0], three[1]],
+      pipeToken);
+    ok(dr.status === 422, 'draft fulfillment 422s a fake image (magic-byte check)');
+    const orow4 = sdb.prepare('SELECT custom_status FROM orders WHERE id = ?').get('draftorder4');
+    ok(orow4.custom_status === 'needs_drafts', 'failed fulfillment leaves the order awaiting drafts');
+  }
+
   // tester bug reports: public form saves + emails the owner (dev-logged here)
   r = await req('GET', '/report-bug');
   ok(r.status === 200 && r.text.includes('Report a bug'), 'bug report form renders');
