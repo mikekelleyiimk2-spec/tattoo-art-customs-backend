@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title><%= typeof title !== 'undefined' ? title : 'Tattoo Art Customs' %></title>
+<title><%= typeof title !== 'undefined' ? title : 'Tattoo Art Customs™' %></title>
 <% if (typeof metaDescription !== 'undefined' && metaDescription) { %>
 <meta name="description" content="<%= metaDescription %>">
 <% } %>
@@ -16,12 +16,12 @@
 <% supportedLocales.forEach(function(l) { %><link rel="alternate" hreflang="<%= l %>" href="<%= canonical %>?hl=<%= l %>">
 <% }); %><link rel="alternate" hreflang="x-default" href="<%= canonical %>">
 <% } %>
-<meta property="og:site_name" content="Tattoo Art Customs">
+<meta property="og:site_name" content="Tattoo Art Customs™">
 <meta property="og:type" content="<%= typeof ogType !== 'undefined' ? ogType : 'website' %>">
 <% if (typeof canonical !== 'undefined' && canonical) { %>
 <meta property="og:url" content="<%= canonical %>">
 <% } %>
-<meta property="og:title" content="<%= typeof title !== 'undefined' ? title : 'Tattoo Art Customs' %>">
+<meta property="og:title" content="<%= typeof title !== 'undefined' ? title : 'Tattoo Art Customs™' %>">
 <% if (typeof metaDescription !== 'undefined' && metaDescription) { %>
 <meta property="og:description" content="<%= metaDescription %>">
 <% } %>
@@ -29,7 +29,7 @@
 <meta property="og:image" content="<%= ogImage %>">
 <% } %>
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="<%= typeof title !== 'undefined' ? title : 'Tattoo Art Customs' %>">
+<meta name="twitter:title" content="<%= typeof title !== 'undefined' ? title : 'Tattoo Art Customs™' %>">
 <% if (typeof metaDescription !== 'undefined' && metaDescription) { %>
 <meta name="twitter:description" content="<%= metaDescription %>">
 <% } %>
@@ -136,7 +136,7 @@
       <% if (playStoreUrl) { %><a href="<%= playStoreUrl %>" target="_blank" rel="noopener"><%= t('nav.get_app') %></a><% } %>
     </nav>
   </div>
-  <p class="fineprint">© <%= new Date().getFullYear() %> Tattoo Art Customs. <%= t('footer.rights') %></p>
+  <p class="fineprint">© <%= new Date().getFullYear() %> Tattoo Art Customs™. <%= t('footer.rights') %></p>
 </footer>
 <div id="cookie-banner" style="display:none;position:fixed;left:0;right:0;bottom:0;background:#1a1a1a;color:#fff;padding:12px 16px;gap:12px;align-items:center;justify-content:space-between;z-index:9999;font-size:14px;">
   <span><%- t('cookie.text', {privacy: '<a href="/privacy" style="color:#ffd166;">' + t('cookie.privacy') + '</a>'}) %></span>
