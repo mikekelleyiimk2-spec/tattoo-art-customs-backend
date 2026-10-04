@@ -177,6 +177,34 @@ router.post('/owner-sweep', async (req, res) => {
   }
 });
 
+router.post('/upload-ipa', (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  ipaUpload(req, res, (err) => {
+    if (err) return res.status(400).json({ ok: false, error: err.message });
+    if (!req.file) return res.status(400).json({ ok: false, error: 'no ipa file' });
+    try {
+      // Verify zip magic (PK\x03\x04) — extension alone is not enough.
+      const fd = fs.openSync(req.file.path, 'r');
+      const head = Buffer.alloc(4);
+      fs.readSync(fd, head, 0, 4, 0);
+      fs.closeSync(fd);
+      if (head[0] !== 0x50 || head[1] !== 0x4b || head[2] !== 0x03 || head[3] !== 0x04) {
+        fs.unlinkSync(req.file.path);
+        return res.status(400).json({ ok: false, error: 'not a valid ipa (zip) file' });
+      }
+      const destDir = path.join(config.uploadDir, 'ios-app');
+      fs.mkdirSync(destDir, { recursive: true });
+      const dest = path.join(destDir, 'tattoo-art-customs.ipa');
+      fs.renameSync(req.file.path, dest);
+      return res.json({ ok: true, size: fs.statSync(dest).size, path: 'uploads/ios-app/tattoo-art-customs.ipa' });
+    } catch (e) {
+      console.error('[muse/upload-ipa] failed:', e.message);
+      return res.status(500).json({ ok: false, error: 'store failed' });
+    }
+  });
+});
+
 // GET /api/muse/custom-orders-needing-drafts
 // Returns paid custom orders with custom_status='needs_drafts' (oldest due first, max 50).
 // Powers the owner's custom-draft worker so it can see PRODUCTION state over HTTPS
@@ -229,6 +257,28 @@ const draftUpload = multer({
     else cb(new Error('Only JPG, PNG, or WebP draft images are allowed.'));
   },
 }).array('drafts', 5);
+
+// POST /api/muse/upload-ipa
+// Uploads the iOS sideload IPA to production storage (uploads/ios-app/).
+// Lets the owner's automation publish new IPA builds without shell access.
+// Accepts a single .ipa file (zip magic verified), max 300MB, and stores it
+// as uploads/ios-app/tattoo-art-customs.ipa under config.uploadDir.
+// Same service-token auth as /notify; 404s when MUSE_SERVICE_TOKEN unset.
+const ipaStageDir = path.join(os.tmpdir(), 'tac-ipa-stage');
+try { fs.mkdirSync(ipaStageDir, { recursive: true }); } catch { /* best effort */ }
+
+const ipaUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, ipaStageDir),
+    filename: (req, file, cb) => cb(null, `stg-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.ipa`),
+  }),
+  limits: { fileSize: 300 * 1024 * 1024, files: 1 },
+  fileFilter: (req, file, cb) => {
+    if (/\.ipa$/i.test(file.originalname)) cb(null, true);
+    else cb(new Error('Only .ipa files are allowed.'));
+  },
+}).single('ipa');
+
 
 // Magic-byte sniff: mimetype/extension can lie; read the real file header.
 function sniffImageType(buf) {

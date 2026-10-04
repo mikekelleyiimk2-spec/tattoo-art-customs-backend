@@ -841,6 +841,32 @@ async function main() {
       'owner-sweep returns summary with valid Bearer <redacted>');
   }
 
+  // Muse service pipe: POST /api/muse/upload-ipa stores the iOS IPA (zip magic checked).
+  {
+    const { Blob } = require('buffer');
+    const ipaPost = async (token, buf, name) => {
+      const fd = new FormData();
+      fd.append('ipa', new Blob([buf], { type: 'application/octet-stream' }), name);
+      return fetch(`http://localhost:${PORT}/api/muse/upload-ipa`, {
+        method: 'POST',
+        headers: { ...(token ? { authorization: `Bearer ${token}` } : {}) },
+        body: fd,
+      });
+    };
+    const fakeZip = Buffer.concat([Buffer.from([0x50, 0x4b, 0x03, 0x04]), Buffer.from('fake-ipa-payload')]);
+    let ur = await ipaPost(undefined, fakeZip, 'x.ipa');
+    ok(ur.status === 401, 'upload-ipa rejects missing Bearer <redacted>');
+    ur = await ipaPost('wrong-token', fakeZip, 'x.ipa');
+    ok(ur.status === 401, 'upload-ipa rejects wrong Bearer <redacted>');
+    ur = await ipaPost(process.env.MUSE_SERVICE_TOKEN, Buffer.from('not-a-zip'), 'x.ipa');
+    const uj1 = await ur.json();
+    ok(ur.status === 400 && uj1.ok === false, 'upload-ipa rejects non-zip payload');
+    ur = await ipaPost(process.env.MUSE_SERVICE_TOKEN, fakeZip, 'x.ipa');
+    const uj2 = await ur.json();
+    ok(ur.status === 200 && uj2.ok && uj2.path === 'uploads/ios-app/tattoo-art-customs.ipa',
+      'upload-ipa stores valid ipa with valid Bearer <redacted>');
+  }
+
   // Production custom-draft fulfillment: POST /api/muse/custom-orders/:id/drafts
   // uploads 3-5 generated draft images, records them, flips the order to
   // drafts_ready — the production half of the 48h draft worker loop.
