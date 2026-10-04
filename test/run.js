@@ -824,6 +824,23 @@ async function main() {
       'money-stats returns totals with valid Bearer <redacted>');
   }
 
+  // Muse service pipe: POST /api/muse/owner-sweep runs the daily owner sweep
+  // on the serving DB (read-only report + idempotent clearing).
+  {
+    const sweepPost = (token) => fetch(`http://localhost:${PORT}/api/muse/owner-sweep`, {
+      method: 'POST',
+      headers: { ...(token ? { authorization: `Bearer ${token}` } : {}) },
+    });
+    let sr = await sweepPost();
+    ok(sr.status === 401, 'owner-sweep rejects missing Bearer <redacted>');
+    sr = await sweepPost('wrong-token');
+    ok(sr.status === 401, 'owner-sweep rejects wrong Bearer <redacted>');
+    sr = await sweepPost(process.env.MUSE_SERVICE_TOKEN);
+    const sj = await sr.json();
+    ok(sr.status === 200 && sj.ok && sj.summary && typeof sj.summary.gross_cents === 'number' && typeof sj.summary.report === 'string',
+      'owner-sweep returns summary with valid Bearer <redacted>');
+  }
+
   // Production custom-draft fulfillment: POST /api/muse/custom-orders/:id/drafts
   // uploads 3-5 generated draft images, records them, flips the order to
   // drafts_ready — the production half of the 48h draft worker loop.

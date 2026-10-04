@@ -137,7 +137,7 @@ router.get('/money-stats', async (req, res) => {
   if (!serviceToken()) return res.status(404).json({ ok: false });
   if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
   const q = async (sql, col) => {
-    try { const r = await db.get(sql); return r ? (r[col] ?? 0) : 0; }
+    try { const r = await db.get(sql); return r ? Number(r[col] ?? 0) : 0; }
     catch (e) { return 0; }
   };
   try {
@@ -155,6 +155,25 @@ router.get('/money-stats', async (req, res) => {
   } catch (e) {
     console.error('[muse/money-stats] query failed:', e.message);
     return res.status(500).json({ ok: false, error: 'query failed' });
+  }
+});
+
+// POST /api/muse/owner-sweep
+// Runs the daily owner sweep ON PRODUCTION: finalizes newly-cleared sales
+// (paid 24h+, no holds) by marking the site's ledger rows cleared, and returns
+// the summary. Powers the owner-daily-sweep cron over HTTPS instead of the
+// empty local dev SQLite DB. Idempotent — only touches uncleared rows.
+// Same service-token auth as /notify; 404s when MUSE_SERVICE_TOKEN unset.
+router.post('/owner-sweep', async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const { runOwnerSweep } = require('../lib/ownerSweep');
+    const summary = await runOwnerSweep({ now: Date.now(), sendEmail: false });
+    return res.json({ ok: true, summary });
+  } catch (e) {
+    console.error('[muse/owner-sweep] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'sweep failed' });
   }
 });
 

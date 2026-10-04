@@ -18,7 +18,7 @@ const { money } = require('./pricing');
 
 const CLEARING_WINDOW_MS = 24 * 3600 * 1000;
 
-async function runOwnerSweep({ now = Date.now() } = {}) {
+async function runOwnerSweep({ now = Date.now(), sendEmail = true } = {}) {
   // Newly-cleared orders: paid, past the clearing window, not on hold, and
   // still having uncleared site rows.
   const orders = await db.all(
@@ -75,7 +75,7 @@ async function runOwnerSweep({ now = Date.now() } = {}) {
     `recipient's configured payout destination — unchanged.`,
   ].join('\n');
 
-  if (config.adminEmail) {
+  if (sendEmail && config.adminEmail) {
     await sendMail({
       to: config.adminEmail,
       subject: `Daily sweep: ${money(summary.net_to_owner_cents)} cleared (${summary.swept_orders} orders)`,
