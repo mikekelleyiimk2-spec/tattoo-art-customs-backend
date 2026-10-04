@@ -196,7 +196,10 @@ router.post('/upload-ipa', (req, res) => {
       const destDir = path.join(config.uploadDir, 'ios-app');
       fs.mkdirSync(destDir, { recursive: true });
       const dest = path.join(destDir, 'tattoo-art-customs.ipa');
-      fs.renameSync(req.file.path, dest);
+      // copy+unlink: staged file may sit on a different filesystem (tmpfs)
+      // than the upload dir — renameSync throws EXDEV across devices.
+      fs.copyFileSync(req.file.path, dest);
+      fs.unlinkSync(req.file.path);
       return res.json({ ok: true, size: fs.statSync(dest).size, path: 'uploads/ios-app/tattoo-art-customs.ipa' });
     } catch (e) {
       console.error('[muse/upload-ipa] failed:', e.message);
