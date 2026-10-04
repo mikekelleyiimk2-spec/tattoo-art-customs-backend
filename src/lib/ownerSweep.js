@@ -57,7 +57,7 @@ async function runOwnerSweep({ now = Date.now(), sendEmail = true } = {}) {
     gross_cents: grossCents,
     owner_cleared_cents: ownerClearedCents,
     colorization_fees_cents: feesClearedCents,
-    commissions_owed_cents: owed ? owed.total : 0,
+    commissions_owed_cents: owed ? Number(owed.total) : 0,
     net_to_owner_cents: ownerClearedCents,
     ran_at: now,
   };
