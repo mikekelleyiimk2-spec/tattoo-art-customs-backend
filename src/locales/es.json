@@ -315,7 +315,7 @@
       },
       "shops": {
         "title": "Estudios de tatuaje",
-        "text": "Un hogar verificado para tu estudio: gana el 20 % en cada referido verificado; herramientas pro de reservas y galerías de trabajos cicatrizados en camino para los dueños.",
+        "text": "Un hogar verificado para tu estudio: gana el 20 % en cada referido verificado; herramientas pro de reservas y galerías de trabajos cicatrizados para los dueños.",
         "price": "Planes para estudios {price}/año",
         "btn": "Panel del estudio"
       },
@@ -442,8 +442,8 @@
       "ex4d": "Tus artistas venden flash y personalizados desde la misma cuenta — 60% en prediseños referidos, 70% en no referidos y personalizados.",
       "ex5t": "El tatuador primero, siempre",
       "ex5d": "Otros mercados tratan a los artistas como inventario. Nosotros los tratamos como todo el negocio — las comisiones favorecen al creador, siempre.",
-      "toolkit_title": "Herramientas para estudios — en desarrollo",
-      "toolkit_sub": "Estamos creando estas herramientas con la opinión de estudios reales. Los fundadores deciden qué sale primero.",
+      "toolkit_title": "Herramientas para estudios — ya disponibles",
+      "toolkit_sub": "Creadas con la opinión de estudios reales. Todo disponible en tu panel.",
       "tk1": "Calendario de citas",
       "tk2": "Cobro de depósitos",
       "tk3": "Recibos",

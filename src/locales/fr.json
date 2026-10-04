@@ -315,7 +315,7 @@
       },
       "shops": {
         "title": "Shops de tatouage",
-        "text": "Un foyer vérifié pour votre shop — touchez 20 % sur chaque parrainage vérifié ; outils de réservation pro et galeries de tatouages cicatrisés en préparation pour les gérants.",
+        "text": "Un foyer vérifié pour votre shop — touchez 20 % sur chaque parrainage vérifié ; outils de réservation pro et galeries de tatouages cicatrisés pour les gérants.",
         "price": "Formules shops {price}/an",
         "btn": "Tableau de bord shop"
       },
@@ -442,8 +442,8 @@
       "ex4d": "Vos artistes vendent flash et customs sur le même compte — 60 % sur prédéfinis parrainés, 70 % sur non parrainés et customs.",
       "ex5t": "Le tatoueur d'abord, toujours",
       "ex5d": "Les autres places de marché traitent les artistes comme du stock. Nous les traitons comme tout le business — les commissions favorisent le créateur, toujours.",
-      "toolkit_title": "Boîte à outils studio — en développement",
-      "toolkit_sub": "Nous créons ces outils avec l'avis de vrais studios. Les fondateurs choisissent les priorités.",
+      "toolkit_title": "Boîte à outils studio — disponible",
+      "toolkit_sub": "Créée avec l'avis de vrais studios. Tout est en ligne dans votre tableau de bord.",
       "tk1": "Calendrier de rendez-vous",
       "tk2": "Encaissement d'acomptes",
       "tk3": "Reçus",

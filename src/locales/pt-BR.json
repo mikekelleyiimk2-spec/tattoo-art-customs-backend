@@ -315,7 +315,7 @@
       },
       "shops": {
         "title": "Estúdios de tatuagem",
-        "text": "Um lar verificado para o seu estúdio — ganhe 20% em cada indicação verificada; ferramentas pro de agendamento e galerias de trabalhos cicatrizados em construção para os donos.",
+        "text": "Um lar verificado para o seu estúdio — ganhe 20% em cada indicação verificada; ferramentas pro de agendamento e galerias de trabalhos cicatrizados para os donos.",
         "price": "Planos para estúdios {price}/ano",
         "btn": "Painel do estúdio"
       },
@@ -442,8 +442,8 @@
       "ex4d": "Seus artistas vendem flash e personalizados na mesma conta — 60% em pré-prontos indicados, 70% em não indicados e personalizados.",
       "ex5t": "Tatuador em primeiro lugar, sempre",
       "ex5d": "Outros mercados tratam artistas como estoque. Nós os tratamos como todo o negócio — as comissões favorecem o criador, sempre.",
-      "toolkit_title": "Ferramentas do estúdio — em desenvolvimento",
-      "toolkit_sub": "Estamos criando essas ferramentas com a opinião de estúdios reais. Fundadores ajudam a decidir o que sai primeiro.",
+      "toolkit_title": "Ferramentas do estúdio — já disponíveis",
+      "toolkit_sub": "Criadas com a opinião de estúdios reais. Tudo disponível no seu painel.",
       "tk1": "Agenda de atendimentos",
       "tk2": "Cobrança de sinal",
       "tk3": "Recibos",

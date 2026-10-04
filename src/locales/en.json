@@ -315,7 +315,7 @@
       },
       "shops": {
         "title": "Tattoo shops",
-        "text": "A verified home for your shop — earn 20% on every verified referral, with pro booking tools and healed-work galleries being built for owners.",
+        "text": "A verified home for your shop — earn 20% on every verified referral, with pro booking tools and healed-work galleries for owners.",
         "price": "Shop plans {price}/yr",
         "btn": "Shop dashboard"
       },
@@ -442,8 +442,8 @@
       "ex4d": "Your artists sell flash and customs from the same account — 60% on referred premades, 70% on unreferred premades and customs.",
       "ex5t": "Tattooist-first, always",
       "ex5d": "Other marketplaces treat artists as inventory. We treat them as the whole business — splits favor the creator, every time.",
-      "toolkit_title": "Shop toolkit — being built",
-      "toolkit_sub": "We're building these tools with input from working shops. Founding shops get a say in what ships first.",
+      "toolkit_title": "Shop toolkit — live now",
+      "toolkit_sub": "Built with input from working shops. It's all live in your shop dashboard.",
       "tk1": "Booking calendar",
       "tk2": "Deposit collection",
       "tk3": "Receipts",
