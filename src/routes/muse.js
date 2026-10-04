@@ -127,4 +127,28 @@ router.get('/ios-sales', async (req, res) => {
   return res.json({ ok: true, sales: rows });
 });
 
+// GET /api/muse/custom-orders-needing-drafts
+// Returns paid custom orders with custom_status='needs_drafts' (oldest due first, max 50).
+// Powers the owner's custom-draft worker so it can see PRODUCTION state over HTTPS
+// instead of only the local dev SQLite DB.
+// Same service-token auth as /notify; 404s when MUSE_SERVICE_TOKEN unset.
+router.get('/custom-orders-needing-drafts', async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  let rows = [];
+  try {
+    rows = await db.all(
+      `SELECT o.id, o.custom_brief, o.delivery_due, o.rush_fee_cents, o.custom_status,
+              u.email AS buyer_email, u.display_name AS buyer_name
+       FROM orders o JOIN users u ON u.id = o.buyer_id
+       WHERE o.order_type = 'custom' AND o.status = 'paid' AND o.custom_status = 'needs_drafts'
+       ORDER BY (o.rush_fee_cents > 0) DESC, o.delivery_due ASC LIMIT 50`
+    );
+  } catch (e) {
+    console.error('[muse/custom-orders-needing-drafts] query failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'query failed' });
+  }
+  return res.json({ ok: true, orders: rows });
+});
+
 module.exports = router;
