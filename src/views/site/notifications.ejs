@@ -73,7 +73,7 @@
       return;
     }
     Notification.requestPermission().then(function (perm) {
-      if (perm !== 'granted') { statusEl.textContent = 'Permission denied — push stays off.'; return; }
+      if (perm !== 'granted') throw new Error('Permission denied — push stays off.');
       return fetch('/api/push/vapid-key').then(function (r) { return r.json(); });
     }).then(function (data) {
       if (!data || !data.publicKey) throw new Error('no key');
