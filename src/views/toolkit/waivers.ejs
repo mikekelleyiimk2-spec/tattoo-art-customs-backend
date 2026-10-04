@@ -1,0 +1,43 @@
+<% if (flash) { %><p class="flash"><%= flash %></p><% } %>
+<h1>Waivers</h1>
+<p class="muted">Tattoo Art Customs provides this tool only and is not your lawyer. Have a licensed attorney in your state review your waiver text before you use it.</p>
+<p class="muted">ID photo capture: <strong><%= idCaptureConfigured ? 'ON' : 'OFF' %></strong><% if (!idCaptureConfigured) { %> — set ID_DOC_KEY on the server to enable<% } %></p>
+
+<section class="card">
+  <h2>Waiver templates</h2>
+  <% if (!waivers || !waivers.length) { %>
+    <p class="muted">No waiver templates yet. Create one below.</p>
+  <% } %>
+  <% (waivers || []).forEach(function(w) { %>
+    <div class="waiver-row">
+      <div class="waiver-head">
+        <strong><%= w.title %></strong>
+        <span class="badge <%= w.active ? 'ok' : 'muted-badge' %>"><%= w.active ? 'Active' : 'Inactive' %></span>
+      </div>
+      <form method="post" action="/toolkit/waivers/<%= w.id %>/edit" class="form">
+        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <label for="title-<%= w.id %>">Title</label>
+        <input type="text" id="title-<%= w.id %>" name="title" value="<%= w.title %>" required maxlength="200">
+        <label for="legal-<%= w.id %>">Waiver text</label>
+        <textarea id="legal-<%= w.id %>" name="legal_text" rows="8" required maxlength="60000" placeholder="Paste the full updated waiver text here (re-saving replaces the template text)…"></textarea>
+        <label class="check">
+          <input type="checkbox" name="active" value="1" <%= Number(w.active) === 1 ? 'checked' : '' %>>
+          Active (customers can sign this version)
+        </label>
+        <p><button class="btn" type="submit">Save waiver</button></p>
+      </form>
+    </div>
+  <% }); %>
+</section>
+
+<section class="card">
+  <h2>New waiver</h2>
+  <form method="post" action="/toolkit/waivers" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <label for="new-title">Title</label>
+    <input type="text" id="new-title" name="title" required maxlength="200" placeholder="Standard consent + liability waiver">
+    <label for="new-legal">Waiver text</label>
+    <textarea id="new-legal" name="legal_text" rows="10" required maxlength="60000" placeholder="Paste your attorney-reviewed waiver text here…"></textarea>
+    <p><button class="btn" type="submit">Create waiver</button></p>
+  </form>
+</section>

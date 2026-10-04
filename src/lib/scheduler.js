@@ -37,6 +37,9 @@ function startScheduler() {
   // Booking reminders (shop toolset) run independently of the payouts toggle.
   const reminderTask = require('../shop/bookingReminders').registerBookingReminderJobs();
   if (reminderTask) tasks.push(reminderTask);
+  // Shop toolkit jobs: aftercare, autofill expiry, waiver ID purge,
+  // reactivation, forfeiture + plan-charge sweeps (charge-free until live).
+  for (const t of require('../shop/toolkitJobs').registerToolkitJobs()) tasks.push(t);
   if (process.env.WEEKLY_PAYOUTS_ENABLED === 'false') {
     console.log('Weekly payouts disabled (WEEKLY_PAYOUTS_ENABLED=false).');
     return;

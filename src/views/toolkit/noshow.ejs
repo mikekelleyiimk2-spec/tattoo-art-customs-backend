@@ -1,0 +1,42 @@
+<% if (flash) { %><p class="flash"><%= flash %></p><% } %>
+<h1>No-show enforcement</h1>
+
+<section class="card">
+  <h2>Policy</h2>
+  <p><strong>Forfeit deposit on no-show:</strong> <%= Number(policy.noshow_forfeit_deposit) === 1 ? 'On' : 'Off' %></p>
+  <p><strong>Free cancellation window:</strong> <%= policy.cancel_window_hours %> hours</p>
+  <p><strong>Deposit amount:</strong> $<%= (Number(policy.deposit_amount_cents || 0) / 100).toFixed(2) %></p>
+  <p class="muted">Edit these on <a href="/bookings/settings">Booking settings</a>.</p>
+</section>
+
+<% if (!autoChargeEnabled || !paypalLive) { %>
+<section class="card">
+  <h2>Automatic collection is OFF</h2>
+  <p class="muted">Holds are recorded and decisions are stamped, but no card is ever charged automatically. (AUTO_CHARGE_ENABLED=1 + live PayPal required.)</p>
+</section>
+<% } %>
+
+<section class="card">
+  <h2>Holds</h2>
+  <% if (holds && holds.length) { %>
+  <table class="table">
+    <thead>
+      <tr><th>Booking</th><th>Client</th><th>Amount</th><th>Status</th><th>Decision</th><th>Recorded</th></tr>
+    </thead>
+    <tbody>
+      <% holds.forEach(function(h) { %>
+      <tr>
+        <td><%= h.booking_id %></td>
+        <td><%= h.customer_name %></td>
+        <td>$<%= (Number(h.amount_cents) / 100).toFixed(2) %></td>
+        <td><span class="badge"><%= h.status %></span></td>
+        <td><span class="badge"><%= h.decision || '—' %></span></td>
+        <td><%= new Date(Number(h.created_at)).toLocaleString() %></td>
+      </tr>
+      <% }); %>
+    </tbody>
+  </table>
+  <% } else { %>
+  <p class="muted">No holds recorded yet.</p>
+  <% } %>
+</section>

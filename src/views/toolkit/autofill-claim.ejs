@@ -1,0 +1,27 @@
+<% if (state === 'claim') { %>
+<h1>A spot just opened!</h1>
+<% if (offer) { %>
+<p class="big"><%= new Date(Number(offer.start_at)).toLocaleString() %><% if (offer.end_at) { %> – <%= new Date(Number(offer.end_at)).toLocaleString() %><% } %></p>
+<% } %>
+<% if (shopName) { %><p>at <%= shopName %></p><% } %>
+<p class="muted">First to claim it gets it.</p>
+<form method="post" action="" class="form">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <p><button class="btn big" type="submit">Claim this spot</button></p>
+</form>
+<% } else if (state === 'won') { %>
+<h1>It&rsquo;s yours!</h1>
+<% if (offer) { %>
+<p class="big"><%= new Date(Number(offer.start_at)).toLocaleString() %><% if (offer.end_at) { %> – <%= new Date(Number(offer.end_at)).toLocaleString() %><% } %></p>
+<% } %>
+<% if (shopName) { %><p>at <%= shopName %></p><% } %>
+<% if (bookingUrl) { %>
+<p><a class="btn" href="<%= bookingUrl %>">Continue to booking</a></p>
+<% } %>
+<% } else if (state === 'lost') { %>
+<h1>Someone just claimed it — sorry!</h1>
+<p class="muted">That slot went fast. Stay on the waitlist and we&rsquo;ll ping you next time one opens.</p>
+<% } else if (state === 'expired') { %>
+<h1>This offer expired.</h1>
+<p class="muted">That slot went back into general availability. Keep an eye on the waitlist for the next one.</p>
+<% } %>

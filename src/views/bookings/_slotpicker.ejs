@@ -81,5 +81,18 @@
       });
     }).catch(function () { grid.innerHTML = '<p class="muted">Could not load slots.</p>'; });
   });
+  // Auto-fill claim pre-fill: ?claim_start=&claim_end= selects the won slot.
+  try {
+    var qp = new URLSearchParams(window.location.search);
+    var cs = Number(qp.get('claim_start')), ce = Number(qp.get('claim_end'));
+    if (cs > 0 && ce > cs) {
+      document.getElementById('sp-f-start').value = cs;
+      document.getElementById('sp-f-end').value = ce;
+      document.getElementById('sp-chosen').textContent =
+        'Claimed slot selected: ' + fmt(cs) + ' — press "' +
+        document.getElementById('sp-submit').textContent.trim() + '" to finish booking.';
+      document.getElementById('sp-form').style.display = '';
+    }
+  } catch (e) { /* pre-fill is best-effort */ }
 })();
 </script>

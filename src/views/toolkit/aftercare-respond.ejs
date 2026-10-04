@@ -1,0 +1,18 @@
+<h1><%= shopName %> — how's the healing?</h1>
+<p class="muted">One tap — no account needed.</p>
+
+<% if (alreadyResponded) { %>
+  <section class="card">
+    <p>Thanks — we've got your response.</p>
+    <% if (reviewUrl) { %>
+      <p><a class="btn" href="<%= reviewUrl %>">Leave us a Google review</a></p>
+    <% } %>
+  </section>
+<% } else { %>
+  <section class="card respond">
+    <p><a class="btn btn-big" href="/toolkit/aftercare/r/<%= checkin.id %>?r=great">Healing great</a></p>
+    <p><a class="btn btn-big secondary" href="/toolkit/aftercare/r/<%= checkin.id %>?r=ok">Doing okay</a></p>
+    <p><a class="btn btn-big warn-btn" href="/toolkit/aftercare/r/<%= checkin.id %>?r=concern">I'm concerned</a></p>
+    <p class="muted">If you're concerned, the shop gets alerted right away and will follow up.</p>
+  </section>
+<% } %>
