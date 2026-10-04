@@ -9,6 +9,7 @@ const { hasAnyActiveSubscription, isAdminRole, isActiveMember } = require('../mi
 const { isSaleWindow, premadePriceCents, customFullCents, salePriceActive } = require('../lib/pricing');
 const { viewerFor, displayImgFile } = require('../lib/contentPolicy');
 const { authLimiter, checkHoneypot } = require('../middleware/rateLimit');
+const { enforceSessionCap } = require('../lib/sessionLimits');
 
 const router = express.Router();
 
@@ -66,6 +67,9 @@ router.get('/bootstrap', async (req, res) => {
   const user = await db.get('SELECT id FROM users WHERE api_token = ?', [token]);
   if (!user) return res.status(401).render('error', { title: 'Not linked', message: 'Link your website account in the app first.' });
   req.session.userId = user.id;
+  // The app reaches the site through this WebView bootstrap, so session
+  // cookies carry over and device caps apply automatically (app parity).
+  await enforceSessionCap(req);
   const safeNext = next.startsWith('/') && !next.startsWith('//') ? next : '/account';
   res.redirect(safeNext);
 });

@@ -13,6 +13,7 @@ const router = express.Router();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const { ensureReferralCode, recordSignupReferral } = require('../lib/referrals');
 const { screenText } = require('../lib/screening');
+const { enforceSessionCap } = require('../lib/sessionLimits');
 
 router.get('/signup', async (req, res) => {
   // Friend referral links look like /signup?ref=TAC-XXXXXX — remember the
@@ -59,6 +60,7 @@ router.post('/signup', authLimiter, checkHoneypot, async (req, res) => {
     if (entry.entered) req.session.flash = "Welcome to Tattoo Art Customs! You're entered in the Opening Raffle — good luck!";
   } catch (e) { console.error('raffle entry on signup failed:', e.message); }
   req.session.userId = id;
+  await enforceSessionCap(req); // new account: no other sessions, a no-op
   if (!req.session.flash) req.session.flash = 'Welcome to Tattoo Art Customs!';
   res.redirect(req.session.returnTo || '/account');
 });
@@ -75,6 +77,7 @@ router.post('/login', authLimiter, checkHoneypot, async (req, res) => {
     return res.redirect('/login');
   }
   req.session.userId = user.id;
+  await enforceSessionCap(req); // evicts oldest sessions when over the plan cap
   const dest = req.session.returnTo || '/account';
   delete req.session.returnTo;
   res.redirect(dest);

@@ -15,6 +15,7 @@ const pricing = require('../lib/pricing');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { registerPayoutRoutes, payoutDashboardData } = require('../lib/payoutRoutes');
 const credits = require('../lib/credits');
+const { capForUserId, listSessions, revokeSession, revokeOtherSessions } = require('../lib/sessionLimits');
 
 const router = express.Router();
 registerPayoutRoutes(router, 'customer');
@@ -104,6 +105,10 @@ router.get('/', requireLogin, async (req, res) => {
     [req.user.id]);
   const uploads = await db.all('SELECT id, title, status, created_at FROM designs WHERE artist_id = ? ORDER BY created_at DESC LIMIT 20', [req.user.id]);
   const ageRow = await db.get('SELECT age_verified, show_explicit FROM users WHERE id = ?', [req.user.id]);
+  // Concurrent-session (device) limits: show the account's active sessions
+  // with per-session revoke, plus the plan cap.
+  const { cap: sessionCap, exempt: sessionExempt } = await capForUserId(req.user.id);
+  const sessions = sessionExempt ? [] : await listSessions(req.user.id, req.sessionID);
   res.render('account/dashboard', {
     title: 'My Account — Tattoo Art Customs', photos, subs, orders,
     metaDescription: 'Your Tattoo Art Customs account.',
@@ -111,6 +116,7 @@ router.get('/', requireLogin, async (req, res) => {
     destTypes: require('../lib/cashout').DEST_TYPES,
     ageVerified: !!(ageRow && ageRow.age_verified),
     showExplicit: !!(ageRow && ageRow.show_explicit),
+    sessions, sessionCap, sessionExempt,
   });
 });
 
@@ -168,6 +174,23 @@ router.post('/explicit-pref', requireLogin, formLimiter, checkHoneypot, async (r
     ? 'Explicit previews will now show unblurred for you.'
     : 'Explicit previews will stay blurred for you.';
   res.redirect('/account#content');
+});
+
+// --- Signed-in devices (concurrent-session limits) ---
+// Revoke one session (never your own current one).
+router.post('/sessions/revoke/:sid', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
+  const sid = String(req.params.sid || '').slice(0, 128);
+  const { revoked } = await revokeSession(req.user.id, sid, req.sessionID);
+  req.session.flash = revoked ? 'That device was signed out.' : 'Could not sign out that session.';
+  res.redirect('/account#devices');
+});
+// "Sign out all other devices": keeps the current session, deletes the rest.
+router.post('/sessions/revoke-others', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
+  const { revoked } = await revokeOtherSessions(req.user.id, req.sessionID);
+  req.session.flash = revoked
+    ? `Signed out ${revoked} other device${revoked === 1 ? '' : 's'}.`
+    : 'No other signed-in devices to sign out.';
+  res.redirect('/account#devices');
 });
 
 // --- Change password (self-service; needed for temp-password logins) ---

@@ -532,6 +532,7 @@ async function main() {
   await require('./shoptools-phase5').runDbTests(ok);
   await require('./shoptools-phase6').runDbTests(ok);
   await require('./shoptools-phase7').runDbTests(ok);
+  await require('./sessionLimits').runDbTests(ok);
 
   // Mail retry (unit-level, no live SMTP): a transient failure is retried
   // with backoff and eventually delivered; a permanent failure exhausts all
@@ -3978,6 +3979,8 @@ async function main() {
   // NOTE: the 404-when-MUSE_SERVICE_TOKEN-is-unset path cannot be toggled
   // from here — the app runs in a child process with a copied env — but it
   // is the same live-read serviceToken() check as /api/muse/notify.
+
+  await require('./sessionLimits').runHttpTests(ok);
 
   sdb.close();
   server.kill();

@@ -29,6 +29,33 @@
       <input type="password" id="new_password" name="new_password" minlength="8" autocomplete="new-password">
       <p><button class="btn" type="submit">Change password</button></p>
     </form>
+    <% if (!sessionExempt) { %>
+    <h2 id="devices">Signed-in devices</h2>
+    <p class="muted">Your plan allows up to <strong><%= sessionCap %></strong> signed-in device<%= sessionCap === 1 ? '' : 's' %> at once.
+    When you sign in past that limit, your oldest session is signed out automatically.</p>
+    <% if (!sessions.length) { %><p class="muted">No active sessions.</p><% } %>
+    <ul>
+    <% sessions.forEach(function(s) { %>
+      <li>
+        <strong><%= s.device %></strong>
+        <% if (s.current) { %><span class="badge ok">this device</span><% } %>
+        <span class="muted">· <%= s.ip %> · last activity <%= s.lastActivity %></span>
+        <% if (!s.current) { %>
+        <form method="post" action="/account/sessions/revoke/<%= encodeURIComponent(s.id) %>" style="display:inline" onsubmit="return confirm('Sign out this device?')">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn btn-secondary" type="submit">Sign out</button>
+        </form>
+        <% } %>
+      </li>
+    <% }); %>
+    </ul>
+    <% if (sessions.length > 1) { %>
+    <form method="post" action="/account/sessions/revoke-others" onsubmit="return confirm('Sign out all other devices?')">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <p><button class="btn btn-secondary" type="submit">Sign out all other devices</button></p>
+    </form>
+    <% } %>
+    <% } %>
     <h2 id="content">Content preferences</h2>
     <p class="muted">Pieces rated explicit (sexual acts / highly offensive content) show a blurred preview.
     Age-verified users may opt in to viewing them unblurred.</p>
