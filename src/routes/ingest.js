@@ -168,7 +168,10 @@ router.post('/email-upload', messageLimiter, (req, res, next) => {
             items.push({ skip: true, title: pair.title, reason: 'Could not store the file.' });
             continue;
           }
-          const title = subjectPrefix ? `${subjectPrefix} — ${pair.title}`.slice(0, 120) : pair.title;
+          // NOTE: do NOT apply subjectPrefix here — the final loop below
+          // applies it once to every item. Applying it here too used to
+          // double-prefix zip-upload titles ("Subject — Subject — name").
+          const title = pair.title;
           items.push({ file: lwFile, colorFile, title });
         }
         if (extraction.truncated) {

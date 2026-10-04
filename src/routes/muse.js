@@ -151,4 +151,23 @@ router.get('/custom-orders-needing-drafts', async (req, res) => {
   return res.json({ ok: true, orders: rows });
 });
 
+// POST /api/muse/fix-design-title
+// One-off data repair: correct a design's title (e.g. the ingest.js
+// double-prefix bug). body: { id, title }.
+// Same service-token auth as /notify; 404s when MUSE_SERVICE_TOKEN unset.
+router.post('/fix-design-title', express.json(), async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  const id = String(req.body.id || '').trim();
+  const title = String(req.body.title || '').trim().slice(0, 120);
+  if (!id || !title) return res.status(422).json({ ok: false, error: 'id and title required' });
+  try {
+    await db.update('designs', id, { title });
+  } catch (e) {
+    console.error('[muse/fix-design-title] update failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'update failed' });
+  }
+  return res.json({ ok: true, id, title });
+});
+
 module.exports = router;
