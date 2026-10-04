@@ -308,6 +308,13 @@ router.get('/about', (req, res) => res.render('site/about', {
   metaDescription: 'About Tattoo Art Customs marketplace.',
 }));
 
+router.get('/apps', (req, res) => res.render('site/apps', {
+  title: 'Apps by Usefulappz™',
+  metaDescription: 'Mobile apps built by Usefulappz — Tattoo Art Customs for Android and iPhone.',
+  playStoreUrl: res.locals.playStoreUrl || null,
+  appStoreUrl: res.locals.appStoreUrl || null,
+}));
+
 // Shared email validator (single-backslash escapes). Used by /contact and /app-notify.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 

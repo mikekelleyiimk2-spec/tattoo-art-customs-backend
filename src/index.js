@@ -120,6 +120,7 @@ app.use((req, res, next) => {
   res.locals.baseUrl = config.baseUrl;
   res.locals.googleVerification = config.googleSiteVerification;
   res.locals.playStoreUrl = config.playStoreUrl;
+  res.locals.appStoreUrl = config.appStoreUrl;
   res.locals.youtubeUrl = config.youtubeUrl;
   res.locals.money = (cents) => `$${(cents / 100).toFixed(2)}`;
   next();

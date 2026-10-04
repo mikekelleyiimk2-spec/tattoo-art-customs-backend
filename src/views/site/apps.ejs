@@ -1,0 +1,23 @@
+<h1>Apps by Usefulappz™</h1>
+<img src="/img/logos/usefulappz.png" alt="Usefulappz™ logo" style="max-width:320px;width:100%;height:auto;display:block;margin:0 auto 1.5rem;" />
+<p>Usefulappz™ builds the apps behind our businesses. More apps are on the way.</p>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem;margin:1.5rem 0;">
+  <div style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1.5rem;">
+    <p style="font-size:2rem;">🎨</p>
+    <p><strong>Tattoo Art Customs</strong></p>
+    <p class="muted">Full design gallery, custom tattoos in 48 hours, memberships, shop tools.</p>
+    <% if (playStoreUrl) { %>
+      <p><a class="btn" href="<%= playStoreUrl %>">Get it on Google Play</a></p>
+    <% } else { %>
+      <p class="muted">Android: coming soon to Google Play</p>
+    <% } %>
+    <% if (appStoreUrl) { %>
+      <p><a class="btn" href="<%= appStoreUrl %>">Download on the App Store</a></p>
+    <% } else { %>
+      <p><a class="btn" href="/ios-app">Get the iPhone app ($1.67)</a></p>
+    <% } %>
+  </div>
+</div>
+
+<p class="muted">New apps from Usefulappz™ will appear here as they launch.</p>
