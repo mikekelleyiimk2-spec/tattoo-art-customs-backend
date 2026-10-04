@@ -89,8 +89,29 @@ router.get('/', async (req, res) => {
      FROM orders o JOIN users u ON u.id = o.buyer_id
      WHERE o.designer_contract_terminated = 1 AND o.custom_status NOT IN ('delivered')
      ORDER BY o.delivery_due ASC`);
+  // Head-admin test-account switcher: the owner's own test accounts, so the
+  // admin landing page can jump straight into viewing the site as the
+  // tattoo shop, designer, or customer account. Looked up by email so the
+  // links never go stale if user ids change.
+  const TEST_ACCOUNT_EMAILS = [
+    'tattooartcustoms@gmail.com',   // tattoo_shop (TAC Test Shop)
+    'mikekelleyii.mk4@gmail.com',   // design_artist (MK Test Designer)
+    'mikekelleyii.mk@gmail.com',    // customer (MK Test Customer)
+  ];
+  let testAccounts = [];
+  if (req.user && req.user.role === 'head_admin') {
+    const rows = await db.all(
+      'SELECT id, email, display_name, role FROM users WHERE email IN (?, ?, ?)',
+      TEST_ACCOUNT_EMAILS
+    );
+    const roleOrder = { tattoo_shop: 0, design_artist: 1, customer: 2 };
+    testAccounts = rows
+      .filter(u => u.role !== 'head_admin')
+      .sort((a, b) => (roleOrder[a.role] ?? 9) - (roleOrder[b.role] ?? 9));
+  }
   res.render('admin/dashboard', {
     title: 'Admin — Tattoo Art Customs', stats, designerWatch, terminatedOrders,
+    testAccounts,
   });
 });
 

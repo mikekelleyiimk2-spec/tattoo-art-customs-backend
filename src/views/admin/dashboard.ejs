@@ -1,4 +1,16 @@
 <h1>Admin dashboard</h1>
+<% if (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'head_admin' && typeof testAccounts !== 'undefined' && testAccounts.length) { %>
+<div class="card" id="view-as-switcher" style="border:2px solid #6a4fb3;margin-bottom:16px">
+  <h3>View site as</h3>
+  <p class="muted">Jump into your test accounts to see the site exactly as each one does. The "Stop impersonating" banner brings you back here.</p>
+  <p style="margin:0">
+    <span class="badge" style="background:#6a4fb3;color:#fff">Site administrator — you are here</span>
+    <% testAccounts.forEach(function(a) { %>
+      <a class="btn btn-secondary" style="margin:4px 4px 4px 0" href="/admin/members/<%= a.id %>/impersonate">View as <%= a.role === 'tattoo_shop' ? 'tattoo shop' : a.role === 'design_artist' ? 'designer' : a.role === 'customer' ? 'customer' : a.role %> (<%= a.display_name || a.email %>)</a>
+    <% }); %>
+  </p>
+</div>
+<% } %>
 <div class="card" id="push-nudge" style="display:none;border:2px solid #6a4fb3">
   <strong>Get pushed the moment a design needs review.</strong>
   <span class="muted">Push notifications are off on this device.</span>
