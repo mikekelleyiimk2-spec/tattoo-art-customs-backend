@@ -1,0 +1,88 @@
+<% if (flash) { %><p class="flash"><%= flash %></p><% } %>
+<h1>Aftercare autopilot</h1>
+<p class="muted">Automated healing check-ins, Google-review asks, and healed-photo collection for your clients.</p>
+
+<section class="card">
+  <h2>Aftercare guide</h2>
+  <form method="post" action="/toolkit/aftercare/template" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <label for="tpl-title">Guide title</label>
+    <input type="text" id="tpl-title" name="title" value="<%= tpl.title || '' %>" maxlength="200">
+    <label for="tpl-body">Guide text (supports {{shop_name}} and {{customer_name}})</label>
+    <textarea id="tpl-body" name="body_md" rows="10" maxlength="20000"><%= tpl.body_md || '' %></textarea>
+    <p><button class="btn" type="submit">Save guide</button></p>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Review machine</h2>
+  <form method="post" action="/toolkit/aftercare/review-settings" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <label for="google-review-url">Google review link</label>
+    <input type="url" id="google-review-url" name="google_review_url" value="<%= review && review.google_review_url ? review.google_review_url : '' %>" placeholder="https://g.page/…/review">
+    <label class="check">
+      <input type="checkbox" name="enabled" value="1" <%= review && Number(review.enabled) === 1 ? 'checked' : '' %>>
+      Enabled — ask for a review after a great-healing response
+    </label>
+    <p class="muted">Only asked after a client taps "healing great" — never after a concern. One ask per booking.</p>
+    <p class="muted">Review asks sent so far: <strong><%= reviewAsks || 0 %></strong></p>
+    <p><button class="btn" type="submit">Save review settings</button></p>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Check-ins</h2>
+  <% if (!checkins || !checkins.length) { %>
+    <p class="muted">No check-ins yet — they are created automatically after appointments.</p>
+  <% } else { %>
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr><th>Kind</th><th>Client</th><th>Due</th><th>Status</th><th>Response</th></tr>
+        </thead>
+        <tbody>
+          <% checkins.forEach(function(c) { %>
+            <tr>
+              <td><%= c.kind %></td>
+              <td><%= c.customer_name || '—' %></td>
+              <td><%= new Date(Number(c.due_at)).toLocaleString() %></td>
+              <td><span class="badge <%= c.status === 'answered' ? 'ok' : (c.status === 'sent' ? '' : 'muted-badge') %>"><%= c.status %></span></td>
+              <td>
+                <% if (c.response === 'great') { %><span class="badge ok">Healing great</span>
+                <% } else if (c.response === 'ok') { %><span class="badge">Doing okay</span>
+                <% } else if (c.response === 'concern') { %><span class="badge warn">Concern</span>
+                <% } else { %>—<% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</section>
+
+<section class="card">
+  <h2>Healed photos</h2>
+  <% if (!photos || !photos.length) { %>
+    <p class="muted">No healed photos yet.</p>
+  <% } else { %>
+    <div class="photo-grid">
+      <% photos.forEach(function(p) { %>
+        <div class="photo-item">
+          <img src="/img/healed/<%= p.image_path.split('/').pop() %>" alt="Healed tattoo photo" loading="lazy">
+          <p class="muted"><%= p.customer_name || '—' %> · <%= new Date(Number(p.created_at)).toLocaleString() %></p>
+          <p>
+            <span class="badge <%= Number(p.consent_to_post) === 1 ? 'ok' : 'muted-badge' %>"><%= Number(p.consent_to_post) === 1 ? 'Consent given' : 'No consent' %></span>
+            <span class="badge <%= Number(p.posted_to_wall) === 1 ? 'ok' : 'muted-badge' %>"><%= Number(p.posted_to_wall) === 1 ? 'On wall' : 'Not posted' %></span>
+          </p>
+          <% if (Number(p.consent_to_post) === 1 && Number(p.posted_to_wall) === 0) { %>
+            <form method="post" action="/toolkit/healed/<%= p.id %>/publish" class="form">
+              <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+              <p><button class="btn secondary" type="submit">Post to healed wall</button></p>
+            </form>
+          <% } %>
+        </div>
+      <% }); %>
+    </div>
+  <% } %>
+</section>

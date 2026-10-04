@@ -38,6 +38,13 @@ const config = {
   sqlitePath: process.env.SQLITE_PATH || path.join(__dirname, '..', 'data', 'app.db'),
   assetDir,
   uploadDir,
+  // AES-256-GCM key for shop waiver ID photos (64 hex chars = 32 bytes).
+  // Generate: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+  // NEVER commit the value. When missing, ID capture endpoints fail closed.
+  idDocKey: (process.env.ID_DOC_KEY || '').trim(),
+  idDocConfigured() {
+    return /^[0-9a-fA-F]{64}$/.test(this.idDocKey);
+  },
 
   paypal: {
     clientId: process.env.PAYPAL_CLIENT_ID || '',
@@ -82,6 +89,10 @@ const config = {
       ? 'https://api-m.paypal.com'
       : 'https://api-m.sandbox.paypal.com';
   },
+
+  // Auto-charging for no-show forfeits + plan installments. OWNER RULE:
+  // stays OFF until explicitly enabled — never attempt a charge otherwise.
+  autoChargeEnabled: process.env.AUTO_CHARGE_ENABLED === '1',
 
   smtp: {
     host: process.env.SMTP_HOST || '',

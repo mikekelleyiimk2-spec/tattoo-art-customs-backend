@@ -159,13 +159,15 @@ const uploadWmDir = path.join(config.uploadDir, 'designs', 'linework-wm');
 const photosDir = path.join(config.uploadDir, 'photos');
 const avatarsDir = path.join(config.uploadDir, 'avatars');
 const adsDir = path.join(config.uploadDir, 'ads');
-for (const d of [wmDir, uploadWmDir, photosDir, avatarsDir, adsDir]) fs.mkdirSync(d, { recursive: true });
+const healedDir = path.join(config.assetDir, 'uploads', 'healed');
+for (const d of [wmDir, uploadWmDir, photosDir, avatarsDir, adsDir, healedDir]) fs.mkdirSync(d, { recursive: true });
 // Gallery previews change rarely (watermarked files can be regenerated in
 // place on re-approval), so allow a week of caching with ETag revalidation.
 const imgCacheOpts = { maxAge: '7d' };
 app.use('/img/designs', express.static(uploadWmDir, imgCacheOpts));
 app.use('/img/designs', express.static(wmDir, imgCacheOpts));
 app.use('/img/photos', express.static(photosDir));
+app.use('/img/healed', express.static(healedDir));
 app.use('/img/avatars', express.static(avatarsDir));
 app.use('/img/ads', express.static(adsDir));
 
@@ -200,6 +202,7 @@ app.use('/gift-cards', require('./routes/siteGiftCards'));
 app.use('/ios-app', require('./routes/iosApp'));
 app.use('/intake', require('./shop/routes-intake'));
 app.use('/waitlist', require('./shop/routes-waitlist'));
+app.use('/toolkit', require('./shop/routes-toolkit'));
 app.use('/events', require('./routes/events'));
 app.use('/social', require('./routes/social'));
 app.use('/journal', require('./routes/journal'));

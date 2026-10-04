@@ -1,0 +1,27 @@
+<h1>Healed wall</h1>
+<p class="muted">Photos clients uploaded after healing. Only photos with consent can be posted to your public healed wall.</p>
+
+<section class="card">
+  <% if (!photos || !photos.length) { %>
+    <p class="muted">No healed photos yet.</p>
+  <% } else { %>
+    <div class="photo-grid">
+      <% photos.forEach(function(p) { %>
+        <div class="photo-item">
+          <img src="/img/healed/<%= p.image_path.split('/').pop() %>" alt="Healed tattoo photo" loading="lazy">
+          <p class="muted"><%= p.customer_name || '—' %> · <%= new Date(Number(p.created_at)).toLocaleString() %></p>
+          <p>
+            <span class="badge <%= Number(p.consent_to_post) === 1 ? 'ok' : 'muted-badge' %>"><%= Number(p.consent_to_post) === 1 ? 'Consent given' : 'No consent' %></span>
+            <span class="badge <%= Number(p.posted_to_wall) === 1 ? 'ok' : 'muted-badge' %>"><%= Number(p.posted_to_wall) === 1 ? 'On wall' : 'Not posted' %></span>
+          </p>
+          <% if (Number(p.consent_to_post) === 1 && Number(p.posted_to_wall) === 0) { %>
+            <form method="post" action="/toolkit/healed/<%= p.id %>/publish" class="form">
+              <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+              <p><button class="btn secondary" type="submit">Post to healed wall</button></p>
+            </form>
+          <% } %>
+        </div>
+      <% }); %>
+    </div>
+  <% } %>
+</section>

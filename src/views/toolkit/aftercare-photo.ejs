@@ -1,0 +1,15 @@
+<h1>Send a healed photo</h1>
+<p class="muted">Share a photo of your healed tattoo with <%= shopName %>.</p>
+
+<section class="card">
+  <form method="post" action="/toolkit/aftercare/photo/<%= checkin.id %>" class="form" enctype="multipart/form-data">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <label for="healed-photo">Photo (image file)</label>
+    <input type="file" id="healed-photo" name="photo" accept="image/*" required>
+    <label class="check">
+      <input type="checkbox" name="consent_to_post" value="1">
+      I give <%= shopName %> permission to post this photo on their healed wall
+    </label>
+    <p><button class="btn" type="submit">Send photo</button></p>
+  </form>
+</section>

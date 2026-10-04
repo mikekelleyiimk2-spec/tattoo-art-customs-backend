@@ -1,0 +1,45 @@
+<% if (flash) { %><p class="flash"><%= flash %></p><% } %>
+<h1>Cancellation auto-fill</h1>
+<p class="muted">When a booking cancels, the freed slot is broadcast to your waitlist — first to claim it gets it.</p>
+
+<form method="post" action="/toolkit/autofill/settings" class="form">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <section class="card">
+    <h2>Auto-fill settings</h2>
+    <label class="check">
+      <input type="checkbox" name="autofill_enabled" value="1" <%= Number(settings.autofill_enabled) === 1 ? 'checked' : '' %>>
+      Broadcast freed slots to the waitlist automatically
+    </label>
+    <label for="autofill_audience">Who gets the offer</label>
+    <select id="autofill_audience" name="autofill_audience">
+      <option value="waitlist" <%= settings.autofill_audience === 'waitlist' ? 'selected' : '' %>>Waitlist only</option>
+      <option value="waitlist+past" <%= settings.autofill_audience === 'waitlist+past' ? 'selected' : '' %>>Waitlist + past clients</option>
+    </select>
+    <label for="autofill_expiry_minutes">Offer expires after (minutes)</label>
+    <input type="number" id="autofill_expiry_minutes" name="autofill_expiry_minutes" min="15" max="1440" value="<%= settings.autofill_expiry_minutes %>">
+    <p><button class="btn" type="submit">Save settings</button></p>
+  </section>
+</form>
+
+<section class="card">
+  <h2>Offers</h2>
+  <% if (offers && offers.length) { %>
+  <table class="table">
+    <thead>
+      <tr><th>Slot</th><th>Status</th><th>Winner</th><th>Created</th></tr>
+    </thead>
+    <tbody>
+      <% offers.forEach(function(o) { %>
+      <tr>
+        <td><%= new Date(Number(o.start_at)).toLocaleString() %><% if (o.end_at) { %> – <%= new Date(Number(o.end_at)).toLocaleString() %><% } %></td>
+        <td><span class="badge"><%= o.status %></span></td>
+        <td><%= o.winner_name || '—' %></td>
+        <td><%= new Date(Number(o.created_at)).toLocaleString() %></td>
+      </tr>
+      <% }); %>
+    </tbody>
+  </table>
+  <% } else { %>
+  <p class="muted">No auto-fill offers yet. When a booking cancels, the freed slot shows up here.</p>
+  <% } %>
+</section>

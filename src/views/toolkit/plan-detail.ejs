@@ -1,0 +1,45 @@
+<h1><%= plan.title %></h1>
+<p class="muted">$<%= (Number(plan.total_cents) / 100).toFixed(2) %> · <%= plan.sessions_count %> sessions · <span class="badge"><%= plan.status %></span><% if (viewerRole === 'shop') { %> · client: <%= plan.customer_name %><% } else { %> · shop: <%= plan.shop_name %><% } %></p>
+
+<section class="card">
+  <h2>Installments</h2>
+  <% if (installments && installments.length) { %>
+  <table class="table">
+    <thead>
+      <tr><th>#</th><th>Amount</th><th>Due</th><th>Status</th><% if (viewerRole === 'shop' && plan.status === 'active') { %><th></th><% } %></tr>
+    </thead>
+    <tbody>
+      <% installments.forEach(function(i) { %>
+      <tr>
+        <td><%= i.seq %></td>
+        <td>$<%= (Number(i.amount_cents) / 100).toFixed(2) %></td>
+        <td><%= i.due_at ? new Date(Number(i.due_at)).toLocaleString() : '—' %></td>
+        <td><span class="badge"><%= i.status %></span></td>
+        <% if (viewerRole === 'shop' && plan.status === 'active') { %>
+        <td>
+          <% if (i.status === 'pending') { %>
+          <form method="post" action="/toolkit/plans/<%= plan.id %>/waive/<%= i.seq %>" class="inline">
+            <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+            <button class="btn secondary" type="submit">Waive</button>
+          </form>
+          <% } %>
+        </td>
+        <% } %>
+      </tr>
+      <% }); %>
+    </tbody>
+  </table>
+  <% } else { %>
+  <p class="muted">No installments yet.</p>
+  <% } %>
+</section>
+
+<% if (viewerRole === 'shop' && plan.status === 'active') { %>
+<section class="card">
+  <h2>Plan actions</h2>
+  <form method="post" action="/toolkit/plans/<%= plan.id %>/cancel" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p><button class="btn secondary" type="submit">Cancel plan</button></p>
+  </form>
+</section>
+<% } %>

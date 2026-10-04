@@ -1,0 +1,19 @@
+<h1>Signed waiver</h1>
+
+<section class="card">
+  <h2><%= sig.waiver_title %></h2>
+  <p><strong>Signer:</strong> <%= sig.signer_name %></p>
+  <p><strong>Signed:</strong> <%= new Date(Number(sig.signed_at)).toLocaleString() %></p>
+  <% if (bookingStart) { %>
+    <p><strong>Appointment:</strong> <%= new Date(Number(bookingStart)).toLocaleString() %></p>
+  <% } %>
+  <h3>Signature</h3>
+  <div class="sig-render"><%- sig.signature_svg %></div>
+  <p class="muted">ID photo on file: <strong><%= sig.has_id_doc ? 'Yes' : 'No' %></strong></p>
+  <% if (sig.has_id_doc) { %>
+    <form method="post" action="/toolkit/waivers/s/<%= sig.id %>/id-view" class="form">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <p><button class="btn secondary" type="submit">View ID photo (decrypts in memory)</button></p>
+    </form>
+  <% } %>
+</section>

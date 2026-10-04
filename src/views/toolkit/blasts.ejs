@@ -1,0 +1,46 @@
+<% if (flash) { %><p class="flash"><%= flash %></p><% } %>
+<h1>Slow-day blasts</h1>
+<p class="muted">One-tap push + email to clients with a completed booking in the last year. <%= blastsLeft %> of 2 blasts left this week. Never SMS.</p>
+
+<form method="post" action="/toolkit/blasts" class="form">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <section class="card">
+    <h2>Compose</h2>
+    <label for="message">Message</label>
+    <textarea id="message" name="message" rows="4" maxlength="<%= maxChars %>" placeholder="e.g. Slow Tuesday — 20% off any booking today only"></textarea>
+    <p class="muted"><span id="char-count">0</span> / <%= maxChars %> characters</p>
+    <p><button class="btn" type="submit">Send blast</button></p>
+  </section>
+</form>
+<script>
+(function () {
+  var ta = document.getElementById('message');
+  var count = document.getElementById('char-count');
+  if (!ta || !count) return;
+  function update() { count.textContent = ta.value.length; }
+  ta.addEventListener('input', update);
+  update();
+})();
+</script>
+
+<section class="card">
+  <h2>History</h2>
+  <% if (blasts && blasts.length) { %>
+  <table class="table">
+    <thead>
+      <tr><th>Message</th><th>Recipients</th><th>Sent</th></tr>
+    </thead>
+    <tbody>
+      <% blasts.forEach(function(b) { %>
+      <tr>
+        <td><%= b.message %></td>
+        <td><%= b.recipient_count %></td>
+        <td><%= new Date(Number(b.sent_at)).toLocaleString() %></td>
+      </tr>
+      <% }); %>
+    </tbody>
+  </table>
+  <% } else { %>
+  <p class="muted">No blasts sent yet.</p>
+  <% } %>
+</section>
