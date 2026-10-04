@@ -1,6 +1,29 @@
 <h1><%= t('about.title') %></h1>
 <img src="/img/logos/tattoo-art-customs.png" alt="Tattoo Art Customs logo" style="max-width:420px;width:100%;height:auto;display:block;margin:0 auto 1.5rem;" />
 <p><%= t('about.intro', {custom: fmtMoney(15574), sale: fmtMoney(12987)}) %></p>
+<h2>Our brands</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;margin:1.5rem 0;">
+  <div style="text-align:center;">
+    <img src="/img/logos/tattoo-art-customs.png" alt="Tattoo Art Customs™ logo" style="max-width:170px;width:100%;height:auto;" />
+    <p><strong>Tattoo Art Customs™</strong></p>
+    <p><a class="btn" href="/gallery">Shop tattoo designs</a></p>
+  </div>
+  <div style="text-align:center;">
+    <img src="/img/logos/mikes-customs.png" alt="Mike's Customs™ logo" style="max-width:170px;width:100%;height:auto;" />
+    <p><strong>Mike's Customs™</strong></p>
+    <p><a class="btn" href="/orders/custom">Order a custom</a></p>
+  </div>
+  <div style="text-align:center;">
+    <img src="/img/logos/mikes-custom-tees.png" alt="Mike's Custom Tees™ logo" style="max-width:170px;width:100%;height:auto;" />
+    <p><strong>Mike's Custom Tees™</strong></p>
+    <p><a class="btn" href="/merch">Shop tees</a></p>
+  </div>
+  <div style="text-align:center;">
+    <img src="/img/logos/usefulappz.png" alt="Usefulappz™ logo" style="max-width:170px;width:100%;height:auto;" />
+    <p><strong>Usefulappz™</strong></p>
+    <p><a class="btn" href="/ios-app">Get the app</a></p>
+  </div>
+</div>
 <h2><%= t('about.for_artists') %></h2>
 <p><%= t('about.artists_text', {price: fmtMoney(567)}) %></p>
 <h2><%= t('about.for_shops') %></h2>
