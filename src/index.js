@@ -186,6 +186,7 @@ app.use('/account', require('./routes/account'));
 app.use('/artist', require('./routes/artist'));
 app.use('/shop', require('./shop/routes'));
 app.use('/orders', require('./routes/orders'));
+app.use('/transfers', require('./routes/transfers'));
 app.use('/play', require('./routes/play'));
 app.use('/api', require('./routes/api').router);
 app.use('/api/muse', require('./routes/muse'));

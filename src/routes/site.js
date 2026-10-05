@@ -282,6 +282,8 @@ router.get('/design/:id', async (req, res) => {
     title: `${design.title} — ${styleBit}Tattoo Design for Sale | Tattoo Art Customs`,
     design, artist, price, isCustom, sale: await salePriceActive(req.user), owned,
     imgFile, blurred,
+    // Shops with an active subscription can buy a design for a client (Phase 2).
+    canBuyForClient: req.user ? await require('../middleware/auth').hasActiveSubscription(req.user.id, 'tattoo_shop') : false,
     // Linework-only purchase option (3% discount). Pieces with no color
     // version are linework-only automatically.
     lineworkPrice: lineworkBase,

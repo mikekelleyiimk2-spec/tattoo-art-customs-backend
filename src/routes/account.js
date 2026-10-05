@@ -95,7 +95,9 @@ router.get('/', requireLogin, async (req, res) => {
   const subs = await db.all(
     `SELECT s.*, p.name AS plan_name, p.slug AS plan_slug FROM subscriptions s
      JOIN plans p ON p.id = s.plan_id WHERE s.user_id = ? ORDER BY s.created_at DESC`, [req.user.id]);
-  const orders = await db.all('SELECT * FROM orders WHERE buyer_id = ? ORDER BY created_at DESC LIMIT 10', [req.user.id]);
+  const orders = await db.all(
+    `SELECT o.*, (SELECT COUNT(*) FROM art_transfers t WHERE t.order_id = o.id) AS transfer_count
+     FROM orders o WHERE o.buyer_id = ? ORDER BY o.created_at DESC LIMIT 10`, [req.user.id]);
   const creditBalance = await credits.getCreditBalance(req.user.id);
   const creditTxns = await credits.creditHistory(req.user.id, 15);
   const { listDestinations } = require('../lib/cashout');

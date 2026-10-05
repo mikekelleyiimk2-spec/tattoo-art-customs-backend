@@ -43,6 +43,34 @@ router.get('/', async (req, res) => {
   // Referral volume tier: current rate + progress to the next tier.
   const { shopReferralTier } = require('./shopIncentives');
   const tier = await shopReferralTier(req.user.id);
+  // Client-art inbox: transfers customers sent to this shop (Phase 1).
+  const myEmail = (await db.get('SELECT email FROM users WHERE id = ?', [req.user.id]) || {}).email || '';
+  const artInbox = await db.all(
+    `SELECT t.*, d.title AS design_title, u.display_name AS from_name
+     FROM art_transfers t
+     LEFT JOIN designs d ON d.id = t.design_id
+     LEFT JOIN users u ON u.id = t.from_user_id
+     WHERE (t.to_shop_user_id = ? OR LOWER(t.to_email) = LOWER(?))
+       AND t.kind = 'to_shop'
+     ORDER BY t.created_at DESC LIMIT 25`,
+    [req.user.id, myEmail]);
+  // Client bills (Phase 2): art the shop bought for clients, to collect.
+  const clientBills = await db.all(
+    `SELECT b.*, d.title AS design_title
+     FROM client_bills b
+     LEFT JOIN orders o ON o.id = b.order_id
+     LEFT JOIN designs d ON d.id = o.design_id
+     WHERE b.shop_user_id = ?
+     ORDER BY b.created_at DESC LIMIT 25`,
+    [req.user.id]);
+  // Client-linked purchases (Phase 2): orders this shop bought for clients.
+  const clientOrders = await db.all(
+    `SELECT o.*, d.title AS design_title
+     FROM orders o
+     LEFT JOIN designs d ON d.id = o.design_id
+     WHERE o.buyer_id = ? AND o.client_email IS NOT NULL AND o.client_email != ''
+     ORDER BY o.created_at DESC LIMIT 25`,
+    [req.user.id]);
   res.render('shop/dashboard', {
     title: 'Shop Dashboard — Tattoo Art Customs',
     profile, balance, payouts, ledger, refLink,
@@ -52,8 +80,21 @@ router.get('/', async (req, res) => {
     dualBonus,
     tier,
     tapSub, tapIsComped, tapIsActive, tapTier, tapTiers: TIERS,
+    artInbox, clientBills, clientOrders,
     ...payout,
   });
+});
+
+// Mark a client bill paid (Phase 2: the shop collected the art cost from the client).
+router.post('/client-bills/:billId/paid', formLimiter, checkHoneypot, async (req, res) => {
+  const bill = await db.get('SELECT * FROM client_bills WHERE id = ? AND shop_user_id = ?', [req.params.billId, req.user.id]);
+  if (!bill || bill.status === 'paid') {
+    req.session.flash = 'That bill was not found.';
+    return res.redirect('/shop');
+  }
+  await db.update('client_bills', bill.id, { status: 'paid', paid_at: Date.now() });
+  req.session.flash = 'Bill marked paid.';
+  res.redirect('/shop');
 });
 
 // Shop profile — ONLY location, hours, appointment requirements may be set.

@@ -1,4 +1,49 @@
 <h1>Shop dashboard</h1>
+
+<% if (typeof artInbox !== 'undefined' && artInbox.length) { %>
+<section class="card">
+  <h2><%= t('transfer.inbox_title') %></h2>
+  <ul><% artInbox.forEach(function(x) { %>
+    <li><strong><%= x.design_title || x.design_id %></strong> <%= t('transfer.inbox_from', {name: x.from_name || x.to_email}) %>
+      — <a href="/transfers/<%= x.token %>"><%= t('transfer.inbox_download') %></a>
+      <span class="badge"><%= x.status %></span>
+      <span class="muted"><%= new Date(x.created_at).toLocaleString(localeTag) %></span></li>
+  <% }); %></ul>
+</section>
+<% } %>
+
+<% if (typeof clientOrders !== 'undefined' && clientOrders.length) { %>
+<section class="card">
+  <h2><%= t('transfer.client_orders_title') %></h2>
+  <ul><% clientOrders.forEach(function(o) { %>
+    <li><strong><%= o.design_title || o.design_id %></strong> — <%= o.client_email %>
+      <span class="badge"><%= o.status %></span>
+      <% if (o.status === 'paid') { %>
+      <form method="post" action="/transfers/send-client/<%= o.id %>" style="display:inline">
+        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="btn secondary" type="submit"><%= t('transfer.forward_client') %></button>
+      </form>
+      <% } %></li>
+  <% }); %></ul>
+</section>
+<% } %>
+
+<% if (typeof clientBills !== 'undefined' && clientBills.length) { %>
+<section class="card">
+  <h2><%= t('transfer.bills_title') %></h2>
+  <ul><% clientBills.forEach(function(b) { %>
+    <li><strong><%= b.design_title || '' %></strong> — <%= b.client_email %> — <%= money(b.amount_cents) %>
+      <span class="badge"><%= b.status %></span>
+      <% if (b.status !== 'paid') { %>
+      <form method="post" action="/shop/client-bills/<%= b.id %>/paid" style="display:inline">
+        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="btn secondary" type="submit"><%= t('transfer.mark_paid') %></button>
+      </form>
+      <% } %></li>
+  <% }); %></ul>
+</section>
+<% } %>
+
 <section class="card">
   <h2>Shop toolkit</h2>
   <p>

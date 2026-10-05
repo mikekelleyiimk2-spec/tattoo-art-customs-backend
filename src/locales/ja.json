@@ -68,7 +68,8 @@
     "sale": "セール",
     "search": "検索",
     "vat_note": "価格には該当する場合VATが含まれます。",
-    "working": "処理中…"
+    "working": "処理中…",
+    "cancel": "Cancel"
   },
   "contact": {
     "email": "あなたのメールアドレス",
@@ -186,7 +187,11 @@
     "price_includes": "（{fee}の手数料込み）",
     "sale_price": "土曜セール価格",
     "verify_age": "年齢を確認してオプトイン",
-    "pre_design": "プレデザイン"
+    "pre_design": "プレデザイン",
+    "buy_for_client": "Buy for a client",
+    "buy_for_client_note": "Purchase this design at full price for your client. The cost is added to a client bill on your dashboard for you to collect. You earn no referral commission on your own purchase.",
+    "client_email": "Client email address",
+    "buy_for_client_btn": "Buy for client"
   },
   "footer": {
     "advertise": "広告",
@@ -700,5 +705,29 @@
     "add": "ウィッシュリストに保存",
     "remove": "ウィッシュリストから削除",
     "saved": "保存済みのデザイン"
+  },
+  "transfer": {
+    "send_title": "Send art to your shop",
+    "send_intro": "Send your purchased design \"{title}\" to the shop doing your tattoo. They'll get a private download link for the clean files, valid 24 hours.",
+    "send_short": "Your shop gets a private download link for the clean files (valid 24 hours).",
+    "send_btn": "Send to my shop",
+    "pick_shop": "Choose the shop",
+    "verified_shop": "Verified shop",
+    "choose": "— choose a shop —",
+    "or_email": "Or send to any shop by email:",
+    "shop_email": "Shop email address",
+    "license_preview": "The shop receives the files under a single-client license: licensed to you, for your tattoo only — not for resale or reuse on other clients.",
+    "sent_before": "Previously sent",
+    "dl_title": "Design transfer",
+    "private_note": "This link is private and expires 24 hours after it was sent. Full-color and clean linework files:",
+    "license_title": "License",
+    "inbox_title": "Client art inbox",
+    "inbox_from": "from {name}",
+    "inbox_download": "Download files",
+    "client_orders_title": "Art bought for clients",
+    "forward_client": "Forward to client",
+    "bills_title": "Client bills",
+    "mark_paid": "Mark paid",
+    "sent_badge": "sent to shop ({count})"
   }
 }

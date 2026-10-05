@@ -31,6 +31,18 @@
   <% }); %></ul>
   <% } %>
 </section>
+<% if (order.order_type === 'premade' && order.design_id) { %>
+<section class="card">
+  <h2><%= t('transfer.send_title') %></h2>
+  <p class="muted"><%= t('transfer.send_short') %></p>
+  <p><a class="btn btn-secondary" href="/transfers/send/<%= order.id %>"><%= t('transfer.send_btn') %></a></p>
+  <% if (typeof transfers !== 'undefined' && transfers.length) { %>
+  <ul><% transfers.forEach(function(s) { %>
+    <li><%= s.to_email %> — <span class="badge"><%= s.status %></span> <span class="muted"><%= new Date(s.created_at).toLocaleString(localeTag) %></span></li>
+  <% }); %></ul>
+  <% } %>
+</section>
+<% } %>
 <% } else if (order.status === 'pending') { %>
 <section class="card">
   <h2><%= t('orders.complete_payment') %></h2>

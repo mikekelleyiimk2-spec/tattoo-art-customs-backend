@@ -11,7 +11,7 @@ const paypal = require('../lib/paypal');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const pricing = require('../lib/pricing');
 const { premadePriceCents, isSaleWindow, salePriceActive } = pricing;
-const { requireLogin, isActiveMember } = require('../middleware/auth');
+const { requireLogin, isActiveMember, requireSubscription } = require('../middleware/auth');
 const { recordSaleCommissions } = require('../lib/commissions');
 const { resolveShopReferral } = require('../shop/attribution');
 const { routeCustomOrder } = require('../lib/customFulfillment');
@@ -84,6 +84,59 @@ router.post('/buy/:designId', requireLogin, formLimiter, checkHoneypot, async (r
     console.error('PayPal order create failed:', e.message);
     req.session.flash = 'PayPal checkout is unavailable right now — you can pay manually below.';
     res.redirect(`/orders/manual/${orderId}`);
+  }
+});
+
+// --- Shop "buy for client" (Phase 2): a shop with an active tattoo_shop
+// subscription purchases a premade design at FULL price for a client. The
+// buying shop earns NO referral commission on its own purchase
+// (referred_shop_id is forced to NULL; see the buyer guard in
+// recordSaleCommissions). The art cost lands on a client bill for the shop
+// to collect (created when the order is paid).
+router.post('/buy-for-client/:designId', requireLogin, requireSubscription('tattoo_shop'), formLimiter, checkHoneypot, async (req, res) => {
+  const design = await db.get("SELECT * FROM designs WHERE id = ? AND status = 'approved'", [req.params.designId]);
+  if (!design) return res.status(404).render('error', { title: 'Not found', message: 'That design is not available.' });
+  const clientEmail = String(req.body.client_email || '').trim().toLowerCase().slice(0, 160);
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(clientEmail)) {
+    req.session.flash = 'Enter the client\u2019s email address so the art can be billed and delivered to them.';
+    return res.redirect(`/design/${design.id}`);
+  }
+  const member = await isActiveMember(req.user);
+  if (design.members_only && !member) {
+    req.session.flash = 'That design is exclusive to members — join a membership to buy it.';
+    return res.redirect('/membership');
+  }
+  const isCustom = design.listing_type === 'custom';
+  const listPrice = isCustom
+    ? pricing.customFullCents(new Date(), member)
+    : premadePriceCents(new Date(), member);
+  const lineworkOnly = design.color_source === 'none' || req.body.linework_only === '1';
+  const price = lineworkOnly ? pricing.lineworkOnlyPriceCents(listPrice) : listPrice;
+  const fee = pricing.processingFeeCents(price);
+  // Link the client's site account when they have one.
+  const clientUser = await db.get('SELECT id FROM users WHERE email = ?', [clientEmail]);
+  const orderId = await db.insert('orders', {
+    buyer_id: req.user.id, design_id: design.id, order_type: 'premade',
+    amount_cents: price, fee_cents: fee, status: 'pending', payment_method: 'paypal',
+    referral_code: '', referred_shop_id: null,
+    linework_only: lineworkOnly ? 1 : 0,
+    client_email: clientEmail, client_user_id: clientUser ? clientUser.id : null,
+    created_at: db.now(),
+  });
+  try {
+    const pp = await paypal.createCheckoutOrder({
+      amountCents: price + fee,
+      description: `Tattoo Art Customs — "${design.title}"${lineworkOnly ? ' (linework only)' : ''} (for client ${clientEmail})`,
+      returnUrl: `${config.baseUrl}/orders/approve/${orderId}`,
+      cancelUrl: `${config.baseUrl}/design/${design.id}`,
+    });
+    await db.update('orders', orderId, { paypal_order_id: pp.id });
+    const approve = pp.links.find((l) => l.rel === 'approve');
+    res.redirect(approve.href);
+  } catch (e) {
+    console.error('PayPal order create failed:', e.message);
+    req.session.flash = 'PayPal checkout is unavailable right now — please try again in a moment.';
+    res.redirect(`/design/${design.id}`);
   }
 });
 
@@ -279,6 +332,22 @@ router.get('/approve/:orderId', requireLogin, async (req, res) => {
     });
     const fresh = await db.get('SELECT * FROM orders WHERE id = ?', [order.id]);
     await recordSaleCommissions(fresh);
+    // Buy-for-client: land the art cost on a client bill for the shop to
+    // collect from the client (idempotent per order).
+    if (fresh.client_email) {
+      const existingBill = await db.get('SELECT id FROM client_bills WHERE order_id = ?', [fresh.id]);
+      if (!existingBill) {
+        await db.insert('client_bills', {
+          shop_user_id: fresh.buyer_id,
+          client_email: fresh.client_email,
+          client_user_id: fresh.client_user_id || null,
+          order_id: fresh.id,
+          amount_cents: Number(fresh.amount_cents || 0) + Number(fresh.fee_cents || 0),
+          status: 'unpaid',
+          note: 'Design purchase for client',
+        });
+      }
+    }
     const fulfil = await onOrderPaid(fresh);
     await routeCustomOrder(fresh);
     await onCustomPieceSold(fresh); // sold custom pieces delist + queue a replacement
@@ -306,11 +375,12 @@ router.get('/:orderId', requireLogin, async (req, res) => {
   }
   const design = order.design_id ? await db.get('SELECT title FROM designs WHERE id = ?', [order.design_id]) : null;
   const downloads = await db.all('SELECT * FROM downloads WHERE order_id = ? ORDER BY created_at DESC', [order.id]);
+  const transfers = await db.all('SELECT * FROM art_transfers WHERE order_id = ? ORDER BY created_at DESC', [order.id]);
   const pricing = require('../lib/pricing');
   const depositTotal = order.order_type === 'custom' && order.deposit_cents != null
     ? Number(order.deposit_cents) + Number(order.fee_cents || 0) : null;
   const fullTotal = order.order_type === 'custom' ? pricing.withFeeCents(Number(order.amount_cents)) : null;
-  res.render('orders/detail', { title: `Order ${order.id.slice(0, 8)} — Tattoo Art Customs`, order, design, downloads, depositTotal, fullTotal });
+  res.render('orders/detail', { title: `Order ${order.id.slice(0, 8)} — Tattoo Art Customs`, order, design, downloads, transfers, depositTotal, fullTotal });
 });
 
 // Cancel your own pending, unpaid order (e.g. an accidental duplicate).
