@@ -566,7 +566,8 @@
     "toggle_menu": "Menü umschalten",
     "wallet": "Wallet",
     "tap_to_pay": "Tap to Pay",
-    "wishlist": "Wunschliste"
+    "wishlist": "Wunschliste",
+    "top_loved": "Top-Lieblinge"
   },
   "orders": {
     "amount": "Betrag",
@@ -729,5 +730,17 @@
     "bills_title": "Client bills",
     "mark_paid": "Mark paid",
     "sent_badge": "sent to shop ({count})"
+  },
+  "toploved": {
+    "title": "Top-Lieblinge",
+    "sub": "Alle lieben diese — die beliebtesten Designs der Community, sortiert nach Liebe.",
+    "loves": "{count} Herzen",
+    "empty_title": "Noch keine Herzen",
+    "empty_text": "Tippe auf das Herz eines Designs, um die erste Stimme abzugeben.",
+    "browse": "Galerie durchsuchen",
+    "badge_most_loved": "Beliebtestes",
+    "badge_most_wanted": "Meistgewolltes",
+    "badge_trending": "Trend",
+    "badge_selling_fast": "Verkauft sich schnell"
   }
 }

@@ -566,7 +566,8 @@
     "toggle_menu": "Växla meny",
     "wallet": "Wallet",
     "tap_to_pay": "Tap to Pay",
-    "wishlist": "Önskelista"
+    "wishlist": "Önskelista",
+    "top_loved": "Mest gillade"
   },
   "orders": {
     "amount": "Belopp",
@@ -729,5 +730,17 @@
     "bills_title": "Client bills",
     "mark_paid": "Mark paid",
     "sent_badge": "sent to shop ({count})"
+  },
+  "toploved": {
+    "title": "Mest gillade",
+    "sub": "Alla älskar dessa — communityns mest hjärtade designer, rankade efter kärlek.",
+    "loves": "{count} hjärtan",
+    "empty_title": "Inga röster ännu",
+    "empty_text": "Tryck på hjärtat på en design för att rösta först.",
+    "browse": "Bläddra i galleriet",
+    "badge_most_loved": "Mest älskad",
+    "badge_most_wanted": "Mest eftertraktad",
+    "badge_trending": "Trendig",
+    "badge_selling_fast": "Säljer snabbt"
   }
 }

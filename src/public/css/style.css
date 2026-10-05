@@ -151,3 +151,11 @@ th { background: var(--paper-dim); }
 .fav-heart.on svg { fill: var(--accent); stroke: var(--accent); }
 .fav-heart-inline { position: static; vertical-align: middle; margin-left: .5rem; width: 2.2rem; height: 2.2rem; }
 .nav-links [data-fav-count] { background: var(--accent); color: #fff; }
+
+/* Top loved leaderboard */
+.top-loved-badge {
+  position: absolute; top: .5rem; left: .5rem; z-index: 2;
+  font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
+  box-shadow: 0 1px 4px rgba(0,0,0,.18);
+}
+.love-count { font-size: 1.25rem; font-weight: 700; color: var(--accent); }

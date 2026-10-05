@@ -566,7 +566,8 @@
     "toggle_menu": "เปิด/ปิดเมนู",
     "wallet": "กระเป๋าเงิน",
     "tap_to_pay": "แตะจ่าย",
-    "wishlist": "รายการโปรด"
+    "wishlist": "รายการโปรด",
+    "top_loved": "ยอดนิยม"
   },
   "orders": {
     "amount": "จำนวนเงิน",
@@ -729,5 +730,17 @@
     "bills_title": "Client bills",
     "mark_paid": "Mark paid",
     "sent_badge": "sent to shop ({count})"
+  },
+  "toploved": {
+    "title": "ยอดนิยม",
+    "sub": "ทุกคนกำลังหลงรักสิ่งเหล่านี้ — ดีไซน์ที่ชุมชนรักมากที่สุด จัดอันดับตามความรัก",
+    "loves": "{count} ไลก์",
+    "empty_title": "ยังไม่มีคะแนน",
+    "empty_text": "แตะหัวใจบนดีไซน์ใดก็ได้เพื่อโหวตเป็นคนแรก",
+    "browse": "เรียกดูแกลเลอรี",
+    "badge_most_loved": "รักมากที่สุด",
+    "badge_most_wanted": "ต้องการมากที่สุด",
+    "badge_trending": "กำลังมาแรง",
+    "badge_selling_fast": "ขายดี"
   }
 }

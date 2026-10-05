@@ -566,7 +566,8 @@
     "toggle_menu": "Переключить меню",
     "wallet": "Кошелёк",
     "tap_to_pay": "Tap to Pay",
-    "wishlist": "Избранное"
+    "wishlist": "Избранное",
+    "top_loved": "Любимые"
   },
   "orders": {
     "amount": "Сумма",
@@ -729,5 +730,17 @@
     "bills_title": "Client bills",
     "mark_paid": "Mark paid",
     "sent_badge": "sent to shop ({count})"
+  },
+  "toploved": {
+    "title": "Самые любимые",
+    "sub": "Все их обожают — самые любимые дизайны сообщества, отсортированные по любви.",
+    "loves": "{count} лайков",
+    "empty_title": "Пока нет голосов",
+    "empty_text": "Нажмите на сердечко дизайна, чтобы проголосовать первым.",
+    "browse": "Смотреть галерею",
+    "badge_most_loved": "Самый любимый",
+    "badge_most_wanted": "Самый желанный",
+    "badge_trending": "В тренде",
+    "badge_selling_fast": "Быстро раскупают"
   }
 }

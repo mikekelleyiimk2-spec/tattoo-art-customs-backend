@@ -8,7 +8,7 @@ const db = require('../db');
 const { hasAnyActiveSubscription, isAdminRole, isActiveMember } = require('../middleware/auth');
 const { isSaleWindow, premadePriceCents, customFullCents, salePriceActive } = require('../lib/pricing');
 const { viewerFor, displayImgFile } = require('../lib/contentPolicy');
-const { authLimiter, checkHoneypot } = require('../middleware/rateLimit');
+const { authLimiter, formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { enforceSessionCap } = require('../lib/sessionLimits');
 
 const router = express.Router();
@@ -312,6 +312,49 @@ router.delete('/favorites/:designId', async (req, res) => {
   await db.query('DELETE FROM user_favorites WHERE user_id = ? AND design_id = ?',
     [req.user.id, id]);
   return res.json({ ok: true, favorited: false, id });
+});
+
+// Top-loved leaderboard (design likes) — [toploved] feature.
+// Gallery hearts double as "love" votes. No login required: logged-in users
+// vote as 'user:<id>'; guests vote with a client UUID (tac_voter_uuid).
+// design_like_counts is recomputed from design_likes after every change so
+// the tally can never drift.
+function likeVoterKey(req) {
+  if (req.user) return 'user:' + req.user.id;
+  const raw = String((req.body && req.body.voter_key) || '').slice(0, 64);
+  if (!/^[A-Za-z0-9-]{8,64}$/.test(raw)) return null;
+  return 'guest:' + raw;
+}
+
+async function refreshLikeCount(designId) {
+  const row = await db.get('SELECT COUNT(*) AS n FROM design_likes WHERE design_id = ?', [designId]);
+  const n = Number((row && row.n) || 0);
+  await db.query(
+    `INSERT INTO design_like_counts (design_id, like_count) VALUES (?, ?)
+     ON CONFLICT(design_id) DO UPDATE SET like_count = excluded.like_count`,
+    [designId, n]);
+  return n;
+}
+
+router.post('/likes/:designId', express.json(), formLimiter, async (req, res) => {
+  const design = await validFavoriteDesign(req.params.designId);
+  if (!design) return res.status(404).json({ ok: false, error: 'not available' });
+  const voterKey = likeVoterKey(req);
+  if (!voterKey) return res.status(400).json({ ok: false, error: 'voter_key required' });
+  await db.query(
+    'INSERT INTO design_likes (design_id, voter_key, created_at) VALUES (?, ?, ?) ON CONFLICT(design_id, voter_key) DO NOTHING',
+    [design.id, voterKey, db.now()]);
+  const likeCount = await refreshLikeCount(design.id);
+  return res.json({ ok: true, liked: true, id: design.id, like_count: likeCount });
+});
+
+router.delete('/likes/:designId', express.json(), formLimiter, async (req, res) => {
+  const voterKey = likeVoterKey(req);
+  if (!voterKey) return res.status(400).json({ ok: false, error: 'voter_key required' });
+  const id = String(req.params.designId || '').slice(0, 128);
+  await db.query('DELETE FROM design_likes WHERE design_id = ? AND voter_key = ?', [id, voterKey]);
+  const likeCount = await refreshLikeCount(id);
+  return res.json({ ok: true, liked: false, id, like_count: likeCount });
 });
 
 module.exports = { router, userFromToken };

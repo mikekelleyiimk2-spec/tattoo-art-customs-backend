@@ -566,7 +566,8 @@
     "toggle_menu": "메뉴 열기/닫기",
     "wallet": "지갑",
     "tap_to_pay": "탭 결제",
-    "wishlist": "위시리스트"
+    "wishlist": "위시리스트",
+    "top_loved": "인기 디자인"
   },
   "orders": {
     "amount": "금액",
@@ -729,5 +730,17 @@
     "bills_title": "Client bills",
     "mark_paid": "Mark paid",
     "sent_badge": "sent to shop ({count})"
+  },
+  "toploved": {
+    "title": "인기 디자인",
+    "sub": "모두가 사랑하는 디자인 — 커뮤니티에서 가장 많은 하트를 받은 디자인을 사랑 순으로.",
+    "loves": "{count}개의 좋아요",
+    "empty_title": "아직 투표가 없습니다",
+    "empty_text": "디자인의 하트를 눌러 첫 투표를 해보세요.",
+    "browse": "갤러리 보기",
+    "badge_most_loved": "최다 사랑",
+    "badge_most_wanted": "최다 인기",
+    "badge_trending": "트렌딩",
+    "badge_selling_fast": "판매 급상승"
   }
 }

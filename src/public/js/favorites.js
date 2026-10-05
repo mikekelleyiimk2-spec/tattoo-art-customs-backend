@@ -97,6 +97,7 @@
     else { local = local.filter(function (x) { return x !== id; }); }
     writeLocal(local);
     paint();
+    pingLike(id, on); // [toploved] leaderboard vote — best-effort, never blocks wishlist
     if (loggedIn()) {
       api(on ? 'POST' : 'DELETE', '/api/favorites/' + encodeURIComponent(id))
         .then(function () { return refreshServerIds(); })
@@ -112,6 +113,38 @@
     } else if (onWishlistPage()) {
       renderWishlist();
     }
+  }
+
+  // [toploved] — every heart doubles as a leaderboard vote. Logged-in users
+  // are keyed by their user id server-side; guests get a stable UUID in
+  // localStorage. Fire-and-forget: the wishlist is the source of truth.
+  var VOTER_KEY = 'tac_voter_uuid';
+  function voterKey() {
+    try {
+      var v = localStorage.getItem(VOTER_KEY);
+      if (!v) {
+        v = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+          var r = Math.random() * 16 | 0;
+          return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+        localStorage.setItem(VOTER_KEY, v);
+      }
+      return v;
+    } catch (e) { return null; }
+  }
+  function pingLike(id, on) {
+    var body = {};
+    if (!loggedIn()) {
+      var vk = voterKey();
+      if (!vk) return;
+      body.voter_key = vk;
+    }
+    fetch('/api/likes/' + encodeURIComponent(id), {
+      method: on ? 'POST' : 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify(body),
+    }).catch(function () {});
   }
 
   function onWishlistPage() { return !!document.getElementById('wishlist-grid'); }

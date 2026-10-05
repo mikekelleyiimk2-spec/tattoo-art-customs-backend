@@ -566,7 +566,8 @@
     "toggle_menu": "Ouvrir/fermer le menu",
     "wallet": "Wallet",
     "tap_to_pay": "Tap to Pay",
-    "wishlist": "Favoris"
+    "wishlist": "Favoris",
+    "top_loved": "Coups de cœur"
   },
   "orders": {
     "amount": "Montant",
@@ -729,5 +730,17 @@
     "bills_title": "Client bills",
     "mark_paid": "Mark paid",
     "sent_badge": "sent to shop ({count})"
+  },
+  "toploved": {
+    "title": "Coups de cœur",
+    "sub": "Tout le monde adore ces motifs — les créations les plus aimées de la communauté, classées par amour.",
+    "loves": "{count} j'aime",
+    "empty_title": "Aucun vote pour l’instant",
+    "empty_text": "Touchez le cœur d’un design pour voter en premier.",
+    "browse": "Parcourir la galerie",
+    "badge_most_loved": "Le plus aimé",
+    "badge_most_wanted": "Le plus convoité",
+    "badge_trending": "Tendance",
+    "badge_selling_fast": "Se vend vite"
   }
 }

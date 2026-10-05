@@ -967,6 +967,7 @@ async function main() {
   await require('./shoptools-phase6').runHttpTests(ok, req);
   await require('./shoptools-phase7').runHttpTests(ok, req);
   await require('./favorites').runHttpTests(ok, req); // [wishlist] feature
+  await require('./toploved').runHttpTests(ok, req); // [toploved] leaderboard
   await require('./transfers').runHttpTests(ok, req); // [transfers] customer<->shop art pipeline
   r = await areq('POST', `/admin/orders/${orderId}/confirm-manual`);
   ok(r.status === 302, 'admin confirms manual payment');

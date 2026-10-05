@@ -566,7 +566,8 @@
     "toggle_menu": "Apri/chiudi menu",
     "wallet": "Wallet",
     "tap_to_pay": "Tap to Pay",
-    "wishlist": "Preferiti"
+    "wishlist": "Preferiti",
+    "top_loved": "Più amati"
   },
   "orders": {
     "amount": "Importo",
@@ -729,5 +730,17 @@
     "bills_title": "Client bills",
     "mark_paid": "Mark paid",
     "sent_badge": "sent to shop ({count})"
+  },
+  "toploved": {
+    "title": "Più amati",
+    "sub": "Tutti li amano — i design più amati dalla community, classificati per amore.",
+    "loves": "{count} mi piace",
+    "empty_title": "Ancora nessun voto",
+    "empty_text": "Tocca il cuore di un design per votare per primo.",
+    "browse": "Sfoglia la galleria",
+    "badge_most_loved": "Più amato",
+    "badge_most_wanted": "Più desiderato",
+    "badge_trending": "Tendenza",
+    "badge_selling_fast": "Vende veloce"
   }
 }

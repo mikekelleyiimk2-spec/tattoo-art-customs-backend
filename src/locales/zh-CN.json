@@ -566,7 +566,8 @@
     "toggle_menu": "切换菜单",
     "wallet": "钱包",
     "tap_to_pay": "拍卡支付",
-    "wishlist": "心愿单"
+    "wishlist": "心愿单",
+    "top_loved": "最受欢迎"
   },
   "orders": {
     "amount": "金额",
@@ -729,5 +730,17 @@
     "bills_title": "Client bills",
     "mark_paid": "Mark paid",
     "sent_badge": "sent to shop ({count})"
+  },
+  "toploved": {
+    "title": "最受欢迎",
+    "sub": "大家都在爱的作品 — 社区最受欢迎的设计，按喜爱度排名。",
+    "loves": "{count} 个喜欢",
+    "empty_title": "还没有投票",
+    "empty_text": "点击任意设计上的爱心，投出第一票。",
+    "browse": "浏览图库",
+    "badge_most_loved": "最受欢迎",
+    "badge_most_wanted": "最受追捧",
+    "badge_trending": "热门趋势",
+    "badge_selling_fast": "热销中"
   }
 }

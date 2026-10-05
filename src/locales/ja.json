@@ -566,7 +566,8 @@
     "toggle_menu": "メニュー切替",
     "wallet": "ウォレット",
     "tap_to_pay": "タップ決済",
-    "wishlist": "ウィッシュリスト"
+    "wishlist": "ウィッシュリスト",
+    "top_loved": "人気ランキング"
   },
   "orders": {
     "amount": "金額",
@@ -729,5 +730,17 @@
     "bills_title": "Client bills",
     "mark_paid": "Mark paid",
     "sent_badge": "sent to shop ({count})"
+  },
+  "toploved": {
+    "title": "人気ランキング",
+    "sub": "みんなが夢中のデザイン — コミュニティで最もハートを集めたデザインを愛され順にランキング。",
+    "loves": "{count} いいね",
+    "empty_title": "まだ投票がありません",
+    "empty_text": "デザインのハートをタップして最初の投票を。",
+    "browse": "ギャラリーを見る",
+    "badge_most_loved": "最愛され",
+    "badge_most_wanted": "最も人気",
+    "badge_trending": "トレンド",
+    "badge_selling_fast": "売れ筋"
   }
 }
