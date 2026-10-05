@@ -8435,12 +8435,12 @@
  },
  {
   "id": "batch7-g4-pinhao-brabo",
-  "title": "PinhãO-Brabo",
+  "title": "Pinh\u00e3O-Brabo",
   "styles": [
    "Blackwork"
   ],
   "subjects": [
-   "Flowers & Botanicals > Pinhão-brabo"
+   "Flowers & Botanicals > Pinh\u00e3o-brabo"
   ]
  },
  {
@@ -10408,6 +10408,156 @@
   ],
   "subjects": [
    "Celestial / Cosmic > Sun"
+  ]
+ },
+ {
+  "id": "batch17-illustrative-lighthouse",
+  "title": "Illustrative Lighthouse",
+  "styles": [
+   "Illustrative"
+  ],
+  "subjects": [
+   "Nature / Scene Concepts > Lighthouse"
+  ]
+ },
+ {
+  "id": "batch17-psychedelic-mushrooms",
+  "title": "Psychedelic Mushrooms",
+  "styles": [
+   "Psychedelic"
+  ],
+  "subjects": [
+   "Mushrooms / Discworld > Mushrooms"
+  ]
+ },
+ {
+  "id": "batch17-blackwork-raven",
+  "title": "Blackwork Raven",
+  "styles": [
+   "Blackwork"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Raven"
+  ]
+ },
+ {
+  "id": "batch17-etching-lighthouse",
+  "title": "Etching Lighthouse",
+  "styles": [
+   "Etching"
+  ],
+  "subjects": [
+   "Nature / Scene Concepts > Lighthouse"
+  ]
+ },
+ {
+  "id": "batch17-carved-stone-gargoyle",
+  "title": "Carved Stone Gargoyle",
+  "styles": [
+   "Carved Stone"
+  ],
+  "subjects": [
+   "Mythology & Fantasy > Gargoyle"
+  ]
+ },
+ {
+  "id": "batch17-xray-dissection-heart",
+  "title": "X-Ray Anatomical Heart",
+  "styles": [
+   "X-Ray / Dissection"
+  ],
+  "subjects": [
+   "Objects & Mechanical > Anatomical Heart"
+  ]
+ },
+ {
+  "id": "batch17-geometric-fox",
+  "title": "Geometric Fox",
+  "styles": [
+   "Geometric"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Fox"
+  ]
+ },
+ {
+  "id": "batch17-neo-traditional-owl",
+  "title": "Neo-Traditional Owl",
+  "styles": [
+   "Neo-Traditional"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Owl"
+  ]
+ },
+ {
+  "id": "batch17-neo-japanese-dragon",
+  "title": "Neo-Japanese Dragon",
+  "styles": [
+   "Neo-Japanese"
+  ],
+  "subjects": [
+   "Mythology & Fantasy > Dragon"
+  ]
+ },
+ {
+  "id": "batch17-showcase-phoenix",
+  "title": "Showcase Phoenix",
+  "styles": [
+   "Showcase"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Phoenix"
+  ]
+ },
+ {
+  "id": "batch17-polynesian-turtle",
+  "title": "Polynesian Turtle",
+  "styles": [
+   "Polynesian"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Turtle"
+  ]
+ },
+ {
+  "id": "batch17-celtic-norse-tree",
+  "title": "Celtic Tree & Knotwork",
+  "styles": [
+   "Celtic / Norse"
+  ],
+  "subjects": [
+   "Lettering / Symbols > Tree & Knotwork"
+  ]
+ },
+ {
+  "id": "batch17-japanese-irezumi-koi",
+  "title": "Japanese Koi Fish",
+  "styles": [
+   "Japanese / Irezumi"
+  ],
+  "subjects": [
+   "Nature / Scene Concepts > Koi Fish"
+  ]
+ },
+ {
+  "id": "batch17-floral-botanical-sunflower",
+  "title": "Floral Sunflower",
+  "styles": [
+   "Floral & Botanical"
+  ],
+  "subjects": [
+   "Flowers & Botanicals > Sunflower"
+  ]
+ },
+ {
+  "id": "batch17-minimalist-mountain",
+  "title": "Minimalist Mountain Landscape",
+  "styles": [
+   "Minimalist"
+  ],
+  "subjects": [
+   "Nature / Scene Concepts > Mountain Landscape"
   ]
  }
 ]
