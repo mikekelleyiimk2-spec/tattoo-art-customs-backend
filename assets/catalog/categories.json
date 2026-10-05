@@ -1,6 +1,6 @@
 {
   "updated": "2026-10-05",
-  "total": 64,
+  "total": 76,
   "categories": [
     {
       "name": "Aliens / UFOs",
@@ -15,6 +15,11 @@
     {
       "name": "Ancient Civilizations",
       "desc": "Egyptian, Mayan, Roman, Greek \u2014 pyramids, hieroglyphs, ruins",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Angels & Demons",
+      "desc": "Guardian angels, fallen angels, demons, cherubs",
       "added": "2026-10-05"
     },
     {
@@ -35,6 +40,16 @@
     {
       "name": "Arctic & Polar",
       "desc": "Polar bears, penguins, aurora, icebergs, tundra",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Arrows & Archery",
+      "desc": "Arrows, bows, quivers, arrowheads",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Biomechanical",
+      "desc": "H.R. Giger-style flesh-machine fusion",
       "added": "2026-10-05"
     },
     {
@@ -68,6 +83,16 @@
       "added": "existing"
     },
     {
+      "name": "Clowns & Jesters",
+      "desc": "Creepy clowns, circus jesters, harlequins",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Crowns & Royalty",
+      "desc": "Crowns, tiaras, thrones, royal crests",
+      "added": "2026-10-05"
+    },
+    {
       "name": "Crystals & Gems",
       "desc": "",
       "added": "existing"
@@ -98,8 +123,18 @@
       "added": "2026-10-05"
     },
     {
+      "name": "Eyes",
+      "desc": "Evil eye, third eye, all-seeing eye, realistic eyes",
+      "added": "2026-10-05"
+    },
+    {
       "name": "Fairy Tale & Storybook",
       "desc": "Castles, fairy tales, storybook scenes, magic",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Feathers",
+      "desc": "Feather tattoos, quills, plumage details",
       "added": "2026-10-05"
     },
     {
@@ -148,6 +183,11 @@
       "added": "existing"
     },
     {
+      "name": "Hands & Gestures",
+      "desc": "Praying hands, hamsa, rock-on, peace signs, mudras",
+      "added": "2026-10-05"
+    },
+    {
       "name": "Horror",
       "desc": "",
       "added": "existing"
@@ -163,6 +203,11 @@
       "added": "2026-10-05"
     },
     {
+      "name": "Keys & Locks",
+      "desc": "Skeleton keys, padlocks, keyholes, lockets",
+      "added": "2026-10-05"
+    },
+    {
       "name": "Lettering / Symbols",
       "desc": "",
       "added": "existing"
@@ -171,6 +216,11 @@
       "name": "Love / Hearts / Couples",
       "desc": "",
       "added": "existing"
+    },
+    {
+      "name": "Mermaids & Sirens",
+      "desc": "Mermaids, sirens, sea nymphs, ocean spirits",
+      "added": "2026-10-05"
     },
     {
       "name": "Military / Patriotic",
@@ -226,6 +276,11 @@
       "name": "Pinup",
       "desc": "",
       "added": "existing"
+    },
+    {
+      "name": "Pirates",
+      "desc": "Pirate ships, jolly roger, treasure maps, cutlasses",
+      "added": "2026-10-05"
     },
     {
       "name": "Portraits / Memorial",
@@ -303,6 +358,11 @@
       "added": "existing"
     },
     {
+      "name": "Warriors",
+      "desc": "Samurai, knights, vikings, gladiators, soldiers",
+      "added": "2026-10-05"
+    },
+    {
       "name": "Weather & Storms",
       "desc": "Lightning, tornadoes, rain, storm clouds, blizzards",
       "added": "2026-10-05"
@@ -322,5 +382,6 @@
       "desc": "",
       "added": "existing"
     }
-  ]
+  ],
+  "notes": "Floral & Botanical and Flowers & Botanicals are duplicates \u2014 merge candidates"
 }
