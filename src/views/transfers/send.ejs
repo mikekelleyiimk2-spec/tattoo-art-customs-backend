@@ -1,0 +1,35 @@
+<h1><%= t('transfer.send_title') %></h1>
+<p class="muted"><%= t('transfer.send_intro', {title: design ? design.title : ''}) %></p>
+
+<section class="card">
+  <h2><%= t('transfer.pick_shop') %></h2>
+  <form method="post" action="/transfers/send/<%= order.id %>" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <% if (shops.length) { %>
+    <label><%= t('transfer.verified_shop') %>
+      <select name="shop_user_id">
+        <option value=""><%= t('transfer.choose') %></option>
+        <% shops.forEach(function(s) { %>
+        <option value="<%= s.id %>"><%= s.business_name || s.display_name %><% if (s.location) { %> — <%= s.location %><% } %></option>
+        <% }); %>
+      </select>
+    </label>
+    <p class="muted"><%= t('transfer.or_email') %></p>
+    <% } %>
+    <label><%= t('transfer.shop_email') %>
+      <input type="email" name="shop_email" placeholder="shop@example.com" maxlength="160">
+    </label>
+    <p class="muted fineprint"><%= t('transfer.license_preview') %></p>
+    <p><button class="btn" type="submit"><%= t('transfer.send_btn') %></button>
+    <a class="btn btn-secondary" href="/orders/<%= order.id %>"><%= t('common.cancel') %></a></p>
+  </form>
+</section>
+
+<% if (sent.length) { %>
+<section class="card">
+  <h2><%= t('transfer.sent_before') %></h2>
+  <ul><% sent.forEach(function(s) { %>
+    <li><%= s.to_email %> — <span class="badge"><%= s.status %></span> <span class="muted"><%= new Date(s.created_at).toLocaleString(localeTag) %></span></li>
+  <% }); %></ul>
+</section>
+<% } %>

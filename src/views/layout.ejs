@@ -60,6 +60,9 @@
     <button class="nav-toggle" aria-label="<%= t('nav.toggle_menu') %>" aria-expanded="false" onclick="document.querySelector('.nav').classList.toggle('open');this.setAttribute('aria-expanded',document.querySelector('.nav').classList.contains('open'))">☰</button>
     <div class="nav-links">
       <a href="/gallery"><%= t('nav.gallery') %></a>
+      <!-- [wishlist] nav link + count badge (visible to everyone, incl. guests) -->
+      <a href="/wishlist"><%= t('nav.wishlist') %> <span class="badge" data-fav-count style="display:none">0</span></a>
+      <a href="/top-loved"><%= t('nav.top_loved') %></a>
       <a href="/orders/custom"><%= t('nav.custom_design') %></a>
       <a href="/membership"><%= t('nav.membership') %></a>
       <a href="/gift-cards/buy"><%= t('nav.gift_cards') %></a>
@@ -128,6 +131,7 @@
       <a href="/contests"><%= t('nav.contests') %></a>
       <a href="/aftercare"><%= t('footer.aftercare') %></a>
       <a href="/advertise"><%= t('footer.advertise') %></a>
+      <a href="/tap-to-pay"><%= t('nav.tap_to_pay') %></a>
       <a href="/terms"><%= t('footer.terms') %></a>
       <a href="/privacy"><%= t('footer.privacy') %></a>
       <a href="/about"><%= t('nav.about') %></a>
@@ -189,5 +193,11 @@ document.addEventListener('submit', function (ev) {
   });
 })();
 </script>
+<script>
+// [wishlist] globals for /js/favorites.js (guests + logged-in alike).
+window.TAC_LOGGED_IN = <%= currentUser ? 'true' : 'false' %>;
+window.TAC_FAV_STRINGS = <%- JSON.stringify({ add: t('fav.add'), remove: t('fav.remove'), buy: t('fav.buy'), saved: t('fav.saved') }) %>;
+</script>
+<script src="/js/favorites.js" defer></script>
 </body>
 </html>

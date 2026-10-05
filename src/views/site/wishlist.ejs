@@ -1,0 +1,15 @@
+<h1><%= t('fav.title') %></h1>
+<p class="muted"><%= t('fav.sub') %></p>
+<p><strong id="wishlist-count" aria-live="polite"></strong></p>
+
+<div class="grid" id="wishlist-grid" aria-live="polite"></div>
+
+<div id="wishlist-empty" style="display:none">
+  <p><strong><%= t('fav.empty_title') %></strong></p>
+  <p class="muted"><%= t('fav.empty_text') %></p>
+  <p><a class="btn" href="/gallery"><%= t('fav.browse') %></a></p>
+</div>
+
+<script>
+window.TAC_WISHLIST_SERVER = <%- JSON.stringify(serverDesigns) %>;
+</script>

@@ -924,6 +924,24 @@ router.post('/raffle/draw', formLimiter, checkHoneypot, async (req, res) => {
   res.redirect('/admin/founding');
 });
 
+// --- Tap-to-pay standalone billing ---
+router.get('/tap', async (req, res) => {
+  const { TIERS } = require('../lib/tapBilling');
+  const subs = await db.all(
+    `SELECT t.*, u.display_name, u.email
+     FROM shop_tap_subscriptions t LEFT JOIN users u ON u.id = t.shop_user_id
+     ORDER BY t.created_at DESC LIMIT 200`);
+  let mrrCents = 0, activeCount = 0, compedCount = 0;
+  for (const s of subs) {
+    if (Number(s.comped)) { compedCount++; continue; }
+    if (s.status === 'active') {
+      activeCount++;
+      mrrCents += (TIERS[s.tier] || { priceCents: 0 }).priceCents;
+    }
+  }
+  res.render('admin/tap', { title: 'Tap-to-Pay Billing — Admin', subs, mrrCents, activeCount, compedCount });
+});
+
 // --- Payouts ---
 router.get('/payouts', async (req, res) => {
   const balances = await db.all(

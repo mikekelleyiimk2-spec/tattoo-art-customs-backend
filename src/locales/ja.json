@@ -68,7 +68,8 @@
     "sale": "セール",
     "search": "検索",
     "vat_note": "価格には該当する場合VATが含まれます。",
-    "working": "処理中…"
+    "working": "処理中…",
+    "cancel": "Cancel"
   },
   "contact": {
     "email": "あなたのメールアドレス",
@@ -186,7 +187,11 @@
     "price_includes": "（{fee}の手数料込み）",
     "sale_price": "土曜セール価格",
     "verify_age": "年齢を確認してオプトイン",
-    "pre_design": "プレデザイン"
+    "pre_design": "プレデザイン",
+    "buy_for_client": "Buy for a client",
+    "buy_for_client_note": "Purchase this design at full price for your client. The cost is added to a client bill on your dashboard for you to collect. You earn no referral commission on your own purchase.",
+    "client_email": "Client email address",
+    "buy_for_client_btn": "Buy for client"
   },
   "footer": {
     "advertise": "広告",
@@ -561,7 +566,10 @@
     "skip": "メインコンテンツへスキップ",
     "studio": "デザインスタジオ",
     "toggle_menu": "メニュー切替",
-    "wallet": "ウォレット"
+    "wallet": "ウォレット",
+    "tap_to_pay": "タップ決済",
+    "wishlist": "ウィッシュリスト",
+    "top_loved": "人気ランキング"
   },
   "orders": {
     "amount": "金額",
@@ -670,6 +678,72 @@
     "th_to": "送金先",
     "th_you_get": "受取額",
     "title": "引き出し"
+  },
+  "tappay": {
+    "title": "お店でタップ決済を導入しよう",
+    "intro": "お客様がカードやスマホをあなたのスマホにかざすだけ。カードリーダーも専用機器も不要 — スマホひとつでOK。",
+    "card1_title": "仕組み",
+    "card1_text": "スマホでPayPalタップ決済をオンに — 無料、約5分。PayPal手数料は1回あたり2.29% + 9¢、残りはすべてあなたのお店のもの。",
+    "card2_title": "シンプルな月額定額制",
+    "card2_text": "ソロ $9.99/月（1席）、スタジオ $19.99/月（2〜4席）、ショップ $29.99/月（5席以上）。ショップサブスクとは別の独立したサービス — お支払いを継続すればサービス継続。オプション：レジでお客様のお会計に0.5%上乗せ（$100のタトゥーなら50¢）して料金の一部または全額をカバーできます。",
+    "card3_title": "今後の予定",
+    "card3_text": "ショップツールに組み込まれた施術席での決済 — 予約カレンダーからデポジット・残金・チップをそのまま受付。タップ決済メンバーが先行利用できます。",
+    "cta_listed": "タップ決済の請求を有効化",
+    "cta_earn": "ショップの収益の仕組み",
+    "badge_active": "有効",
+    "badge_comped": "無料提供",
+    "badge_comped_note": "— タップ決済の請求は当社負担です。",
+    "dash_blurb": "お店でタップ決済を導入 — プランを選んで月額請求を有効化。",
+    "dash_lapsed": "— 請求が失効しました。サービス継続には再有効化が必要です。",
+    "activate_cta": "有効化",
+    "cancel_cta": "タップ請求を解約"
+  },
+  "fav": {
+    "title": "マイウィッシュリスト",
+    "sub": "ハートを付けたデザインをまとめて保存 — いつでも戻ってきて、お気に入りを購入できます。",
+    "empty_title": "まだお気に入りがありません",
+    "empty_text": "デザインのハートをタップしてここに保存しましょう。",
+    "browse": "ギャラリーを見る",
+    "buy": "今すぐ購入",
+    "add": "ウィッシュリストに保存",
+    "remove": "ウィッシュリストから削除",
+    "saved": "保存済みのデザイン"
+  },
+  "transfer": {
+    "send_title": "Send art to your shop",
+    "send_intro": "Send your purchased design \"{title}\" to the shop doing your tattoo. They'll get a private download link for the clean files, valid 24 hours.",
+    "send_short": "Your shop gets a private download link for the clean files (valid 24 hours).",
+    "send_btn": "Send to my shop",
+    "pick_shop": "Choose the shop",
+    "verified_shop": "Verified shop",
+    "choose": "— choose a shop —",
+    "or_email": "Or send to any shop by email:",
+    "shop_email": "Shop email address",
+    "license_preview": "The shop receives the files under a single-client license: licensed to you, for your tattoo only — not for resale or reuse on other clients.",
+    "sent_before": "Previously sent",
+    "dl_title": "Design transfer",
+    "private_note": "This link is private and expires 24 hours after it was sent. Full-color and clean linework files:",
+    "license_title": "License",
+    "inbox_title": "Client art inbox",
+    "inbox_from": "from {name}",
+    "inbox_download": "Download files",
+    "client_orders_title": "Art bought for clients",
+    "forward_client": "Forward to client",
+    "bills_title": "Client bills",
+    "mark_paid": "Mark paid",
+    "sent_badge": "sent to shop ({count})"
+  },
+  "toploved": {
+    "title": "人気ランキング",
+    "sub": "みんなが夢中のデザイン — コミュニティで最もハートを集めたデザインを愛され順にランキング。",
+    "loves": "{count} いいね",
+    "empty_title": "まだ投票がありません",
+    "empty_text": "デザインのハートをタップして最初の投票を。",
+    "browse": "ギャラリーを見る",
+    "badge_most_loved": "最愛され",
+    "badge_most_wanted": "最も人気",
+    "badge_trending": "トレンド",
+    "badge_selling_fast": "売れ筋"
   },
   "apps": {
     "free_label": "無料",

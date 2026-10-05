@@ -68,7 +68,8 @@
     "sale": "Rea",
     "search": "Sök",
     "vat_note": "Priser inklusive moms där det är tillämpligt.",
-    "working": "Ett ögonblick…"
+    "working": "Ett ögonblick…",
+    "cancel": "Cancel"
   },
   "contact": {
     "email": "Din e-post",
@@ -186,7 +187,11 @@
     "price_includes": "(inkl. {fee} hanteringsavgift)",
     "sale_price": "Saturday sale-pris",
     "verify_age": "Verifiera din ålder och godkänn",
-    "pre_design": "färdig design"
+    "pre_design": "färdig design",
+    "buy_for_client": "Buy for a client",
+    "buy_for_client_note": "Purchase this design at full price for your client. The cost is added to a client bill on your dashboard for you to collect. You earn no referral commission on your own purchase.",
+    "client_email": "Client email address",
+    "buy_for_client_btn": "Buy for client"
   },
   "footer": {
     "advertise": "Annonsera",
@@ -561,7 +566,10 @@
     "skip": "Hoppa till huvudinnehåll",
     "studio": "Designstudio",
     "toggle_menu": "Växla meny",
-    "wallet": "Wallet"
+    "wallet": "Wallet",
+    "tap_to_pay": "Tap to Pay",
+    "wishlist": "Önskelista",
+    "top_loved": "Mest gillade"
   },
   "orders": {
     "amount": "Belopp",
@@ -670,6 +678,72 @@
     "th_to": "Till",
     "th_you_get": "Du får",
     "title": "Ta ut"
+  },
+  "tappay": {
+    "title": "Ta emot tap-to-pay i din studio",
+    "intro": "Dina kunder blippar sitt kort eller sin telefon mot din. Ingen kortläsare, ingen extra hårdvara — bara din telefon.",
+    "card1_title": "Så fungerar det",
+    "card1_text": "Slå på PayPal Tap to Pay på din telefon — gratis, cirka fem minuter. PayPal tar 2,29 % + 9¢ per blippning; resten är din.",
+    "card2_title": "En fast månadsavgift",
+    "card2_text": "Solo $9,99/mån för en stol, Studio $19,99/mån för 2–4 stolar, Shop $29,99/mån för 5+ stolar. En fristående tjänst som faktureras separat från din butiksprenumeration — håll fakturan betald för att behålla tjänsten. Valfritt: lägg på en halv procent på kundens nota i kassan — 50¢ på en $100-tatuering — för att täcka en del av eller hela avgiften.",
+    "card3_title": "Kommer snart",
+    "card3_text": "Betalningar vid stolen, inbyggda i butikens verktyg — depositioner, slutbetalningar och dricks via din bokningskalender. Tap-to-pay-medlemmar får tillgång först.",
+    "cta_listed": "Aktivera tap-to-pay-fakturering",
+    "cta_earn": "Så tjänar studios",
+    "badge_active": "Aktiv",
+    "badge_comped": "Gratis",
+    "badge_comped_note": "— tap-to-pay-faktureringen bjuder vi på.",
+    "dash_blurb": "Ta emot tap-to-pay i din butik — välj en nivå för att aktivera månadsfakturering.",
+    "dash_lapsed": "— faktureringen har förfallit. Återaktivera för att behålla tjänsten.",
+    "activate_cta": "Aktivera",
+    "cancel_cta": "Avsluta tap-fakturering"
+  },
+  "fav": {
+    "title": "Min önskelista",
+    "sub": "Alla designer du hjärtmarkerat, på ett ställe — kom tillbaka när du vill och köp dina favoriter.",
+    "empty_title": "Inga favoriter ännu",
+    "empty_text": "Tryck på hjärtat på en design för att spara den här.",
+    "browse": "Bläddra i galleriet",
+    "buy": "Köp nu",
+    "add": "Spara i önskelistan",
+    "remove": "Ta bort från önskelistan",
+    "saved": "Sparade designer"
+  },
+  "transfer": {
+    "send_title": "Send art to your shop",
+    "send_intro": "Send your purchased design \"{title}\" to the shop doing your tattoo. They'll get a private download link for the clean files, valid 24 hours.",
+    "send_short": "Your shop gets a private download link for the clean files (valid 24 hours).",
+    "send_btn": "Send to my shop",
+    "pick_shop": "Choose the shop",
+    "verified_shop": "Verified shop",
+    "choose": "— choose a shop —",
+    "or_email": "Or send to any shop by email:",
+    "shop_email": "Shop email address",
+    "license_preview": "The shop receives the files under a single-client license: licensed to you, for your tattoo only — not for resale or reuse on other clients.",
+    "sent_before": "Previously sent",
+    "dl_title": "Design transfer",
+    "private_note": "This link is private and expires 24 hours after it was sent. Full-color and clean linework files:",
+    "license_title": "License",
+    "inbox_title": "Client art inbox",
+    "inbox_from": "from {name}",
+    "inbox_download": "Download files",
+    "client_orders_title": "Art bought for clients",
+    "forward_client": "Forward to client",
+    "bills_title": "Client bills",
+    "mark_paid": "Mark paid",
+    "sent_badge": "sent to shop ({count})"
+  },
+  "toploved": {
+    "title": "Mest gillade",
+    "sub": "Alla älskar dessa — communityns mest hjärtade designer, rankade efter kärlek.",
+    "loves": "{count} hjärtan",
+    "empty_title": "Inga röster ännu",
+    "empty_text": "Tryck på hjärtat på en design för att rösta först.",
+    "browse": "Bläddra i galleriet",
+    "badge_most_loved": "Mest älskad",
+    "badge_most_wanted": "Mest eftertraktad",
+    "badge_trending": "Trendig",
+    "badge_selling_fast": "Säljer snabbt"
   },
   "apps": {
     "free_label": "Gratis",

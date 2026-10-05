@@ -68,7 +68,8 @@
     "sale": "ลดราคา",
     "search": "ค้นหา",
     "vat_note": "ราคานี้รวม VAT แล้วหากมีผลบังคับใช้",
-    "working": "กำลังดำเนินการ…"
+    "working": "กำลังดำเนินการ…",
+    "cancel": "Cancel"
   },
   "contact": {
     "email": "อีเมลของคุณ",
@@ -186,7 +187,11 @@
     "price_includes": "(รวมค่าธรรมเนียม {fee})",
     "sale_price": "ราคาเสาร์ลดราคา",
     "verify_age": "ยืนยันอายุและตกลง",
-    "pre_design": "พรีดีไซน์"
+    "pre_design": "พรีดีไซน์",
+    "buy_for_client": "Buy for a client",
+    "buy_for_client_note": "Purchase this design at full price for your client. The cost is added to a client bill on your dashboard for you to collect. You earn no referral commission on your own purchase.",
+    "client_email": "Client email address",
+    "buy_for_client_btn": "Buy for client"
   },
   "footer": {
     "advertise": "โฆษณา",
@@ -561,7 +566,10 @@
     "skip": "ข้ามไปเนื้อหาหลัก",
     "studio": "สตูดิโอดีไซน์",
     "toggle_menu": "เปิด/ปิดเมนู",
-    "wallet": "กระเป๋าเงิน"
+    "wallet": "กระเป๋าเงิน",
+    "tap_to_pay": "แตะจ่าย",
+    "wishlist": "รายการโปรด",
+    "top_loved": "ยอดนิยม"
   },
   "orders": {
     "amount": "จำนวนเงิน",
@@ -670,6 +678,72 @@
     "th_to": "ผู้รับ",
     "th_you_get": "คุณจะได้รับ",
     "title": "ถอนเงิน"
+  },
+  "tappay": {
+    "title": "รับชำระแบบแตะจ่ายในร้านของคุณ",
+    "intro": "ลูกค้าแตะบัตรหรือมือถือกับมือถือของคุณ ไม่ต้องมีเครื่องรูดบัตร ไม่ต้องมีอุปกรณ์เสริม — แค่มือถือเครื่องเดียว",
+    "card1_title": "วิธีการทำงาน",
+    "card1_text": "เปิด PayPal Tap to Pay บนมือถือของคุณ — ฟรี ใช้เวลาประมาณห้านาที PayPal หัก 2.29% + 9¢ ต่อครั้ง ที่เหลือเป็นของคุณ",
+    "card2_title": "ค่าบริการรายเดือนแบบเหมาจ่าย",
+    "card2_text": "Solo $9.99/เดือน สำหรับ 1 ที่นั่ง, Studio $19.99/เดือน สำหรับ 2–4 ที่นั่ง, Shop $29.99/เดือน สำหรับ 5+ ที่นั่ง เป็นบริการแยกต่างหาก เรียกเก็บแยกจากค่าสมาชิกร้าน — ชำระให้ตรงเวลาเพื่อใช้บริการต่อเนื่อง ทางเลือก: บวก 0.5% ในบิลของลูกค้าที่แคชเชียร์ — 50¢ สำหรับรอยสัก $100 — เพื่อช่วยจ่ายค่าบริการบางส่วนหรือทั้งหมด",
+    "card3_title": "เร็วๆ นี้",
+    "card3_text": "ระบบชำระเงินที่เก้าอี้ ฝังในชุดเครื่องมือร้าน — เงินมัดจำ ยอดคงเหลือ และทิป ผ่านปฏิทินการจองของคุณ สมาชิก tap-to-pay ได้ใช้ก่อน",
+    "cta_listed": "เปิดใช้งานการเรียกเก็บ tap-to-pay",
+    "cta_earn": "ร้านมีรายได้อย่างไร",
+    "badge_active": "ใช้งานอยู่",
+    "badge_comped": "ฟรี",
+    "badge_comped_note": "— เราออกค่าบริการ tap-to-pay ให้",
+    "dash_blurb": "รับชำระ tap-to-pay ในร้านของคุณ — เลือกระดับเพื่อเปิดการเรียกเก็บรายเดือน",
+    "dash_lapsed": "— การเรียกเก็บหมดอายุ เปิดใช้งานอีกครั้งเพื่อใช้บริการต่อ",
+    "activate_cta": "เปิดใช้งาน",
+    "cancel_cta": "ยกเลิกการเรียกเก็บ tap"
+  },
+  "fav": {
+    "title": "รายการโปรดของฉัน",
+    "sub": "ทุกดีไซน์ที่คุณกดหัวใจจะรวมอยู่ที่นี่ — กลับมาเมื่อไหร่ก็ได้เพื่อซื้อดีไซน์ที่รัก",
+    "empty_title": "ยังไม่มีรายการโปรด",
+    "empty_text": "แตะหัวใจบนดีไซน์เพื่อบันทึกไว้ที่นี่",
+    "browse": "ดูแกลเลอรี",
+    "buy": "ซื้อเลย",
+    "add": "บันทึกลงรายการโปรด",
+    "remove": "ลบออกจากรายการโปรด",
+    "saved": "ดีไซน์ที่บันทึกไว้"
+  },
+  "transfer": {
+    "send_title": "Send art to your shop",
+    "send_intro": "Send your purchased design \"{title}\" to the shop doing your tattoo. They'll get a private download link for the clean files, valid 24 hours.",
+    "send_short": "Your shop gets a private download link for the clean files (valid 24 hours).",
+    "send_btn": "Send to my shop",
+    "pick_shop": "Choose the shop",
+    "verified_shop": "Verified shop",
+    "choose": "— choose a shop —",
+    "or_email": "Or send to any shop by email:",
+    "shop_email": "Shop email address",
+    "license_preview": "The shop receives the files under a single-client license: licensed to you, for your tattoo only — not for resale or reuse on other clients.",
+    "sent_before": "Previously sent",
+    "dl_title": "Design transfer",
+    "private_note": "This link is private and expires 24 hours after it was sent. Full-color and clean linework files:",
+    "license_title": "License",
+    "inbox_title": "Client art inbox",
+    "inbox_from": "from {name}",
+    "inbox_download": "Download files",
+    "client_orders_title": "Art bought for clients",
+    "forward_client": "Forward to client",
+    "bills_title": "Client bills",
+    "mark_paid": "Mark paid",
+    "sent_badge": "sent to shop ({count})"
+  },
+  "toploved": {
+    "title": "ยอดนิยม",
+    "sub": "ทุกคนกำลังหลงรักสิ่งเหล่านี้ — ดีไซน์ที่ชุมชนรักมากที่สุด จัดอันดับตามความรัก",
+    "loves": "{count} ไลก์",
+    "empty_title": "ยังไม่มีคะแนน",
+    "empty_text": "แตะหัวใจบนดีไซน์ใดก็ได้เพื่อโหวตเป็นคนแรก",
+    "browse": "เรียกดูแกลเลอรี",
+    "badge_most_loved": "รักมากที่สุด",
+    "badge_most_wanted": "ต้องการมากที่สุด",
+    "badge_trending": "กำลังมาแรง",
+    "badge_selling_fast": "ขายดี"
   },
   "apps": {
     "free_label": "ฟรี",

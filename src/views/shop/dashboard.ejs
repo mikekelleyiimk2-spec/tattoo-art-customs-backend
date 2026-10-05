@@ -1,4 +1,49 @@
 <h1>Shop dashboard</h1>
+
+<% if (typeof artInbox !== 'undefined' && artInbox.length) { %>
+<section class="card">
+  <h2><%= t('transfer.inbox_title') %></h2>
+  <ul><% artInbox.forEach(function(x) { %>
+    <li><strong><%= x.design_title || x.design_id %></strong> <%= t('transfer.inbox_from', {name: x.from_name || x.to_email}) %>
+      — <a href="/transfers/<%= x.token %>"><%= t('transfer.inbox_download') %></a>
+      <span class="badge"><%= x.status %></span>
+      <span class="muted"><%= new Date(x.created_at).toLocaleString(localeTag) %></span></li>
+  <% }); %></ul>
+</section>
+<% } %>
+
+<% if (typeof clientOrders !== 'undefined' && clientOrders.length) { %>
+<section class="card">
+  <h2><%= t('transfer.client_orders_title') %></h2>
+  <ul><% clientOrders.forEach(function(o) { %>
+    <li><strong><%= o.design_title || o.design_id %></strong> — <%= o.client_email %>
+      <span class="badge"><%= o.status %></span>
+      <% if (o.status === 'paid') { %>
+      <form method="post" action="/transfers/send-client/<%= o.id %>" style="display:inline">
+        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="btn secondary" type="submit"><%= t('transfer.forward_client') %></button>
+      </form>
+      <% } %></li>
+  <% }); %></ul>
+</section>
+<% } %>
+
+<% if (typeof clientBills !== 'undefined' && clientBills.length) { %>
+<section class="card">
+  <h2><%= t('transfer.bills_title') %></h2>
+  <ul><% clientBills.forEach(function(b) { %>
+    <li><strong><%= b.design_title || '' %></strong> — <%= b.client_email %> — <%= money(b.amount_cents) %>
+      <span class="badge"><%= b.status %></span>
+      <% if (b.status !== 'paid') { %>
+      <form method="post" action="/shop/client-bills/<%= b.id %>/paid" style="display:inline">
+        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="btn secondary" type="submit"><%= t('transfer.mark_paid') %></button>
+      </form>
+      <% } %></li>
+  <% }); %></ul>
+</section>
+<% } %>
+
 <section class="card">
   <h2>Shop toolkit</h2>
   <p>
@@ -10,6 +55,33 @@
     <a class="btn secondary" href="/toolkit/noshow">No-shows</a>
     <a class="btn secondary" href="/toolkit/plans">Payment plans</a>
   </p>
+</section>
+
+<section class="card">
+  <h2><%= t('nav.tap_to_pay') %></h2>
+  <% if (typeof tapIsComped !== 'undefined' && tapIsComped) { %>
+    <p><span class="badge ok"><%= t('tappay.badge_comped') %></span>
+      <span class="muted"><%= t('tappay.badge_comped_note') %></span></p>
+  <% } else if (typeof tapSub !== 'undefined' && tapSub && tapIsActive && tapTier) { %>
+    <p><span class="badge ok"><%= t('tappay.badge_active') %></span>
+      <strong><%= tapTier.label %></strong> — $<%= (tapTier.priceCents / 100).toFixed(2) %>/mo · <%= tapTier.chairs %></p>
+    <form method="post" action="/tap/cancel" style="display:inline">
+      <button class="btn secondary" type="submit"><%= t('tappay.cancel_cta') %></button>
+    </form>
+  <% } else if (typeof tapSub !== 'undefined' && tapSub) { %>
+    <p><span class="badge warn"><%= tapSub.status %></span>
+      <span class="muted"><%= t('tappay.dash_lapsed') %></span></p>
+    <p><a class="btn" href="/tap-to-pay"><%= t('tappay.activate_cta') %></a></p>
+  <% } else { %>
+    <p class="muted"><%= t('tappay.dash_blurb') %></p>
+    <p>
+      <% for (const key of ['solo', 'studio', 'shop']) { const tr = tapTiers[key]; %>
+        <form method="post" action="/tap/subscribe/<%= key %>" style="display:inline;margin-right:.5rem">
+          <button class="btn secondary" type="submit"><%= t('tappay.activate_cta') %> — <%= tr.label %> $<%= (tr.priceCents / 100).toFixed(2) %>/mo</button>
+        </form>
+      <% } %>
+    </p>
+  <% } %>
   <p class="muted">Booking calendar, deposits, receipts, reminders, waitlist, and gift cards live under <a href="/bookings/manage">Manage bookings</a>.</p>
 </section>
 <% if (isFoundingShop) { %>

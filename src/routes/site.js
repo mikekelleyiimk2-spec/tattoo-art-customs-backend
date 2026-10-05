@@ -90,6 +90,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/terms`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/contact`, changefreq: 'monthly', priority: '0.4' },
+    { loc: `${base}/tap-to-pay`, changefreq: 'monthly', priority: '0.6' },
   ];
   try {
     const designs = await db.all(
@@ -196,6 +197,93 @@ router.get('/gallery', async (req, res) => {
   });
 });
 
+// Wishlist (favorites) page — [wishlist] feature. Everyone can use it:
+// logged-in users get their server-side favorites embedded for rendering,
+// guests render client-side from localStorage + /api/designs.
+router.get('/wishlist', async (req, res) => {
+  const member = await isActiveMember(req.user);
+  let serverDesigns = null;
+  if (req.user) {
+    const favRows = await db.all(
+      'SELECT design_id FROM user_favorites WHERE user_id = ? ORDER BY created_at DESC',
+      [req.user.id]);
+    const favSet = new Set(favRows.map((r) => r.design_id));
+    const designs = (await approvedDesigns(member)).filter((d) => favSet.has(d.id));
+    const viewer = await viewerFor(req.user);
+    const { fmtMoney } = require('../i18n');
+    const locale = res.locals.locale || 'en';
+    const priceStr = fmtMoney(locale, withFeeCents(premadePriceCents(new Date(), member)));
+    serverDesigns = designs.map((d) => ({
+      id: d.id,
+      title: d.title,
+      thumb: displayImgFile(d, viewer),
+      categories: d.categories.slice(0, 3),
+      price: priceStr,
+    }));
+  }
+  res.render('site/wishlist', {
+    title: 'My Wishlist — Saved Tattoo Designs | Tattoo Art Customs',
+    serverDesigns,
+    metaDescription: 'Your saved tattoo designs at Tattoo Art Customs — every piece you hearted, in one place. Come back anytime and buy the ones you love.',
+    canonical: `${config.baseUrl.replace(/\/$/, '')}/wishlist`,
+  });
+});
+
+// Top-loved leaderboard — [toploved] feature. Every gallery heart is a vote;
+// designs rank most-loved first. Zero-like designs trail at the end.
+router.get('/top-loved', async (req, res) => {
+  const member = await isActiveMember(req.user);
+  const viewer = await viewerFor(req.user);
+  const rows = await db.all(
+    `SELECT d.*, COALESCE(c.like_count, 0) AS like_count
+     FROM designs d LEFT JOIN design_like_counts c ON c.design_id = d.id
+     WHERE d.status = 'approved' AND d.listing_scope = 'gallery'
+     AND (d.members_only = 0 OR ? = 1)
+     ORDER BY like_count DESC, d.created_at DESC`,
+    [member ? 1 : 0]);
+  const designs = rows.map((r) => {
+    const d = parseDesign(r);
+    d.like_count = Number(r.like_count || 0);
+    d.thumb = displayImgFile(d, viewer);
+    return d;
+  });
+  // Real urgency signals: rank badges from real like counts, velocity badges
+  // from real likes / real paid sales in the last 7 days. Nothing is faked.
+  const WEEK_MS = 7 * 24 * 3600 * 1000, since = Date.now() - WEEK_MS;
+  const likeVel = new Map((await db.all(
+    `SELECT design_id, COUNT(*) AS n FROM design_likes WHERE created_at >= ? GROUP BY design_id`, [since]
+  )).map(r => [r.design_id, Number(r.n)]));
+  const saleVel = new Map((await db.all(
+    `SELECT design_id, COUNT(*) AS n FROM orders WHERE status = 'paid' AND paid_at >= ? AND design_id IS NOT NULL GROUP BY design_id`, [since]
+  )).map(r => [r.design_id, Number(r.n)]));
+  designs.forEach((d, i) => {
+    const rank = i + 1;
+    let badge = null;
+    if (rank === 1 && d.like_count > 0) badge = 'most_loved';
+    else if (rank <= 3 && d.like_count > 0) badge = 'most_wanted';
+    else if ((likeVel.get(d.id) || 0) >= 3) badge = 'trending';
+    else if ((saleVel.get(d.id) || 0) >= 2) badge = 'selling_fast';
+    d.badge = badge;
+  });
+  const { fmtMoney } = require('../i18n');
+  const locale = res.locals.locale || 'en';
+  const priceStr = fmtMoney(locale, withFeeCents(premadePriceCents(new Date(), member)));
+  res.render('site/top-loved', {
+    title: 'Top Loved — Most-Hearted Tattoo Designs | Tattoo Art Customs',
+    designs: designs.map((d) => ({
+      id: d.id,
+      title: d.title,
+      thumb: d.thumb,
+      categories: d.categories.slice(0, 3),
+      price: priceStr,
+      like_count: d.like_count,
+      badge: d.badge,
+    })),
+    metaDescription: 'The Tattoo Art Customs community leaderboard — the most-hearted original tattoo designs, ranked by love.',
+    canonical: `${config.baseUrl.replace(/\/$/, '')}/top-loved`,
+  });
+});
+
 router.get('/design/:id', async (req, res) => {
   const design = parseDesign(await db.get(
     "SELECT * FROM designs WHERE id = ? AND status = 'approved'", [req.params.id]));
@@ -250,6 +338,8 @@ router.get('/design/:id', async (req, res) => {
     title: `${design.title} — ${styleBit}Tattoo Design for Sale | Tattoo Art Customs`,
     design, artist, price, isCustom, sale: await salePriceActive(req.user), owned,
     imgFile, blurred,
+    // Shops with an active subscription can buy a design for a client (Phase 2).
+    canBuyForClient: req.user ? await require('../middleware/auth').hasActiveSubscription(req.user.id, 'tattoo_shop') : false,
     // Linework-only purchase option (3% discount). Pieces with no color
     // version are linework-only automatically.
     lineworkPrice: lineworkBase,
@@ -315,6 +405,11 @@ router.get('/apps', (req, res) => res.render('site/apps', {
   playStoreUrl: res.locals.playStoreUrl || null,
   playStoreProUrl: res.locals.playStoreProUrl || null,
   appStoreUrl: res.locals.appStoreUrl || null,
+}));
+
+router.get('/tap-to-pay', (req, res) => res.render('site/tap-to-pay', {
+  title: 'Tap-to-Pay for Tattoo Shops — Tattoo Art Customs',
+  metaDescription: 'Take in-person tap-to-pay in your tattoo shop with PayPal. No reader, no monthly fee until you sell — fair 1% split with Tattoo Art Customs.',
 }));
 
 // Shared email validator (single-backslash escapes). Used by /contact and /app-notify.

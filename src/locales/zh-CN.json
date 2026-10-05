@@ -68,7 +68,8 @@
     "sale": "特卖",
     "search": "搜索",
     "vat_note": "价格已含适用地区的增值税。",
-    "working": "处理中…"
+    "working": "处理中…",
+    "cancel": "Cancel"
   },
   "contact": {
     "email": "您的邮箱",
@@ -186,7 +187,11 @@
     "price_includes": "（含{fee}手续费）",
     "sale_price": "周六特卖价",
     "verify_age": "验证年龄并确认",
-    "pre_design": "预制设计"
+    "pre_design": "预制设计",
+    "buy_for_client": "Buy for a client",
+    "buy_for_client_note": "Purchase this design at full price for your client. The cost is added to a client bill on your dashboard for you to collect. You earn no referral commission on your own purchase.",
+    "client_email": "Client email address",
+    "buy_for_client_btn": "Buy for client"
   },
   "footer": {
     "advertise": "广告",
@@ -561,7 +566,10 @@
     "skip": "跳到主内容",
     "studio": "设计工作室",
     "toggle_menu": "切换菜单",
-    "wallet": "钱包"
+    "wallet": "钱包",
+    "tap_to_pay": "拍卡支付",
+    "wishlist": "心愿单",
+    "top_loved": "最受欢迎"
   },
   "orders": {
     "amount": "金额",
@@ -670,6 +678,72 @@
     "th_to": "收款方",
     "th_you_get": "您将获得",
     "title": "提现"
+  },
+  "tappay": {
+    "title": "在您的店铺接受拍卡支付",
+    "intro": "顾客将卡或手机轻触您的手机即可。无需刷卡器、无需额外硬件 — 只需要您的手机。",
+    "card1_title": "工作原理",
+    "card1_text": "在手机上开启 PayPal Tap to Pay — 免费，约五分钟。PayPal 每笔收取 2.29% + 9¢，其余全部归您。",
+    "card2_title": "固定月费",
+    "card2_text": "Solo $9.99/月（1 个工位）、Studio $19.99/月（2–4 个工位）、Shop $29.99/月（5 个以上工位）。独立服务，与店铺订阅分开计费 — 保持账单正常以继续使用服务。可选：在收银时向顾客账单加收 0.5%（$100 的纹身加收 50¢），用于抵扣部分或全部费用。",
+    "card3_title": "即将推出",
+    "card3_text": "工位旁支付直接接入店铺工具包 — 定金、尾款和小费都通过您的预约日历。Tap-to-pay 会员优先体验。",
+    "cta_listed": "开通 tap-to-pay 计费",
+    "cta_earn": "店铺如何赚钱",
+    "badge_active": "已开通",
+    "badge_comped": "免费",
+    "badge_comped_note": "— tap-to-pay 费用由我们承担。",
+    "dash_blurb": "在您的店铺开通 tap-to-pay — 选择档位以启用按月计费。",
+    "dash_lapsed": "— 账单已逾期。请重新开通以继续使用服务。",
+    "activate_cta": "开通",
+    "cancel_cta": "取消 tap-to-pay 计费"
+  },
+  "fav": {
+    "title": "我的心愿单",
+    "sub": "所有点过爱心的设计都保存在这里——随时回来购买您喜爱的作品。",
+    "empty_title": "还没有收藏",
+    "empty_text": "点击设计上的爱心，将它保存在这里。",
+    "browse": "浏览图库",
+    "buy": "立即购买",
+    "add": "加入心愿单",
+    "remove": "从心愿单移除",
+    "saved": "已保存的设计"
+  },
+  "transfer": {
+    "send_title": "Send art to your shop",
+    "send_intro": "Send your purchased design \"{title}\" to the shop doing your tattoo. They'll get a private download link for the clean files, valid 24 hours.",
+    "send_short": "Your shop gets a private download link for the clean files (valid 24 hours).",
+    "send_btn": "Send to my shop",
+    "pick_shop": "Choose the shop",
+    "verified_shop": "Verified shop",
+    "choose": "— choose a shop —",
+    "or_email": "Or send to any shop by email:",
+    "shop_email": "Shop email address",
+    "license_preview": "The shop receives the files under a single-client license: licensed to you, for your tattoo only — not for resale or reuse on other clients.",
+    "sent_before": "Previously sent",
+    "dl_title": "Design transfer",
+    "private_note": "This link is private and expires 24 hours after it was sent. Full-color and clean linework files:",
+    "license_title": "License",
+    "inbox_title": "Client art inbox",
+    "inbox_from": "from {name}",
+    "inbox_download": "Download files",
+    "client_orders_title": "Art bought for clients",
+    "forward_client": "Forward to client",
+    "bills_title": "Client bills",
+    "mark_paid": "Mark paid",
+    "sent_badge": "sent to shop ({count})"
+  },
+  "toploved": {
+    "title": "最受欢迎",
+    "sub": "大家都在爱的作品 — 社区最受欢迎的设计，按喜爱度排名。",
+    "loves": "{count} 个喜欢",
+    "empty_title": "还没有投票",
+    "empty_text": "点击任意设计上的爱心，投出第一票。",
+    "browse": "浏览图库",
+    "badge_most_loved": "最受欢迎",
+    "badge_most_wanted": "最受追捧",
+    "badge_trending": "热门趋势",
+    "badge_selling_fast": "热销中"
   },
   "apps": {
     "free_label": "免费",

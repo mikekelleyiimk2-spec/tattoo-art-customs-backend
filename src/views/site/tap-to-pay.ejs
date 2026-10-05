@@ -1,0 +1,25 @@
+<h1><%= t('tappay.title') %></h1>
+<p class="muted"><%= t('tappay.intro') %></p>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem;margin:1.5rem 0;">
+  <div style="border:1px solid var(--line,#ddd);border-radius:8px;padding:1.5rem;">
+    <p style="font-size:2rem;">📲</p>
+    <p><strong><%= t('tappay.card1_title') %></strong></p>
+    <p class="muted"><%= t('tappay.card1_text') %></p>
+  </div>
+  <div style="border:1px solid var(--line,#ddd);border-radius:8px;padding:1.5rem;">
+    <p style="font-size:2rem;">⚖️</p>
+    <p><strong><%= t('tappay.card2_title') %></strong></p>
+    <p class="muted"><%= t('tappay.card2_text') %></p>
+  </div>
+  <div style="border:1px solid var(--line,#ddd);border-radius:8px;padding:1.5rem;">
+    <p style="font-size:2rem;">🪑</p>
+    <p><strong><%= t('tappay.card3_title') %></strong></p>
+    <p class="muted"><%= t('tappay.card3_text') %></p>
+  </div>
+</div>
+
+<p>
+  <a class="btn" href="/signup"><%= t('tappay.cta_listed') %></a>
+  <a class="btn secondary" href="/membership/shops"><%= t('tappay.cta_earn') %></a>
+</p>

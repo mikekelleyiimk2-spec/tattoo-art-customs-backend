@@ -12,7 +12,7 @@
     <% } %>
   </div>
   <div>
-    <h1><%= design.title %></h1>
+    <h1><%= design.title %><button type="button" class="fav-heart fav-heart-inline" data-fav-id="<%= design.id %>" aria-pressed="false" aria-label="<%= t('fav.add') %>" title="<%= t('fav.add') %>"></button></h1>
     <% design.categories.forEach(function(c) { %><span class="tag"><%= c %></span><% }); %>
     <p><%= design.description %></p>
     <% if (artist) { %><p class="muted"><%= t('design.by') %> <a href="/artists/<%= design.artist_id %>"><%= artist.display_name %></a>
@@ -46,6 +46,19 @@
       <p><button class="btn btn-secondary" type="submit" name="use_credit" value="1"><%= t('design.pay_credit', {balance: fmtMoney(creditBalance)}) %></button></p>
       <% } %>
     </form>
+    <% if (typeof canBuyForClient !== 'undefined' && canBuyForClient) { %>
+    <details class="card" style="margin-top:1rem">
+      <summary><strong><%= t('design.buy_for_client') %></strong></summary>
+      <p class="muted"><%= t('design.buy_for_client_note') %></p>
+      <form method="post" action="/orders/buy-for-client/<%= design.id %>" class="form">
+        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <label><%= t('design.client_email') %>
+          <input type="email" name="client_email" required maxlength="160" placeholder="client@example.com">
+        </label>
+        <p><button class="btn" type="submit"><%= t('design.buy_for_client_btn') %></button></p>
+      </form>
+    </details>
+    <% } %>
     <% } else { %>
     <p><a class="btn" href="/login?next=<%= encodeURIComponent('/design/' + design.id) %>"><%= t('design.login_to_buy') %></a></p>
     <% } %>

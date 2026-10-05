@@ -1,0 +1,23 @@
+<h1><%= t('toploved.title') %></h1>
+<p class="muted"><%= t('toploved.sub') %></p>
+
+<% if (!designs.length) { %>
+  <p><strong><%= t('toploved.empty_title') %></strong></p>
+  <p class="muted"><%= t('toploved.empty_text') %></p>
+  <p><a class="btn" href="/gallery"><%= t('toploved.browse') %></a></p>
+<% } %>
+<div class="grid">
+  <% designs.forEach(function(d, i) { %>
+  <article class="design-card">
+    <a href="/design/<%= d.id %>"><img src="/img/designs/<%= d.thumb %>" alt="<%= d.title %>" loading="lazy" decoding="async"></a>
+    <button type="button" class="fav-heart" data-fav-id="<%= d.id %>" aria-pressed="false" aria-label="<%= t('fav.add') %>" title="<%= t('fav.add') %>"></button>
+    <% if (d.badge) { %><span class="badge <%= d.badge === 'selling_fast' ? 'ok' : 'warn' %> top-loved-badge"><%= t('toploved.badge_' + d.badge) %></span><% } %>
+    <div class="pad">
+      <p class="muted"><span class="badge ok">#<%= i + 1 %></span> <span class="love-count" aria-label="<%= t('toploved.loves', {count: d.like_count}) %>">♥ <%= d.like_count %></span></p>
+      <h3><a href="/design/<%= d.id %>"><%= d.title %></a></h3>
+      <% d.categories.slice(0,3).forEach(function(c) { %><span class="tag"><%= c %></span><% }); %>
+      <p class="muted"><%= d.price %></p>
+    </div>
+  </article>
+  <% }); %>
+</div>

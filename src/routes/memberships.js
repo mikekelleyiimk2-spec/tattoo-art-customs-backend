@@ -422,6 +422,20 @@ router.post('/webhook', async (req, res) => {
             });
           } catch (e) { console.error('subscription revenue record failed:', e.message); }
         }
+      } else {
+        // Tap-to-pay standalone billing: each successful payment extends the
+        // paid period by one month (bill current = service active).
+        const tapSale = await db.get(
+          'SELECT * FROM shop_tap_subscriptions WHERE paypal_subscription_id = ?',
+          [resource.billing_agreement_id]);
+        if (tapSale && !Number(tapSale.comped)) {
+          const now = Date.now();
+          const from = Math.max(Number(tapSale.current_period_end) || now, now);
+          await db.update('shop_tap_subscriptions', tapSale.id, {
+            status: 'active', current_period_start: now,
+            current_period_end: from + 30 * 86400000, updated_at: now,
+          });
+        }
       }
       return res.sendStatus(200);
     }
@@ -431,7 +445,27 @@ router.post('/webhook', async (req, res) => {
       `SELECT s.*, p.slug AS plan_slug, p.price_cents AS plan_price_cents FROM subscriptions s
        JOIN plans p ON p.id = s.plan_id
        WHERE s.paypal_subscription_id = ?`, [paypalSubId]);
-    if (!sub) return res.sendStatus(200);
+    if (!sub) {
+      // Tap-to-pay standalone billing (no plan roles ever granted here).
+      const tapSub = await db.get(
+        'SELECT * FROM shop_tap_subscriptions WHERE paypal_subscription_id = ?',
+        [paypalSubId]);
+      if (!tapSub) return res.sendStatus(200);
+      const tnow = Date.now();
+      if (type.includes('ACTIVATED')) {
+        await db.update('shop_tap_subscriptions', tapSub.id, {
+          status: 'active', current_period_start: tnow,
+          current_period_end: tnow + 30 * 86400000, updated_at: tnow,
+        });
+      } else if (type.includes('CANCELLED') || type.includes('EXPIRED')) {
+        await db.update('shop_tap_subscriptions', tapSub.id,
+          { status: 'suspended', canceled_at: db.now(), updated_at: tnow });
+      } else if (type.includes('PAYMENT.FAILED')) {
+        await db.update('shop_tap_subscriptions', tapSub.id,
+          { status: 'past_due', updated_at: tnow });
+      }
+      return res.sendStatus(200);
+    }
     if (type.includes('ACTIVATED')) {
       const wasActive = sub.status === 'active';
       await db.update('subscriptions', sub.id, { status: 'active' });

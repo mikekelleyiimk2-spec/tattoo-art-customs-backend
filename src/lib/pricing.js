@@ -198,3 +198,4 @@ function teeColorLabel(color) {
 }
 
 module.exports = { isSaleWindow, salePriceActive, premadePriceCents, customFullCents, money, LINEWORK_ONLY_DISCOUNT, lineworkOnlyPriceCents, processingFeeCents, withFeeCents, withPlayFeeCents, FIRST_CUSTOM_DISCOUNT_CODE, firstCustomFullCents, firstCustomDepositCents, MEMBER_DISCOUNT_CODE, MEMBER_DISCOUNT_RATE, memberPremadeCents, memberCustomFullCents, memberCustomDepositCents, premadePriceQuote, RUSH_FEE_CENTS, RUSH_DESIGNER_CENTS, RUSH_SITE_CENTS, RUSH_SLA_HOURS, STANDARD_SLA_HOURS, TEE_SIZES, TEE_COLORS, teePriceCents, teeSizeLabel, teeColorLabel };
+

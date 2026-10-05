@@ -182,10 +182,12 @@ app.get('/health', (req, res) => res.json({ ok: true, time: Date.now(), commit: 
 app.use('/', require('./routes/site'));
 app.use('/', require('./routes/auth'));
 app.use('/membership', require('./routes/memberships'));
+app.use('/tap', require('./routes/tapBilling'));
 app.use('/account', require('./routes/account'));
 app.use('/artist', require('./routes/artist'));
 app.use('/shop', require('./shop/routes'));
 app.use('/orders', require('./routes/orders'));
+app.use('/transfers', require('./routes/transfers'));
 app.use('/play', require('./routes/play'));
 app.use('/api', require('./routes/api').router);
 app.use('/api/muse', require('./routes/muse'));

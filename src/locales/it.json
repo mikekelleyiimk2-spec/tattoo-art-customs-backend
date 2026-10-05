@@ -68,7 +68,8 @@
     "sale": "Saldi",
     "search": "Cerca",
     "vat_note": "Prezzi IVA inclusa dove applicabile.",
-    "working": "Un attimo…"
+    "working": "Un attimo…",
+    "cancel": "Cancel"
   },
   "contact": {
     "email": "La tua email",
@@ -186,7 +187,11 @@
     "price_includes": "(incl. {fee} di spese di gestione)",
     "sale_price": "Prezzo Saturday sale",
     "verify_age": "Verifica l'età e accetta",
-    "pre_design": "pre-design"
+    "pre_design": "pre-design",
+    "buy_for_client": "Buy for a client",
+    "buy_for_client_note": "Purchase this design at full price for your client. The cost is added to a client bill on your dashboard for you to collect. You earn no referral commission on your own purchase.",
+    "client_email": "Client email address",
+    "buy_for_client_btn": "Buy for client"
   },
   "footer": {
     "advertise": "Pubblicità",
@@ -561,7 +566,10 @@
     "skip": "Salta al contenuto principale",
     "studio": "Design Studio",
     "toggle_menu": "Apri/chiudi menu",
-    "wallet": "Wallet"
+    "wallet": "Wallet",
+    "tap_to_pay": "Tap to Pay",
+    "wishlist": "Preferiti",
+    "top_loved": "Più amati"
   },
   "orders": {
     "amount": "Importo",
@@ -670,6 +678,72 @@
     "th_to": "A",
     "th_you_get": "Ricevi",
     "title": "Prelievo"
+  },
+  "tappay": {
+    "title": "Accetta il tap-to-pay nel tuo studio",
+    "intro": "I vostri clienti appoggiano la carta o il telefono al vostro. Nessun lettore di carte, nessun hardware extra — solo il vostro telefono.",
+    "card1_title": "Come funziona",
+    "card1_text": "Attivate PayPal Tap to Pay sul vostro telefono — gratis, circa cinque minuti. PayPal trattiene il 2,29% + 9¢ per tocco; il resto è vostro.",
+    "card2_title": "Un’unica tariffa mensile",
+    "card2_text": "Solo $9,99/mese per una poltrona, Studio $19,99/mese per 2–4 poltrone, Shop $29,99/mese per 5+ poltrone. Un servizio autonomo, fatturato separatamente dall’abbonamento del negozio — mantenete la fattura in regola per conservare il servizio. Facoltativo: aggiungete mezzo punto percentuale al conto del cliente alla cassa — 50¢ su un tatuaggio da $100 — per coprire parte o tutta la tariffa.",
+    "card3_title": "In arrivo",
+    "card3_text": "Pagamenti alla poltrona integrati negli strumenti del negozio — acconti, saldi e mance direttamente dal vostro calendario appuntamenti. I membri tap-to-pay accedono per primi.",
+    "cta_listed": "Attiva la fatturazione tap-to-pay",
+    "cta_earn": "Come guadagnano gli studi",
+    "badge_active": "Attivo",
+    "badge_comped": "Omaggio",
+    "badge_comped_note": "— la fatturazione tap-to-pay è offerta.",
+    "dash_blurb": "Accettate il tap-to-pay nel vostro negozio — scegliete un piano per attivare la fatturazione mensile.",
+    "dash_lapsed": "— fatturazione scaduta. Riattivate per conservare il servizio.",
+    "activate_cta": "Attiva",
+    "cancel_cta": "Annulla fatturazione tap"
+  },
+  "fav": {
+    "title": "I miei preferiti",
+    "sub": "Tutti i design salvati con un cuore, in un unico posto — torna quando vuoi e acquista i tuoi preferiti.",
+    "empty_title": "Ancora nessun preferito",
+    "empty_text": "Tocca il cuore su un design per salvarlo qui.",
+    "browse": "Sfoglia la galleria",
+    "buy": "Acquista ora",
+    "add": "Salva nei preferiti",
+    "remove": "Rimuovi dai preferiti",
+    "saved": "Design salvati"
+  },
+  "transfer": {
+    "send_title": "Send art to your shop",
+    "send_intro": "Send your purchased design \"{title}\" to the shop doing your tattoo. They'll get a private download link for the clean files, valid 24 hours.",
+    "send_short": "Your shop gets a private download link for the clean files (valid 24 hours).",
+    "send_btn": "Send to my shop",
+    "pick_shop": "Choose the shop",
+    "verified_shop": "Verified shop",
+    "choose": "— choose a shop —",
+    "or_email": "Or send to any shop by email:",
+    "shop_email": "Shop email address",
+    "license_preview": "The shop receives the files under a single-client license: licensed to you, for your tattoo only — not for resale or reuse on other clients.",
+    "sent_before": "Previously sent",
+    "dl_title": "Design transfer",
+    "private_note": "This link is private and expires 24 hours after it was sent. Full-color and clean linework files:",
+    "license_title": "License",
+    "inbox_title": "Client art inbox",
+    "inbox_from": "from {name}",
+    "inbox_download": "Download files",
+    "client_orders_title": "Art bought for clients",
+    "forward_client": "Forward to client",
+    "bills_title": "Client bills",
+    "mark_paid": "Mark paid",
+    "sent_badge": "sent to shop ({count})"
+  },
+  "toploved": {
+    "title": "Più amati",
+    "sub": "Tutti li amano — i design più amati dalla community, classificati per amore.",
+    "loves": "{count} mi piace",
+    "empty_title": "Ancora nessun voto",
+    "empty_text": "Tocca il cuore di un design per votare per primo.",
+    "browse": "Sfoglia la galleria",
+    "badge_most_loved": "Più amato",
+    "badge_most_wanted": "Più desiderato",
+    "badge_trending": "Tendenza",
+    "badge_selling_fast": "Vende veloce"
   },
   "apps": {
     "free_label": "Gratis",

@@ -84,7 +84,7 @@
     <ul><% subs.forEach(function(s) { %><li><%= s.plan_name %> — <span class="badge <%= s.status === 'active' ? 'ok' : 'warn' %>"><%= s.status %></span></li><% }); %></ul>
     <h2>Recent orders</h2>
     <% if (!orders.length) { %><p class="muted">No orders yet.</p><% } %>
-    <ul><% orders.forEach(function(o) { %><li><a href="/orders/<%= o.id %>">Order <%= o.id.slice(0,8) %></a> — <%= o.order_type %> — <%= money(o.amount_cents) %> — <span class="badge"><%= o.status %></span></li><% }); %></ul>
+    <ul><% orders.forEach(function(o) { %><li><a href="/orders/<%= o.id %>">Order <%= o.id.slice(0,8) %></a> — <%= o.order_type %> — <%= money(o.amount_cents) %> — <span class="badge"><%= o.status %></span><% if (o.transfer_count > 0) { %> <span class="muted"><%= t('transfer.sent_badge', {count: o.transfer_count}) %></span><% } %></li><% }); %></ul>
   </section>
 
   <section class="card">

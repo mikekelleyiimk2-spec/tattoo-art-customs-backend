@@ -68,7 +68,8 @@
     "sale": "Sale",
     "search": "Search",
     "vat_note": "Prices include VAT where applicable.",
-    "working": "Working…"
+    "working": "Working…",
+    "cancel": "Cancel"
   },
   "contact": {
     "email": "Your email",
@@ -186,7 +187,11 @@
     "price_includes": "(includes {fee} processing fee)",
     "sale_price": "Saturday sale price",
     "verify_age": "Verify your age and opt in",
-    "pre_design": "pre-design"
+    "pre_design": "pre-design",
+    "buy_for_client": "Buy for a client",
+    "buy_for_client_note": "Purchase this design at full price for your client. The cost is added to a client bill on your dashboard for you to collect. You earn no referral commission on your own purchase.",
+    "client_email": "Client email address",
+    "buy_for_client_btn": "Buy for client"
   },
   "footer": {
     "advertise": "Advertise",
@@ -561,7 +566,10 @@
     "skip": "Skip to main content",
     "studio": "Design Studio",
     "toggle_menu": "Toggle menu",
-    "wallet": "Wallet"
+    "wallet": "Wallet",
+    "tap_to_pay": "Tap to Pay",
+    "wishlist": "Wishlist",
+    "top_loved": "Top Loved"
   },
   "orders": {
     "amount": "Amount",
@@ -670,6 +678,72 @@
     "th_to": "To",
     "th_you_get": "You get",
     "title": "Cashout"
+  },
+  "tappay": {
+    "title": "Take tap-to-pay in your shop",
+    "intro": "Your customers tap their card or phone on yours. No card reader, no extra hardware — just your phone.",
+    "card1_title": "How it works",
+    "card1_text": "Turn on PayPal Tap to Pay on your phone — free, about five minutes. PayPal takes 2.29% + 9¢ per tap; the rest is yours.",
+    "card2_title": "One flat monthly fee",
+    "card2_text": "Solo $9.99/mo for one chair, Studio $19.99/mo for 2–4 chairs, Shop $29.99/mo for 5+ chairs. A standalone service, billed separately from your shop subscription — keep the bill current to keep the service. Optional: add half a percent to the customer's bill at the register — 50¢ on a $100 tattoo — to cover some or all of the fee.",
+    "card3_title": "Coming next",
+    "card3_text": "Chair-side payments built right into the shop toolkit — deposits, final payments, and tips flowing through your booking calendar. Tap-to-pay members get first access.",
+    "cta_listed": "Activate tap-to-pay billing",
+    "cta_earn": "How shops earn",
+    "badge_active": "Active",
+    "badge_comped": "Comped",
+    "badge_comped_note": "— tap-to-pay billing is on the house.",
+    "dash_blurb": "Take tap-to-pay in your shop — pick a tier to activate monthly billing.",
+    "dash_lapsed": "— billing lapsed. Reactivate to keep the service.",
+    "activate_cta": "Activate",
+    "cancel_cta": "Cancel tap billing"
+  },
+  "fav": {
+    "title": "My Wishlist",
+    "sub": "Every design you heart, in one place — come back anytime and buy the ones you love.",
+    "empty_title": "No favorites yet",
+    "empty_text": "Tap the heart on any design to save it here. Your wishlist waits for you.",
+    "browse": "Browse the gallery",
+    "buy": "Buy now",
+    "add": "Save to wishlist",
+    "remove": "Remove from wishlist",
+    "saved": "Saved designs"
+  },
+  "transfer": {
+    "send_title": "Send art to your shop",
+    "send_intro": "Send your purchased design \"{title}\" to the shop doing your tattoo. They'll get a private download link for the clean files, valid 24 hours.",
+    "send_short": "Your shop gets a private download link for the clean files (valid 24 hours).",
+    "send_btn": "Send to my shop",
+    "pick_shop": "Choose the shop",
+    "verified_shop": "Verified shop",
+    "choose": "— choose a shop —",
+    "or_email": "Or send to any shop by email:",
+    "shop_email": "Shop email address",
+    "license_preview": "The shop receives the files under a single-client license: licensed to you, for your tattoo only — not for resale or reuse on other clients.",
+    "sent_before": "Previously sent",
+    "dl_title": "Design transfer",
+    "private_note": "This link is private and expires 24 hours after it was sent. Full-color and clean linework files:",
+    "license_title": "License",
+    "inbox_title": "Client art inbox",
+    "inbox_from": "from {name}",
+    "inbox_download": "Download files",
+    "client_orders_title": "Art bought for clients",
+    "forward_client": "Forward to client",
+    "bills_title": "Client bills",
+    "mark_paid": "Mark paid",
+    "sent_badge": "sent to shop ({count})"
+  },
+  "toploved": {
+    "title": "Top Loved",
+    "sub": "Everyone's loving these — the community's most-hearted designs, ranked by love.",
+    "loves": "{count} loves",
+    "empty_title": "No loves yet",
+    "empty_text": "Tap the heart on any design to cast the first vote.",
+    "browse": "Browse the gallery",
+    "badge_most_loved": "Most loved",
+    "badge_most_wanted": "Most wanted",
+    "badge_trending": "Trending",
+    "badge_selling_fast": "Selling fast"
   },
   "apps": {
     "free_label": "Free",

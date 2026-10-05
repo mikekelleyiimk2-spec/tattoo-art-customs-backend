@@ -1,0 +1,11 @@
+<h1><%= t('transfer.dl_title') %></h1>
+<% if (design) { %><p><strong><%= design.title %></strong></p><% } %>
+<p class="muted"><%= t('transfer.private_note') %></p>
+<p>
+  <% if (!lineworkOnly) { %><a class="btn" href="/transfers/<%= token %>/file?which=color"><%= t('orders.dl_color') %></a><% } %>
+  <a class="btn btn-secondary" href="/transfers/<%= token %>/file?which=linework"><%= t('orders.dl_linework') %></a>
+</p>
+<section class="card">
+  <h2><%= t('transfer.license_title') %></h2>
+  <p class="fineprint"><%= transfer.license_note %></p>
+</section>

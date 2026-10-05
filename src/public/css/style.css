@@ -136,3 +136,26 @@ th { background: var(--paper-dim); }
 /* Text-style button for secondary destructive actions (e.g. cancel order) */
 .linklike { background: none; border: none; padding: 0; color: #b3261e; text-decoration: underline; cursor: pointer; font-size: .95rem; }
 .linklike:disabled { color: var(--muted); cursor: default; }
+
+/* Wishlist / favorites ([wishlist] feature) */
+.design-card { position: relative; }
+.fav-heart {
+  position: absolute; top: .5rem; right: .5rem; z-index: 2;
+  width: 2.4rem; height: 2.4rem; border-radius: 50%;
+  background: rgba(255,255,255,.94); border: 1px solid var(--line);
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; padding: 0;
+}
+.fav-heart svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: var(--ink); stroke-width: 2; }
+.fav-heart:hover svg { stroke: var(--accent); }
+.fav-heart.on svg { fill: var(--accent); stroke: var(--accent); }
+.fav-heart-inline { position: static; vertical-align: middle; margin-left: .5rem; width: 2.2rem; height: 2.2rem; }
+.nav-links [data-fav-count] { background: var(--accent); color: #fff; }
+
+/* Top loved leaderboard */
+.top-loved-badge {
+  position: absolute; top: .5rem; left: .5rem; z-index: 2;
+  font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
+  box-shadow: 0 1px 4px rgba(0,0,0,.18);
+}
+.love-count { font-size: 1.25rem; font-weight: 700; color: var(--accent); }
