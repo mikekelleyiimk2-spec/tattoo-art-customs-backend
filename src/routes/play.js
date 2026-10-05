@@ -151,4 +151,54 @@ router.post('/verify', express.json(), async (req, res) => {
   return res.json({ ok: true, linked: !!user, verified, membershipActivated });
 });
 
+// Pro-app purchase intake (owner directive 2026-10-05): records a VERIFIED
+// Pro purchase so the buyer unlocks the 6-month membership perk. Android Pro
+// is a paid download — the Play Billing purchase's product ID is the Pro
+// package itself (BillingClient returns the paid app as an inapp purchase
+// whose SKU is the package name). Requires a linked website account
+// (apiToken): the perk gates a WEBSITE membership, so an unlinked purchase
+// cannot be attributed. Verified via the Play Developer API service account;
+// unverified or unconfigured purchases are REJECTED (never silently trusted
+// like /verify's manual-review pending state — this endpoint grants a perk,
+// so fail-closed).
+const PRO_PACKAGE = process.env.PLAY_PRO_PACKAGE_NAME || 'com.tattooartcustoms.app.pro';
+
+router.post('/verify-pro', express.json(), async (req, res) => {
+  const purchaseToken = String(req.body?.purchaseToken || '').slice(0, 512);
+  const apiToken = String(req.body?.apiToken || '').slice(0, 128);
+  if (!purchaseToken || !apiToken) {
+    return res.status(400).json({ ok: false, error: 'purchaseToken and apiToken required' });
+  }
+  const user = await db.get('SELECT id FROM users WHERE api_token = ?', [apiToken]);
+  if (!user) return res.status(401).json({ ok: false, error: 'not linked' });
+  let verification = { verified: false, reason: 'not_configured' };
+  try {
+    verification = await verifyPurchase({
+      productId: PRO_PACKAGE, purchaseToken, type: 'inapp', packageName: PRO_PACKAGE,
+    });
+  } catch (e) {
+    verification = { verified: false, reason: e.message };
+  }
+  if (!verification.verified) {
+    return res.status(402).json({ ok: false, error: 'unverified', reason: verification.reason });
+  }
+  const { recordProPurchase } = require('../lib/proPurchases');
+  try {
+    await recordProPurchase({ userId: user.id, purchaseToken, platform: 'android' });
+  } catch (e) {
+    return res.status(409).json({ ok: false, error: e.message });
+  }
+  // The perk IS the delivered good: acknowledge so Google does not auto-
+  // refund in ~3 days. Ack failure is logged only — the perk row is the
+  // source of truth and a retry sweep is not worth a new table for a
+  // one-time intake.
+  if (verification.needsAcknowledge) {
+    const ack = await acknowledgePurchase({
+      productId: PRO_PACKAGE, purchaseToken, type: 'inapp', packageName: PRO_PACKAGE,
+    });
+    if (!ack.ok) console.error(`PRO PURCHASE ACKNOWLEDGE FAILED for ${purchaseToken.slice(0, 12)}: ${ack.reason}`);
+  }
+  return res.json({ ok: true, eligibleFor6Month: true });
+});
+
 module.exports = router;

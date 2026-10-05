@@ -66,7 +66,7 @@
       <a href="/merch"><%= t('nav.custom_tees') %></a>
       <a href="/contests"><%= t('nav.contests') %></a>
       <a href="/about"><%= t('nav.about') %></a>
-      <% if (playStoreUrl) { %><a class="btn" href="<%= playStoreUrl %>" target="_blank" rel="noopener"><%= t('nav.get_app') %></a><% } %>
+      <% if (playStoreUrl && playStoreProUrl) { %><a class="btn" href="/apps"><%= t('nav.get_app') %></a><% } else if (playStoreUrl) { %><a class="btn" href="<%= playStoreUrl %>" target="_blank" rel="noopener"><%= t('nav.get_app') %></a><% } else if (playStoreProUrl) { %><a class="btn" href="<%= playStoreProUrl %>" target="_blank" rel="noopener"><%= t('nav.get_app') %></a><% } %>
       <% if (currentUser) { %>
         <a href="/account"><%= t('nav.account') %></a>
         <a href="/wallet"><%= t('nav.wallet') %></a>
@@ -133,7 +133,7 @@
       <a href="/about"><%= t('nav.about') %></a>
       <a href="/contact"><%= t('footer.contact') %></a>
       <% if (youtubeUrl) { %><a href="<%= youtubeUrl %>" target="_blank" rel="noopener"><%= t('footer.youtube') %></a><% } %>
-      <% if (playStoreUrl) { %><a href="<%= playStoreUrl %>" target="_blank" rel="noopener"><%= t('nav.get_app') %></a><% } %>
+      <% if (playStoreUrl) { %><a href="<%= playStoreUrl %>" target="_blank" rel="noopener"><%= t('home.get_play_free') %></a><% } %><% if (playStoreProUrl) { %><a href="<%= playStoreProUrl %>" target="_blank" rel="noopener"><%= t('home.get_play_pro') %></a><% } %>
     </nav>
   </div>
   <p class="fineprint">© <%= new Date().getFullYear() %> Tattoo Art Customs™. <%= t('footer.rights') %></p>

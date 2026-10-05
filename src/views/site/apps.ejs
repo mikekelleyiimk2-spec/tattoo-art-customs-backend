@@ -7,8 +7,23 @@
     <p style="font-size:2rem;">🎨</p>
     <p><strong>Tattoo Art Customs</strong></p>
     <p class="muted">Full design gallery, custom tattoos in 48 hours, memberships, shop tools.</p>
-    <% if (playStoreUrl) { %>
-      <p><a class="btn" href="<%= playStoreUrl %>">Get it on Google Play</a></p>
+    <% if (playStoreUrl || playStoreProUrl) { %>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin:1rem 0;text-align:center;">
+        <% if (playStoreUrl) { %>
+        <div style="border:1px solid var(--line,#ddd);border-radius:8px;padding:1rem;">
+          <p><strong><%= t('apps.free_label') %></strong></p>
+          <p class="muted"><%= t('apps.free_text') %></p>
+          <p><a class="btn" href="<%= playStoreUrl %>"><%= t('home.get_play_free') %></a></p>
+        </div>
+        <% } %>
+        <% if (playStoreProUrl) { %>
+        <div style="border:1px solid var(--line,#ddd);border-radius:8px;padding:1rem;">
+          <p><strong><%= t('apps.pro_label') %></strong></p>
+          <p class="muted"><%= t('apps.pro_text') %></p>
+          <p><a class="btn" href="<%= playStoreProUrl %>"><%= t('home.get_play_pro') %></a></p>
+        </div>
+        <% } %>
+      </div>
     <% } else { %>
       <p class="muted">Android: coming soon to Google Play</p>
     <% } %>

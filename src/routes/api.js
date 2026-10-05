@@ -5,7 +5,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const db = require('../db');
-const { hasAnyActiveSubscription, isAdminRole, isActiveMember } = require('../middleware/auth');
+const { hasAnyActiveSubscription, isAdminRole, isActiveMember, isCustomerMember } = require('../middleware/auth');
 const { isSaleWindow, premadePriceCents, customFullCents, salePriceActive } = require('../lib/pricing');
 const { viewerFor, displayImgFile } = require('../lib/contentPolicy');
 const { authLimiter, checkHoneypot } = require('../middleware/rateLimit');
@@ -13,7 +13,21 @@ const { enforceSessionCap } = require('../lib/sessionLimits');
 
 const router = express.Router();
 
-function publicUser(user, isSubscriber) {
+// Public app store links for app clients: the free app's "Go Pro" upsell
+// reads playStoreProUrl here (falls back to the website /apps page when empty).
+// Never a dead button — empty strings mean "not published yet".
+router.get('/app-links', (req, res) => {
+  const config = require('../config');
+  res.json({
+    ok: true,
+    playStoreUrl: config.playStoreUrl || '',
+    playStoreProUrl: config.playStoreProUrl || '',
+    appStoreUrl: config.appStoreUrl || '',
+    appsPage: `${config.baseUrl}/apps`,
+  });
+});
+
+function publicUser(user, isSubscriber, eligibleFor6Month) {
   return {
     ok: true,
     user_id: user.id,
@@ -22,6 +36,11 @@ function publicUser(user, isSubscriber) {
     display_name: user.display_name || '',
     role: user.role,
     is_subscriber: !!isSubscriber,
+    // Pro-app perk (owner directive 2026-10-05): the Pro app reads this to
+    // surface the 6-month membership offer natively. True only when the
+    // offer is actually purchasable (verified Pro purchase + no active
+    // customer-plan membership).
+    eligibleFor6Month: !!eligibleFor6Month,
   };
 }
 
@@ -39,7 +58,9 @@ router.post('/link-account', authLimiter, checkHoneypot, express.json(), async (
     await db.update('users', user.id, { api_token: user.api_token });
   }
   const isSub = isAdminRole(user.role) || await hasAnyActiveSubscription(user.id);
-  return res.json(publicUser(user, isSub));
+  const eligibleFor6Month = await require('../lib/proPurchases').hasVerifiedProPurchase(user.id)
+    && !await isCustomerMember(user);
+  return res.json(publicUser(user, isSub, eligibleFor6Month));
 });
 
 // Linked-account info for the app (header x-api-token).
@@ -53,7 +74,9 @@ router.get('/me', async (req, res) => {
   const user = await userFromToken(req);
   if (!user) return res.status(401).json({ ok: false, error: 'not linked' });
   const isSub = isAdminRole(user.role) || await hasAnyActiveSubscription(user.id);
-  return res.json(publicUser(user, isSub));
+  const eligibleFor6Month = await require('../lib/proPurchases').hasVerifiedProPurchase(user.id)
+    && !await isCustomerMember(user);
+  return res.json(publicUser(user, isSub, eligibleFor6Month));
 });
 
 // Bootstrap a website session inside the app's WebView: the app loads

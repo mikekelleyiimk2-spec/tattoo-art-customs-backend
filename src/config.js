@@ -28,6 +28,7 @@ const config = {
   baseUrl: (process.env.BASE_URL || 'http://localhost:3000').replace(/\/$/, ''),
   googleSiteVerification: process.env.GOOGLE_SITE_VERIFICATION || '',
   playStoreUrl: process.env.PLAY_STORE_URL || '',
+  playStoreProUrl: process.env.PLAY_STORE_URL_PRO || '',
   appStoreUrl: process.env.APP_STORE_URL || '',
   youtubeUrl: process.env.YOUTUBE_CHANNEL_URL || '',
   sessionSecret: process.env.SESSION_SECRET || 'dev-only-secret-change-me',
@@ -54,6 +55,10 @@ const config = {
     planIds: {
       customer: process.env.PAYPAL_PLAN_CUSTOMER || '',
       customer_annual: process.env.PAYPAL_PLAN_CUSTOMER_ANNUAL || '',
+      // Pro-app perk 6-month plan (owner directive 2026-10-05): dedicated
+      // PayPal plan with a 6-month (MONTH x 6) billing cycle. Create via
+      // scripts/create-6month-plan.js, then set PAYPAL_PLAN_CUSTOMER_6MONTH.
+      customer_6month: process.env.PAYPAL_PLAN_CUSTOMER_6MONTH || '',
       artist: process.env.PAYPAL_PLAN_ARTIST || '',
       shop: process.env.PAYPAL_PLAN_SHOP || '',
       // Dedicated founding-shop plan ($83.28 first year as a plan-level
@@ -75,6 +80,12 @@ const config = {
   // all checkout.
   paypalAnnualPlanConfigured() {
     return this.paypalConfigured() && !!this.paypal.planIds.customer_annual;
+  },
+  // 6-month Pro-perk plan is optional like the annual plan: when
+  // PAYPAL_PLAN_CUSTOMER_6MONTH is missing the plan shows as "coming soon"
+  // to eligible users instead of disabling all checkout.
+  paypalCustomer6MonthPlanConfigured() {
+    return this.paypalConfigured() && !!this.paypal.planIds.customer_6month;
   },
   // Dedicated founding-shop plan (trial pricing defined in the plan itself —
   // PayPal rejects a 1-year TRIAL billing-cycle override at subscription
@@ -140,6 +151,11 @@ const config = {
       // fees are passed through, never absorbed). Base + fee shown in parens.
       customer: { slug: 'customer', name: 'Customer Membership', priceCents: 567, interval: 'month' }, // $5.00 + $0.67
       customer_annual: { slug: 'customer_annual', name: 'Customer Membership (Annual)', priceCents: 5224, interval: 'year' }, // $50.00 + $2.24
+      // Pro-app perk (owner directive 2026-10-05): 6 months for the price of
+      // 5 ($25.00 + $1.37 fee), purchasable ONLY by verified Pro-app owners
+      // with no active customer-plan membership (anti-gaming: not a
+      // downgrade path for existing members; lapsed members eligible).
+      customer_6month: { slug: 'customer_6month', name: 'Customer Membership (6-Month)', priceCents: 2637, interval: '6month' }, // $25.00 + $1.37
       artist: { slug: 'design_artist', name: 'Design Artist', priceCents: 567, interval: 'month' }, // $5.00 + $0.67
       shop: { slug: 'tattoo_shop', name: 'Tattoo Shop', priceCents: 10398, interval: 'year' }, // $99.99 + $3.99
     },

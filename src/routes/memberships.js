@@ -10,7 +10,7 @@ const { requireLogin } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 
 const router = express.Router();
-const PLAN_KEY_BY_SLUG = { customer: 'customer', customer_annual: 'customer_annual', design_artist: 'artist', tattoo_shop: 'shop' };
+const PLAN_KEY_BY_SLUG = { customer: 'customer', customer_annual: 'customer_annual', customer_6month: 'customer_6month', design_artist: 'artist', tattoo_shop: 'shop' };
 const { isAdminRole } = require('../middleware/auth');
 const { ensureReferralCode, firstMonthDiscountEligible, markFirstMonthUsed, grantReferralReward } = require('../lib/referrals');
 const { recordPaypalActivation, recordPaypalSale } = require('../lib/subscriptionRevenue');
@@ -43,6 +43,13 @@ router.get('/', requireLogin, async (req, res) => {
     title: 'Membership — Tattoo Art Customs',
     plans, subs, paypalReady: config.paypalPlansConfigured(),
     annualReady: config.paypalAnnualPlanConfigured(),
+    sixMonthReady: config.paypalCustomer6MonthPlanConfigured(),
+    // Pro-app perk (owner directive 2026-10-05): the 6-month customer plan
+    // is purchasable ONLY by verified Pro-app owners with no active
+    // customer-plan membership. Everyone else sees it locked with an upsell
+    // (or "already active"), never a dead button.
+    eligibleFor6Month: await require('../lib/proPurchases').hasVerifiedProPurchase(req.user.id),
+    hasActiveCustomerMembership: await require('../middleware/auth').isCustomerMember(req.user),
     foundingShop: foundingShop && foundingStatus.shopsLeft > 0 && config.paypalFoundingShopPlanConfigured(), foundingPrice: config.pricing.foundingShop.priceCents,
     foundingEnds: config.foundingShopWindowEnd,
     shopsLeft: foundingStatus.shopsLeft,
@@ -77,13 +84,29 @@ router.post('/credit/:slug', requireLogin, formLimiter, checkHoneypot, async (re
     req.session.flash = 'Population-admin accounts are never billed for memberships — your access is already covered.';
     return res.redirect('/membership');
   }
+  // Pro-app perk gate (owner directive 2026-10-05): the 6-month customer
+  // plan is purchasable ONLY by verified Pro-app owners, on any payment path.
+  if (plan.slug === 'customer_6month' && !await require('../lib/proPurchases').hasVerifiedProPurchase(req.user.id)) {
+    req.session.flash = 'The 6-month plan is a Pro-app perk — own the Pro app to unlock 6 months for the price of 5.';
+    return res.redirect('/membership');
+  }
+  // Anti-gaming (owner directive 2026-10-05): the free month is a NEW-member
+  // acquisition perk, not a downgrade path. A user with an ACTIVE
+  // customer-plan membership (customer / customer_annual / customer_6month)
+  // cannot re-buy at the perk rate — lapsed members (no active sub) ARE
+  // eligible, because that is win-back and it is desirable.
+  if (plan.slug === 'customer_6month' && await require('../middleware/auth').isCustomerMember(req.user)) {
+    req.session.flash = 'The 6-month Pro-perk rate is for new memberships — your customer membership is already active.';
+    return res.redirect('/membership');
+  }
   // Base price: invert the fee pass-through (priceCents = round(base*1.035)+49).
   const pricing = require('../lib/pricing');
+  const displayInterval = plan.interval === '6month' ? '6 months' : plan.interval;
   const baseCents = Math.round((plan.price_cents - 49) / 1.035);
   const { getCreditBalance, addCredit } = require('../lib/credits');
   const balance = await getCreditBalance(req.user.id);
   if (balance < baseCents) {
-    req.session.flash = `Not enough site credit — one ${plan.interval} of ${plan.name} is ${pricing.money(baseCents)} and you have ${pricing.money(balance)}. Top up or redeem a gift card first.`;
+    req.session.flash = `Not enough site credit — one ${displayInterval} of ${plan.name} is ${pricing.money(baseCents)} and you have ${pricing.money(balance)}. Top up or redeem a gift card first.`;
     return res.redirect('/membership');
   }
   // Extend an existing active sub for this plan, else create a fresh
@@ -94,7 +117,11 @@ router.post('/credit/:slug', requireLogin, formLimiter, checkHoneypot, async (re
   // debited. A PayPal-billed subscription already covering this plan must
   // redirect WITHOUT touching credit — debiting first meant the user lost
   // credit and got nothing.
-  const termMs = plan.interval === 'year' ? 365 * 86400000 : 30 * 86400000;
+  // Term length mirrors the plan interval (month = 30d, 6-month = 180d,
+  // year = 365d) so the site-credit path grants the plan's real term.
+  const termMs = plan.interval === 'year' ? 365 * 86400000
+    : plan.interval === '6month' ? 180 * 86400000
+    : 30 * 86400000;
   const nowMs = Date.now();
   const existing = await db.get(
     `SELECT * FROM subscriptions WHERE user_id = ? AND plan_id = ? AND status = 'active'
@@ -107,7 +134,7 @@ router.post('/credit/:slug', requireLogin, formLimiter, checkHoneypot, async (re
   }
   await addCredit({
     userId: req.user.id, amountCents: -baseCents, kind: 'membership_spend', refId: plan.id,
-    note: `One ${plan.interval} of ${plan.name} paid with site credit`,
+    note: `One ${displayInterval} of ${plan.name} paid with site credit`,
   });
   let subId;
   if (existing) {
@@ -136,7 +163,7 @@ router.post('/credit/:slug', requireLogin, formLimiter, checkHoneypot, async (re
     await require('../lib/saleWatch').watchSubscriptionActive(
       await db.get('SELECT * FROM subscriptions WHERE id = ?', [subId]));
   } catch (e) { console.error('sale watch failed:', e.message); }
-  req.session.flash = `${plan.name} active for one ${plan.interval} — paid with site credit.`;
+  req.session.flash = `${plan.name} active for one ${displayInterval} — paid with site credit.`;
   res.redirect('/membership');
 });
 
@@ -168,6 +195,24 @@ router.post('/subscribe/:slug', requireLogin, formLimiter, checkHoneypot, async 
   if (plan.slug === 'customer_annual' && !config.paypalAnnualPlanConfigured()) {
     req.session.flash = 'The annual plan is not available yet — the monthly plan is ready now.';
     return res.redirect('/membership');
+  }
+  // Pro-app perk gate (owner directive 2026-10-05): verified Pro purchase
+  // required, AND no active customer-plan membership — the free month is a
+  // new-member acquisition perk, not a downgrade path for existing $5/mo
+  // members. Lapsed members (no active sub) are eligible: win-back.
+  if (plan.slug === 'customer_6month') {
+    if (!await require('../lib/proPurchases').hasVerifiedProPurchase(req.user.id)) {
+      req.session.flash = 'The 6-month plan is a Pro-app perk — own the Pro app to unlock 6 months for the price of 5.';
+      return res.redirect('/membership');
+    }
+    if (await require('../middleware/auth').isCustomerMember(req.user)) {
+      req.session.flash = 'The 6-month Pro-perk rate is for new memberships — your customer membership is already active.';
+      return res.redirect('/membership');
+    }
+    if (!config.paypalCustomer6MonthPlanConfigured()) {
+      req.session.flash = 'The 6-month plan is not available yet — the monthly plan is ready now.';
+      return res.redirect('/membership');
+    }
   }
   try {
     // Subscription incentives:

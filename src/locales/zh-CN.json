@@ -282,7 +282,9 @@
     "start_custom": "开始定制设计",
     "yt_subscribe": "订阅YouTube",
     "yt_text": "每日新图案掉落、定制设计延时摄影、护理指南。每天更新视频——订阅不错过任何上新。",
-    "yt_title": "🎥 我们在YouTube——快订阅"
+    "yt_title": "🎥 我们在YouTube——快订阅",
+    "get_play_free": "在Google Play获取 — 免费",
+    "get_play_pro": "获取Pro版 — 无广告"
   },
   "landing": {
     "hero": {
@@ -668,5 +670,11 @@
     "th_to": "收款方",
     "th_you_get": "您将获得",
     "title": "提现"
+  },
+  "apps": {
+    "free_label": "免费",
+    "pro_label": "Pro",
+    "free_text": "完整应用，含广告。",
+    "pro_text": "无广告 — Pro版优先获得每次更新。"
   }
 }

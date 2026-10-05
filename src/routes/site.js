@@ -151,6 +151,7 @@ router.get('/', async (req, res) => {
     canonical: `${base}/`,
     ogImage: `${base}/img/landing/hero.webp`,
     playStoreUrl: config.playStoreUrl,
+    playStoreProUrl: config.playStoreProUrl,
     appStoreUrl: config.appStoreUrl,
   });
 });
@@ -312,6 +313,7 @@ router.get('/apps', (req, res) => res.render('site/apps', {
   title: 'Apps by Usefulappz™',
   metaDescription: 'Mobile apps built by Usefulappz — Tattoo Art Customs for Android and iPhone.',
   playStoreUrl: res.locals.playStoreUrl || null,
+  playStoreProUrl: res.locals.playStoreProUrl || null,
   appStoreUrl: res.locals.appStoreUrl || null,
 }));
 

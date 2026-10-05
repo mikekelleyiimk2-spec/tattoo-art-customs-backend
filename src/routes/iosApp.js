@@ -61,6 +61,15 @@ router.get('/approve/:orderId', requireLogin, async (req, res) => {
     const captured = Math.round(parseFloat(capture.purchase_units[0].payments.captures[0].amount.value) * 100);
     if (captured !== expectedTotal) throw new Error('Amount mismatch');
     await db.update('orders', order.id, { status: 'paid', paid_at: db.now() });
+    // Pro-app perk registry (owner directive 2026-10-05): the iOS sideload
+    // buyer is known here (signed-in capture), so record the verified Pro
+    // purchase — unlocks the 6-month membership perk. Idempotent on the
+    // order (a re-hit of this endpoint re-uses the same token).
+    try {
+      await require('../lib/proPurchases').recordProPurchase({
+        userId: req.user.id, purchaseToken: `ios-sideload:${order.id}`, platform: 'ios',
+      });
+    } catch (e) { console.error('pro purchase record failed:', e.message); }
     req.session.flash = 'Payment complete — your iOS app download is ready.';
     res.redirect(`/ios-app/download/${order.id}`);
   } catch (e) {

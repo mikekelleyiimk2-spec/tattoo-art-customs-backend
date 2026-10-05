@@ -239,6 +239,38 @@ function foundingShopPlanPayload({ productId, name, description, trialCents, reg
 // shell, for the founding-shop plan — PayPal rejects a 1-year TRIAL cycle
 // when overridden at subscription creation, so the discount lives in the
 // plan itself, which is the PayPal-native way to do trial pricing).
+// Pure payload builder for the Pro-perk 6-month customer plan (exported
+// for tests + scripts/create-6month-plan.js). A single REGULAR cycle at
+// $26.37 every 6 months (MONTH x 6) — PayPal natively supports multi-month
+// interval counts, so no trial-cycle hack is needed. Auto-renews forever;
+// the "first month free" framing is marketing for the price ($25 base vs
+// $30), not a billing-cycle discount.
+function sixMonthPlanPayload({ productId, name, description, regularCents }) {
+  const price = (cents) => ({ currency_code: 'USD', value: (cents / 100).toFixed(2) });
+  return {
+    product_id: productId,
+    name: String(name).slice(0, 127),
+    description: String(description).slice(0, 127),
+    status: 'ACTIVE',
+    billing_cycles: [
+      {
+        frequency: { interval_unit: 'MONTH', interval_count: 6 },
+        tenure_type: 'REGULAR', sequence: 1, total_cycles: 0,
+        pricing_scheme: { fixed_price: price(regularCents) },
+      },
+    ],
+    payment_preferences: { auto_bill_outstanding: true, payment_failure_threshold: 3 },
+  };
+}
+
+// Create the 6-month billing plan in PayPal (run once from the shell via
+// scripts/create-6month-plan.js). Unlike the founding-shop plan, no trial
+// cycle is needed — the discount is baked into the $26.37/6mo price itself.
+async function createSixMonthBillingPlan(args) {
+  assertConfigured();
+  return api('/v1/billing/plans', 'POST', sixMonthPlanPayload(args));
+}
+
 async function createBillingPlan(args) {
   assertConfigured();
   return api('/v1/billing/plans', 'POST', foundingShopPlanPayload(args));
@@ -359,7 +391,9 @@ module.exports = {
   refundCheckoutCapture,
   createSubscription,
   createBillingPlan,
+  createSixMonthBillingPlan,
   foundingShopPlanPayload,
+  sixMonthPlanPayload,
   firstMonthTrialCycles,
   foundingShopCycles,
   getSubscription,
