@@ -10559,5 +10559,125 @@
   "subjects": [
    "Nature / Scene Concepts > Mountain Landscape"
   ]
+ },
+ {
+  "id": "batch18-traditional-eagle",
+  "title": "Traditional Eagle",
+  "styles": [
+   "Traditional / Old School"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Eagle"
+  ]
+ },
+ {
+  "id": "batch18-traditional-panther",
+  "title": "Traditional Roaring Panther",
+  "styles": [
+   "Traditional / Old School"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Panther"
+  ]
+ },
+ {
+  "id": "batch18-traditional-snake",
+  "title": "Traditional Coiled Snake",
+  "styles": [
+   "Traditional / Old School"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Snake"
+  ]
+ },
+ {
+  "id": "batch18-realism-lion",
+  "title": "Realistic Lion",
+  "styles": [
+   "Realism"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Lion"
+  ]
+ },
+ {
+  "id": "batch18-realism-elephant",
+  "title": "Photorealistic Elephant",
+  "styles": [
+   "Realism"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Elephant"
+  ]
+ },
+ {
+  "id": "batch18-black-grey-wolf",
+  "title": "Black & Grey Howling Wolf",
+  "styles": [
+   "Black & Grey"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Wolf"
+  ]
+ },
+ {
+  "id": "batch18-black-grey-owl",
+  "title": "Black & Grey Detailed Owl",
+  "styles": [
+   "Black & Grey"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Owl"
+  ]
+ },
+ {
+  "id": "batch18-japanese-dragon",
+  "title": "Japanese Dragon",
+  "styles": [
+   "Japanese / Irezumi"
+  ],
+  "subjects": [
+   "Mythology & Fantasy > Dragon"
+  ]
+ },
+ {
+  "id": "batch18-japanese-tiger",
+  "title": "Japanese Tiger",
+  "styles": [
+   "Japanese / Irezumi"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Tiger"
+  ]
+ },
+ {
+  "id": "batch18-traditional-rose",
+  "title": "Traditional Rose",
+  "styles": [
+   "Traditional / Old School"
+  ],
+  "subjects": [
+   "Flowers & Botanicals > Rose"
+  ]
+ },
+ {
+  "id": "batch18-dotwork-geometric",
+  "title": "Dotwork Geometric Mandala",
+  "styles": [
+   "Dotwork"
+  ],
+  "subjects": [
+   "Geometric / Abstract > Mandala"
+  ]
+ },
+ {
+  "id": "batch18-neotraditional-fox",
+  "title": "Neo-Traditional Fox",
+  "styles": [
+   "Neo-Traditional"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Fox"
+  ]
  }
 ]
