@@ -8435,12 +8435,12 @@
  },
  {
   "id": "batch7-g4-pinhao-brabo",
-  "title": "Pinh\u00e3O-Brabo",
+  "title": "PinhãO-Brabo",
   "styles": [
    "Blackwork"
   ],
   "subjects": [
-   "Flowers & Botanicals > Pinh\u00e3o-brabo"
+   "Flowers & Botanicals > Pinhão-brabo"
   ]
  },
  {
@@ -10098,6 +10098,316 @@
   ],
   "subjects": [
    "Celestial / Cosmic > Lightning"
+  ]
+ },
+ {
+  "id": "batch17-traditional-old-school-tiger",
+  "title": "Traditional Old School Tiger",
+  "styles": [
+   "Traditional / Old School"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Tiger"
+  ]
+ },
+ {
+  "id": "batch17-realism-wolf",
+  "title": "Realism Wolf",
+  "styles": [
+   "Realism"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Wolf"
+  ]
+ },
+ {
+  "id": "batch17-black-grey-rose",
+  "title": "Black & Grey Rose",
+  "styles": [
+   "Black & Grey"
+  ],
+  "subjects": [
+   "Flowers & Botanicals > Rose"
+  ]
+ },
+ {
+  "id": "batch17-watercolor-sea-turtle",
+  "title": "Watercolor Sea Turtle",
+  "styles": [
+   "Watercolor"
+  ],
+  "subjects": [
+   "Nautical / Ocean > Sea Turtle"
+  ]
+ },
+ {
+  "id": "batch17-tribal-wolf",
+  "title": "Tribal Wolf",
+  "styles": [
+   "Tribal"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Wolf"
+  ]
+ },
+ {
+  "id": "batch17-new-school-octopus",
+  "title": "New School Octopus",
+  "styles": [
+   "New School"
+  ],
+  "subjects": [
+   "Nautical / Ocean > Octopus"
+  ]
+ },
+ {
+  "id": "batch17-fine-line-lily",
+  "title": "Fine Line Lily",
+  "styles": [
+   "Fine Line"
+  ],
+  "subjects": [
+   "Flowers & Botanicals > Lily"
+  ]
+ },
+ {
+  "id": "batch17-script-lettering-flesh-eater-lettering",
+  "title": "Flesh Eater Lettering",
+  "styles": [
+   "Script / Lettering"
+  ],
+  "subjects": [
+   "Lettering / Symbols > Flesh Eater Lettering"
+  ]
+ },
+ {
+  "id": "batch17-ignorant-style-panther",
+  "title": "Ignorant Style Panther",
+  "styles": [
+   "Ignorant Style"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Panther"
+  ]
+ },
+ {
+  "id": "batch17-carved-wood-lion",
+  "title": "Carved Wood Lion",
+  "styles": [
+   "Carved Wood"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Lion"
+  ]
+ },
+ {
+  "id": "batch17-mosaic-seahorse",
+  "title": "Mosaic Seahorse",
+  "styles": [
+   "Mosaic"
+  ],
+  "subjects": [
+   "Nautical / Ocean > Seahorse"
+  ]
+ },
+ {
+  "id": "batch17-trash-polka-woman-portrait",
+  "title": "Trash Polka Woman Portrait",
+  "styles": [
+   "Trash Polka"
+  ],
+  "subjects": [
+   "Portraits / Memorial > Woman Portrait"
+  ]
+ },
+ {
+  "id": "batch17-cybersigilism-sigil",
+  "title": "Cybersigilism Sigil",
+  "styles": [
+   "Cybersigilism"
+  ],
+  "subjects": [
+   "Lettering / Symbols > Sigil"
+  ]
+ },
+ {
+  "id": "batch17-mandala-mandala",
+  "title": "Mandala",
+  "styles": [
+   "Mandala"
+  ],
+  "subjects": [
+   "Geometric / Abstract > Mandala"
+  ]
+ },
+ {
+  "id": "batch17-dotwork-jellyfish",
+  "title": "Dotwork Jellyfish",
+  "styles": [
+   "Dotwork"
+  ],
+  "subjects": [
+   "Nautical / Ocean > Jellyfish"
+  ]
+ },
+ {
+  "id": "batch17-origami-origami-bird",
+  "title": "Origami Bird",
+  "styles": [
+   "Origami"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Origami Bird"
+  ]
+ },
+ {
+  "id": "batch17-stipple-deer",
+  "title": "Stipple Deer",
+  "styles": [
+   "Stipple"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Deer"
+  ]
+ },
+ {
+  "id": "batch17-surrealism-surreal-pocket-watch",
+  "title": "Surreal Pocket Watch",
+  "styles": [
+   "Surrealism"
+  ],
+  "subjects": [
+   "Objects & Mechanical > Surreal Pocket Watch"
+  ]
+ },
+ {
+  "id": "batch17-dark-surrealism-skull",
+  "title": "Dark Surrealism Skull",
+  "styles": [
+   "Dark Surrealism"
+  ],
+  "subjects": [
+   "Skulls / Death / Gothic > Skull"
+  ]
+ },
+ {
+  "id": "batch17-dark-anime-anime-character",
+  "title": "Dark Anime Character",
+  "styles": [
+   "Dark Anime"
+  ],
+  "subjects": [
+   "Characters / People > Anime Character"
+  ]
+ },
+ {
+  "id": "batch17-absurdist-fishbowl",
+  "title": "Absurdist Fishbowl",
+  "styles": [
+   "Absurdist"
+  ],
+  "subjects": [
+   "Surreal / Bizarre > Fishbowl"
+  ]
+ },
+ {
+  "id": "batch17-funny-ironic-duck",
+  "title": "Funny Duck",
+  "styles": [
+   "Funny / Ironic"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Duck"
+  ]
+ },
+ {
+  "id": "batch17-graffiti-graffiti-skull",
+  "title": "Graffiti Skull",
+  "styles": [
+   "Graffiti"
+  ],
+  "subjects": [
+   "Lettering / Symbols > Graffiti Skull"
+  ]
+ },
+ {
+  "id": "batch17-postmodern-classical-bust",
+  "title": "Postmodern Classical Bust",
+  "styles": [
+   "Postmodern"
+  ],
+  "subjects": [
+   "Portraits / Memorial > Classical Bust"
+  ]
+ },
+ {
+  "id": "batch17-pop-culture-game-controller",
+  "title": "Game Controller",
+  "styles": [
+   "Pop Culture"
+  ],
+  "subjects": [
+   "Objects & Mechanical > Game Controller"
+  ]
+ },
+ {
+  "id": "batch17-chicano-woman-portrait",
+  "title": "Chicano Woman Portrait",
+  "styles": [
+   "Chicano"
+  ],
+  "subjects": [
+   "Portraits / Memorial > Woman Portrait"
+  ]
+ },
+ {
+  "id": "batch17-biomechanical-biomechanical-heart",
+  "title": "Biomechanical Heart",
+  "styles": [
+   "Biomechanical"
+  ],
+  "subjects": [
+   "Objects & Mechanical > Biomechanical Heart"
+  ]
+ },
+ {
+  "id": "batch17-ornamental-lion",
+  "title": "Ornamental Lion",
+  "styles": [
+   "Ornamental"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Lion"
+  ]
+ },
+ {
+  "id": "batch17-anime-anime-woman",
+  "title": "Anime Woman",
+  "styles": [
+   "Anime"
+  ],
+  "subjects": [
+   "Characters / People > Anime Woman"
+  ]
+ },
+ {
+  "id": "batch17-sketch-compass",
+  "title": "Sketch Compass",
+  "styles": [
+   "Sketch"
+  ],
+  "subjects": [
+   "Travel > Compass"
+  ]
+ },
+ {
+  "id": "batch17-stick-poke-sun",
+  "title": "Stick & Poke Sun",
+  "styles": [
+   "Stick & Poke"
+  ],
+  "subjects": [
+   "Celestial / Cosmic > Sun"
   ]
  }
 ]
