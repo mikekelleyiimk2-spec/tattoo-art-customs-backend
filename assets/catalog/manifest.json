@@ -10009,5 +10009,95 @@
   "subjects": [
    "Vehicles > Motorcycles"
   ]
+ },
+ {
+  "id": "batch16-sketch-raven",
+  "title": "Sketch Raven",
+  "styles": [
+   "Sketch"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Birds"
+  ]
+ },
+ {
+  "id": "batch16-psychedelic-frog",
+  "title": "Psychedelic Frog",
+  "styles": [
+   "Psychedelic"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Amphibians"
+  ]
+ },
+ {
+  "id": "batch16-psychedelic-mushrooms",
+  "title": "Psychedelic Mushrooms",
+  "styles": [
+   "Psychedelic"
+  ],
+  "subjects": [
+   "Mushrooms / Discworld > Mushrooms"
+  ]
+ },
+ {
+  "id": "batch16-psychedelic-eye",
+  "title": "Psychedelic All-Seeing Eye",
+  "styles": [
+   "Psychedelic"
+  ],
+  "subjects": [
+   "Religious / Spiritual / Occult > All-Seeing Eye"
+  ]
+ },
+ {
+  "id": "batch16-psychedelic-sun",
+  "title": "Psychedelic Sun",
+  "styles": [
+   "Psychedelic"
+  ],
+  "subjects": [
+   "Celestial / Cosmic > Sun"
+  ]
+ },
+ {
+  "id": "batch16-stickpoke-moon",
+  "title": "Stick & Poke Crescent Moon",
+  "styles": [
+   "Stick & Poke"
+  ],
+  "subjects": [
+   "Celestial / Cosmic > Moon"
+  ]
+ },
+ {
+  "id": "batch16-stickpoke-snake",
+  "title": "Stick & Poke Snake",
+  "styles": [
+   "Stick & Poke"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Reptiles"
+  ]
+ },
+ {
+  "id": "batch16-stickpoke-heart",
+  "title": "Stick & Poke Heart",
+  "styles": [
+   "Stick & Poke"
+  ],
+  "subjects": [
+   "Lettering / Symbols > Hearts"
+  ]
+ },
+ {
+  "id": "batch16-stickpoke-bolt",
+  "title": "Stick & Poke Lightning Bolt",
+  "styles": [
+   "Stick & Poke"
+  ],
+  "subjects": [
+   "Celestial / Cosmic > Lightning"
+  ]
  }
 ]
