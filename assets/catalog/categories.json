@@ -1,6 +1,6 @@
 {
   "updated": "2026-10-05",
-  "total": 76,
+  "total": 75,
   "categories": [
     {
       "name": "Aliens / UFOs",
@@ -154,12 +154,7 @@
     },
     {
       "name": "Floral & Botanical",
-      "desc": "",
-      "added": "existing"
-    },
-    {
-      "name": "Flowers & Botanicals",
-      "desc": "",
+      "desc": "Flowers, plants, botanical art (merged with Flowers & Botanicals 2026-10-05)",
       "added": "existing"
     },
     {
