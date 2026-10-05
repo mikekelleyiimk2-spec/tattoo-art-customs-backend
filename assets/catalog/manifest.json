@@ -9919,5 +9919,95 @@
   "subjects": [
    "Americana / Traditional > Dagger"
   ]
+ },
+ {
+  "id": "batch16-ornamental-stag",
+  "title": "Ornamental Stag",
+  "styles": [
+   "Ornamental"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Deer"
+  ]
+ },
+ {
+  "id": "batch16-ornamental-seahorse",
+  "title": "Ornamental Seahorse",
+  "styles": [
+   "Ornamental"
+  ],
+  "subjects": [
+   "Nautical / Ocean > Seahorse"
+  ]
+ },
+ {
+  "id": "batch16-ornamental-koi",
+  "title": "Ornamental Koi",
+  "styles": [
+   "Ornamental"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Fish"
+  ]
+ },
+ {
+  "id": "batch16-illustrative-lighthouse",
+  "title": "Illustrative Lighthouse",
+  "styles": [
+   "Illustrative"
+  ],
+  "subjects": [
+   "Nautical / Ocean > Lighthouse"
+  ]
+ },
+ {
+  "id": "batch16-illustrative-balloon",
+  "title": "Illustrative Hot Air Balloon",
+  "styles": [
+   "Illustrative"
+  ],
+  "subjects": [
+   "Objects & Mechanical > Hot Air Balloon"
+  ]
+ },
+ {
+  "id": "batch16-illustrative-ship",
+  "title": "Illustrative Sailing Ship",
+  "styles": [
+   "Illustrative"
+  ],
+  "subjects": [
+   "Nautical / Ocean > Ships"
+  ]
+ },
+ {
+  "id": "batch16-sketch-lion",
+  "title": "Sketch Lion",
+  "styles": [
+   "Sketch"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Big Cats"
+  ]
+ },
+ {
+  "id": "batch16-sketch-ballerina",
+  "title": "Sketch Ballerina",
+  "styles": [
+   "Sketch"
+  ],
+  "subjects": [
+   "Characters / People > Dancers"
+  ]
+ },
+ {
+  "id": "batch16-sketch-motorcycle",
+  "title": "Sketch Motorcycle",
+  "styles": [
+   "Sketch"
+  ],
+  "subjects": [
+   "Vehicles > Motorcycles"
+  ]
  }
 ]
