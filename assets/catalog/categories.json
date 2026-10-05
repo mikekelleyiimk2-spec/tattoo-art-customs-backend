@@ -1,6 +1,6 @@
 {
   "updated": "2026-10-05",
-  "total": 75,
+  "total": 100,
   "categories": [
     {
       "name": "Aliens / UFOs",
@@ -48,6 +48,11 @@
       "added": "2026-10-05"
     },
     {
+      "name": "Astronomy Tools",
+      "desc": "Telescopes, orreries, star charts, sextants",
+      "added": "2026-10-05"
+    },
+    {
       "name": "Biomechanical",
       "desc": "H.R. Giger-style flesh-machine fusion",
       "added": "2026-10-05"
@@ -55,6 +60,16 @@
     {
       "name": "Birds",
       "desc": "Owls, ravens, eagles, hummingbirds, songbirds \u2014 dedicated bird category",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Books & Literature",
+      "desc": "Open books, libraries, literary art, bookmarks",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Bridges",
+      "desc": "Covered bridges, golden gate, rope bridges, arches",
       "added": "2026-10-05"
     },
     {
@@ -68,6 +83,16 @@
       "added": "existing"
     },
     {
+      "name": "Castles & Fortresses",
+      "desc": "Castles, fortresses, keeps, battlements",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Caves & Caverns",
+      "desc": "Caves, caverns, underground crystals",
+      "added": "2026-10-05"
+    },
+    {
       "name": "Celestial / Cosmic",
       "desc": "",
       "added": "existing"
@@ -78,6 +103,16 @@
       "added": "existing"
     },
     {
+      "name": "Chess & Games",
+      "desc": "Chess pieces, dice, playing cards, board games",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Churches & Temples",
+      "desc": "Sacred architecture, cathedrals, shrines",
+      "added": "2026-10-05"
+    },
+    {
       "name": "Circus / Carnival",
       "desc": "",
       "added": "existing"
@@ -85,6 +120,11 @@
     {
       "name": "Clowns & Jesters",
       "desc": "Creepy clowns, circus jesters, harlequins",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Coral Reefs",
+      "desc": "Coral reef scenes, reef fish, anemones",
       "added": "2026-10-05"
     },
     {
@@ -118,6 +158,11 @@
       "added": "existing"
     },
     {
+      "name": "Dolls & Toys",
+      "desc": "Voodoo dolls, teddy bears, matryoshka, action figures",
+      "added": "2026-10-05"
+    },
+    {
       "name": "Dreams & Sleep",
       "desc": "Dreamcatchers, sleeping figures, clouds, night skies",
       "added": "2026-10-05"
@@ -130,6 +175,11 @@
     {
       "name": "Fairy Tale & Storybook",
       "desc": "Castles, fairy tales, storybook scenes, magic",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Farmland & Barns",
+      "desc": "Barns, silos, farmhouses, rural scenes",
       "added": "2026-10-05"
     },
     {
@@ -163,6 +213,11 @@
       "added": "existing"
     },
     {
+      "name": "Forests",
+      "desc": "Dark forests, redwoods, woodland scenes",
+      "added": "2026-10-05"
+    },
+    {
       "name": "Gambling / Luck",
       "desc": "",
       "added": "existing"
@@ -173,13 +228,33 @@
       "added": "existing"
     },
     {
+      "name": "Gardens & Mazes",
+      "desc": "Hedge mazes, Japanese gardens, formal gardens",
+      "added": "2026-10-05"
+    },
+    {
       "name": "Geometric / Abstract",
       "desc": "",
       "added": "existing"
     },
     {
+      "name": "Glaciers & Icebergs",
+      "desc": "Glaciers, icebergs, ice caves",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Graveyards & Tombs",
+      "desc": "Cemeteries, tombstones, mausoleums, crypts",
+      "added": "2026-10-05"
+    },
+    {
       "name": "Hands & Gestures",
       "desc": "Praying hands, hamsa, rock-on, peace signs, mudras",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Hearts & Anatomy",
+      "desc": "Anatomical hearts, organs, medical illustration art",
       "added": "2026-10-05"
     },
     {
@@ -208,9 +283,19 @@
       "added": "existing"
     },
     {
+      "name": "Lighthouses & Beacons",
+      "desc": "Lighthouses, beacons, lightships",
+      "added": "2026-10-05"
+    },
+    {
       "name": "Love / Hearts / Couples",
       "desc": "",
       "added": "existing"
+    },
+    {
+      "name": "Masks",
+      "desc": "Venetian masks, gas masks, hockey masks, masquerade",
+      "added": "2026-10-05"
     },
     {
       "name": "Mermaids & Sirens",
@@ -278,6 +363,11 @@
       "added": "2026-10-05"
     },
     {
+      "name": "Portals & Doors",
+      "desc": "Portals, doorways, windows to other worlds",
+      "added": "2026-10-05"
+    },
+    {
       "name": "Portraits / Memorial",
       "desc": "",
       "added": "existing"
@@ -308,6 +398,11 @@
       "added": "existing"
     },
     {
+      "name": "Skeletons & Bones",
+      "desc": "Full skeletons, ribcages, bones, x-ray skeletons",
+      "added": "2026-10-05"
+    },
+    {
       "name": "Skulls / Death / Gothic",
       "desc": "",
       "added": "existing"
@@ -328,9 +423,19 @@
       "added": "existing"
     },
     {
+      "name": "Swamps & Bayous",
+      "desc": "Cypress swamps, gators, Spanish moss, bayou scenes",
+      "added": "2026-10-05"
+    },
+    {
       "name": "Tattoo Styles",
       "desc": "",
       "added": "existing"
+    },
+    {
+      "name": "Tea & Coffee",
+      "desc": "Teapots, coffee cups, cafe culture, matcha",
+      "added": "2026-10-05"
     },
     {
       "name": "Technology & Cyber",
@@ -348,13 +453,33 @@
       "added": "existing"
     },
     {
+      "name": "Treehouses & Cabins",
+      "desc": "Treehouses, cozy cabins, hideouts",
+      "added": "2026-10-05"
+    },
+    {
       "name": "Vehicles",
       "desc": "",
       "added": "existing"
     },
     {
+      "name": "Vineyards & Orchards",
+      "desc": "Grapevines, apple orchards, harvest scenes",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Volcanoes & Lava",
+      "desc": "Volcanoes, lava flows, eruptions",
+      "added": "2026-10-05"
+    },
+    {
       "name": "Warriors",
       "desc": "Samurai, knights, vikings, gladiators, soldiers",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Waterfalls & Rivers",
+      "desc": "Waterfalls, rivers, rapids, streams",
       "added": "2026-10-05"
     },
     {

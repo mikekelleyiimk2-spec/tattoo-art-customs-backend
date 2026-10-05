@@ -24,7 +24,9 @@ const DESIGN_STYLES = [
   'blackwork', 'traditional', 'japanese', 'realism', 'fine-line', 'floral',
   'animals', 'geometric', 'lettering', 'tribal', 'chicano', 'dotwork',
   'watercolor', 'new-school', 'minimalist', 'pixelated', 'circuit-bloom',
-  'ascii-skin', 'kintsugi', 'topographic', 'smoke-form', 'other',
+  'ascii-skin', 'kintsugi', 'topographic', 'smoke-form', 'thermal',
+  'blueprint', 'cross-stitch', 'stained-shard', 'bioluminescent',
+  'mycelium', 'aurora-veil', 'frost-fractal', 'other',
 ];
 
 const portfolioStorage = multer.diskStorage({
