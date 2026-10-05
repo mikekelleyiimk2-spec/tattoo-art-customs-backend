@@ -22,6 +22,8 @@ router.get('/app-links', (req, res) => {
     ok: true,
     playStoreUrl: config.playStoreUrl || '',
     playStoreProUrl: config.playStoreProUrl || '',
+    // Alias the app's Go-Pro upsell expects (resolveProUrl in prolink.js).
+    proStoreUrl: config.playStoreProUrl || '',
     appStoreUrl: config.appStoreUrl || '',
     appsPage: `${config.baseUrl}/apps`,
   });
@@ -85,6 +87,26 @@ router.get('/me', async (req, res) => {
 // without typing their password into the WebView.
 router.get('/bootstrap', async (req, res) => {
   const token = String(req.query.api_token || '').slice(0, 128);
+  // JSON variant for the app's Go-Pro upsell (prolink.js resolveProUrl):
+  // the HTML redirect below is a WebView session bootstrap, not a JSON
+  // payload, so ?format=json exposes the store URLs as JSON instead.
+  // Public info (same as /api/app-links); token is optional here.
+  if (req.query.format === 'json') {
+    const config = require('../config');
+    const payload = {
+      ok: true,
+      playStoreUrl: config.playStoreUrl || '',
+      playStoreProUrl: config.playStoreProUrl || '',
+      proStoreUrl: config.playStoreProUrl || '',
+      appStoreUrl: config.appStoreUrl || '',
+      appsPage: `${config.baseUrl}/apps`,
+    };
+    if (token) {
+      const user = await db.get('SELECT id FROM users WHERE api_token = ?', [token]);
+      if (user) payload.user_id = user.id;
+    }
+    return res.json(payload);
+  }
   const next = String(req.query.next || '/account').slice(0, 200);
   if (!token) return res.status(401).render('error', { title: 'Not linked', message: 'Link your website account in the app first.' });
   const user = await db.get('SELECT id FROM users WHERE api_token = ?', [token]);

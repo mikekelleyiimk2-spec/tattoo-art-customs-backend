@@ -394,12 +394,16 @@ router.get('/:orderId', requireLogin, async (req, res) => {
   }
   const design = order.design_id ? await db.get('SELECT title FROM designs WHERE id = ?', [order.design_id]) : null;
   const downloads = await db.all('SELECT * FROM downloads WHERE order_id = ? ORDER BY created_at DESC', [order.id]);
-  const transfers = await db.all('SELECT * FROM art_transfers WHERE order_id = ? ORDER BY created_at DESC', [order.id]);
+  // NOTE (2026-10-05): the customer<->shop art-transfer pipeline is not built
+  // yet — no art_transfers table exists, and the detail view does not use a
+  // transfers variable. The query that was here crashed this page with
+  // SQLITE_ERROR. When the pipeline is implemented, re-add the query with its
+  // migration and wire `transfers` into the view.
   const pricing = require('../lib/pricing');
   const depositTotal = order.order_type === 'custom' && order.deposit_cents != null
     ? Number(order.deposit_cents) + Number(order.fee_cents || 0) : null;
   const fullTotal = order.order_type === 'custom' ? pricing.withFeeCents(Number(order.amount_cents)) : null;
-  res.render('orders/detail', { title: `Order ${order.id.slice(0, 8)} — Tattoo Art Customs`, order, design, downloads, transfers, depositTotal, fullTotal });
+  res.render('orders/detail', { title: `Order ${order.id.slice(0, 8)} — Tattoo Art Customs`, order, design, downloads, depositTotal, fullTotal });
 });
 
 // Cancel your own pending, unpaid order (e.g. an accidental duplicate).
