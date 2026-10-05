@@ -34,6 +34,12 @@ router.get('/', async (req, res) => {
   const me = await db.get(
     'SELECT is_founding_shop, founding_shop_ends_at FROM users WHERE id = ?', [req.user.id]);
   const dualBonus = await dualSubBonusActive(req.user.id);
+  // Tap-to-pay standalone billing status card.
+  const { getTapSub, tapComped, tapActive, TIERS } = require('../lib/tapBilling');
+  const tapSub = await getTapSub(req.user.id);
+  const tapIsComped = await tapComped(req.user.id);
+  const tapIsActive = await tapActive(req.user.id);
+  const tapTier = tapSub ? TIERS[tapSub.tier] : null;
   // Referral volume tier: current rate + progress to the next tier.
   const { shopReferralTier } = require('./shopIncentives');
   const tier = await shopReferralTier(req.user.id);
@@ -45,6 +51,7 @@ router.get('/', async (req, res) => {
     foundingEndsAt: me && me.founding_shop_ends_at,
     dualBonus,
     tier,
+    tapSub, tapIsComped, tapIsActive, tapTier, tapTiers: TIERS,
     ...payout,
   });
 });

@@ -560,6 +560,7 @@
     "studio": "Design Studio",
     "toggle_menu": "Abrir/cerrar menú",
     "wallet": "Wallet",
+    "tap_to_pay": "Tap to Pay",
     "wishlist": "Favoritos"
   },
   "orders": {
@@ -669,6 +670,25 @@
     "th_to": "A",
     "th_you_get": "Recibes",
     "title": "Retiro"
+  },
+  "tappay": {
+    "title": "Acepta tap-to-pay en tu estudio",
+    "intro": "Sus clientes acercan su tarjeta o su teléfono al suyo. Sin lector de tarjetas, sin hardware adicional — solo su teléfono.",
+    "card1_title": "Cómo funciona",
+    "card1_text": "Active PayPal Tap to Pay en su teléfono — gratis, unos cinco minutos. PayPal se queda con el 2,29 % + 9¢ por toque; el resto es suyo.",
+    "card2_title": "Una tarifa mensual fija",
+    "card2_text": "Solo $9.99/mes por una silla, Studio $19.99/mes por 2–4 sillas, Shop $29.99/mes por 5+ sillas. Un servicio independiente, facturado por separado de su suscripción de tienda — mantenga la factura al día para conservar el servicio. Opcional: agregue medio punto porcentual a la cuenta del cliente en la caja — 50¢ en un tatuaje de $100 — para cubrir parte o toda la tarifa.",
+    "card3_title": "Próximamente",
+    "card3_text": "Pagos junto a la silla integrados en las herramientas de la tienda — depósitos, pagos finales y propinas fluyendo por su calendario de citas. Los miembros de tap-to-pay acceden primero.",
+    "cta_listed": "Activar la facturación tap-to-pay",
+    "cta_earn": "Cómo ganan los estudios",
+    "badge_active": "Activo",
+    "badge_comped": "Cortesía",
+    "badge_comped_note": "— la facturación tap-to-pay corre por nuestra cuenta.",
+    "dash_blurb": "Acepte tap-to-pay en su tienda — elija un plan para activar la facturación mensual.",
+    "dash_lapsed": "— facturación vencida. Reactive para conservar el servicio.",
+    "activate_cta": "Activar",
+    "cancel_cta": "Cancelar facturación tap"
   },
   "fav": {
     "title": "Mis favoritos",

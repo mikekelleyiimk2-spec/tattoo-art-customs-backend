@@ -560,6 +560,7 @@
     "studio": "Design-Studio",
     "toggle_menu": "Menü umschalten",
     "wallet": "Wallet",
+    "tap_to_pay": "Tap to Pay",
     "wishlist": "Wunschliste"
   },
   "orders": {
@@ -669,6 +670,25 @@
     "th_to": "An",
     "th_you_get": "Du erhältst",
     "title": "Auszahlen"
+  },
+  "tappay": {
+    "title": "Nutze Tap-to-Pay in deinem Studio",
+    "intro": "Ihre Kunden tippen ihre Karte oder ihr Handy an Ihres. Kein Kartenleser, keine zusätzliche Hardware — nur Ihr Handy.",
+    "card1_title": "So funktioniert's",
+    "card1_text": "Aktivieren Sie PayPal Tap to Pay auf Ihrem Handy — kostenlos, ca. fünf Minuten. PayPal nimmt 2,29 % + 9¢ pro Tap; der Rest gehört Ihnen.",
+    "card2_title": "Eine feste Monatsgebühr",
+    "card2_text": "Solo 9,99 $/Monat für einen Stuhl, Studio 19,99 $/Monat für 2–4 Stühle, Shop 29,99 $/Monat für 5+ Stühle. Ein eigenständiger Service, separat vom Shop-Abo abgerechnet — halten Sie die Rechnung aktuell, um den Service zu behalten. Optional: Schlagen Sie an der Kasse ein halbes Prozent auf die Kundenrechnung auf — 50¢ bei einem 100-$-Tattoo — um die Gebühr ganz oder teilweise zu decken.",
+    "card3_title": "Demnächst",
+    "card3_text": "Zahlungen direkt am Stuhl, eingebaut ins Shop-Toolkit — Anzahlungen, Restzahlungen und Trinkgelder fließen durch Ihren Buchungskalender. Tap-to-Pay-Mitglieder erhalten zuerst Zugang.",
+    "cta_listed": "Tap-to-Pay-Abrechnung aktivieren",
+    "cta_earn": "So verdienen Studios",
+    "badge_active": "Aktiv",
+    "badge_comped": "Gratis",
+    "badge_comped_note": "— die Tap-to-Pay-Abrechnung geht aufs Haus.",
+    "dash_blurb": "Akzeptieren Sie Tap-to-Pay in Ihrem Shop — wählen Sie einen Tarif für die monatliche Abrechnung.",
+    "dash_lapsed": "— Abrechnung abgelaufen. Reaktivieren Sie, um den Service zu behalten.",
+    "activate_cta": "Aktivieren",
+    "cancel_cta": "Tap-Abrechnung kündigen"
   },
   "fav": {
     "title": "Meine Wunschliste",

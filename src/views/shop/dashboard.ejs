@@ -10,6 +10,33 @@
     <a class="btn secondary" href="/toolkit/noshow">No-shows</a>
     <a class="btn secondary" href="/toolkit/plans">Payment plans</a>
   </p>
+</section>
+
+<section class="card">
+  <h2><%= t('nav.tap_to_pay') %></h2>
+  <% if (typeof tapIsComped !== 'undefined' && tapIsComped) { %>
+    <p><span class="badge ok"><%= t('tappay.badge_comped') %></span>
+      <span class="muted"><%= t('tappay.badge_comped_note') %></span></p>
+  <% } else if (typeof tapSub !== 'undefined' && tapSub && tapIsActive && tapTier) { %>
+    <p><span class="badge ok"><%= t('tappay.badge_active') %></span>
+      <strong><%= tapTier.label %></strong> — $<%= (tapTier.priceCents / 100).toFixed(2) %>/mo · <%= tapTier.chairs %></p>
+    <form method="post" action="/tap/cancel" style="display:inline">
+      <button class="btn secondary" type="submit"><%= t('tappay.cancel_cta') %></button>
+    </form>
+  <% } else if (typeof tapSub !== 'undefined' && tapSub) { %>
+    <p><span class="badge warn"><%= tapSub.status %></span>
+      <span class="muted"><%= t('tappay.dash_lapsed') %></span></p>
+    <p><a class="btn" href="/tap-to-pay"><%= t('tappay.activate_cta') %></a></p>
+  <% } else { %>
+    <p class="muted"><%= t('tappay.dash_blurb') %></p>
+    <p>
+      <% for (const key of ['solo', 'studio', 'shop']) { const tr = tapTiers[key]; %>
+        <form method="post" action="/tap/subscribe/<%= key %>" style="display:inline;margin-right:.5rem">
+          <button class="btn secondary" type="submit"><%= t('tappay.activate_cta') %> — <%= tr.label %> $<%= (tr.priceCents / 100).toFixed(2) %>/mo</button>
+        </form>
+      <% } %>
+    </p>
+  <% } %>
   <p class="muted">Booking calendar, deposits, receipts, reminders, waitlist, and gift cards live under <a href="/bookings/manage">Manage bookings</a>.</p>
 </section>
 <% if (isFoundingShop) { %>

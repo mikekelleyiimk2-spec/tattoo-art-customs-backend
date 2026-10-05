@@ -90,6 +90,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/terms`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/contact`, changefreq: 'monthly', priority: '0.4' },
+    { loc: `${base}/tap-to-pay`, changefreq: 'monthly', priority: '0.6' },
   ];
   try {
     const designs = await db.all(
@@ -345,6 +346,11 @@ router.get('/apps', (req, res) => res.render('site/apps', {
   metaDescription: 'Mobile apps built by Usefulappz — Tattoo Art Customs for Android and iPhone.',
   playStoreUrl: res.locals.playStoreUrl || null,
   appStoreUrl: res.locals.appStoreUrl || null,
+}));
+
+router.get('/tap-to-pay', (req, res) => res.render('site/tap-to-pay', {
+  title: 'Tap-to-Pay for Tattoo Shops — Tattoo Art Customs',
+  metaDescription: 'Take in-person tap-to-pay in your tattoo shop with PayPal. No reader, no monthly fee until you sell — fair 1% split with Tattoo Art Customs.',
 }));
 
 // Shared email validator (single-backslash escapes). Used by /contact and /app-notify.

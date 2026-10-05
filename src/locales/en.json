@@ -560,6 +560,7 @@
     "studio": "Design Studio",
     "toggle_menu": "Toggle menu",
     "wallet": "Wallet",
+    "tap_to_pay": "Tap to Pay",
     "wishlist": "Wishlist"
   },
   "orders": {
@@ -669,6 +670,25 @@
     "th_to": "To",
     "th_you_get": "You get",
     "title": "Cashout"
+  },
+  "tappay": {
+    "title": "Take tap-to-pay in your shop",
+    "intro": "Your customers tap their card or phone on yours. No card reader, no extra hardware — just your phone.",
+    "card1_title": "How it works",
+    "card1_text": "Turn on PayPal Tap to Pay on your phone — free, about five minutes. PayPal takes 2.29% + 9¢ per tap; the rest is yours.",
+    "card2_title": "One flat monthly fee",
+    "card2_text": "Solo $9.99/mo for one chair, Studio $19.99/mo for 2–4 chairs, Shop $29.99/mo for 5+ chairs. A standalone service, billed separately from your shop subscription — keep the bill current to keep the service. Optional: add half a percent to the customer's bill at the register — 50¢ on a $100 tattoo — to cover some or all of the fee.",
+    "card3_title": "Coming next",
+    "card3_text": "Chair-side payments built right into the shop toolkit — deposits, final payments, and tips flowing through your booking calendar. Tap-to-pay members get first access.",
+    "cta_listed": "Activate tap-to-pay billing",
+    "cta_earn": "How shops earn",
+    "badge_active": "Active",
+    "badge_comped": "Comped",
+    "badge_comped_note": "— tap-to-pay billing is on the house.",
+    "dash_blurb": "Take tap-to-pay in your shop — pick a tier to activate monthly billing.",
+    "dash_lapsed": "— billing lapsed. Reactivate to keep the service.",
+    "activate_cta": "Activate",
+    "cancel_cta": "Cancel tap billing"
   },
   "fav": {
     "title": "My Wishlist",

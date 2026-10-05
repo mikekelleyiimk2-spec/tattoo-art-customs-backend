@@ -560,6 +560,7 @@
     "studio": "Design Studio",
     "toggle_menu": "Abrir/fechar menu",
     "wallet": "Carteira",
+    "tap_to_pay": "Tap to Pay",
     "wishlist": "Lista de desejos"
   },
   "orders": {
@@ -669,6 +670,25 @@
     "th_to": "Para",
     "th_you_get": "Você recebe",
     "title": "Saque"
+  },
+  "tappay": {
+    "title": "Aceite tap-to-pay no seu estúdio",
+    "intro": "Seus clientes aproximam o cartão ou o celular do seu. Sem maquininha, sem hardware extra — só o seu celular.",
+    "card1_title": "Como funciona",
+    "card1_text": "Ative o Tap to Pay do PayPal no seu celular — grátis, uns cinco minutos. O PayPal fica com 2,29% + 9¢ por toque; o resto é seu.",
+    "card2_title": "Uma mensalidade fixa",
+    "card2_text": "Solo $9,99/mês para uma cadeira, Studio $19,99/mês para 2–4 cadeiras, Shop $29,99/mês para 5+ cadeiras. Um serviço independente, cobrado separadamente da sua assinatura de loja — mantenha a fatura em dia para manter o serviço. Opcional: adicione meio por cento à conta do cliente no caixa — 50¢ numa tatuagem de $100 — para cobrir parte ou toda a taxa.",
+    "card3_title": "Em breve",
+    "card3_text": "Pagamentos na cadeira integrados às ferramentas da loja — entradas, pagamentos finais e gorjetas direto pela sua agenda. Membros tap-to-pay têm acesso primeiro.",
+    "cta_listed": "Ativar cobrança tap-to-pay",
+    "cta_earn": "Como os estúdios ganham",
+    "badge_active": "Ativo",
+    "badge_comped": "Cortesia",
+    "badge_comped_note": "— a cobrança tap-to-pay é por nossa conta.",
+    "dash_blurb": "Aceite tap-to-pay na sua loja — escolha um plano para ativar a cobrança mensal.",
+    "dash_lapsed": "— cobrança vencida. Reative para manter o serviço.",
+    "activate_cta": "Ativar",
+    "cancel_cta": "Cancelar cobrança tap"
   },
   "fav": {
     "title": "Minha lista de desejos",

@@ -560,6 +560,7 @@
     "studio": "Designstudio",
     "toggle_menu": "Växla meny",
     "wallet": "Wallet",
+    "tap_to_pay": "Tap to Pay",
     "wishlist": "Önskelista"
   },
   "orders": {
@@ -669,6 +670,25 @@
     "th_to": "Till",
     "th_you_get": "Du får",
     "title": "Ta ut"
+  },
+  "tappay": {
+    "title": "Ta emot tap-to-pay i din studio",
+    "intro": "Dina kunder blippar sitt kort eller sin telefon mot din. Ingen kortläsare, ingen extra hårdvara — bara din telefon.",
+    "card1_title": "Så fungerar det",
+    "card1_text": "Slå på PayPal Tap to Pay på din telefon — gratis, cirka fem minuter. PayPal tar 2,29 % + 9¢ per blippning; resten är din.",
+    "card2_title": "En fast månadsavgift",
+    "card2_text": "Solo $9,99/mån för en stol, Studio $19,99/mån för 2–4 stolar, Shop $29,99/mån för 5+ stolar. En fristående tjänst som faktureras separat från din butiksprenumeration — håll fakturan betald för att behålla tjänsten. Valfritt: lägg på en halv procent på kundens nota i kassan — 50¢ på en $100-tatuering — för att täcka en del av eller hela avgiften.",
+    "card3_title": "Kommer snart",
+    "card3_text": "Betalningar vid stolen, inbyggda i butikens verktyg — depositioner, slutbetalningar och dricks via din bokningskalender. Tap-to-pay-medlemmar får tillgång först.",
+    "cta_listed": "Aktivera tap-to-pay-fakturering",
+    "cta_earn": "Så tjänar studios",
+    "badge_active": "Aktiv",
+    "badge_comped": "Gratis",
+    "badge_comped_note": "— tap-to-pay-faktureringen bjuder vi på.",
+    "dash_blurb": "Ta emot tap-to-pay i din butik — välj en nivå för att aktivera månadsfakturering.",
+    "dash_lapsed": "— faktureringen har förfallit. Återaktivera för att behålla tjänsten.",
+    "activate_cta": "Aktivera",
+    "cancel_cta": "Avsluta tap-fakturering"
   },
   "fav": {
     "title": "Min önskelista",

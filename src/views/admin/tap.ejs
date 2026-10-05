@@ -1,0 +1,29 @@
+<h1>Tap-to-Pay Billing</h1>
+<p><a href="/admin">← Dashboard</a></p>
+
+<section class="card">
+  <h2>Monthly recurring revenue</h2>
+  <p><strong>$<%= (mrrCents / 100).toFixed(2) %>/mo</strong> from <strong><%= activeCount %></strong> paying shop(s)
+    (<%= compedCount %> comped).</p>
+  <p class="muted">Standalone tap-to-pay subscriptions — billed separately from shop memberships. Bill current = service active.</p>
+</section>
+
+<section class="card">
+  <h2>Subscribers</h2>
+  <% if (!subs.length) { %><p class="muted">No tap subscriptions yet.</p><% } else { %>
+  <table>
+    <thead><tr><th>Shop</th><th>Email</th><th>Tier</th><th>Status</th><th>Period ends</th></tr></thead>
+    <tbody>
+      <% for (const s of subs) { %>
+        <tr>
+          <td><%= s.display_name || '—' %></td>
+          <td><%= s.email || '—' %></td>
+          <td><%= s.tier %><%= s.comped ? ' (comped)' : '' %></td>
+          <td><span class="badge <%= s.status === 'active' ? 'ok' : 'warn' %>"><%= s.status %></span></td>
+          <td><%= s.current_period_end ? new Date(s.current_period_end).toLocaleDateString() : '—' %></td>
+        </tr>
+      <% } %>
+    </tbody>
+  </table>
+  <% } %>
+</section>

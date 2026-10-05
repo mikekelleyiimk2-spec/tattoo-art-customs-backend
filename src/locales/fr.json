@@ -560,6 +560,7 @@
     "studio": "Design Studio",
     "toggle_menu": "Ouvrir/fermer le menu",
     "wallet": "Wallet",
+    "tap_to_pay": "Tap to Pay",
     "wishlist": "Favoris"
   },
   "orders": {
@@ -669,6 +670,25 @@
     "th_to": "Vers",
     "th_you_get": "Tu reçois",
     "title": "Retrait"
+  },
+  "tappay": {
+    "title": "Acceptez le tap-to-pay dans votre studio",
+    "intro": "Vos clients posent leur carte ou leur téléphone sur le vôtre. Pas de lecteur de carte, pas de matériel supplémentaire — juste votre téléphone.",
+    "card1_title": "Comment ça marche",
+    "card1_text": "Activez PayPal Tap to Pay sur votre téléphone — gratuit, environ cinq minutes. PayPal prend 2,29 % + 9¢ par paiement ; le reste est à vous.",
+    "card2_title": "Un forfait mensuel unique",
+    "card2_text": "Solo 9,99 $/mois pour une chaise, Studio 19,99 $/mois pour 2 à 4 chaises, Shop 29,99 $/mois pour 5 chaises et plus. Un service autonome, facturé séparément de votre abonnement boutique — gardez la facture à jour pour conserver le service. En option : ajoutez un demi-pourcent à l’addition du client à la caisse — 50¢ sur un tatouage à 100 $ — pour couvrir une partie ou la totalité des frais.",
+    "card3_title": "Bientôt",
+    "card3_text": "Des paiements au fauteuil intégrés aux outils de la boutique — acomptes, paiements finaux et pourboires via votre calendrier de rendez-vous. Les membres tap-to-pay y accèdent en premier.",
+    "cta_listed": "Activer la facturation tap-to-pay",
+    "cta_earn": "Comment les studios gagnent",
+    "badge_active": "Actif",
+    "badge_comped": "Offert",
+    "badge_comped_note": "— la facturation tap-to-pay est offerte.",
+    "dash_blurb": "Acceptez le tap-to-pay dans votre boutique — choisissez une formule pour activer la facturation mensuelle.",
+    "dash_lapsed": "— facturation expirée. Réactivez pour conserver le service.",
+    "activate_cta": "Activer",
+    "cancel_cta": "Résilier la facturation tap"
   },
   "fav": {
     "title": "Mes favoris",

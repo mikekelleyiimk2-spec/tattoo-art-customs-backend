@@ -61,6 +61,12 @@ const config = {
       // When missing, founding checkout falls back to the regular shop plan
       // at full price rather than failing.
       founding_shop: process.env.PAYPAL_PLAN_FOUNDING_SHOP || '',
+      // Tap-to-pay standalone tiers (owner-approved 2026-10-04): monthly
+      // PayPal subscription plans, created in the PayPal dashboard by the
+      // owner. Until set, tap checkout shows "being set up".
+      tap_solo: process.env.PAYPAL_PLAN_TAP_SOLO || '',
+      tap_studio: process.env.PAYPAL_PLAN_TAP_STUDIO || '',
+      tap_shop: process.env.PAYPAL_PLAN_TAP_SHOP || '',
     },
   },
   paypalConfigured() {
@@ -75,6 +81,11 @@ const config = {
   // all checkout.
   paypalAnnualPlanConfigured() {
     return this.paypalConfigured() && !!this.paypal.planIds.customer_annual;
+  },
+  // All three tap-to-pay tier plans must exist for tap checkout.
+  paypalTapPlansConfigured() {
+    const p = this.paypal.planIds;
+    return this.paypalConfigured() && !!(p.tap_solo && p.tap_studio && p.tap_shop);
   },
   // Dedicated founding-shop plan (trial pricing defined in the plan itself —
   // PayPal rejects a 1-year TRIAL billing-cycle override at subscription
