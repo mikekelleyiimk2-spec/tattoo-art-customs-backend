@@ -14,12 +14,14 @@
 // trusted.
 //
 // Never stackable: customPriceQuote() returns a single best-deal price —
-// the first-custom discount, the Saturday sale, or regular — never combined.
+// the first-custom discount, the standing member discount, the Saturday
+// sale, or regular — never combined. first_custom_20 wins ties with
+// member_20 because it consumes the one-time redemption.
 const db = require('../db');
 const config = require('../config');
 const pricing = require('./pricing');
 const { visitorCount, paidSalesCount } = require('./visitors');
-const { isActiveMember } = require('../middleware/auth');
+const { isActiveMember, isCustomerMember } = require('../middleware/auth');
 
 const FIRST_CUSTOM_DISCOUNT_CODE = 'first_custom_20';
 
@@ -46,16 +48,26 @@ async function firstCustomEligible(user) {
 }
 
 // Best-deal-wins custom quote. Returns { full, deposit, discount, sale, member }.
-// `discount` is a single code ('first_custom_20' | 'saturday_sale' | null) —
-// discounts are never stacked; the buyer always gets the lowest single price.
+// `discount` is a single code ('first_custom_20' | 'member_20' |
+// 'saturday_sale' | null) — discounts are never stacked; the buyer always
+// gets the lowest single price. Note the member price ($124.59) undercuts
+// the Saturday sale price ($125), so member_20 wins over saturday_sale.
 async function customPriceQuote(user, date = new Date()) {
   const member = await isActiveMember(user);
+  const customerMember = await isCustomerMember(user);
   const saleOn = await pricing.salePriceActive(user, date);
   let full = pricing.customFullCents(date, member);
   let discount = saleOn ? 'saturday_sale' : null;
-  if (await firstCustomEligible(user)) {
+  const fcEligible = await firstCustomEligible(user);
+  if (customerMember && !fcEligible) {
+    const mFull = pricing.memberCustomFullCents();
+    if (mFull < full) { full = mFull; discount = pricing.MEMBER_DISCOUNT_CODE; }
+  }
+  if (fcEligible) {
     const fcFull = pricing.firstCustomFullCents();
-    if (fcFull < full) { full = fcFull; discount = FIRST_CUSTOM_DISCOUNT_CODE; }
+    // <= so the one-time discount wins ties with member_20 (it consumes
+    // the redemption; member_20 stays available for later customs).
+    if (fcFull <= full) { full = fcFull; discount = FIRST_CUSTOM_DISCOUNT_CODE; }
   }
   return { full, deposit: Math.round(full / 2), discount, sale: saleOn, member };
 }

@@ -1230,8 +1230,8 @@ async function main() {
     fcr = await fcreq('POST', '/orders/custom', { body: { brief: brief2 }, follow: false });
     const ordId2 = (fcr.location || '').split('/orders/manual/')[1];
     const o2 = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(ordId2);
-    ok(o2 && o2.discount_applied !== 'first_custom_20' && o2.amount_cents !== 12459,
-      'second custom gets no first-custom discount');
+    ok(o2 && o2.discount_applied === 'member_20' && o2.amount_cents === 12459,
+      'second custom gets the standing member_20 (customer plan), not first_custom_20');
     ok(sdb.prepare('SELECT COUNT(*) AS n FROM first_custom_redemptions WHERE user_id = ?').get(fcBuyerId).n === 1,
       'redemption still exactly one row after second custom');
     ok(!(await fc.firstCustomEligible(fcUser)), 'buyer with a prior custom is no longer eligible');
@@ -1288,6 +1288,135 @@ async function main() {
     ok(await fc.openingSaleActive(), 'opening sale is active before either cap');
     ok(await fc.firstCustomEligible({ id: saleId, role: 'customer' }),
       'eligible subscriber keeps the discount before either cap');
+  }
+
+  // Standing 20% MEMBER discount (owner rule 2026-10-05): "Members don't
+  // pay full price, ever." CUSTOMER-plan members (slugs 'customer' /
+  // 'customer_annual') get 20% off premade + custom, best-deal-wins against
+  // the Saturday sale and the one-time first-custom discount — never
+  // stacked. Artists, shops, lifetime non-customer grants, and admins never
+  // qualify. Purchases stay open to non-members.
+  {
+    const fc = require('../src/lib/firstCustom');
+    const fcp = require('../src/lib/pricing');
+    const { isCustomerMember } = require('../src/middleware/auth');
+    const { randomUUID } = require('crypto');
+
+    // Math: 20% off the advertised (fee-inclusive) price; fee computed on
+    // the discounted base, exactly like the first-custom discount.
+    ok(fcp.MEMBER_DISCOUNT_RATE === 0.20 && fcp.MEMBER_DISCOUNT_CODE === 'member_20',
+      'member discount constants: 20% rate, member_20 code');
+    ok(fcp.memberPremadeCents() === 6250, 'member premade: $62.50 base (20% off $75)');
+    ok(fcp.memberCustomFullCents() === 12459, 'member custom: $124.59 full (20% off $150)');
+    ok(fcp.memberCustomDepositCents() === 6230, 'member custom: $62.30 deposit (half of $124.59, rounded)');
+    ok(fcp.processingFeeCents(6250) === 268, 'member premade fee: $2.68 on the discounted base');
+    ok(fcp.processingFeeCents(6230) === 267, 'member deposit fee: $2.67 on the discounted base');
+
+    // Customer-plan member vs non-member quotes (Wednesday noon: no sale).
+    const wedNoon = new Date('2026-10-07T12:00:00-05:00');
+    const mreq = jarredReq();
+    await mreq('POST', '/signup', { body: { display_name: 'Member Buyer', email: 'membuyer@test.local', password: 'password123' }, follow: false });
+    const memId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('membuyer@test.local').id;
+    const custPlan = sdb.prepare("SELECT id FROM plans WHERE slug = 'customer'").get().id;
+    sdb.prepare('INSERT INTO subscriptions (id, user_id, plan_id, status, created_at) VALUES (?,?,?,?,?)')
+      .run(randomUUID(), memId, custPlan, 'active', Date.now());
+    sdb.prepare(`INSERT INTO orders (id, buyer_id, order_type, amount_cents, status, created_at)
+      VALUES (?,?,?,?,?,?)`).run('ord-mem-prior', memId, 'custom', 15000, 'paid', Date.now());
+    const nreq = jarredReq();
+    await nreq('POST', '/signup', { body: { display_name: 'Non Member', email: 'nonmem@test.local', password: 'password123' }, follow: false });
+    const nonMemId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('nonmem@test.local').id;
+
+    const mq = await fc.customPriceQuote({ id: memId, role: 'customer' }, wedNoon);
+    ok(mq.discount === 'member_20' && mq.full === 12459 && mq.deposit === 6230,
+      'member quote: 20% off custom ($124.59 / $62.30), member_20 code');
+    const nq = await fc.customPriceQuote({ id: nonMemId, role: 'customer' }, wedNoon);
+    ok(nq.discount === null && nq.full === 15000,
+      'non-member quote: full custom price ($150), no discount');
+    const mpq = await fcp.premadePriceQuote({ id: memId, role: 'customer' }, wedNoon);
+    ok(mpq.discount === 'member_20' && mpq.price === 6250,
+      'member premade quote: 20% off ($62.50), member_20 code');
+    const npq = await fcp.premadePriceQuote({ id: nonMemId, role: 'customer' }, wedNoon);
+    ok(npq.discount === null && npq.price === 7500,
+      'non-member premade quote: full price ($75), no discount');
+
+    // Saturday sale beats the member discount when lower (custom: $125 sale
+    // < $124.59 member — member wins; premade: $50 sale < $62.50 member —
+    // sale wins). Never stacked.
+    const satNight = new Date('2026-10-03T20:00:00-05:00');
+    const msq = await fc.customPriceQuote({ id: memId, role: 'customer' }, satNight);
+    ok(msq.discount === 'member_20' && msq.full === 12459,
+      'sale night custom: member_20 ($124.59) beats saturday_sale ($125)');
+    const mspq = await fcp.premadePriceQuote({ id: memId, role: 'customer' }, satNight);
+    ok(mspq.discount === 'saturday_sale' && mspq.price === 5000,
+      'sale night premade: saturday_sale ($50) beats member_20 ($62.50), not stacked');
+
+    // first_custom_20 wins ties with member_20 (consumes the one-time
+    // redemption; member_20 stays available afterwards).
+    const memNewReq = jarredReq();
+    await memNewReq('POST', '/signup', { body: { display_name: 'Member New', email: 'memnew@test.local', password: 'password123' }, follow: false });
+    const memNewId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('memnew@test.local').id;
+    sdb.prepare('INSERT INTO subscriptions (id, user_id, plan_id, status, created_at) VALUES (?,?,?,?,?)')
+      .run(randomUUID(), memNewId, custPlan, 'active', Date.now());
+    const fcq = await fc.customPriceQuote({ id: memNewId, role: 'customer' }, wedNoon);
+    ok(fcq.discount === 'first_custom_20' && fcq.full === 12459,
+      'eligible member: first_custom_20 wins the tie with member_20');
+
+    // Premade checkout applies member_20 (PayPal unconfigured -> manual).
+    sdb.prepare(`INSERT INTO designs
+      (id, title, description, categories, linework_path, linework_wm_path, status, created_at)
+      VALUES (?, 'Member Discount Design', '', '[]', 'lw/m.png', 'wm/m.png', 'approved', ?)`)
+      .run('mem-design-1', Date.now());
+    let mr = await mreq('POST', '/orders/buy/mem-design-1', { body: {}, follow: false });
+    ok(mr.status === 302 && (mr.location || '').includes('/orders/manual/'),
+      'member premade checkout created (manual-pay fallback)');
+    const memOrdId = (mr.location || '').split('/orders/manual/')[1];
+    const mo = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(memOrdId);
+    ok(mo && mo.amount_cents === 6250 && mo.fee_cents === 268 && mo.discount_applied === 'member_20',
+      'member premade order: $62.50 base, $2.68 fee-on-discounted-base, member_20 recorded');
+
+    // Premade checkout as non-member: full price, no discount code.
+    mr = await nreq('POST', '/orders/buy/mem-design-1', { body: {}, follow: false });
+    const nonOrdId = (mr.location || '').split('/orders/manual/')[1];
+    const no = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(nonOrdId);
+    ok(no && no.amount_cents === 7500 && no.discount_applied === null,
+      'non-member premade order: full $75 price, no discount recorded');
+
+    // Scope: member_20 is CUSTOMER-plan only.
+    ok(await isCustomerMember({ id: memId, role: 'customer' }) === true,
+      'customer-plan subscriber qualifies for member_20');
+    ok(await isCustomerMember({ id: nonMemId, role: 'customer' }) === false,
+      'non-subscriber does not qualify for member_20');
+    ok(await isCustomerMember({ id: memId, role: 'admin' }) === false,
+      'admin role never qualifies for member_20, even with a customer sub');
+    // Artist-plan subscriber: no member_20 on custom or premade.
+    const artMemReq = jarredReq();
+    await artMemReq('POST', '/signup', { body: { display_name: 'Artist Mem', email: 'artistmem@test.local', password: 'password123' }, follow: false });
+    const artistMemId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('artistmem@test.local').id;
+    const artistPlan = sdb.prepare("SELECT id FROM plans WHERE slug = 'design_artist'").get().id;
+    sdb.prepare('INSERT INTO subscriptions (id, user_id, plan_id, status, created_at) VALUES (?,?,?,?,?)')
+      .run(randomUUID(), artistMemId, artistPlan, 'active', Date.now());
+    sdb.prepare(`INSERT INTO orders (id, buyer_id, order_type, amount_cents, status, created_at)
+      VALUES (?,?,?,?,?,?)`).run('ord-artist-prior', artistMemId, 'custom', 15000, 'paid', Date.now());
+    ok(await isCustomerMember({ id: artistMemId, role: 'design_artist' }) === false,
+      'artist-plan subscriber does not qualify for member_20');
+    const artQ = await fc.customPriceQuote({ id: artistMemId, role: 'design_artist' }, wedNoon);
+    ok(artQ.discount !== 'member_20' && artQ.full === 15000,
+      'artist-plan subscriber pays full custom price ($150), no member_20');
+    const artPq = await fcp.premadePriceQuote({ id: artistMemId, role: 'design_artist' }, wedNoon);
+    ok(artPq.discount !== 'member_20' && artPq.price === 7500,
+      'artist-plan subscriber pays full premade price ($75), no member_20');
+    // Shop-plan subscriber: no member_20 either.
+    const shopPlan = sdb.prepare("SELECT id FROM plans WHERE slug = 'tattoo_shop'").get().id;
+    const shopMemReq = jarredReq();
+    await shopMemReq('POST', '/signup', { body: { display_name: 'Shop Mem', email: 'shopmem@test.local', password: 'password123' }, follow: false });
+    const shopMemId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('shopmem@test.local').id;
+    sdb.prepare('INSERT INTO subscriptions (id, user_id, plan_id, status, created_at) VALUES (?,?,?,?,?)')
+      .run(randomUUID(), shopMemId, shopPlan, 'active', Date.now());
+    sdb.prepare(`INSERT INTO orders (id, buyer_id, order_type, amount_cents, status, created_at)
+      VALUES (?,?,?,?,?,?)`).run('ord-shop-prior', shopMemId, 'custom', 15000, 'paid', Date.now());
+    const shopQ = await fc.customPriceQuote({ id: shopMemId, role: 'tattoo_shop' }, wedNoon);
+    ok(shopQ.discount !== 'member_20' && shopQ.full === 15000,
+      'shop-plan subscriber pays full custom price ($150), no member_20');
   }
 
   // --- Rush customs (owner rule 2026-09-30): +$30 for 24-hour delivery ---

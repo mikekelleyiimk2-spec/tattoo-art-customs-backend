@@ -11,7 +11,7 @@ const paypal = require('../lib/paypal');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const pricing = require('../lib/pricing');
 const { premadePriceCents, isSaleWindow, salePriceActive } = pricing;
-const { requireLogin, isActiveMember, requireSubscription } = require('../middleware/auth');
+const { requireLogin, isActiveMember, isCustomerMember, requireSubscription } = require('../middleware/auth');
 const { recordSaleCommissions } = require('../lib/commissions');
 const { resolveShopReferral } = require('../shop/attribution');
 const { routeCustomOrder } = require('../lib/customFulfillment');
@@ -40,10 +40,28 @@ router.post('/buy/:designId', requireLogin, formLimiter, checkHoneypot, async (r
     return res.redirect('/membership');
   }
   const isCustom = design.listing_type === 'custom';
-  // Members see the sale price from 6 PM Saturday (early entry).
-  const listPrice = isCustom
-    ? pricing.customFullCents(new Date(), member)
-    : premadePriceCents(new Date(), member);
+  // Best-deal-wins at checkout: Saturday sale, the standing 20% CUSTOMER
+  // member discount, or regular — never stacked. (The one-time first-custom
+  // discount applies only to made-to-order customs via POST /custom, never
+  // to already-made portfolio pieces here. member_20 is customer-plan only:
+  // artists, shops, and admins never get it — see isCustomerMember.)
+  const saleOn = await pricing.salePriceActive(req.user);
+  const customerMember = await isCustomerMember(req.user);
+  let listPrice, discountApplied;
+  if (saleOn) {
+    listPrice = isCustom
+      ? pricing.customFullCents(new Date(), member)
+      : premadePriceCents(new Date(), member);
+    discountApplied = 'saturday_sale';
+  } else if (customerMember) {
+    listPrice = isCustom ? pricing.memberCustomFullCents() : pricing.memberPremadeCents();
+    discountApplied = pricing.MEMBER_DISCOUNT_CODE;
+  } else {
+    listPrice = isCustom
+      ? pricing.customFullCents(new Date(), member)
+      : premadePriceCents(new Date(), member);
+    discountApplied = null;
+  }
   // Linework-only purchase: the buyer chose it (3% discount), or the piece
   // has no color version (automatic 3%-off linework-only price).
   const lineworkOnly = design.color_source === 'none' || req.body.linework_only === '1';
@@ -57,6 +75,7 @@ router.post('/buy/:designId', requireLogin, formLimiter, checkHoneypot, async (r
     amount_cents: price, fee_cents: fee, status: 'pending', payment_method: 'paypal',
     referral_code: refCode, referred_shop_id: await resolveShopReferral(refCode),
     linework_only: lineworkOnly ? 1 : 0,
+    discount_applied: discountApplied,
     created_at: db.now(),
   });
   // Pay with site credit when requested and the balance covers it.
@@ -141,8 +160,8 @@ router.post('/buy-for-client/:designId', requireLogin, requireSubscription('tatt
 });
 
 // --- Custom design request: brief + 50% deposit (Saturday-aware pricing,
-// plus the one-time 20%-off-first-custom subscriber discount: best-deal-wins,
-// never stacked) ---
+// the one-time 20%-off-first-custom subscriber discount, and the standing
+// 20%-off customer-member discount: best-deal-wins, never stacked) ---
 router.get('/custom', requireLogin, async (req, res) => {
   const quote = await firstCustom.customPriceQuote(req.user);
   const full = quote.full;

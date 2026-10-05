@@ -164,6 +164,20 @@ async function isActiveMember(user) {
   return hasAnyActiveSubscription(user.id);
 }
 
+// Customer-plan membership ONLY (owner rule 2026-10-05): the standing 20%
+// member discount (member_20) applies solely to the customer membership —
+// plan slugs 'customer' / 'customer_annual' / 'customer_6month'. Design
+// artists, tattoo shops, lifetime non-customer grants, and admin roles do
+// NOT qualify, even though isActiveMember() covers them for other perks
+// (early sale entry, etc.). A lifetime 'customer'-plan grant IS a customer
+// membership and qualifies.
+async function isCustomerMember(user) {
+  if (!user || isAdminRole(user.role)) return false;
+  return (await hasActiveSubscription(user.id, 'customer'))
+      || (await hasActiveSubscription(user.id, 'customer_annual'))
+      || (await hasActiveSubscription(user.id, 'customer_6month'));
+}
+
 function requireAnySubscription() {
   return async (req, res, next) => {
     if (!req.user) return res.redirect('/login');
@@ -174,4 +188,4 @@ function requireAnySubscription() {
   };
 }
 
-module.exports = { loadUser, requireLogin, requireRole, requireHeadAdmin, requireSubscription, requireAnySubscription, hasActiveSubscription, hasAnyActiveSubscription, hasLifetimeSubscription, isPopulationAdmin, assertNotPopulationAdmin, isActiveMember, isAdminRole, isHeadAdmin };
+module.exports = { loadUser, requireLogin, requireRole, requireHeadAdmin, requireSubscription, requireAnySubscription, hasActiveSubscription, hasAnyActiveSubscription, hasLifetimeSubscription, isPopulationAdmin, assertNotPopulationAdmin, isActiveMember, isCustomerMember, isAdminRole, isHeadAdmin };
