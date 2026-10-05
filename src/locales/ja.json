@@ -282,7 +282,9 @@
     "start_custom": "カスタムデザインを開始",
     "yt_subscribe": "YouTubeで登録",
     "yt_text": "毎日のフラッシュドロップ、カスタムデザインのタイムラプス、アフターケアガイド。毎日新しい動画を公開 — 登録して見逃さないようにしましょう。",
-    "yt_title": "🎥 YouTubeでも配信中 — 登録しよう"
+    "yt_title": "🎥 YouTubeでも配信中 — 登録しよう",
+    "get_play_free": "Google Playで入手 — 無料",
+    "get_play_pro": "Proを入手 — 広告なし"
   },
   "landing": {
     "hero": {
@@ -668,5 +670,11 @@
     "th_to": "送金先",
     "th_you_get": "受取額",
     "title": "引き出し"
+  },
+  "apps": {
+    "free_label": "無料",
+    "pro_label": "Pro",
+    "free_text": "広告付きのフルアプリ。",
+    "pro_text": "広告なし — Proはすべてのアップデートを最速で入手。"
   }
 }

@@ -282,7 +282,9 @@
     "start_custom": "Custom-Design starten",
     "yt_subscribe": "Auf YouTube abonnieren",
     "yt_text": "Tägliche Flash-Drops, Custom-Design-Timelapses und Aftercare-Guides. Jeden Tag neue Videos — abonnieren, damit du keinen Drop verpasst.",
-    "yt_title": "🎥 Wir sind auf YouTube — abonnieren"
+    "yt_title": "🎥 Wir sind auf YouTube — abonnieren",
+    "get_play_free": "Bei Google Play holen — Kostenlos",
+    "get_play_pro": "Pro holen — keine Werbung"
   },
   "landing": {
     "hero": {
@@ -668,5 +670,11 @@
     "th_to": "An",
     "th_you_get": "Du erhältst",
     "title": "Auszahlen"
+  },
+  "apps": {
+    "free_label": "Kostenlos",
+    "pro_label": "Pro",
+    "free_text": "Die komplette App, werbefinanziert.",
+    "pro_text": "Keine Werbung — und Pro erhält jedes Update zuerst."
   }
 }

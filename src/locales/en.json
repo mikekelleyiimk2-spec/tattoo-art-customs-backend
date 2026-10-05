@@ -282,7 +282,9 @@
     "start_custom": "Start a custom design",
     "yt_subscribe": "Subscribe on YouTube",
     "yt_text": "Daily flash drops, custom design timelapses, and aftercare guides. New videos every day — hit subscribe so you never miss a drop.",
-    "yt_title": "🎥 We're on YouTube — subscribe"
+    "yt_title": "🎥 We're on YouTube — subscribe",
+    "get_play_free": "Get it on Google Play — Free",
+    "get_play_pro": "Get Pro — no ads"
   },
   "landing": {
     "hero": {
@@ -668,5 +670,11 @@
     "th_to": "To",
     "th_you_get": "You get",
     "title": "Cashout"
+  },
+  "apps": {
+    "free_label": "Free",
+    "pro_label": "Pro",
+    "free_text": "The full app, supported by ads.",
+    "pro_text": "No ads — and Pro gets every update first."
   }
 }

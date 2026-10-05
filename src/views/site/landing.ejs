@@ -112,10 +112,10 @@
 </div>
 
 <section class="card" id="app">
-  <% if (playStoreUrl || appStoreUrl) { %>
+  <% if (playStoreUrl || playStoreProUrl || appStoreUrl) { %>
   <h2><%= t('home.app_title_live') %></h2>
   <p><%= t('home.app_text_live') %></p>
-  <p><% if (playStoreUrl) { %><a class="btn" href="<%= playStoreUrl %>"><%= t('home.get_play') %></a><% } %> <% if (appStoreUrl) { %><a class="btn" href="<%= appStoreUrl %>"><%= t('home.get_appstore') %></a><% } %></p>
+  <p><% if (playStoreUrl && playStoreProUrl) { %><a class="btn" href="<%= playStoreUrl %>"><%= t('home.get_play_free') %></a> <a class="btn btn-secondary" href="<%= playStoreProUrl %>"><%= t('home.get_play_pro') %></a><% } else if (playStoreUrl) { %><a class="btn" href="<%= playStoreUrl %>"><%= t('home.get_play') %></a><% } else if (playStoreProUrl) { %><a class="btn" href="<%= playStoreProUrl %>"><%= t('home.get_play_pro') %></a><% } %> <% if (appStoreUrl) { %><a class="btn" href="<%= appStoreUrl %>"><%= t('home.get_appstore') %></a><% } %></p>
   <% if (!appStoreUrl) { %>
   <p class="muted"><%= t('home.ios_soon') %></p>
   <form method="post" action="/app-notify" class="form">

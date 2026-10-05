@@ -282,7 +282,9 @@
     "start_custom": "커스텀 디자인 시작",
     "yt_subscribe": "YouTube 구독",
     "yt_text": "매일 새로운 디자인 드롭, 커스텀 디자인 타임랩스, 애프터케어 가이드. 매일 영상이 올라와요 — 구독하면 새 소식을 놓치지 않아요.",
-    "yt_title": "🎥 YouTube에 있어요 — 구독해 주세요"
+    "yt_title": "🎥 YouTube에 있어요 — 구독해 주세요",
+    "get_play_free": "Google Play에서 받기 — 무료",
+    "get_play_pro": "Pro 받기 — 광고 없음"
   },
   "landing": {
     "hero": {
@@ -668,5 +670,11 @@
     "th_to": "수령처",
     "th_you_get": "수령 금액",
     "title": "인출"
+  },
+  "apps": {
+    "free_label": "무료",
+    "pro_label": "Pro",
+    "free_text": "광고가 포함된 전체 앱.",
+    "pro_text": "광고 없음 — Pro는 모든 업데이트를 가장 먼저 받습니다."
   }
 }

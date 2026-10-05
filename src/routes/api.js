@@ -13,7 +13,21 @@ const { enforceSessionCap } = require('../lib/sessionLimits');
 
 const router = express.Router();
 
-function publicUser(user, isSubscriber) {
+// Public app store links for app clients: the free app's "Go Pro" upsell
+// reads playStoreProUrl here (falls back to the website /apps page when empty).
+// Never a dead button — empty strings mean "not published yet".
+router.get('/app-links', (req, res) => {
+  const config = require('../config');
+  res.json({
+    ok: true,
+    playStoreUrl: config.playStoreUrl || '',
+    playStoreProUrl: config.playStoreProUrl || '',
+    appStoreUrl: config.appStoreUrl || '',
+    appsPage: `${config.baseUrl}/apps`,
+  });
+});
+
+function publicUser(user, isSubscriber, eligibleFor6Month) {
   return {
     ok: true,
     user_id: user.id,

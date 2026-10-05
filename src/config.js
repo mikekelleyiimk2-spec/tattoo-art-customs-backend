@@ -28,6 +28,7 @@ const config = {
   baseUrl: (process.env.BASE_URL || 'http://localhost:3000').replace(/\/$/, ''),
   googleSiteVerification: process.env.GOOGLE_SITE_VERIFICATION || '',
   playStoreUrl: process.env.PLAY_STORE_URL || '',
+  playStoreProUrl: process.env.PLAY_STORE_URL_PRO || '',
   appStoreUrl: process.env.APP_STORE_URL || '',
   youtubeUrl: process.env.YOUTUBE_CHANNEL_URL || '',
   sessionSecret: process.env.SESSION_SECRET || 'dev-only-secret-change-me',

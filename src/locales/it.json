@@ -282,7 +282,9 @@
     "start_custom": "Avvia un custom design",
     "yt_subscribe": "Iscriviti su YouTube",
     "yt_text": "Drop flash quotidiani, timelapse di custom design e guide aftercare. Nuovi video ogni giorno — iscriviti per non perdere nessun drop.",
-    "yt_title": "🎥 Siamo su YouTube — iscriviti"
+    "yt_title": "🎥 Siamo su YouTube — iscriviti",
+    "get_play_free": "Scarica su Google Play — Gratis",
+    "get_play_pro": "Passa a Pro — senza pubblicità"
   },
   "landing": {
     "hero": {
@@ -668,5 +670,11 @@
     "th_to": "A",
     "th_you_get": "Ricevi",
     "title": "Prelievo"
+  },
+  "apps": {
+    "free_label": "Gratis",
+    "pro_label": "Pro",
+    "free_text": "L’app completa, con pubblicità.",
+    "pro_text": "Senza pubblicità — e Pro riceve ogni aggiornamento per primo."
   }
 }

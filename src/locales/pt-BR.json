@@ -282,7 +282,9 @@
     "start_custom": "Começar um custom",
     "yt_subscribe": "Inscrever-se no YouTube",
     "yt_text": "Flash drops diários, timelapses de customs e guias de aftercare. Vídeos novos todo dia — inscreva-se para não perder nenhum drop.",
-    "yt_title": "🎥 Estamos no YouTube — inscreva-se"
+    "yt_title": "🎥 Estamos no YouTube — inscreva-se",
+    "get_play_free": "Baixar no Google Play — Grátis",
+    "get_play_pro": "Baixar o Pro — sem anúncios"
   },
   "landing": {
     "hero": {
@@ -668,5 +670,11 @@
     "th_to": "Para",
     "th_you_get": "Você recebe",
     "title": "Saque"
+  },
+  "apps": {
+    "free_label": "Grátis",
+    "pro_label": "Pro",
+    "free_text": "O app completo, com anúncios.",
+    "pro_text": "Sem anúncios — e o Pro recebe cada atualização primeiro."
   }
 }

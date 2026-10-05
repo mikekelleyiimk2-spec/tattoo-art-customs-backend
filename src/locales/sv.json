@@ -282,7 +282,9 @@
     "start_custom": "Starta en customdesign",
     "yt_subscribe": "Prenumerera på YouTube",
     "yt_text": "Dagliga flashdrops, customdesign-timelapses och aftercareguider. Nya videor varje dag — prenumerera så missar du ingen drop.",
-    "yt_title": "🎥 Vi finns på YouTube — prenumerera"
+    "yt_title": "🎥 Vi finns på YouTube — prenumerera",
+    "get_play_free": "Hämta på Google Play — Gratis",
+    "get_play_pro": "Hämta Pro — utan annonser"
   },
   "landing": {
     "hero": {
@@ -668,5 +670,11 @@
     "th_to": "Till",
     "th_you_get": "Du får",
     "title": "Ta ut"
+  },
+  "apps": {
+    "free_label": "Gratis",
+    "pro_label": "Pro",
+    "free_text": "Hela appen, med annonser.",
+    "pro_text": "Utan annonser — Pro får varje uppdatering först."
   }
 }
