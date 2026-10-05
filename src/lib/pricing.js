@@ -8,7 +8,7 @@
 // before the public 7:00 PM start). Pass member=true (resolved via the async
 // salePriceActive(user) helper) to price for a member.
 const config = require('../config');
-const { isActiveMember } = require('../middleware/auth');
+const { isActiveMember, isCustomerMember } = require('../middleware/auth');
 
 function chicagoParts(date = new Date()) {
   const fmt = new Intl.DateTimeFormat('en-US', {
@@ -96,6 +96,55 @@ function firstCustomDepositCents() {
   return Math.round(firstCustomFullCents() / 2);
 }
 
+// Standing member discount (owner rule 2026-10-05): CUSTOMER-plan members
+// get 20% off — "Members don't pay full price, ever." Customer membership
+// only (plan slugs 'customer' / 'customer_annual'); artists, shops, lifetime
+// non-customer grants, and admins never qualify (see isCustomerMember).
+// Never stacked with the Saturday sale or the one-time first-custom
+// discount — best-deal-wins (see customPriceQuote in lib/firstCustom.js and
+// premadePriceQuote below). Same math as the first-custom discount: 20% off
+// the advertised (fee-inclusive) price; the processing fee is computed on
+// the discounted amount at checkout, never absorbed; splits keep their
+// percentages on the discounted base.
+const MEMBER_DISCOUNT_RATE = 0.20;
+const MEMBER_DISCOUNT_CODE = 'member_20';
+
+// Member premade price: 20% off the advertised (fee-inclusive) regular
+// premade price. = 6250 ($62.50) off $78.12.
+function memberPremadeCents() {
+  return Math.round(withFeeCents(config.pricing.premadeRegular) * (1 - MEMBER_DISCOUNT_RATE));
+}
+
+// Member custom full price: 20% off the advertised (fee-inclusive) regular
+// custom price. = 12459 ($124.59) — same base as the first-custom discount.
+function memberCustomFullCents() {
+  return Math.round(withFeeCents(config.pricing.customFull) * (1 - MEMBER_DISCOUNT_RATE));
+}
+
+// Member custom deposit: always 50% of the discounted full price.
+function memberCustomDepositCents() {
+  return Math.round(memberCustomFullCents() / 2);
+}
+
+// Best-deal-wins premade quote for checkout. Returns
+// { price, discount, sale, member }. The Saturday sale ($50 base) always
+// beats the member price ($62.50 base); CUSTOMER-plan members get 20% off
+// the regular price when no sale is on (member_20 is customer-membership
+// only — artists, shops, lifetime non-customer grants, and admins never
+// qualify). Discounts are never stacked.
+async function premadePriceQuote(user, date = new Date()) {
+  const member = await isActiveMember(user);
+  const customerMember = await isCustomerMember(user);
+  const saleOn = await salePriceActive(user, date);
+  let price = premadePriceCents(date, member);
+  let discount = saleOn ? 'saturday_sale' : null;
+  if (customerMember && !saleOn) {
+    const mPrice = memberPremadeCents();
+    if (mPrice < price) { price = mPrice; discount = MEMBER_DISCOUNT_CODE; }
+  }
+  return { price, discount, sale: saleOn, member };
+}
+
 // Processing fee added to a web transaction (cents): 3.5% of the base + 49c.
 function processingFeeCents(baseCents) {
   return Math.round(baseCents * 0.035) + 49;
@@ -148,4 +197,4 @@ function teeColorLabel(color) {
   return TEE_COLORS.includes(c) ? c : 'black';
 }
 
-module.exports = { isSaleWindow, salePriceActive, premadePriceCents, customFullCents, money, LINEWORK_ONLY_DISCOUNT, lineworkOnlyPriceCents, processingFeeCents, withFeeCents, withPlayFeeCents, FIRST_CUSTOM_DISCOUNT_CODE, firstCustomFullCents, firstCustomDepositCents, RUSH_FEE_CENTS, RUSH_DESIGNER_CENTS, RUSH_SITE_CENTS, RUSH_SLA_HOURS, STANDARD_SLA_HOURS, TEE_SIZES, TEE_COLORS, teePriceCents, teeSizeLabel, teeColorLabel };
+module.exports = { isSaleWindow, salePriceActive, premadePriceCents, customFullCents, money, LINEWORK_ONLY_DISCOUNT, lineworkOnlyPriceCents, processingFeeCents, withFeeCents, withPlayFeeCents, FIRST_CUSTOM_DISCOUNT_CODE, firstCustomFullCents, firstCustomDepositCents, MEMBER_DISCOUNT_CODE, memberPremadeCents, memberCustomFullCents, memberCustomDepositCents, premadePriceQuote, RUSH_FEE_CENTS, RUSH_DESIGNER_CENTS, RUSH_SITE_CENTS, RUSH_SLA_HOURS, STANDARD_SLA_HOURS, TEE_SIZES, TEE_COLORS, teePriceCents, teeSizeLabel, teeColorLabel };

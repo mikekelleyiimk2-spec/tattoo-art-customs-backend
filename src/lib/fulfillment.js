@@ -103,6 +103,8 @@ async function sendCustomDepositReceipt(order) {
   ];
   if (order.discount_applied === 'first_custom_20') {
     lines.push(`Opening sale — first custom 20% off: ${money(order.amount_cents)} (regular ${money(15574)})`);
+  } else if (order.discount_applied === 'member_20') {
+    lines.push(`Member discount — 20% off: ${money(order.amount_cents)} (regular ${money(15574)})`);
   } else {
     lines.push(`Design price: ${money(order.amount_cents)}`);
   }
