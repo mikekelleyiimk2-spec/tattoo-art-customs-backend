@@ -10689,5 +10689,385 @@
   "subjects": [
    "Cartoon / Pop Culture > Games"
   ]
+ },
+ {
+  "id": "batch19-traditional-old-school-tiger",
+  "title": "Traditional Old School Tiger",
+  "styles": [
+   "Traditional / Old School"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Tiger"
+  ]
+ },
+ {
+  "id": "batch19-realism-wolf",
+  "title": "Realism Wolf",
+  "styles": [
+   "Realism"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Wolf"
+  ]
+ },
+ {
+  "id": "batch19-japanese-irezumi-koi",
+  "title": "Japanese Koi Fish",
+  "styles": [
+   "Japanese / Irezumi"
+  ],
+  "subjects": [
+   "Nature / Scene Concepts > Koi Fish"
+  ]
+ },
+ {
+  "id": "batch19-neo-traditional-owl",
+  "title": "Neo-Traditional Owl",
+  "styles": [
+   "Neo-Traditional"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Owl"
+  ]
+ },
+ {
+  "id": "batch19-neo-japanese-dragon",
+  "title": "Neo-Japanese Dragon",
+  "styles": [
+   "Neo-Japanese"
+  ],
+  "subjects": [
+   "Mythology & Fantasy > Dragon"
+  ]
+ },
+ {
+  "id": "batch19-watercolor-sea-turtle",
+  "title": "Watercolor Sea Turtle",
+  "styles": [
+   "Watercolor"
+  ],
+  "subjects": [
+   "Nautical / Ocean > Sea Turtle"
+  ]
+ },
+ {
+  "id": "batch19-tribal-wolf",
+  "title": "Tribal Wolf",
+  "styles": [
+   "Tribal"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Wolf"
+  ]
+ },
+ {
+  "id": "batch19-new-school-octopus",
+  "title": "New School Octopus",
+  "styles": [
+   "New School"
+  ],
+  "subjects": [
+   "Nautical / Ocean > Octopus"
+  ]
+ },
+ {
+  "id": "batch19-minimalist-mountain",
+  "title": "Minimalist Mountain Landscape",
+  "styles": [
+   "Minimalist"
+  ],
+  "subjects": [
+   "Nature / Scene Concepts > Mountain Landscape"
+  ]
+ },
+ {
+  "id": "batch19-fine-line-lily",
+  "title": "Fine Line Lily",
+  "styles": [
+   "Fine Line"
+  ],
+  "subjects": [
+   "Flowers & Botanicals > Lily"
+  ]
+ },
+ {
+  "id": "batch19-carved-wood-lion",
+  "title": "Carved Wood Lion",
+  "styles": [
+   "Carved Wood"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Lion"
+  ]
+ },
+ {
+  "id": "batch19-carved-stone-gargoyle",
+  "title": "Carved Stone Gargoyle",
+  "styles": [
+   "Carved Stone"
+  ],
+  "subjects": [
+   "Mythology & Fantasy > Gargoyle"
+  ]
+ },
+ {
+  "id": "batch19-xray-dissection-heart",
+  "title": "X-Ray Anatomical Heart",
+  "styles": [
+   "X-Ray / Dissection"
+  ],
+  "subjects": [
+   "Objects & Mechanical > Anatomical Heart"
+  ]
+ },
+ {
+  "id": "batch19-mosaic-seahorse",
+  "title": "Mosaic Seahorse",
+  "styles": [
+   "Mosaic"
+  ],
+  "subjects": [
+   "Nautical / Ocean > Seahorse"
+  ]
+ },
+ {
+  "id": "batch19-trash-polka-woman-portrait",
+  "title": "Trash Polka Woman Portrait",
+  "styles": [
+   "Trash Polka"
+  ],
+  "subjects": [
+   "Portraits / Memorial > Woman Portrait"
+  ]
+ },
+ {
+  "id": "batch19-cybersigilism-sigil",
+  "title": "Cybersigilism Sigil",
+  "styles": [
+   "Cybersigilism"
+  ],
+  "subjects": [
+   "Lettering / Symbols > Sigil"
+  ]
+ },
+ {
+  "id": "batch19-geometric-fox",
+  "title": "Geometric Fox",
+  "styles": [
+   "Geometric"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Fox"
+  ]
+ },
+ {
+  "id": "batch19-mandala-mandala",
+  "title": "Mandala",
+  "styles": [
+   "Mandala"
+  ],
+  "subjects": [
+   "Geometric / Abstract > Mandala"
+  ]
+ },
+ {
+  "id": "batch19-dotwork-jellyfish",
+  "title": "Dotwork Jellyfish",
+  "styles": [
+   "Dotwork"
+  ],
+  "subjects": [
+   "Nautical / Ocean > Jellyfish"
+  ]
+ },
+ {
+  "id": "batch19-origami-origami-bird",
+  "title": "Origami Bird",
+  "styles": [
+   "Origami"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Origami Bird"
+  ]
+ },
+ {
+  "id": "batch19-etching-lighthouse",
+  "title": "Etching Lighthouse",
+  "styles": [
+   "Etching"
+  ],
+  "subjects": [
+   "Nature / Scene Concepts > Lighthouse"
+  ]
+ },
+ {
+  "id": "batch19-stipple-deer",
+  "title": "Stipple Deer",
+  "styles": [
+   "Stipple"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Deer"
+  ]
+ },
+ {
+  "id": "batch19-surrealism-surreal-pocket-watch",
+  "title": "Surreal Pocket Watch",
+  "styles": [
+   "Surrealism"
+  ],
+  "subjects": [
+   "Objects & Mechanical > Surreal Pocket Watch"
+  ]
+ },
+ {
+  "id": "batch19-dark-surrealism-skull",
+  "title": "Dark Surrealism Skull",
+  "styles": [
+   "Dark Surrealism"
+  ],
+  "subjects": [
+   "Skulls / Death / Gothic > Skull"
+  ]
+ },
+ {
+  "id": "batch19-absurdist-fishbowl",
+  "title": "Absurdist Fishbowl",
+  "styles": [
+   "Absurdist"
+  ],
+  "subjects": [
+   "Surreal / Bizarre > Fishbowl"
+  ]
+ },
+ {
+  "id": "batch19-funny-ironic-duck",
+  "title": "Funny Duck",
+  "styles": [
+   "Funny / Ironic"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Duck"
+  ]
+ },
+ {
+  "id": "batch19-graffiti-graffiti-skull",
+  "title": "Graffiti Skull",
+  "styles": [
+   "Graffiti"
+  ],
+  "subjects": [
+   "Lettering / Symbols > Graffiti Skull"
+  ]
+ },
+ {
+  "id": "batch19-postmodern-classical-bust",
+  "title": "Postmodern Classical Bust",
+  "styles": [
+   "Postmodern"
+  ],
+  "subjects": [
+   "Portraits / Memorial > Classical Bust"
+  ]
+ },
+ {
+  "id": "batch19-showcase-phoenix",
+  "title": "Showcase Phoenix",
+  "styles": [
+   "Showcase"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Phoenix"
+  ]
+ },
+ {
+  "id": "batch19-floral-botanical-sunflower",
+  "title": "Floral Sunflower",
+  "styles": [
+   "Floral & Botanical"
+  ],
+  "subjects": [
+   "Flowers & Botanicals > Sunflower"
+  ]
+ },
+ {
+  "id": "batch19-biomechanical-biomechanical-heart",
+  "title": "Biomechanical Heart",
+  "styles": [
+   "Biomechanical"
+  ],
+  "subjects": [
+   "Objects & Mechanical > Biomechanical Heart"
+  ]
+ },
+ {
+  "id": "batch19-ornamental-lion",
+  "title": "Ornamental Lion",
+  "styles": [
+   "Ornamental"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Lion"
+  ]
+ },
+ {
+  "id": "batch19-illustrative-lighthouse",
+  "title": "Illustrative Lighthouse",
+  "styles": [
+   "Illustrative"
+  ],
+  "subjects": [
+   "Nature / Scene Concepts > Lighthouse"
+  ]
+ },
+ {
+  "id": "batch19-polynesian-turtle",
+  "title": "Polynesian Turtle",
+  "styles": [
+   "Polynesian"
+  ],
+  "subjects": [
+   "Animals & Wildlife > Turtle"
+  ]
+ },
+ {
+  "id": "batch19-celtic-norse-tree",
+  "title": "Celtic Tree & Knotwork",
+  "styles": [
+   "Celtic / Norse"
+  ],
+  "subjects": [
+   "Lettering / Symbols > Tree & Knotwork"
+  ]
+ },
+ {
+  "id": "batch19-anime-anime-woman",
+  "title": "Anime Woman",
+  "styles": [
+   "Anime"
+  ],
+  "subjects": [
+   "Characters / People > Anime Woman"
+  ]
+ },
+ {
+  "id": "batch19-sketch-compass",
+  "title": "Sketch Compass",
+  "styles": [
+   "Sketch"
+  ],
+  "subjects": [
+   "Travel > Compass"
+  ]
+ },
+ {
+  "id": "batch19-psychedelic-mushrooms",
+  "title": "Psychedelic Mushrooms",
+  "styles": [
+   "Psychedelic"
+  ],
+  "subjects": [
+   "Mushrooms / Discworld > Mushrooms"
+  ]
  }
 ]
