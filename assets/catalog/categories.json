@@ -1,6 +1,6 @@
 {
   "updated": "2026-10-05",
-  "total": 63,
+  "total": 64,
   "categories": [
     {
       "name": "Aliens / UFOs",
@@ -211,6 +211,11 @@
       "name": "Objects & Mechanical",
       "desc": "",
       "added": "existing"
+    },
+    {
+      "name": "Peace & Harmony",
+      "desc": "Peace signs, doves, olive branches, harmony symbols",
+      "added": "2026-10-05"
     },
     {
       "name": "Pets / Pet Memorial",
