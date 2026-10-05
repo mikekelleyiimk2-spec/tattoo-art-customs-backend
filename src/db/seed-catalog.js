@@ -18,10 +18,11 @@ async function seedCatalog() {
     console.log('[seed-catalog] no manifest — skipping');
     return;
   }
+  // Incremental: import any manifest entries missing from the designs table.
+  // Idempotent — existing ids are skipped, so this is safe to run on every boot.
   const { n } = await db.get('SELECT COUNT(*) AS n FROM designs');
   if (n > 0) {
-    console.log(`[seed-catalog] designs table already has ${n} rows — skipping`);
-    return;
+    console.log(`[seed-catalog] designs table has ${n} rows — importing missing entries only`);
   }
   const manifest = JSON.parse(fs.readFileSync(MANIFEST, 'utf8'));
   const admin = await db.get(
