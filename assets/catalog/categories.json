@@ -1,0 +1,321 @@
+{
+  "updated": "2026-10-05",
+  "total": 63,
+  "categories": [
+    {
+      "name": "Aliens / UFOs",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Americana / Traditional",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Ancient Civilizations",
+      "desc": "Egyptian, Mayan, Roman, Greek \u2014 pyramids, hieroglyphs, ruins",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Animals & Wildlife",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Anime / Manga",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Architecture",
+      "desc": "Buildings, temples, castles, bridges, lighthouses",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Arctic & Polar",
+      "desc": "Polar bears, penguins, aurora, icebergs, tundra",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Birds",
+      "desc": "Owls, ravens, eagles, hummingbirds, songbirds \u2014 dedicated bird category",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Candy / Sweets",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Cartoon / Pop Culture",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Celestial / Cosmic",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Characters / People",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Circus / Carnival",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Crystals & Gems",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Cultural Heritage",
+      "desc": "Day of the Dead, cultural masks, traditions, folk art",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Deep Sea",
+      "desc": "Anglerfish, jellyfish, bioluminescent creatures, abyss",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Desert",
+      "desc": "Cacti, dunes, desert animals, arid landscapes",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Dinosaurs / Prehistoric",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Dreams & Sleep",
+      "desc": "Dreamcatchers, sleeping figures, clouds, night skies",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Fairy Tale & Storybook",
+      "desc": "Castles, fairy tales, storybook scenes, magic",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Filler / Supporting Elements",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Fire & Smoke",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Fitness / Gym",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Floral & Botanical",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Flowers & Botanicals",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Food & Drink",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Gambling / Luck",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Gaming & Pixel Art",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Geometric / Abstract",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Horror",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Insects & Bugs",
+      "desc": "Beetles, butterflies, dragonflies, bees, moths, spiders",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Jungle & Tropical",
+      "desc": "Toucans, palm trees, tropical flowers, rainforest",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Lettering / Symbols",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Love / Hearts / Couples",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Military / Patriotic",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Mixed / Combination Concepts",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Mushrooms / Discworld",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Music",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Mythology & Fantasy",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Nature / Scene Concepts",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Nautical / Ocean",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Objects & Mechanical",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Pets / Pet Memorial",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Pinup",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Portraits / Memorial",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Religious / Spiritual / Occult",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Retro & Vintage",
+      "desc": "Vintage tech, retro cars, old signs, nostalgic Americana",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Sci-Fi / Futuristic",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Seasons",
+      "desc": "Autumn leaves, winter scenes, spring blooms, summer vibes",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Showcase pieces",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Skulls / Death / Gothic",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Sports",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Steampunk",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Surreal / Bizarre",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Tattoo Styles",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Technology & Cyber",
+      "desc": "Robots, circuits, AI, cyborgs, cybernetics",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Time / Clocks",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Travel",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Vehicles",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Weather & Storms",
+      "desc": "Lightning, tornadoes, rain, storm clouds, blizzards",
+      "added": "2026-10-05"
+    },
+    {
+      "name": "Western",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Wings",
+      "desc": "",
+      "added": "existing"
+    },
+    {
+      "name": "Zodiac / Astrology",
+      "desc": "",
+      "added": "existing"
+    }
+  ]
+}

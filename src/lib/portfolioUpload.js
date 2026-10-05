@@ -23,7 +23,8 @@ const { isHeadAdmin } = require('../middleware/auth');
 const DESIGN_STYLES = [
   'blackwork', 'traditional', 'japanese', 'realism', 'fine-line', 'floral',
   'animals', 'geometric', 'lettering', 'tribal', 'chicano', 'dotwork',
-  'watercolor', 'new-school', 'minimalist', 'pixelated', 'other',
+  'watercolor', 'new-school', 'minimalist', 'pixelated', 'circuit-bloom',
+  'ascii-skin', 'kintsugi', 'topographic', 'smoke-form', 'other',
 ];
 
 const portfolioStorage = multer.diskStorage({
