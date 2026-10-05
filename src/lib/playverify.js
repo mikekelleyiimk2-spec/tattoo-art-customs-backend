@@ -28,13 +28,16 @@ async function getPublisher() {
 }
 
 // type: 'subs' | 'inapp'. Returns { verified, orderId, purchaseTime, expiryTime, reason }.
-async function verifyPurchase({ productId, purchaseToken, type }) {
+async function verifyPurchase({ productId, purchaseToken, type, packageName }) {
   const publisher = await getPublisher();
   if (!publisher) return { verified: false, reason: 'not_configured' };
+  // packageName defaults to the free app's package; the Pro app purchase is
+  // verified against the Pro package (its own SKU is its package name).
+  const pkg = packageName || PACKAGE_NAME;
   try {
     if (type === 'subs') {
       const r = await publisher.purchases.subscriptions.get({
-        packageName: PACKAGE_NAME, subscriptionId: productId, token: purchaseToken,
+        packageName: pkg, subscriptionId: productId, token: purchaseToken,
       });
       const d = r.data || {};
       const state = d.paymentState; // 1 = payment received
@@ -51,7 +54,7 @@ async function verifyPurchase({ productId, purchaseToken, type }) {
       };
     }
     const r = await publisher.purchases.products.get({
-      packageName: PACKAGE_NAME, productId, token: purchaseToken,
+      packageName: pkg, productId, token: purchaseToken,
     });
     const d = r.data || {};
     const ok = d.purchaseState === 0; // 0 = purchased
@@ -82,20 +85,21 @@ const MEMBERSHIP_PLAN_BY_PRODUCT = {
 // this call is what keeps the revenue. Idempotent: acknowledging twice is a
 // no-op on Google's side (returns success). Must only be called AFTER the
 // membership/access has actually been granted.
-async function acknowledgePurchase({ productId, purchaseToken, type }) {
+async function acknowledgePurchase({ productId, purchaseToken, type, packageName }) {
   const publisher = await getPublisher();
   if (!publisher) return { ok: false, reason: 'not_configured' };
+  const pkg = packageName || PACKAGE_NAME;
   try {
     if (type === 'subs') {
       await publisher.purchases.subscriptions.acknowledge({
-        packageName: PACKAGE_NAME,
+        packageName: pkg,
         subscriptionId: productId,
         token: purchaseToken,
         requestBody: {},
       });
     } else {
       await publisher.purchases.products.acknowledge({
-        packageName: PACKAGE_NAME,
+        packageName: pkg,
         productId,
         token: purchaseToken,
         requestBody: {},

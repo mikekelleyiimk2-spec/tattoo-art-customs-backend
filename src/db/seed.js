@@ -16,6 +16,7 @@ async function seed() {
     const descriptions = {
       customer: 'Lower-cost custom commissions, pre-made designs, early access to new content. First month $1.53.',
       customer_annual: 'Everything in Customer Membership, billed yearly — two months free ($52.24/year).',
+      customer_6month: 'Everything in Customer Membership, billed every 6 months — 6 months for the price of 5, first month free with a Pro app purchase ($26.37/6 months). Pro-app owners only.',
       design_artist: 'Upload your art, write an artist bio, earn 60% commission per sale.',
       tattoo_shop: 'Refer customers and earn 20% on every verified sale you refer. Includes the full Design Artist membership — upload your art, write an artist bio, earn designer commissions.',
     };

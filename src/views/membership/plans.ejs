@@ -24,7 +24,7 @@
   <% plans.forEach(function(p) { %>
   <div class="card">
     <h3><%= p.name %></h3>
-    <p><strong><%= fmtMoney(p.price_cents) %></strong> / <%= p.interval === 'month' ? t('membership.per_month') : t('membership.per_year') %></p>
+    <p><strong><%= fmtMoney(p.price_cents) %></strong> / <%= p.interval === 'month' ? t('membership.per_month') : p.interval === '6month' ? 'per 6 months' : t('membership.per_year') %></p>
     <p class="muted"><%= p.description %></p>
     <% if (p.slug === 'tattoo_shop' && foundingShop) { %>
     <p><strong><%= t('membership.first_year', {price: fmtMoney(foundingPrice)}) %></strong> — <%= t('membership.renews_at', {price: fmtMoney(p.price_cents)}) %></p>
@@ -33,7 +33,28 @@
     <p><strong><%= t('membership.first_month_plan', {price: fmtMoney(firstMonthPrice)}) %></strong><%= t('membership.then', {price: fmtMoney(p.price_cents)}) %></p>
     <% } %>
     <% if (vatNote) { %><p class="muted fineprint"><%= vatNote %></p><% } %>
-    <% if (p.slug === 'customer_annual' && !annualReady) { %>
+    <% if (p.slug === 'customer_6month') { %>
+    <% // Pro-app perk card (owner directive 2026-10-05): locked with an
+       // upsell for non-owners, "already active" for current customer-plan
+       // members (anti-gaming: no downgrade path), live checkout only for
+       // eligible new members. Never a dead button — the lock links to /apps. %>
+    <p><strong>6 months for the price of 5 — first month free with Pro.</strong></p>
+    <% const _sixEligible = typeof eligibleFor6Month !== 'undefined' && eligibleFor6Month; %>
+    <% const _sixActive = typeof hasActiveCustomerMembership !== 'undefined' && hasActiveCustomerMembership; %>
+    <% const _sixReady = typeof sixMonthReady !== 'undefined' && sixMonthReady; %>
+    <% if (_sixEligible && !_sixActive && _sixReady && paypalReady) { %>
+    <form method="post" action="/membership/subscribe/<%= p.slug %>">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button class="btn" type="submit"><%= t('membership.subscribe') %></button>
+    </form>
+    <% } else if (_sixEligible && !_sixActive) { %>
+    <p class="muted">6-month checkout is coming soon.</p>
+    <% } else if (_sixActive) { %>
+    <p class="muted">Your customer membership is already active — the 6-month Pro-perk rate is for new memberships.</p>
+    <% } else { %>
+    <p>🔒 <strong>Own the Pro app to unlock</strong> — 6 months for the price of 5, first month free with Pro. <a href="/apps">Get the Pro app</a></p>
+    <% } %>
+    <% } else if (p.slug === 'customer_annual' && !annualReady) { %>
     <p class="muted"><strong><%= t('membership.annual_soon') %></strong> <%= t('membership.annual_soon_tail') %></p>
     <% } else if (paypalReady) { %>
     <% const _pfx = fxNote(p.price_cents); if (_pfx) { %><p class="muted fineprint"><%= _pfx %></p><% } %>
@@ -42,11 +63,12 @@
       <button class="btn" type="submit"><%= t('membership.subscribe') %></button>
     </form>
     <% } %>
-    <% if (typeof creditBaseBySlug !== 'undefined' && creditBaseBySlug[p.slug]) { %>
-    <form method="post" action="/membership/credit/<%= p.slug %>" onsubmit="return confirm('Pay one <%= p.interval %> of <%= p.name %> with site credit (<%= fmtMoney(creditBaseBySlug[p.slug]) %>)? No auto-renewal.')">
+    <% const _sixCreditOk = p.slug !== 'customer_6month' || ((typeof eligibleFor6Month !== 'undefined' && eligibleFor6Month) && !(typeof hasActiveCustomerMembership !== 'undefined' && hasActiveCustomerMembership)); %>
+    <% if (typeof creditBaseBySlug !== 'undefined' && creditBaseBySlug[p.slug] && _sixCreditOk) { %>
+    <form method="post" action="/membership/credit/<%= p.slug %>" onsubmit="return confirm('Pay one <%= p.interval === '6month' ? '6 months' : p.interval %> of <%= p.name %> with site credit (<%= fmtMoney(creditBaseBySlug[p.slug]) %>)? No auto-renewal.')">
       <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
       <p><button class="btn btn-secondary" type="submit"><%= t('membership.pay_credit', {price: fmtMoney(creditBaseBySlug[p.slug])}) %></button><br>
-      <span class="muted"><%- t('membership.credit_note', {interval: p.interval === 'month' ? t('membership.per_month') : t('membership.per_year'), credit: fmtMoney(typeof creditBalance !== 'undefined' ? creditBalance : 0), redeem: '<a href="/gift-cards/redeem">' + t('membership.redeem') + '</a>'}) %></span></p>
+      <span class="muted"><%- t('membership.credit_note', {interval: p.interval === 'month' ? t('membership.per_month') : p.interval === '6month' ? 'per 6 months' : t('membership.per_year'), credit: fmtMoney(typeof creditBalance !== 'undefined' ? creditBalance : 0), redeem: '<a href="/gift-cards/redeem">' + t('membership.redeem') + '</a>'}) %></span></p>
     </form>
     <% } %>
   </div>
