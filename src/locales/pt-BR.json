@@ -559,7 +559,8 @@
     "skip": "Pular para o conteúdo",
     "studio": "Design Studio",
     "toggle_menu": "Abrir/fechar menu",
-    "wallet": "Carteira"
+    "wallet": "Carteira",
+    "wishlist": "Lista de desejos"
   },
   "orders": {
     "amount": "Valor",
@@ -668,5 +669,16 @@
     "th_to": "Para",
     "th_you_get": "Você recebe",
     "title": "Saque"
+  },
+  "fav": {
+    "title": "Minha lista de desejos",
+    "sub": "Todos os designs que você curtiu, em um só lugar — volte quando quiser e compre seus favoritos.",
+    "empty_title": "Nenhum favorito ainda",
+    "empty_text": "Toque no coração de um design para salvá-lo aqui.",
+    "browse": "Ver a galeria",
+    "buy": "Comprar agora",
+    "add": "Salvar na lista de desejos",
+    "remove": "Remover da lista de desejos",
+    "saved": "Designs salvos"
   }
 }

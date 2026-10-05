@@ -12,7 +12,7 @@
     <% } %>
   </div>
   <div>
-    <h1><%= design.title %></h1>
+    <h1><%= design.title %><button type="button" class="fav-heart fav-heart-inline" data-fav-id="<%= design.id %>" aria-pressed="false" aria-label="<%= t('fav.add') %>" title="<%= t('fav.add') %>"></button></h1>
     <% design.categories.forEach(function(c) { %><span class="tag"><%= c %></span><% }); %>
     <p><%= design.description %></p>
     <% if (artist) { %><p class="muted"><%= t('design.by') %> <a href="/artists/<%= design.artist_id %>"><%= artist.display_name %></a>

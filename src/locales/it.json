@@ -559,7 +559,8 @@
     "skip": "Salta al contenuto principale",
     "studio": "Design Studio",
     "toggle_menu": "Apri/chiudi menu",
-    "wallet": "Wallet"
+    "wallet": "Wallet",
+    "wishlist": "Preferiti"
   },
   "orders": {
     "amount": "Importo",
@@ -668,5 +669,16 @@
     "th_to": "A",
     "th_you_get": "Ricevi",
     "title": "Prelievo"
+  },
+  "fav": {
+    "title": "I miei preferiti",
+    "sub": "Tutti i design salvati con un cuore, in un unico posto — torna quando vuoi e acquista i tuoi preferiti.",
+    "empty_title": "Ancora nessun preferito",
+    "empty_text": "Tocca il cuore su un design per salvarlo qui.",
+    "browse": "Sfoglia la galleria",
+    "buy": "Acquista ora",
+    "add": "Salva nei preferiti",
+    "remove": "Rimuovi dai preferiti",
+    "saved": "Design salvati"
   }
 }

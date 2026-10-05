@@ -261,4 +261,57 @@ router.post('/push/expo-token', express.json(), async (req, res) => {
   res.json({ ok: true });
 });
 
+// Wishlist (favorites) for the gallery — [wishlist] feature.
+// Guests keep favorites in localStorage only; logged-in users get server
+// persistence via the session (req.user). Writes 401 for guests.
+async function favoriteIdsFor(userId) {
+  const rows = await db.all(
+    'SELECT design_id FROM user_favorites WHERE user_id = ? ORDER BY created_at DESC', [userId]);
+  return rows.map((r) => r.design_id);
+}
+
+async function validFavoriteDesign(designId) {
+  const id = String(designId || '').slice(0, 128);
+  if (!id) return null;
+  return db.get("SELECT id FROM designs WHERE id = ? AND status = 'approved'", [id]);
+}
+
+router.get('/favorites', async (req, res) => {
+  if (!req.user) return res.status(401).json({ ok: false, error: 'login required' });
+  return res.json({ ok: true, ids: await favoriteIdsFor(req.user.id) });
+});
+
+// Merge guest localStorage favorites into the server set (dedupe).
+router.post('/favorites/merge', express.json(), async (req, res) => {
+  if (!req.user) return res.status(401).json({ ok: false, error: 'login required' });
+  const ids = Array.isArray(req.body && req.body.ids) ? req.body.ids : [];
+  const now = db.now();
+  for (const raw of ids.slice(0, 500)) {
+    const design = await validFavoriteDesign(raw);
+    if (!design) continue;
+    await db.query(
+      'INSERT INTO user_favorites (user_id, design_id, created_at) VALUES (?, ?, ?) ON CONFLICT(user_id, design_id) DO NOTHING',
+      [req.user.id, design.id, now]);
+  }
+  return res.json({ ok: true, ids: await favoriteIdsFor(req.user.id) });
+});
+
+router.post('/favorites/:designId', express.json(), async (req, res) => {
+  if (!req.user) return res.status(401).json({ ok: false, error: 'login required' });
+  const design = await validFavoriteDesign(req.params.designId);
+  if (!design) return res.status(404).json({ ok: false, error: 'not available' });
+  await db.query(
+    'INSERT INTO user_favorites (user_id, design_id, created_at) VALUES (?, ?, ?) ON CONFLICT(user_id, design_id) DO NOTHING',
+    [req.user.id, design.id, db.now()]);
+  return res.json({ ok: true, favorited: true, id: design.id });
+});
+
+router.delete('/favorites/:designId', async (req, res) => {
+  if (!req.user) return res.status(401).json({ ok: false, error: 'login required' });
+  const id = String(req.params.designId || '').slice(0, 128);
+  await db.query('DELETE FROM user_favorites WHERE user_id = ? AND design_id = ?',
+    [req.user.id, id]);
+  return res.json({ ok: true, favorited: false, id });
+});
+
 module.exports = { router, userFromToken };

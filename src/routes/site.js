@@ -195,6 +195,38 @@ router.get('/gallery', async (req, res) => {
   });
 });
 
+// Wishlist (favorites) page — [wishlist] feature. Everyone can use it:
+// logged-in users get their server-side favorites embedded for rendering,
+// guests render client-side from localStorage + /api/designs.
+router.get('/wishlist', async (req, res) => {
+  const member = await isActiveMember(req.user);
+  let serverDesigns = null;
+  if (req.user) {
+    const favRows = await db.all(
+      'SELECT design_id FROM user_favorites WHERE user_id = ? ORDER BY created_at DESC',
+      [req.user.id]);
+    const favSet = new Set(favRows.map((r) => r.design_id));
+    const designs = (await approvedDesigns(member)).filter((d) => favSet.has(d.id));
+    const viewer = await viewerFor(req.user);
+    const { fmtMoney } = require('../i18n');
+    const locale = res.locals.locale || 'en';
+    const priceStr = fmtMoney(locale, withFeeCents(premadePriceCents(new Date(), member)));
+    serverDesigns = designs.map((d) => ({
+      id: d.id,
+      title: d.title,
+      thumb: displayImgFile(d, viewer),
+      categories: d.categories.slice(0, 3),
+      price: priceStr,
+    }));
+  }
+  res.render('site/wishlist', {
+    title: 'My Wishlist — Saved Tattoo Designs | Tattoo Art Customs',
+    serverDesigns,
+    metaDescription: 'Your saved tattoo designs at Tattoo Art Customs — every piece you hearted, in one place. Come back anytime and buy the ones you love.',
+    canonical: `${config.baseUrl.replace(/\/$/, '')}/wishlist`,
+  });
+});
+
 router.get('/design/:id', async (req, res) => {
   const design = parseDesign(await db.get(
     "SELECT * FROM designs WHERE id = ? AND status = 'approved'", [req.params.id]));

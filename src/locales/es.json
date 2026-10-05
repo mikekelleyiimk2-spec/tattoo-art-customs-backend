@@ -559,7 +559,8 @@
     "skip": "Saltar al contenido principal",
     "studio": "Design Studio",
     "toggle_menu": "Abrir/cerrar menú",
-    "wallet": "Wallet"
+    "wallet": "Wallet",
+    "wishlist": "Favoritos"
   },
   "orders": {
     "amount": "Monto",
@@ -668,5 +669,16 @@
     "th_to": "A",
     "th_you_get": "Recibes",
     "title": "Retiro"
+  },
+  "fav": {
+    "title": "Mis favoritos",
+    "sub": "Todos los diseños marcados con un corazón, en un solo lugar — vuelve cuando quieras y compra tus favoritos.",
+    "empty_title": "Aún no tienes favoritos",
+    "empty_text": "Toca el corazón de un diseño para guardarlo aquí.",
+    "browse": "Ver la galería",
+    "buy": "Comprar ahora",
+    "add": "Guardar en favoritos",
+    "remove": "Quitar de favoritos",
+    "saved": "Diseños guardados"
   }
 }

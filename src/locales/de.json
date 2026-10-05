@@ -559,7 +559,8 @@
     "skip": "Zum Hauptinhalt springen",
     "studio": "Design-Studio",
     "toggle_menu": "Menü umschalten",
-    "wallet": "Wallet"
+    "wallet": "Wallet",
+    "wishlist": "Wunschliste"
   },
   "orders": {
     "amount": "Betrag",
@@ -668,5 +669,16 @@
     "th_to": "An",
     "th_you_get": "Du erhältst",
     "title": "Auszahlen"
+  },
+  "fav": {
+    "title": "Meine Wunschliste",
+    "sub": "Alle Designs mit Herz an einem Ort – komm jederzeit zurück und kaufe deine Favoriten.",
+    "empty_title": "Noch keine Favoriten",
+    "empty_text": "Tippe auf das Herz bei einem Design, um es hier zu speichern.",
+    "browse": "Galerie ansehen",
+    "buy": "Jetzt kaufen",
+    "add": "Zur Wunschliste",
+    "remove": "Von Wunschliste entfernen",
+    "saved": "Gespeicherte Designs"
   }
 }

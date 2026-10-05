@@ -559,7 +559,8 @@
     "skip": "Skip to main content",
     "studio": "Design Studio",
     "toggle_menu": "Toggle menu",
-    "wallet": "Wallet"
+    "wallet": "Wallet",
+    "wishlist": "Wishlist"
   },
   "orders": {
     "amount": "Amount",
@@ -668,5 +669,16 @@
     "th_to": "To",
     "th_you_get": "You get",
     "title": "Cashout"
+  },
+  "fav": {
+    "title": "My Wishlist",
+    "sub": "Every design you heart, in one place — come back anytime and buy the ones you love.",
+    "empty_title": "No favorites yet",
+    "empty_text": "Tap the heart on any design to save it here. Your wishlist waits for you.",
+    "browse": "Browse the gallery",
+    "buy": "Buy now",
+    "add": "Save to wishlist",
+    "remove": "Remove from wishlist",
+    "saved": "Saved designs"
   }
 }

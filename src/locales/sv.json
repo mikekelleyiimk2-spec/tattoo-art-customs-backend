@@ -559,7 +559,8 @@
     "skip": "Hoppa till huvudinnehåll",
     "studio": "Designstudio",
     "toggle_menu": "Växla meny",
-    "wallet": "Wallet"
+    "wallet": "Wallet",
+    "wishlist": "Önskelista"
   },
   "orders": {
     "amount": "Belopp",
@@ -668,5 +669,16 @@
     "th_to": "Till",
     "th_you_get": "Du får",
     "title": "Ta ut"
+  },
+  "fav": {
+    "title": "Min önskelista",
+    "sub": "Alla designer du hjärtmarkerat, på ett ställe — kom tillbaka när du vill och köp dina favoriter.",
+    "empty_title": "Inga favoriter ännu",
+    "empty_text": "Tryck på hjärtat på en design för att spara den här.",
+    "browse": "Bläddra i galleriet",
+    "buy": "Köp nu",
+    "add": "Spara i önskelistan",
+    "remove": "Ta bort från önskelistan",
+    "saved": "Sparade designer"
   }
 }
