@@ -18,6 +18,7 @@ const aftercare = require('./aftercare');
 const autofill = require('./autofill');
 const blasts = require('./blasts');
 const attribution = require('./attribution');
+const { isHttpUrl, resolveStoredPath, designImgUrl } = require('../lib/storage');
 
 const router = express.Router();
 const shopOnly = [requireLogin, requireSubscription('tattoo_shop')];
@@ -540,5 +541,65 @@ async function hasShopSub(userId) {
   try { return await hasActiveSubscription(userId, 'tattoo_shop'); }
   catch (_) { return false; }
 }
+
+// --- Scale & print: tile any design to any size across printed pages --------
+// Clean (watermark-free) artwork ONLY for designs this shop has purchased
+// (paid premade order). Everything else previews/prints watermarked, with a
+// buy link. The image endpoint below is login-gated; clean files are never
+// mounted publicly.
+router.get('/scale-print', ...shopOnly, async (req, res) => {
+  const designs = await db.all(
+    `SELECT d.id, d.title, d.linework_wm_path,
+            MAX(CASE WHEN o.id IS NULL THEN 0 ELSE 1 END) AS owned,
+            MAX(CASE WHEN o.linework_only THEN 0 ELSE 1 END) AS color_ok
+       FROM designs d
+       LEFT JOIN orders o ON o.design_id = d.id AND o.buyer_id = ?
+            AND o.status = 'paid' AND o.order_type = 'premade'
+      GROUP BY d.id ORDER BY d.title`,
+    [req.user.id]
+  );
+  res.render('toolkit/scale-print', {
+    title: 'Scale & print — Shop toolkit',
+    designs: designs.map((d) => ({
+      id: d.id, title: d.title,
+      thumb: designImgUrl(d.linework_wm_path),
+      owned: !!d.owned, colorOk: !!d.color_ok,
+    })),
+    flash: req.session.flash,
+  });
+  req.session.flash = null;
+});
+
+// Serves the artwork for the scaler: clean linework/color when owned,
+// watermarked preview otherwise.
+router.get('/scale-print/image/:designId', ...shopOnly, async (req, res) => {
+  const d = await db.get(
+    'SELECT id, title, color_path, linework_path, linework_wm_path FROM designs WHERE id = ?',
+    [req.params.designId]
+  );
+  if (!d) return res.status(404).send('Not found');
+  const order = await db.get(
+    `SELECT linework_only FROM orders WHERE buyer_id = ? AND design_id = ?
+     AND status = 'paid' AND order_type = 'premade'
+     ORDER BY created_at DESC LIMIT 1`,
+    [req.user.id, d.id]
+  );
+  const style = req.query.style === 'color' ? 'color' : 'linework';
+  let rel;
+  if (order) {
+    if (style === 'color' && order.linework_only) {
+      return res.status(403).send('You purchased linework only — the color version is not included.');
+    }
+    rel = style === 'color' ? d.color_path : d.linework_path;
+  } else {
+    rel = d.linework_wm_path;
+  }
+  if (!rel) return res.status(404).send('File missing');
+  if (isHttpUrl(rel)) return res.redirect(rel);
+  const abs = resolveStoredPath(rel);
+  if (!abs) return res.status(404).send('File missing');
+  res.set('Cache-Control', 'private, max-age=3600');
+  res.sendFile(abs);
+});
 
 module.exports = router;

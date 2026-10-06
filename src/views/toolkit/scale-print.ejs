@@ -1,0 +1,248 @@
+<% if (flash) { %><p class="flash"><%= flash %></p><% } %>
+<div id="scaler-ui">
+<h1>Scale &amp; print</h1>
+<p class="muted">Pick a design, scale it to any size, and print it tiled across as many pages as it takes — perfect for full-back pieces and other large patterns. <strong>Clean, watermark-free prints unlock only for designs you've purchased.</strong></p>
+
+<section class="card">
+  <h2>1. Pick a design</h2>
+  <p><input type="search" id="design-search" placeholder="Search designs…" aria-label="Search designs" style="width:100%;max-width:420px"></p>
+  <div id="design-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;max-height:320px;overflow:auto">
+    <% designs.forEach(function(d) { %>
+    <button type="button" class="design-pick" data-id="<%= d.id %>" data-title="<%= d.title.replace(/"/g, '&quot;') %>" data-owned="<%= d.owned ? 1 : 0 %>" data-color-ok="<%= d.colorOk ? 1 : 0 %>"
+      style="border:2px solid transparent;border-radius:8px;padding:4px;background:#fff;cursor:pointer">
+      <% if (d.thumb) { %><img src="<%= d.thumb %>" alt="" loading="lazy" style="width:100%;height:120px;object-fit:contain;background:#f4f1ea;border-radius:6px"><% } %>
+      <div style="font-size:12px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><%= d.title %></div>
+      <% if (d.owned) { %><div style="font-size:11px;color:#1a7f37;font-weight:700">Owned — clean print</div><% } else { %><div style="font-size:11px"><a href="/design/<%= d.id %>">Buy</a></div><% } %>
+    </button>
+    <% }); %>
+  </div>
+</section>
+
+<section class="card" id="config-card" style="display:none">
+  <h2>2. Size it</h2>
+  <p class="muted" id="own-note"></p>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end">
+    <div>
+      <label for="in-w">Width (in)</label><br>
+      <input type="number" id="in-w" min="0.5" max="120" step="0.25" value="8" style="width:90px">
+    </div>
+    <div>
+      <label for="in-h">Height (in)</label><br>
+      <input type="number" id="in-h" min="0.5" max="120" step="0.25" value="10" style="width:90px">
+    </div>
+    <div>
+      <label><input type="checkbox" id="lock-aspect" checked> Lock aspect</label>
+    </div>
+    <div>
+      <label for="preset">Body-part preset</label><br>
+      <select id="preset">
+        <option value="">— pick —</option>
+        <option value="2x3">Wrist / ankle — 2&Prime; × 3&Prime;</option>
+        <option value="4x6">Forearm — 4&Prime; × 6&Prime;</option>
+        <option value="6x8">Half sleeve — 6&Prime; × 8&Prime;</option>
+        <option value="8x10">Thigh — 8&Prime; × 10&Prime;</option>
+        <option value="10x12">Chest — 10&Prime; × 12&Prime;</option>
+        <option value="12x16">Full back — 12&Prime; × 16&Prime;</option>
+        <option value="10x18">Full sleeve — 10&Prime; × 18&Prime;</option>
+      </select>
+    </div>
+    <div>
+      <label for="scale-pct">Scale %</label><br>
+      <input type="number" id="scale-pct" min="10" max="1000" step="5" value="100" style="width:80px">
+    </div>
+    <div>
+      <label>Artwork</label><br>
+      <label><input type="radio" name="style" value="linework" checked> Linework (stencil)</label>
+      <label><input type="radio" name="style" value="color" id="style-color"> Color</label>
+    </div>
+    <div>
+      <label for="overlap">Tile overlap</label><br>
+      <select id="overlap">
+        <option value="0.25">0.25&Prime;</option>
+        <option value="0.5" selected>0.5&Prime;</option>
+        <option value="1">1&Prime;</option>
+      </select>
+    </div>
+  </div>
+  <p class="muted" id="tile-readout" style="margin-top:10px"></p>
+</section>
+
+<section class="card" id="preview-card" style="display:none">
+  <h2>3. Preview &amp; print</h2>
+  <p>
+    <button type="button" class="btn" id="print-btn">Print tiled pattern</button>
+    <span class="muted">US Letter, ½&Prime; margins. Tape pages together on the overlap using the corner marks.</span>
+  </p>
+  <div id="preview" style="overflow:auto;border:1px solid #ddd;border-radius:8px;padding:12px;background:#fafafa"></div>
+</section>
+</div>
+
+<div id="print-area" aria-hidden="true"></div>
+
+<style>
+#print-area { display: none; }
+.design-pick[aria-pressed="true"] { border-color: #C9A227 !important; }
+@media print {
+  @page { size: letter; margin: 0; }
+  .site-header, .site-footer, #scaler-ui { display: none !important; }
+  #main { padding: 0 !important; margin: 0 !important; max-width: none !important; }
+  #print-area { display: block !important; }
+  .print-page { width: 8.5in; height: 11in; page-break-after: always; position: relative; overflow: hidden; }
+  .print-page:last-child { page-break-after: auto; }
+  .tile-label { position: absolute; bottom: 0.15in; left: 0.5in; right: 0.5in; font-size: 9pt; color: #555;
+    display: flex; justify-content: space-between; }
+  .crop-mark { position: absolute; width: 0.3in; height: 0.3in; border: 0 solid #000; }
+}
+</style>
+
+<script>
+(function () {
+  'use strict';
+  var PAPER_W = 8.5, PAPER_H = 11, MARGIN = 0.5;
+  var PRINT_W = PAPER_W - MARGIN * 2, PRINT_H = PAPER_H - MARGIN * 2;
+  var MAX_PAGES = 120;
+
+  var state = { id: null, title: '', owned: false, colorOk: true, aspect: 1, style: 'linework', imgUrl: '' };
+
+  var grid = document.getElementById('design-grid');
+  var search = document.getElementById('design-search');
+  var configCard = document.getElementById('config-card');
+  var previewCard = document.getElementById('preview-card');
+  var inW = document.getElementById('in-w'), inH = document.getElementById('in-h');
+  var lockAspect = document.getElementById('lock-aspect');
+  var preset = document.getElementById('preset');
+  var scalePct = document.getElementById('scale-pct');
+  var overlapSel = document.getElementById('overlap');
+  var readout = document.getElementById('tile-readout');
+  var ownNote = document.getElementById('own-note');
+  var preview = document.getElementById('preview');
+  var printArea = document.getElementById('print-area');
+  var styleColor = document.getElementById('style-color');
+
+  search.addEventListener('input', function () {
+    var q = search.value.toLowerCase();
+    grid.querySelectorAll('.design-pick').forEach(function (b) {
+      b.style.display = b.getAttribute('data-title').toLowerCase().indexOf(q) === -1 ? 'none' : '';
+    });
+  });
+
+  grid.addEventListener('click', function (e) {
+    var btn = e.target.closest('.design-pick');
+    if (!btn) return;
+    grid.querySelectorAll('.design-pick').forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
+    btn.setAttribute('aria-pressed', 'true');
+    state.id = btn.getAttribute('data-id');
+    state.title = btn.getAttribute('data-title');
+    state.owned = btn.getAttribute('data-owned') === '1';
+    state.colorOk = btn.getAttribute('data-color-ok') === '1';
+    if (!state.colorOk) { styleColor.disabled = true; document.querySelector('input[name="style"][value="linework"]').checked = true; state.style = 'linework'; }
+    else { styleColor.disabled = false; }
+    ownNote.innerHTML = state.owned
+      ? '<span style="color:#1a7f37;font-weight:700">Clean print unlocked</span> — you own this design, the print below is watermark-free.'
+      : 'Watermarked preview — <a href="/design/' + state.id + '">buy this design</a> to unlock the clean print.';
+    configCard.style.display = '';
+    loadArtwork();
+  });
+
+  document.querySelectorAll('input[name="style"]').forEach(function (r) {
+    r.addEventListener('change', function () { state.style = r.value; loadArtwork(); });
+  });
+
+  function imgSrc() { return '/toolkit/scale-print/image/' + state.id + '?style=' + state.style; }
+
+  function loadArtwork() {
+    var img = new Image();
+    img.onload = function () {
+      state.aspect = img.naturalWidth / img.naturalHeight;
+      state.imgUrl = imgSrc();
+      if (lockAspect.checked) { inH.value = (parseFloat(inW.value) / state.aspect).toFixed(2); }
+      render();
+    };
+    img.onerror = function () { readout.textContent = 'Could not load the artwork file.'; };
+    img.src = imgSrc();
+  }
+
+  function dims() {
+    var w = Math.min(120, Math.max(0.5, parseFloat(inW.value) || 8));
+    var h = Math.min(120, Math.max(0.5, parseFloat(inH.value) || 8));
+    return { w: w, h: h };
+  }
+
+  function tiles(w, h, ov) {
+    var stepX = PRINT_W - ov, stepY = PRINT_H - ov;
+    var cols = w <= PRINT_W ? 1 : Math.ceil((w - PRINT_W) / stepX) + 1;
+    var rows = h <= PRINT_H ? 1 : Math.ceil((h - PRINT_H) / stepY) + 1;
+    return { cols: cols, rows: rows, stepX: stepX, stepY: stepY };
+  }
+
+  inW.addEventListener('input', function () {
+    if (lockAspect.checked && state.aspect) { inH.value = (parseFloat(inW.value) / state.aspect).toFixed(2); }
+    scalePct.value = 100; render();
+  });
+  inH.addEventListener('input', function () {
+    if (lockAspect.checked && state.aspect) { inW.value = (parseFloat(inH.value) * state.aspect).toFixed(2); }
+    scalePct.value = 100; render();
+  });
+  preset.addEventListener('change', function () {
+    if (!preset.value) return;
+    var p = preset.value.split('x');
+    inW.value = p[0]; inH.value = p[1]; scalePct.value = 100; render();
+  });
+  scalePct.addEventListener('input', function () {
+    var base = { w: parseFloat(inW.value) || 8, h: parseFloat(inH.value) || 8 };
+    var f = (parseFloat(scalePct.value) || 100) / 100;
+    // scale relative to the 100% baseline captured on change
+    if (!scalePct._base) scalePct._base = base;
+    inW.value = (scalePct._base.w * f).toFixed(2);
+    inH.value = (scalePct._base.h * f).toFixed(2);
+    render();
+  });
+  scalePct.addEventListener('focus', function () {
+    scalePct._base = { w: parseFloat(inW.value) || 8, h: parseFloat(inH.value) || 8 };
+  });
+  overlapSel.addEventListener('change', render);
+
+  function tileHtml(c, r, t, d, ov, n, forPrint) {
+    var x0 = c * t.stepX, y0 = r * t.stepY;
+    var tw = Math.min(PRINT_W, d.w - x0), th = Math.min(PRINT_H, d.h - y0);
+    var u = forPrint ? 'in' : 'px';
+    var k = forPrint ? 1 : 28; // screen preview: 28px per inch
+    function v(inches) { return (inches * k).toFixed(1) + u; }
+    var label = 'Page ' + n + ' of ' + (t.cols * t.rows) + ' — row ' + (r + 1) + ', col ' + (c + 1);
+    return '' +
+    '<div class="print-page" style="' + (forPrint ? '' : 'width:' + v(PAPER_W) + ';height:' + v(PAPER_H) + ';position:relative;overflow:hidden;background:#fff;border:1px solid #ccc;margin:0 12px 12px 0;display:inline-block;vertical-align:top;') + '">' +
+      '<div style="position:absolute;left:' + v(MARGIN) + ';top:' + v(MARGIN) + ';width:' + v(tw) + ';height:' + v(th) + ';overflow:hidden">' +
+        '<img src="' + state.imgUrl + '" alt="" style="position:absolute;width:' + v(d.w) + ';height:' + v(d.h) + ';left:-' + v(x0) + ';top:-' + v(y0) + ';max-width:none">' +
+      '</div>' +
+      (c > 0 ? '<div title="overlap" style="position:absolute;left:' + v(MARGIN) + ';top:' + v(MARGIN) + ';width:' + v(ov) + ';height:' + v(th) + ';background:rgba(201,162,39,.18)"></div>' : '') +
+      (r > 0 ? '<div title="overlap" style="position:absolute;left:' + v(MARGIN) + ';top:' + v(MARGIN) + ';width:' + v(tw) + ';height:' + v(ov) + ';background:rgba(201,162,39,.18)"></div>' : '') +
+      '<div class="tile-label" style="' + (forPrint ? '' : 'position:absolute;bottom:4px;left:14px;right:14px;font-size:10px;color:#555;display:flex;justify-content:space-between;') + '">' +
+        '<span>' + label + '</span><span>' + d.w + '&Prime; × ' + d.h + '&Prime;</span>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function render() {
+    if (!state.id || !state.imgUrl) return;
+    var d = dims(), ov = parseFloat(overlapSel.value);
+    var t = tiles(d.w, d.h, ov);
+    var total = t.cols * t.rows;
+    if (total > MAX_PAGES) {
+      readout.textContent = 'That size needs ' + total + ' pages — over the ' + MAX_PAGES + ' page limit. Reduce the size.';
+      preview.innerHTML = ''; printArea.innerHTML = ''; previewCard.style.display = 'none';
+      return;
+    }
+    readout.textContent = total + (total === 1 ? ' page' : ' pages') + ' (' + t.cols + ' × ' + t.rows + ') — US Letter, ½″ margins, ' + ov + '″ overlap.';
+    var html = '', n = 0;
+    for (var r = 0; r < t.rows; r++) for (var c = 0; c < t.cols; c++) { n++; html += tileHtml(c, r, t, d, ov, n, false); }
+    preview.innerHTML = html;
+    previewCard.style.display = '';
+    // build the print version (real inches)
+    var ph = '', m = 0;
+    for (var r2 = 0; r2 < t.rows; r2++) for (var c2 = 0; c2 < t.cols; c2++) { m++; ph += tileHtml(c2, r2, t, d, ov, m, true); }
+    printArea.innerHTML = ph;
+  }
+
+  document.getElementById('print-btn').addEventListener('click', function () { window.print(); });
+})();
+</script>
