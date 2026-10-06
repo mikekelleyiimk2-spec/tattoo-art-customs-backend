@@ -191,7 +191,9 @@
     "buy_for_client": "Buy for a client",
     "buy_for_client_note": "Purchase this design at full price for your client. The cost is added to a client bill on your dashboard for you to collect. You earn no referral commission on your own purchase.",
     "client_email": "Client email address",
-    "buy_for_client_btn": "Buy for client"
+    "buy_for_client_btn": "Buy for client",
+    "prev_design": "Design anterior",
+    "next_design": "Próximo design"
   },
   "footer": {
     "advertise": "Anuncie",

@@ -3,7 +3,34 @@
 <% } %>
 <div class="two-col">
   <div>
-    <img class="detail-img" src="/img/designs/<%= imgFile || design.linework_wm_path.split('/').pop() %>" alt="<%= t('design.linework_alt', {title: design.title}) %>" decoding="async">
+    <div class="design-swipe" id="designSwipe"<% if (typeof prevId !== 'undefined' && prevId) { %> data-prev="/design/<%= prevId %>"<% } %><% if (typeof nextId !== 'undefined' && nextId) { %> data-next="/design/<%= nextId %>"<% } %>>
+      <img class="detail-img" src="/img/designs/<%= imgFile || design.linework_wm_path.split('/').pop() %>" alt="<%= t('design.linework_alt', {title: design.title}) %>" decoding="async">
+      <% if (typeof prevId !== 'undefined' && prevId) { %><a class="swipe-arrow left" href="/design/<%= prevId %>" aria-label="<%= t('design.prev_design') %>">‹</a><% } %>
+      <% if (typeof nextId !== 'undefined' && nextId) { %><a class="swipe-arrow right" href="/design/<%= nextId %>" aria-label="<%= t('design.next_design') %>">›</a><% } %>
+    </div>
+    <script>
+    (function () {
+      var el = document.getElementById('designSwipe');
+      if (!el) return;
+      var sx = null, sy = null;
+      el.addEventListener('touchstart', function (e) {
+        var t = e.changedTouches[0]; sx = t.clientX; sy = t.clientY;
+      }, { passive: true });
+      el.addEventListener('touchend', function (e) {
+        if (sx === null) return;
+        var t = e.changedTouches[0];
+        var dx = t.clientX - sx, dy = t.clientY - sy; sx = null;
+        if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+          var url = dx < 0 ? el.dataset.next : el.dataset.prev;
+          if (url) window.location.href = url;
+        }
+      }, { passive: true });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowLeft' && el.dataset.prev) window.location.href = el.dataset.prev;
+        else if (e.key === 'ArrowRight' && el.dataset.next) window.location.href = el.dataset.next;
+      });
+    })();
+    </script>
     <% if (blurred) { %>
     <p class="muted"><strong><%= t('design.blurred_note') %></strong>
       <a href="/account#content"><%= t('design.verify_age') %></a> <%= t('design.blurred_tail') %></p>

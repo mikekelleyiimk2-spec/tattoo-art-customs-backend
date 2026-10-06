@@ -168,6 +168,17 @@ for (const d of [wmDir, uploadWmDir, photosDir, avatarsDir, adsDir, healedDir]) 
 const imgCacheOpts = { maxAge: '7d' };
 app.use('/img/designs', express.static(uploadWmDir, imgCacheOpts));
 app.use('/img/designs', express.static(wmDir, imgCacheOpts));
+// R2 fallback for gallery previews: when a file isn't on local disk (e.g.
+// once we stop baking previews into the Docker image), redirect to the R2
+// public copy under the same designs/ key namespace the storage module uses
+// for new uploads. Local files always win, so this changes nothing while
+// baked copies exist. Needs R2_PUBLIC_URL in env.
+app.use('/img/designs', (req, res, next) => {
+  const base = (process.env.R2_PUBLIC_URL || '').replace(/\/$/, '');
+  const m = /^\/([A-Za-z0-9._-]+)$/.exec(req.path);
+  if (!base || !m) return next();
+  return res.redirect(302, `${base}/designs/${m[1]}`);
+});
 app.use('/img/photos', express.static(photosDir));
 app.use('/img/healed', express.static(healedDir));
 app.use('/img/avatars', express.static(avatarsDir));

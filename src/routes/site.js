@@ -311,6 +311,15 @@ router.get('/design/:id', async (req, res) => {
   const viewer = await viewerFor(req.user);
   const imgFile = displayImgFile(design, viewer, owned);
   const blurred = design.sensitivity === 'explicit' && !canViewUnblurred(design, viewer, owned);
+  // Prev/next design navigation (gallery order: newest first). Custom
+  // portfolio pieces aren't in the gallery list — they get no arrows.
+  let prevId = null, nextId = null;
+  const galleryIds = (await approvedDesigns(member)).map((d) => d.id);
+  const pos = galleryIds.indexOf(design.id);
+  if (pos >= 0) {
+    if (pos > 0) prevId = galleryIds[pos - 1];
+    if (pos < galleryIds.length - 1) nextId = galleryIds[pos + 1];
+  }
   const base = config.baseUrl.replace(/\/$/, '');
   const canonical = `${base}/design/${design.id}`;
   const styleBit = design.style ? `${design.style} ` : '';
@@ -337,7 +346,7 @@ router.get('/design/:id', async (req, res) => {
   res.render('site/design', {
     title: `${design.title} — ${styleBit}Tattoo Design for Sale | Tattoo Art Customs`,
     design, artist, price, isCustom, sale: await salePriceActive(req.user), owned,
-    imgFile, blurred,
+    imgFile, blurred, prevId, nextId,
     // Shops with an active subscription can buy a design for a client (Phase 2).
     canBuyForClient: req.user ? await require('../middleware/auth').hasActiveSubscription(req.user.id, 'tattoo_shop') : false,
     // Linework-only purchase option (3% discount). Pieces with no color

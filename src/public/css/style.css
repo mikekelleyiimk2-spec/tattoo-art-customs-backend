@@ -93,6 +93,20 @@ th { background: var(--paper-dim); }
 .site-footer a { color: var(--paper); }
 .fineprint { text-align: center; font-size: .8rem; color: #b9b0a0; margin-top: 1.5em; }
 .detail-img { max-width: 520px; width: 100%; border: 1px solid var(--line); border-radius: var(--radius); }
+/* Swipeable design viewer: prev/next arrows overlaid on the picture. */
+.design-swipe { position: relative; max-width: 520px; }
+.design-swipe .detail-img { display: block; }
+.swipe-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 46px; height: 46px; border-radius: 50%;
+  background: rgba(20, 16, 12, .5); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px; line-height: 1; text-decoration: none;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+.swipe-arrow.left { left: 10px; }
+.swipe-arrow.right { right: 10px; }
+.swipe-arrow:hover, .swipe-arrow:active { background: rgba(20, 16, 12, .75); color: #fff; }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
 .thread { list-style: none; padding: 0; }
 .thread li { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: .8em 1em; margin: .6em 0; }
