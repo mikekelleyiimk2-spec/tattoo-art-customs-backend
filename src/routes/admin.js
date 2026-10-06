@@ -21,6 +21,12 @@ const { verifyShop } = require('../shop/verification');
 
 const router = express.Router();
 
+// DEBUG: log all POSTs reaching the admin router
+router.use((req, res, next) => {
+  if (req.method === 'POST') console.log('[admin-router] POST', req.path);
+  next();
+});
+
 // Stop impersonating — must be registered BEFORE the admin guard below,
 // because while impersonating a non-admin account req.user is that account
 // and would fail requireRole('admin').
