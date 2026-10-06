@@ -217,12 +217,39 @@
       '<div style="position:absolute;left:' + v(MARGIN) + ';top:' + v(MARGIN) + ';width:' + v(tw) + ';height:' + v(th) + ';overflow:hidden">' +
         '<img src="' + state.imgUrl + '" alt="" style="position:absolute;width:' + v(d.w) + ';height:' + v(d.h) + ';left:-' + v(x0) + ';top:-' + v(y0) + ';max-width:none">' +
       '</div>' +
+      cornerMarks(tw, th, forPrint) +
       (c > 0 ? '<div title="overlap" style="position:absolute;left:' + v(MARGIN) + ';top:' + v(MARGIN) + ';width:' + v(ov) + ';height:' + v(th) + ';background:rgba(201,162,39,.18)"></div>' : '') +
       (r > 0 ? '<div title="overlap" style="position:absolute;left:' + v(MARGIN) + ';top:' + v(MARGIN) + ';width:' + v(tw) + ';height:' + v(ov) + ';background:rgba(201,162,39,.18)"></div>' : '') +
       '<div class="tile-label" style="' + (forPrint ? '' : 'position:absolute;bottom:4px;left:14px;right:14px;font-size:10px;color:#555;display:flex;justify-content:space-between;') + '">' +
         '<span>' + label + '</span><span>' + d.w + '&Prime; × ' + d.h + '&Prime;</span>' +
       '</div>' +
     '</div>';
+  }
+
+  // Real crop/alignment marks: L-shaped registration corners just outside the
+  // tile's image area (inside the ½" margin). Line the marks up when taping
+  // pages together and the tiles register exactly.
+  function cornerMarks(tw, th, forPrint) {
+    var u = forPrint ? 'in' : 'px';
+    var k = forPrint ? 1 : 28;
+    function v(inches) { return (inches * k).toFixed(2) + u; }
+    var L = 0.25, T = 0.02, O = 0.06; // arm length, thickness, offset outside tile
+    var x0 = MARGIN - O, y0 = MARGIN - O;
+    var x1 = MARGIN + tw + O, y1 = MARGIN + th + O;
+    function hbar(x, y, leftward) {
+      var lx = leftward ? x - L : x;
+      return '<div class="crop-mark" style="position:absolute;left:' + v(lx) + ';top:' + v(y - T / 2) +
+        ';width:' + v(L) + ';height:' + v(T) + ';background:#000"></div>';
+    }
+    function vbar(x, y, upward) {
+      var ty = upward ? y - L : y;
+      return '<div class="crop-mark" style="position:absolute;left:' + v(x - T / 2) + ';top:' + v(ty) +
+        ';width:' + v(T) + ';height:' + v(L) + ';background:#000"></div>';
+    }
+    return hbar(x0, y0, false) + vbar(x0, y0, false) +   // top-left
+           hbar(x1, y0, true)  + vbar(x1, y0, false) +   // top-right
+           hbar(x0, y1, false) + vbar(x0, y1, true)  +   // bottom-left
+           hbar(x1, y1, true)  + vbar(x1, y1, true);     // bottom-right
   }
 
   function render() {

@@ -555,7 +555,7 @@ router.get('/scale-print', ...shopOnly, async (req, res) => {
   const myEmail = (await db.get('SELECT email FROM users WHERE id = ?', [req.user.id]) || {}).email || '';
   const designs = await db.all(
     `SELECT d.id, d.title, d.linework_wm_path,
-            MAX(CASE WHEN o.linework_only THEN 0 ELSE 1 END) AS color_ok,
+            MAX(CASE WHEN src.linework_only THEN 0 ELSE 1 END) AS color_ok,
             MAX(CASE WHEN src.kind = 'transfer' THEN 1 ELSE 0 END) AS via_transfer,
             MAX(src.from_name) AS from_name
        FROM (
@@ -588,8 +588,10 @@ router.get('/scale-print', ...shopOnly, async (req, res) => {
   req.session.flash = null;
 });
 
-// Serves the artwork for the scaler: clean linework/color when owned,
-// watermarked preview otherwise.
+// Serves the artwork for the scaler: clean linework/color ONLY for designs
+// this shop purchased (paid premade order) or a customer transferred to it.
+// Anything else gets 403 — there is intentionally no watermarked print path
+// (owner rule 2026-10-06).
 router.get('/scale-print/image/:designId', ...shopOnly, async (req, res) => {
   const d = await db.get(
     'SELECT id, title, color_path, linework_path, linework_wm_path FROM designs WHERE id = ?',
@@ -603,21 +605,16 @@ router.get('/scale-print/image/:designId', ...shopOnly, async (req, res) => {
          OR EXISTS (SELECT 1 FROM art_transfers t
                      WHERE t.order_id = o.id AND t.kind = 'to_shop' AND t.design_id = o.design_id
                        AND (t.to_shop_user_id = ? OR LOWER(t.to_email) = LOWER(
-                         (SELECT email FROM users WHERE id = ?))))))
+                         (SELECT email FROM users WHERE id = ?)))))
      ORDER BY o.created_at DESC LIMIT 1`,
     [d.id, req.user.id, req.user.id, req.user.id]
   );
   if (!order) return res.status(403).send('This tool is only for designs you have purchased or that a customer sent you.');
   const style = req.query.style === 'color' ? 'color' : 'linework';
-  let rel;
-  if (order) {
-    if (style === 'color' && order.linework_only) {
-      return res.status(403).send('You purchased linework only — the color version is not included.');
-    }
-    rel = style === 'color' ? d.color_path : d.linework_path;
-  } else {
-    rel = d.linework_wm_path;
+  if (style === 'color' && order.linework_only) {
+    return res.status(403).send('You purchased linework only — the color version is not included.');
   }
+  const rel = style === 'color' ? d.color_path : d.linework_path;
   if (!rel) return res.status(404).send('File missing');
   if (isHttpUrl(rel)) return res.redirect(rel);
   const abs = resolveStoredPath(rel);
