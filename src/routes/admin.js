@@ -21,12 +21,6 @@ const { verifyShop } = require('../shop/verification');
 
 const router = express.Router();
 
-// DEBUG: log all POSTs reaching the admin router
-router.use((req, res, next) => {
-  if (req.method === 'POST') console.log('[admin-router] POST', req.path);
-  next();
-});
-
 // Stop impersonating — must be registered BEFORE the admin guard below,
 // because while impersonating a non-admin account req.user is that account
 // and would fail requireRole('admin').
@@ -833,16 +827,13 @@ router.post('/members/:id/grant-comp', requireHeadAdmin, formLimiter, checkHoney
   const slug = String(req.body.plan || '');
   const lifetime = req.body.lifetime === '1';
   const months = parseInt(req.body.months, 10);
-  console.log('[grant-comp] start', { slug, months, lifetime, memberId: req.params.id });
   const plan = await db.get('SELECT * FROM plans WHERE slug = ? AND active = 1', [slug]);
-  console.log('[grant-comp] plan lookup done', { found: !!plan });
   if (!plan || !['customer', 'customer_annual', 'design_artist', 'tattoo_shop'].includes(slug)
       || (!lifetime && (!Number.isInteger(months) || months < 1 || months > 36))) {
     req.session.flash = lifetime ? 'Choose a valid plan.' : 'Choose a valid plan and a term of 1–36 months.';
     return res.redirect('/admin/members');
   }
   const user = await db.get('SELECT id, role FROM users WHERE id = ?', [req.params.id]);
-  console.log('[grant-comp] user lookup done', { found: !!user });
   if (!user) return res.redirect('/admin/members');
   if (isAdminRole(user.role)) {
     req.session.flash = 'Complimentary grants are for non-admin accounts only — admins already have full access.';
@@ -858,7 +849,6 @@ router.post('/members/:id/grant-comp', requireHeadAdmin, formLimiter, checkHoney
   const existing = await db.get(
     `SELECT * FROM subscriptions WHERE user_id = ? AND plan_id = ? AND status = 'active'
      AND (current_period_end IS NULL OR current_period_end > ?)`, [user.id, plan.id, nowMs]);
-  console.log('[grant-comp] existing sub check done', { found: !!existing });
   if (existing) {
     if (lifetime) {
       await db.update('subscriptions', existing.id, { current_period_end: null });
@@ -875,11 +865,8 @@ router.post('/members/:id/grant-comp', requireHeadAdmin, formLimiter, checkHoney
   }
   // Artist/shop plans also carry the matching role (idempotent, skips admins).
   const { grantPlanRole } = require('../lib/planRoles');
-  console.log('[grant-comp] before grantPlanRole');
   await grantPlanRole(user.id, plan.slug);
-  console.log('[grant-comp] after grantPlanRole, before payAdmin');
   await payAdmin(req, 'member_comp_grant', 'user', user.id);
-  console.log('[grant-comp] after payAdmin, redirecting');
   req.session.flash = lifetime
     ? `Complimentary ${plan.name} granted for life.`
     : `Complimentary ${plan.name} granted for ${months} month${months === 1 ? '' : 's'}.`;
