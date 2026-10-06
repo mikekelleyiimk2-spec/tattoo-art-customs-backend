@@ -164,7 +164,8 @@
     "pay_deposit_rush": "支付{deposit}定金（加急）",
     "rush_text": "在定金基础上加{fee}加急费（今日共{total}，含手续费）。您的设计将优先处理，24小时内交付而非48小时。费用的{cut}将作为加急奖励直接支付给您的设计师。",
     "rush_title": "⚡ 加急设计——24小时交付（+{fee}）",
-    "title": "定制设计需求"
+    "title": "定制设计需求",
+    "requesting_design": "You are requesting: {title}"
   },
   "design": {
     "blurred_note": "此预览已模糊处理——该作品被评为限制级。",
@@ -193,7 +194,10 @@
     "client_email": "Client email address",
     "buy_for_client_btn": "Buy for client",
     "prev_design": "上一个设计",
-    "next_design": "下一个设计"
+    "next_design": "下一个设计",
+    "request_only_title": "Available by request only",
+    "request_only_note": "This design is delivered as a custom order — black linework and full-color versions included.",
+    "request_this_design": "Request this design"
   },
   "footer": {
     "advertise": "广告",

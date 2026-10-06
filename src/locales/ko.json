@@ -164,7 +164,8 @@
     "pay_deposit_rush": "{deposit} 계약금 결제 (긴급)",
     "rush_text": "계약금에 {fee} 긴급 수수료를 추가하세요 (오늘 총 {total}, 수수료 포함). 디자인이 맨 앞으로 가서 48시간이 아닌 24시간 안에 배송돼요. 수수료의 {cut}는 긴급 인센티브로 디자이너에게 직접 가요.",
     "rush_title": "⚡ 긴급 디자인 — 24시간 배송 (+{fee})",
-    "title": "커스텀 디자인 요청"
+    "title": "커스텀 디자인 요청",
+    "requesting_design": "요청 중: {title}"
   },
   "design": {
     "blurred_note": "이 미리보기는 블러 처리됐어요 — 이 작품은 성인용으로 분류돼요.",
@@ -193,7 +194,10 @@
     "client_email": "Client email address",
     "buy_for_client_btn": "Buy for client",
     "prev_design": "이전 디자인",
-    "next_design": "다음 디자인"
+    "next_design": "다음 디자인",
+    "request_only_title": "요청 시에만 제공",
+    "request_only_note": "이 디자인은 커스텀 주문으로 제공됩니다 — 블랙 라인워크와 풀컬러 버전 포함.",
+    "request_this_design": "이 디자인 요청하기"
   },
   "footer": {
     "advertise": "광고",

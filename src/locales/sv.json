@@ -164,7 +164,8 @@
     "pay_deposit_rush": "Betala {deposit} i deposition (rush)",
     "rush_text": "Lägg till en rushavgift på {fee} till din deposition ({total} totalt idag, hanteringsavgift ingår). Din design hoppar längst fram i kön och levereras inom 24 timmar istället för 48. {cut} av avgiften går direkt till din designer som rushbonus.",
     "rush_title": "⚡ Rusha min design — leverans inom 24 timmar (+{fee})",
-    "title": "Beställ en customdesign"
+    "title": "Beställ en customdesign",
+    "requesting_design": "Du begär: {title}"
   },
   "design": {
     "blurred_note": "Denna förhandsvisning är suddig — piecen är klassad som explicit.",
@@ -193,7 +194,10 @@
     "client_email": "Client email address",
     "buy_for_client_btn": "Buy for client",
     "prev_design": "Föregående design",
-    "next_design": "Nästa design"
+    "next_design": "Nästa design",
+    "request_only_title": "Endast på förfrågan",
+    "request_only_note": "Denna design levereras som en anpassad beställning — svart linework och fullfärgsversion ingår.",
+    "request_this_design": "Begär denna design"
   },
   "footer": {
     "advertise": "Annonsera",

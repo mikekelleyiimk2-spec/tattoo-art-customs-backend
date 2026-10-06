@@ -54,6 +54,13 @@
     <p><strong><%= fmtMoney(priceTotal) %></strong> <span class="muted"><%= t('design.price_includes', {fee: fmtMoney(priceFee)}) %></span> <% if (sale) { %><span class="badge ok"><%= t('design.sale_price') %></span><% } %> <% if (typeof isCustom !== 'undefined' && isCustom) { %><span class="badge"><%= t('design.custom_portfolio') %></span><% } %></p>
     <% if (vatNote) { %><p class="muted fineprint"><%= vatNote %></p><% } %>
     <% if (currentUser) { %>
+    <% if (design.request_only) { %>
+    <div class="card">
+      <p><strong><%= t('design.request_only_title') %></strong></p>
+      <p class="muted"><%= t('design.request_only_note') %></p>
+      <p><a class="btn" href="/orders/custom?design=<%= design.id %>"><%= t('design.request_this_design') %></a></p>
+    </div>
+    <% } else { %>
     <form method="post" action="/orders/buy/<%= design.id %>">
       <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
       <% if (design.color_source === 'none') { %>
@@ -73,7 +80,8 @@
       <p><button class="btn btn-secondary" type="submit" name="use_credit" value="1"><%= t('design.pay_credit', {balance: fmtMoney(creditBalance)}) %></button></p>
       <% } %>
     </form>
-    <% if (typeof canBuyForClient !== 'undefined' && canBuyForClient) { %>
+    <% } %>
+    <% if (typeof canBuyForClient !== 'undefined' && canBuyForClient && !design.request_only) { %>
     <details class="card" style="margin-top:1rem">
       <summary><strong><%= t('design.buy_for_client') %></strong></summary>
       <p class="muted"><%= t('design.buy_for_client_note') %></p>

@@ -164,7 +164,8 @@
     "pay_deposit_rush": "Pagar {deposit} de anticipo (rush)",
     "rush_text": "Añade una tarifa rush de {fee} a tu anticipo ({total} en total hoy, gastos de gestión incluidos). Tu diseño salta al frente de la cola y se entrega en 24 horas en vez de 48. {cut} de la tarifa van directo a tu diseñador como incentivo rush.",
     "rush_title": "⚡ Rush en mi diseño — entrega en 24 horas (+{fee})",
-    "title": "Pedir un custom"
+    "title": "Pedir un custom",
+    "requesting_design": "Estás solicitando: {title}"
   },
   "design": {
     "blurred_note": "Esta vista previa está borrosa — la pieza está clasificada como explícita.",
@@ -193,7 +194,10 @@
     "client_email": "Client email address",
     "buy_for_client_btn": "Buy for client",
     "prev_design": "Diseño anterior",
-    "next_design": "Diseño siguiente"
+    "next_design": "Diseño siguiente",
+    "request_only_title": "Disponible solo bajo pedido",
+    "request_only_note": "Este diseño se entrega como pedido personalizado: versiones en línea negra y a todo color incluidas.",
+    "request_this_design": "Solicitar este diseño"
   },
   "footer": {
     "advertise": "Publicidad",

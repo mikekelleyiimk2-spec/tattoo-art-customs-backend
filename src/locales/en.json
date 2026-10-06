@@ -164,7 +164,8 @@
     "pay_deposit_rush": "Pay {deposit} deposit (rush)",
     "rush_text": "Add a {fee} rush fee to your deposit ({total} total today, processing fee included). Your design jumps to the front of the line and is delivered within 24 hours instead of 48. {cut} of the fee goes straight to your designer as a rush incentive.",
     "rush_title": "⚡ Rush my design — 24-hour delivery (+{fee})",
-    "title": "Request a custom design"
+    "title": "Request a custom design",
+    "requesting_design": "You are requesting: {title}"
   },
   "design": {
     "blurred_note": "This preview is blurred — the piece is rated explicit.",
@@ -193,7 +194,10 @@
     "client_email": "Client email address",
     "buy_for_client_btn": "Buy for client",
     "prev_design": "Previous design",
-    "next_design": "Next design"
+    "next_design": "Next design",
+    "request_only_title": "Available by request only",
+    "request_only_note": "This design is delivered as a custom order — black linework and full-color versions included.",
+    "request_this_design": "Request this design"
   },
   "footer": {
     "advertise": "Advertise",

@@ -7,7 +7,10 @@
 <form method="post" action="/orders/custom" class="form">
   <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
   <label for="brief"><%= t('customs.brief_label') %></label>
-  <textarea id="brief" name="brief" required minlength="20" maxlength="4000" placeholder="<%= t('customs.brief_ph') %>"></textarea>
+  <% if (typeof designTitle !== 'undefined' && designTitle) { %>
+  <p class="notice"><%= t('customs.requesting_design', {title: designTitle}) %></p>
+  <% } %>
+  <textarea id="brief" name="brief" required minlength="20" maxlength="4000" placeholder="<%= t('customs.brief_ph') %>"><% if (typeof designBrief !== 'undefined' && designBrief) { %><%= designBrief %><% } %></textarea>
   <% if (typeof artists !== 'undefined' && artists.length) { %>
   <label for="requested_artist_id"><%= t('customs.artist_label') %></label>
   <select id="requested_artist_id" name="requested_artist_id">

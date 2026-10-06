@@ -164,7 +164,8 @@
     "pay_deposit_rush": "{deposit} Anzahlung zahlen (Rush)",
     "rush_text": "Füge deiner Anzahlung eine Rush-Gebühr von {fee} hinzu ({total} gesamt heute, Bearbeitungsgebühr inklusive). Dein Design rutscht ganz nach vorne und wird innerhalb von 24 Stunden statt 48 geliefert. {cut} der Gebühr gehen direkt als Rush-Bonus an deinen Designer.",
     "rush_title": "⚡ Rush mein Design — Lieferung in 24 Stunden (+{fee})",
-    "title": "Custom-Design anfragen"
+    "title": "Custom-Design anfragen",
+    "requesting_design": "Du fragst an: {title}"
   },
   "design": {
     "blurred_note": "Diese Vorschau ist verschwommen — das Piece ist als explizit eingestuft.",
@@ -193,7 +194,10 @@
     "client_email": "Client email address",
     "buy_for_client_btn": "Buy for client",
     "prev_design": "Vorheriges Design",
-    "next_design": "Nächstes Design"
+    "next_design": "Nächstes Design",
+    "request_only_title": "Nur auf Anfrage erhältlich",
+    "request_only_note": "Dieses Design wird als Custom-Auftrag geliefert – schwarze Linework- und Vollfarb-Versionen inklusive.",
+    "request_this_design": "Dieses Design anfragen"
   },
   "footer": {
     "advertise": "Werbung",

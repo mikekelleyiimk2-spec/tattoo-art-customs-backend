@@ -55,6 +55,38 @@ async function seedCatalog() {
     inserted++;
   }
   console.log(`[seed-catalog] imported ${inserted}/${manifest.length} catalog designs`);
+  await markRequestOnly();
 }
 
-module.exports = { seedCatalog };
+// Trademarked/pop-culture character designs: customers must request them —
+// they are fulfilled as custom orders, never instant-buy. Runs every boot so
+// the flag stays correct even for rows imported before the column existed.
+const REQUEST_ONLY_IDS = [
+  'batch5-joker-card-milenko', 'batch5-joker-card-riddlebox', 'batch5-joker-card-ringmaster',
+  'mixed-batch-kratos', 'mixed-batch-link-zelda', 'mixed-batch-mario', 'mixed-batch-master-chief',
+  'mixed-batch-rem-death-note', 'mixed-batch-ryuk', 'mixed-batch-stitch',
+  'pop-culture-decim', 'pop-culture-eva-unit-01', 'pop-culture-evangelion-angel',
+  'pop-culture-finn-and-jake', 'pop-culture-gojo', 'pop-culture-goku', 'pop-culture-guts',
+  'pop-culture-inuyasha', 'pop-culture-kirito', 'pop-culture-l-death-note', 'pop-culture-levi',
+  'pop-culture-light-yagami', 'pop-culture-lucy-with-vectors', 'pop-culture-lucy-without-vectors',
+  'pop-culture-luffy', 'pop-culture-makishima', 'pop-culture-motoko', 'pop-culture-naruto',
+  'pop-culture-pikachu', 'pop-culture-spike-spiegel', 'pop-culture-tanjiro',
+];
+
+async function markRequestOnly() {
+  try {
+    const placeholders = REQUEST_ONLY_IDS.map(() => '?').join(',');
+    const r = await db.run(
+      `UPDATE designs SET request_only = 1 WHERE id IN (${placeholders}) AND (request_only IS NULL OR request_only = 0)`,
+      REQUEST_ONLY_IDS
+    );
+    const n = r && r.changes ? r.changes : 0;
+    if (n > 0) console.log(`[seed-catalog] marked ${n} request-only designs`);
+  } catch (e) {
+    // Column may not exist yet if migrations haven't run — the migration
+    // adds it, and this retry runs on every boot.
+    console.log('[seed-catalog] request-only marking skipped:', e.message);
+  }
+}
+
+module.exports = { seedCatalog, REQUEST_ONLY_IDS };

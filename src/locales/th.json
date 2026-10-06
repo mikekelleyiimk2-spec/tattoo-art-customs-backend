@@ -164,7 +164,8 @@
     "pay_deposit_rush": "จ่ายมัดจำ {deposit} (แบบเร่งด่วน)",
     "rush_text": "เพิ่มค่าธรรมเนียมเร่งด่วน {fee} บนมัดจำ (วันนี้รวม {total} รวมค่าธรรมเนียมแล้ว) ดีไซน์ของคุณจะได้คิวแซง ได้งานใน 24 ชั่วโมงแทน 48 ชั่วโมง {cut} ของค่าธรรมเนียมจะจ่ายตรงให้ดีไซเนอร์เป็นโบนัสเร่งงาน",
     "rush_title": "⚡ ดีไซน์ด่วน — ส่งใน 24 ชั่วโมง (+{fee})",
-    "title": "ขอดีไซน์คัสตอม"
+    "title": "ขอดีไซน์คัสตอม",
+    "requesting_design": "You are requesting: {title}"
   },
   "design": {
     "blurred_note": "ตัวอย่างนี้ถูกเบลอ — ผลงานนี้จัดอยู่ในหมวดผู้ใหญ่",
@@ -193,7 +194,10 @@
     "client_email": "Client email address",
     "buy_for_client_btn": "Buy for client",
     "prev_design": "ดีไซน์ก่อนหน้า",
-    "next_design": "ดีไซน์ถัดไป"
+    "next_design": "ดีไซน์ถัดไป",
+    "request_only_title": "Available by request only",
+    "request_only_note": "This design is delivered as a custom order — black linework and full-color versions included.",
+    "request_this_design": "Request this design"
   },
   "footer": {
     "advertise": "โฆษณา",

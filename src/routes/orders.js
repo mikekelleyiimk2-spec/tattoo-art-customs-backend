@@ -39,6 +39,11 @@ router.post('/buy/:designId', requireLogin, formLimiter, checkHoneypot, async (r
     req.session.flash = 'That design is exclusive to members — join a membership to buy it.';
     return res.redirect('/membership');
   }
+  // Request-only designs are never instant-buy — they go through custom orders.
+  if (design.request_only) {
+    req.session.flash = 'That design is available by request only — submit a custom order request and we will deliver it.';
+    return res.redirect(`/orders/custom?design=${encodeURIComponent(design.id)}`);
+  }
   const isCustom = design.listing_type === 'custom';
   // Best-deal-wins at checkout: Saturday sale, the standing 20% CUSTOMER
   // member discount, or regular — never stacked. (The one-time first-custom
@@ -166,6 +171,21 @@ router.get('/custom', requireLogin, async (req, res) => {
   const quote = await firstCustom.customPriceQuote(req.user);
   const full = quote.full;
   const deposit = quote.deposit;
+  // Pre-fill from a request-only design (?design=<id>): the brief names the
+  // design so the custom order fulfills that specific piece.
+  let designBrief = '';
+  let designTitle = '';
+  const designParam = String(req.query.design || '').trim().slice(0, 64);
+  if (designParam) {
+    const d = await db.get(
+      "SELECT id, title FROM designs WHERE id = ? AND status = 'approved' AND request_only = 1",
+      [designParam]
+    );
+    if (d) {
+      designTitle = d.title;
+      designBrief = `Request-only design "${d.title}" (ID: ${d.id}) — please deliver the black linework and full-color versions.`;
+    }
+  }
   // Tier-2 commission-suspended designers are hidden from the request-artist
   // dropdown (their listings stay up; only new commissions pause).
   // Shops opted into the free designer membership are listed as designers.
@@ -179,6 +199,7 @@ router.get('/custom', requireLogin, async (req, res) => {
   res.render('orders/custom', {
     title: 'Request a Custom Design — Tattoo Art Customs',
     deposit, full, sale: quote.sale, artists,
+    designBrief, designTitle,
     firstCustom: quote.discount === firstCustom.FIRST_CUSTOM_DISCOUNT_CODE,
     depositFee: pricing.processingFeeCents(deposit),
     depositTotal: pricing.withFeeCents(deposit),

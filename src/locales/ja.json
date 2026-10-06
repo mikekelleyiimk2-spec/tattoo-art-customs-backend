@@ -164,7 +164,8 @@
     "pay_deposit_rush": "{deposit}のデポジットを支払う（特急）",
     "rush_text": "デポジットに{fee}の特急料金を追加します（本日合計{total}、手数料込み）。デザインが最優先で作成され、48時間ではなく24時間以内に納品されます。料金の{cut}は特急インセンティブとしてデザイナーに直接支払われます。",
     "rush_title": "⚡ 特急でデザイン — 24時間納品（+{fee}）",
-    "title": "カスタムデザインをリクエスト"
+    "title": "カスタムデザインをリクエスト",
+    "requesting_design": "リクエスト中: {title}"
   },
   "design": {
     "blurred_note": "このプレビューはぼかされています — この作品はエクスプリシット指定です。",
@@ -193,7 +194,10 @@
     "client_email": "Client email address",
     "buy_for_client_btn": "Buy for client",
     "prev_design": "前のデザイン",
-    "next_design": "次のデザイン"
+    "next_design": "次のデザイン",
+    "request_only_title": "リクエストのみ対応",
+    "request_only_note": "このデザインはカスタムオーダーとして納品されます — ブラックのラインワーク版とフルカラー版付き。",
+    "request_this_design": "このデザインをリクエスト"
   },
   "footer": {
     "advertise": "広告",

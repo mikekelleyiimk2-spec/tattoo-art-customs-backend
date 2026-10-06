@@ -164,7 +164,8 @@
     "pay_deposit_rush": "Payer {deposit} d'acompte (rush)",
     "rush_text": "Ajoute des frais rush de {fee} à ton acompte ({total} au total aujourd'hui, frais de traitement inclus). Ton design passe en tête de file et est livré en 24 heures au lieu de 48. {cut} des frais vont directement à ton designer en bonus rush.",
     "rush_title": "⚡ Rush sur mon design — livraison en 24 heures (+{fee})",
-    "title": "Demander un custom"
+    "title": "Demander un custom",
+    "requesting_design": "Vous demandez : {title}"
   },
   "design": {
     "blurred_note": "Cet aperçu est flouté — la pièce est classée explicite.",
@@ -193,7 +194,10 @@
     "client_email": "Client email address",
     "buy_for_client_btn": "Buy for client",
     "prev_design": "Design précédent",
-    "next_design": "Design suivant"
+    "next_design": "Design suivant",
+    "request_only_title": "Disponible sur demande uniquement",
+    "request_only_note": "Ce design est livré en commande personnalisée — versions linework noir et couleur incluses.",
+    "request_this_design": "Demander ce design"
   },
   "footer": {
     "advertise": "Publicité",
