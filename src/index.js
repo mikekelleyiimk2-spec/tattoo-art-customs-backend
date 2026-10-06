@@ -44,12 +44,6 @@ app.set('layout', 'layout');
 app.use(layouts);
 app.set('trust proxy', 1);
 
-// DEBUG: log all POSTs at the top of the chain
-app.use((req, res, next) => {
-  if (req.method === 'POST') console.log('[top] POST', req.path);
-  next();
-});
-
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -80,11 +74,6 @@ app.use(helmet({
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 app.use(express.json({ limit: '2mb' }));
 app.use(cookieParser());
-// DEBUG
-app.use((req, res, next) => {
-  if (req.method === 'POST') console.log('[top] after body parse', req.path);
-  next();
-});
 
 // Defaults available even if the session store fails mid-request.
 app.use((req, res, next) => {
@@ -104,11 +93,6 @@ app.use(session({
 }));
 
 app.use(loadUser);
-// DEBUG
-app.use((req, res, next) => {
-  if (req.method === 'POST') console.log('[top] after loadUser', req.path);
-  next();
-});
 
 // Opening-sale visitor counter: one count per session (lib/visitors).
 // Fire-and-forget so the counter write never slows the response; the
