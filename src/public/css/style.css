@@ -108,12 +108,14 @@ th { background: var(--paper-dim); }
 .swipe-arrow.right { right: 10px; }
 .swipe-arrow:hover, .swipe-arrow:active { background: rgba(20, 16, 12, .75); color: #fff; }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; }
 .thread { list-style: none; padding: 0; }
 .thread li { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: .8em 1em; margin: .6em 0; }
 .thread li.mine { background: #fdf6e8; margin-left: 2rem; }
 .muted { color: var(--muted); font-size: .9rem; }
 @media (max-width: 700px) {
   .two-col { grid-template-columns: 1fr; }
+  .three-col { grid-template-columns: 1fr; }
   .nav-toggle { display: block; order: 2; margin-left: .5rem; }
   .nav-links { display: none; width: 100%; flex-direction: column; align-items: flex-start; order: 3; }
   .user-chip { order: 1; margin-left: auto; }

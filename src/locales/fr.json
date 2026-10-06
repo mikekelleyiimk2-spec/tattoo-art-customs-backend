@@ -218,7 +218,10 @@
     "sort_all": "Tous les designs",
     "sort_newest": "Nouveautés",
     "sub": "Cherche parmi 900+ designs de tatouage originaux par style et catégorie. Aperçus linework uniquement — la couleur est livrée aux acheteurs après l'achat.",
-    "title": "Galerie de designs de tatouage — achète des designs originaux"
+    "title": "Galerie de designs de tatouage — achète des designs originaux",
+    "style": "Style",
+    "all_styles": "Tous les styles",
+    "mix_match": "Plus de 50 styles. Des centaines de catégories. Mix and match : choisis ton style, choisis ta catégorie."
   },
   "giftcards": {
     "a_customer": "un client",

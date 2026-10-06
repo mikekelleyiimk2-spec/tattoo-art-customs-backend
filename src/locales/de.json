@@ -218,7 +218,10 @@
     "sort_all": "Alle Designs",
     "sort_newest": "Neueste Designs",
     "sub": "Durchsuche über 900 originale Tattoo-Designs nach Stil und Kategorie. Es werden nur Linework-Vorschauen gezeigt — die Vollfarbe erhalten Käufer nach dem Kauf.",
-    "title": "Tattoo-Design-Galerie — originale Designs kaufen"
+    "title": "Tattoo-Design-Galerie — originale Designs kaufen",
+    "style": "Stil",
+    "all_styles": "Alle Stile",
+    "mix_match": "Über 50 Stile. Hunderte Kategorien. Mix and Match – wähle deinen Stil, wähle deine Kategorie."
   },
   "giftcards": {
     "a_customer": "ein Kunde",

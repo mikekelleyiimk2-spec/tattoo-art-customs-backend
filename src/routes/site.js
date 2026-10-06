@@ -160,16 +160,19 @@ router.get('/', async (req, res) => {
 router.get('/gallery', async (req, res) => {
   const q = (req.query.q || '').trim().toLowerCase();
   const cat = (req.query.cat || '').trim().toLowerCase();
+  const styleQ = (req.query.style || '').trim().toLowerCase();
   // Newest arrivals: posted within the last 3 months, newest first.
   const newestOnly = (req.query.sort || '').trim().toLowerCase() === 'newest';
   const member = await isActiveMember(req.user);
   let designs = await approvedDesigns(member);
   const allCats = [...new Set(designs.flatMap((d) => d.categories))].sort();
+  const allStyles = [...new Set(designs.map((d) => (d.style || '').trim()).filter(Boolean))].sort();
   if (newestOnly) {
     const cutoff = Date.now() - 90 * 24 * 3600 * 1000;
     designs = designs.filter((d) => Number(d.created_at || 0) >= cutoff);
   }
   if (cat) designs = designs.filter((d) => d.categories.some((c) => c.toLowerCase() === cat));
+  if (styleQ) designs = designs.filter((d) => (d.style || '').toLowerCase() === styleQ);
   if (q) {
     designs = designs.filter((d) =>
       d.title.toLowerCase().includes(q) || d.description.toLowerCase().includes(q) ||
@@ -177,18 +180,19 @@ router.get('/gallery', async (req, res) => {
   }
   const viewer = await viewerFor(req.user);
   const thumbs = designs.map((d) => ({ ...d, thumb: displayImgFile(d, viewer) }));
-  // Sort-chip links keep the current search/category filters.
+  // Sort-chip links keep the current search/category/style filters.
   const galleryUrl = (sortVal) => {
     const p = new URLSearchParams();
     if (req.query.q) p.set('q', req.query.q);
     if (req.query.cat) p.set('cat', req.query.cat);
+    if (req.query.style) p.set('style', req.query.style);
     if (sortVal) p.set('sort', sortVal);
     const s = p.toString();
     return '/gallery' + (s ? `?${s}` : '');
   };
   res.render('site/gallery', {
     title: 'Tattoo Design Gallery — Buy Original Tattoo Designs | Tattoo Art Customs',
-    designs: thumbs, allCats, q: req.query.q || '', cat: req.query.cat || '', sale: await salePriceActive(req.user),
+    designs: thumbs, allCats, allStyles, q: req.query.q || '', cat: req.query.cat || '', style: req.query.style || '', sale: await salePriceActive(req.user),
     premadePrice: withFeeCents(premadePriceCents(new Date(), member)),
     sort: newestOnly ? 'newest' : '',
     newestUrl: galleryUrl('newest'), allUrl: galleryUrl(''),

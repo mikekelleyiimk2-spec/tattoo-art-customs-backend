@@ -218,7 +218,10 @@
     "sort_all": "ดีไซน์ทั้งหมด",
     "sort_newest": "ใหม่ล่าสุด",
     "sub": "ค้นหาดีไซน์รอยสักต้นฉบับกว่า 900 แบบตามสไตล์และหมวดหมู่ แสดงเฉพาะตัวอย่างลายเส้น — เวอร์ชันสีเต็มส่งให้ผู้ซื้อหลังซื้อ",
-    "title": "แกลเลอรีดีไซน์รอยสัก — ซื้อดีไซน์ต้นฉบับ"
+    "title": "แกลเลอรีดีไซน์รอยสัก — ซื้อดีไซน์ต้นฉบับ",
+    "style": "Style",
+    "all_styles": "All styles",
+    "mix_match": "50+ styles. Hundreds of categories. Mix and match — pick your style, pick your category."
   },
   "giftcards": {
     "a_customer": "ลูกค้า",

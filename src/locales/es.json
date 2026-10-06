@@ -218,7 +218,10 @@
     "sort_all": "Todos los diseños",
     "sort_newest": "Novedades",
     "sub": "Busca entre más de 900 diseños de tatuaje originales por estilo y categoría. Solo vistas previas en linework — el color completo se entrega al comprador tras la compra.",
-    "title": "Galería de diseños de tatuaje — compra diseños originales"
+    "title": "Galería de diseños de tatuaje — compra diseños originales",
+    "style": "Estilo",
+    "all_styles": "Todos los estilos",
+    "mix_match": "Más de 50 estilos. Cientos de categorías. Combínalos: elige tu estilo, elige tu categoría."
   },
   "giftcards": {
     "a_customer": "un cliente",

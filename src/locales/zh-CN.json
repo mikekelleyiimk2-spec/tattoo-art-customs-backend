@@ -218,7 +218,10 @@
     "sort_all": "所有设计",
     "sort_newest": "最新上架",
     "sub": "按风格和分类搜索900多件原创纹身设计。仅显示线稿预览——全彩版本在购买后交付给买家。",
-    "title": "纹身设计画廊——购买原创设计"
+    "title": "纹身设计画廊——购买原创设计",
+    "style": "Style",
+    "all_styles": "All styles",
+    "mix_match": "50+ styles. Hundreds of categories. Mix and match — pick your style, pick your category."
   },
   "giftcards": {
     "a_customer": "客户",

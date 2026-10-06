@@ -218,7 +218,10 @@
     "sort_all": "Alla design",
     "sort_newest": "Nyheter",
     "sub": "Sök bland 900+ originella tatueringsdesigner efter stil och kategori. Endast linework-förhandsvisningar — fullfärg levereras till köparen efter köp.",
-    "title": "Tatueringsdesigngalleri — köp originella designer"
+    "title": "Tatueringsdesigngalleri — köp originella designer",
+    "style": "Stil",
+    "all_styles": "Alla stilar",
+    "mix_match": "Över 50 stilar. Hundratals kategorier. Mixa och matcha — välj din stil, välj din kategori."
   },
   "giftcards": {
     "a_customer": "en kund",

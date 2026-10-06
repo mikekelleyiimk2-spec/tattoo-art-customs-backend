@@ -1,5 +1,6 @@
 <h1><%= t('gallery.title') %></h1>
 <p class="muted"><%= t('gallery.sub') %></p>
+<p class="mix-match"><strong><%= t('gallery.mix_match') %></strong></p>
 <p>
   <a class="btn<%= sort === 'newest' ? '' : ' btn-secondary' %>" href="<%= newestUrl %>"><%= t('gallery.sort_newest') %></a>
   <a class="btn<%= sort === 'newest' ? ' btn-secondary' : '' %>" href="<%= allUrl %>"><%= t('gallery.sort_all') %></a>
@@ -8,7 +9,7 @@
 <% if (vatNote) { %><p class="muted fineprint"><%= vatNote %></p><% } %>
 
 <form method="get" action="/gallery" class="card" role="search" aria-label="<%= t('gallery.search_aria') %>">
-  <div class="two-col">
+  <div class="three-col">
     <div>
       <label for="q"><%= t('gallery.search_label') %></label>
       <input type="text" id="q" name="q" value="<%= q %>" placeholder="<%= t('gallery.search_ph') %>">
@@ -19,6 +20,15 @@
         <option value=""><%= t('gallery.all_categories') %></option>
         <% allCats.forEach(function(c) { %>
         <option value="<%= c %>" <%= cat === c ? 'selected' : '' %>><%= c %></option>
+        <% }); %>
+      </select>
+    </div>
+    <div>
+      <label for="style"><%= t('gallery.style') %></label>
+      <select id="style" name="style">
+        <option value=""><%= t('gallery.all_styles') %></option>
+        <% allStyles.forEach(function(s) { %>
+        <option value="<%= s %>" <%= style === s ? 'selected' : '' %>><%= s %></option>
         <% }); %>
       </select>
     </div>
