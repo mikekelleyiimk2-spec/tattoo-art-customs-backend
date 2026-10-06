@@ -44,6 +44,12 @@ app.set('layout', 'layout');
 app.use(layouts);
 app.set('trust proxy', 1);
 
+// DEBUG: log all POSTs at the top of the chain
+app.use((req, res, next) => {
+  if (req.method === 'POST') console.log('[top] POST', req.path);
+  next();
+});
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
