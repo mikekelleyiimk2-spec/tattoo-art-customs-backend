@@ -59,6 +59,20 @@ services:
         sync: false
       - key: SMTP_FROM
         sync: false
+      - key: STORAGE_PROVIDER
+        value: local
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_PUBLIC_BUCKET
+        sync: false
+      - key: R2_PRIVATE_BUCKET
+        sync: false
+      - key: R2_PUBLIC_URL
+        sync: false
 
 databases:
   - name: tattoo-art-customs-db
