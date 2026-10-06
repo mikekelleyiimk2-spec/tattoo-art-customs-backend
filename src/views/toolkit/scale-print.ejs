@@ -1,21 +1,24 @@
 <% if (flash) { %><p class="flash"><%= flash %></p><% } %>
 <div id="scaler-ui">
 <h1>Scale &amp; print</h1>
-<p class="muted">Pick a design, scale it to any size, and print it tiled across as many pages as it takes — perfect for full-back pieces and other large patterns. <strong>Clean, watermark-free prints unlock only for designs you've purchased.</strong></p>
+<p class="muted">Pick a design, scale it to any size, and print it tiled across as many pages as it takes — perfect for full-back pieces and other large patterns. <strong>Only designs you've purchased, or that a customer sent you, appear here — every print is clean and watermark-free.</strong> Customers send you their purchased designs from their order page ("Send art to your shop").</p>
 
 <section class="card">
   <h2>1. Pick a design</h2>
   <p><input type="search" id="design-search" placeholder="Search designs…" aria-label="Search designs" style="width:100%;max-width:420px"></p>
   <div id="design-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;max-height:320px;overflow:auto">
     <% designs.forEach(function(d) { %>
-    <button type="button" class="design-pick" data-id="<%= d.id %>" data-title="<%= d.title.replace(/"/g, '&quot;') %>" data-owned="<%= d.owned ? 1 : 0 %>" data-color-ok="<%= d.colorOk ? 1 : 0 %>"
+    <button type="button" class="design-pick" data-id="<%= d.id %>" data-title="<%= d.title.replace(/"/g, '&quot;') %>" data-color-ok="<%= d.colorOk ? 1 : 0 %>" data-from="<%= d.fromName ? d.fromName.replace(/"/g, '&quot;') : '' %>"
       style="border:2px solid transparent;border-radius:8px;padding:4px;background:#fff;cursor:pointer">
       <% if (d.thumb) { %><img src="<%= d.thumb %>" alt="" loading="lazy" style="width:100%;height:120px;object-fit:contain;background:#f4f1ea;border-radius:6px"><% } %>
       <div style="font-size:12px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><%= d.title %></div>
-      <% if (d.owned) { %><div style="font-size:11px;color:#1a7f37;font-weight:700">Owned — clean print</div><% } else { %><div style="font-size:11px"><a href="/design/<%= d.id %>">Buy</a></div><% } %>
+      <% if (d.viaTransfer && d.fromName) { %><div style="font-size:11px;color:#1a7f37">From <%= d.fromName %></div><% } else { %><div style="font-size:11px;color:#1a7f37">Owned</div><% } %>
     </button>
     <% }); %>
   </div>
+  <% if (!designs.length) { %>
+  <p class="muted">Nothing here yet — buy a premade design, or ask your customer to send you theirs from their order page ("Send art to your shop"). Purchased and transferred designs will appear here ready to scale and print.</p>
+  <% } %>
 </section>
 
 <section class="card" id="config-card" style="display:none">
@@ -133,13 +136,13 @@
     btn.setAttribute('aria-pressed', 'true');
     state.id = btn.getAttribute('data-id');
     state.title = btn.getAttribute('data-title');
-    state.owned = btn.getAttribute('data-owned') === '1';
+    state.fromName = btn.getAttribute('data-from');
     state.colorOk = btn.getAttribute('data-color-ok') === '1';
     if (!state.colorOk) { styleColor.disabled = true; document.querySelector('input[name="style"][value="linework"]').checked = true; state.style = 'linework'; }
     else { styleColor.disabled = false; }
-    ownNote.innerHTML = state.owned
-      ? '<span style="color:#1a7f37;font-weight:700">Clean print unlocked</span> — you own this design, the print below is watermark-free.'
-      : 'Watermarked preview — <a href="/design/' + state.id + '">buy this design</a> to unlock the clean print.';
+    ownNote.innerHTML = state.fromName
+      ? 'Sent by customer <strong>' + state.fromName.replace(/</g, '&lt;') + '</strong> — clean print ready.'
+      : '<span style="color:#1a7f37;font-weight:700">Clean print ready</span> — you own this design.';
     configCard.style.display = '';
     loadArtwork();
   });

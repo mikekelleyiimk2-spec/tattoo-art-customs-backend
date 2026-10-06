@@ -548,22 +548,40 @@ async function hasShopSub(userId) {
 // buy link. The image endpoint below is login-gated; clean files are never
 // mounted publicly.
 router.get('/scale-print', ...shopOnly, async (req, res) => {
+  // Purchased designs ONLY — the tool is unavailable for anything the shop
+  // hasn't bought (owner rule 2026-10-06). No watermarked path exists here.
+  // Two sources: (1) designs this shop bought directly, (2) designs customers
+  // sent to this shop via art transfers ("send to my shop").
+  const myEmail = (await db.get('SELECT email FROM users WHERE id = ?', [req.user.id]) || {}).email || '';
   const designs = await db.all(
     `SELECT d.id, d.title, d.linework_wm_path,
-            MAX(CASE WHEN o.id IS NULL THEN 0 ELSE 1 END) AS owned,
-            MAX(CASE WHEN o.linework_only THEN 0 ELSE 1 END) AS color_ok
-       FROM designs d
-       LEFT JOIN orders o ON o.design_id = d.id AND o.buyer_id = ?
-            AND o.status = 'paid' AND o.order_type = 'premade'
+            MAX(CASE WHEN o.linework_only THEN 0 ELSE 1 END) AS color_ok,
+            MAX(CASE WHEN src.kind = 'transfer' THEN 1 ELSE 0 END) AS via_transfer,
+            MAX(src.from_name) AS from_name
+       FROM (
+         SELECT o.design_id, o.linework_only, 'purchase' AS kind, NULL AS from_name
+           FROM orders o
+          WHERE o.buyer_id = ? AND o.status = 'paid' AND o.order_type = 'premade' AND o.design_id IS NOT NULL
+         UNION ALL
+         SELECT t.design_id, o.linework_only, 'transfer' AS kind, u.display_name AS from_name
+           FROM art_transfers t
+           JOIN orders o ON o.id = t.order_id AND o.status = 'paid'
+           LEFT JOIN users u ON u.id = t.from_user_id
+          WHERE t.kind = 'to_shop' AND t.design_id IS NOT NULL
+            AND (t.to_shop_user_id = ? OR LOWER(t.to_email) = LOWER(?))
+       ) src
+       JOIN designs d ON d.id = src.design_id
       GROUP BY d.id ORDER BY d.title`,
-    [req.user.id]
+    [req.user.id, req.user.id, myEmail]
   );
   res.render('toolkit/scale-print', {
     title: 'Scale & print — Shop toolkit',
     designs: designs.map((d) => ({
       id: d.id, title: d.title,
       thumb: designImgUrl(d.linework_wm_path),
-      owned: !!d.owned, colorOk: !!d.color_ok,
+      colorOk: !!d.color_ok,
+      viaTransfer: !!d.via_transfer,
+      fromName: d.from_name || null,
     })),
     flash: req.session.flash,
   });
@@ -579,11 +597,17 @@ router.get('/scale-print/image/:designId', ...shopOnly, async (req, res) => {
   );
   if (!d) return res.status(404).send('Not found');
   const order = await db.get(
-    `SELECT linework_only FROM orders WHERE buyer_id = ? AND design_id = ?
-     AND status = 'paid' AND order_type = 'premade'
-     ORDER BY created_at DESC LIMIT 1`,
-    [req.user.id, d.id]
+    `SELECT o.linework_only FROM orders o WHERE o.status = 'paid' AND o.order_type = 'premade'
+       AND o.design_id = ? AND (
+         o.buyer_id = ?
+         OR EXISTS (SELECT 1 FROM art_transfers t
+                     WHERE t.order_id = o.id AND t.kind = 'to_shop' AND t.design_id = o.design_id
+                       AND (t.to_shop_user_id = ? OR LOWER(t.to_email) = LOWER(
+                         (SELECT email FROM users WHERE id = ?))))))
+     ORDER BY o.created_at DESC LIMIT 1`,
+    [d.id, req.user.id, req.user.id, req.user.id]
   );
+  if (!order) return res.status(403).send('This tool is only for designs you have purchased or that a customer sent you.');
   const style = req.query.style === 'color' ? 'color' : 'linework';
   let rel;
   if (order) {
