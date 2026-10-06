@@ -551,7 +551,11 @@
     "apt_optional": "Whg. / Suite (optional)",
     "state_region": "Bundesland / Region",
     "zip_postal": "PLZ",
-    "tee_final_note": "Tees werden auf Bestellung gefertigt und in 5–7 Werktagen versandt. Alle Merch-Verkäufe sind endgültig."
+    "tee_final_note": "Tees werden auf Bestellung gefertigt und in 5–7 Werktagen versandt. Alle Merch-Verkäufe sind endgültig.",
+    "poster_h": "Posters",
+    "poster_desc": "Your purchased designs as bold 18×24\" posters — {price} (includes processing fee). Printed on demand, ships in 5–7 business days.",
+    "poster_pick": "Pick one of your purchased designs to order it as a poster:",
+    "poster_cta": "Order poster"
   },
   "nav": {
     "about": "Über uns",

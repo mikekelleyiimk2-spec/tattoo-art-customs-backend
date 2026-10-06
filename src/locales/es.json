@@ -551,7 +551,11 @@
     "apt_optional": "Apto. / suite (opcional)",
     "state_region": "Estado / región",
     "zip_postal": "Código postal",
-    "tee_final_note": "Las camisetas se hacen bajo pedido y se envían en 5–7 días laborables. Todas las ventas de merch son finales."
+    "tee_final_note": "Las camisetas se hacen bajo pedido y se envían en 5–7 días laborables. Todas las ventas de merch son finales.",
+    "poster_h": "Posters",
+    "poster_desc": "Your purchased designs as bold 18×24\" posters — {price} (includes processing fee). Printed on demand, ships in 5–7 business days.",
+    "poster_pick": "Pick one of your purchased designs to order it as a poster:",
+    "poster_cta": "Order poster"
   },
   "nav": {
     "about": "Nosotros",

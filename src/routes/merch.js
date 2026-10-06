@@ -25,6 +25,7 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   const configured = printfulConfigured();
   let ownedCount = 0;
+  let ownedDesigns = [];
   if (configured && req.session && req.session.userId) {
     const r = await db.get(
       `SELECT COUNT(*) AS c FROM orders WHERE buyer_id = ? AND design_id IS NOT NULL
@@ -32,7 +33,17 @@ router.get('/', async (req, res) => {
       [req.session.userId]
     ).catch(() => ({ c: 0 }));
     ownedCount = r ? r.c : 0;
+    if (ownedCount > 0) {
+      ownedDesigns = await db.all(
+        `SELECT d.id, d.title FROM designs d
+         JOIN orders o ON o.design_id = d.id
+         WHERE o.buyer_id = ? AND o.status = 'paid' AND o.order_type = 'premade'
+         GROUP BY d.id ORDER BY MAX(o.created_at) DESC LIMIT 50`,
+        [req.session.userId]
+      ).catch(() => []);
+    }
   }
+  const poster = require('../lib/print').PRODUCTS.poster_18x24;
   res.render('merch/index', {
     title: "Mike's Custom Tees",
     configured,
@@ -42,7 +53,9 @@ router.get('/', async (req, res) => {
     withFee: (c) => pricing.withFeeCents(c),
     money: pricing.money,
     ownedCount,
-    metaDescription: "Mike's Custom Tees — your purchased Tattoo Art Customs designs on premium Bella + Canvas tees, printed on demand.",
+    ownedDesigns,
+    posterPrice: poster ? pricing.withFeeCents(poster.price_cents) : 0,
+    metaDescription: "Mike's Custom Tees — your purchased Tattoo Art Customs designs on premium Bella + Canvas tees and bold 18×24\" posters, printed on demand.",
   });
 });
 

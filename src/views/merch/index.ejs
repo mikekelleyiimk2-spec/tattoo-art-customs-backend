@@ -23,6 +23,17 @@
 <p><a class="btn" href="/login?next=<%= encodeURIComponent('/merch') %>"><%= t('merch.login') %></a> <%= t('merch.login_tail') %></p>
 <% } %>
 
+<h2><%= t('merch.poster_h') %></h2>
+<p><%= t('merch.poster_desc', {price: fmtMoney(posterPrice)}) %></p>
+<% if (typeof currentUser !== 'undefined' && currentUser && ownedDesigns && ownedDesigns.length) { %>
+<p class="muted"><%= t('merch.poster_pick') %></p>
+<ul>
+  <% ownedDesigns.forEach(function(d) { %>
+  <li><strong><%= d.title %></strong> — <a class="btn btn-secondary" href="/prints/order/design/<%= d.id %>"><%= t('merch.poster_cta') %></a></li>
+  <% }); %>
+</ul>
+<% } %>
+
 <% } else { %>
 <h2><%= t('merch.soon_title') %></h2>
 <p><%= t('merch.soon_text') %></p>
