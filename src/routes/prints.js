@@ -30,6 +30,10 @@ router.get('/file/:id', async (req, res) => {
   } else if (po.combo_id) {
     const c = await db.get('SELECT output_path FROM combos WHERE id = ?', [po.combo_id]);
     if (c) rel = c.output_path;
+  } else if (po.doodle_file) {
+    // Doodle-merch orders (tee/poster from /doodle-to-tattoo): the kid's
+    // uploaded drawing prints as-is. Basename only — traversal guard.
+    rel = 'doodles/' + path.basename(String(po.doodle_file));
   }
   const abs = rel ? resolveStoredPath(rel) : null;
   if (!abs) return res.status(404).send('File missing');

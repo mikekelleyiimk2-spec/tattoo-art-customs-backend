@@ -231,10 +231,12 @@ router.get('/by-request', async (req, res) => {
   });
 });
 
-// --- Doodle-to-Tattoo ("Ink Their Imagination") ---
+// --- Doodle-to-Merchandise ("Turn Their Doodle Into Merchandise") ---
 // Parents upload a kid's doodle/coloring (or enter a TAC-XXXXXX code from the
-// Little Inkers app) and order it as a tattoo. Two tiers, paid up front like
-// a custom order, delivered through the 48h custom pipeline.
+// Little Inkers app) and pick what to make: a T-shirt, a poster/print
+// (printed as-is via the print_orders + Printful path), or a tattoo design
+// (the original two-tier 48h custom pipeline). Merch needs the uploaded
+// file; tattoo orders keep the old behavior.
 const doodleStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     const dir = path.join(config.uploadDir, 'doodles');
@@ -257,29 +259,40 @@ const uploadDoodle = multer({
 
 router.get('/doodle-to-tattoo', async (req, res) => {
   const { DOODLE_LIGHT_CENTS } = require('../lib/littleInkers');
-  const { customFullCents, withFeeCents, processingFeeCents } = require('../lib/pricing');
+  const { customFullCents, withFeeCents, processingFeeCents, TEE_SIZES, TEE_COLORS, teePriceCents } = require('../lib/pricing');
+  const { PRODUCTS } = require('../lib/print');
   const member = await isActiveMember(req.user);
   const lightFull = DOODLE_LIGHT_CENTS;
   const lightDeposit = Math.round(lightFull / 2);
   const reworkFull = customFullCents(new Date(), member);
   const reworkDeposit = Math.round(reworkFull / 2);
+  const printProducts = ['print_8x10', 'print_12x16', 'poster_18x24', 'canvas_16x20'].map((id) => ({
+    id, name: PRODUCTS[id].name, price: PRODUCTS[id].price_cents,
+  }));
   const base = config.baseUrl.replace(/\/$/, '');
   res.render('site/doodle-to-tattoo', {
-    title: 'Doodle-to-Tattoo — Ink Their Imagination | Tattoo Art Customs',
+    title: 'Turn Their Doodle Into Merchandise | Tattoo Art Customs',
     code: (req.query.code || '').trim().toUpperCase(),
     lightFull, lightDeposit,
     lightTotal: withFeeCents(lightFull), lightDepositTotal: withFeeCents(lightDeposit),
     reworkFull, reworkDeposit,
     reworkTotal: withFeeCents(reworkFull), reworkDepositTotal: withFeeCents(reworkDeposit),
+    teeSizes: TEE_SIZES, teeColors: TEE_COLORS,
+    teeFrom: teePriceCents('S'),
+    printProducts,
+    minPrintPrice: Math.min(...printProducts.map((p) => p.price)),
     feeNote: `$${(processingFeeCents(100) / 100).toFixed(2)}`,
-    metaDescription: 'Turn your kid\'s doodle into a real tattoo. Upload their drawing, pick a tier, and our artists deliver tattoo-ready art in 48 hours.',
+    metaDescription: 'Turn your kid\'s drawing into merchandise — a custom t-shirt, a poster for their wall, or tattoo-ready art. Upload their doodle and pick what to make.',
     canonical: `${base}/doodle-to-tattoo`,
   });
 });
 
 router.post('/doodle-to-tattoo', requireLogin, formLimiter, checkHoneypot, uploadDoodle.single('doodle'), async (req, res) => {
   const li = require('../lib/littleInkers');
-  const { customFullCents, processingFeeCents } = require('../lib/pricing');
+  const pricing = require('../lib/pricing');
+  const { customFullCents, processingFeeCents } = pricing;
+  const { PRODUCTS } = require('../lib/print');
+  const product = ['tee', 'print', 'tattoo'].includes(req.body.product) ? req.body.product : 'tattoo';
   const tier = req.body.tier === 'rework' ? 'rework' : 'light';
   const rights = req.body.rights === '1';
   const notes = String(req.body.notes || '').trim().slice(0, 1000);
@@ -301,15 +314,81 @@ router.post('/doodle-to-tattoo', requireLogin, formLimiter, checkHoneypot, uploa
     req.session.flash = 'Upload your child\'s doodle or enter a submission code from the Little Inkers app.';
     return res.redirect('/doodle-to-tattoo');
   }
+  // Merchandise prints the doodle as-is via Printful, so it needs the actual
+  // uploaded file. Tattoo orders keep the old behavior (code-only is fine).
+  if (product !== 'tattoo' && !req.file) {
+    req.session.flash = 'Merchandise needs the uploaded image file — please upload your child\'s doodle directly (submission codes work for tattoo orders only).';
+    return res.redirect('/doodle-to-tattoo');
+  }
 
-  const member = await isActiveMember(req.user);
-  const full = tier === 'rework' ? customFullCents(new Date(), member) : li.DOODLE_LIGHT_CENTS;
-  const deposit = Math.round(full / 2);
-  const fee = processingFeeCents(deposit);
+  if (product === 'tattoo') {
+    const member = await isActiveMember(req.user);
+    const full = tier === 'rework' ? customFullCents(new Date(), member) : li.DOODLE_LIGHT_CENTS;
+    const deposit = Math.round(full / 2);
+    const fee = processingFeeCents(deposit);
+    const brief = [
+      `DOODLE-TO-TATTOO (${tier === 'rework' ? 'Artist Rework' : 'True to the Doodle'})`,
+      tacCode ? `App submission code: ${tacCode}` : null,
+      req.file ? `Uploaded file: ${req.file.filename}` : 'Artwork via app submission code',
+      notes ? `Parent notes: ${notes}` : null,
+      'Rights confirmed: parent attests this is their child\'s artwork.',
+    ].filter(Boolean).join('\n');
+
+    const orderId = await db.insert('orders', {
+      id: db.newId(),
+      buyer_id: req.user.id,
+      order_type: 'custom',
+      amount_cents: full,
+      deposit_cents: deposit,
+      fee_cents: fee,
+      status: 'pending',
+      payment_method: 'paypal',
+      custom_brief: brief,
+      doodle_file: req.file ? req.file.filename : null,
+      doodle_tier: tier,
+      custom_status: 'new',
+      delivery_due: Date.now() + 48 * 3600 * 1000,
+      created_at: db.now(),
+    });
+    if (codeOk) await li.consumeSubmissionCode(codeOk.code, orderId);
+    return res.redirect(`/orders/${orderId}`);
+  }
+
+  // --- Merchandise branch: tee or poster/print, paid in full, print_orders ---
+  const ship = {
+    ship_name: String(req.body.ship_name || '').slice(0, 120).trim(),
+    ship_address1: String(req.body.ship_address1 || '').slice(0, 160).trim(),
+    ship_address2: String(req.body.ship_address2 || '').slice(0, 160).trim(),
+    ship_city: String(req.body.ship_city || '').slice(0, 80).trim(),
+    ship_state: String(req.body.ship_state || '').slice(0, 80).trim(),
+    ship_zip: String(req.body.ship_zip || '').slice(0, 20).trim(),
+    ship_country: String(req.body.ship_country || 'US').slice(0, 60).trim() || 'US',
+  };
+  if (!ship.ship_name || !ship.ship_address1 || !ship.ship_city || !ship.ship_zip) {
+    req.session.flash = 'Name, street address, city, and ZIP are required for shipping.';
+    return res.redirect('/doodle-to-tattoo');
+  }
+  let printProduct, amount, desc, size = '', color = '', qty = 1;
+  if (product === 'tee') {
+    size = pricing.teeSizeLabel(req.body.size);
+    color = pricing.teeColorLabel(req.body.color);
+    qty = Math.min(10, Math.max(1, parseInt(req.body.tee_qty, 10) || 1));
+    printProduct = 'tee_classic';
+    amount = pricing.teePriceCents(size) * qty;
+    desc = `Kids doodle tee — Bella + Canvas 3001 ${color} ${size} x ${qty}`;
+  } else {
+    const validPrints = ['print_8x10', 'print_12x16', 'poster_18x24', 'canvas_16x20'];
+    printProduct = validPrints.includes(req.body.print_product) ? req.body.print_product : 'poster_18x24';
+    qty = Math.min(10, Math.max(1, parseInt(req.body.print_qty, 10) || 1));
+    amount = PRODUCTS[printProduct].price_cents * qty;
+    desc = `Kids doodle print — ${PRODUCTS[printProduct].name} x ${qty}`;
+  }
+  const fee = processingFeeCents(amount);
   const brief = [
-    `DOODLE-TO-TATTOO (${tier === 'rework' ? 'Artist Rework' : 'True to the Doodle'})`,
+    'DOODLE-TO-MERCHANDISE',
+    desc,
     tacCode ? `App submission code: ${tacCode}` : null,
-    req.file ? `Uploaded file: ${req.file.filename}` : 'Artwork via app submission code',
+    `Doodle file: ${req.file.filename}`,
     notes ? `Parent notes: ${notes}` : null,
     'Rights confirmed: parent attests this is their child\'s artwork.',
   ].filter(Boolean).join('\n');
@@ -317,21 +396,64 @@ router.post('/doodle-to-tattoo', requireLogin, formLimiter, checkHoneypot, uploa
   const orderId = await db.insert('orders', {
     id: db.newId(),
     buyer_id: req.user.id,
-    order_type: 'custom',
-    amount_cents: full,
-    deposit_cents: deposit,
+    order_type: 'print',
+    amount_cents: amount,
     fee_cents: fee,
     status: 'pending',
     payment_method: 'paypal',
     custom_brief: brief,
-    doodle_file: req.file ? req.file.filename : null,
-    doodle_tier: tier,
-    custom_status: 'new',
-    delivery_due: Date.now() + 48 * 3600 * 1000,
     created_at: db.now(),
   });
+  await db.insert('print_orders', {
+    id: db.newId(), order_id: orderId, user_id: req.user.id,
+    design_id: null, combo_id: null, product: printProduct, quantity: qty,
+    style: 'color', size, color, ...ship, status: 'pending',
+    fulfill_token: require('crypto').randomBytes(24).toString('hex'),
+    doodle_file: req.file.filename,
+  });
   if (codeOk) await li.consumeSubmissionCode(codeOk.code, orderId);
-  res.redirect(`/orders/${orderId}`);
+
+  // Holiday raffle prize redemption: a valid RAFFLE-XXXXXX code makes one
+  // tee/print order free (fee waived, no PayPal — marked paid directly).
+  // Tattoo orders can't use prize codes.
+  const raffleCode = String(req.body.raffle_code || '').trim().toUpperCase();
+  if (raffleCode) {
+    const hr = require('../lib/holidayRaffle');
+    const v = await hr.validatePrizeCode(raffleCode);
+    if (!v.ok) {
+      req.session.flash = v.reason === 'consumed'
+        ? 'That prize code was already used.'
+        : 'That prize code was not recognized. Check it and try again.';
+      return res.redirect('/doodle-to-tattoo');
+    }
+    await db.update('orders', orderId, {
+      amount_cents: 0, fee_cents: 0, status: 'paid',
+      amount_paid_cents: 0, paid_at: db.now(), payment_method: 'raffle_prize',
+      custom_brief: brief + `\nRaffle prize code: ${v.code} (free merchandise)`,
+    });
+    await hr.consumePrizeCode(v.code, orderId);
+    const fresh = await db.get('SELECT * FROM orders WHERE id = ?', [orderId]);
+    try { await require('../lib/holidayRaffle').awardPurchaseEntries(fresh); } catch (e) { console.error('holiday raffle purchase entries failed:', e.message); }
+    req.session.flash = 'Prize applied — your free merchandise order is in! We\u2019ll print your kid\u2019s art and ship it soon.';
+    return res.redirect(`/orders/${orderId}`);
+  }
+
+  try {
+    const paypal = require('../lib/paypal');
+    const pp = await paypal.createCheckoutOrder({
+      amountCents: amount + fee,
+      description: `Tattoo Art Customs — ${desc}`,
+      returnUrl: `${config.baseUrl}/orders/approve/${orderId}`,
+      cancelUrl: `${config.baseUrl}/account`,
+    });
+    await db.update('orders', orderId, { paypal_order_id: pp.id });
+    const approve = pp.links.find((l) => l.rel === 'approve');
+    return res.redirect(approve.href);
+  } catch (e) {
+    console.error('PayPal doodle merch order create failed:', e.message);
+    req.session.flash = 'PayPal checkout is unavailable right now — you can pay manually below.';
+    return res.redirect(`/orders/manual/${orderId}`);
+  }
 });
 
 // Wishlist (favorites) page — [wishlist] feature. Everyone can use it:

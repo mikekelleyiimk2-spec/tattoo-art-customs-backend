@@ -16,18 +16,94 @@
       <input type="text" name="tac_code" value="<%= code %>" placeholder="TAC-XXXXXX" maxlength="10" style="text-transform:uppercase">
     </label>
   </p>
+  <p>
+    <label><%= t('doodle.raffle_label') %>
+      <input type="text" name="raffle_code" placeholder="RAFFLE-XXXXXX" maxlength="13" style="text-transform:uppercase">
+    </label>
+  </p>
 
   <h2><%= t('doodle.step2') %></h2>
   <label>
-    <input type="radio" name="tier" value="light" checked>
-    <strong><%= t('doodle.tier_light', {price: fmtMoney(lightTotal), deposit: fmtMoney(lightDepositTotal)}) %></strong><br>
-    <span class="muted"><%= t('doodle.tier_light_note') %></span>
+    <input type="radio" name="product" value="tee">
+    <strong><%= t('doodle.product_tee') %></strong><br>
+    <span class="muted"><%= t('doodle.product_tee_note', {price: fmtMoney(teeFrom)}) %></span>
   </label>
   <label>
-    <input type="radio" name="tier" value="rework">
-    <strong><%= t('doodle.tier_rework', {price: fmtMoney(reworkTotal), deposit: fmtMoney(reworkDepositTotal)}) %></strong><br>
-    <span class="muted"><%= t('doodle.tier_rework_note') %></span>
+    <input type="radio" name="product" value="print">
+    <strong><%= t('doodle.product_print') %></strong><br>
+    <span class="muted"><%= t('doodle.product_print_note', {minprice: fmtMoney(minPrintPrice)}) %></span>
   </label>
+  <label>
+    <input type="radio" name="product" value="tattoo" checked>
+    <strong><%= t('doodle.product_tattoo') %></strong><br>
+    <span class="muted"><%= t('doodle.product_tattoo_note') %></span>
+  </label>
+
+  <div id="doodle-tee" hidden>
+    <p>
+      <label><%= t('doodle.tee_size') %>
+        <select name="size">
+          <% teeSizes.forEach(function(s){ %><option value="<%= s %>"<%= s === 'M' ? ' selected' : '' %>><%= s %></option><% }); %>
+        </select>
+      </label>
+      <label><%= t('doodle.tee_color') %>
+        <select name="color">
+          <% teeColors.forEach(function(c){ %><option value="<%= c %>"><%= c %></option><% }); %>
+        </select>
+      </label>
+      <label><%= t('doodle.tee_qty') %>
+        <input type="number" name="tee_qty" value="1" min="1" max="10">
+      </label>
+    </p>
+  </div>
+
+  <div id="doodle-print" hidden>
+    <p>
+      <label><%= t('doodle.print_product') %>
+        <select name="print_product">
+          <% printProducts.forEach(function(p){ %><option value="<%= p.id %>"><%= p.name %> — <%= fmtMoney(p.price) %></option><% }); %>
+        </select>
+      </label>
+      <label><%= t('merch.qty') %>
+        <input type="number" name="print_qty" value="1" min="1" max="10">
+      </label>
+    </p>
+  </div>
+
+  <div id="doodle-ship" hidden>
+    <h3><%= t('merch.shipping_address') %></h3>
+    <p>
+      <label><%= t('merch.full_name') %><br><input type="text" name="ship_name" maxlength="120"></label>
+    </p>
+    <p>
+      <label><%= t('merch.street') %><br><input type="text" name="ship_address1" maxlength="160"></label><br>
+      <label><%= t('merch.apt_optional') %><br><input type="text" name="ship_address2" maxlength="160"></label>
+    </p>
+    <p>
+      <label><%= t('merch.city') %><br><input type="text" name="ship_city" maxlength="80"></label>
+      <label><%= t('merch.state_region') %><br><input type="text" name="ship_state" maxlength="80"></label>
+    </p>
+    <p>
+      <label><%= t('merch.zip_postal') %><br><input type="text" name="ship_zip" maxlength="20"></label>
+      <label><%= t('merch.country') %><br><input type="text" name="ship_country" value="US" maxlength="60"></label>
+    </p>
+    <p class="muted fineprint"><%= t('doodle.merch_note') %></p>
+  </div>
+
+  <div id="doodle-tattoo">
+    <p><strong><%= t('doodle.tattoo_tier_label') %></strong></p>
+    <label>
+      <input type="radio" name="tier" value="light" checked>
+      <strong><%= t('doodle.tier_light', {price: fmtMoney(lightTotal), deposit: fmtMoney(lightDepositTotal)}) %></strong><br>
+      <span class="muted"><%= t('doodle.tier_light_note') %></span>
+    </label>
+    <label>
+      <input type="radio" name="tier" value="rework">
+      <strong><%= t('doodle.tier_rework', {price: fmtMoney(reworkTotal), deposit: fmtMoney(reworkDepositTotal)}) %></strong><br>
+      <span class="muted"><%= t('doodle.tier_rework_note') %></span>
+    </label>
+    <p class="muted fineprint"><%= t('doodle.deposit_note') %></p>
+  </div>
 
   <h2><%= t('doodle.step3') %></h2>
   <p>
@@ -41,5 +117,24 @@
   </p>
 
   <p><button class="btn" type="submit"><%= t('doodle.submit') %></button></p>
-  <p class="muted fineprint"><%= t('doodle.deposit_note') %></p>
 </form>
+<script>
+(function () {
+  var form = document.querySelector('form[action="/doodle-to-tattoo"]');
+  if (!form) return;
+  var tee = document.getElementById('doodle-tee'),
+      print = document.getElementById('doodle-print'),
+      ship = document.getElementById('doodle-ship'),
+      tattoo = document.getElementById('doodle-tattoo');
+  function sync() {
+    var checked = form.querySelector('input[name="product"]:checked');
+    var v = checked ? checked.value : 'tattoo';
+    tee.hidden = v !== 'tee';
+    print.hidden = v !== 'print';
+    ship.hidden = v === 'tattoo';
+    tattoo.hidden = v !== 'tattoo';
+  }
+  form.addEventListener('change', sync);
+  sync();
+})();
+</script>
