@@ -183,6 +183,12 @@ app.use('/img/photos', express.static(photosDir));
 app.use('/img/healed', express.static(healedDir));
 app.use('/img/avatars', express.static(avatarsDir));
 app.use('/img/ads', express.static(adsDir));
+// By-request character previews (fan art, kept separate from the original
+// copyrighted gallery). Baked into the Docker image; regenerated after
+// every character batch.
+const byRequestDir = path.join(config.assetDir, 'by-request');
+fs.mkdirSync(byRequestDir, { recursive: true });
+app.use('/img/by-request', express.static(byRequestDir, imgCacheOpts));
 
 // Routes
 // Health check (for hosting monitors / load balancers).

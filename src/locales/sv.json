@@ -582,7 +582,8 @@
     "wallet": "Wallet",
     "tap_to_pay": "Tap to Pay",
     "wishlist": "Önskelista",
-    "top_loved": "Mest gillade"
+    "top_loved": "Mest gillade",
+    "by_request": "By Request"
   },
   "orders": {
     "amount": "Belopp",
@@ -763,5 +764,21 @@
     "pro_label": "Pro",
     "free_text": "Hela appen, med annonser.",
     "pro_text": "Utan annonser — Pro får varje uppdatering först."
+  },
+  "byrequest": {
+    "title": "By-Request Characters",
+    "sub": "These characters are available as custom orders for {price} — request one and a real artist draws it for you in 48 hours.",
+    "updated": "List updated {date}",
+    "search_aria": "Search by-request characters",
+    "search_label": "Search",
+    "search_ph": "e.g. Goku, Batman, Mario…",
+    "search_btn": "Search",
+    "no_match": "No characters match your search.",
+    "ready": "Ready",
+    "request_btn": "Request",
+    "note": "Character names are listed for request purposes only. Artwork is delivered privately after purchase and never posted publicly.",
+    "gallery_h": "Ready to Request",
+    "fanart_note": "Fan-art interpretations, drawn in our style — kept separate from our original copyrighted designs.",
+    "soon_h": "Coming Soon — Request Any of These"
   }
 }

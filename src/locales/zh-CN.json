@@ -582,7 +582,8 @@
     "wallet": "钱包",
     "tap_to_pay": "拍卡支付",
     "wishlist": "心愿单",
-    "top_loved": "最受欢迎"
+    "top_loved": "最受欢迎",
+    "by_request": "By Request"
   },
   "orders": {
     "amount": "金额",
@@ -763,5 +764,21 @@
     "pro_label": "Pro",
     "free_text": "完整应用，含广告。",
     "pro_text": "无广告 — Pro版优先获得每次更新。"
+  },
+  "byrequest": {
+    "title": "By-Request Characters",
+    "sub": "These characters are available as custom orders for {price} — request one and a real artist draws it for you in 48 hours.",
+    "updated": "List updated {date}",
+    "search_aria": "Search by-request characters",
+    "search_label": "Search",
+    "search_ph": "e.g. Goku, Batman, Mario…",
+    "search_btn": "Search",
+    "no_match": "No characters match your search.",
+    "ready": "Ready",
+    "request_btn": "Request",
+    "note": "Character names are listed for request purposes only. Artwork is delivered privately after purchase and never posted publicly.",
+    "gallery_h": "Ready to Request",
+    "fanart_note": "Fan-art interpretations, drawn in our style — kept separate from our original copyrighted designs.",
+    "soon_h": "Coming Soon — Request Any of These"
   }
 }

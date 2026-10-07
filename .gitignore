@@ -4,10 +4,14 @@ data/
 assets/*
 !assets/designs/
 !assets/catalog/
+!assets/by-request/
 assets/designs/*
 !assets/designs/linework-wm/
 assets/catalog/*
 !assets/catalog/manifest.json
+!assets/catalog/by-request.json
+assets/by-request/*
+!assets/by-request/*.jpg
 *.log
 .DS_Store
 *.sqlite3

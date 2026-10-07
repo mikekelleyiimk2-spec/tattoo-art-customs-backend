@@ -186,6 +186,20 @@ router.get('/custom', requireLogin, async (req, res) => {
       designBrief = `Request-only design "${d.title}" (ID: ${d.id}) — please deliver the black linework and full-color versions.`;
     }
   }
+  // Pre-fill from a by-request character (?character=<slug>): the slug is
+  // validated against the by-request list so only listed characters pre-fill.
+  const charParam = String(req.query.character || '').trim().slice(0, 64).toLowerCase();
+  if (charParam && !designBrief) {
+    try {
+      const br = JSON.parse(fs.readFileSync(
+        path.join(__dirname, '..', '..', 'assets/catalog/by-request.json'), 'utf8'));
+      const hit = (br.items || []).find((i) => i.slug === charParam);
+      if (hit) {
+        designTitle = hit.name;
+        designBrief = `By-request character "${hit.name}" — please deliver the black linework and full-color versions.`;
+      }
+    } catch { /* list unreadable: no pre-fill */ }
+  }
   // Tier-2 commission-suspended designers are hidden from the request-artist
   // dropdown (their listings stay up; only new commissions pause).
   // Shops opted into the free designer membership are listed as designers.

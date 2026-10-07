@@ -1,0 +1,1127 @@
+{
+ "updated": "2026-10-07T10:53:06.012Z",
+ "items": [
+  {
+   "name": "Goku (Dragon Ball)",
+   "slug": "goku",
+   "done": true,
+   "img": "/img/by-request/goku.jpg"
+  },
+  {
+   "name": "Naruto Uzumaki",
+   "slug": "naruto-uzumaki",
+   "done": true,
+   "img": "/img/by-request/naruto-uzumaki.jpg"
+  },
+  {
+   "name": "Monkey D. Luffy (One Piece)",
+   "slug": "monkey-d-luffy",
+   "done": true,
+   "img": "/img/by-request/monkey-d-luffy.jpg"
+  },
+  {
+   "name": "Vegeta (Dragon Ball)",
+   "slug": "vegeta",
+   "done": true,
+   "img": "/img/by-request/vegeta.jpg"
+  },
+  {
+   "name": "Sasuke Uchiha (Naruto)",
+   "slug": "sasuke-uchiha",
+   "done": true,
+   "img": "/img/by-request/sasuke-uchiha.jpg"
+  },
+  {
+   "name": "Kakashi Hatake (Naruto)",
+   "slug": "kakashi-hatake",
+   "done": true,
+   "img": "/img/by-request/kakashi-hatake.jpg"
+  },
+  {
+   "name": "Levi Ackerman (Attack on Titan)",
+   "slug": "levi-ackerman",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Satoru Gojo (Jujutsu Kaisen)",
+   "slug": "satoru-gojo",
+   "done": true,
+   "img": "/img/by-request/satoru-gojo.jpg"
+  },
+  {
+   "name": "Tanjiro Kamado (Demon Slayer)",
+   "slug": "tanjiro-kamado",
+   "done": true,
+   "img": "/img/by-request/tanjiro-kamado.jpg"
+  },
+  {
+   "name": "Nezuko Kamado (Demon Slayer)",
+   "slug": "nezuko-kamado",
+   "done": true,
+   "img": "/img/by-request/nezuko-kamado.jpg"
+  },
+  {
+   "name": "Eren Yeager (Attack on Titan)",
+   "slug": "eren-yeager",
+   "done": true,
+   "img": "/img/by-request/eren-yeager.jpg"
+  },
+  {
+   "name": "Ichigo Kurosaki (Bleach)",
+   "slug": "ichigo-kurosaki",
+   "done": true,
+   "img": "/img/by-request/ichigo-kurosaki.jpg"
+  },
+  {
+   "name": "Edward Elric (Fullmetal Alchemist)",
+   "slug": "edward-elric",
+   "done": true,
+   "img": "/img/by-request/edward-elric.jpg"
+  },
+  {
+   "name": "Light Yagami (Death Note)",
+   "slug": "light-yagami",
+   "done": true,
+   "img": "/img/by-request/light-yagami.jpg"
+  },
+  {
+   "name": "L (Death Note)",
+   "slug": "l",
+   "done": true,
+   "img": "/img/by-request/l.jpg"
+  },
+  {
+   "name": "Ryuk (Death Note)",
+   "slug": "ryuk",
+   "done": true,
+   "img": "/img/by-request/ryuk.jpg"
+  },
+  {
+   "name": "Spike Spiegel (Cowboy Bebop)",
+   "slug": "spike-spiegel",
+   "done": true,
+   "img": "/img/by-request/spike-spiegel.jpg"
+  },
+  {
+   "name": "Guts (Berserk)",
+   "slug": "guts",
+   "done": true,
+   "img": "/img/by-request/guts.jpg"
+  },
+  {
+   "name": "Sailor Moon",
+   "slug": "sailor-moon",
+   "done": true,
+   "img": "/img/by-request/sailor-moon.jpg"
+  },
+  {
+   "name": "Totoro (My Neighbor Totoro)",
+   "slug": "totoro",
+   "done": true,
+   "img": "/img/by-request/totoro.jpg"
+  },
+  {
+   "name": "No-Face (Spirited Away)",
+   "slug": "no-face",
+   "done": true,
+   "img": "/img/by-request/no-face.jpg"
+  },
+  {
+   "name": "Saitama (One Punch Man)",
+   "slug": "saitama",
+   "done": true,
+   "img": "/img/by-request/saitama.jpg"
+  },
+  {
+   "name": "Izuku \"Deku\" Midoriya (My Hero Academia)",
+   "slug": "izuku-deku-midoriya",
+   "done": true,
+   "img": "/img/by-request/izuku-deku-midoriya.jpg"
+  },
+  {
+   "name": "All Might (My Hero Academia)",
+   "slug": "all-might",
+   "done": true,
+   "img": "/img/by-request/all-might.jpg"
+  },
+  {
+   "name": "Killua Zoldyck (Hunter x Hunter)",
+   "slug": "killua-zoldyck",
+   "done": true,
+   "img": "/img/by-request/killua-zoldyck.jpg"
+  },
+  {
+   "name": "Gon Freecss (Hunter x Hunter)",
+   "slug": "gon-freecss",
+   "done": true,
+   "img": "/img/by-request/gon-freecss.jpg"
+  },
+  {
+   "name": "Jotaro Kujo (JoJo's Bizarre Adventure)",
+   "slug": "jotaro-kujo",
+   "done": true,
+   "img": "/img/by-request/jotaro-kujo.jpg"
+  },
+  {
+   "name": "Dio Brando (JoJo's Bizarre Adventure)",
+   "slug": "dio-brando",
+   "done": true,
+   "img": "/img/by-request/dio-brando.jpg"
+  },
+  {
+   "name": "Inuyasha",
+   "slug": "inuyasha",
+   "done": true,
+   "img": "/img/by-request/inuyasha.jpg"
+  },
+  {
+   "name": "Kirito (Sword Art Online)",
+   "slug": "kirito",
+   "done": true,
+   "img": "/img/by-request/kirito.jpg"
+  },
+  {
+   "name": "Motoko Kusanagi (Ghost in the Shell)",
+   "slug": "motoko-kusanagi",
+   "done": true,
+   "img": "/img/by-request/motoko-kusanagi.jpg"
+  },
+  {
+   "name": "Shinji Ikari (Neon Genesis Evangelion)",
+   "slug": "shinji-ikari",
+   "done": true,
+   "img": "/img/by-request/shinji-ikari.jpg"
+  },
+  {
+   "name": "Asuka Langley (Evangelion)",
+   "slug": "asuka-langley",
+   "done": true,
+   "img": "/img/by-request/asuka-langley.jpg"
+  },
+  {
+   "name": "Rei Ayanami (Evangelion)",
+   "slug": "rei-ayanami",
+   "done": true,
+   "img": "/img/by-request/rei-ayanami.jpg"
+  },
+  {
+   "name": "Astro Boy",
+   "slug": "astro-boy",
+   "done": true,
+   "img": "/img/by-request/astro-boy.jpg"
+  },
+  {
+   "name": "Roronoa Zoro (One Piece)",
+   "slug": "roronoa-zoro",
+   "done": true,
+   "img": "/img/by-request/roronoa-zoro.jpg"
+  },
+  {
+   "name": "Tony Tony Chopper (One Piece)",
+   "slug": "tony-tony-chopper",
+   "done": true,
+   "img": "/img/by-request/tony-tony-chopper.jpg"
+  },
+  {
+   "name": "Denji (Chainsaw Man)",
+   "slug": "denji",
+   "done": true,
+   "img": "/img/by-request/denji.jpg"
+  },
+  {
+   "name": "Mikasa Ackerman (Attack on Titan)",
+   "slug": "mikasa-ackerman",
+   "done": true,
+   "img": "/img/by-request/mikasa-ackerman.jpg"
+  },
+  {
+   "name": "Rem (Re:Zero)",
+   "slug": "rem",
+   "done": true,
+   "img": "/img/by-request/rem.jpg"
+  },
+  {
+   "name": "Zero Two (Darling in the Franxx)",
+   "slug": "zero-two",
+   "done": true,
+   "img": "/img/by-request/zero-two.jpg"
+  },
+  {
+   "name": "Itachi Uchiha (Naruto)",
+   "slug": "itachi-uchiha",
+   "done": true,
+   "img": "/img/by-request/itachi-uchiha.jpg"
+  },
+  {
+   "name": "Pain (Naruto)",
+   "slug": "pain",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Hisoka (Hunter x Hunter)",
+   "slug": "hisoka",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Mob (Mob Psycho 100)",
+   "slug": "mob",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Mario (Super Mario)",
+   "slug": "mario",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Link (The Legend of Zelda)",
+   "slug": "link",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Pikachu (Pokémon)",
+   "slug": "pikachu",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Sonic the Hedgehog",
+   "slug": "sonic-the-hedgehog",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Kratos (God of War)",
+   "slug": "kratos",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Master Chief (Halo)",
+   "slug": "master-chief",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Lara Croft (Tomb Raider)",
+   "slug": "lara-croft",
+   "done": true,
+   "img": "/img/by-request/lara-croft.jpg"
+  },
+  {
+   "name": "Samus Aran (Metroid)",
+   "slug": "samus-aran",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Kirby",
+   "slug": "kirby",
+   "done": true,
+   "img": "/img/by-request/kirby.jpg"
+  },
+  {
+   "name": "Pac-Man",
+   "slug": "pac-man",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Donkey Kong",
+   "slug": "donkey-kong",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Mega Man",
+   "slug": "mega-man",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Ryu (Street Fighter)",
+   "slug": "ryu",
+   "done": true,
+   "img": "/img/by-request/ryu.jpg"
+  },
+  {
+   "name": "Chun-Li (Street Fighter)",
+   "slug": "chun-li",
+   "done": true,
+   "img": "/img/by-request/chun-li.jpg"
+  },
+  {
+   "name": "Scorpion (Mortal Kombat)",
+   "slug": "scorpion",
+   "done": true,
+   "img": "/img/by-request/scorpion.jpg"
+  },
+  {
+   "name": "Sub-Zero (Mortal Kombat)",
+   "slug": "sub-zero",
+   "done": true,
+   "img": "/img/by-request/sub-zero.jpg"
+  },
+  {
+   "name": "Sephiroth (Final Fantasy VII)",
+   "slug": "sephiroth",
+   "done": true,
+   "img": "/img/by-request/sephiroth.jpg"
+  },
+  {
+   "name": "Tifa Lockhart (Final Fantasy VII)",
+   "slug": "tifa-lockhart",
+   "done": true,
+   "img": "/img/by-request/tifa-lockhart.jpg"
+  },
+  {
+   "name": "Cloud Strife (Final Fantasy VII)",
+   "slug": "cloud-strife",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Crash Bandicoot",
+   "slug": "crash-bandicoot",
+   "done": true,
+   "img": "/img/by-request/crash-bandicoot.jpg"
+  },
+  {
+   "name": "Spyro the Dragon",
+   "slug": "spyro-the-dragon",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Sora (Kingdom Hearts)",
+   "slug": "sora",
+   "done": true,
+   "img": "/img/by-request/sora.jpg"
+  },
+  {
+   "name": "Ezio Auditore (Assassin's Creed)",
+   "slug": "ezio-auditore",
+   "done": true,
+   "img": "/img/by-request/ezio-auditore.jpg"
+  },
+  {
+   "name": "Geralt of Rivia (The Witcher)",
+   "slug": "geralt-of-rivia",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Steve (Minecraft)",
+   "slug": "steve",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Creeper (Minecraft)",
+   "slug": "creeper",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Among Us Crewmate",
+   "slug": "among-us-crewmate",
+   "done": true,
+   "img": "/img/by-request/among-us-crewmate.jpg"
+  },
+  {
+   "name": "Ellie (The Last of Us)",
+   "slug": "ellie",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Arthur Morgan (Red Dead Redemption 2)",
+   "slug": "arthur-morgan",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Doom Slayer (DOOM)",
+   "slug": "doom-slayer",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Vault Boy (Fallout)",
+   "slug": "vault-boy",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Solid Snake (Metal Gear)",
+   "slug": "solid-snake",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Nathan Drake (Uncharted)",
+   "slug": "nathan-drake",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Aloy (Horizon)",
+   "slug": "aloy",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Joker (Persona 5)",
+   "slug": "joker",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "2B (NieR: Automata)",
+   "slug": "2b",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Dante (Devil May Cry)",
+   "slug": "dante",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Bayonetta",
+   "slug": "bayonetta",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Ratchet & Clank",
+   "slug": "ratchet-clank",
+   "done": true,
+   "img": "/img/by-request/ratchet-clank.jpg"
+  },
+  {
+   "name": "Sackboy (LittleBigPlanet)",
+   "slug": "sackboy",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Fox McCloud (Star Fox)",
+   "slug": "fox-mccloud",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Captain Falcon (F-Zero)",
+   "slug": "captain-falcon",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Banjo-Kazooie",
+   "slug": "banjo-kazooie",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Shovel Knight",
+   "slug": "shovel-knight",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Hollow Knight",
+   "slug": "hollow-knight",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Bart Simpson",
+   "slug": "bart-simpson",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Homer Simpson",
+   "slug": "homer-simpson",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "SpongeBob SquarePants",
+   "slug": "spongebob-squarepants",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Patrick Star (SpongeBob)",
+   "slug": "patrick-star",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Squidward (SpongeBob)",
+   "slug": "squidward",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Stewie Griffin (Family Guy)",
+   "slug": "stewie-griffin",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Rick Sanchez (Rick and Morty)",
+   "slug": "rick-sanchez",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Morty Smith (Rick and Morty)",
+   "slug": "morty-smith",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Samurai Jack",
+   "slug": "samurai-jack",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Powerpuff Girls",
+   "slug": "powerpuff-girls",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Invader Zim",
+   "slug": "invader-zim",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Tweety Bird",
+   "slug": "tweety-bird",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Taz (Tasmanian Devil)",
+   "slug": "taz",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Bugs Bunny",
+   "slug": "bugs-bunny",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Daffy Duck",
+   "slug": "daffy-duck",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Wile E. Coyote & Road Runner",
+   "slug": "wile-e-coyote-road-runner",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Winnie the Pooh",
+   "slug": "winnie-the-pooh",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Tigger",
+   "slug": "tigger",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Mordecai & Rigby (Regular Show)",
+   "slug": "mordecai-rigby",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Ben 10",
+   "slug": "ben-10",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Danny Phantom",
+   "slug": "danny-phantom",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Johnny Bravo",
+   "slug": "johnny-bravo",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Dexter (Dexter's Laboratory)",
+   "slug": "dexter",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Courage the Cowardly Dog",
+   "slug": "courage-the-cowardly-dog",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Ren & Stimpy",
+   "slug": "ren-stimpy",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Pinky and the Brain",
+   "slug": "pinky-and-the-brain",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Yakko, Wakko & Dot (Animaniacs)",
+   "slug": "yakko-wakko-dot",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Finn & Jake (Adventure Time)",
+   "slug": "finn-jake",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Gumball (The Amazing World of Gumball)",
+   "slug": "gumball",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Aang (Avatar: The Last Airbender)",
+   "slug": "aang",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Spider-Man",
+   "slug": "spider-man",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Batman",
+   "slug": "batman",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "The Joker",
+   "slug": "the-joker",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Superman",
+   "slug": "superman",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Wonder Woman",
+   "slug": "wonder-woman",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Iron Man",
+   "slug": "iron-man",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Captain America",
+   "slug": "captain-america",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Thor",
+   "slug": "thor",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Hulk",
+   "slug": "hulk",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Wolverine",
+   "slug": "wolverine",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Deadpool",
+   "slug": "deadpool",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Venom",
+   "slug": "venom",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "The Flash",
+   "slug": "the-flash",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Black Panther",
+   "slug": "black-panther",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Thanos",
+   "slug": "thanos",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Loki",
+   "slug": "loki",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Harley Quinn",
+   "slug": "harley-quinn",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Green Goblin",
+   "slug": "green-goblin",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Doctor Octopus",
+   "slug": "doctor-octopus",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Miles Morales (Spider-Man)",
+   "slug": "miles-morales",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Darth Vader (Star Wars)",
+   "slug": "darth-vader",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Grogu / Baby Yoda (Star Wars)",
+   "slug": "grogu-baby-yoda",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "The Mandalorian (Star Wars)",
+   "slug": "the-mandalorian",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Luke Skywalker (Star Wars)",
+   "slug": "luke-skywalker",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Boba Fett (Star Wars)",
+   "slug": "boba-fett",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Harry Potter",
+   "slug": "harry-potter",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Jack Skellington (The Nightmare Before Christmas)",
+   "slug": "jack-skellington",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Godzilla",
+   "slug": "godzilla",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Xenomorph (Alien)",
+   "slug": "xenomorph",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Terminator T-800",
+   "slug": "terminator-t-800",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "The Doctor (Doctor Who)",
+   "slug": "the-doctor",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Dalek (Doctor Who)",
+   "slug": "dalek",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Cyberman (Doctor Who)",
+   "slug": "cyberman",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Weeping Angel (Doctor Who)",
+   "slug": "weeping-angel",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "TARDIS (Doctor Who)",
+   "slug": "tardis",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "The Master (Doctor Who)",
+   "slug": "the-master",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "K-9 (Doctor Who)",
+   "slug": "k-9",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Conan the Barbarian",
+   "slug": "conan-the-barbarian",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Tarzan",
+   "slug": "tarzan",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Pink Panther",
+   "slug": "pink-panther",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Hong Kong Phooey",
+   "slug": "hong-kong-phooey",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Snoopy (Peanuts)",
+   "slug": "snoopy",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Snake Eyes (G.I. Joe)",
+   "slug": "snake-eyes",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Storm Shadow (G.I. Joe)",
+   "slug": "storm-shadow",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Cobra Commander (G.I. Joe)",
+   "slug": "cobra-commander",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Duke (G.I. Joe)",
+   "slug": "duke",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Scarlett (G.I. Joe)",
+   "slug": "scarlett",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Destro (G.I. Joe)",
+   "slug": "destro",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Lion-O (ThunderCats)",
+   "slug": "lion-o",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Cheetara (ThunderCats)",
+   "slug": "cheetara",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Panthro (ThunderCats)",
+   "slug": "panthro",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Mumm-Ra (ThunderCats)",
+   "slug": "mumm-ra",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Snarf (ThunderCats)",
+   "slug": "snarf",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Darth Maul (Star Wars)",
+   "slug": "darth-maul",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Red Sonja",
+   "slug": "red-sonja",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "The Lone Ranger",
+   "slug": "the-lone-ranger",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Tonto (Lone Ranger)",
+   "slug": "tonto",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Captain Jack Sparrow",
+   "slug": "captain-jack-sparrow",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Rob Roy — Neeson film portrayal",
+   "slug": "rob-roy-neeson-film-portrayal",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "William Wallace — Braveheart film portrayal",
+   "slug": "william-wallace-braveheart-film-portrayal",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "KISS (band)",
+   "slug": "kiss",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Ghost Rider (Marvel)",
+   "slug": "ghost-rider",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Dig Dug",
+   "slug": "dig-dug",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Joust knight",
+   "slug": "joust-knight",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Frosty the Snowman",
+   "slug": "frosty-the-snowman",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Heathcliff (cartoon cat)",
+   "slug": "heathcliff",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "King Kong",
+   "slug": "king-kong",
+   "done": false,
+   "img": null
+  }
+ ]
+}

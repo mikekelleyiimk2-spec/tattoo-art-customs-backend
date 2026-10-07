@@ -91,6 +91,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/privacy`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/contact`, changefreq: 'monthly', priority: '0.4' },
     { loc: `${base}/tap-to-pay`, changefreq: 'monthly', priority: '0.6' },
+    { loc: `${base}/by-request`, changefreq: 'daily', priority: '0.8' },
   ];
   try {
     const designs = await db.all(
@@ -198,6 +199,33 @@ router.get('/gallery', async (req, res) => {
     newestUrl: galleryUrl('newest'), allUrl: galleryUrl(''),
     metaDescription: 'Search 900+ original tattoo designs by style and category. Buy ready-made tattoo designs from independent artists — full color and linework included.',
     canonical: `${config.baseUrl.replace(/\/$/, '')}/gallery`,
+  });
+});
+
+// By-request character list — names only, never artwork (copyrighted designs
+// stay private). Regenerated from the handy list by scripts/build-by-request.js
+// after every character batch.
+function byRequestList() {
+  try {
+    const raw = fs.readFileSync(
+      path.join(__dirname, '..', '..', 'assets/catalog/by-request.json'), 'utf8');
+    return JSON.parse(raw);
+  } catch { return { updated: null, items: [] }; }
+}
+
+router.get('/by-request', async (req, res) => {
+  const q = (req.query.q || '').trim().toLowerCase();
+  const data = byRequestList();
+  let items = data.items;
+  if (q) items = items.filter((i) => i.name.toLowerCase().includes(q));
+  const base = config.baseUrl.replace(/\/$/, '');
+  res.render('site/by-request', {
+    title: 'By-Request Characters — Tattoo Art Customs',
+    items, q: req.query.q || '',
+    updated: data.updated ? new Date(data.updated).toLocaleDateString() : '',
+    customPrice: withFeeCents(config.pricing.customFull),
+    metaDescription: 'Request any of these characters as a custom tattoo design — drawn for you in 48 hours. Names list updated daily.',
+    canonical: `${base}/by-request`,
   });
 });
 

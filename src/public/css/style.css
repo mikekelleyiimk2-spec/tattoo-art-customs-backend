@@ -175,3 +175,8 @@ th { background: var(--paper-dim); }
   box-shadow: 0 1px 4px rgba(0,0,0,.18);
 }
 .love-count { font-size: 1.25rem; font-weight: 700; color: var(--accent); }
+
+/* By-request character list */
+.byrequest-list { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .5rem; }
+.byrequest-list li { display: flex; align-items: center; gap: .5rem; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: .5rem .75rem; }
+.byrequest-name { flex: 1; font-weight: 600; }

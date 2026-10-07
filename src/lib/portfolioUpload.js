@@ -392,7 +392,27 @@ async function uploadOneDesign(user, fileSet, fields) {
   }
 
   const screen = screenText(`${title}\n${description}`);
-  // Content rating (owner policy): nudity allowed; sexual acts / highly
+  // By-request auto-flag: any uploaded design whose title matches a by-request
+// character slug is automatically marked request_only so copyrighted designs
+// can never be instant-bought. List lives server-side in
+// assets/catalog/by-request.json (names only, never public artwork).
+let _byRequestSlugs = null;
+function byRequestSlugs() {
+  if (_byRequestSlugs) return _byRequestSlugs;
+  try {
+    const br = JSON.parse(fs.readFileSync(
+      path.join(__dirname, '..', '..', 'assets/catalog/by-request.json'), 'utf8'));
+    _byRequestSlugs = new Set((br.items || []).map((i) => i.slug));
+  } catch { _byRequestSlugs = new Set(); }
+  return _byRequestSlugs;
+}
+function titleIsByRequest(title) {
+  const slug = String(title || '').toLowerCase()
+    .replace(/\s*\(.*?\)/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return byRequestSlugs().has(slug);
+}
+
+// Content rating (owner policy): nudity allowed; sexual acts / highly
   // offensive content is blurred for the public preview; racist material is
   // held for admin-only review. Artist self-declares; admins can adjust.
   const sensitivity = SENSITIVITIES.includes(String(fields.sensitivity || '').toLowerCase())
@@ -422,6 +442,8 @@ async function uploadOneDesign(user, fileSet, fields) {
     status: holdForHate ? 'on_hold' : (screen.ok ? 'pending' : 'flagged'),
     created_at: db.now(),
     sale_count: 0,
+    // Auto-check: by-request character titles can never be instant-buy.
+    request_only: titleIsByRequest(title) ? 1 : 0,
   });
   if (!screen.ok) {
     await db.insert('review_queue', {
