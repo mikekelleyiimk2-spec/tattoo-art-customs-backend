@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-07T10:53:06.012Z",
+ "updated": "2026-10-07T11:45:45.111Z",
  "items": [
   {
    "name": "Goku (Dragon Ball)",
@@ -40,8 +40,8 @@
   {
    "name": "Levi Ackerman (Attack on Titan)",
    "slug": "levi-ackerman",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/levi-ackerman.jpg"
   },
   {
    "name": "Satoru Gojo (Jujutsu Kaisen)",
@@ -256,38 +256,38 @@
   {
    "name": "Pain (Naruto)",
    "slug": "pain",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/pain.jpg"
   },
   {
    "name": "Hisoka (Hunter x Hunter)",
    "slug": "hisoka",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/hisoka.jpg"
   },
   {
    "name": "Mob (Mob Psycho 100)",
    "slug": "mob",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/mob.jpg"
   },
   {
    "name": "Mario (Super Mario)",
    "slug": "mario",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/mario.jpg"
   },
   {
    "name": "Link (The Legend of Zelda)",
    "slug": "link",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/link.jpg"
   },
   {
    "name": "Pikachu (Pokémon)",
    "slug": "pikachu",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/pikachu.jpg"
   },
   {
    "name": "Sonic the Hedgehog",
@@ -298,14 +298,14 @@
   {
    "name": "Kratos (God of War)",
    "slug": "kratos",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/kratos.jpg"
   },
   {
    "name": "Master Chief (Halo)",
    "slug": "master-chief",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/master-chief.jpg"
   },
   {
    "name": "Lara Croft (Tomb Raider)",
@@ -316,8 +316,8 @@
   {
    "name": "Samus Aran (Metroid)",
    "slug": "samus-aran",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/samus-aran.jpg"
   },
   {
    "name": "Kirby",
@@ -328,20 +328,20 @@
   {
    "name": "Pac-Man",
    "slug": "pac-man",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/pac-man.jpg"
   },
   {
    "name": "Donkey Kong",
    "slug": "donkey-kong",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/donkey-kong.jpg"
   },
   {
    "name": "Mega Man",
    "slug": "mega-man",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/mega-man.jpg"
   },
   {
    "name": "Ryu (Street Fighter)",
@@ -382,8 +382,8 @@
   {
    "name": "Cloud Strife (Final Fantasy VII)",
    "slug": "cloud-strife",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/cloud-strife.jpg"
   },
   {
    "name": "Crash Bandicoot",
@@ -394,8 +394,8 @@
   {
    "name": "Spyro the Dragon",
    "slug": "spyro-the-dragon",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/spyro-the-dragon.jpg"
   },
   {
    "name": "Sora (Kingdom Hearts)",
@@ -412,20 +412,20 @@
   {
    "name": "Geralt of Rivia (The Witcher)",
    "slug": "geralt-of-rivia",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/geralt-of-rivia.jpg"
   },
   {
    "name": "Steve (Minecraft)",
    "slug": "steve",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/steve.jpg"
   },
   {
    "name": "Creeper (Minecraft)",
    "slug": "creeper",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/creeper.jpg"
   },
   {
    "name": "Among Us Crewmate",
