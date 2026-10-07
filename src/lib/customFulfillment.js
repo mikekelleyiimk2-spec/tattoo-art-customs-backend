@@ -28,6 +28,14 @@ async function routeCustomOrder(order) {
   if (!order || order.order_type !== 'custom' || order.status !== 'paid') return order;
   const cur = order.custom_status || 'new';
   if (cur !== 'new') return order; // already routed
+  // Doodle-to-tattoo orders (owner rule 2026-10-07): fulfilled by the OWNER
+  // directly. Never routed into the designer assignment/commission queue —
+  // no designer payout entries. recordSaleCommissions() already books these
+  // (no design_id) as owner art with no designer split.
+  if (order.doodle_tier) {
+    await db.update('orders', order.id, { custom_status: 'owner_fulfilled' });
+    return { ...order, custom_status: 'owner_fulfilled' };
+  }
   if (order.requested_artist_id) {
     // users.sla_suspended is a manual-admin-only flag — automatic enforcement
     // never sets or reads it, so routing does not filter on it. Tier-2

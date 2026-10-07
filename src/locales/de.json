@@ -199,7 +199,7 @@
     "request_only_note": "Dieses Design wird als Custom-Auftrag geliefert – schwarze Linework- und Vollfarb-Versionen inklusive.",
     "request_this_design": "Dieses Design anfragen",
     "send_to_app": "Send to Little Inkers",
-    "send_to_app_note": "Get this design as a coloring page in the Little Inkers kids app — {price} incl. fee. You'll get a redeem code for the app's parent zone.",
+    "send_to_app_note": "Color it before you ink it — get this design as a coloring page in the Little Inkers kids app ({price} incl. fee). Kids color it for fun, adults preview it in color before committing. You'll get a redeem code for the app's parent zone.",
     "send_to_app_btn": "Get redeem code"
   },
   "footer": {
@@ -772,7 +772,7 @@
     "free_text": "Die komplette App, werbefinanziert.",
     "pro_text": "Keine Werbung — und Pro erhält jedes Update zuerst.",
     "lil_title": "Little Inkers",
-    "lil_text": "A free kids coloring book from Usefulappz™. Screenshot-proof art, kid-safe ads, and a parent zone that connects to Tattoo Art Customs.",
+    "lil_text": "A free kids coloring book from Usefulappz™. Screenshot-proof art, kid-safe ads, and a parent zone that connects to Tattoo Art Customs — color it before you ink it, or turn their doodles into tattoos.",
     "lil_soon": "Coming soon",
     "lil_notify": "Get notified at launch"
   },
@@ -794,7 +794,7 @@
   },
   "doodle": {
     "title": "Doodle-to-Tattoo — Ink Their Imagination",
-    "sub": "Your kid drew your next tattoo. Upload their doodle or coloring — our artists turn it into real, tattoo-ready art in 48 hours.",
+    "sub": "Your kid drew your next tattoo. Upload their doodle or coloring — our artists turn it into real, tattoo-ready art in 48 hours. Tip: color any design first in the Little Inkers app to preview it before you commit.",
     "step1": "1. The artwork",
     "upload_label": "Upload your child's doodle (JPG, PNG, or WebP):",
     "or": "— or —",

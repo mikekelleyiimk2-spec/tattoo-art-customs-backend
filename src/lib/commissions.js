@@ -188,6 +188,18 @@ async function recordSaleCommissions(order) {
   // 12% site) via pickWinner() — never as a normal sale here, or the prize
   // would be double-booked.
   if (order.order_type === 'contest') return;
+  // Send-to-Little-Inkers fee (owner rule 2026-10-07): the 99c transfer fee
+  // is 100% business. No designer commission/ledger entry on the fee — the
+  // designer was already paid their normal commission on the underlying
+  // design sale (separate order, existing logic unchanged).
+  if (order.order_type === 'send_to_app') {
+    await db.insert('commission_ledger', {
+      order_id: order.id, recipient_type: 'site', recipient_id: null,
+      amount_cents: commissionBaseCents(order), status: 'site_kept',
+      commission_type: 'send_to_app_fee', created_at: t,
+    });
+    return;
+  }
   if (order.order_type === 'print') {
     const po = await db.get('SELECT product FROM print_orders WHERE order_id = ?', [order.id]);
     if (po && po.product === 'tee_classic') {
