@@ -414,6 +414,7 @@ router.get('/approve/:orderId', requireLogin, async (req, res) => {
     });
     const fresh = await db.get('SELECT * FROM orders WHERE id = ?', [order.id]);
     await recordSaleCommissions(fresh);
+    try { await require('../lib/holidayRaffle').awardPurchaseEntries(fresh); } catch (e) { console.error('holiday raffle purchase entries failed:', e.message); }
     // Buy-for-client: land the art cost on a client bill for the shop to
     // collect from the client (idempotent per order).
     if (fresh.client_email) {

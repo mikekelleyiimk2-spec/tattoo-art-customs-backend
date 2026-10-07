@@ -1,0 +1,17 @@
+<h1><%= t('hraffle.enter_title') %></h1>
+<p class="muted"><%= t('hraffle.enter_sub', {count: myEntries}) %></p>
+
+<form method="post" action="/holiday-raffle/enter" class="card">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <h2><%= t('hraffle.pick_pack') %></h2>
+  <% packs.forEach(function(p, i){ %>
+  <label>
+    <input type="radio" name="pack" value="<%= p.id %>" <%= i === 1 ? 'checked' : '' %>>
+    <strong><%= p.entries %> <%= t('hraffle.entries_word') %></strong> — <%= fmtMoney(p.totalCents) %>
+  </label>
+  <% }); %>
+  <p><button class="btn" type="submit"><%= t('hraffle.buy') %></button></p>
+  <p class="muted fineprint"><%= t('hraffle.buy_note') %></p>
+</form>
+
+<p><a href="/holiday-raffle">&larr; <%= t('hraffle.back') %></a></p>

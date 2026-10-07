@@ -544,6 +544,7 @@ async function main() {
   await require('./shoptools-phase7').runDbTests(ok);
   await require('./sessionLimits').runDbTests(ok);
   await require('./doodleMerch').runDbTests(ok);
+  await require('./holidayRaffle').runDbTests(ok);
 
   // Mail retry (unit-level, no live SMTP): a transient failure is retried
   // with backoff and eventually delivered; a permanent failure exhausts all
@@ -980,6 +981,7 @@ async function main() {
   await require('./favorites').runHttpTests(ok, req); // [wishlist] feature
   await require('./toploved').runHttpTests(ok, req); // [toploved] leaderboard
   await require('./doodleMerch').runHttpTests(ok, req); // doodle-to-merchandise
+  await require('./holidayRaffle').runHttpTests(ok, req); // holiday doodle raffle
   await require('./transfers').runHttpTests(ok, req); // [transfers] customer<->shop art pipeline
   r = await areq('POST', `/admin/orders/${orderId}/confirm-manual`);
   ok(r.status === 302, 'admin confirms manual payment');

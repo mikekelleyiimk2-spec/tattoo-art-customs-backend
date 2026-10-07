@@ -61,6 +61,10 @@ router.get('/approve/:orderId', requireLogin, async (req, res) => {
     const captured = Math.round(parseFloat(capture.purchase_units[0].payments.captures[0].amount.value) * 100);
     if (captured !== expectedTotal) throw new Error('Amount mismatch');
     await db.update('orders', order.id, { status: 'paid', paid_at: db.now() });
+    try {
+      await require('../lib/holidayRaffle').awardPurchaseEntries(
+        await db.get('SELECT * FROM orders WHERE id = ?', [order.id]));
+    } catch (e) { console.error('holiday raffle purchase entries failed:', e.message); }
     // Pro-app perk registry (owner directive 2026-10-05): the iOS sideload
     // buyer is known here (signed-in capture), so record the verified Pro
     // purchase — unlocks the 6-month membership perk. Idempotent on the

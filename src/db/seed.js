@@ -62,6 +62,24 @@ async function seed() {
 
   // Owner's pre-made catalog -> public gallery (one-time, idempotent).
   await seedCatalog();
+
+  // Holiday Doodle Raffle (Dec 2026): one open raffle row, idempotent.
+  // Ends Dec 15, 2026 11:59 PM America/Chicago = 2026-12-16 05:59 UTC.
+  const raffleEndsAt = Date.UTC(2026, 11, 16, 5, 59, 0);
+  const existingRaffle = await db.get(
+    "SELECT id FROM holiday_raffles WHERE name = 'Holiday Doodle Raffle'");
+  if (!existingRaffle) {
+    await db.insert('holiday_raffles', {
+      id: db.newId(),
+      name: 'Holiday Doodle Raffle',
+      ends_at: raffleEndsAt,
+      status: 'open',
+      created_at: db.now(),
+    });
+    console.log('created Holiday Doodle Raffle');
+  } else {
+    console.log('Holiday Doodle Raffle already exists');
+  }
 }
 
 if (require.main === module) {

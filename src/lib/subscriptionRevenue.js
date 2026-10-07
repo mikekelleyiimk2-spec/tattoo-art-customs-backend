@@ -53,6 +53,13 @@ async function recordSubscriptionRevenue({ userId, plan, amountCents, provider, 
       provider_ref: String(providerRef).slice(0, 200),
       created_at: db.now(),
     });
+    // Holiday Doodle Raffle: customer-plan payments earn 20 entries.
+    // Idempotent via the (raffle, source, source_ref) unique guard.
+    try {
+      await require('./holidayRaffle').awardMembershipEntries({
+        userId, planSlug: plan, providerRef,
+      });
+    } catch (e) { console.error('holiday raffle membership entries failed:', e.message); }
     return { recorded: true, amountCents: amount, ownerShareCents: ownerShare, siteShareCents: siteShare };
   } catch (e) {
     if (/unique/i.test(e.message || '')) return { recorded: false, reason: 'duplicate' };

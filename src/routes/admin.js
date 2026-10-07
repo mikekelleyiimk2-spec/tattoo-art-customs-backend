@@ -184,6 +184,7 @@ router.post('/orders/:id/confirm-manual', formLimiter, checkHoneypot, async (req
   await db.update('orders', order.id, { status: 'paid', amount_paid_cents: due + (order.fee_cents || 0), paid_at: db.now() });
   const fresh = await db.get('SELECT * FROM orders WHERE id = ?', [order.id]);
   await recordSaleCommissions(fresh);
+  try { await require('../lib/holidayRaffle').awardPurchaseEntries(fresh); } catch (e) { console.error('holiday raffle purchase entries failed:', e.message); }
   // Design-contest prize escrow paid manually: open the contest for entries.
   if (fresh.order_type === 'contest') {
     const contest = await db.get('SELECT id FROM contests WHERE order_id = ?', [fresh.id]);
@@ -977,6 +978,42 @@ router.post('/raffle/draw', formLimiter, checkHoneypot, async (req, res) => {
     req.session.flash = 'Draw failed: ' + e.message;
   }
   res.redirect('/admin/founding');
+});
+
+// Draw the Holiday Doodle Raffle (after Dec 15, 2026). Winners are notified
+// on-site and by email with their free merchandise prize code.
+router.post('/holiday-raffle/draw', formLimiter, checkHoneypot, async (req, res) => {
+  try {
+    const hr = require('../lib/holidayRaffle');
+    const { sendMail } = require('../lib/mail');
+    const raffleId = String(req.body.raffle_id || '');
+    const result = await hr.drawWinners(raffleId);
+    for (const w of result.winners) {
+      const u = await db.get('SELECT email, display_name FROM users WHERE id = ?', [w.userId]);
+      if (!u) continue;
+      try {
+        await db.insert('notifications', {
+          id: db.newId(), user_id: w.userId,
+          title: 'You won the Holiday Doodle Raffle!',
+          body: `Your prize code ${w.code} turns your kid's art into FREE merchandise — a custom t-shirt or poster. Enter it on the doodle-to-tattoo page.`,
+          created_at: db.now(),
+        });
+      } catch (e) { console.error('raffle winner notification failed:', e.message); }
+      if (u.email) {
+        try {
+          await sendMail({
+            to: u.email,
+            subject: 'You won the Holiday Doodle Raffle!',
+            text: `Hi ${u.display_name || 'there'},\n\nYou won the Holiday Doodle Raffle! Your prize code is ${w.code}.\n\nTurn your kid's art into FREE merchandise — a custom t-shirt or a poster for their wall. Go to https://tattoo-art-customs.onrender.com/doodle-to-tattoo, upload their drawing, pick a t-shirt or poster, and enter your prize code at checkout.\n\nThanks for entering, and happy holidays!\n— Tattoo Art Customs`,
+          });
+        } catch (e) { console.error('raffle winner email failed:', e.message); }
+      }
+    }
+    req.session.flash = `Holiday raffle drawn: ${result.winners.length} winners from ${result.totalEntries} entries. Winners notified on-site and by email.`;
+  } catch (e) {
+    req.session.flash = 'Draw failed: ' + e.message;
+  }
+  res.redirect('/admin');
 });
 
 // --- Tap-to-pay standalone billing ---

@@ -1,0 +1,41 @@
+<h1><%= t('hraffle.title') %></h1>
+<p class="muted"><%= t('hraffle.sub') %></p>
+
+<% if (raffle && raffle.status === 'open') { %>
+<p><span class="badge ok"><%= t('hraffle.open') %></span> <%= t('hraffle.ends', {date: new Date(endsAt).toLocaleDateString()}) %></p>
+<% } else if (raffle && raffle.status === 'drawn') { %>
+<p><span class="badge ok"><%= t('hraffle.drawn') %></span> <%= t('hraffle.drawn_text') %></p>
+<% } else { %>
+<p><span class="badge"><%= t('hraffle.closed') %></span> <%= t('hraffle.closed_text') %></p>
+<% } %>
+
+<section class="card">
+  <h2><%= t('hraffle.prize_title') %></h2>
+  <p><%= t('hraffle.prize_text') %></p>
+  <p><strong><%= t('hraffle.prize_scale', {count: Math.floor(totalEntries / 100)}) %></strong></p>
+  <p class="muted"><%= t('hraffle.prize_note') %></p>
+</section>
+
+<section class="card">
+  <h2><%= t('hraffle.entries_title') %></h2>
+  <p><strong><%= t('hraffle.total', {count: totalEntries}) %></strong></p>
+  <% if (myEntries > 0) { %><p><%= t('hraffle.mine', {count: myEntries}) %></p><% } %>
+  <ul>
+    <li><%= t('hraffle.how_membership') %></li>
+    <li><%= t('hraffle.how_purchase') %></li>
+    <li><a href="/holiday-raffle/enter"><%= t('hraffle.how_direct') %></a></li>
+  </ul>
+</section>
+
+<% if (winners && winners.length) { %>
+<section class="card">
+  <h2><%= t('hraffle.winners_title') %></h2>
+  <ul>
+    <% winners.forEach(function(w){ %>
+    <li><strong><%= w.display_name %></strong> — <%= t('hraffle.won_code') %></li>
+    <% }); %>
+  </ul>
+</section>
+<% } %>
+
+<p class="muted fineprint"><%= t('hraffle.fineprint') %></p>

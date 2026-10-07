@@ -94,6 +94,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/tap-to-pay`, changefreq: 'monthly', priority: '0.6' },
     { loc: `${base}/by-request`, changefreq: 'daily', priority: '0.8' },
     { loc: `${base}/doodle-to-tattoo`, changefreq: 'weekly', priority: '0.7' },
+    { loc: `${base}/holiday-raffle`, changefreq: 'weekly', priority: '0.7' },
   ];
   try {
     const designs = await db.all(
@@ -835,6 +836,100 @@ router.get('/raffle', async (req, res) => {
       'SELECT id FROM raffle_entries WHERE user_id = ?', [req.user.id])) : false,
   });
 });
+
+// --- Holiday Doodle Raffle (Dec 2026): entries for memberships, purchases,
+// and direct entry packs. Prize: free turn-your-kid's-art-into-merchandise
+// codes, 1 winner per 100 entries. Kid-safe copy throughout (no tattoo talk).
+router.get('/holiday-raffle', async (req, res) => {
+  const hr = require('../lib/holidayRaffle');
+  const base = config.baseUrl.replace(/\/$/, '');
+  const raffle = await hr.getOpenRaffle();
+  // Fall back to the most recent raffle (drawn/closed) so the page still
+  // shows winners after the draw.
+  const shown = raffle || await db.get(
+    'SELECT * FROM holiday_raffles ORDER BY ends_at DESC LIMIT 1');
+  let total = 0, mine = 0, winners = [];
+  if (shown) {
+    total = await hr.totalEntries(shown.id);
+    if (req.user) mine = await hr.userEntries(shown.id, req.user.id);
+    if (shown.status === 'drawn') {
+      winners = await db.all(
+        `SELECT w.code, w.drawn_at, u.display_name
+         FROM holiday_raffle_winners w JOIN users u ON u.id = w.user_id
+         WHERE w.raffle_id = ? ORDER BY w.drawn_at`, [shown.id]);
+    }
+  }
+  res.render('site/holiday-raffle', {
+    title: 'Holiday Doodle Raffle — Win Free Kids-Art Merchandise | Tattoo Art Customs',
+    metaDescription: 'The Holiday Doodle Raffle: win a FREE turn-your-kid\u2019s-art-into-merchandise code. Earn entries with a customer membership, every purchase, or grab an entry pack.',
+    canonical: `${base}/holiday-raffle`,
+    raffle: shown, totalEntries: total, myEntries: mine,
+    winners, endsAt: shown ? shown.ends_at : null,
+  });
+});
+
+router.get('/holiday-raffle/enter', requireLogin, async (req, res) => {
+  const hr = require('../lib/holidayRaffle');
+  const { withFeeCents } = require('../lib/pricing');
+  const raffle = await hr.getOpenRaffle();
+  if (!raffle) {
+    req.session.flash = 'The raffle has ended — thanks for entering!';
+    return res.redirect('/holiday-raffle');
+  }
+  const packs = hr.ENTRY_PACKS.map((p) => ({
+    ...p, totalCents: withFeeCents(p.baseCents),
+  }));
+  const mine = await hr.userEntries(raffle.id, req.user.id);
+  res.render('site/holiday-raffle-enter', {
+    title: 'Get Raffle Entries — Holiday Doodle Raffle | Tattoo Art Customs',
+    packs, myEntries: mine, raffle,
+  });
+});
+
+router.post('/holiday-raffle/enter', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
+  const hr = require('../lib/holidayRaffle');
+  const { withFeeCents, processingFeeCents } = require('../lib/pricing');
+  try {
+    const raffle = await hr.getOpenRaffle();
+    if (!raffle) throw new Error('The raffle has ended.');
+    const pack = hr.ENTRY_PACKS.find((p) => p.id === req.body.pack);
+    if (!pack) throw new Error('Choose an entry pack.');
+    const amount = pack.baseCents;
+    const fee = processingFeeCents(amount);
+    const orderId = await db.insert('orders', {
+      id: db.newId(),
+      buyer_id: req.user.id,
+      order_type: 'raffle_entries',
+      amount_cents: amount,
+      fee_cents: fee,
+      status: 'pending',
+      payment_method: 'paypal',
+      custom_brief: `HOLIDAY RAFFLE ENTRY PACK — ${pack.entries} entries`,
+      raffle_entries_bought: pack.entries,
+      created_at: db.now(),
+    });
+    const paypal = require('../lib/paypal');
+    try {
+      const pp = await paypal.createCheckoutOrder({
+        amountCents: amount + fee,
+        description: `Holiday Doodle Raffle — ${pack.entries} entries`,
+        returnUrl: `${config.baseUrl}/orders/approve/${orderId}`,
+        cancelUrl: `${config.baseUrl}/holiday-raffle/enter`,
+      });
+      await db.update('orders', orderId, { paypal_order_id: pp.id });
+      const approve = pp.links.find((l) => l.rel === 'approve');
+      return res.redirect(approve.href);
+    } catch (e) {
+      console.error('PayPal raffle entry order create failed:', e.message);
+      req.session.flash = 'PayPal checkout is unavailable right now — you can pay manually below.';
+      return res.redirect(`/orders/manual/${orderId}`);
+    }
+  } catch (e) {
+    req.session.flash = e.message || 'Could not start your entry order.';
+    return res.redirect('/holiday-raffle/enter');
+  }
+});
+
 
 
 router.get('/notifications', requireLogin, async (req, res) => {
