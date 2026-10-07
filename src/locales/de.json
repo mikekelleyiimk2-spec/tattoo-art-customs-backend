@@ -857,6 +857,9 @@
     "entries_word": "Lose",
     "buy": "Lose kaufen",
     "buy_note": "Die Lose werden sofort nach Zahlungseingang gutgeschrieben.",
-    "back": "Zurück zur Verlosung"
+    "back": "Zurück zur Verlosung",
+    "per_entry": "pro Teilnahme",
+    "best_value": "BESTES ANGEBOT",
+    "popular": "BELIEBTESTE"
   }
 }

@@ -857,6 +857,9 @@
     "entries_word": "lotter",
     "buy": "Köp lotter",
     "buy_note": "Lotterna krediteras direkt när betalningen är klar.",
-    "back": "Tillbaka till lotteriet"
+    "back": "Tillbaka till lotteriet",
+    "per_entry": "per deltagande",
+    "best_value": "BÄSTA VÄRDE",
+    "popular": "MEST POPULÄR"
   }
 }

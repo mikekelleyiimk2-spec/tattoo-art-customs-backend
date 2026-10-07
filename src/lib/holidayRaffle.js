@@ -15,6 +15,16 @@ const ENTRIES_PER_MEMBERSHIP = 20;
 const ENTRIES_PER_PURCHASE = 5;
 const ENTRIES_PER_WINNER = 100;
 
+// REVENUE SPLIT (owner directive 2026-10-07) — applies to direct entry-pack
+// revenue. Prize reserve is a FIXED $0.20/entry (covers the ~$20 fulfilled
+// prize per 100 entries with buffer, regardless of bundle). PayPal's fee
+// (~$0.49 + 3.5%/txn) comes off the top. Of the remainder: 60% to overhead
+// (builds the overhead account), 40% to the owner. NOTE: $1 singles lose
+// >50% to PayPal's fixed fee — the bundles are the margin; push them in copy.
+const PRIZE_RESERVE_CENTS_PER_ENTRY = 20;
+const OVERHEAD_SHARE = 0.60;
+const OWNER_SHARE = 0.40;
+
 // Entry packs: fee-inclusive totals are exactly $1 / $5 / $10.
 const ENTRY_PACKS = [
   { id: 'pack1', entries: 1, baseCents: 49, label: '1 entry' },

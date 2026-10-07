@@ -857,6 +857,9 @@
     "entries_word": "partecipazioni",
     "buy": "Acquista partecipazioni",
     "buy_note": "Le partecipazioni vengono accreditate subito dopo il pagamento.",
-    "back": "Torna alla lotteria"
+    "back": "Torna alla lotteria",
+    "per_entry": "per partecipazione",
+    "best_value": "MIGLIOR OFFERTA",
+    "popular": "PIÙ POPOLARE"
   }
 }

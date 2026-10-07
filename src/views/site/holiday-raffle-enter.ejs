@@ -8,6 +8,9 @@
   <label>
     <input type="radio" name="pack" value="<%= p.id %>" <%= i === 1 ? 'checked' : '' %>>
     <strong><%= p.entries %> <%= t('hraffle.entries_word') %></strong> — <%= fmtMoney(p.totalCents) %>
+    <span class="muted">(<%= fmtMoney(Math.round(p.totalCents / p.entries)) %> <%= t('hraffle.per_entry') %>)</span>
+    <% if (p.id === 'pack25') { %><span class="badge"><%= t('hraffle.best_value') %></span><% } %>
+    <% if (p.id === 'pack10') { %><span class="badge"><%= t('hraffle.popular') %></span><% } %>
   </label>
   <% }); %>
   <p><button class="btn" type="submit"><%= t('hraffle.buy') %></button></p>

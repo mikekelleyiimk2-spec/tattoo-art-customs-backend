@@ -857,6 +857,9 @@
     "entries_word": "participações",
     "buy": "Comprar participações",
     "buy_note": "As participações são creditadas na hora após o pagamento.",
-    "back": "Voltar para a rifa"
+    "back": "Voltar para a rifa",
+    "per_entry": "por participação",
+    "best_value": "MELHOR VALOR",
+    "popular": "MAIS POPULAR"
   }
 }

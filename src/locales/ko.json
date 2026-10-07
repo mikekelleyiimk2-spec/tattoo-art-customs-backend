@@ -857,6 +857,9 @@
     "entries_word": "응모",
     "buy": "응모권 구매",
     "buy_note": "결제 완료 즉시 응모권이 적립됩니다.",
-    "back": "래플로 돌아가기"
+    "back": "래플로 돌아가기",
+    "per_entry": "1회당",
+    "best_value": "최고 가성비",
+    "popular": "가장 인기"
   }
 }

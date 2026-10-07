@@ -857,6 +857,9 @@
     "entries_word": "名额",
     "buy": "购买名额",
     "buy_note": "付款完成后名额即时到账。",
-    "back": "返回抽奖"
+    "back": "返回抽奖",
+    "per_entry": "每次参与",
+    "best_value": "最划算",
+    "popular": "最受欢迎"
   }
 }

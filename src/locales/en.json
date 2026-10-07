@@ -857,6 +857,9 @@
     "entries_word": "entries",
     "buy": "Buy entries",
     "buy_note": "Entries are credited instantly when your payment completes.",
-    "back": "Back to the raffle"
+    "back": "Back to the raffle",
+    "per_entry": "per entry",
+    "best_value": "BEST VALUE",
+    "popular": "MOST POPULAR"
   }
 }

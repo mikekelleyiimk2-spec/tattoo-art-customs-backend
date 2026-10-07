@@ -857,6 +857,9 @@
     "entries_word": "tickets",
     "buy": "Acheter des tickets",
     "buy_note": "Les tickets sont crédités instantanément après paiement.",
-    "back": "Retour à la tombola"
+    "back": "Retour à la tombola",
+    "per_entry": "par participation",
+    "best_value": "MEILLEUR RAPPORT",
+    "popular": "LE PLUS POPULAIRE"
   }
 }
