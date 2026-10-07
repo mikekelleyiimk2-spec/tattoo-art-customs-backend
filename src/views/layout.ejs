@@ -141,6 +141,7 @@
       <a href="/about"><%= t('nav.about') %></a>
       <a href="/contact"><%= t('footer.contact') %></a>
       <% if (youtubeUrl) { %><a href="<%= youtubeUrl %>" target="_blank" rel="noopener"><%= t('footer.youtube') %></a><% } %>
+      <% if (littleInkersYoutubeUrl) { %><a href="<%= littleInkersYoutubeUrl %>" target="_blank" rel="noopener">🖍️ <%= t('footer.lil_youtube') %></a><% } %>
       <% if (playStoreUrl) { %><a href="<%= playStoreUrl %>" target="_blank" rel="noopener"><%= t('home.get_play_free') %></a><% } %><% if (playStoreProUrl) { %><a href="<%= playStoreProUrl %>" target="_blank" rel="noopener"><%= t('home.get_play_pro') %></a><% } %>
     </nav>
   </div>

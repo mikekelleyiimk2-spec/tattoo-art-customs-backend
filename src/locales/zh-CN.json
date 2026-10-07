@@ -211,7 +211,8 @@
     "rights": "所有销售、订阅和会员资格均为最终交易。",
     "tagline": "原创纹身设计。48小时交付的定制服务。",
     "terms": "条款",
-    "youtube": "YouTube"
+    "youtube": "YouTube",
+    "lil_youtube": "Little Inkers on YouTube — Subscribe"
   },
   "gallery": {
     "all_categories": "所有分类",
@@ -774,7 +775,8 @@
     "lil_title": "Little Inkers",
     "lil_text": "A free kids coloring book from Usefulappz™. Screenshot-proof art, kid-safe ads, and a parent zone that connects to Tattoo Art Customs — color it before you ink it, or turn their doodles into tattoos.",
     "lil_soon": "Coming soon",
-    "lil_notify": "Get notified at launch"
+    "lil_notify": "Get notified at launch",
+    "lil_watch": "Watch on YouTube — Subscribe"
   },
   "byrequest": {
     "title": "By-Request Characters",

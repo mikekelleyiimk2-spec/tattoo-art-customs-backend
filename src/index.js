@@ -123,6 +123,7 @@ app.use((req, res, next) => {
   res.locals.playStoreProUrl = config.playStoreProUrl;
   res.locals.appStoreUrl = config.appStoreUrl;
   res.locals.youtubeUrl = config.youtubeUrl;
+  res.locals.littleInkersYoutubeUrl = config.littleInkersYoutubeUrl;
   res.locals.money = (cents) => `$${(cents / 100).toFixed(2)}`;
   next();
 });

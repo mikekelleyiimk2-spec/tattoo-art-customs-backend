@@ -211,7 +211,8 @@
     "rights": "모든 판매, 구독, 멤버십은 최종 거래예요.",
     "tagline": "오리지널 타투 디자인. 48시간 배송 커스텀 작업.",
     "terms": "이용약관",
-    "youtube": "YouTube"
+    "youtube": "YouTube",
+    "lil_youtube": "Little Inkers on YouTube — Subscribe"
   },
   "gallery": {
     "all_categories": "모든 카테고리",
@@ -774,7 +775,8 @@
     "lil_title": "Little Inkers",
     "lil_text": "A free kids coloring book from Usefulappz™. Screenshot-proof art, kid-safe ads, and a parent zone that connects to Tattoo Art Customs — color it before you ink it, or turn their doodles into tattoos.",
     "lil_soon": "Coming soon",
-    "lil_notify": "Get notified at launch"
+    "lil_notify": "Get notified at launch",
+    "lil_watch": "Watch on YouTube — Subscribe"
   },
   "byrequest": {
     "title": "By-Request Characters",

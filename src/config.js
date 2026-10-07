@@ -31,6 +31,10 @@ const config = {
   playStoreProUrl: process.env.PLAY_STORE_URL_PRO || '',
   appStoreUrl: process.env.APP_STORE_URL || '',
   youtubeUrl: process.env.YOUTUBE_CHANNEL_URL || '',
+  // Little Inkers YouTube channel (one-way cross-promo, owner 2026-10-07):
+  // TAC side promotes the kids' channel; kids' content never links back.
+  // Empty until the channel exists — links render only when set.
+  littleInkersYoutubeUrl: process.env.LITTLE_INKERS_YOUTUBE_URL || '',
   sessionSecret: process.env.SESSION_SECRET || 'dev-only-secret-change-me',
   // Muse service pipe token. Documented here; the route reads process.env
   // live so tests can toggle it. Never commit a real value.

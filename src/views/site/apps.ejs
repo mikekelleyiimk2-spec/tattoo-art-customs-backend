@@ -37,6 +37,9 @@
     <p style="font-size:2rem;">🖍️</p>
     <p><strong><%= t('apps.lil_title') %></strong></p>
     <p class="muted"><%= t('apps.lil_text') %></p>
+    <% if (littleInkersYoutubeUrl) { %>
+    <p><a class="btn btn-secondary" href="<%= littleInkersYoutubeUrl %>" target="_blank" rel="noopener">🖍️ <%= t('apps.lil_watch') %></a></p>
+    <% } %>
     <p><span class="badge"><%= t('apps.lil_soon') %></span></p>
     <p class="muted fineprint"><%= t('apps.lil_notify') %></p>
   </div>
