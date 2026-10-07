@@ -1,6 +1,12 @@
 <h1><%= t('merch.title') %></h1>
 <img src="/img/logos/mikes-custom-tees-hero.webp" alt="Mike's Custom Tees™ logo" style="max-width:420px;width:100%;height:auto;display:block;margin:0 auto 1.5rem;" />
 
+<div class="card" style="border:2px solid #f5b942;background:#fff8e8;margin-bottom:1.5rem;">
+  <h2 style="margin-top:0;"><%= t('merch.kids_h') %></h2>
+  <p><%= t('merch.kids_text') %></p>
+  <p><a class="btn" href="/doodle-to-tattoo"><%= t('merch.kids_cta') %></a></p>
+</div>
+
 <% if (configured) { %>
 <p><%= t('merch.intro') %></p>
 

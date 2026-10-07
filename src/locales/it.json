@@ -559,7 +559,10 @@
     "poster_h": "Posters",
     "poster_desc": "Your purchased designs as bold 18×24\" posters — {price} (includes processing fee). Printed on demand, ships in 5–7 business days.",
     "poster_pick": "Pick one of your purchased designs to order it as a poster:",
-    "poster_cta": "Order poster"
+    "poster_cta": "Order poster",
+    "kids_h": "🎨 Piccolo artista in casa?",
+    "kids_text": "Trasforma lo scarabocchio o il disegno da colorare di tuo figlio in una maglietta o un poster personalizzato. Carica la sua opera, scegli un prodotto e lo stampiamo!",
+    "kids_cta": "Ordina un disegno"
   },
   "nav": {
     "about": "Chi siamo",

@@ -559,7 +559,10 @@
     "poster_h": "Posters",
     "poster_desc": "Your purchased designs as bold 18×24\" posters — {price} (includes processing fee). Printed on demand, ships in 5–7 business days.",
     "poster_pick": "Pick one of your purchased designs to order it as a poster:",
-    "poster_cta": "Order poster"
+    "poster_cta": "Order poster",
+    "kids_h": "🎨 집에 꼬마 예술가가 있나요?",
+    "kids_text": "아이의 낙서나 색칠 그림을 맞춘 티셔츠나 포스터로 만들어 드립니다. 작품을 업로드하고 상품을 선택하세요!",
+    "kids_cta": "두들 주문하기"
   },
   "nav": {
     "about": "소개",

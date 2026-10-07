@@ -559,7 +559,10 @@
     "poster_h": "Posters",
     "poster_desc": "Your purchased designs as bold 18×24\" posters — {price} (includes processing fee). Printed on demand, ships in 5–7 business days.",
     "poster_pick": "Pick one of your purchased designs to order it as a poster:",
-    "poster_cta": "Order poster"
+    "poster_cta": "Order poster",
+    "kids_h": "🎨 ¿Pequeno artista en casa?",
+    "kids_text": "Convierte el dibujo o coloreado de tu hijo en una camiseta o póster personalizado. ¡Sube su obra, elige un producto y lo imprimimos!",
+    "kids_cta": "Crear un pedido de dibujo"
   },
   "nav": {
     "about": "Nosotros",
