@@ -101,6 +101,16 @@
     <p><a class="btn btn-secondary" href="/prints/order/design/<%= design.id %>"><%= t('design.order_print') %></a>
     <a class="btn btn-secondary" href="/merch/tee/<%= design.id %>"><%= t('design.get_tee') %></a></p>
     <% } %>
+    <% if (!design.request_only) { %>
+    <details class="card" style="margin-top:1rem">
+      <summary><strong><%= t('design.send_to_app') %></strong></summary>
+      <p class="muted"><%= t('design.send_to_app_note', {price: fmtMoney(sendToAppTotal)}) %></p>
+      <form method="post" action="/orders/send-to-app/<%= design.id %>">
+        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <p><button class="btn btn-secondary" type="submit"><%= t('design.send_to_app_btn') %></button></p>
+      </form>
+    </details>
+    <% } %>
   </div>
 </div>
 

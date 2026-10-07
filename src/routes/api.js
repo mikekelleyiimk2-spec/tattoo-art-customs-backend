@@ -402,4 +402,35 @@ router.delete('/likes/:designId', express.json(), formLimiter, async (req, res) 
   return res.json({ ok: true, liked: false, id, like_count: likeCount });
 });
 
+// --- Little Inkers pipeline ---
+// POST /api/little-inkers/redeem { code } — the kids app validates a
+// LIL-XXXXXX code (no auth: the code itself is the credential; the kid has
+// no account). Marks the code used and returns the watermarked linework.
+router.post('/little-inkers/redeem', express.json(), async (req, res) => {
+  const { redeemCode } = require('../lib/littleInkers');
+  const result = await redeemCode(req.body && req.body.code);
+  if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
+  return res.json({ ok: true, design: result.design });
+});
+
+// POST /api/little-inkers/submit-code { code } — validate a TAC-XXXXXX
+// submission code from the app's parent zone. Returns a draft token the
+// /doodle-to-tattoo page accepts to pre-fill the order.
+router.post('/little-inkers/submit-code', express.json(), async (req, res) => {
+  const { checkSubmissionCode } = require('../lib/littleInkers');
+  const result = await checkSubmissionCode(req.body && req.body.code);
+  if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
+  return res.json({ ok: true, code: result.code });
+});
+
+// POST /api/little-inkers/mint-submit — mint a TAC-XXXXXX submission code
+// for a parent (logged-in). The app calls this behind its parent gate;
+// the website "send" flow uses the same function server-side.
+router.post('/little-inkers/mint-submit', express.json(), async (req, res) => {
+  const user = await userFromToken(req);
+  const { mintSubmissionCode } = require('../lib/littleInkers');
+  const code = await mintSubmissionCode(user ? user.id : null);
+  return res.json({ ok: true, code });
+});
+
 module.exports = { router, userFromToken };

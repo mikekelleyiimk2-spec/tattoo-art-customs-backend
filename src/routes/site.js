@@ -2,6 +2,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const multer = require('multer');
 const db = require('../db');
 const config = require('../config');
 const { requireLogin, isActiveMember } = require('../middleware/auth');
@@ -92,6 +93,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/contact`, changefreq: 'monthly', priority: '0.4' },
     { loc: `${base}/tap-to-pay`, changefreq: 'monthly', priority: '0.6' },
     { loc: `${base}/by-request`, changefreq: 'daily', priority: '0.8' },
+    { loc: `${base}/doodle-to-tattoo`, changefreq: 'weekly', priority: '0.7' },
   ];
   try {
     const designs = await db.all(
@@ -227,6 +229,109 @@ router.get('/by-request', async (req, res) => {
     metaDescription: 'Request any of these characters as a custom tattoo design — drawn for you in 48 hours. Names list updated daily.',
     canonical: `${base}/by-request`,
   });
+});
+
+// --- Doodle-to-Tattoo ("Ink Their Imagination") ---
+// Parents upload a kid's doodle/coloring (or enter a TAC-XXXXXX code from the
+// Little Inkers app) and order it as a tattoo. Two tiers, paid up front like
+// a custom order, delivered through the 48h custom pipeline.
+const doodleStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.join(config.uploadDir, 'doodles');
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname || '').toLowerCase().slice(0, 5) || '.jpg';
+    cb(null, `doodle-${Date.now()}-${Math.round(Math.random() * 1e6)}${ext}`);
+  },
+});
+const uploadDoodle = multer({
+  storage: doodleStorage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (/^image\/(jpeg|png|webp)$/.test(file.mimetype)) cb(null, true);
+    else cb(new Error('Only JPG, PNG, or WebP images are allowed.'));
+  },
+});
+
+router.get('/doodle-to-tattoo', async (req, res) => {
+  const { DOODLE_LIGHT_CENTS } = require('../lib/littleInkers');
+  const { customFullCents, withFeeCents, processingFeeCents } = require('../lib/pricing');
+  const member = await isActiveMember(req.user);
+  const lightFull = DOODLE_LIGHT_CENTS;
+  const lightDeposit = Math.round(lightFull / 2);
+  const reworkFull = customFullCents(new Date(), member);
+  const reworkDeposit = Math.round(reworkFull / 2);
+  const base = config.baseUrl.replace(/\/$/, '');
+  res.render('site/doodle-to-tattoo', {
+    title: 'Doodle-to-Tattoo — Ink Their Imagination | Tattoo Art Customs',
+    code: (req.query.code || '').trim().toUpperCase(),
+    lightFull, lightDeposit,
+    lightTotal: withFeeCents(lightFull), lightDepositTotal: withFeeCents(lightDeposit),
+    reworkFull, reworkDeposit,
+    reworkTotal: withFeeCents(reworkFull), reworkDepositTotal: withFeeCents(reworkDeposit),
+    feeNote: `$${(processingFeeCents(100) / 100).toFixed(2)}`,
+    metaDescription: 'Turn your kid\'s doodle into a real tattoo. Upload their drawing, pick a tier, and our artists deliver tattoo-ready art in 48 hours.',
+    canonical: `${base}/doodle-to-tattoo`,
+  });
+});
+
+router.post('/doodle-to-tattoo', requireLogin, formLimiter, checkHoneypot, uploadDoodle.single('doodle'), async (req, res) => {
+  const li = require('../lib/littleInkers');
+  const { customFullCents, processingFeeCents } = require('../lib/pricing');
+  const tier = req.body.tier === 'rework' ? 'rework' : 'light';
+  const rights = req.body.rights === '1';
+  const notes = String(req.body.notes || '').trim().slice(0, 1000);
+  const tacCode = String(req.body.tac_code || '').trim().toUpperCase();
+
+  if (!rights) {
+    req.session.flash = 'Please confirm the artwork rights checkbox.';
+    return res.redirect('/doodle-to-tattoo');
+  }
+  let codeOk = null;
+  if (tacCode) {
+    codeOk = await li.checkSubmissionCode(tacCode);
+    if (!codeOk.ok) {
+      req.session.flash = 'That submission code was not recognized. Check it and try again, or upload the doodle directly.';
+      return res.redirect('/doodle-to-tattoo');
+    }
+  }
+  if (!req.file && !codeOk) {
+    req.session.flash = 'Upload your child\'s doodle or enter a submission code from the Little Inkers app.';
+    return res.redirect('/doodle-to-tattoo');
+  }
+
+  const member = await isActiveMember(req.user);
+  const full = tier === 'rework' ? customFullCents(new Date(), member) : li.DOODLE_LIGHT_CENTS;
+  const deposit = Math.round(full / 2);
+  const fee = processingFeeCents(deposit);
+  const brief = [
+    `DOODLE-TO-TATTOO (${tier === 'rework' ? 'Artist Rework' : 'True to the Doodle'})`,
+    tacCode ? `App submission code: ${tacCode}` : null,
+    req.file ? `Uploaded file: ${req.file.filename}` : 'Artwork via app submission code',
+    notes ? `Parent notes: ${notes}` : null,
+    'Rights confirmed: parent attests this is their child\'s artwork.',
+  ].filter(Boolean).join('\n');
+
+  const orderId = await db.insert('orders', {
+    id: db.newId(),
+    buyer_id: req.user.id,
+    order_type: 'custom',
+    amount_cents: full,
+    deposit_cents: deposit,
+    fee_cents: fee,
+    status: 'pending',
+    payment_method: 'paypal',
+    custom_brief: brief,
+    doodle_file: req.file ? req.file.filename : null,
+    doodle_tier: tier,
+    custom_status: 'new',
+    delivery_due: Date.now() + 48 * 3600 * 1000,
+    created_at: db.now(),
+  });
+  if (codeOk) await li.consumeSubmissionCode(codeOk.code, orderId);
+  res.redirect(`/orders/${orderId}`);
 });
 
 // Wishlist (favorites) page — [wishlist] feature. Everyone can use it:
@@ -390,6 +495,8 @@ router.get('/design/:id', async (req, res) => {
     lineworkTotal: withFeeCents(lineworkBase),
     lineworkFee: processingFeeCents(lineworkBase),
     lineworkDiscount: LINEWORK_ONLY_DISCOUNT,
+    // Send to Little Inkers add-on (kids coloring app redeem code).
+    sendToAppTotal: withFeeCents(require('../lib/littleInkers').SEND_TO_APP_FEE_CENTS),
     metaDescription: `Buy "${design.title}" — an original ${styleBit}tattoo design${catBit} by ${artistName}. ${priceStr}, full color + linework delivered after purchase.`,
     canonical, ogImage: ogImgFile ? `${base}/img/designs/${ogImgFile}` : '', ogType: 'product', jsonLd,
     creditBalance: req.user ? await require('../lib/credits').getCreditBalance(req.user.id) : 0,

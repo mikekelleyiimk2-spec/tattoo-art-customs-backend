@@ -197,7 +197,10 @@
     "next_design": "次のデザイン",
     "request_only_title": "リクエストのみ対応",
     "request_only_note": "このデザインはカスタムオーダーとして納品されます — ブラックのラインワーク版とフルカラー版付き。",
-    "request_this_design": "このデザインをリクエスト"
+    "request_this_design": "このデザインをリクエスト",
+    "send_to_app": "Send to Little Inkers",
+    "send_to_app_note": "Get this design as a coloring page in the Little Inkers kids app — {price} incl. fee. You'll get a redeem code for the app's parent zone.",
+    "send_to_app_btn": "Get redeem code"
   },
   "footer": {
     "advertise": "広告",
@@ -583,7 +586,8 @@
     "tap_to_pay": "タップ決済",
     "wishlist": "ウィッシュリスト",
     "top_loved": "人気ランキング",
-    "by_request": "By Request"
+    "by_request": "By Request",
+    "doodle": "Doodle-to-Tattoo"
   },
   "orders": {
     "amount": "金額",
@@ -638,7 +642,10 @@
     "pay_exact": "PayPalで注文合計{amount}を安全にお支払いください — アカウント不要です。",
     "pay_with": "{amount}をPayPalで支払う",
     "paypal_redirect": "PayPalに移動して1回限りの支払いを承認すると、自動的にこちらに戻ります。",
-    "socials_note": "SNSの支払いリンクをご利用の上、こちらで記録してください。"
+    "socials_note": "SNSの支払いリンクをご利用の上、こちらで記録してください。",
+    "redeem_title": "Your Little Inkers redeem code",
+    "redeem_note": "Enter this code in the Little Inkers app (Parent Zone → Redeem a coloring code) to unlock this design as a coloring page.",
+    "redeem_how": "One-time use, expires in 30 days."
   },
   "raffle": {
     "already": "お一人様1エントリー — すでに参加済みです。ご幸運を！",
@@ -763,7 +770,11 @@
     "free_label": "無料",
     "pro_label": "Pro",
     "free_text": "広告付きのフルアプリ。",
-    "pro_text": "広告なし — Proはすべてのアップデートを最速で入手。"
+    "pro_text": "広告なし — Proはすべてのアップデートを最速で入手。",
+    "lil_title": "Little Inkers",
+    "lil_text": "A free kids coloring book from Usefulappz™. Screenshot-proof art, kid-safe ads, and a parent zone that connects to Tattoo Art Customs.",
+    "lil_soon": "Coming soon",
+    "lil_notify": "Get notified at launch"
   },
   "byrequest": {
     "title": "By-Request Characters",
@@ -780,5 +791,24 @@
     "gallery_h": "Ready to Request",
     "fanart_note": "Fan-art interpretations, drawn in our style — kept separate from our original copyrighted designs.",
     "soon_h": "Coming Soon — Request Any of These"
+  },
+  "doodle": {
+    "title": "Doodle-to-Tattoo — Ink Their Imagination",
+    "sub": "Your kid drew your next tattoo. Upload their doodle or coloring — our artists turn it into real, tattoo-ready art in 48 hours.",
+    "step1": "1. The artwork",
+    "upload_label": "Upload your child's doodle (JPG, PNG, or WebP):",
+    "or": "— or —",
+    "code_label": "Submission code from the Little Inkers app:",
+    "step2": "2. Pick your tier",
+    "tier_light": "True to the Doodle — {price} ({deposit} deposit)",
+    "tier_light_note": "Light cleanup. Your kid's strokes, lines, and wobbles preserved — just made tattoo-safe.",
+    "tier_rework": "Artist Rework — {price} ({deposit} deposit)",
+    "tier_rework_note": "A professional artist redraws the concept as full tattoo-ready linework and color.",
+    "step3": "3. Details",
+    "notes_label": "Notes for the artist (placement, size, colors):",
+    "notes_ph": "e.g. inner forearm, about 4 inches, keep the blue dinosaur",
+    "rights": "This is my child's artwork and I have the right to use it for a tattoo.",
+    "submit": "Start my doodle order",
+    "deposit_note": "50% deposit due now, remainder on delivery. 48-hour artist turnaround."
   }
 }

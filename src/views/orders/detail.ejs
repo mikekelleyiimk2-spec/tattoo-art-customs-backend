@@ -18,6 +18,14 @@
 </table>
 <% if (vatNote) { %><p class="muted fineprint"><%= vatNote %></p><% } %>
 
+<% if (typeof redeemCode !== 'undefined' && redeemCode) { %>
+<section class="card" style="border-left:4px solid #2e7d32">
+  <h2><%= t('orders.redeem_title') %></h2>
+  <p><%= t('orders.redeem_note') %></p>
+  <p style="font-size:1.5rem;letter-spacing:.15em"><strong><%= redeemCode %></strong></p>
+  <p class="muted fineprint"><%= t('orders.redeem_how') %></p>
+</section>
+<% } %>
 <% if (order.status === 'paid') { %>
 <section class="card">
   <h2><%= t('orders.your_download') %></h2>

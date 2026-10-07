@@ -326,6 +326,34 @@ router.post('/custom', requireLogin, formLimiter, checkHoneypot, async (req, res
   }
 });
 
+// --- Send to Little Inkers: small-fee add-on that mints a LIL-XXXXXX redeem
+// code for the kids app. Requires login; design must be approved. The code is
+// minted when the order reaches 'paid' (see fulfillSendToApp).
+router.post('/send-to-app/:designId', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
+  const design = await db.get("SELECT * FROM designs WHERE id = ? AND status = 'approved'", [req.params.designId]);
+  if (!design) {
+    req.session.flash = 'That design is not available.';
+    return res.redirect('/gallery');
+  }
+  const { SEND_TO_APP_FEE_CENTS } = require('../lib/littleInkers');
+  const { processingFeeCents } = require('../lib/pricing');
+  const fee = processingFeeCents(SEND_TO_APP_FEE_CENTS);
+  const orderId = await db.insert('orders', {
+    id: db.newId(),
+    buyer_id: req.user.id,
+    design_id: design.id,
+    order_type: 'send_to_app',
+    amount_cents: SEND_TO_APP_FEE_CENTS,
+    fee_cents: fee,
+    status: 'pending',
+    payment_method: 'paypal',
+    custom_brief: `Send "${design.title}" to Little Inkers (kids coloring app)`,
+    custom_status: 'new',
+    created_at: db.now(),
+  });
+  res.redirect(`/orders/${orderId}`);
+});
+
 // --- Manual payment (CashApp/Venmo): record as pending for admin ---
 router.get('/manual/:orderId', requireLogin, async (req, res) => {
   const order = await db.get('SELECT * FROM orders WHERE id = ? AND buyer_id = ?', [req.params.orderId, req.user.id]);
@@ -406,6 +434,7 @@ router.get('/approve/:orderId', requireLogin, async (req, res) => {
     await routeCustomOrder(fresh);
     await onCustomPieceSold(fresh); // sold custom pieces delist + queue a replacement
     await fulfillPremadeOrder(fresh); // premades deliver instantly: token + receipt email
+    await require('../lib/littleInkers').fulfillSendToApp(fresh); // send-to-app: mint LIL- code
     if (fresh.order_type === 'custom') await sendCustomDepositReceipt(fresh); // deposit receipt (+ first-custom line item)
     try { await require('../lib/saleWatch').watchOrderPaid(fresh); } catch (e) { console.error('sale watch failed:', e.message); }
     const orderRush = (order.rush_fee_cents || 0) > 0;
@@ -434,7 +463,13 @@ router.get('/:orderId', requireLogin, async (req, res) => {
   const depositTotal = order.order_type === 'custom' && order.deposit_cents != null
     ? Number(order.deposit_cents) + Number(order.fee_cents || 0) : null;
   const fullTotal = order.order_type === 'custom' ? pricing.withFeeCents(Number(order.amount_cents)) : null;
-  res.render('orders/detail', { title: `Order ${order.id.slice(0, 8)} — Tattoo Art Customs`, order, design, downloads, transfers, depositTotal, fullTotal });
+  // Send-to-app orders: show the minted Little Inkers redeem code once paid.
+  let redeemCode = null;
+  if (order.order_type === 'send_to_app' && order.status === 'paid') {
+    const rc = await db.get('SELECT code FROM redeem_codes WHERE order_id = ?', [order.id]);
+    redeemCode = rc ? rc.code : null;
+  }
+  res.render('orders/detail', { title: `Order ${order.id.slice(0, 8)} — Tattoo Art Customs`, order, design, downloads, transfers, depositTotal, fullTotal, redeemCode });
 });
 
 // Cancel your own pending, unpaid order (e.g. an accidental duplicate).

@@ -1,0 +1,45 @@
+<h1><%= t('doodle.title') %></h1>
+<p class="muted"><%= t('doodle.sub') %></p>
+
+<form method="post" action="/doodle-to-tattoo" enctype="multipart/form-data" class="card">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+  <h2><%= t('doodle.step1') %></h2>
+  <p>
+    <label><%= t('doodle.upload_label') %>
+      <input type="file" name="doodle" accept="image/jpeg,image/png,image/webp">
+    </label>
+  </p>
+  <p class="muted"><%= t('doodle.or') %></p>
+  <p>
+    <label><%= t('doodle.code_label') %>
+      <input type="text" name="tac_code" value="<%= code %>" placeholder="TAC-XXXXXX" maxlength="10" style="text-transform:uppercase">
+    </label>
+  </p>
+
+  <h2><%= t('doodle.step2') %></h2>
+  <label>
+    <input type="radio" name="tier" value="light" checked>
+    <strong><%= t('doodle.tier_light', {price: fmtMoney(lightTotal), deposit: fmtMoney(lightDepositTotal)}) %></strong><br>
+    <span class="muted"><%= t('doodle.tier_light_note') %></span>
+  </label>
+  <label>
+    <input type="radio" name="tier" value="rework">
+    <strong><%= t('doodle.tier_rework', {price: fmtMoney(reworkTotal), deposit: fmtMoney(reworkDepositTotal)}) %></strong><br>
+    <span class="muted"><%= t('doodle.tier_rework_note') %></span>
+  </label>
+
+  <h2><%= t('doodle.step3') %></h2>
+  <p>
+    <label><%= t('doodle.notes_label') %><br>
+      <textarea name="notes" rows="3" maxlength="1000" placeholder="<%= t('doodle.notes_ph') %>"></textarea>
+    </label>
+  </p>
+  <p>
+    <label><input type="checkbox" name="rights" value="1" required>
+      <%= t('doodle.rights') %></label>
+  </p>
+
+  <p><button class="btn" type="submit"><%= t('doodle.submit') %></button></p>
+  <p class="muted fineprint"><%= t('doodle.deposit_note') %></p>
+</form>

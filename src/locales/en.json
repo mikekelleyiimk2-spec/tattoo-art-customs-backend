@@ -197,7 +197,10 @@
     "next_design": "Next design",
     "request_only_title": "Available by request only",
     "request_only_note": "This design is delivered as a custom order — black linework and full-color versions included.",
-    "request_this_design": "Request this design"
+    "request_this_design": "Request this design",
+    "send_to_app": "Send to Little Inkers",
+    "send_to_app_note": "Get this design as a coloring page in the Little Inkers kids app — {price} incl. fee. You'll get a redeem code for the app's parent zone.",
+    "send_to_app_btn": "Get redeem code"
   },
   "footer": {
     "advertise": "Advertise",
@@ -583,7 +586,8 @@
     "tap_to_pay": "Tap to Pay",
     "wishlist": "Wishlist",
     "top_loved": "Top Loved",
-    "by_request": "By Request"
+    "by_request": "By Request",
+    "doodle": "Doodle-to-Tattoo"
   },
   "orders": {
     "amount": "Amount",
@@ -638,7 +642,10 @@
     "pay_exact": "Pay the exact order total of {amount} securely through PayPal — no account needed.",
     "pay_with": "Pay {amount} with PayPal",
     "paypal_redirect": "You'll be taken to PayPal to approve the one-time payment, then returned here automatically.",
-    "socials_note": "Use the payment links on our socials, then record it here."
+    "socials_note": "Use the payment links on our socials, then record it here.",
+    "redeem_title": "Your Little Inkers redeem code",
+    "redeem_note": "Enter this code in the Little Inkers app (Parent Zone → Redeem a coloring code) to unlock this design as a coloring page.",
+    "redeem_how": "One-time use, expires in 30 days."
   },
   "raffle": {
     "already": "One entry per person — you're already entered. Good luck!",
@@ -763,7 +770,11 @@
     "free_label": "Free",
     "pro_label": "Pro",
     "free_text": "The full app, supported by ads.",
-    "pro_text": "No ads — and Pro gets every update first."
+    "pro_text": "No ads — and Pro gets every update first.",
+    "lil_title": "Little Inkers",
+    "lil_text": "A free kids coloring book from Usefulappz™. Screenshot-proof art, kid-safe ads, and a parent zone that connects to Tattoo Art Customs.",
+    "lil_soon": "Coming soon",
+    "lil_notify": "Get notified at launch"
   },
   "byrequest": {
     "title": "By-Request Characters",
@@ -780,5 +791,24 @@
     "gallery_h": "Ready to Request",
     "fanart_note": "Fan-art interpretations, drawn in our style — kept separate from our original copyrighted designs.",
     "soon_h": "Coming Soon — Request Any of These"
+  },
+  "doodle": {
+    "title": "Doodle-to-Tattoo — Ink Their Imagination",
+    "sub": "Your kid drew your next tattoo. Upload their doodle or coloring — our artists turn it into real, tattoo-ready art in 48 hours.",
+    "step1": "1. The artwork",
+    "upload_label": "Upload your child's doodle (JPG, PNG, or WebP):",
+    "or": "— or —",
+    "code_label": "Submission code from the Little Inkers app:",
+    "step2": "2. Pick your tier",
+    "tier_light": "True to the Doodle — {price} ({deposit} deposit)",
+    "tier_light_note": "Light cleanup. Your kid's strokes, lines, and wobbles preserved — just made tattoo-safe.",
+    "tier_rework": "Artist Rework — {price} ({deposit} deposit)",
+    "tier_rework_note": "A professional artist redraws the concept as full tattoo-ready linework and color.",
+    "step3": "3. Details",
+    "notes_label": "Notes for the artist (placement, size, colors):",
+    "notes_ph": "e.g. inner forearm, about 4 inches, keep the blue dinosaur",
+    "rights": "This is my child's artwork and I have the right to use it for a tattoo.",
+    "submit": "Start my doodle order",
+    "deposit_note": "50% deposit due now, remainder on delivery. 48-hour artist turnaround."
   }
 }
