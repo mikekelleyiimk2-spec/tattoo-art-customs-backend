@@ -255,6 +255,38 @@ router.post('/orders/:id/attach', formLimiter, (req, res, next) => {
 // --- Custom 48h fulfillment queue ---
 const { FULFILLMENT_STATUSES, draftsDir, parseDrafts } = require('../lib/customFulfillment');
 
+// --- Private design library (admin-only) ---
+// The request-only ZIP collections live here, hidden from the public site.
+// Admins download them to fulfill by-request custom orders. Every collection
+// carries artist attribution (manifest.json) so commissions flow to the
+// right people. NEVER mount this directory as public static.
+const libraryDir = path.join(config.assetDir, 'library');
+function readLibraryManifest() {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(libraryDir, 'manifest.json'), 'utf8'));
+  } catch (e) { return { updated: null, collections: [] }; }
+}
+
+router.get('/library', async (req, res) => {
+  const manifest = readLibraryManifest();
+  const totalDesigns = manifest.collections.reduce((s, c) => s + (c.design_count || 0), 0);
+  const totalBytes = manifest.collections.reduce((s, c) => s + (c.size_bytes || 0), 0);
+  res.render('admin/library', {
+    title: 'Private design library — Admin',
+    collections: manifest.collections, totalDesigns, totalBytes,
+    updated: manifest.updated, now: Date.now(),
+  });
+});
+
+router.get('/library/download/:file', async (req, res) => {
+  const file = path.basename(String(req.params.file || ''));
+  if (!/\.zip$/i.test(file)) return res.status(400).send('Bad request');
+  const full = path.join(libraryDir, file);
+  if (!full.startsWith(libraryDir)) return res.status(403).send('Forbidden');
+  if (!fs.existsSync(full)) return res.status(404).send('Not found');
+  res.download(full, file);
+});
+
 router.get('/custom-orders', async (req, res) => {
   const filter = String(req.query.status || 'open');
   let where = "o.order_type = 'custom' AND o.status = 'paid'";
@@ -303,6 +335,7 @@ router.get('/custom-orders/:id', async (req, res) => {
     title: `Custom order ${order.id.slice(0, 8)} — Admin`,
     order, artists, drafts: parseDrafts(order), now: Date.now(),
     penalties, penaltyTotals, designerLedger,
+    libraryCollections: readLibraryManifest().collections,
   });
 });
 
@@ -456,6 +489,28 @@ router.post('/custom-orders/:id/deliver', formLimiter, checkHoneypot, async (req
   if (!order) return res.redirect('/admin/custom-orders');
   await db.update('orders', order.id, { custom_status: 'delivered' });
   await payAdmin(req, 'custom_deliver', 'custom_order', order.id);
+  // Library attribution: if the admin fulfilled from a private-library
+  // collection, record which one so the publishing artist gets compensated.
+  const libFile = String(req.body.library_collection || '').trim();
+  if (libFile) {
+    const manifest = readLibraryManifest();
+    const col = manifest.collections.find((c) => c.file === path.basename(libFile));
+    if (col) {
+      await db.insert('library_fulfillments', {
+        id: require('crypto').randomUUID(),
+        order_id: order.id,
+        collection_file: col.file,
+        artist_name: col.artist_name,
+        artist_user_id: col.artist_user_id || null,
+        fulfilled_by: req.user.id,
+        created_at: db.now(),
+      });
+      if (col.artist_user_id) {
+        const { recordCustomDesignerCommission } = require('../lib/commissions');
+        await recordCustomDesignerCommission(order, col.artist_user_id);
+      }
+    }
+  }
   req.session.flash = 'Marked delivered. (Attach final files from the sales log if you have not already.)';
   res.redirect(`/admin/custom-orders/${order.id}`);
 });

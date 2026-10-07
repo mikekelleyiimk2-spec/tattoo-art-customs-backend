@@ -125,7 +125,16 @@
     <form method="post" action="/admin/custom-orders/<%= order.id %>/deliver" style="margin-bottom:12px"
           onsubmit="return confirm('Mark this custom order delivered? Attach the final files first if you have not.')">
       <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-      <button class="btn" type="submit">Mark delivered</button>
+      <% if (libraryCollections && libraryCollections.length) { %>
+      <label for="library_collection">Fulfilled from private library pack (credits the publishing artist):</label>
+      <select id="library_collection" name="library_collection">
+        <option value="">— not from the library —</option>
+        <% libraryCollections.forEach(function(c) { %>
+        <option value="<%= c.file %>"><%= c.file %> (<%= c.artist_name %>)</option>
+        <% }); %>
+      </select>
+      <% } %>
+      <p><button class="btn" type="submit">Mark delivered</button></p>
     </form>
     <p class="muted">Attach final color + linework files from the <a href="/admin/orders">sales log</a> (order <%= order.id.slice(0, 8) %>) before delivering.</p>
     <% } %>

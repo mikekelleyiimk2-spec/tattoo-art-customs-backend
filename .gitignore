@@ -12,6 +12,10 @@ assets/catalog/*
 !assets/catalog/by-request.json
 assets/by-request/*
 !assets/by-request/*.jpg
+!assets/library/
+assets/library/*
+!assets/library/*.zip
+!assets/library/manifest.json
 *.log
 .DS_Store
 *.sqlite3

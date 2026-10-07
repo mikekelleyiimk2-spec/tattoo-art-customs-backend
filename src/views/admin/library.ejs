@@ -1,0 +1,36 @@
+<h1>Private design library</h1>
+<p><a href="/admin">← Dashboard</a></p>
+
+<div class="card" style="border-left:4px solid #b3261e;margin-bottom:16px">
+  <h3>Legal notice — fan art vs. distribution (read before downloading)</h3>
+  <p>The designs in this library are <strong>fan art</strong>: original drawings of characters owned by other companies (Nintendo, Disney, Toei, etc.).</p>
+  <p><strong>Showing watermarked previews</strong> on the website = lower risk. Fan-art display is generally tolerated; rights holders usually start with a takedown notice, not a lawsuit.</p>
+  <p><strong>Downloading these ZIPs and sending the full files to a customer = DISTRIBUTION</strong> of derivative works. That carries real legal risk — it is the step where "fan art" can become copyright infringement in a rights holder's eyes.</p>
+  <p>By downloading from this library you acknowledge:</p>
+  <ol>
+    <li>You understand the difference above.</li>
+    <li>You are choosing to distribute these files yourself, <em>or</em> you are downloading only to review.</li>
+    <li><strong>If you are not comfortable with the risk, do NOT send the files</strong> — leave the order in the queue and message Mike to handle the fulfillment himself.</li>
+  </ol>
+  <p>When in doubt, let Mike distribute.</p>
+</div>
+
+<p class="muted">Request-only ZIP collections. Admin eyes only — never public. Download a pack to fulfill a by-request custom order, then mark the order delivered from its detail page and pick the collection so the publishing artist gets compensated.</p>
+<p class="muted fineprint"><%= collections.length %> collections · <%= totalDesigns %> designs · <%= (totalBytes / 1048576).toFixed(0) %> MB<% if (updated) { %> · manifest built <%= updated.slice(0, 10) %><% } %></p>
+
+<table>
+  <thead><tr><th>Collection</th><th>Designs</th><th>Size</th><th>Published by</th><th></th></tr></thead>
+  <tbody>
+  <% collections.forEach(function(c) { %>
+    <tr>
+      <td><strong><%= c.file %></strong></td>
+      <td><%= c.design_count %></td>
+      <td><%= (c.size_bytes / 1048576).toFixed(1) %> MB</td>
+      <td><%= c.artist_name %></td>
+      <td><a class="btn btn-small" href="/admin/library/download/<%= encodeURIComponent(c.file) %>"
+             onclick="return confirm('You are downloading full design files (DISTRIBUTION, not just fan-art display). Only proceed if you accept the legal risk described above, or are downloading to review only.')">Download</a></td>
+    </tr>
+  <% }); %>
+  </tbody>
+</table>
+<% if (!collections.length) { %><p class="muted">No collections yet. Run <code>node scripts/build-library-manifest.js</code> after adding ZIPs to <code>assets/library/</code>.</p><% } %>
