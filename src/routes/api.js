@@ -433,4 +433,29 @@ router.post('/little-inkers/mint-submit', express.json(), async (req, res) => {
   return res.json({ ok: true, code });
 });
 
+// --- Little Inkers weekly bundles manifest (2026-10-07) ---
+// Public, no auth: the kids app fetches this on launch to discover new
+// weekly coloring-page bundles. The weekly cron inserts rows into lil_bundles.
+router.get('/little-inkers/bundles', async (req, res) => {
+  try {
+    const rows = await db.all(
+      "SELECT id, title, theme, design_count, published_at, file_url FROM lil_bundles WHERE active = 1 OR active = 't' ORDER BY published_at DESC LIMIT 52"
+    );
+    res.json({
+      ok: true,
+      bundles: rows.map((r) => ({
+        id: r.id,
+        title: r.title,
+        theme: r.theme,
+        designCount: Number(r.design_count || 0),
+        publishedAt: Number(r.published_at),
+        fileUrl: r.file_url,
+      })),
+    });
+  } catch (e) {
+    console.error('bundles manifest failed:', e.message);
+    res.status(500).json({ ok: false, error: 'server_error' });
+  }
+});
+
 module.exports = { router, userFromToken };
