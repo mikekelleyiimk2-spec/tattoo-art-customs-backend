@@ -179,6 +179,18 @@ app.use('/img/designs', (req, res, next) => {
   if (!base || !m) return next();
   return res.redirect(302, `${base}/designs/${m[1]}`);
 });
+// R2 fallback for promo videos: /videos/promo.mp4 and /videos/promo-short.mp4
+// live in the R2 public bucket under the videos/ key namespace (uploaded once
+// with --content-type video/mp4). express.static above serves the baked local
+// copy first; once the 71MB MP4s are dropped from the Docker image (git rm
+// --cached), this 302 takes over and video traffic bypasses Render entirely.
+// Local files always win, so this changes nothing while baked copies exist.
+app.use('/videos', (req, res, next) => {
+  const base = (process.env.R2_PUBLIC_URL || '').replace(/\/$/, '');
+  const m = /^\/([A-Za-z0-9._-]+\.mp4)$/.exec(req.path);
+  if (!base || !m) return next();
+  return res.redirect(302, `${base}/videos/${m[1]}`);
+});
 app.use('/img/photos', express.static(photosDir));
 app.use('/img/healed', express.static(healedDir));
 app.use('/img/avatars', express.static(avatarsDir));
@@ -215,6 +227,13 @@ app.use('/bookings', require('./shop/routes-bookings'));
 app.use('/giftcards', require('./shop/routes-giftcards'));
 app.use('/gift-cards', require('./routes/siteGiftCards'));
 app.use('/ios-app', require('./routes/iosApp'));
+// Sideload lineup (owner order 2026-10-08): Little Inkers iOS/Android (free,
+// kid-safe pages), TAC Android free, TAC Android Pro ($1.99 paid).
+const { liSideloadRouter, tacAndroidFreeRouter, tacAndroidProRouter } = require('./routes/sideload');
+app.use('/little-inkers-ios', liSideloadRouter('ios'));
+app.use('/little-inkers-android', liSideloadRouter('android'));
+app.use('/tac-android', tacAndroidFreeRouter());
+app.use('/tac-android-pro', tacAndroidProRouter());
 app.use('/intake', require('./shop/routes-intake'));
 app.use('/waitlist', require('./shop/routes-waitlist'));
 app.use('/toolkit', require('./shop/routes-toolkit'));

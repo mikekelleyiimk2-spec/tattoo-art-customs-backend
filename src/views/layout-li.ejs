@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><%= typeof title !== 'undefined' ? title : 'Little Inkers — Free Coloring Fun for Kids' %></title>
+<% if (typeof metaDescription !== 'undefined' && metaDescription) { %>
+<meta name="description" content="<%= metaDescription %>">
+<% } %>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.li-header { background: #FFF7E8; border-bottom: 3px solid #ffd166; padding: .75rem 1rem; }
+.li-header .brand { font-size: 1.4rem; font-weight: 800; color: #5b4a68; text-decoration: none; }
+.li-footer { margin-top: 2rem; padding: 1.25rem 1rem; background: #FFF7E8; border-top: 3px solid #ffd166; text-align: center; color: #5b4a68; }
+</style>
+</head>
+<body>
+<header class="li-header">
+  <span class="brand">🖍️ Little Inkers</span>
+</header>
+
+<% if (typeof flash !== 'undefined' && flash) { %>
+<div class="flash" role="alert"><%= flash %></div>
+<% } %>
+
+<main id="main" class="container">
+  <%- body %>
+</main>
+
+<footer class="li-footer">
+  <p><strong>Little Inkers</strong> — free coloring fun for kids, by Usefulappz.</p>
+  <p class="fineprint">Grown-ups: this is a kid-safe page. No accounts, no ads that track, no links out.</p>
+</footer>
+</body>
+</html>

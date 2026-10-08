@@ -453,6 +453,15 @@ router.get('/download/:token', async (req, res) => {
     }
     return res.download(absPath, 'tattoo-art-customs.ipa');
   }
+  if (order.order_type === 'tac_android_pro') {
+    // TAC Android Pro APK (paid sideload): served from the configured path.
+    const apkPath = process.env.TAC_ANDROID_PRO_APK_PATH || 'uploads/sideload/tac-android-pro.apk';
+    absPath = resolveStoredPath(apkPath);
+    if (!absPath) {
+      return res.status(404).render('error', { title: 'Not ready', message: 'The Pro APK file is being prepared — check back soon.' });
+    }
+    return res.download(absPath, 'tac-android-pro.apk');
+  }
   if (order.order_type === 'premade' && order.design_id) {
     const design = await db.get('SELECT color_path, linework_path FROM designs WHERE id = ?', [order.design_id]);
     if (!design) return res.status(404).render('error', { title: 'Not found', message: 'Design files are missing.' });
