@@ -125,6 +125,7 @@
     <button type="submit"><%= t('home.notify_me') %></button>
   </form>
   <% } %>
+  <p style="margin-top:0.75rem;"><a class="btn btn-secondary" href="/ios-app"><%= t('home.get_ios_sideload') %></a></p>
   <% } else { %>
   <h2><%= t('home.app_title_soon') %></h2>
   <p><%= t('home.app_text_soon') %></p>
@@ -133,6 +134,7 @@
     <input type="email" name="email" maxlength="120" required placeholder="you@example.com" aria-label="<%= t('home.notify_me') %>">
     <button type="submit"><%= t('home.notify_me') %></button>
   </form>
+  <p style="margin-top:0.75rem;"><a class="btn btn-secondary" href="/ios-app"><%= t('home.get_ios_sideload') %></a></p>
   <% } %>
   <div style="margin-top:1rem;text-align:center;">
     <video controls playsinline preload="metadata" style="width:100%;max-width:320px;border-radius:8px;" src="/videos/promo-short.mp4"></video>
