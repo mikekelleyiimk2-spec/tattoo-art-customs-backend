@@ -1,0 +1,22 @@
+<h1>Get Tattoo Art Customs Pro for Android</h1>
+<p class="muted">The full app with zero ads — sideload the APK. No Play Store needed.</p>
+
+<div class="card">
+  <h2>$1.99 one-time</h2>
+  <p>Pro: everything in the free app, with all ads permanently removed. Works on Android 8+.</p>
+  <h3>How it works</h3>
+  <ol>
+    <li>Buy here with PayPal ($1.99).</li>
+    <li>Download the Pro APK file.</li>
+    <li>Open it — allow installs from this source if asked — and tap Install.</li>
+  </ol>
+  <p class="muted fineprint">This is separate from the Play Store version (coming soon).</p>
+  <% if (user) { %>
+  <form method="post" action="/tac-android-pro/buy" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p><button class="btn" type="submit">Buy Pro for $1.99</button></p>
+  </form>
+  <% } else { %>
+  <p><a class="btn" href="/login?next=/tac-android-pro">Log in to buy</a></p>
+  <% } %>
+</div>

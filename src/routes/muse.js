@@ -208,6 +208,53 @@ router.post('/upload-ipa', (req, res) => {
   });
 });
 
+// POST /api/muse/upload-sideload
+// Uploads a free/paid sideload build (IPA or APK) to production storage
+// (uploads/sideload/). Lets the owner's automation publish new sideload builds
+// without shell access. Body: `app` (allowlisted key) + single `file` field.
+// Accepts .ipa (iOS) or .apk (Android); zip magic verified; max 300MB.
+// Same service-token auth as /notify; 404s when MUSE_SERVICE_TOKEN unset.
+// (Upload middleware defined next to ipaUpload below, after the requires.)
+router.post('/upload-sideload', (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  sideloadUpload(req, res, (err) => {
+    if (err) return res.status(400).json({ ok: false, error: err.message });
+    if (!req.file) return res.status(400).json({ ok: false, error: 'no file' });
+    const slot = SIDELOAD_UPLOAD_APPS[req.body.app];
+    if (!slot) {
+      fs.unlinkSync(req.file.path);
+      return res.status(400).json({ ok: false, error: 'unknown app key' });
+    }
+    if (!req.file.originalname.toLowerCase().endsWith(slot.ext)) {
+      fs.unlinkSync(req.file.path);
+      return res.status(400).json({ ok: false, error: `expected a ${slot.ext} file for ${req.body.app}` });
+    }
+    try {
+      // Verify zip magic (PK\x03\x04) — both IPA and APK are zips.
+      const fd = fs.openSync(req.file.path, 'r');
+      const head = Buffer.alloc(4);
+      fs.readSync(fd, head, 0, 4, 0);
+      fs.closeSync(fd);
+      if (head[0] !== 0x50 || head[1] !== 0x4b || head[2] !== 0x03 || head[3] !== 0x04) {
+        fs.unlinkSync(req.file.path);
+        return res.status(400).json({ ok: false, error: 'not a valid ipa/apk (zip) file' });
+      }
+      const destDir = path.join(config.uploadDir, 'sideload');
+      fs.mkdirSync(destDir, { recursive: true });
+      const dest = path.join(destDir, path.basename(slot.dest));
+      // copy+unlink: staged file may sit on a different filesystem (tmpfs)
+      // than the upload dir — renameSync throws EXDEV across devices.
+      fs.copyFileSync(req.file.path, dest);
+      fs.unlinkSync(req.file.path);
+      return res.json({ ok: true, size: fs.statSync(dest).size, path: slot.dest });
+    } catch (e) {
+      console.error('[muse/upload-sideload] failed:', e.message);
+      return res.status(500).json({ ok: false, error: 'store failed' });
+    }
+  });
+});
+
 // GET /api/muse/custom-orders-needing-drafts
 // Returns paid custom orders with custom_status='needs_drafts' (oldest due first, max 50).
 // Powers the owner's custom-draft worker so it can see PRODUCTION state over HTTPS
@@ -281,6 +328,28 @@ const ipaUpload = multer({
     else cb(new Error('Only .ipa files are allowed.'));
   },
 }).single('ipa');
+
+// Sideload build upload allowlist + middleware (used by POST /upload-sideload
+// defined above; kept here next to ipaUpload so multer/fs/path/os/crypto are
+// initialized).
+const SIDELOAD_UPLOAD_APPS = {
+  'little-inkers-ios': { ext: '.ipa', dest: 'uploads/sideload/little-inkers.ipa' },
+  'little-inkers-android': { ext: '.apk', dest: 'uploads/sideload/little-inkers.apk' },
+  'tac-android-free': { ext: '.apk', dest: 'uploads/sideload/tac-android-free.apk' },
+  'tac-android-pro': { ext: '.apk', dest: 'uploads/sideload/tac-android-pro.apk' },
+};
+
+const sideloadUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, ipaStageDir),
+    filename: (req, file, cb) => cb(null, `stg-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.bin`),
+  }),
+  limits: { fileSize: 300 * 1024 * 1024, files: 1 },
+  fileFilter: (req, file, cb) => {
+    if (/\.(ipa|apk)$/i.test(file.originalname)) cb(null, true);
+    else cb(new Error('Only .ipa or .apk files are allowed.'));
+  },
+}).single('file');
 
 
 // Magic-byte sniff: mimetype/extension can lie; read the real file header.
