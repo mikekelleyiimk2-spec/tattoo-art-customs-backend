@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-07T11:45:45.111Z",
+ "updated": "2026-10-08T11:45:00.902Z",
  "items": [
   {
    "name": "Goku (Dragon Ball)",
@@ -442,62 +442,62 @@
   {
    "name": "Arthur Morgan (Red Dead Redemption 2)",
    "slug": "arthur-morgan",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/arthur-morgan.jpg"
   },
   {
    "name": "Doom Slayer (DOOM)",
    "slug": "doom-slayer",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/doom-slayer.jpg"
   },
   {
    "name": "Vault Boy (Fallout)",
    "slug": "vault-boy",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/vault-boy.jpg"
   },
   {
    "name": "Solid Snake (Metal Gear)",
    "slug": "solid-snake",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/solid-snake.jpg"
   },
   {
    "name": "Nathan Drake (Uncharted)",
    "slug": "nathan-drake",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/nathan-drake.jpg"
   },
   {
    "name": "Aloy (Horizon)",
    "slug": "aloy",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/aloy.jpg"
   },
   {
    "name": "Joker (Persona 5)",
    "slug": "joker",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/joker.jpg"
   },
   {
    "name": "2B (NieR: Automata)",
    "slug": "2b",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/2b.jpg"
   },
   {
    "name": "Dante (Devil May Cry)",
    "slug": "dante",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/dante.jpg"
   },
   {
    "name": "Bayonetta",
    "slug": "bayonetta",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/bayonetta.jpg"
   },
   {
    "name": "Ratchet & Clank",
@@ -508,38 +508,38 @@
   {
    "name": "Sackboy (LittleBigPlanet)",
    "slug": "sackboy",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/sackboy.jpg"
   },
   {
    "name": "Fox McCloud (Star Fox)",
    "slug": "fox-mccloud",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/fox-mccloud.jpg"
   },
   {
    "name": "Captain Falcon (F-Zero)",
    "slug": "captain-falcon",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/captain-falcon.jpg"
   },
   {
    "name": "Banjo-Kazooie",
    "slug": "banjo-kazooie",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/banjo-kazooie.jpg"
   },
   {
    "name": "Shovel Knight",
    "slug": "shovel-knight",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/shovel-knight.jpg"
   },
   {
    "name": "Hollow Knight",
    "slug": "hollow-knight",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/hollow-knight.jpg"
   },
   {
    "name": "Bart Simpson",
@@ -550,8 +550,8 @@
   {
    "name": "Homer Simpson",
    "slug": "homer-simpson",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/homer-simpson.jpg"
   },
   {
    "name": "SpongeBob SquarePants",
