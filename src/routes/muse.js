@@ -242,6 +242,13 @@ router.post('/upload-sideload', (req, res) => {
       }
       const dest = path.join(config.uploadDir, slot.dest);
       fs.mkdirSync(path.dirname(dest), { recursive: true });
+      // One-time cleanup (2026-10-08): the pre-fix handler wrote uploads to
+      // <uploadDir>/sideload/<basename> (missing the uploads/ segment). Remove
+      // that orphan if present so the 1GB Render disk doesn't fill up.
+      try {
+        const orphan = path.join(config.uploadDir, 'sideload', path.basename(slot.dest));
+        if (orphan !== dest && fs.existsSync(orphan)) fs.unlinkSync(orphan);
+      } catch { /* best effort */ }
       // copy+unlink: staged file may sit on a different filesystem (tmpfs)
       // than the upload dir — renameSync throws EXDEV across devices.
       fs.copyFileSync(req.file.path, dest);
