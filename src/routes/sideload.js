@@ -50,7 +50,7 @@ function serveFreeFile(appKey, res) {
   if (!absPath) {
     return res.status(404).render('error', {
       title: 'Not ready',
-      message: 'The app file is being prepared — check back soon.',
+      message: `The ${cfg.appName} app file is being prepared — check back soon.`,
     });
   }
   return res.download(absPath, cfg.filename);
