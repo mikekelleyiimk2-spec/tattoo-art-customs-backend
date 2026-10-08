@@ -7,6 +7,7 @@ assets/*
 !assets/by-request/
 assets/designs/*
 !assets/designs/linework-wm/
+!assets/designs/linework-clean/
 assets/catalog/*
 !assets/catalog/manifest.json
 !assets/catalog/by-request.json
