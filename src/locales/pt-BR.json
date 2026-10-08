@@ -565,7 +565,20 @@
     "poster_cta": "Order poster",
     "kids_h": "🎨 Pequeno artista em casa?",
     "kids_text": "Transforme o desenho ou colorido do seu filho em uma camiseta ou pôster personalizado. Envie a arte dele, escolha um produto e nós imprimimos!",
-    "kids_cta": "Pedir um desenho"
+    "kids_cta": "Pedir um desenho",
+    "aff_h": "Produtos recomendados",
+    "aff_disclosure": "Alguns links são de afiliados — podemos ganhar comissão em compras qualificadas, sem custo extra para você.",
+    "aff_baselabs_name": "Base Labs Aftercare",
+    "aff_baselabs_blurb": "Pós-cuidado para pele tatuada — nosso link aplica o desconto TAC20 automaticamente.",
+    "aff_cta": "Comprar com nosso desconto",
+    "cat_h": "Catálogo de merch",
+    "cat_sub": "Roupas sob demanda com os designs do Mike — novidades chegam aqui.",
+    "cat_music_name": "Camiseta Music Genres",
+    "cat_music_blurb": "Todos os 713 gêneros musicais em 16 famílias — a taxonomia completa numa camiseta premium.",
+    "cat_alice_name": "Camiseta Alice Tea-Party",
+    "cat_alice_blurb": "O chá alienígena da Alice pelo Mike — para vestir.",
+    "cat_order": "Peça a sua",
+    "cat_soon_badge": "Em breve"
   },
   "nav": {
     "about": "Sobre",

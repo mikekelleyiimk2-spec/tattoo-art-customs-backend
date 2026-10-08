@@ -565,7 +565,20 @@
     "poster_cta": "Order poster",
     "kids_h": "🎨 おうちに小さなアーティスト？",
     "kids_text": "お子さんの落書きや塗り絵をオリジナルTシャツやポスターに。作品をアップロードして商品を選ぶだけ！",
-    "kids_cta": "ドゥードルを注文する"
+    "kids_cta": "ドゥードルを注文する",
+    "aff_h": "おすすめ商品",
+    "aff_disclosure": "一部のリンクはアフィリエイトリンクです — 対象の購入でコミッションが発生する場合があります（お客様の負担増なし）。",
+    "aff_baselabs_name": "Base Labs アフターケア",
+    "aff_baselabs_blurb": "タトゥースキンのためのアフターケア — リンクからTAC20割引が自動適用されます。",
+    "aff_cta": "割引価格で購入",
+    "cat_h": "マーチカタログ",
+    "cat_sub": "Mikeのデザインのオンデマンドグッズ — 新作はこちらに。",
+    "cat_music_name": "Music Genres Tシャツ",
+    "cat_music_blurb": "16ファミリー713ジャンル — タクソノミーチャートをプレミアムTシャツに。",
+    "cat_alice_name": "アリス・ティーパーティーTシャツ",
+    "cat_alice_blurb": "不思議の国のアリスのエイリアン・ティーパーティー。",
+    "cat_order": "注文する",
+    "cat_soon_badge": "近日発売"
   },
   "nav": {
     "about": "概要",

@@ -54,3 +54,37 @@
 <% } %>
 
 <p class="muted"><%= t('merch.made_order') %></p>
+
+<% if (affiliates && affiliates.length) { %>
+<h2><%= t('merch.aff_h') %></h2>
+<p class="muted"><%= t('merch.aff_disclosure') %></p>
+<% affiliates.forEach(function(a) { %>
+<div class="card" style="margin-bottom:1rem;">
+  <h3 style="margin-top:0;"><%= t(a.nameKey) %></h3>
+  <p><%= t(a.blurbKey) %></p>
+  <p><a class="btn" href="<%= a.url %>" target="_blank" rel="noopener nofollow sponsored"><%= t(a.ctaKey) %></a></p>
+</div>
+<% }); %>
+<% } %>
+
+<% if (podProducts && podProducts.length) { %>
+<h2><%= t('merch.cat_h') %></h2>
+<p class="muted"><%= t('merch.cat_sub') %></p>
+<% podProducts.forEach(function(p) { %>
+<div class="card" style="margin-bottom:1rem;">
+  <img src="<%= p.image %>" alt="<%= t(p.nameKey) %>" loading="lazy" style="max-width:320px;width:100%;height:auto;display:block;margin-bottom:0.75rem;">
+  <h3 style="margin-top:0;"><%= t(p.nameKey) %></h3>
+  <p><%= t(p.blurbKey) %></p>
+  <% if (p.status === 'live' && printfulOk) { %>
+  <p><a class="btn" href="/merch/catalog/<%= p.id %>"><%= t('merch.cat_order') %></a></p>
+  <% } else { %>
+  <p><span class="badge"><%= t('merch.cat_soon_badge') %></span></p>
+  <form method="post" action="/merch/notify" style="margin-top:0.5rem;">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <input type="email" name="email" required maxlength="160" autocomplete="email" placeholder="<%= t('merch.notify_email') %>" style="max-width:280px;">
+    <button class="btn btn-secondary" type="submit"><%= t('merch.notify_me') %></button>
+  </form>
+  <% } %>
+</div>
+<% }); %>
+<% } %>

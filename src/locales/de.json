@@ -565,7 +565,20 @@
     "poster_cta": "Order poster",
     "kids_h": "🎨 Kleiner Künstler zu Hause?",
     "kids_text": "Verwandle die Kritzelei oder das Ausmalbild deines Kindes in ein T-Shirt oder Poster. Lade das Kunstwerk hoch, wähle ein Produkt und wir drucken es!",
-    "kids_cta": "Doodle-Bestellung starten"
+    "kids_cta": "Doodle-Bestellung starten",
+    "aff_h": "Empfohlene Produkte",
+    "aff_disclosure": "Einige Links sind Affiliate-Links — wir erhalten ggf. eine Provision für qualifizierte Käufe, für dich ohne Mehrkosten.",
+    "aff_baselabs_name": "Base Labs Aftercare",
+    "aff_baselabs_blurb": "Aftercare für tätowierte Haut — unser Link wendet den TAC20-Rabatt automatisch an.",
+    "aff_cta": "Mit unserem Rabatt shoppen",
+    "cat_h": "Merch-Katalog",
+    "cat_sub": "Print-on-Demand-Kleidung mit Mikes Designs — neue Drops landen hier.",
+    "cat_music_name": "Music Genres T-Shirt",
+    "cat_music_blurb": "Alle 713 Musikgenres in 16 Familien — die komplette Taxonomie auf einem Premium-Shirt.",
+    "cat_alice_name": "Alice Tea-Party T-Shirt",
+    "cat_alice_blurb": "Mikes trippe Alice-im-Wunderland-Alien-Teeparty zum Anziehen.",
+    "cat_order": "Jetzt bestellen",
+    "cat_soon_badge": "Bald"
   },
   "nav": {
     "about": "Über uns",

@@ -565,7 +565,20 @@
     "poster_cta": "Order poster",
     "kids_h": "🎨 Piccolo artista in casa?",
     "kids_text": "Trasforma lo scarabocchio o il disegno da colorare di tuo figlio in una maglietta o un poster personalizzato. Carica la sua opera, scegli un prodotto e lo stampiamo!",
-    "kids_cta": "Ordina un disegno"
+    "kids_cta": "Ordina un disegno",
+    "aff_h": "Prodotti consigliati",
+    "aff_disclosure": "Alcuni link sono di affiliazione — potremmo guadagnare una commissione sugli acquisti idonei, senza costi extra per te.",
+    "aff_baselabs_name": "Base Labs Aftercare",
+    "aff_baselabs_blurb": "Aftercare per pelle tatuata — il nostro link applica lo sconto TAC20 automaticamente.",
+    "aff_cta": "Acquista con il nostro sconto",
+    "cat_h": "Catalogo merch",
+    "cat_sub": "Abbigliamento print-on-demand con i design di Mike — le novità arrivano qui.",
+    "cat_music_name": "Maglietta Music Genres",
+    "cat_music_blurb": "Tutti i 713 generi musicali in 16 famiglie — la tassonomia completa su una maglietta premium.",
+    "cat_alice_name": "Maglietta Alice Tea-Party",
+    "cat_alice_blurb": "Il tè alieno di Alice secondo Mike, da indossare.",
+    "cat_order": "Ordina la tua",
+    "cat_soon_badge": "Prossimamente"
   },
   "nav": {
     "about": "Chi siamo",

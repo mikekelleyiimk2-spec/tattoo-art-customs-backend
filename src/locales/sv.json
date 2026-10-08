@@ -565,7 +565,20 @@
     "poster_cta": "Order poster",
     "kids_h": "🎨 Liten konstnär hemma?",
     "kids_text": "Förvandla ditt barns klotter eller målarbild till en t-shirt eller poster. Ladda upp konstverket, välj en produkt så trycker vi den!",
-    "kids_cta": "Beställ en doodle"
+    "kids_cta": "Beställ en doodle",
+    "aff_h": "Rekommenderade produkter",
+    "aff_disclosure": "Vissa länkar är affiliatelänkar — vi kan få provision på kvalificerade köp, utan extra kostnad för dig.",
+    "aff_baselabs_name": "Base Labs Aftercare",
+    "aff_baselabs_blurb": "Aftercare för tatuerad hud — vår länk applicerar TAC20-rabatten automatiskt.",
+    "aff_cta": "Handla med vår rabatt",
+    "cat_h": "Merch-katalog",
+    "cat_sub": "Print-on-demand-kläder med Mikes designer — nya släpp hamnar här.",
+    "cat_music_name": "Music Genres T-shirt",
+    "cat_music_blurb": "Alla 713 musikgenrer i 16 familjer — hela taxonomin på en premium-t-shirt.",
+    "cat_alice_name": "Alice Tea-Party T-shirt",
+    "cat_alice_blurb": "Mikes trippiga Alice-i-Underlandet-alien-tebjudning att bära.",
+    "cat_order": "Beställ din",
+    "cat_soon_badge": "Kommer snart"
   },
   "nav": {
     "about": "Om oss",

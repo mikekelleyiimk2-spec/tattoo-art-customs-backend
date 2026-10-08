@@ -34,6 +34,14 @@ router.get('/file/:id', async (req, res) => {
     // Doodle-merch orders (tee/poster from /doodle-to-tattoo): the kid's
     // uploaded drawing prints as-is. Basename only — traversal guard.
     rel = 'doodles/' + path.basename(String(po.doodle_file));
+  } else if (po.catalog_asset) {
+    // Merch-catalog fixed-design POD products (/merch). Stored as a
+    // catalog/-prefixed relative path (see merchCatalog.js asset field).
+    // Pinned under assets/catalog/ with a traversal guard.
+    const ca = String(po.catalog_asset).replace(/\\/g, '/');
+    if (/^catalog\/[A-Za-z0-9._/-]+$/.test(ca) && !ca.includes('..')) {
+      rel = ca;
+    }
   }
   const abs = rel ? resolveStoredPath(rel) : null;
   if (!abs) return res.status(404).send('File missing');

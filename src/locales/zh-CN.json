@@ -565,7 +565,20 @@
     "poster_cta": "Order poster",
     "kids_h": "🎨 家有小画家？",
     "kids_text": "把孩子的涂鸦或填色画印成定制T恤或海报。上传作品、选择商品，我们来印刷！",
-    "kids_cta": "定制涂鸦商品"
+    "kids_cta": "定制涂鸦商品",
+    "aff_h": "推荐产品",
+    "aff_disclosure": "部分链接为推广链接 — 符合条件的购买我们可能会获得佣金，您无需支付额外费用。",
+    "aff_baselabs_name": "Base Labs 纹身护理",
+    "aff_baselabs_blurb": "专为纹身肌肤设计的护理产品 — 通过我们的链接自动享受TAC20折扣。",
+    "aff_cta": "享折扣购买",
+    "cat_h": "周边目录",
+    "cat_sub": "印有Mike设计的按需定制服饰 — 新品都在这里。",
+    "cat_music_name": "Music Genres T恤",
+    "cat_music_blurb": "16大类713种音乐流派 — 完整分类表印在优质T恤上。",
+    "cat_alice_name": "爱丽丝茶会T恤",
+    "cat_alice_blurb": "Mike笔下的迷幻爱丽丝外星茶会 — 穿在身上。",
+    "cat_order": "立即订购",
+    "cat_soon_badge": "即将推出"
   },
   "nav": {
     "about": "关于",

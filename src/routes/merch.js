@@ -18,6 +18,7 @@ const pricing = require('../lib/pricing');
 const { requireLogin } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { printfulConfigured } = require('../lib/printful');
+const catalog = require('../lib/merchCatalog');
 
 const router = express.Router();
 
@@ -55,6 +56,11 @@ router.get('/', async (req, res) => {
     ownedCount,
     ownedDesigns,
     posterPrice: poster ? pricing.withFeeCents(poster.price_cents) : 0,
+    // Merch catalog (owner rule 2026-10-08): data-driven POD + affiliate
+    // products. Affiliate cards render regardless of Printful state.
+    affiliates: catalog.affiliateProducts(),
+    podProducts: catalog.podProducts(),
+    printfulOk: configured,
     metaDescription: "Mike's Custom Tees — your purchased Tattoo Art Customs designs on premium Bella + Canvas tees and bold 18×24\" posters, printed on demand.",
   });
 });
@@ -162,6 +168,87 @@ router.post('/tee', requireLogin, formLimiter, checkHoneypot, async (req, res) =
     }
   } catch (e) {
     req.session.flash = e.message || 'Could not start your tee order.';
+    return res.redirect('/merch');
+  }
+});
+
+// --- Fixed-design catalog POD products (owner rule 2026-10-08) ---
+// Anyone can buy these (no design ownership needed); the print file is the
+// catalog asset, not an owned design. Degrades to /merch when the product
+// isn't live or Printful isn't configured.
+router.get('/catalog/:productId', requireLogin, formLimiter, async (req, res) => {
+  const product = catalog.getProduct(req.params.productId);
+  if (!product || product.kind !== 'pod' || product.status !== 'live' || !printfulConfigured()) {
+    req.session.flash = 'That item is not available yet — join the notify list below.';
+    return res.redirect('/merch');
+  }
+  res.render('merch/catalog-order', {
+    title: `Mike's Custom Tees — ${product.id}`,
+    product,
+    sizes: pricing.TEE_SIZES,
+    colors: pricing.TEE_COLORS,
+    priceFor: pricing.teePriceCents,
+    withFee: (c) => pricing.withFeeCents(c),
+    money: pricing.money,
+  });
+});
+
+router.post('/catalog', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
+  try {
+    const product = catalog.getProduct(String(req.body.product_id || ''));
+    if (!product || product.kind !== 'pod' || product.status !== 'live' || !printfulConfigured()) {
+      throw new Error('That item is not available yet.');
+    }
+    const size = pricing.teeSizeLabel(req.body.size);
+    const color = pricing.teeColorLabel(req.body.color);
+    const qty = Math.min(10, Math.max(1, parseInt(req.body.quantity, 10) || 1));
+
+    const ship = {
+      ship_name: String(req.body.ship_name || '').slice(0, 120).trim(),
+      ship_address1: String(req.body.ship_address1 || '').slice(0, 160).trim(),
+      ship_address2: String(req.body.ship_address2 || '').slice(0, 160).trim(),
+      ship_city: String(req.body.ship_city || '').slice(0, 80).trim(),
+      ship_state: String(req.body.ship_state || '').slice(0, 80).trim(),
+      ship_zip: String(req.body.ship_zip || '').slice(0, 20).trim(),
+      ship_country: String(req.body.ship_country || 'US').slice(0, 60).trim() || 'US',
+    };
+    if (!ship.ship_name || !ship.ship_address1 || !ship.ship_city || !ship.ship_zip) {
+      throw new Error('Name, street address, city, and ZIP are required for shipping.');
+    }
+
+    const unit = pricing.teePriceCents(size);
+    const amount = unit * qty;
+    const fee = pricing.processingFeeCents(amount);
+    const orderId = await db.insert('orders', {
+      buyer_id: req.user.id, design_id: null, order_type: 'print',
+      amount_cents: amount, fee_cents: fee, status: 'pending', payment_method: 'paypal',
+      created_at: db.now(),
+    });
+    await db.insert('print_orders', {
+      id: db.newId(), order_id: orderId, user_id: req.user.id,
+      design_id: null, combo_id: null, catalog_asset: product.asset,
+      product: product.printfulProduct, quantity: qty,
+      style: 'color', size, color, ...ship, status: 'pending',
+      fulfill_token: db.newId() + db.newId(), created_at: db.now(),
+    });
+
+    try {
+      const pp = await paypal.createCheckoutOrder({
+        amountCents: amount + fee,
+        description: `Tattoo Art Customs merch — ${product.id} ${color} ${size} × ${qty}`,
+        returnUrl: `${config.baseUrl}/orders/approve/${orderId}`,
+        cancelUrl: `${config.baseUrl}/account`,
+      });
+      await db.update('orders', orderId, { paypal_order_id: pp.id });
+      const approve = pp.links.find((l) => l.rel === 'approve');
+      return res.redirect(approve.href);
+    } catch (e) {
+      console.error('PayPal catalog merch order create failed:', e.message);
+      req.session.flash = 'PayPal checkout is unavailable right now — you can pay manually below.';
+      return res.redirect(`/orders/manual/${orderId}`);
+    }
+  } catch (e) {
+    req.session.flash = e.message || 'Could not start your merch order.';
     return res.redirect('/merch');
   }
 });

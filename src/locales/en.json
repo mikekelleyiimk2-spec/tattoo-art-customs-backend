@@ -14,7 +14,7 @@
   },
   "aftercare": {
     "check_price": "Check price on Amazon",
-    "disclosure": "As a Base Labs affiliate, Tattoo Art Customs earns from qualifying purchases made through the links on this page.",
+    "disclosure": "As an Amazon Associate and a Base Labs affiliate, Tattoo Art Customs earns from qualifying purchases made through the links on this page.",
     "first48_1": "Leave the initial wrap on for the time your artist tells you (usually 2–24 hours).",
     "first48_2": "Wash gently with lukewarm water and fragrance-free soap. Pat dry — never rub.",
     "first48_3": "Apply a thin layer of aftercare balm or ointment. Thin is key: too much suffocates the skin.",
@@ -565,7 +565,20 @@
     "poster_cta": "Order poster",
     "kids_h": "🎨 Little Artist at Home?",
     "kids_text": "Turn your kid's doodle or coloring into a custom t-shirt or poster. Upload their artwork, pick a product, and we print it!",
-    "kids_cta": "Start a Doodle Order"
+    "kids_cta": "Start a Doodle Order",
+    "aff_h": "Recommended products",
+    "aff_disclosure": "Some links below are affiliate links — we may earn a commission on qualifying purchases, at no extra cost to you.",
+    "aff_baselabs_name": "Base Labs Aftercare",
+    "aff_baselabs_blurb": "Aftercare made for tattooed skin — our link applies the TAC20 discount automatically.",
+    "aff_cta": "Shop with our discount",
+    "cat_h": "Merch catalog",
+    "cat_sub": "Print-on-demand gear carrying Mike's designs — new drops land here.",
+    "cat_music_name": "Music Genres Tee",
+    "cat_music_blurb": "All 713 music genres across 16 families — the full taxonomy chart on a premium tee.",
+    "cat_alice_name": "Alice Tea-Party Tee",
+    "cat_alice_blurb": "Mike's trippy Alice-in-Wonderland alien tea party, wearable.",
+    "cat_order": "Order yours",
+    "cat_soon_badge": "Coming soon"
   },
   "nav": {
     "about": "About",
