@@ -877,5 +877,18 @@
     "per_entry": "pro Teilnahme",
     "best_value": "BESTES ANGEBOT",
     "popular": "BELIEBTESTE"
+  },
+  "show": {
+    "badge": "Gesehen in Color With Us!",
+    "title": "Gesehen in Color With Us!",
+    "sub": "Jedes Design aus der Little-Inkers-Show. TAC-Mitglieder sparen {pct}%.",
+    "member_callout": "TAC-Mitglieder sparen {pct}% auf dieses Design.",
+    "member_save": "Mitglieder sparen {pct}%",
+    "vs_regular": "statt {price} regulär",
+    "join_callout": "TAC-Mitglieder sparen {pct}% auf diese Designs.",
+    "join_link": "Mitglied werden",
+    "empty": "Noch keine Show-Designs — schau bald wieder vorbei.",
+    "browse_all": "Alle Designs ansehen",
+    "starts_when_airs": "Der Mitglieder-Rabatt startet mit der Ausstrahlung der Folge."
   }
 }

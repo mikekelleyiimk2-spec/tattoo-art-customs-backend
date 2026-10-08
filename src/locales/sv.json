@@ -877,5 +877,18 @@
     "per_entry": "per deltagande",
     "best_value": "BÄSTA VÄRDE",
     "popular": "MEST POPULÄR"
+  },
+  "show": {
+    "badge": "Sedda i Color With Us!",
+    "title": "Sedda i Color With Us!",
+    "sub": "All design som visats i Little Inkers-showen. TAC-medlemmar sparar {pct}%.",
+    "member_callout": "TAC-medlemmar sparar {pct}% på denna design.",
+    "member_save": "Medlemmar sparar {pct}%",
+    "vs_regular": "jämfört med {price} ordinarie",
+    "join_callout": "TAC-medlemmar sparar {pct}% på dessa designer.",
+    "join_link": "Bli medlem",
+    "empty": "Inga showdesigner ännu — kom tillbaka snart.",
+    "browse_all": "Bläddra bland alla designer",
+    "starts_when_airs": "Medlemsrean startar när avsnittet sänds."
   }
 }

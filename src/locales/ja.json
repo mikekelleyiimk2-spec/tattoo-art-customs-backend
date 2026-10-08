@@ -877,5 +877,18 @@
     "per_entry": "1口あたり",
     "best_value": "一番お得",
     "popular": "人気No.1"
+  },
+  "show": {
+    "badge": "「Color With Us!」で紹介",
+    "title": "「Color With Us!」で紹介",
+    "sub": "Little Inkersの番組で紹介された全デザイン。TACメンバーは{pct}%オフ。",
+    "member_callout": "TACメンバーはこのデザインが{pct}%オフ。",
+    "member_save": "メンバーは{pct}%オフ",
+    "vs_regular": "通常{price}",
+    "join_callout": "TACメンバーはこれらのデザインが{pct}%オフ。",
+    "join_link": "メンバーになる",
+    "empty": "番組デザインはまだありません。またお越しください。",
+    "browse_all": "全デザインを見る",
+    "starts_when_airs": "エピソードの公開後にメンバーセール開始。"
   }
 }

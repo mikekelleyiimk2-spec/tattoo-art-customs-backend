@@ -877,5 +877,18 @@
     "per_entry": "por participação",
     "best_value": "MELHOR VALOR",
     "popular": "MAIS POPULAR"
+  },
+  "show": {
+    "badge": "Visto no Color With Us!",
+    "title": "Visto no Color With Us!",
+    "sub": "Todos os designs do programa Little Inkers. Membros TAC economizam {pct}%.",
+    "member_callout": "Membros TAC economizam {pct}% neste design.",
+    "member_save": "Membros economizam {pct}%",
+    "vs_regular": "vs {price} normal",
+    "join_callout": "Membros TAC economizam {pct}% nestes designs.",
+    "join_link": "Seja membro",
+    "empty": "Nenhum design do programa ainda — volte em breve.",
+    "browse_all": "Ver todos os designs",
+    "starts_when_airs": "A promoção para membros começa quando o episódio for ao ar."
   }
 }

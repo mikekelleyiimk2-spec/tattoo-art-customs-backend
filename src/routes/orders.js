@@ -46,26 +46,31 @@ router.post('/buy/:designId', requireLogin, formLimiter, checkHoneypot, async (r
   }
   const isCustom = design.listing_type === 'custom';
   // Best-deal-wins at checkout: Saturday sale, the standing 20% CUSTOMER
-  // member discount, or regular — never stacked. (The one-time first-custom
-  // discount applies only to made-to-order customs via POST /custom, never
-  // to already-made portfolio pieces here. member_20 is customer-plan only:
-  // artists, shops, and admins never get it — see isCustomerMember.)
+  // member discount, the show-featured discount (designs used on the Little
+  // Inkers "Color With Us!" show — same customer-member eligibility, code
+  // show_featured_20 so show-driven sales are trackable), or regular — never
+  // stacked. (The one-time first-custom discount applies only to made-to-order
+  // customs via POST /custom, never to already-made portfolio pieces here.
+  // member_20 is customer-plan only: artists, shops, and admins never get
+  // it — see isCustomerMember.)
   const saleOn = await pricing.salePriceActive(req.user);
   const customerMember = await isCustomerMember(req.user);
   let listPrice, discountApplied;
-  if (saleOn) {
-    listPrice = isCustom
-      ? pricing.customFullCents(new Date(), member)
-      : premadePriceCents(new Date(), member);
-    discountApplied = 'saturday_sale';
-  } else if (customerMember) {
-    listPrice = isCustom ? pricing.memberCustomFullCents() : pricing.memberPremadeCents();
-    discountApplied = pricing.MEMBER_DISCOUNT_CODE;
+  if (isCustom) {
+    if (saleOn) {
+      listPrice = pricing.customFullCents(new Date(), member);
+      discountApplied = 'saturday_sale';
+    } else if (customerMember) {
+      listPrice = pricing.memberCustomFullCents();
+      discountApplied = pricing.MEMBER_DISCOUNT_CODE;
+    } else {
+      listPrice = pricing.customFullCents(new Date(), member);
+      discountApplied = null;
+    }
   } else {
-    listPrice = isCustom
-      ? pricing.customFullCents(new Date(), member)
-      : premadePriceCents(new Date(), member);
-    discountApplied = null;
+    const quote = await pricing.premadeQuoteForDesign(req.user, design);
+    listPrice = quote.price;
+    discountApplied = quote.discount;
   }
   // Linework-only purchase: the buyer chose it (3% discount), or the piece
   // has no color version (automatic 3%-off linework-only price).

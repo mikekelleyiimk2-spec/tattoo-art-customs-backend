@@ -1435,6 +1435,104 @@ async function main() {
       'shop-plan subscriber pays full custom price ($150), no member_20');
   }
 
+  // --- Show-featured designs (owner rule 2026-10-08): designs used on the
+  // Little Inkers "Color With Us!" show get a member discount (default 20%,
+  // config pricing.showFeaturedDiscountPct), never stacked — best-deal-wins.
+  {
+    const pricing = require('../src/lib/pricing');
+    const cols = sdb.prepare("SELECT name FROM pragma_table_info('designs')").all().map((c) => c.name);
+    ok(cols.includes('show_featured'), 'migration 064 applied: designs.show_featured exists');
+    ok(pricing.SHOW_FEATURED_DISCOUNT_CODE === 'show_featured_20', 'show discount code: show_featured_20');
+    ok(pricing.showFeaturedDiscountRate() === 0.20, 'show discount rate defaults to 20%');
+    ok(pricing.showFeaturedPremadeCents() === 6250, 'show premade: $62.50 base (20% off $75)');
+
+    const wedNoon = new Date('2026-10-07T12:00:00-05:00');
+    const satNight = new Date('2026-10-03T20:00:00-05:00');
+    const memId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('membuyer@test.local').id;
+    const nonMemId = sdb.prepare('SELECT id FROM users WHERE email = ?').get('nonmem@test.local').id;
+    sdb.prepare(`INSERT INTO designs
+      (id, title, description, categories, linework_path, linework_wm_path, status, show_featured, created_at)
+      VALUES ('show-design-1', 'Show Featured Design', '', '[]', 'lw/s.png', 'wm/s.png', 'approved', 1, ?)`)
+      .run(Date.now());
+    const showDesign = { id: 'show-design-1', show_featured: 1 };
+    const plainDesign = { id: 'mem-design-1', show_featured: 0 };
+
+    // Member + show design (no sale): show_featured_20 wins the tie with member_20.
+    const sq = await pricing.premadeQuoteForDesign({ id: memId, role: 'customer' }, showDesign, wedNoon);
+    ok(sq.discount === 'show_featured_20' && sq.price === 6250,
+      'member + show design: show_featured_20 ($62.50), recorded for tracking');
+    // Member + plain design: member_20 as before (no regression).
+    const pq = await pricing.premadeQuoteForDesign({ id: memId, role: 'customer' }, plainDesign, wedNoon);
+    ok(pq.discount === 'member_20' && pq.price === 6250,
+      'member + plain design: member_20 ($62.50), unchanged');
+    // Saturday sale beats the show discount (never stacked).
+    const ssq = await pricing.premadeQuoteForDesign({ id: memId, role: 'customer' }, showDesign, satNight);
+    ok(ssq.discount === 'saturday_sale' && ssq.price === 5000,
+      'sale night + show design: saturday_sale ($50) beats show_featured_20, not stacked');
+    // Non-member + show design: no discount.
+    const nq = await pricing.premadeQuoteForDesign({ id: nonMemId, role: 'customer' }, showDesign, wedNoon);
+    ok(nq.discount === null && nq.price === 7500,
+      'non-member + show design: full $75, no discount');
+
+    // Checkout records show_featured_20 (PayPal unconfigured -> manual).
+    // (mreq's session is the member buyer from the earlier signup block.)
+    const mreq = jarredReq();
+    await mreq('POST', '/login', { body: { email: 'membuyer@test.local', password: 'password123' }, follow: false });
+    let r = await mreq('POST', '/orders/buy/show-design-1', { body: {}, follow: false });
+    ok(r.status === 302 && (r.location || '').includes('/orders/manual/'), 'member show-design checkout created (manual-pay fallback)');
+    const ordId = (r.location || '').split('/orders/manual/')[1];
+    const o = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(ordId);
+    ok(o && o.amount_cents === 6250 && o.discount_applied === 'show_featured_20',
+      'member show-design order: $62.50 base, show_featured_20 recorded');
+
+    // Design page shows the badge; /show-designs collection lists it.
+    r = await mreq('GET', '/design/show-design-1');
+    ok(r.status === 200 && r.text.includes('As seen on Color With Us!'),
+      'design page shows the "As seen on Color With Us!" badge');
+    r = await mreq('GET', '/show-designs');
+    ok(r.status === 200 && r.text.includes('show-design-1') && r.text.includes('As seen on Color With Us!'),
+      '/show-designs collection page lists the show-featured design with badge');
+    // Plain member design page has no badge.
+    r = await mreq('GET', '/design/mem-design-1');
+    ok(r.status === 200 && !r.text.includes('As seen on Color With Us!'),
+      'plain design page shows no show badge');
+
+    // Air-date gate (owner refinement 2026-10-08): no discount until the
+    // episode airs publicly. Badge/listing are NOT gated — only the discount.
+    ok(pricing.showDiscountLive({ show_featured: 1, show_air_at: null }, wedNoon) === true,
+      'showDiscountLive: NULL air_at = no gate, discount live');
+    ok(pricing.showDiscountLive({ show_featured: 1, show_air_at: wedNoon.getTime() - 1000 }, wedNoon) === true,
+      'showDiscountLive: past air datetime = discount live');
+    ok(pricing.showDiscountLive({ show_featured: 1, show_air_at: wedNoon.getTime() + 3600000 }, wedNoon) === false,
+      'showDiscountLive: future air datetime = discount NOT live');
+    ok(pricing.showDiscountLive({ show_featured: 0, show_air_at: null }, wedNoon) === false,
+      'showDiscountLive: non-featured design never qualifies');
+    // Quote pre-air: member falls back to member_20 (never show_featured_20).
+    const preAir = await pricing.premadeQuoteForDesign(
+      { id: memId, role: 'customer' },
+      { id: 'show-design-1', show_featured: 1, show_air_at: wedNoon.getTime() + 3600000 }, wedNoon);
+    ok(preAir.discount === 'member_20' && preAir.price === 6250,
+      'pre-air quote: member_20 applies, show_featured_20 withheld until air');
+    // Quote post-air: show_featured_20 wins the tie again.
+    const postAir = await pricing.premadeQuoteForDesign(
+      { id: memId, role: 'customer' },
+      { id: 'show-design-1', show_featured: 1, show_air_at: wedNoon.getTime() - 1000 }, wedNoon);
+    ok(postAir.discount === 'show_featured_20' && postAir.price === 6250,
+      'post-air quote: show_featured_20 applies once the episode aired');
+    // Design page pre-air: badge shows, discount hidden, "starts when airs" note.
+    sdb.prepare('UPDATE designs SET show_air_at = ? WHERE id = ?')
+      .run(Date.now() + 30 * 24 * 3600 * 1000, 'show-design-1');
+    r = await mreq('GET', '/design/show-design-1');
+    ok(r.status === 200 && r.text.includes('As seen on Color With Us!'),
+      'pre-air design page still shows the badge');
+    ok(r.status === 200 && !r.text.includes('Members save 20%') && r.text.includes('starts when the episode airs'),
+      'pre-air design page hides the discount, shows the airs-note');
+    // /show-designs pre-air: design listed with badge, no member price.
+    r = await mreq('GET', '/show-designs');
+    ok(r.status === 200 && r.text.includes('show-design-1') && r.text.includes('starts when the episode airs'),
+      '/show-designs pre-air: design listed, discount withheld with airs-note');
+  }
+
   // --- Rush customs (owner rule 2026-09-30): +$30 for 24-hour delivery ---
   // The $30 rush fee splits 60/40: $18 to the fulfilling designer/admin as
   // the rush incentive, $12 to site overhead. Standard orders stay 48h.

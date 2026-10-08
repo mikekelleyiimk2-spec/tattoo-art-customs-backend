@@ -10,6 +10,7 @@ assets/designs/*
 assets/catalog/*
 !assets/catalog/manifest.json
 !assets/catalog/by-request.json
+!assets/catalog/show-air-dates.json
 !assets/catalog/merch/
 assets/by-request/*
 !assets/by-request/*.jpg
@@ -20,3 +21,6 @@ assets/library/*
 *.log
 .DS_Store
 *.sqlite3
+
+# Local sqlite dev/test databases
+*.db

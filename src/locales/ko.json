@@ -877,5 +877,18 @@
     "per_entry": "1회당",
     "best_value": "최고 가성비",
     "popular": "가장 인기"
+  },
+  "show": {
+    "badge": "「Color With Us!」에 소개됨",
+    "title": "「Color With Us!」에 소개됨",
+    "sub": "Little Inkers 쇼에 소개된 모든 디자인. TAC 회원은 {pct}% 할인.",
+    "member_callout": "TAC 회원은 이 디자인을 {pct}% 할인받습니다.",
+    "member_save": "회원 {pct}% 할인",
+    "vs_regular": "정상가 {price} 대비",
+    "join_callout": "TAC 회원은 이 디자인들을 {pct}% 할인받습니다.",
+    "join_link": "회원 가입",
+    "empty": "아직 쇼 디자인이 없습니다. 곧 다시 확인하세요.",
+    "browse_all": "모든 디자인 보기",
+    "starts_when_airs": "에피소드 공개 후 멤버 할인이 시작됩니다."
   }
 }

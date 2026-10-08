@@ -46,6 +46,7 @@
     <button type="button" class="fav-heart" data-fav-id="<%= d.id %>" aria-pressed="false" aria-label="<%= t('fav.add') %>" title="<%= t('fav.add') %>"></button>
     <div class="pad">
       <h3><a href="/design/<%= d.id %>"><%= d.title %></a></h3>
+      <% if (d.show_featured) { %><span class="badge ok"><%= t('show.badge') %></span><% } %>
       <% d.categories.slice(0,3).forEach(function(c) { %><span class="tag"><%= c %></span><% }); %>
       <p class="muted"><%= fmtMoney(premadePrice) %><% if (sale) { %> <span class="badge ok"><%= t('common.sale') %></span><% } %></p>
     </div>

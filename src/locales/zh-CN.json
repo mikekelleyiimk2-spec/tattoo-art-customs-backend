@@ -877,5 +877,18 @@
     "per_entry": "每次参与",
     "best_value": "最划算",
     "popular": "最受欢迎"
+  },
+  "show": {
+    "badge": "《Color With Us!》节目同款",
+    "title": "《Color With Us!》节目同款",
+    "sub": "Little Inkers节目中展示的所有设计。TAC会员立享{pct}%优惠。",
+    "member_callout": "TAC会员购买此设计立享{pct}%优惠。",
+    "member_save": "会员立享{pct}%优惠",
+    "vs_regular": "原价{price}",
+    "join_callout": "TAC会员购买这些设计立享{pct}%优惠。",
+    "join_link": "成为会员",
+    "empty": "暂无节目设计，敬请期待。",
+    "browse_all": "浏览全部设计",
+    "starts_when_airs": "节目播出后会员优惠开启。"
   }
 }

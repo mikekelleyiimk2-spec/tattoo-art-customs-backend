@@ -7,7 +7,7 @@ const db = require('../db');
 const config = require('../config');
 const { requireLogin, isActiveMember } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
-const { premadePriceCents, customFullCents, isSaleWindow, lineworkOnlyPriceCents, LINEWORK_ONLY_DISCOUNT, salePriceActive, withFeeCents, processingFeeCents, money } = require('../lib/pricing');
+const { premadePriceCents, customFullCents, isSaleWindow, lineworkOnlyPriceCents, LINEWORK_ONLY_DISCOUNT, salePriceActive, withFeeCents, processingFeeCents, money, premadeQuoteForDesign, SHOW_FEATURED_DISCOUNT_CODE, showFeaturedDiscountRate, showFeaturedPremadeCents, showDiscountLive } = require('../lib/pricing');
 const { viewerFor, displayImgFile, canViewUnblurred } = require('../lib/contentPolicy');
 
 const router = express.Router();
@@ -95,6 +95,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/by-request`, changefreq: 'daily', priority: '0.8' },
     { loc: `${base}/doodle-to-tattoo`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/holiday-raffle`, changefreq: 'weekly', priority: '0.7' },
+    { loc: `${base}/show-designs`, changefreq: 'daily', priority: '0.8' },
   ];
   try {
     const designs = await db.all(
@@ -202,6 +203,38 @@ router.get('/gallery', async (req, res) => {
     newestUrl: galleryUrl('newest'), allUrl: galleryUrl(''),
     metaDescription: 'Search 900+ original tattoo designs by style and category. Buy ready-made tattoo designs from independent artists — full color and linework included.',
     canonical: `${config.baseUrl.replace(/\/$/, '')}/gallery`,
+  });
+});
+
+// Show-featured collection (owner rule 2026-10-08): every design used on the
+// Little Inkers "Color With Us!" show, with the TAC member discount callout.
+// Parent-zone banner in the Little Inkers app links here; never linked from
+// kids' videos, descriptions, or kid-facing app surfaces.
+router.get('/show-designs', async (req, res) => {
+  const member = await isActiveMember(req.user);
+  const rows = await db.all(
+    `SELECT * FROM designs WHERE status = 'approved' AND listing_scope = 'gallery'
+     AND show_featured = 1 AND (members_only = 0 OR ? = 1) ORDER BY created_at DESC`,
+    [member ? 1 : 0]);
+  const designs = rows.map(parseDesign);
+  const viewer = await viewerFor(req.user);
+  // Per-card air state: the badge shows pre-air, but the member price and
+  // discount callout stay hidden until the episode airs (gated server-side
+  // in the pricing quote too — the UI never grants the discount early).
+  const now = new Date();
+  const thumbs = designs.map((d) => ({ ...d, thumb: displayImgFile(d, viewer), show_aired: showDiscountLive(d, now) }));
+  const customerMember = await require('../middleware/auth').isCustomerMember(req.user);
+  const base = config.baseUrl.replace(/\/$/, '');
+  res.render('site/show-designs', {
+    title: 'As Seen on Color With Us! — Show Designs | Tattoo Art Customs',
+    designs: thumbs, customerMember,
+    anyAired: thumbs.some((d) => d.show_aired),
+    showDiscountPct: Math.round(showFeaturedDiscountRate() * 100),
+    sale: await salePriceActive(req.user),
+    memberPrice: withFeeCents(showFeaturedPremadeCents()),
+    regularPrice: withFeeCents(premadePriceCents(new Date(), member)),
+    metaDescription: 'Every tattoo design featured on the Little Inkers "Color With Us!" show. TAC members save on show designs.',
+    canonical: `${base}/show-designs`,
   });
 });
 
@@ -556,8 +589,12 @@ router.get('/design/:id', async (req, res) => {
     : null;
   // Portfolio custom pieces sell at the custom-design price (sale-aware);
   // pre-designs sell at the premade price. Members get the early sale entry.
+  // Show-featured designs (used on "Color With Us!") quote the member
+  // show discount for eligible customer members — best-deal-wins.
   const isCustom = design.listing_type === 'custom';
-  const price = isCustom ? customFullCents(new Date(), member) : premadePriceCents(new Date(), member);
+  const quote = isCustom ? null : await premadeQuoteForDesign(req.user, design);
+  const price = isCustom ? customFullCents(new Date(), member) : quote.price;
+  const showDiscountPct = Math.round(showFeaturedDiscountRate() * 100);
   let owned = false;
   if (req.user) {
     const o = await db.get(
@@ -607,6 +644,11 @@ router.get('/design/:id', async (req, res) => {
     title: `${design.title} — ${styleBit}Tattoo Design for Sale | Tattoo Art Customs`,
     design, artist, price, isCustom, sale: await salePriceActive(req.user), owned,
     imgFile, blurred, prevId, nextId,
+    // Show-featured discount state for the badge + member callout. The badge
+    // is never air-gated; the discount is (server-side, in the quote above).
+    showDiscountApplied: !!(quote && quote.discount === SHOW_FEATURED_DISCOUNT_CODE),
+    showAired: showDiscountLive(design),
+    showDiscountPct,
     // Shops with an active subscription can buy a design for a client (Phase 2).
     canBuyForClient: req.user ? await require('../middleware/auth').hasActiveSubscription(req.user.id, 'tattoo_shop') : false,
     // Linework-only purchase option (3% discount). Pieces with no color

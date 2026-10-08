@@ -877,5 +877,18 @@
     "per_entry": "per entry",
     "best_value": "BEST VALUE",
     "popular": "MOST POPULAR"
+  },
+  "show": {
+    "badge": "As seen on Color With Us!",
+    "title": "As Seen on Color With Us!",
+    "sub": "Every design featured on the Little Inkers show. TAC members save {pct}%.",
+    "member_callout": "TAC members save {pct}% on this design.",
+    "member_save": "Members save {pct}%",
+    "vs_regular": "vs {price} regular",
+    "join_callout": "TAC members save {pct}% on these designs.",
+    "join_link": "Become a member",
+    "empty": "No show designs yet — check back soon.",
+    "browse_all": "Browse all designs",
+    "starts_when_airs": "Member sale starts when the episode airs."
   }
 }

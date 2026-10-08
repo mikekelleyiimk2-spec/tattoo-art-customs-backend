@@ -133,14 +133,59 @@ function memberCustomDepositCents() {
 // only — artists, shops, lifetime non-customer grants, and admins never
 // qualify). Discounts are never stacked.
 async function premadePriceQuote(user, date = new Date()) {
+  return premadeQuoteForDesign(user, null, date);
+}
+
+// Show-featured discount (owner rule 2026-10-08): designs used on the Little
+// Inkers "Color With Us!" show (designs.show_featured = 1) are discounted
+// for customer-plan members — pricing.showFeaturedDiscountPct (default 20%)
+// off the advertised (fee-inclusive) regular premade price. Same math as the
+// member discount: fee computed on the discounted base at checkout, never
+// absorbed. Never stacked with the Saturday sale or member_20 —
+// best-deal-wins: the Saturday sale always beats it, and at the default 20%
+// it ties member_20 (show_featured_20 is recorded so show-driven sales are
+// trackable via orders.discount_applied). Customer-membership only, same
+// eligibility as member_20 (see isCustomerMember).
+const SHOW_FEATURED_DISCOUNT_CODE = 'show_featured_20';
+function showFeaturedDiscountRate() {
+  const pct = Number(config.pricing.showFeaturedDiscountPct);
+  return (Number.isFinite(pct) && pct > 0 && pct < 100 ? pct : 20) / 100;
+}
+function showFeaturedPremadeCents() {
+  return Math.round(withFeeCents(config.pricing.premadeRegular) * (1 - showFeaturedDiscountRate()));
+}
+// Air-date gate (owner refinement 2026-10-08): the show-featured discount
+// runs only AFTER the episode has aired publicly. designs.show_air_at is the
+// episode's air datetime as a BIGINT ms timestamp; NULL means no gate (aired
+// or unscheduled — discount applies). Server-side enforcement: the pricing
+// path checks this, never just the UI.
+function showDiscountLive(design, date = new Date()) {
+  if (!design || !design.show_featured) return false;
+  const airAt = Number(design.show_air_at);
+  if (!Number.isFinite(airAt) || airAt <= 0) return true;
+  return date.getTime() >= airAt;
+}
+// Best-deal-wins premade quote for a SPECIFIC design (show-featured aware).
+// Returns { price, discount, sale, member } — drop-in for premadePriceQuote
+// with per-design show discount support.
+async function premadeQuoteForDesign(user, design, date = new Date()) {
   const member = await isActiveMember(user);
   const customerMember = await isCustomerMember(user);
   const saleOn = await salePriceActive(user, date);
   let price = premadePriceCents(date, member);
   let discount = saleOn ? 'saturday_sale' : null;
-  if (customerMember && !saleOn) {
-    const mPrice = memberPremadeCents();
-    if (mPrice < price) { price = mPrice; discount = MEMBER_DISCOUNT_CODE; }
+  if (!saleOn && customerMember) {
+    // Show-featured goes first so it wins price ties with member_20 (same
+    // amount at the default 20%) — the code is how show-driven sales are
+    // tracked. A strictly lower price always wins regardless of order.
+    // The show discount is air-gated: no discount until the episode airs.
+    const options = [];
+    if (showDiscountLive(design, date)) {
+      options.push({ price: showFeaturedPremadeCents(), code: SHOW_FEATURED_DISCOUNT_CODE });
+    }
+    options.push({ price: memberPremadeCents(), code: MEMBER_DISCOUNT_CODE });
+    options.sort((a, b) => a.price - b.price);
+    if (options[0].price < price) { price = options[0].price; discount = options[0].code; }
   }
   return { price, discount, sale: saleOn, member };
 }
@@ -197,5 +242,5 @@ function teeColorLabel(color) {
   return TEE_COLORS.includes(c) ? c : 'black';
 }
 
-module.exports = { isSaleWindow, salePriceActive, premadePriceCents, customFullCents, money, LINEWORK_ONLY_DISCOUNT, lineworkOnlyPriceCents, processingFeeCents, withFeeCents, withPlayFeeCents, FIRST_CUSTOM_DISCOUNT_CODE, firstCustomFullCents, firstCustomDepositCents, MEMBER_DISCOUNT_CODE, MEMBER_DISCOUNT_RATE, memberPremadeCents, memberCustomFullCents, memberCustomDepositCents, premadePriceQuote, RUSH_FEE_CENTS, RUSH_DESIGNER_CENTS, RUSH_SITE_CENTS, RUSH_SLA_HOURS, STANDARD_SLA_HOURS, TEE_SIZES, TEE_COLORS, teePriceCents, teeSizeLabel, teeColorLabel };
+module.exports = { isSaleWindow, salePriceActive, premadePriceCents, customFullCents, money, LINEWORK_ONLY_DISCOUNT, lineworkOnlyPriceCents, processingFeeCents, withFeeCents, withPlayFeeCents, FIRST_CUSTOM_DISCOUNT_CODE, firstCustomFullCents, firstCustomDepositCents, MEMBER_DISCOUNT_CODE, MEMBER_DISCOUNT_RATE, memberPremadeCents, memberCustomFullCents, memberCustomDepositCents, premadePriceQuote, premadeQuoteForDesign, SHOW_FEATURED_DISCOUNT_CODE, showFeaturedDiscountRate, showFeaturedPremadeCents, showDiscountLive, RUSH_FEE_CENTS, RUSH_DESIGNER_CENTS, RUSH_SITE_CENTS, RUSH_SLA_HOURS, STANDARD_SLA_HOURS, TEE_SIZES, TEE_COLORS, teePriceCents, teeSizeLabel, teeColorLabel };
 

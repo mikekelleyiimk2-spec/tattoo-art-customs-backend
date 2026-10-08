@@ -1,0 +1,31 @@
+<h1><%= t('show.title') %></h1>
+<p class="muted"><%= t('show.sub', {pct: showDiscountPct}) %></p>
+<% if (customerMember && anyAired) { %>
+<p><span class="badge ok"><%= t('show.member_save', {pct: showDiscountPct}) %></span>
+<span class="muted"><%= fmtMoney(memberPrice) %> <%= t('show.vs_regular', {price: fmtMoney(regularPrice)}) %></span></p>
+<% } %>
+<% if (!anyAired) { %>
+<p class="muted"><%= t('show.starts_when_airs') %></p>
+<% } %>
+<% if (!customerMember && anyAired) { %>
+<p class="muted"><%= t('show.join_callout', {pct: showDiscountPct}) %> <a href="/membership"><%= t('show.join_link') %></a></p>
+<% } %>
+<% if (sale) { %><div class="sale-banner" role="status"><%= t('gallery.sale_banner', {price: fmtMoney(regularPrice)}) %></div><% } %>
+
+<% if (!designs.length) { %><p><%= t('show.empty') %></p><% } %>
+<div class="grid">
+  <% designs.forEach(function(d) { %>
+  <article class="design-card">
+    <a href="/design/<%= d.id %>"><img src="/img/designs/<%= d.thumb || d.linework_wm_path.split('/').pop() %>" alt="<%= t('home.design_alt', {title: d.title}) %>" loading="lazy" decoding="async"></a>
+    <button type="button" class="fav-heart" data-fav-id="<%= d.id %>" aria-pressed="false" aria-label="<%= t('fav.add') %>" title="<%= t('fav.add') %>"></button>
+    <div class="pad">
+      <h3><a href="/design/<%= d.id %>"><%= d.title %></a></h3>
+      <span class="badge ok"><%= t('show.badge') %></span>
+      <% d.categories.slice(0,3).forEach(function(c) { %><span class="tag"><%= c %></span><% }); %>
+      <p class="muted"><% if (d.show_aired) { %><%= fmtMoney(customerMember && !sale ? memberPrice : regularPrice) %><% } else { %><%= fmtMoney(regularPrice) %><% } %><% if (sale) { %> <span class="badge ok"><%= t('common.sale') %></span><% } %></p>
+      <% if (!d.show_aired) { %><p class="muted"><%= t('show.starts_when_airs') %></p><% } %>
+    </div>
+  </article>
+  <% }); %>
+</div>
+<p><a class="btn btn-secondary" href="/gallery"><%= t('show.browse_all') %></a></p>

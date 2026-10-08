@@ -181,6 +181,10 @@ const config = {
     foundingShop: {
       priceCents: 8328, // $79.99 + $3.29 fee — first year during the founding window (vs $103.98)
     },
+    // Show-featured discount (owner rule 2026-10-08): designs used on the
+    // Little Inkers "Color With Us!" show (designs.show_featured = 1) are
+    // this percent off for active TAC customer-plan members. Default 20.
+    showFeaturedDiscountPct: 20,
   },
 
   // Campaign caps — reusable mechanism for opening sales and future promos.

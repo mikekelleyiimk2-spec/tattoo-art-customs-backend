@@ -1,0 +1,11 @@
+{
+  "_note": "Episode air datetimes for show-featured TAC designs (ms timestamps, 9:36 AM America/Chicago). When a pack page is filed as a TAC design, set designs.show_featured=1 AND designs.show_air_at to the matching value below. The member discount applies only once server time >= show_air_at (enforced in pricing.showDiscountLive). Badge and /show-designs listing are NOT air-gated.",
+  "fall-harvest/12-fox-leaves": 1791988560000,
+  "fall-harvest/03-scarecrow": 1792593360000,
+  "costume-party/09-candy-corn": 1793198160000,
+  "woodland-friends/11-turtle": 1793806560000,
+  "thankful-hearts/09-friends-hug": 1794411360000,
+  "thanksgiving-feast/13-drumstick": 1795016160000,
+  "cozy-winter/01-snowman": 1795620960000,
+  "santas-workshop/09-gingerbread": 1796225760000
+}
