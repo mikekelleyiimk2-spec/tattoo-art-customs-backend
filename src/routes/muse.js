@@ -240,9 +240,8 @@ router.post('/upload-sideload', (req, res) => {
         fs.unlinkSync(req.file.path);
         return res.status(400).json({ ok: false, error: 'not a valid ipa/apk (zip) file' });
       }
-      const destDir = path.join(config.uploadDir, 'sideload');
-      fs.mkdirSync(destDir, { recursive: true });
-      const dest = path.join(destDir, path.basename(slot.dest));
+      const dest = path.join(config.uploadDir, slot.dest);
+      fs.mkdirSync(path.dirname(dest), { recursive: true });
       // copy+unlink: staged file may sit on a different filesystem (tmpfs)
       // than the upload dir — renameSync throws EXDEV across devices.
       fs.copyFileSync(req.file.path, dest);
