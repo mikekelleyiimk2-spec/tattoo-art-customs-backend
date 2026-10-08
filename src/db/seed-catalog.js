@@ -37,7 +37,7 @@ async function seedCatalog() {
     await db.insert('designs', {
       id: d.id,
       title: d.title,
-      description: '',
+      description: d.description || '',
       categories: JSON.stringify(d.subjects || []),
       color_path: '',
       linework_path: '',
