@@ -14,7 +14,7 @@
   },
   "aftercare": {
     "check_price": "Voir le prix sur Amazon",
-    "disclosure": "En tant que Partenaire Amazon, Tattoo Art Customs perçoit des commissions sur les achats éligibles effectués via les liens de cette page.",
+    "disclosure": "En tant que Partenaire Amazon et affilié Base Labs, Tattoo Art Customs perçoit des commissions sur les achats éligibles effectués via les liens de cette page.",
     "first48_1": "Garde le premier pansement le temps indiqué par ton artiste (généralement 2 à 24 heures).",
     "first48_2": "Lave délicatement à l'eau tiède avec un savon sans parfum. Sèche en tamponnant — jamais en frottant.",
     "first48_3": "Applique une fine couche de baume ou pommade aftercare. Fine, c'est le mot clé : trop épais, ça étouffe la peau.",
@@ -23,6 +23,8 @@
     "p1_desc": "Film adhésif transparent qui protège ton tatouage frais pendant des jours — douche avec, cicatrisation plus rapide, moins de croûtes. Le grand pack couvre les grosses pièces.",
     "p2_desc": "Le baume standard de l'industrie — vegan, sans pétrolatum, sûr sur l'encre fraîche et parfait pour garder les tatouages cicatrisés éclatants. Un pot dure longtemps.",
     "p3_desc": "Le classique. Recommandé par les dermatologues, sans parfum et pas cher — une fine couche protège les tatouages frais et les garde hydratés pendant la desquamation.",
+    "p4_cta": "Acheter chez Base Labs",
+    "p4_desc": "Des soins conçus pour la peau tatouée — apaisent l’encre fraîche pour une cicatrisation nette. Notre lien applique la remise TAC20 automatiquement.",
     "recommend_h": "Ce qu'on recommande",
     "recommend_sub": "Ce sont les produits que les artistes utilisent vraiment. Acheter via ces liens soutient Tattoo Art Customs sans surcoût pour toi.",
     "sub": "Cicatrise-le bien et ton encre restera intense pendant des décennies. Voici la routine que les vrais artistes ne jurent que par.",

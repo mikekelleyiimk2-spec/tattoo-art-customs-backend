@@ -14,7 +14,7 @@
   },
   "aftercare": {
     "check_price": "Ver precio en Amazon",
-    "disclosure": "Como Afiliado de Amazon, Tattoo Art Customs gana comisiones por compras elegibles hechas a través de los enlaces de esta página.",
+    "disclosure": "Como Afiliado de Amazon y afiliado de Base Labs, Tattoo Art Customs gana comisiones por compras elegibles hechas a través de los enlaces de esta página.",
     "first48_1": "Deja el primer vendaje el tiempo que te indique tu artista (normalmente 2–24 horas).",
     "first48_2": "Lava suavemente con agua tibia y jabón sin fragancia. Seca a toques — nunca frotes.",
     "first48_3": "Aplica una capa fina de bálsamo o pomada aftercare. Fina es la clave: demasiado sofoca la piel.",
@@ -23,6 +23,8 @@
     "p1_desc": "Film adhesivo transparente que protege tu tatuaje fresco durante días — dúchate con él, cicatriza más rápido, menos costra. El pack grande cubre piezas más grandes.",
     "p2_desc": "El bálsamo estándar de la industria — vegano, sin petrolato, seguro para tinta fresca y genial para mantener vibrantes los tatuajes curados. Un bote dura mucho.",
     "p3_desc": "El clásico. Recomendado por dermatólogos, sin fragancia y barato — una capa fina protege los tatuajes frescos y los mantiene hidratados durante la descamación.",
+    "p4_cta": "Comprar en Base Labs",
+    "p4_desc": "Aftercare creado para la piel tatuada — calma la tinta fresca y ayuda a una cicatrización limpia. Nuestro enlace aplica el descuento TAC20 automáticamente.",
     "recommend_h": "Lo que recomendamos",
     "recommend_sub": "Son los productos que los artistas usan de verdad. Comprar por estos enlaces apoya a Tattoo Art Customs sin coste extra para ti.",
     "sub": "Cúralo bien y tu tinta se mantendrá intensa durante décadas. Esta es la rutina que los artistas de verdad juran.",
