@@ -474,7 +474,7 @@ router.get('/pending-designs', async (req, res) => {
     return res.json({ ok: true, count: designs.length, designs });
   } catch (e) {
     console.error('[muse/pending-designs] failed:', e.message);
-    return res.status(500).json({ ok: false, error: 'query failed' });
+    return res.status(500).json({ ok: false, error: 'query failed', detail: e.message });
   }
 });
 
