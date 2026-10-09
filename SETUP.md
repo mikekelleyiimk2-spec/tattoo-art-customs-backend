@@ -37,7 +37,7 @@ buttons show a "payments being set up" notice and buyers are routed to manual pa
 | `PAYPAL_PLAN_CUSTOMER_ANNUAL` | no | Subscription plan ID for $50/year customer membership (optional; leave blank and the annual plan shows as "coming soon") |
 | `FOUNDING_SHOP_WINDOW_END` | no | ISO date (e.g. `2027-03-01`) ending the founding-shop window; shops joining before it pay $79.99 for their first year instead of $99.99. Defaults to 2027-03-01. |
 | `SMTP_HOST/PORT/USER/PASS/FROM` | no | Email sending; without these, emails are logged to the console |
-| `WISE_API_TOKEN` / `WISE_PROFILE_ID` | no | Wise API token + profile ID for automatic bank-account payouts; without these, bank cashouts queue for manual admin send |
+| `WISE_API_TOKEN` / `WISE_PROFILE_ID` | no | Wise API token + business profile ID for automatic bank-account payouts; without these, bank cashouts queue for manual admin send. Token needs transfer + recipient permissions. See "Wise setup" below. |
 | `WEEKLY_PAYOUTS_ENABLED` | no | Set to `false` to disable the automatic Monday payout run |
 
 ## 3. PayPal setup (Business account)
@@ -83,7 +83,27 @@ You already have a PayPal Business account. Do this once:
    
    Webhook events are signature-verified against this ID; unverified events are rejected with 401.
 
-## 4. Deploy on Render (recommended)
+## 4. Wise setup (automatic bank payouts)
+
+To enable automatic Monday payouts to designers'/shops' bank accounts:
+
+1. **Sign up for Wise** at https://wise.com/register (business account, needs ID verification).
+2. **Get your Profile ID:** in the Wise dashboard, go to Settings → your business profile.
+   The Profile ID is a number (e.g. `12345678`). Use the **business** profile, not personal.
+3. **Create an API token:** Settings → API tokens → Add new token.
+   Grant it permission to **create transfers** and **create recipients**.
+   Copy the token (it starts with a long alphanumeric string — save it, it shows only once).
+4. **Fund your Wise USD balance:** transfers draw from your Wise USD balance
+   (the code funds with `type: BALANCE`). Top up USD in Wise before each Monday run,
+   or keep a rolling balance.
+5. **Set the env vars** in the Render dashboard (Environment tab):
+   `WISE_API_TOKEN` = the token, `WISE_PROFILE_ID` = the profile ID.
+   Then redeploy (or wait for the next auto-deploy).
+
+Once set, every Monday ~9am CT the scheduler sends bank-destination payouts automatically
+via Wise. Failures revert to payable and queue for manual send — nothing is lost.
+
+## 5. Deploy on Render (recommended)
 
 1. Push this folder to a GitHub repo.
 2. In Render: **New → Blueprint**, select the repo. `render.yaml` creates the web service (Docker) plus

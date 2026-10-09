@@ -73,6 +73,10 @@ services:
         sync: false
       - key: R2_PUBLIC_URL
         sync: false
+      - key: WISE_API_TOKEN
+        sync: false
+      - key: WISE_PROFILE_ID
+        sync: false
 
 databases:
   - name: tattoo-art-customs-db
