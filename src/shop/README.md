@@ -18,9 +18,27 @@ changes — same function names, same signatures, same routes.
 | `routes-giftcards.js` | Gift card routes (`/giftcards`) |
 | `routes-intake.js` | Intake form routes (`/intake`): customer fill-in + shop view |
 | `routes-waitlist.js` | Waitlist routes (`/waitlist`): join, claim, shop management |
+| `routes-clients.js` | Client CRM routes (`/shop/clients`): client profiles, tattoo history (phase 8) |
+| `routes-reviews.js` | Review request routes (`/shop/reviews`): settings + manual send (phase 8) |
+| `routes-artists.js` | Artist commission tracker (`/shop/artists`): artists, splits, earnings log (phase 8) |
+| `routes-inventory.js` | Inventory alerts (`/shop/inventory`): stock items, low-stock flags (phase 8) |
+| `routes-expenses.js` | Expense tracker (`/shop/expenses`): monthly + category totals (phase 8) |
+| `routes-storefront.js` | Public shop storefront (`/store/:shopId`): shop's own designs for sale (phase 8) |
+| `clients.js` | Client profiles: CRUD + per-client tattoo history |
+| `reviewRequests.js` | Review request auto-send sweep + manual send; unified sent-log with the aftercare review machine (phase 8) |
+| `artistCommissions.js` | Shop-internal artist registry + earnings log with frozen splits (phase 8) |
+| `inventory.js` | Supply items, qty adjust, low-stock detection (phase 8) |
+| `expenses.js` | Expense log, monthly/category totals (phase 8) |
+| `storefront.js` | Storefront settings + the shop's approved designs with referral code (phase 8) |
+| `touchups.js` | Touch-up bookings: linked follow-ups for completed tattoos, free or reduced deposit (phase 8) |
+| `sharekit.js` | Portfolio share kit: image + caption + share deep links per completed booking (phase 8) |
 | `shopDesigner.js` | Shop-included designer membership: an active `tattoo_shop` subscription carries full designer access (portfolio, commissions, request-artist dropdown). Also the Adolfo-only dual-subscription loyalty bonus gate |
 | `shopIncentives.js` | Referral volume tiers (20% → 22% at 25+/mo → 25% at 50+/mo, Chicago calendar month) and booking-conversion bonuses ($5 flat on premades, 5% of base on customs) |
 | `attribution.js` | `resolveShopReferral(code)`: referral code → shop user id, recorded on orders as `referred_shop_id` |
+| `routes-clients.js` | Client profiles CRM routes (`/shop/clients`): list, create, detail/edit, tattoo history |
+| `routes-reviews.js` | Review request automation routes (`/shop/reviews`): settings (shared with the aftercare review machine), manual send, sent log |
+| `clients.js` | Client profiles CRM: per-shop client records + tattoo history, all shop-scoped |
+| `reviewRequests.js` | Review request automation: manual trigger + auto-send sweep, settings delegated to `aftercare.js`; never double-asks across the aftercare 'great' ask |
 | `verification.js` | `verifyShop(shopUserId)`: mark a shop profile verified (called from the admin members page) |
 | `bookingFlow.js` | Booking state machine (standard + deposit-first flows), PayPal deposit/balance capture, confirm/complete/cancel/no-show |
 | `bookingSlots.js` | Open-slot computation for shop calendars |
@@ -33,12 +51,14 @@ changes — same function names, same signatures, same routes.
 ## Entry points (how the marketplace uses this module)
 
 - **Route mounts** (`src/index.js`): `/shop` → `shop/routes.js`, `/bookings` → `shop/routes-bookings.js`, `/giftcards` → `shop/routes-giftcards.js`, `/intake` → `shop/routes-intake.js`, `/waitlist` → `shop/routes-waitlist.js`
+- COORDINATOR MOUNTING PENDING: `/shop/clients` → `shop/routes-clients.js`, `/shop/reviews` → `shop/routes-reviews.js`
 - **`designerAccess` / `requireDesignerAccess` / `dualSubBonusActive`** (`shopDesigner.js`) — used by `src/routes/account.js`, `src/routes/artist.js`
 - **`shopVolumeTierRate`** (`shopIncentives.js`) — used by `src/lib/commissions.js` at commission time
 - **`maybeAwardBookingBonus`** (`shopIncentives.js`) — used by `shop/bookingFlow.js` on booking confirmation
 - **`resolveShopReferral`** (`attribution.js`) — used by `src/routes/orders.js` when recording orders
 - **`verifyShop`** (`verification.js`) — used by `src/routes/admin.js` (`POST /admin/members/:id/verify-shop`)
 - **`registerBookingReminderJobs`** (`bookingReminders.js`) — used by `src/lib/scheduler.js`
+- **`registerReviewRequestJobs`** (`reviewRequests.js`) — COORDINATOR WIRING PENDING: call once from `src/lib/scheduler.js` startScheduler() to run the 6-hour review auto-send sweep (conservative: bookings completed 24h–7d ago, shop enabled + URL set, active shop subscription)
 
 ## Shared modules this depends on (stays outside)
 

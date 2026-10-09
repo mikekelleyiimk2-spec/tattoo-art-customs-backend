@@ -8,6 +8,17 @@
       <p><a class="btn" href="<%= reviewUrl %>">Leave us a Google review</a></p>
     <% } %>
   </section>
+  <% if (typeof affiliates !== 'undefined' && affiliates && affiliates.length) { %>
+    <section class="card">
+      <h2><%= t('toolkit.aftercare_affiliate_title') %></h2>
+      <ul>
+        <% affiliates.forEach(function (a) { %>
+          <li><a href="<%= a.url %>" target="_blank" rel="noopener nofollow sponsored"><%= a.name %></a><% if (a.note) { %> <span class="muted">(<%= a.note %>)</span><% } %></li>
+        <% }); %>
+      </ul>
+      <p class="muted"><%= t('toolkit.aftercare_affiliate_note') %></p>
+    </section>
+  <% } %>
 <% } else { %>
   <section class="card respond">
     <p><a class="btn btn-big" href="/toolkit/aftercare/r/<%= checkin.id %>?r=great">Healing great</a></p>

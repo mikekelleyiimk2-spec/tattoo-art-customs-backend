@@ -1,0 +1,56 @@
+<h1><%= t('shop.artists.title') %></h1>
+<p class="muted"><%= t('shop.artists.subtitle') %></p>
+<p><a class="btn secondary" href="/shop/artists/earnings"><%= t('shop.artists.view_earnings') %></a></p>
+
+<section class="card">
+  <h2><%= t('shop.artists.add_artist') %></h2>
+  <form method="post" action="/shop/artists" class="form">
+    <label><%= t('shop.artists.name') %>
+      <input type="text" name="name" required maxlength="120">
+    </label>
+    <label><%= t('shop.artists.rate_label') %>
+      <input type="number" name="commission_rate_pct" min="0" max="100" value="60">
+    </label>
+    <p><button type="submit"><%= t('shop.artists.save_artist') %></button></p>
+  </form>
+</section>
+
+<section class="card">
+  <h2><%= t('shop.artists.totals') %> · <%= t('shop.artists.period') %></h2>
+  <form method="get" action="/shop/artists" class="form inline">
+    <label><%= t('shop.common.from') %> <input type="date" name="from" value="<%= new Date(from).toISOString().slice(0, 10) %>"></label>
+    <label><%= t('shop.common.to') %> <input type="date" name="to" value="<%= new Date(to).toISOString().slice(0, 10) %>"></label>
+    <p><button type="submit" class="secondary"><%= t('shop.common.filter') %></button></p>
+  </form>
+  <p><strong><%= t('shop.artists.total_booked') %>:</strong> <%= money(shopTotals.amount_cents) %>
+    · <strong><%= t('shop.artists.artist_share') %>:</strong> <%= money(shopTotals.artist_share_cents) %>
+    · <strong><%= t('shop.artists.shop_share') %>:</strong> <%= money(shopTotals.shop_share_cents) %>
+    · <strong><%= t('shop.artists.bookings') %>:</strong> <%= shopTotals.entries %></p>
+</section>
+
+<h2><%= t('shop.artists.artists_heading') %></h2>
+<% if (!artists.length) { %><p class="muted"><%= t('shop.artists.no_artists') %></p><% } %>
+<% for (const a of artists) { const tt = totalsByArtist.get(a.id); %>
+<section class="card">
+  <h3><%= a.name %>
+    <% if (!a.active) { %><span class="badge"><%= t('shop.artists.inactive_badge') %></span><% } %>
+    <span class="muted"><%= a.commission_rate_pct %>%</span></h3>
+  <% if (tt) { %>
+  <p class="muted"><%= t('shop.artists.total_booked') %>: <strong><%= money(tt.amount_cents) %></strong>
+    · <%= t('shop.artists.artist_share') %>: <%= money(tt.artist_share_cents) %>
+    · <%= t('shop.artists.shop_share') %>: <%= money(tt.shop_share_cents) %></p>
+  <% } %>
+  <p>
+    <a class="btn secondary" href="/shop/artists/<%= a.id %>"><%= t('shop.artists.view_detail') %></a>
+    <% if (a.active) { %>
+    <form method="post" action="/shop/artists/<%= a.id %>/deactivate" class="inline">
+      <button type="submit" class="secondary"><%= t('shop.artists.deactivate') %></button>
+    </form>
+    <% } else { %>
+    <form method="post" action="/shop/artists/<%= a.id %>/reactivate" class="inline">
+      <button type="submit" class="secondary"><%= t('shop.artists.reactivate') %></button>
+    </form>
+    <% } %>
+  </p>
+</section>
+<% } %>

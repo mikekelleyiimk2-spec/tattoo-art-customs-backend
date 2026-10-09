@@ -21,6 +21,7 @@ const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { formatReceiptLines } = require('./bookingFees');
 const { getOpenSlots } = require('./bookingSlots');
 const flow = require('./bookingFlow');
+const touchups = require('./touchups');
 const { money } = require('../lib/pricing');
 
 const router = express.Router();
@@ -106,6 +107,76 @@ router.post('/start', requireLogin, formLimiter, checkHoneypot, async (req, res)
   res.redirect(`/bookings/shop/${shopId}` + (designId ? `?design_id=${encodeURIComponent(designId)}` : ''));
 });
 
+// --- touch-up flow ---------------------------------------------------------
+// Customer books a follow-up for a completed tattoo:
+// GET /touchups (eligible list) -> GET /touchup/:bookingId (slot picker) ->
+// POST /touchup/:bookingId/hold -> confirmed (free) or /checkout/:id (deposit)
+
+router.get('/touchups', requireLogin, async (req, res) => {
+  const rows = await db.all(
+    `SELECT b.*, u.display_name AS shop_name FROM bookings b
+     JOIN users u ON u.id = b.shop_user_id
+     WHERE b.customer_user_id = ? AND b.status = 'completed'
+       AND (b.booking_type IS NULL OR b.booking_type = 'standard')
+       AND NOT EXISTS (
+         SELECT 1 FROM bookings t
+         WHERE t.parent_booking_id = b.id AND t.status NOT IN ('cancelled')
+       )
+     ORDER BY b.completed_at DESC`,
+    [req.user.id]);
+  res.render('bookings/touchups', {
+    title: 'Book a touch-up — Tattoo Art Customs', eligible: rows, money,
+  });
+});
+
+router.get('/touchup/:bookingId', requireLogin, async (req, res) => {
+  const parent = await db.get('SELECT * FROM bookings WHERE id = ?', [req.params.bookingId]);
+  if (!parent || parent.customer_user_id !== req.user.id || parent.status !== 'completed') {
+    return res.status(404).render('error', { title: 'Not found', message: 'Booking not found.' });
+  }
+  const shop = await shopUser(parent.shop_user_id);
+  if (!shop || !(await shopActive(shop.id))) {
+    req.session.flash = 'That shop is not available for booking right now.';
+    return res.redirect('/bookings/touchups');
+  }
+  const settings = await flow.getBookingSettings(shop.id);
+  const staff = await db.all('SELECT * FROM shop_staff WHERE shop_user_id = ? AND active = 1 ORDER BY name', [shop.id]);
+  const chairs = await db.all('SELECT * FROM shop_chairs WHERE shop_user_id = ? AND active = 1 ORDER BY name', [shop.id]);
+  const touchupDeposit = touchups.touchupDepositBase(settings);
+  res.render('bookings/touchup-slots', {
+    title: `Book a touch-up — ${shop.display_name} — Tattoo Art Customs`,
+    parent, shop, settings, staff, chairs, money, touchupDeposit,
+  });
+});
+
+router.post('/touchup/:bookingId/hold', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
+  const parent = await db.get('SELECT * FROM bookings WHERE id = ?', [req.params.bookingId]);
+  if (!parent || parent.customer_user_id !== req.user.id) {
+    return res.status(404).render('error', { title: 'Not found', message: 'Booking not found.' });
+  }
+  const startAt = Number(req.body.start_at);
+  let endAt = Number(req.body.end_at);
+  if (!Number.isFinite(endAt) || endAt <= startAt) endAt = startAt + 60 * 60000;
+  try {
+    const booking = await touchups.createTouchupBooking({
+      shopUserId: parent.shop_user_id, customerUserId: req.user.id,
+      parentBookingId: parent.id,
+      staffId: req.body.staff_id || null, chairId: req.body.chair_id || null,
+      startAt, endAt,
+    });
+    if (booking.status === 'confirmed') {
+      req.session.flash = 'Touch-up booked — no deposit needed. See you then!';
+      return res.redirect(`/bookings/receipt/${booking.id}`);
+    }
+    res.redirect(`/bookings/checkout/${booking.id}`);
+  } catch (e) {
+    req.session.flash = errCode(e) === 'SLOT_TAKEN'
+      ? 'That slot was just taken — pick another.'
+      : 'Could not book that touch-up: ' + e.message;
+    res.redirect(`/bookings/touchup/${parent.id}`);
+  }
+});
+
 // --- standard flow: hold -> checkout -> capture ----------------------------
 
 router.post('/hold', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
@@ -149,9 +220,11 @@ router.get('/checkout/:id', requireLogin, async (req, res) => {
   }
   if (booking.status !== 'pending_deposit') return res.redirect(`/bookings/receipt/${booking.id}`);
   const settings = await flow.getBookingSettings(booking.shop_user_id);
-  const fees = flow.depositFees(settings);
+  const isTouchup = booking.booking_type === 'touchup';
+  const fees = isTouchup ? touchups.touchupFees(booking) : flow.depositFees(settings);
   // Sanity: the hold's deposit base must match the current shop settings.
-  if (Number(booking.deposit_cents) !== fees.base) {
+  // Touch-ups are priced from the booking's own deposit_cents — never overwrite.
+  if (!isTouchup && Number(booking.deposit_cents) !== fees.base) {
     await db.update('bookings', booking.id, { deposit_cents: fees.base });
     booking.deposit_cents = fees.base;
   }
@@ -168,7 +241,7 @@ router.post('/checkout/:id', requireLogin, formLimiter, checkHoneypot, async (re
     return res.status(404).render('error', { title: 'Not found', message: 'Booking not found.' });
   }
   const settings = await flow.getBookingSettings(booking.shop_user_id);
-  const fees = flow.depositFees(settings);
+  const fees = booking.booking_type === 'touchup' ? touchups.touchupFees(booking) : flow.depositFees(settings);
   const kind = fees.base === 100 ? 'booking_fee' : 'deposit';
   try {
     // Idempotent on double-click: reuse the still-pending payment row instead
@@ -603,6 +676,7 @@ router.post('/settings', requireSubscription('tattoo_shop'), formLimiter, checkH
     slot_hold_minutes: Math.max(5, Math.min(1440, num(b.slot_hold_minutes, 30))),
     deposit_credit_expiry_days: Math.max(1, Math.min(365, num(b.deposit_credit_expiry_days, 90))),
     booking_instructions: String(b.booking_instructions || '').slice(0, 2000) || null,
+    touchup_deposit_cents: Math.max(0, num(b.touchup_deposit_cents, 0)),
   });
   req.session.flash = 'Booking settings saved.';
   res.redirect('/bookings/settings');

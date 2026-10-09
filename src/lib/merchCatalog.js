@@ -191,6 +191,17 @@ const CATALOG = [
     url: 'https://ledaartsupply.com/collections/premium-leda-sketchbooks-for-artists/products/mother-leda-medium-art-sketchbook',
     ctaKey: 'merch.aff_cta',
   },
+  // --- DrTattooSkin (Social Snowball, live 2026-10-09) ---
+  // 20% commission on every sale. Tracking link verified live.
+  {
+    id: 'drtattoo-aftercare-system',
+    kind: 'affiliate',
+    status: 'live',
+    nameKey: 'merch.aff_drtattoo_name',
+    blurbKey: 'merch.aff_drtattoo_blurb',
+    url: 'https://www.drtattooskin.com/TATTOOARTCUSTOMS',
+    ctaKey: 'merch.aff_cta',
+  },
   {
     id: 'tee-music-genres',
     kind: 'pod',

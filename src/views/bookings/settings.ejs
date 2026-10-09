@@ -32,6 +32,8 @@
     </label>
     <label for="deposit_credit_expiry_days">Deposit credit expires after (days)</label>
     <input type="number" id="deposit_credit_expiry_days" name="deposit_credit_expiry_days" min="1" max="365" value="<%= settings.deposit_credit_expiry_days %>">
+    <label for="touchup_deposit_cents"><%= t('bookings.touchup_deposit_label') %></label>
+    <input type="number" id="touchup_deposit_cents" name="touchup_deposit_cents" min="0" step="100" value="<%= settings.touchup_deposit_cents || 0 %>">
   </section>
 
   <section class="card">

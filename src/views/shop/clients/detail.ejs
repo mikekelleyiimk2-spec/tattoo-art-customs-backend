@@ -1,0 +1,81 @@
+<p><a href="/shop/clients"><%= t('shop.clients.back_to_clients') %></a></p>
+<h1><%= shopClient.name %></h1>
+<p class="muted"><%= t('shop.clients.client_since', { date: new Date(shopClient.created_at).toLocaleDateString(localeTag) }) %></p>
+
+<section class="card">
+  <h2><%= t('shop.clients.details_title') %></h2>
+  <form method="post" action="/shop/clients/<%= shopClient.id %>" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <label><%= t('shop.clients.name') %>*
+      <input type="text" name="name" value="<%= shopClient.name %>" required maxlength="200">
+    </label>
+    <label><%= t('shop.clients.email') %>
+      <input type="email" name="email" value="<%= shopClient.email || '' %>" maxlength="200">
+    </label>
+    <label><%= t('shop.clients.phone') %>
+      <input type="tel" name="phone" value="<%= shopClient.phone || '' %>" maxlength="80">
+    </label>
+    <label><%= t('shop.clients.allergies') %>
+      <textarea name="allergies" rows="3" maxlength="1000"><%= shopClient.allergies || '' %></textarea>
+    </label>
+    <label><%= t('shop.clients.notes') %>
+      <textarea name="notes" rows="4" maxlength="2000"><%= shopClient.notes || '' %></textarea>
+    </label>
+    <button type="submit"><%= t('shop.clients.update') %></button>
+  </form>
+  <form method="post" action="/shop/clients/<%= shopClient.id %>/delete" class="form"
+        onsubmit="return confirm(<%= JSON.stringify(t('shop.clients.delete_confirm')) %>);">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <button type="submit" class="danger"><%= t('shop.clients.delete') %></button>
+  </form>
+</section>
+
+<section class="card">
+  <h2><%= t('shop.clients.tattoos_title') %></h2>
+  <% if (!shopClient.tattoos.length) { %>
+    <p class="muted"><%= t('shop.clients.no_tattoos') %></p>
+  <% } %>
+  <% for (const tat of shopClient.tattoos) { %>
+    <div class="tattoo-entry">
+      <h3><%= tat.description %></h3>
+      <p class="muted">
+        <% if (tat.placement) { %><%= tat.placement %> · <% } %>
+        <% if (tat.date_done) { %><%= tat.date_done %> · <% } %>
+        <% if (tat.artist_name) { %><%= tat.artist_name %> · <% } %>
+        <% if (tat.booking_id) { %><a href="/bookings/manage"><%= t('shop.clients.booking') %> #<%= tat.booking_id %></a><% } %>
+      </p>
+      <% if (tat.aftercare_notes) { %><p><%= t('shop.clients.aftercare_notes') %>: <%= tat.aftercare_notes %></p><% } %>
+    </div>
+  <% } %>
+</section>
+
+<section class="card">
+  <h2><%= t('shop.clients.add_tattoo') %></h2>
+  <form method="post" action="/shop/clients/<%= shopClient.id %>/tattoos" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <label><%= t('shop.clients.tattoo_description') %>*
+      <input type="text" name="description" required maxlength="300">
+    </label>
+    <label><%= t('shop.clients.placement') %>
+      <input type="text" name="placement" maxlength="200">
+    </label>
+    <label><%= t('shop.clients.date_done') %>
+      <input type="text" name="date_done" maxlength="40" placeholder="YYYY-MM-DD">
+    </label>
+    <label><%= t('shop.clients.artist') %>
+      <input type="text" name="artist_name" maxlength="200">
+    </label>
+    <label><%= t('shop.clients.link_booking') %>
+      <select name="booking_id">
+        <option value=""><%= t('shop.clients.no_booking') %></option>
+        <% for (const b of bookings) { %>
+          <option value="<%= b.id %>"><%= t('shop.clients.booking') %> #<%= b.id %> — <%= new Date(b.start_at).toLocaleDateString(localeTag) %><%= b.customer_name ? ' (' + b.customer_name + ')' : '' %></option>
+        <% } %>
+      </select>
+    </label>
+    <label><%= t('shop.clients.aftercare_notes') %>
+      <textarea name="aftercare_notes" rows="3" maxlength="1000"></textarea>
+    </label>
+    <button type="submit"><%= t('shop.clients.add_tattoo') %></button>
+  </form>
+</section>

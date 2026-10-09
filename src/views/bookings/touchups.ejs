@@ -1,0 +1,17 @@
+<h1><%= t('bookings.touchups_title') %></h1>
+<p class="muted"><%= t('bookings.touchups_intro') %></p>
+
+<% if (!eligible.length) { %>
+  <section class="card"><p class="muted"><%= t('bookings.touchups_none') %></p></section>
+<% } else { %>
+  <% eligible.forEach(function (b) { %>
+    <section class="card">
+      <h2><%= b.shop_name %></h2>
+      <p class="muted">
+        <%= t('bookings.touchups_completed_on', { date: new Date(Number(b.completed_at)).toLocaleDateString() }) %>
+        <% if (b.design_id) { %> · <%= t('bookings.touchups_design', { id: String(b.design_id).slice(0, 8) }) %><% } %>
+      </p>
+      <p><a class="btn" href="/bookings/touchup/<%= b.id %>"><%= t('bookings.touchups_book') %></a></p>
+    </section>
+  <% }); %>
+<% } %>

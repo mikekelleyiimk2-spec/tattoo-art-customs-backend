@@ -16,6 +16,7 @@ const flow = require('./bookingFlow');
 const waivers = require('./waivers');
 const aftercare = require('./aftercare');
 const autofill = require('./autofill');
+const sharekit = require('./sharekit');
 const blasts = require('./blasts');
 const attribution = require('./attribution');
 const { isHttpUrl, resolveStoredPath, designImgUrl } = require('../lib/storage');
@@ -235,11 +236,13 @@ router.get('/aftercare/r/:checkinId', requireLogin, async (req, res) => {
     return res.render('toolkit/aftercare-respond', {
       title: `${shopName} — thanks! — Tattoo Art Customs`,
       checkin: fresh, shopName, alreadyResponded: true, reviewUrl, money,
+      affiliates: aftercare.AFTERCARE_AFFILIATES,
     });
   }
   res.render('toolkit/aftercare-respond', {
     title: `${shopName} — how's the healing? — Tattoo Art Customs`,
     checkin: ac, shopName, alreadyResponded: ac.status === 'responded', reviewUrl: null, money,
+    affiliates: aftercare.AFTERCARE_AFFILIATES,
   });
 });
 
@@ -621,6 +624,21 @@ router.get('/scale-print/image/:designId', ...shopOnly, async (req, res) => {
   if (!abs) return res.status(404).send('File missing');
   res.set('Cache-Control', 'private, max-age=3600');
   res.sendFile(abs);
+});
+
+// --- Portfolio share kit -------------------------------------------------------
+// One-tap posting helper for a completed booking: finished art, pre-written
+// caption, and share deep links. The shop posts from their own apps.
+
+router.get('/share/:bookingId', ...shopOnly, async (req, res) => {
+  try {
+    const kit = await sharekit.getShareKit(req.params.bookingId, req.user.id);
+    res.render('toolkit/share-kit', {
+      title: 'Share kit — Tattoo Art Customs', ...kit, money,
+    });
+  } catch (e) {
+    res.status(404).render('error', { title: 'Not found', message: 'Booking not found.' });
+  }
 });
 
 module.exports = router;

@@ -1,0 +1,15 @@
+<p><a href="/shop/reviews"><%= t('shop.reviews.back_to_settings') %></a></p>
+<h1><%= t('shop.reviews.log_title') %></h1>
+<% if (!log.length) { %>
+  <p class="muted"><%= t('shop.reviews.no_log') %></p>
+<% } else { %>
+  <% for (const r of log) { %>
+  <section class="card">
+    <h2><%= r.customer_name || r.client_email %></h2>
+    <p class="muted">
+      <%= t('shop.reviews.sent_at', { date: new Date(r.sent_at).toLocaleString(localeTag) }) %>
+      · <%= t('shop.reviews.booking_label') %> #<%= r.booking_id %>
+    </p>
+  </section>
+  <% } %>
+<% } %>

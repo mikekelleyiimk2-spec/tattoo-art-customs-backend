@@ -37,6 +37,11 @@ function startScheduler() {
   // Booking reminders (shop toolset) run independently of the payouts toggle.
   const reminderTask = require('../shop/bookingReminders').registerBookingReminderJobs();
   if (reminderTask) tasks.push(reminderTask);
+  // Review request auto-send (shop toolset phase 8): daily sweep, one ask per
+  // booking max (deduped against the aftercare review machine via the
+  // shop_review_requests sent-log).
+  const reviewTask = require('../shop/reviewRequests').registerReviewRequestJobs();
+  if (reviewTask) tasks.push(reviewTask);
   // Shop toolkit jobs: aftercare, autofill expiry, waiver ID purge,
   // reactivation, forfeiture + plan-charge sweeps (charge-free until live).
   for (const t of require('../shop/toolkitJobs').registerToolkitJobs()) tasks.push(t);

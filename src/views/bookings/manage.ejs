@@ -50,6 +50,7 @@
   <% past.forEach(function (b) { %>
     <p><span class="muted"><%= new Date(Number(b.start_at)).toUTCString().slice(0, 22) %></span>
       — <%= b.customer_name %> <span class="badge"><%= b.status.replace(/_/g, ' ') %></span>
-      <a href="/bookings/receipt/<%= b.id %>">Receipt</a></p>
+      <a href="/bookings/receipt/<%= b.id %>">Receipt</a>
+      <% if (b.status === 'completed') { %><a href="/toolkit/share/<%= b.id %>"><%= t('bookings.share_kit') %></a><% } %></p>
   <% }); %>
 </section>

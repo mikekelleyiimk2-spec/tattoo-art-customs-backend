@@ -236,6 +236,14 @@ app.use('/admin', require('./routes/admin'));
 app.use('/bookings', require('./shop/routes-bookings'));
 app.use('/giftcards', require('./shop/routes-giftcards'));
 app.use('/gift-cards', require('./routes/siteGiftCards'));
+// Shop toolset phase 8 (owner order 2026-10-09): clients CRM, review requests,
+// artist commissions, inventory, expenses, public shop storefront.
+app.use('/shop/clients', require('./shop/routes-clients'));
+app.use('/shop/reviews', require('./shop/routes-reviews'));
+app.use('/shop/artists', require('./shop/routes-artists'));
+app.use('/shop/inventory', require('./shop/routes-inventory'));
+app.use('/shop/expenses', require('./shop/routes-expenses'));
+app.use('/store', require('./shop/routes-storefront'));
 app.use('/ios-app', require('./routes/iosApp'));
 // Sideload lineup (owner order 2026-10-08): Little Inkers iOS/Android (free,
 // kid-safe pages), TAC Android free, TAC Android Pro ($1.99 paid).

@@ -1,0 +1,21 @@
+<h1><%= t('shop.clients.new_client') %></h1>
+<form method="post" action="/shop/clients" class="form">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <label><%= t('shop.clients.name') %>*
+    <input type="text" name="name" required maxlength="200">
+  </label>
+  <label><%= t('shop.clients.email') %>
+    <input type="email" name="email" maxlength="200">
+  </label>
+  <label><%= t('shop.clients.phone') %>
+    <input type="tel" name="phone" maxlength="80">
+  </label>
+  <label><%= t('shop.clients.allergies') %>
+    <textarea name="allergies" rows="3" maxlength="1000"></textarea>
+  </label>
+  <label><%= t('shop.clients.notes') %>
+    <textarea name="notes" rows="4" maxlength="2000"></textarea>
+  </label>
+  <button type="submit"><%= t('shop.clients.add_client') %></button>
+  <a class="btn secondary" href="/shop/clients"><%= t('shop.clients.cancel') %></a>
+</form>

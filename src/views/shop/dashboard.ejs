@@ -7,7 +7,7 @@
     <li><strong><%= x.design_title || x.design_id %></strong> <%= t('transfer.inbox_from', {name: x.from_name || x.to_email}) %>
       — <a href="/transfers/<%= x.token %>"><%= t('transfer.inbox_download') %></a>
       <span class="badge"><%= x.status %></span>
-      <span class="muted"><%= new Date(x.created_at).toLocaleString(localeTag) %></span></li>
+      <span class="muted"><%= new Date(x.created_at).toLocaleString() %></span></li>
   <% }); %></ul>
 </section>
 <% } %>
@@ -55,6 +55,12 @@
     <a class="btn secondary" href="/toolkit/noshow">No-shows</a>
     <a class="btn secondary" href="/toolkit/plans">Payment plans</a>
     <a class="btn secondary" href="/toolkit/scale-print">Scale &amp; print</a>
+    <a class="btn secondary" href="/shop/clients"><%= t('shop.clients.title') %></a>
+    <a class="btn secondary" href="/shop/reviews"><%= t('shop.reviews.title') %></a>
+    <a class="btn secondary" href="/shop/artists"><%= t('shop.artists.title') %></a>
+    <a class="btn secondary" href="/shop/inventory"><%= t('shop.inventory.title') %></a>
+    <a class="btn secondary" href="/shop/expenses"><%= t('shop.expenses.title') %></a>
+    <a class="btn secondary" href="/store/manage/settings"><%= t('shop.storefront_settings_title') %></a>
   </p>
 </section>
 

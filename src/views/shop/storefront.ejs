@@ -1,0 +1,20 @@
+<h1><%= settings.headline || shop.display_name %></h1>
+<% if (settings.welcome_text) { %><p><%= settings.welcome_text %></p><% } %>
+<p class="muted"><%= t('shop.storefront_byline', { shop: shop.display_name }) %></p>
+
+<% if (!designs.length) { %>
+  <section class="card"><p class="muted"><%= t('shop.storefront_empty') %></p></section>
+<% } else { %>
+  <div class="design-grid">
+    <% designs.forEach(function (d) { %>
+      <a class="design-card" href="/design/<%= d.id %><%= refCode ? '?ref=' + encodeURIComponent(refCode) : '' %>">
+        <% if (d.linework_wm_path) { %><img src="/img/designs/<%= d.linework_wm_path.split('/').pop() %>" alt="<%= d.title %>" loading="lazy"><% } %>
+        <div class="design-card-body">
+          <strong><%= d.title %></strong>
+          <span class="price"><%= money(d.price_cents) %></span>
+        </div>
+      </a>
+    <% }); %>
+  </div>
+<% } %>
+<p><a class="btn secondary" href="/bookings/shop/<%= shop.id %>"><%= t('shop.storefront_book') %></a></p>

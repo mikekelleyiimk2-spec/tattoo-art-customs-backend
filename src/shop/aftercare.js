@@ -18,6 +18,24 @@ const { sendMail } = require('../lib/mail');
 
 const DAY_MS = 86400000;
 const HEALED_DIR = 'uploads/healed'; // relative to config.assetDir
+
+// Affiliate aftercare picks (owner directive 2026-10-09: "All afilia products
+// in the merch store" + shop-supply gating rule). These links live ONLY in
+// shop-gated surfaces: the per-client check-in emails and the one-tap
+// response page — never on public pages.
+// Recovery Aftercare Lasso link still pending generation — placeholder kept
+// as a comment until the Lasso URL is swapped in.
+const AFTERCARE_AFFILIATES = [
+  { name: 'Base Labs aftercare', url: 'https://baselabs.is/?coupon=TAC20', note: 'code TAC20 auto-applied' },
+  { name: 'Tattoo aftercare on Amazon', url: 'https://www.amazon.com/s?k=tattoo+aftercare&tag=tattooartcust-20', note: null },
+  // TODO: { name: 'Recovery Aftercare', url: '__RECOVERY_LASSO_LINK__', note: null },
+];
+
+function aftercareAffiliateTextBlock() {
+  const lines = AFTERCARE_AFFILIATES.map((a) =>
+    `\u2022 ${a.name}${a.note ? ` (${a.note})` : ''}: ${a.url}`);
+  return `Recommended aftercare picks (affiliate links — we may earn a commission):\n${lines.join('\n')}`;
+}
 const KINDS = [
   { kind: 'day3', afterMs: 3 * DAY_MS, label: 'Day 3' },
   { kind: 'day7', afterMs: 7 * DAY_MS, label: 'Day 7' },
@@ -138,7 +156,7 @@ async function runAftercareSweep(now = Date.now()) {
         await sendMail({
           to: ac.customer_email,
           subject: title,
-          text: `Hi ${ac.customer_name || 'there'},\n\n${body}\n\nRespond here: ${config.baseUrl}${link}\n\n---\n${tpl.title} — ${ac.shop_name}\n${guide}\n\n— Tattoo Art Customs`,
+          text: `Hi ${ac.customer_name || 'there'},\n\n${body}\n\nRespond here: ${config.baseUrl}${link}\n\n---\n${tpl.title} — ${ac.shop_name}\n${guide}\n\n---\n${aftercareAffiliateTextBlock()}\n\n— Tattoo Art Customs`,
         });
       }
       await db.update('aftercare_checkins', ac.id, { status: 'sent' });
@@ -197,6 +215,19 @@ async function maybeAskReview(ac) {
     });
   }
   await db.update('aftercare_checkins', ac.id, { review_requested_at: Date.now() });
+  // Unified sent-log (phase 8): record the ask in shop_review_requests so
+  // the manual/auto review-request paths never double-ask this booking.
+  // Duplicate-safe: the UNIQUE(booking_id) backstop swallows a lost race.
+  try {
+    await db.insert('shop_review_requests', {
+      shop_user_id: String(ac.shop_user_id),
+      booking_id: String(ac.booking_id),
+      client_email: (customer && customer.email) || null,
+      sent_at: Date.now(),
+      clicked: 0,
+      source: 'aftercare',
+    });
+  } catch (_) { /* log-only; the ask already went out */ }
   return true;
 }
 
@@ -258,4 +289,5 @@ module.exports = {
   scheduleAftercare, runAftercareSweep, respondToCheckin,
   saveReviewSettings, getReviewSettings,
   saveHealedPhoto, getHealedPhotosForShop,
+  AFTERCARE_AFFILIATES, aftercareAffiliateTextBlock,
 };

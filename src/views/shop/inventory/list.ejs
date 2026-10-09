@@ -1,0 +1,56 @@
+<h1><%= t('shop.inventory.title') %></h1>
+<p class="muted"><%= t('shop.inventory.subtitle') %></p>
+
+<section class="card">
+  <h2><%= t('shop.inventory.add_item') %></h2>
+  <form method="post" action="/shop/inventory" class="form">
+    <label><%= t('shop.inventory.name') %>
+      <input type="text" name="name" required maxlength="120">
+    </label>
+    <label><%= t('shop.inventory.category') %>
+      <select name="category">
+        <% for (const c of categories) { %><option value="<%= c %>"><%= c %></option><% } %>
+      </select>
+    </label>
+    <label><%= t('shop.inventory.qty') %>
+      <input type="number" name="qty_on_hand" min="0" value="0">
+    </label>
+    <label><%= t('shop.inventory.threshold') %>
+      <input type="number" name="low_stock_threshold" min="0" value="5">
+    </label>
+    <label><%= t('shop.inventory.unit') %>
+      <input type="text" name="unit" maxlength="20" placeholder="<%= t('shop.inventory.unit_hint') %>">
+    </label>
+    <p><button type="submit"><%= t('shop.inventory.save_item') %></button></p>
+  </form>
+</section>
+
+<h2><%= t('shop.inventory.items_heading') %></h2>
+<% if (!items.length) { %><p class="muted"><%= t('shop.inventory.no_items') %></p><% } %>
+<% for (const i of items) { const low = lowIds.has(i.id); %>
+<section class="card <%= low ? 'low-stock' : '' %>">
+  <h3><%= i.name %>
+    <% if (low) { %><span class="badge warn"><%= t('shop.inventory.low_stock') %></span><% } %></h3>
+  <p class="muted">
+    <% if (i.category) { %><%= i.category %> · <% } %>
+    <strong><%= i.qty_on_hand %></strong><%= i.unit ? ' ' + i.unit : '' %>
+    · <%= t('shop.inventory.threshold') %>: <%= i.low_stock_threshold %>
+  </p>
+  <form method="post" action="/shop/inventory/<%= i.id %>/adjust" class="form inline">
+    <button type="submit" name="delta" value="-1" class="secondary">−1</button>
+    <button type="submit" name="delta" value="1" class="secondary">+1</button>
+  </form>
+  <form method="post" action="/shop/inventory" class="form inline">
+    <input type="hidden" name="id" value="<%= i.id %>">
+    <input type="hidden" name="name" value="<%= i.name %>">
+    <input type="hidden" name="category" value="<%= i.category || '' %>">
+    <input type="hidden" name="qty_on_hand" value="<%= i.qty_on_hand %>">
+    <input type="hidden" name="low_stock_threshold" value="<%= i.low_stock_threshold %>">
+    <input type="hidden" name="unit" value="<%= i.unit || '' %>">
+    <button type="submit" class="secondary"><%= t('shop.inventory.edit') %></button>
+  </form>
+  <form method="post" action="/shop/inventory/<%= i.id %>/delete" class="form inline">
+    <button type="submit" class="secondary danger" onclick="return confirm('<%= t('shop.common.confirm_delete') %>')"><%= t('shop.common.delete') %></button>
+  </form>
+</section>
+<% } %>

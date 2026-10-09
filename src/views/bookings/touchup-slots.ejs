@@ -1,0 +1,17 @@
+<h1><%= t('bookings.touchup_slots_title', { shop: shop.display_name }) %></h1>
+
+<section class="card">
+  <h2><%= t('bookings.touchup_for') %></h2>
+  <p class="muted">
+    <%= t('bookings.touchups_completed_on', { date: new Date(Number(parent.completed_at)).toLocaleDateString() }) %>
+    <% if (parent.design_id) { %> · <%= t('bookings.touchups_design', { id: String(parent.design_id).slice(0, 8) }) %><% } %>
+  </p>
+  <% if (touchupDeposit === 0) { %>
+    <p><strong><%= t('bookings.touchup_free') %></strong></p>
+  <% } else { %>
+    <p><%= t('bookings.touchup_deposit', { amount: money(touchupDeposit) }) %></p>
+  <% } %>
+</section>
+
+<%- include('_slotpicker', { shopId: shop.id, staff: staff, chairs: chairs, postUrl: '/bookings/touchup/' + parent.id + '/hold', submitLabel: t('bookings.touchup_hold'), designId: '' }) %>
+<p class="muted"><%= t('bookings.touchup_hold_note') %></p>

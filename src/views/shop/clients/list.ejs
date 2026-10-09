@@ -1,0 +1,16 @@
+<h1><%= t('shop.clients.title') %></h1>
+<p><a class="btn" href="/shop/clients/new"><%= t('shop.clients.new_client') %></a></p>
+<% if (!clients.length) { %>
+  <p class="muted"><%= t('shop.clients.no_clients') %></p>
+<% } %>
+<% for (const c of clients) { %>
+<section class="card">
+  <h2><a href="/shop/clients/<%= c.id %>"><%= c.name %></a></h2>
+  <p class="muted">
+    <% if (c.email) { %><%= c.email %><% } %>
+    <% if (c.phone) { %><br><%= c.phone %><% } %>
+    <br><%= t('shop.clients.tattoo_count', { count: c.tattoo_count }) %>
+  </p>
+  <% if (c.allergies) { %><p><strong><%= t('shop.clients.allergies') %>:</strong> <%= c.allergies %></p><% } %>
+</section>
+<% } %>

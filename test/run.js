@@ -542,6 +542,7 @@ async function main() {
   await require('./shoptools-phase5').runDbTests(ok);
   await require('./shoptools-phase6').runDbTests(ok);
   await require('./shoptools-phase7').runDbTests(ok);
+  await require('./shoptools-phase8').runDbTests(ok); // client profiles CRM + review requests
   await require('./sessionLimits').runDbTests(ok);
   await require('./doodleMerch').runDbTests(ok);
   await require('./holidayRaffle').runDbTests(ok);
@@ -979,6 +980,7 @@ async function main() {
   await require('./shoptools-phase5').runHttpTests(ok, req);
   await require('./shoptools-phase6').runHttpTests(ok, req);
   await require('./shoptools-phase7').runHttpTests(ok, req);
+  await require('./shoptools-phase8').runHttpTests(ok, req); // client profiles CRM + review requests
   await require('./favorites').runHttpTests(ok, req); // [wishlist] feature
   await require('./toploved').runHttpTests(ok, req); // [toploved] leaderboard
   await require('./doodleMerch').runHttpTests(ok, req); // doodle-to-merchandise

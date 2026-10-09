@@ -1,0 +1,55 @@
+<h1><%= t('shop.artists.earnings_heading') %></h1>
+<p><a class="btn secondary" href="/shop/artists"><%= t('shop.artists.back') %></a></p>
+
+<section class="card">
+  <h2><%= t('shop.artists.log_earning_heading') %></h2>
+  <form method="post" action="/shop/artists/earnings" class="form">
+    <label><%= t('shop.artists.artist') %>
+      <select name="artist_id" required>
+        <option value=""><%= t('shop.artists.pick_artist') %></option>
+        <% for (const a of artists.filter((x) => x.active)) { %>
+        <option value="<%= a.id %>" <%= a.id === artistId ? 'selected' : '' %>><%= a.name %> (<%= a.commission_rate_pct %>%)</option>
+        <% } %>
+      </select>
+    </label>
+    <label><%= t('shop.artists.amount') %>
+      <input type="number" name="amount_dollars" step="0.01" min="0.01" required>
+    </label>
+    <label><%= t('shop.artists.booking_id_label') %>
+      <input type="text" name="booking_id" maxlength="64">
+    </label>
+    <label><%= t('shop.artists.note_label') %>
+      <input type="text" name="note" maxlength="500">
+    </label>
+    <p><button type="submit"><%= t('shop.artists.log_earning') %></button></p>
+  </form>
+</section>
+
+<section class="card">
+  <h2><%= t('shop.artists.earnings_heading') %></h2>
+  <form method="get" action="/shop/artists/earnings" class="form inline">
+    <label><%= t('shop.artists.artist') %>
+      <select name="artist_id">
+        <option value=""><%= t('shop.common.all') %></option>
+        <% for (const a of artists) { %>
+        <option value="<%= a.id %>" <%= a.id === artistId ? 'selected' : '' %>><%= a.name %></option>
+        <% } %>
+      </select>
+    </label>
+    <label><%= t('shop.common.from') %> <input type="date" name="from" value="<%= new Date(from).toISOString().slice(0, 10) %>"></label>
+    <label><%= t('shop.common.to') %> <input type="date" name="to" value="<%= new Date(to).toISOString().slice(0, 10) %>"></label>
+    <p><button type="submit" class="secondary"><%= t('shop.common.filter') %></button></p>
+  </form>
+</section>
+
+<% if (!earnings.length) { %><p class="muted"><%= t('shop.artists.no_earnings') %></p><% } %>
+<% for (const e of earnings) { %>
+<section class="card">
+  <h3><%= e.artist_name %> — <%= money(e.amount_cents) %></h3>
+  <p class="muted"><%= t('shop.artists.artist_share') %>: <%= money(e.artist_share_cents) %>
+    · <%= t('shop.artists.shop_share') %>: <%= money(e.shop_share_cents) %>
+    <br><%= new Date(e.earned_at).toLocaleString('en-US', { timeZone: 'America/Chicago' }) %>
+    <% if (e.booking_id) { %> · booking <%= e.booking_id %><% } %>
+    <% if (e.note) { %><br><%= e.note %><% } %></p>
+</section>
+<% } %>

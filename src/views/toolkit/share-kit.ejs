@@ -1,0 +1,32 @@
+<h1><%= t('toolkit.sharekit_title') %></h1>
+<p class="muted"><%= t('toolkit.sharekit_intro', { shop: shopName }) %></p>
+
+<% if (imgUrl) { %>
+  <section class="card">
+    <img src="<%= imgUrl %>" alt="<%= design ? design.title : '' %>" style="max-width:100%">
+    <p><a class="btn" href="<%= imgUrl %>" download><%= t('toolkit.sharekit_download') %></a></p>
+  </section>
+<% } %>
+
+<section class="card">
+  <h2><%= t('toolkit.sharekit_caption') %></h2>
+  <pre id="sharekit-caption" style="white-space:pre-wrap"><%= caption %></pre>
+  <p><button class="btn secondary" type="button" id="sharekit-copy"><%= t('toolkit.sharekit_copy') %></button></p>
+</section>
+
+<section class="card">
+  <h2><%= t('toolkit.sharekit_post') %></h2>
+  <p class="muted"><%= t('toolkit.sharekit_ig_note') %></p>
+  <p>
+    <a class="btn" href="<%= shareLinks.facebook %>" target="_blank" rel="noopener">Facebook</a>
+    <a class="btn" href="<%= shareLinks.threads %>" target="_blank" rel="noopener">Threads</a>
+    <a class="btn" href="<%= shareLinks.x %>" target="_blank" rel="noopener">X</a>
+  </p>
+</section>
+
+<script>
+document.getElementById('sharekit-copy').addEventListener('click', function () {
+  var txt = document.getElementById('sharekit-caption').textContent;
+  if (navigator.clipboard) navigator.clipboard.writeText(txt);
+});
+</script>

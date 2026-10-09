@@ -1,0 +1,16 @@
+<h1><%= t('shop.storefront_settings_title') %></h1>
+<p class="muted"><%= t('shop.storefront_settings_intro') %></p>
+<p><a href="<%= storeUrl %>" target="_blank" rel="noopener"><%= storeUrl %></a></p>
+
+<form method="post" action="/store/manage/settings" class="form card">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <label class="check">
+    <input type="checkbox" name="enabled" value="1" <%= Number(settings.enabled) === 1 ? 'checked' : '' %>>
+    <%= t('shop.storefront_enabled') %>
+  </label>
+  <label for="headline"><%= t('shop.storefront_headline') %></label>
+  <input type="text" id="headline" name="headline" maxlength="120" value="<%= settings.headline || '' %>">
+  <label for="welcome_text"><%= t('shop.storefront_welcome') %></label>
+  <textarea id="welcome_text" name="welcome_text" rows="4" maxlength="2000"><%= settings.welcome_text || '' %></textarea>
+  <p><button class="btn" type="submit"><%= t('shop.common.save') %></button></p>
+</form>

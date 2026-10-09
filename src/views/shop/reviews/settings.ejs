@@ -1,0 +1,53 @@
+<h1><%= t('shop.reviews.title') %></h1>
+
+<section class="card">
+  <h2><%= t('shop.reviews.settings_title') %></h2>
+  <form method="post" action="/shop/reviews/settings" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <label><%= t('shop.reviews.google_review_url') %>
+      <input type="url" name="google_review_url" value="<%= reviewSettings.google_review_url || '' %>" maxlength="500" placeholder="https://">
+    </label>
+    <p class="muted"><%= t('shop.reviews.google_review_url_help') %></p>
+    <label class="check">
+      <input type="checkbox" name="enabled" value="1" <%= reviewSettings && Number(reviewSettings.enabled) === 1 ? 'checked' : '' %>>
+      <%= t('shop.reviews.auto_send') %>
+    </label>
+    <button type="submit"><%= t('shop.reviews.save') %></button>
+  </form>
+</section>
+
+<section class="card">
+  <h2><%= t('shop.reviews.eligible_title') %></h2>
+  <% if (!eligible.length) { %>
+    <p class="muted"><%= t('shop.reviews.no_eligible') %></p>
+  <% } %>
+  <% for (const b of eligible) { %>
+    <div class="tattoo-entry">
+      <h3><%= b.customer_name || b.customer_email %></h3>
+      <p class="muted"><%= t('shop.reviews.completed_on', { date: new Date(b.completed_at).toLocaleDateString(localeTag) }) %></p>
+      <% if (reviewSettings.google_review_url) { %>
+        <form method="post" action="/shop/reviews/send/<%= b.id %>" style="display:inline">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button type="submit" class="btn secondary"><%= t('shop.reviews.send') %></button>
+        </form>
+      <% } %>
+    </div>
+  <% } %>
+  <% if (!reviewSettings.google_review_url) { %>
+    <p class="muted"><%= t('shop.reviews.set_url_first') %></p>
+  <% } %>
+</section>
+
+<section class="card">
+  <h2><%= t('shop.reviews.log_title') %></h2>
+  <% if (!log.length) { %>
+    <p class="muted"><%= t('shop.reviews.no_log') %></p>
+  <% } else { %>
+    <ul>
+    <% for (const r of log) { %>
+      <li><%= t('shop.reviews.sent_at', { date: new Date(r.sent_at).toLocaleString(localeTag) }) %> — <%= r.customer_name || r.client_email %></li>
+    <% } %>
+    </ul>
+    <p><a href="/shop/reviews/log"><%= t('shop.reviews.full_log') %></a></p>
+  <% } %>
+</section>

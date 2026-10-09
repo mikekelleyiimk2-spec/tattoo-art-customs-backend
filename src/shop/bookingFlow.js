@@ -62,6 +62,7 @@ const SETTING_COLS = [
   'deposit_credit_expiry_days', 'booking_instructions',
   'autofill_enabled', 'autofill_audience', 'autofill_expiry_minutes',
   'id_retention_days', 'reactivation_enabled', 'reactivation_lapse_days',
+  'touchup_deposit_cents',
 ];
 
 async function getBookingSettings(shopUserId) {
