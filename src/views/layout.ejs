@@ -233,5 +233,13 @@ window.TAC_FAV_STRINGS = <%- JSON.stringify({ add: t('fav.add'), remove: t('fav.
 <!-- Afterpay messaging widget -->
 <script async src="https://static.afterpay.com/modal/en_US.js"></script>
 <% } %>
+<!-- Lasso affiliate link tracking snippet (TAC main site only — never on Little Inkers kid surfaces) -->
+<script type="text/javascript" src="https://js.codedrink.com/snippet.min.js" defer></script>
+<script type="text/javascript" defer>
+  document.addEventListener("LSAFFEventLoaded",
+    function(e) {
+      e.detail.init();
+    });
+</script>
 </body>
 </html>
