@@ -1,10 +1,16 @@
 <% if (flash) { %><p class="flash"><%= flash %></p><% } %>
 <div id="scaler-ui">
 <h1>Scale &amp; print</h1>
-<p class="muted">Pick a design, scale it to any size, and print it tiled across as many pages as it takes — perfect for full-back pieces and other large patterns. <strong>Only designs you've purchased, or that a customer sent you, appear here — every print is clean and watermark-free.</strong> Customers send you their purchased designs from their order page ("Send art to your shop").</p>
+<p class="muted">Pick a design, scale it to any size, and print it tiled across as many pages as it takes — perfect for full-back pieces and other large patterns. Or switch to <strong>Stencil sheet</strong> mode to put multiple purchased designs on shared pages with no borders, ready to cut apart. <strong>Only designs you've purchased, or that a customer sent you, appear here — every print is clean and watermark-free.</strong> Customers send you their purchased designs from their order page ("Send art to your shop").</p>
+
+<p style="margin:12px 0">
+  <label style="margin-right:18px"><input type="radio" name="print-mode" value="single" checked> <strong>One design</strong> — scale it large, tiled across pages</label>
+  <label style="margin-right:18px"><input type="radio" name="print-mode" value="sheet"> <strong>Stencil sheet</strong> — multiple designs on shared pages, no borders</label>
+  <label><input type="radio" name="print-mode" value="compose"> <strong>Compose layout</strong> — arrange &amp; layer designs + fillers for sleeves</label>
+</p>
 
 <section class="card">
-  <h2>1. Pick a design</h2>
+  <h2 id="pick-heading">1. Pick a design</h2>
   <p><input type="search" id="design-search" placeholder="Search designs…" aria-label="Search designs" style="width:100%;max-width:420px"></p>
   <div id="design-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;max-height:320px;overflow:auto">
     <% designs.forEach(function(d) { %>
@@ -19,6 +25,62 @@
   <% if (!designs.length) { %>
   <p class="muted">Nothing here yet — buy a premade design, or ask your customer to send you theirs from their order page ("Send art to your shop"). Purchased and transferred designs will appear here ready to scale and print.</p>
   <% } %>
+</section>
+
+<section class="card" id="sheet-card" style="display:none">
+  <h2>2. Size each design</h2>
+  <p class="muted">Click designs above to add or remove them. Each prints at its own size — small designs share pages with no borders between them, so you can cut them apart. Anything bigger than a letter page (7.5&Prime; × 10&Prime;) can't go on a shared sheet.</p>
+  <p>
+    <label style="margin-right:14px"><strong>Artwork</strong></label>
+    <label style="margin-right:10px"><input type="radio" name="sheet-style" value="linework" checked> Linework (stencil)</label>
+    <label><input type="radio" name="sheet-style" value="color"> Color</label>
+  </p>
+  <div id="sheet-list"></div>
+  <p class="muted" id="sheet-readout" style="margin-top:10px"></p>
+</section>
+
+<section class="card" id="compose-card" style="display:none">
+  <h2>2. Compose the layout</h2>
+  <p class="muted">Click designs above to add them as layers — drag them around the canvas, overlap to layer them. Mix main designs with small filler designs to build full sleeves and other large compositions, then print tiled.</p>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
+    <div>
+      <label>Canvas</label><br>
+      <label style="font-size:12px">W <input type="number" id="compose-w" min="1" max="120" step="0.25" value="10" style="width:70px"></label>
+      <label style="font-size:12px">H <input type="number" id="compose-h" min="1" max="120" step="0.25" value="18" style="width:70px"></label>
+      <span class="muted" style="font-size:12px">inches</span>
+    </div>
+    <div>
+      <label for="compose-preset">Body-part preset</label><br>
+      <select id="compose-preset">
+        <option value="">— pick —</option>
+        <option value="2x3">Wrist / ankle — 2&Prime; × 3&Prime;</option>
+        <option value="4x6">Forearm — 4&Prime; × 6&Prime;</option>
+        <option value="6x8">Half sleeve — 6&Prime; × 8&Prime;</option>
+        <option value="8x10">Thigh — 8&Prime; × 10&Prime;</option>
+        <option value="10x12">Chest — 10&Prime; × 12&Prime;</option>
+        <option value="12x16">Full back — 12&Prime; × 16&Prime;</option>
+        <option value="10x18" selected>Full sleeve — 10&Prime; × 18&Prime;</option>
+      </select>
+    </div>
+    <div>
+      <label><strong>Artwork</strong></label><br>
+      <label style="margin-right:10px"><input type="radio" name="compose-style" value="linework" checked> Linework (stencil)</label>
+      <label><input type="radio" name="compose-style" value="color"> Color</label>
+    </div>
+    <div>
+      <label for="compose-overlap">Tile overlap</label><br>
+      <select id="compose-overlap">
+        <option value="0.25">0.25&Prime;</option>
+        <option value="0.5" selected>0.5&Prime;</option>
+        <option value="1">1&Prime;</option>
+      </select>
+    </div>
+  </div>
+  <div id="compose-wrap" style="overflow:auto;border:1px solid #ddd;border-radius:8px;padding:12px;background:#fafafa;margin-bottom:10px">
+    <div id="compose-canvas" style="position:relative;background:#fff;box-shadow:0 0 0 1px #ccc;margin:0 auto;touch-action:none"></div>
+  </div>
+  <div id="compose-layers"></div>
+  <p class="muted" id="compose-readout" style="margin-top:10px"></p>
 </section>
 
 <section class="card" id="config-card" style="display:none">
@@ -133,6 +195,8 @@
   grid.addEventListener('click', function (e) {
     var btn = e.target.closest('.design-pick');
     if (!btn) return;
+    if (mode === 'sheet') { toggleSheetDesign(btn); return; }
+    if (mode === 'compose') { addComposeLayer(btn); return; }
     grid.querySelectorAll('.design-pick').forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
     btn.setAttribute('aria-pressed', 'true');
     state.id = btn.getAttribute('data-id');
@@ -206,25 +270,31 @@
   });
   overlapSel.addEventListener('change', render);
 
-  function tileHtml(c, r, t, d, ov, n, forPrint) {
+  function tileShell(c, r, t, d, ov, n, forPrint, labelText, contentHtml) {
     var x0 = c * t.stepX, y0 = r * t.stepY;
     var tw = Math.min(PRINT_W, d.w - x0), th = Math.min(PRINT_H, d.h - y0);
     var u = forPrint ? 'in' : 'px';
     var k = forPrint ? 1 : 28; // screen preview: 28px per inch
     function v(inches) { return (inches * k).toFixed(1) + u; }
-    var label = 'Page ' + n + ' of ' + (t.cols * t.rows) + ' — row ' + (r + 1) + ', col ' + (c + 1);
     return '' +
     '<div class="print-page" style="' + (forPrint ? '' : 'width:' + v(PAPER_W) + ';height:' + v(PAPER_H) + ';position:relative;overflow:hidden;background:#fff;border:1px solid #ccc;margin:0 12px 12px 0;display:inline-block;vertical-align:top;') + '">' +
       '<div style="position:absolute;left:' + v(MARGIN) + ';top:' + v(MARGIN) + ';width:' + v(tw) + ';height:' + v(th) + ';overflow:hidden">' +
-        '<img src="' + state.imgUrl + '" alt="" style="position:absolute;width:' + v(d.w) + ';height:' + v(d.h) + ';left:-' + v(x0) + ';top:-' + v(y0) + ';max-width:none">' +
+        contentHtml(x0, y0, v) +
       '</div>' +
       cornerMarks(tw, th, forPrint) +
       (c > 0 ? '<div title="overlap" style="position:absolute;left:' + v(MARGIN) + ';top:' + v(MARGIN) + ';width:' + v(ov) + ';height:' + v(th) + ';background:rgba(201,162,39,.18)"></div>' : '') +
       (r > 0 ? '<div title="overlap" style="position:absolute;left:' + v(MARGIN) + ';top:' + v(MARGIN) + ';width:' + v(tw) + ';height:' + v(ov) + ';background:rgba(201,162,39,.18)"></div>' : '') +
       '<div class="tile-label" style="' + (forPrint ? '' : 'position:absolute;bottom:4px;left:14px;right:14px;font-size:10px;color:#555;display:flex;justify-content:space-between;') + '">' +
-        '<span>' + label + '</span><span>' + d.w + '&Prime; × ' + d.h + '&Prime;</span>' +
+        '<span>' + labelText + '</span><span>' + d.w + '&Prime; × ' + d.h + '&Prime;</span>' +
       '</div>' +
     '</div>';
+  }
+
+  function tileHtml(c, r, t, d, ov, n, forPrint) {
+    var label = 'Page ' + n + ' of ' + (t.cols * t.rows) + ' — row ' + (r + 1) + ', col ' + (c + 1);
+    return tileShell(c, r, t, d, ov, n, forPrint, label, function (x0, y0, v) {
+      return '<img src="' + state.imgUrl + '" alt="" style="position:absolute;width:' + v(d.w) + ';height:' + v(d.h) + ';left:-' + v(x0) + ';top:-' + v(y0) + ';max-width:none">';
+    });
   }
 
   // Real crop/alignment marks: L-shaped registration corners just outside the
@@ -274,6 +344,414 @@
     printArea.innerHTML = ph;
   }
 
-  document.getElementById('print-btn').addEventListener('click', function () { window.print(); });
+  // ---- Stencil sheet mode: multiple designs on shared pages, no borders ----
+  var mode = 'single';
+  var sheetDesigns = []; // {id,title,thumb,colorOk,aspect,w,h,lock,imgLoaded,tooBig}
+  var SHEET_GAP = 0.25, CAPTION_H = 0.32; // inches between designs / caption strip
+  var sheetCard = document.getElementById('sheet-card');
+  var sheetList = document.getElementById('sheet-list');
+  var sheetReadout = document.getElementById('sheet-readout');
+  var pickHeading = document.getElementById('pick-heading');
+  var printBtn = document.getElementById('print-btn');
+
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function clampNum(x, lo, hi) { return Math.min(hi, Math.max(lo, x)); }
+  function findRec(id) { return sheetDesigns.find(function (d) { return d.id === id; }); }
+  function sheetStyle() { var el = document.querySelector('input[name="sheet-style"]:checked'); return el ? el.value : 'linework'; }
+
+  document.querySelectorAll('input[name="print-mode"]').forEach(function (r) {
+    r.addEventListener('change', function () {
+      mode = r.value;
+      var isSheet = mode === 'sheet';
+      var isCompose = mode === 'compose';
+      sheetCard.style.display = isSheet ? '' : 'none';
+      composeCard.style.display = isCompose ? '' : 'none';
+      configCard.style.display = (!isSheet && !isCompose && state.id) ? '' : 'none';
+      previewCard.style.display = 'none';
+      preview.innerHTML = ''; printArea.innerHTML = '';
+      grid.querySelectorAll('.design-pick').forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
+      state.id = null; state.imgUrl = '';
+      sheetDesigns = [];
+      sheetList.innerHTML = '';
+      sheetReadout.textContent = '';
+      layers = []; selectedUid = null;
+      composeLayersEl.innerHTML = '';
+      composeReadout.textContent = '';
+      printBtn.textContent = isSheet ? 'Print stencil sheets' : (isCompose ? 'Print composed layout' : 'Print tiled pattern');
+      pickHeading.textContent = isSheet ? '1. Pick designs' : (isCompose ? '1. Pick designs & fillers' : '1. Pick a design');
+      if (isCompose) { renderCanvas(); renderComposeLayers(); renderCompose(); }
+    });
+  });
+
+  document.querySelectorAll('input[name="sheet-style"]').forEach(function (r) {
+    r.addEventListener('change', function () { renderSheet(); });
+  });
+
+  function toggleSheetDesign(btn) {
+    var id = btn.getAttribute('data-id');
+    var ix = sheetDesigns.findIndex(function (d) { return d.id === id; });
+    if (ix >= 0) {
+      sheetDesigns.splice(ix, 1);
+      btn.setAttribute('aria-pressed', 'false');
+      renderSheetList(); renderSheet();
+      return;
+    }
+    btn.setAttribute('aria-pressed', 'true');
+    var imgEl = btn.querySelector('img');
+    var rec = {
+      id: id,
+      title: btn.getAttribute('data-title'),
+      thumb: imgEl ? imgEl.src : '',
+      colorOk: btn.getAttribute('data-color-ok') === '1',
+      aspect: 0, w: 4, h: 4, lock: true, imgLoaded: false, tooBig: false
+    };
+    sheetDesigns.push(rec);
+    var img = new Image();
+    img.onload = function () {
+      rec.aspect = img.naturalWidth / img.naturalHeight;
+      rec.h = +(rec.w / rec.aspect).toFixed(2);
+      rec.imgLoaded = true;
+      renderSheetList(); renderSheet();
+    };
+    img.onerror = function () { rec.imgLoaded = true; renderSheetList(); renderSheet(); };
+    img.src = '/toolkit/scale-print/image/' + id + '?style=linework';
+    renderSheetList(); renderSheet();
+  }
+
+  function sheetRowHtml(rec) {
+    return '<div class="sheet-row" data-id="' + rec.id + '" style="display:flex;gap:10px;align-items:center;border:1px solid #eee;border-radius:8px;padding:8px;margin-bottom:8px;background:#fff">' +
+      (rec.thumb ? '<img src="' + rec.thumb + '" alt="" style="width:64px;height:64px;object-fit:contain;background:#f4f1ea;border-radius:6px">' : '') +
+      '<div style="flex:1;min-width:0"><div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(rec.title) + '</div>' +
+      (rec.colorOk ? '' : '<div style="font-size:11px;color:#92610f">linework only</div>') +
+      '<div class="sheet-warn" style="font-size:11px;color:#a33"></div></div>' +
+      '<label style="font-size:12px;white-space:nowrap">W <input type="number" class="sheet-w" min="0.5" max="120" step="0.25" value="' + rec.w + '" style="width:70px"></label>' +
+      '<label style="font-size:12px;white-space:nowrap">H <input type="number" class="sheet-h" min="0.5" max="120" step="0.25" value="' + rec.h + '" style="width:70px"></label>' +
+      '<label style="font-size:12px;white-space:nowrap"><input type="checkbox" class="sheet-lock"' + (rec.lock ? ' checked' : '') + '> lock</label>' +
+      '<button type="button" class="sheet-fit" style="font-size:12px">Fit page</button>' +
+      '<button type="button" class="sheet-remove" style="font-size:14px;background:none;border:none;cursor:pointer;color:#a33" aria-label="Remove">&times;</button>' +
+    '</div>';
+  }
+
+  function renderSheetList() {
+    sheetList.innerHTML = sheetDesigns.map(sheetRowHtml).join('');
+  }
+
+  sheetList.addEventListener('input', function (e) {
+    var row = e.target.closest('.sheet-row'); if (!row) return;
+    var rec = findRec(row.getAttribute('data-id')); if (!rec) return;
+    if (e.target.classList.contains('sheet-w')) {
+      rec.w = clampNum(parseFloat(e.target.value) || rec.w, 0.5, 120);
+      if (rec.lock && rec.aspect) { rec.h = +(rec.w / rec.aspect).toFixed(2); row.querySelector('.sheet-h').value = rec.h; }
+    } else if (e.target.classList.contains('sheet-h')) {
+      rec.h = clampNum(parseFloat(e.target.value) || rec.h, 0.5, 120);
+      if (rec.lock && rec.aspect) { rec.w = +(rec.h * rec.aspect).toFixed(2); row.querySelector('.sheet-w').value = rec.w; }
+    }
+    renderSheet();
+  });
+  sheetList.addEventListener('change', function (e) {
+    var row = e.target.closest('.sheet-row'); if (!row) return;
+    var rec = findRec(row.getAttribute('data-id')); if (!rec) return;
+    if (e.target.classList.contains('sheet-lock')) { rec.lock = e.target.checked; }
+  });
+  sheetList.addEventListener('click', function (e) {
+    var row = e.target.closest('.sheet-row'); if (!row) return;
+    var id = row.getAttribute('data-id');
+    if (e.target.classList.contains('sheet-remove')) {
+      var ix = sheetDesigns.findIndex(function (d) { return d.id === id; });
+      if (ix >= 0) sheetDesigns.splice(ix, 1);
+      var btn = grid.querySelector('.design-pick[data-id="' + id + '"]');
+      if (btn) btn.setAttribute('aria-pressed', 'false');
+      renderSheetList(); renderSheet();
+    } else if (e.target.classList.contains('sheet-fit')) {
+      var rec = findRec(id); if (!rec || !rec.aspect) return;
+      rec.h = +Math.min(PRINT_H, PRINT_W / rec.aspect).toFixed(2);
+      rec.w = +(rec.h * rec.aspect).toFixed(2);
+      row.querySelector('.sheet-w').value = rec.w;
+      row.querySelector('.sheet-h').value = rec.h;
+      renderSheet();
+    }
+  });
+
+  // Shelf-packing: left to right, top to bottom inside the printable area.
+  function layoutSheet() {
+    var pages = [], page = [], x = 0, y = 0, rowH = 0;
+    function newPage() { if (page.length) pages.push(page); page = []; x = 0; y = 0; rowH = 0; }
+    sheetDesigns.forEach(function (rec) {
+      if (!rec.imgLoaded) return;
+      var w = rec.w, h = rec.h + CAPTION_H;
+      if (w > PRINT_W || rec.h > PRINT_H) { rec.tooBig = true; return; }
+      rec.tooBig = false;
+      if (x > 0 && x + w > PRINT_W + 1e-9) { x = 0; y += rowH + SHEET_GAP; rowH = 0; }
+      if (y + h > PRINT_H + 1e-9) { newPage(); }
+      page.push({ rec: rec, x: x, y: y });
+      x += w + SHEET_GAP;
+      if (h > rowH) rowH = h;
+    });
+    newPage();
+    return pages;
+  }
+
+  function sheetPageHtml(items, n, total, forPrint) {
+    var u = forPrint ? 'in' : 'px';
+    var k = forPrint ? 1 : 28;
+    function v(x) { return (x * k).toFixed(1) + u; }
+    var inner = items.map(function (p) {
+      var rec = p.rec;
+      var src = '/toolkit/scale-print/image/' + rec.id + '?style=' + (sheetStyle() === 'color' && rec.colorOk ? 'color' : 'linework');
+      return '<div style="position:absolute;left:' + v(MARGIN + p.x) + ';top:' + v(MARGIN + p.y) + ';width:' + v(rec.w) + '">' +
+        '<img src="' + src + '" alt="" style="display:block;width:' + v(rec.w) + ';height:' + v(rec.h) + ';max-width:none">' +
+        '<div style="font-size:' + (forPrint ? '8pt' : '9px') + ';color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25">' +
+        esc(rec.title) + ' &mdash; ' + rec.w + '&Prime; &times; ' + rec.h + '&Prime;</div></div>';
+    }).join('');
+    return '<div class="print-page" style="' + (forPrint ? '' : 'width:' + v(PAPER_W) + ';height:' + v(PAPER_H) + ';position:relative;overflow:hidden;background:#fff;border:1px solid #ccc;margin:0 12px 12px 0;display:inline-block;vertical-align:top;') + '">' +
+      inner +
+      '<div class="tile-label" style="' + (forPrint ? '' : 'position:absolute;bottom:4px;left:14px;right:14px;font-size:10px;color:#555;display:flex;justify-content:space-between;') + '"><span>Sheet ' + n + ' of ' + total + '</span><span></span></div>' +
+    '</div>';
+  }
+
+  function renderSheet() {
+    var pages = layoutSheet();
+    sheetList.querySelectorAll('.sheet-row').forEach(function (row) {
+      var rec = findRec(row.getAttribute('data-id'));
+      var warn = row.querySelector('.sheet-warn');
+      if (warn) warn.textContent = (rec && rec.tooBig) ? 'Too big for one sheet — shrink it or use single-design mode.' : '';
+    });
+    if (!sheetDesigns.length) {
+      sheetReadout.textContent = 'Pick designs above to add them to the sheet.';
+      preview.innerHTML = ''; printArea.innerHTML = ''; previewCard.style.display = 'none';
+      return;
+    }
+    var total = sheetDesigns.filter(function (d) { return d.imgLoaded; }).length;
+    var placed = sheetDesigns.filter(function (d) { return d.imgLoaded && !d.tooBig; }).length;
+    if (pages.length > MAX_PAGES) {
+      sheetReadout.textContent = 'That needs ' + pages.length + ' sheets — over the ' + MAX_PAGES + ' sheet limit. Shrink some designs.';
+      preview.innerHTML = ''; printArea.innerHTML = ''; previewCard.style.display = 'none';
+      return;
+    }
+    sheetReadout.textContent = placed + ' of ' + total + ' design' + (total === 1 ? '' : 's') + ' on ' +
+      pages.length + (pages.length === 1 ? ' sheet' : ' sheets') + ' — US Letter, ½″ margins, no borders. Cut apart on the captions.';
+    preview.innerHTML = pages.map(function (items, i) { return sheetPageHtml(items, i + 1, pages.length, false); }).join('');
+    previewCard.style.display = '';
+    printArea.innerHTML = '';
+  }
+
+  function buildSheetPrint() {
+    var pages = layoutSheet();
+    printArea.innerHTML = pages.map(function (items, i) { return sheetPageHtml(items, i + 1, pages.length, true); }).join('');
+  }
+
+  // ---- Compose mode: free canvas, drag + layer designs & fillers ----
+  var layers = []; // back-to-front; {uid,id,title,thumb,colorOk,aspect,x,y,w,h,imgLoaded}
+  var selectedUid = null, layerSeq = 0, canvasScale = 40, dragState = null;
+  var composeCard = document.getElementById('compose-card');
+  var composeCanvas = document.getElementById('compose-canvas');
+  var composeWrap = document.getElementById('compose-wrap');
+  var composeLayersEl = document.getElementById('compose-layers');
+  var composeReadout = document.getElementById('compose-readout');
+  var composeW = document.getElementById('compose-w'), composeH = document.getElementById('compose-h');
+  var composePreset = document.getElementById('compose-preset');
+  var composeOverlap = document.getElementById('compose-overlap');
+
+  function composeDims() {
+    return {
+      w: clampNum(parseFloat(composeW.value) || 10, 1, 120),
+      h: clampNum(parseFloat(composeH.value) || 18, 1, 120)
+    };
+  }
+  function composeStyle() { var el = document.querySelector('input[name="compose-style"]:checked'); return el ? el.value : 'linework'; }
+  function findLayer(uid) { return layers.find(function (L) { return L.uid === uid; }); }
+  function layerSrc(L, forPrint) {
+    return '/toolkit/scale-print/image/' + L.id + '?style=' + (composeStyle() === 'color' && L.colorOk ? 'color' : 'linework');
+  }
+
+  function addComposeLayer(btn) {
+    var id = btn.getAttribute('data-id');
+    var d = composeDims();
+    var imgEl = btn.querySelector('img');
+    var L = {
+      uid: 'L' + (++layerSeq),
+      id: id,
+      title: btn.getAttribute('data-title'),
+      thumb: imgEl ? imgEl.src : '',
+      colorOk: btn.getAttribute('data-color-ok') === '1',
+      aspect: 0,
+      w: Math.min(4, d.w * 0.6), h: 3,
+      x: 0, y: 0,
+      imgLoaded: false
+    };
+    layers.push(L);
+    selectedUid = L.uid;
+    var img = new Image();
+    img.onload = function () {
+      L.aspect = img.naturalWidth / img.naturalHeight;
+      L.h = +(L.w / L.aspect).toFixed(2);
+      if (L.h > d.h * 0.8) { L.h = +(d.h * 0.8).toFixed(2); L.w = +(L.h * L.aspect).toFixed(2); }
+      L.x = +((d.w - L.w) / 2).toFixed(2);
+      L.y = +((d.h - L.h) / 2).toFixed(2);
+      L.imgLoaded = true;
+      renderCanvas(); renderComposeLayers(); renderCompose();
+    };
+    img.onerror = function () { L.imgLoaded = true; renderCanvas(); renderComposeLayers(); renderCompose(); };
+    img.src = '/toolkit/scale-print/image/' + id + '?style=linework';
+    renderCanvas(); renderComposeLayers(); renderCompose();
+  }
+
+  function renderCanvas() {
+    var d = composeDims();
+    var avail = composeWrap.clientWidth - 26 || 600;
+    canvasScale = Math.min(avail / d.w, 520 / d.h, 60);
+    if (canvasScale < 4) canvasScale = 4;
+    composeCanvas.style.width = (d.w * canvasScale) + 'px';
+    composeCanvas.style.height = (d.h * canvasScale) + 'px';
+    composeCanvas.innerHTML = layers.map(function (L, i) {
+      return '<div class="clayer" data-uid="' + L.uid + '" style="position:absolute;left:' + (L.x * canvasScale) + 'px;top:' + (L.y * canvasScale) + 'px;' +
+        'width:' + (L.w * canvasScale) + 'px;height:' + (L.h * canvasScale) + 'px;z-index:' + i + ';cursor:move;' +
+        (L.uid === selectedUid ? 'outline:2px solid #C9A227;outline-offset:-2px;' : '') + '">' +
+        (L.imgLoaded ? '<img src="' + layerSrc(L) + '" alt="" draggable="false" style="width:100%;height:100%;display:block;pointer-events:none">' :
+          '<div style="width:100%;height:100%;background:#f4f1ea;display:flex;align-items:center;justify-content:center;font-size:11px;color:#888">loading…</div>') +
+      '</div>';
+    }).join('');
+  }
+
+  composeCanvas.addEventListener('pointerdown', function (e) {
+    var el = e.target.closest('.clayer'); if (!el) return;
+    var L = findLayer(el.getAttribute('data-uid')); if (!L) return;
+    selectedUid = L.uid;
+    renderCanvas(); renderComposeLayers();
+    dragState = { uid: L.uid, sx: e.clientX, sy: e.clientY, ox: L.x, oy: L.y };
+    try { composeCanvas.setPointerCapture(e.pointerId); } catch (_) {}
+    e.preventDefault();
+  });
+  composeCanvas.addEventListener('pointermove', function (e) {
+    if (!dragState) return;
+    var L = findLayer(dragState.uid); if (!L) return;
+    var d = composeDims();
+    L.x = +clampNum(dragState.ox + (e.clientX - dragState.sx) / canvasScale, -L.w + 0.25, d.w - 0.25).toFixed(2);
+    L.y = +clampNum(dragState.oy + (e.clientY - dragState.sy) / canvasScale, -L.h + 0.25, d.h - 0.25).toFixed(2);
+    var el = composeCanvas.querySelector('.clayer[data-uid="' + L.uid + '"]');
+    if (el) { el.style.left = (L.x * canvasScale) + 'px'; el.style.top = (L.y * canvasScale) + 'px'; }
+  });
+  composeCanvas.addEventListener('pointerup', function () {
+    if (!dragState) return;
+    dragState = null;
+    renderComposeLayers(); renderCompose();
+  });
+  composeCanvas.addEventListener('pointercancel', function () { dragState = null; });
+
+  function composeLayerRowHtml(L, i) {
+    return '<div class="clayer-row" data-uid="' + L.uid + '" style="display:flex;gap:8px;align-items:center;border:1px solid ' +
+      (L.uid === selectedUid ? '#C9A227' : '#eee') + ';border-radius:8px;padding:6px 8px;margin-bottom:6px;background:#fff">' +
+      (L.thumb ? '<img src="' + L.thumb + '" alt="" style="width:44px;height:44px;object-fit:contain;background:#f4f1ea;border-radius:6px">' : '') +
+      '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(L.title) + '</div>' +
+      '<div style="font-size:11px;color:#888">layer ' + (i + 1) + ' of ' + layers.length + (L.colorOk ? '' : ' · linework only') + '</div></div>' +
+      '<label style="font-size:11px">X <input type="number" class="cl-x" step="0.25" value="' + L.x + '" style="width:60px"></label>' +
+      '<label style="font-size:11px">Y <input type="number" class="cl-y" step="0.25" value="' + L.y + '" style="width:60px"></label>' +
+      '<label style="font-size:11px">W <input type="number" class="cl-w" min="0.25" step="0.25" value="' + L.w + '" style="width:60px"></label>' +
+      '<label style="font-size:11px">H <input type="number" class="cl-h" min="0.25" step="0.25" value="' + L.h + '" style="width:60px"></label>' +
+      '<button type="button" class="cl-up" title="Bring forward" style="font-size:14px">▲</button>' +
+      '<button type="button" class="cl-down" title="Send backward" style="font-size:14px">▼</button>' +
+      '<button type="button" class="cl-del" style="font-size:14px;background:none;border:none;cursor:pointer;color:#a33" aria-label="Remove">&times;</button>' +
+    '</div>';
+  }
+
+  function renderComposeLayers() {
+    composeLayersEl.innerHTML = layers.map(composeLayerRowHtml).join('');
+  }
+
+  composeLayersEl.addEventListener('input', function (e) {
+    var row = e.target.closest('.clayer-row'); if (!row) return;
+    var L = findLayer(row.getAttribute('data-uid')); if (!L) return;
+    var v = parseFloat(e.target.value);
+    if (e.target.classList.contains('cl-x')) L.x = isNaN(v) ? L.x : +v.toFixed(2);
+    else if (e.target.classList.contains('cl-y')) L.y = isNaN(v) ? L.y : +v.toFixed(2);
+    else if (e.target.classList.contains('cl-w')) { L.w = isNaN(v) ? L.w : Math.max(0.25, +v.toFixed(2)); if (L.aspect) L.h = +(L.w / L.aspect).toFixed(2); }
+    else if (e.target.classList.contains('cl-h')) { L.h = isNaN(v) ? L.h : Math.max(0.25, +v.toFixed(2)); if (L.aspect) L.w = +(L.h * L.aspect).toFixed(2); }
+    else return;
+    selectedUid = L.uid;
+    renderCanvas(); renderCompose();
+  });
+  composeLayersEl.addEventListener('click', function (e) {
+    var row = e.target.closest('.clayer-row'); if (!row) return;
+    var uid = row.getAttribute('data-uid');
+    var ix = layers.findIndex(function (L) { return L.uid === uid; });
+    if (ix < 0) return;
+    if (e.target.classList.contains('cl-del')) {
+      layers.splice(ix, 1);
+      if (selectedUid === uid) selectedUid = null;
+    } else if (e.target.classList.contains('cl-up')) {
+      if (ix < layers.length - 1) { var t = layers[ix]; layers[ix] = layers[ix + 1]; layers[ix + 1] = t; }
+      selectedUid = uid;
+    } else if (e.target.classList.contains('cl-down')) {
+      if (ix > 0) { var t2 = layers[ix]; layers[ix] = layers[ix - 1]; layers[ix - 1] = t2; }
+      selectedUid = uid;
+    } else return;
+    renderCanvas(); renderComposeLayers(); renderCompose();
+  });
+
+  composeW.addEventListener('input', function () { renderCanvas(); renderCompose(); });
+  composeH.addEventListener('input', function () { renderCanvas(); renderCompose(); });
+  composePreset.addEventListener('change', function () {
+    if (!composePreset.value) return;
+    var p = composePreset.value.split('x');
+    composeW.value = p[0]; composeH.value = p[1];
+    renderCanvas(); renderCompose();
+  });
+  composeOverlap.addEventListener('change', renderCompose);
+  document.querySelectorAll('input[name="compose-style"]').forEach(function (r) {
+    r.addEventListener('change', function () { renderCanvas(); renderCompose(); });
+  });
+
+  function composeTileHtml(c, r, t, d, ov, n, forPrint) {
+    var label = 'Page ' + n + ' of ' + (t.cols * t.rows) + ' — row ' + (r + 1) + ', col ' + (c + 1);
+    var st = composeStyle();
+    return tileShell(c, r, t, d, ov, n, forPrint, label, function (x0, y0, v) {
+      var inner = layers.map(function (L, i) {
+        if (!L.imgLoaded) return '';
+        var src = '/toolkit/scale-print/image/' + L.id + '?style=' + (st === 'color' && L.colorOk ? 'color' : 'linework');
+        return '<img src="' + src + '" alt="" draggable="false" style="position:absolute;left:' + v(L.x) + ';top:' + v(L.y) +
+          ';width:' + v(L.w) + ';height:' + v(L.h) + ';z-index:' + i + ';max-width:none">';
+      }).join('');
+      return '<div style="position:absolute;width:' + v(d.w) + ';height:' + v(d.h) + ';left:-' + v(x0) + ';top:-' + v(y0) + '">' + inner + '</div>';
+    });
+  }
+
+  function renderCompose() {
+    if (mode !== 'compose') return;
+    var d = composeDims(), ov = parseFloat(composeOverlap.value);
+    var t = tiles(d.w, d.h, ov);
+    var total = t.cols * t.rows;
+    var loaded = layers.filter(function (L) { return L.imgLoaded; }).length;
+    if (!layers.length) {
+      composeReadout.textContent = 'Click designs above to add them as layers.';
+      preview.innerHTML = ''; printArea.innerHTML = ''; previewCard.style.display = 'none';
+      return;
+    }
+    if (total > MAX_PAGES) {
+      composeReadout.textContent = 'That canvas needs ' + total + ' pages — over the ' + MAX_PAGES + ' page limit. Reduce the canvas size.';
+      preview.innerHTML = ''; printArea.innerHTML = ''; previewCard.style.display = 'none';
+      return;
+    }
+    composeReadout.textContent = loaded + ' layer' + (loaded === 1 ? '' : 's') + ' on a ' + d.w + '″ × ' + d.h + '″ canvas → ' +
+      total + (total === 1 ? ' page' : ' pages') + ' (' + t.cols + ' × ' + t.rows + ') — US Letter, ½″ margins, ' + ov + '″ overlap.';
+    var html = '', n = 0;
+    for (var r = 0; r < t.rows; r++) for (var c = 0; c < t.cols; c++) { n++; html += composeTileHtml(c, r, t, d, ov, n, false); }
+    preview.innerHTML = html;
+    previewCard.style.display = '';
+    printArea.innerHTML = '';
+  }
+
+  function buildComposePrint() {
+    var d = composeDims(), ov = parseFloat(composeOverlap.value);
+    var t = tiles(d.w, d.h, ov);
+    var html = '', n = 0;
+    for (var r = 0; r < t.rows; r++) for (var c = 0; c < t.cols; c++) { n++; html += composeTileHtml(c, r, t, d, ov, n, true); }
+    printArea.innerHTML = html;
+  }
+
+  document.getElementById('print-btn').addEventListener('click', function () {
+    if (mode === 'sheet') { buildSheetPrint(); }
+    else if (mode === 'compose') { buildComposePrint(); }
+    window.print();
+  });
 })();
 </script>
