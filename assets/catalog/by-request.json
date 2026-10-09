@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-09T02:12:58.427Z",
+ "updated": "2026-10-09T11:46:32.767Z",
  "items": [
   {
    "name": "Goku (Dragon Ball)",
@@ -592,20 +592,20 @@
   {
    "name": "Samurai Jack",
    "slug": "samurai-jack",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/samurai-jack.jpg"
   },
   {
    "name": "Powerpuff Girls",
    "slug": "powerpuff-girls",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/powerpuff-girls.jpg"
   },
   {
    "name": "Invader Zim",
    "slug": "invader-zim",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/invader-zim.jpg"
   },
   {
    "name": "Tweety Bird",
@@ -616,8 +616,8 @@
   {
    "name": "Taz (Tasmanian Devil)",
    "slug": "taz",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/taz.jpg"
   },
   {
    "name": "Bugs Bunny",
@@ -634,26 +634,26 @@
   {
    "name": "Wile E. Coyote & Road Runner",
    "slug": "wile-e-coyote-road-runner",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/wile-e-coyote-road-runner.jpg"
   },
   {
-   "name": "Winnie the Pooh",
+   "name": "Winnie the Pooh (Disney version)",
    "slug": "winnie-the-pooh",
    "done": false,
    "img": null
   },
   {
-   "name": "Tigger",
+   "name": "Tigger (Disney version)",
    "slug": "tigger",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/tigger.jpg"
   },
   {
    "name": "Mordecai & Rigby (Regular Show)",
    "slug": "mordecai-rigby",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/mordecai-rigby.jpg"
   },
   {
    "name": "Ben 10",
@@ -764,12 +764,6 @@
    "img": null
   },
   {
-   "name": "Thor",
-   "slug": "thor",
-   "done": false,
-   "img": null
-  },
-  {
    "name": "Hulk",
    "slug": "hulk",
    "done": false,
@@ -808,12 +802,6 @@
   {
    "name": "Thanos",
    "slug": "thanos",
-   "done": false,
-   "img": null
-  },
-  {
-   "name": "Loki",
-   "slug": "loki",
    "done": false,
    "img": null
   },
@@ -1774,12 +1762,6 @@
   {
    "name": "Paddington Bear",
    "slug": "paddington-bear",
-   "done": false,
-   "img": null
-  },
-  {
-   "name": "Peter Rabbit",
-   "slug": "peter-rabbit",
    "done": false,
    "img": null
   },
