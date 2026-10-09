@@ -403,6 +403,11 @@
       "text": "Vendez vos designs à des collectionneurs du monde entier, gardez jusqu'à 80 % de chaque vente et faites-vous découvrir par des clients en quête de leur prochaine pièce.",
       "designer_btn": "Rejoindre comme designer — {price}/mois",
       "shop_btn": "Référencer votre shop — {price}/an"
+    },
+    "li_sub": {
+      "title": "🖍️ Little Inkers — Free Coloring Fun for Kids",
+      "text": "Our kids’ show and free coloring app are on YouTube! New episodes every Wednesday. Subscribe so your little artist never misses one.",
+      "btn": "Subscribe on YouTube"
     }
   },
   "membership": {
@@ -1011,5 +1016,12 @@
     "disclosure": "Tattoo Art Customs is an affiliate partner of these brands and earns from qualifying purchases made through the links on this page, at no extra cost to you.",
     "banner_text": "Tattoo discounts inside: 20% off Electrum Supply with code TATART20 + more deals",
     "banner_cta": "See all deals"
+  },
+  "li_sideload": {
+    "sub": {
+      "title": "Parents — subscribe to our YouTube channel",
+      "text": "New Little Inkers episodes land every Wednesday. Subscribe on YouTube so your kids never miss a new coloring adventure.",
+      "btn": "Subscribe on YouTube"
+    }
   }
 }
