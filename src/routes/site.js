@@ -777,6 +777,15 @@ router.post('/contact', formLimiter, checkHoneypot, async (req, res) => {
 
 // Aftercare guide with affiliate product picks (owner-approved 2026-09-30).
 // Tag is the owner's Amazon Associates tracking ID.
+// Discount campaign landing page (owner-ordered 2026-10-09): all live affiliate
+// discount codes in one place — Electrum TATART20, Base Labs TAC20, Recovery
+// Aftercare, Amazon picks.
+router.get('/discounts', (req, res) => res.render('site/discounts', {
+  title: 'Tattoo Discounts & Deals — Tattoo Art Customs',
+  metaDescription: 'Real tattoo discounts: 20% off Electrum Supply with code TATART20, Base Labs TAC20, Recovery Aftercare, and our Amazon picks.',
+  canonical: `${config.baseUrl.replace(/\/$/, '')}/discounts`,
+}));
+
 router.get('/aftercare', (req, res) => res.render('site/aftercare', {
   title: 'Tattoo Aftercare Guide — Tattoo Art Customs',
   metaDescription: 'How to heal your new tattoo, plus the aftercare products we recommend.',
