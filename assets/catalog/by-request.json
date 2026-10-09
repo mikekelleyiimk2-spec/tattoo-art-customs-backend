@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-08T11:45:00.902Z",
+ "updated": "2026-10-09T02:12:58.427Z",
  "items": [
   {
    "name": "Goku (Dragon Ball)",
@@ -1120,6 +1120,690 @@
   {
    "name": "King Kong",
    "slug": "king-kong",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Hello Kitty",
+   "slug": "hello-kitty",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "A.L.F.",
+   "slug": "a-l-f",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Vash the Stampede (Trigun)",
+   "slug": "vash-the-stampede",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Alucard (Hellsing)",
+   "slug": "alucard",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Kenshiro (Fist of the North Star)",
+   "slug": "kenshiro",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Kaneki Ken (Tokyo Ghoul)",
+   "slug": "kaneki-ken",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Lelouch vi Britannia (Code Geass)",
+   "slug": "lelouch-vi-britannia",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Yuji Itadori (Jujutsu Kaisen)",
+   "slug": "yuji-itadori",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Sung Jinwoo (Solo Leveling)",
+   "slug": "sung-jinwoo",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Bakugo Katsuki (My Hero Academia)",
+   "slug": "bakugo-katsuki",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Zenitsu Agatsuma (Demon Slayer)",
+   "slug": "zenitsu-agatsuma",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Sanji (One Piece)",
+   "slug": "sanji",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Trafalgar Law (One Piece)",
+   "slug": "trafalgar-law",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Jiraiya (Naruto)",
+   "slug": "jiraiya",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Kurapika (Hunter x Hunter)",
+   "slug": "kurapika",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Griffith (Berserk)",
+   "slug": "griffith",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Giorno Giovanna (JoJo's Bizarre Adventure)",
+   "slug": "giorno-giovanna",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Zuko (Avatar: The Last Airbender)",
+   "slug": "zuko",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Howl (Howl's Moving Castle)",
+   "slug": "howl",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "The Moving Castle (Howl's Moving Castle) `moving-castle`",
+   "slug": "the-moving-castle-moving-castle",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Calcifer (Howl's Moving Castle)",
+   "slug": "calcifer",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Optimus Prime (Transformers)",
+   "slug": "optimus-prime",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Megatron (Transformers)",
+   "slug": "megatron",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Yugi Muto (Yu-Gi-Oh!)",
+   "slug": "yugi-muto",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Gintoki Sakata (Gintama)",
+   "slug": "gintoki-sakata",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Roy Mustang (Fullmetal Alchemist)",
+   "slug": "roy-mustang",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Inosuke Hashibira (Demon Slayer)",
+   "slug": "inosuke-hashibira",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Shanks (One Piece)",
+   "slug": "shanks",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Luigi (Super Mario)",
+   "slug": "luigi",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Princess Peach (Super Mario)",
+   "slug": "princess-peach",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Bowser (Super Mario)",
+   "slug": "bowser",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Yoshi (Super Mario)",
+   "slug": "yoshi",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Princess Zelda (The Legend of Zelda)",
+   "slug": "princess-zelda",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Ganondorf (The Legend of Zelda)",
+   "slug": "ganondorf",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Charizard (Pokémon)",
+   "slug": "charizard",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Gengar (Pokémon)",
+   "slug": "gengar",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Snorlax (Pokémon)",
+   "slug": "snorlax",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Shadow the Hedgehog",
+   "slug": "shadow-the-hedgehog",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Knuckles (Sonic the Hedgehog)",
+   "slug": "knuckles",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Gordon Freeman (Half-Life)",
+   "slug": "gordon-freeman",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "G-Man (Half-Life)",
+   "slug": "g-man",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Big Daddy (BioShock)",
+   "slug": "big-daddy",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Pyramid Head (Silent Hill)",
+   "slug": "pyramid-head",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Leon Kennedy (Resident Evil)",
+   "slug": "leon-kennedy",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Lady Dimitrescu (Resident Evil)",
+   "slug": "lady-dimitrescu",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Agent 47 (Hitman)",
+   "slug": "agent-47",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Big Boss (Metal Gear)",
+   "slug": "big-boss",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "John Marston (Red Dead Redemption)",
+   "slug": "john-marston",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Carl \"CJ\" Johnson (GTA: San Andreas)",
+   "slug": "carl-cj-johnson",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Handsome Jack (Borderlands)",
+   "slug": "handsome-jack",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Tiny Tina (Borderlands)",
+   "slug": "tiny-tina",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "GLaDOS (Portal)",
+   "slug": "glados",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Companion Cube (Portal)",
+   "slug": "companion-cube",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Isaac Clarke (Dead Space)",
+   "slug": "isaac-clarke",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Solaire of Astora (Dark Souls)",
+   "slug": "solaire-of-astora",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Lady Maria (Bloodborne)",
+   "slug": "lady-maria",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Ranni the Witch (Elden Ring)",
+   "slug": "ranni-the-witch",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Malenia (Elden Ring)",
+   "slug": "malenia",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Jin Sakai (Ghost of Tsushima)",
+   "slug": "jin-sakai",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Wukong (Black Myth: Wukong)",
+   "slug": "wukong",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Cortana (Halo)",
+   "slug": "cortana",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Tracer (Overwatch)",
+   "slug": "tracer",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "D.Va (Overwatch)",
+   "slug": "d-va",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Teenage Mutant Ninja Turtles",
+   "slug": "teenage-mutant-ninja-turtles",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Garfield",
+   "slug": "garfield",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Tom & Jerry",
+   "slug": "tom-jerry",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Scooby-Doo",
+   "slug": "scooby-doo",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Shaggy (Scooby-Doo)",
+   "slug": "shaggy",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Yogi Bear",
+   "slug": "yogi-bear",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Fred Flintstone",
+   "slug": "fred-flintstone",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Yosemite Sam",
+   "slug": "yosemite-sam",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Marvin the Martian",
+   "slug": "marvin-the-martian",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Woody Woodpecker",
+   "slug": "woody-woodpecker",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Mighty Mouse",
+   "slug": "mighty-mouse",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Stitch (Lilo & Stitch)",
+   "slug": "stitch",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Woody (Toy Story)",
+   "slug": "woody",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Buzz Lightyear (Toy Story)",
+   "slug": "buzz-lightyear",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Mike Wazowski (Monsters, Inc.)",
+   "slug": "mike-wazowski",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Dory (Finding Nemo)",
+   "slug": "dory",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Shrek",
+   "slug": "shrek",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Donkey (Shrek)",
+   "slug": "donkey",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Puss in Boots (Shrek)",
+   "slug": "puss-in-boots",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Toothless (How to Train Your Dragon)",
+   "slug": "toothless",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Minions (Despicable Me)",
+   "slug": "minions",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Po (Kung Fu Panda)",
+   "slug": "po",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Kronk (The Emperor's New Groove)",
+   "slug": "kronk",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Baymax (Big Hero 6)",
+   "slug": "baymax",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Wallace & Gromit",
+   "slug": "wallace-gromit",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Spawn",
+   "slug": "spawn",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Hellboy",
+   "slug": "hellboy",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "John Constantine (Hellblazer)",
+   "slug": "john-constantine",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Omni-Man (Invincible)",
+   "slug": "omni-man",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Homelander (The Boys)",
+   "slug": "homelander",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Judge Dredd",
+   "slug": "judge-dredd",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "The Crow (Eric Draven)",
+   "slug": "the-crow",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "The Mask",
+   "slug": "the-mask",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Calvin and Hobbes",
+   "slug": "calvin-and-hobbes",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Hit-Girl (Kick-Ass)",
+   "slug": "hit-girl",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Kermit the Frog (The Muppets)",
+   "slug": "kermit-the-frog",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Miss Piggy (The Muppets)",
+   "slug": "miss-piggy",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Big Bird (Sesame Street)",
+   "slug": "big-bird",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Cookie Monster (Sesame Street)",
+   "slug": "cookie-monster",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Elmo (Sesame Street)",
+   "slug": "elmo",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Wednesday Addams (The Addams Family)",
+   "slug": "wednesday-addams",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "The Grinch",
+   "slug": "the-grinch",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Willy Wonka (Charlie and the Chocolate Factory)",
+   "slug": "willy-wonka",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Falkor (The NeverEnding Story)",
+   "slug": "falkor",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Inigo Montoya (The Princess Bride)",
+   "slug": "inigo-montoya",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Paddington Bear",
+   "slug": "paddington-bear",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Peter Rabbit",
+   "slug": "peter-rabbit",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Bluey (Bluey)",
+   "slug": "bluey",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Peppa Pig",
+   "slug": "peppa-pig",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Dora the Explorer",
+   "slug": "dora-the-explorer",
+   "done": false,
+   "img": null
+  },
+  {
+   "name": "Pingu",
+   "slug": "pingu",
    "done": false,
    "img": null
   }
