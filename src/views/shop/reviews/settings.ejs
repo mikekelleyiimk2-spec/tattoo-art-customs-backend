@@ -24,7 +24,7 @@
   <% for (const b of eligible) { %>
     <div class="tattoo-entry">
       <h3><%= b.customer_name || b.customer_email %></h3>
-      <p class="muted"><%= t('shop.reviews.completed_on', { date: new Date(b.completed_at).toLocaleDateString(localeTag) }) %></p>
+      <p class="muted"><%= t('shop.reviews.completed_on', { date: new Date(b.completed_at).toLocaleDateString() }) %></p>
       <% if (reviewSettings.google_review_url) { %>
         <form method="post" action="/shop/reviews/send/<%= b.id %>" style="display:inline">
           <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
@@ -45,7 +45,7 @@
   <% } else { %>
     <ul>
     <% for (const r of log) { %>
-      <li><%= t('shop.reviews.sent_at', { date: new Date(r.sent_at).toLocaleString(localeTag) }) %> — <%= r.customer_name || r.client_email %></li>
+      <li><%= t('shop.reviews.sent_at', { date: new Date(r.sent_at).toLocaleString() }) %> — <%= r.customer_name || r.client_email %></li>
     <% } %>
     </ul>
     <p><a href="/shop/reviews/log"><%= t('shop.reviews.full_log') %></a></p>

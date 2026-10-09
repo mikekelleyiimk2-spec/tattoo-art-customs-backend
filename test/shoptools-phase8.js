@@ -120,6 +120,22 @@ async function runDbTests(ok) {
     ok(!(await reviews.getEligibleBookings(shop)).some((b) => String(b.id) === String(b2)),
       'aftercare-asked booking is not listed as eligible');
 
+    // The real aftercare path: a 'great' check-in response logs source='aftercare'
+    // in the unified log, and the manual trigger then refuses to double-ask.
+    const b6 = await mkCompletedBooking(shop, cust, 4);
+    const ac6 = await db.insert('aftercare_checkins', {
+      booking_id: String(b6), shop_user_id: shop, customer_user_id: cust,
+      kind: 'day3', due_at: Date.now() - DAY_MS,
+    });
+    const aftercare = require('../src/shop/aftercare');
+    const resp = await aftercare.respondToCheckin({ checkinId: ac6, customerUserId: cust, response: 'great' });
+    ok(resp.reviewAsked === true, 'great check-in response triggers the aftercare ask');
+    const acLog = await db.get('SELECT source FROM shop_review_requests WHERE booking_id = ?', [String(b6)]);
+    ok(acLog && acLog.source === 'aftercare', 'aftercare ask is logged in the unified sent-log');
+    const r4 = await reviews.sendReviewRequest({ shopUserId: shop, bookingId: b6 });
+    ok(r4.already === true && r4.by === 'aftercare',
+      'manual trigger refuses to double-ask after the aftercare ask');
+
     // Auto-send sweep: only enabled shops, only the 24h–7d window, never the
     // aftercare-asked booking, one ask per booking.
     const b3 = await mkCompletedBooking(shop, cust, 2); // in the auto window
@@ -132,8 +148,9 @@ async function runDbTests(ok) {
       'sweep skips too-fresh and disabled-shop bookings');
     const b3row = await db.get('SELECT source FROM shop_review_requests WHERE booking_id = ?', [String(b3)]);
     ok(b3row && b3row.source === 'auto', 'sweep logs source=auto in the unified log');
+    const before = mailSent;
     const sentAgain = await reviews.runReviewSweep();
-    ok(!sentAgain.includes(String(b3)) && mailSent === 2, 'sweep never re-sends a logged booking');
+    ok(!sentAgain.includes(String(b3)) && mailSent === before, 'sweep never re-sends a logged booking');
   } finally {
     mail.__setTransporter(null);
   }

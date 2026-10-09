@@ -1,6 +1,6 @@
 <p><a href="/shop/clients"><%= t('shop.clients.back_to_clients') %></a></p>
 <h1><%= shopClient.name %></h1>
-<p class="muted"><%= t('shop.clients.client_since', { date: new Date(shopClient.created_at).toLocaleDateString(localeTag) }) %></p>
+<p class="muted"><%= t('shop.clients.client_since', { date: new Date(shopClient.created_at).toLocaleDateString() }) %></p>
 
 <section class="card">
   <h2><%= t('shop.clients.details_title') %></h2>
@@ -69,7 +69,7 @@
       <select name="booking_id">
         <option value=""><%= t('shop.clients.no_booking') %></option>
         <% for (const b of bookings) { %>
-          <option value="<%= b.id %>"><%= t('shop.clients.booking') %> #<%= b.id %> — <%= new Date(b.start_at).toLocaleDateString(localeTag) %><%= b.customer_name ? ' (' + b.customer_name + ')' : '' %></option>
+          <option value="<%= b.id %>"><%= t('shop.clients.booking') %> #<%= b.id %> — <%= new Date(b.start_at).toLocaleDateString() %><%= b.customer_name ? ' (' + b.customer_name + ')' : '' %></option>
         <% } %>
       </select>
     </label>

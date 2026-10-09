@@ -4169,7 +4169,7 @@ async function main() {
     tr = await treq('GET', '/aftercare');
     ok(tr.status === 200 && tr.text.includes('Tattoo Aftercare Guide'), 'aftercare page renders');
     ok(tr.text.includes('tag=tattooartcust-20'), 'aftercare links carry the Amazon Associates tracking ID');
-    ok(tr.text.includes('As an Amazon Associate'), 'aftercare page shows the affiliate disclosure');
+    ok(tr.text.includes('earns from qualifying purchases'), 'aftercare page shows the affiliate disclosure');
 
     // Printful variant mapping (lib-level): PRINTFUL_VARIANT_TEE_<COLOR>_<SIZE>.
     ok(!printful.printfulConfigured(), 'printful not configured in the test env');
