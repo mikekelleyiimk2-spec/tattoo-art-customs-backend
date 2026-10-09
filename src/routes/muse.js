@@ -444,4 +444,72 @@ router.post('/fix-design-title', express.json(), async (req, res) => {
   return res.json({ ok: true, id, title });
 });
 
+// GET /api/muse/pending-designs?artist=<name-or-email-fragment>&since=<ms-epoch>
+// Lists pending (unapproved) designs, optionally filtered to one uploader.
+// Powers the Chris Jones auto-approve watcher: his by-request uploads get
+// approved and filed into the by-request catalog without owner taps.
+// Same service-token auth as /notify; 404s when MUSE_SERVICE_TOKEN unset.
+router.get('/pending-designs', async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  const q = String(req.query.artist || '').toLowerCase();
+  const since = Number(req.query.since || 0) || 0;
+  try {
+    const rows = await db.query(
+      `SELECT d.id, d.title, d.description, d.color_path, d.linework_path,
+              d.linework_wm_path, d.status AS design_status, d.created_at,
+              d.artist_id, u.name AS artist_name, u.email AS artist_email,
+              rq.id AS review_id
+         FROM designs d
+         LEFT JOIN users u ON u.id = d.artist_id
+         LEFT JOIN review_queue rq ON rq.item_type = 'design' AND rq.item_id = d.id AND rq.status = 'open'
+        WHERE d.status = 'pending' AND d.created_at >= ?
+        ORDER BY d.created_at DESC LIMIT 200`,
+      [since]
+    );
+    const designs = q
+      ? rows.filter(r => String(r.artist_name || '').toLowerCase().includes(q) ||
+                         String(r.artist_email || '').toLowerCase().includes(q))
+      : rows;
+    return res.json({ ok: true, count: designs.length, designs });
+  } catch (e) {
+    console.error('[muse/pending-designs] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'query failed' });
+  }
+});
+
+// POST /api/muse/pending-designs/:id/approve
+// Approves one pending design — mirrors the admin applyReviewDecision path
+// for designs (requires the watermarked linework, marks the review closed,
+// runs completeOnApproval). Owner standing order: Chris Jones's uploads are
+// auto-approved; this is the machine endpoint the watcher uses.
+// Same service-token auth as /notify; 404s when MUSE_SERVICE_TOKEN unset.
+router.post('/pending-designs/:id/approve', express.json(), async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const design = await db.get('SELECT * FROM designs WHERE id = ?', [req.params.id]);
+    if (!design) return res.status(404).json({ ok: false, error: 'not found' });
+    if (design.status !== 'pending') return res.json({ ok: true, already: design.status, design });
+    if (!design.linework_wm_path) {
+      return res.status(400).json({ ok: false, error: 'blocked-no-watermark' });
+    }
+    await db.update('designs', design.id, { status: 'approved' });
+    await db.query(
+      "UPDATE review_queue SET status = 'approved', reviewed_at = ? WHERE item_type = 'design' AND item_id = ? AND status = 'open'",
+      [db.now(), design.id]
+    );
+    try {
+      const { completeOnApproval } = require('../lib/replacements');
+      await completeOnApproval(design.id);
+    } catch (e) {
+      console.error('[muse/pending-designs-approve] completeOnApproval failed:', e.message);
+    }
+    return res.json({ ok: true, design });
+  } catch (e) {
+    console.error('[muse/pending-designs-approve] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'approve failed' });
+  }
+});
+
 module.exports = router;
