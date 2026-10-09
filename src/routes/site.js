@@ -858,7 +858,7 @@ router.post('/newsletter', formLimiter, checkHoneypot, async (req, res) => {
   const raw = String(req.body.email || '').trim().toLowerCase().slice(0, 120);
   const back = String(req.body.back || '/').slice(0, 200) || '/';
   if (!EMAIL_RE.test(raw)) {
-    req.session.flash = req.t('newsletter.invalid');
+    req.session.flash = res.locals.t('newsletter.invalid');
     return res.redirect(back);
   }
   try {
@@ -869,7 +869,7 @@ router.post('/newsletter', formLimiter, checkHoneypot, async (req, res) => {
       await db.insert('mailing_list', { email: raw, source: 'footer', unsubscribed_at: null });
     }
   } catch (e) { console.error('newsletter insert failed:', e.message); }
-  req.session.flash = req.t('newsletter.success');
+  req.session.flash = res.locals.t('newsletter.success');
   res.redirect(back);
 });
 
