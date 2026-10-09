@@ -37,6 +37,34 @@ const CATALOG = [
     url: 'https://www.amazon.com/?tag=tattooartcust-20',
     ctaKey: 'merch.aff_cta',
   },
+  // --- Amazon specific picks (tag tattooartcust-20, live) ---
+  {
+    id: 'amazon-saniderm',
+    kind: 'affiliate',
+    status: 'live',
+    nameKey: 'merch.aff_saniderm_name',
+    blurbKey: 'merch.aff_saniderm_blurb',
+    url: 'https://www.amazon.com/dp/B07LGHJMBD?tag=tattooartcust-20',
+    ctaKey: 'merch.aff_cta',
+  },
+  {
+    id: 'amazon-hustle-butter',
+    kind: 'affiliate',
+    status: 'live',
+    nameKey: 'merch.aff_hustlebutter_name',
+    blurbKey: 'merch.aff_hustlebutter_blurb',
+    url: 'https://www.amazon.com/dp/B00AEVIIYK?tag=tattooartcust-20',
+    ctaKey: 'merch.aff_cta',
+  },
+  {
+    id: 'amazon-aquaphor',
+    kind: 'affiliate',
+    status: 'live',
+    nameKey: 'merch.aff_aquaphor_name',
+    blurbKey: 'merch.aff_aquaphor_blurb',
+    url: 'https://www.amazon.com/dp/B001FB5IP0?tag=tattooartcust-20',
+    ctaKey: 'merch.aff_cta',
+  },
   {
     id: 'tee-music-genres',
     kind: 'pod',
@@ -59,6 +87,126 @@ const CATALOG = [
     asset: 'catalog/merch/alice-tea-tee-300dpi.png',
     open: true,
   },
+  // --- Printful synced products (live 2026-10-09) ---
+  // Bella + Canvas tees & hoodie in Black, S–2XL. syncVariants maps size ->
+  // Printful sync_variant_id (used directly in /orders submit).
+  {
+    id: 'pf-tee-iron-serpent',
+    kind: 'pod',
+    status: 'live',
+    nameKey: 'merch.pf_tee_iron_name',
+    blurbKey: 'merch.pf_tee_iron_blurb',
+    image: 'https://files.cdn.printful.com/files/b3e/b3ed08f0d8b8e2b5b56e47a55ce14b73_preview.png',
+    printfulProduct: 'sync_tee_iron_serpent',
+    syncVariants: { S: 5561819920, M: 5561819921, L: 5561819922, XL: 5561819923, '2XL': 5561819924 },
+    sizes: ['S', 'M', 'L', 'XL', '2XL'],
+    priceCents: { S: 2899, M: 2899, L: 2899, XL: 2899, '2XL': 3099 },
+    open: true,
+  },
+  {
+    id: 'pf-tee-hollow-bloom',
+    kind: 'pod',
+    status: 'live',
+    nameKey: 'merch.pf_tee_bloom_name',
+    blurbKey: 'merch.pf_tee_bloom_blurb',
+    image: 'https://files.cdn.printful.com/files/712/71243ed90873cbe87d355afa0fe4a030_preview.png',
+    printfulProduct: 'sync_tee_hollow_bloom',
+    syncVariants: { S: 5561819925, M: 5561819926, L: 5561819927, XL: 5561819928, '2XL': 5561819929 },
+    sizes: ['S', 'M', 'L', 'XL', '2XL'],
+    priceCents: { S: 2899, M: 2899, L: 2899, XL: 2899, '2XL': 3099 },
+    open: true,
+  },
+  {
+    id: 'pf-tee-shattered-dragon',
+    kind: 'pod',
+    status: 'live',
+    nameKey: 'merch.pf_tee_dragon_name',
+    blurbKey: 'merch.pf_tee_dragon_blurb',
+    image: 'https://files.cdn.printful.com/files/cfe/cfee9e64ac0487cc74b2d0c8397e20ed_preview.png',
+    printfulProduct: 'sync_tee_shattered_dragon',
+    syncVariants: { S: 5561819914, M: 5561819915, L: 5561819916, XL: 5561819917, '2XL': 5561819918 },
+    sizes: ['S', 'M', 'L', 'XL', '2XL'],
+    priceCents: { S: 2899, M: 2899, L: 2899, XL: 2899, '2XL': 3099 },
+    open: true,
+  },
+  {
+    id: 'pf-hoodie-iron-serpent',
+    kind: 'pod',
+    status: 'live',
+    nameKey: 'merch.pf_hoodie_iron_name',
+    blurbKey: 'merch.pf_hoodie_iron_blurb',
+    image: 'https://files.cdn.printful.com/files/acb/acba117ddbf2be1a3efd8435b3c4edea_preview.png',
+    printfulProduct: 'sync_hoodie_iron_serpent',
+    syncVariants: { S: 5561820002, M: 5561820003, L: 5561820004, XL: 5561820005, '2XL': 5561820006 },
+    sizes: ['S', 'M', 'L', 'XL', '2XL'],
+    priceCents: { S: 4499, M: 4499, L: 4499, XL: 4499, '2XL': 4799 },
+    open: true,
+  },
+  {
+    id: 'pf-mug-serpent-bloom',
+    kind: 'pod',
+    status: 'live',
+    nameKey: 'merch.pf_mug_bloom_name',
+    blurbKey: 'merch.pf_mug_bloom_blurb',
+    image: 'https://files.cdn.printful.com/files/af8/af89d5c871186bf1582233148852d832_preview.png',
+    printfulProduct: 'sync_mug_serpent_bloom',
+    syncVariants: { OS: 5561820000 },
+    sizes: null,
+    priceCents: 1599,
+    open: true,
+  },
+  {
+    id: 'pf-sticker-serpent-bloom',
+    kind: 'pod',
+    status: 'live',
+    nameKey: 'merch.pf_sticker_bloom_name',
+    blurbKey: 'merch.pf_sticker_bloom_blurb',
+    image: 'https://files.cdn.printful.com/files/d82/d827e4e8171878ff3021d7ae5f517916_preview.png',
+    printfulProduct: 'sync_sticker_serpent_bloom',
+    syncVariants: { OS: 5561820001 },
+    sizes: null,
+    priceCents: 799,
+    open: true,
+  },
+  {
+    id: 'pf-poster-iron-serpent',
+    kind: 'pod',
+    status: 'live',
+    nameKey: 'merch.pf_poster_iron_name',
+    blurbKey: 'merch.pf_poster_iron_blurb',
+    image: 'https://files.cdn.printful.com/files/675/6753e31e80573aeaba3116aa06c1affd_preview.png',
+    printfulProduct: 'sync_poster_iron_serpent',
+    syncVariants: { OS: 5561819956 },
+    sizes: null,
+    priceCents: 1799,
+    open: true,
+  },
+  {
+    id: 'pf-poster-hollow-bloom',
+    kind: 'pod',
+    status: 'live',
+    nameKey: 'merch.pf_poster_bloom_name',
+    blurbKey: 'merch.pf_poster_bloom_blurb',
+    image: 'https://files.cdn.printful.com/files/c38/c38bcdbf62ad4e2f7bcc3d082492fb9d_preview.png',
+    printfulProduct: 'sync_poster_hollow_bloom',
+    syncVariants: { OS: 5561819932 },
+    sizes: null,
+    priceCents: 1799,
+    open: true,
+  },
+  {
+    id: 'pf-poster-shattered-dragon',
+    kind: 'pod',
+    status: 'live',
+    nameKey: 'merch.pf_poster_dragon_name',
+    blurbKey: 'merch.pf_poster_dragon_blurb',
+    image: 'https://files.cdn.printful.com/files/1af/1af7d49bdfea41c49ce5f4d8c02050d6_preview.png',
+    printfulProduct: 'sync_poster_shattered_dragon',
+    syncVariants: { OS: 5561819931 },
+    sizes: null,
+    priceCents: 1799,
+    open: true,
+  },
 ];
 
 function getProduct(id) {
@@ -77,4 +225,20 @@ function podProducts() {
   return CATALOG.filter((p) => p.kind === 'pod');
 }
 
-module.exports = { CATALOG, getProduct, liveProducts, affiliateProducts, podProducts };
+// --- SHEIN section (placeholder, 2026-10-09) ---
+// Owner: "SHEIN too once it's up and going." The SHEIN seller account is
+// NOT approved yet — when it is and products are listed there, add entries
+// here with kind: 'shein', status: 'live', nameKey/blurbKey, image, url
+// (SHEIN product URL), ctaKey. sheinProducts() feeds the /merch view, which
+// only renders the section when the list is non-empty.
+function sheinProducts() {
+  return CATALOG.filter((p) => p.kind === 'shein' && p.status === 'live');
+}
+
+// --- Partner pipeline (not live affiliates — do NOT render) ---
+// Programs we've applied to but aren't approved yet (Dr. Tattoo Skin, OOLY,
+// This Month's Craft, Electrum Supply, EZ Tattoo, Leda Art Supply, ...).
+// They have NO referral links, so they stay out of the catalog. When a
+// program approves us, add it as kind: 'affiliate', status: 'live' above.
+
+module.exports = { CATALOG, getProduct, liveProducts, affiliateProducts, podProducts, sheinProducts };

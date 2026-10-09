@@ -36,6 +36,17 @@ function variantIdFor(product, printOrder) {
     const size = String(printOrder.size || 'M').toUpperCase();
     return process.env[`PRINTFUL_VARIANT_TEE_${color}_${size}`] || '';
   }
+  // Printful synced catalog products (merch store, live 2026-10-09):
+  // the catalog entry carries syncVariants {SIZE: sync_variant_id}.
+  try {
+    const catalog = require('./merchCatalog');
+    const entry = catalog.CATALOG.find((p) => p.printfulProduct === product && p.syncVariants);
+    if (entry) {
+      const size = String(printOrder?.size || 'M').toUpperCase();
+      const vid = entry.syncVariants[size] || entry.syncVariants.OS || Object.values(entry.syncVariants)[0];
+      return String(vid || '');
+    }
+  } catch (e) { /* fall through to static map */ }
   const map = {
     print_8x10: process.env.PRINTFUL_VARIANT_8X10 || '',
     print_12x16: process.env.PRINTFUL_VARIANT_12X16 || '',

@@ -60,6 +60,7 @@ router.get('/', async (req, res) => {
     // products. Affiliate cards render regardless of Printful state.
     affiliates: catalog.affiliateProducts(),
     podProducts: catalog.podProducts(),
+    sheinProducts: catalog.sheinProducts(),
     printfulOk: configured,
     metaDescription: "Mike's Custom Tees — your purchased Tattoo Art Customs designs on premium Bella + Canvas tees and bold 18×24\" posters, printed on demand.",
   });
@@ -182,12 +183,25 @@ router.get('/catalog/:productId', requireLogin, formLimiter, async (req, res) =>
     req.session.flash = 'That item is not available yet — join the notify list below.';
     return res.redirect('/merch');
   }
+  // Per-product sizes/pricing: synced Printful products carry their own
+  // sizes + priceCents; legacy tee_classic entries fall back to tee pricing.
+  const sizes = product.sizes || pricing.TEE_SIZES;
+  const priceFor = (size) => {
+    if (product.priceCents != null) {
+      if (typeof product.priceCents === 'object') {
+        return product.priceCents[String(size || 'M').toUpperCase()] || product.priceCents.M;
+      }
+      return product.priceCents;
+    }
+    return pricing.teePriceCents(size);
+  };
   res.render('merch/catalog-order', {
     title: `Mike's Custom Tees — ${product.id}`,
     product,
-    sizes: pricing.TEE_SIZES,
+    sizes,
+    singleVariant: !product.sizes,
     colors: pricing.TEE_COLORS,
-    priceFor: pricing.teePriceCents,
+    priceFor,
     withFee: (c) => pricing.withFeeCents(c),
     money: pricing.money,
   });
@@ -199,8 +213,13 @@ router.post('/catalog', requireLogin, formLimiter, checkHoneypot, async (req, re
     if (!product || product.kind !== 'pod' || product.status !== 'live' || !printfulConfigured()) {
       throw new Error('That item is not available yet.');
     }
-    const size = pricing.teeSizeLabel(req.body.size);
-    const color = pricing.teeColorLabel(req.body.color);
+    // Size validation: synced products use their own size list; single-
+    // variant products (mug/sticker/poster) use 'OS'. Color is fixed.
+    const rawSize = String(req.body.size || 'M').toUpperCase();
+    const size = product.sizes
+      ? (product.sizes.includes(rawSize) ? rawSize : product.sizes[0])
+      : 'OS';
+    const color = 'black';
     const qty = Math.min(10, Math.max(1, parseInt(req.body.quantity, 10) || 1));
 
     const ship = {
@@ -216,7 +235,15 @@ router.post('/catalog', requireLogin, formLimiter, checkHoneypot, async (req, re
       throw new Error('Name, street address, city, and ZIP are required for shipping.');
     }
 
-    const unit = pricing.teePriceCents(size);
+    const unit = (() => {
+      if (product.priceCents != null) {
+        if (typeof product.priceCents === 'object') {
+          return product.priceCents[size] || product.priceCents.M;
+        }
+        return product.priceCents;
+      }
+      return pricing.teePriceCents(size);
+    })();
     const amount = unit * qty;
     const fee = pricing.processingFeeCents(amount);
     const orderId = await db.insert('orders', {

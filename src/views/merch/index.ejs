@@ -88,3 +88,16 @@
 </div>
 <% }); %>
 <% } %>
+
+<% if (typeof sheinProducts !== 'undefined' && sheinProducts && sheinProducts.length) { %>
+<h2><%= t('merch.shein_h') %></h2>
+<p class="muted"><%= t('merch.shein_sub') %></p>
+<% sheinProducts.forEach(function(p) { %>
+<div class="card" style="margin-bottom:1rem;">
+  <img src="<%= p.image %>" alt="<%= t(p.nameKey) %>" loading="lazy" style="max-width:320px;width:100%;height:auto;display:block;margin-bottom:0.75rem;">
+  <h3 style="margin-top:0;"><%= t(p.nameKey) %></h3>
+  <p><%= t(p.blurbKey) %></p>
+  <p><a class="btn" href="<%= p.url %>" target="_blank" rel="noopener nofollow sponsored"><%= t(p.ctaKey) %></a></p>
+</div>
+<% }); %>
+<% } %>
