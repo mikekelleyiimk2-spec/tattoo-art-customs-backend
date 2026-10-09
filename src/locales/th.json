@@ -665,7 +665,11 @@
     "socials_note": "ใช้ลิงก์ชำระเงินในโซเชียลของเรา แล้วมาบันทึกที่นี่",
     "redeem_title": "Your Little Inkers redeem code",
     "redeem_note": "Enter this code in the Little Inkers app (Parent Zone → Redeem a coloring code) to unlock this design as a coloring page.",
-    "redeem_how": "One-time use, expires in 30 days."
+    "redeem_how": "One-time use, expires in 30 days.",
+    "aftercare_title": "จะเอาสิ่งนี้ไปให้ช่างสักของคุณ?",
+    "aftercare_text": "ดูแลให้หายดี — เราแนะนำผลิตภัณฑ์ดูแลหลังสัก Base Labs สำหรับรอยสักใหม่",
+    "aftercare_cta": "รับ Base Labs (ใช้ส่วนลดแล้ว)",
+    "aftercare_note": "ลิงก์พันธมิตร — เราได้รับค่าคอมมิชั่นโดยคุณไม่เสียค่าใช้จ่ายเพิ่ม"
   },
   "raffle": {
     "already": "หนึ่งคนหนึ่งสิทธิ์ — คุณเข้าร่วมแล้ว ขอให้โชคดี!",

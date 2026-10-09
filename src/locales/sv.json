@@ -665,7 +665,11 @@
     "socials_note": "Använd betalningslänkarna på våra sociala medier och registrera det här.",
     "redeem_title": "Your Little Inkers redeem code",
     "redeem_note": "Enter this code in the Little Inkers app (Parent Zone → Redeem a coloring code) to unlock this design as a coloring page.",
-    "redeem_how": "One-time use, expires in 30 days."
+    "redeem_how": "One-time use, expires in 30 days.",
+    "aftercare_title": "Tar du detta till din tatuerare?",
+    "aftercare_text": "Läk det rätt — Base Labs eftervård är vad vi rekommenderar för färsk tatuering.",
+    "aftercare_cta": "Skaffa Base Labs (rabatt applicerad)",
+    "aftercare_note": "Affiliatelänk — vi tjänar en provision utan extra kostnad för dig."
   },
   "raffle": {
     "already": "En entry per person — du är redan med. Lycka till!",

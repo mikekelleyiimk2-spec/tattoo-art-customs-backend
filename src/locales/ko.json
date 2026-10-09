@@ -665,7 +665,11 @@
     "socials_note": "저희 SNS에 있는 결제 링크로 보내신 뒤 여기서 기록해 주세요.",
     "redeem_title": "Your Little Inkers redeem code",
     "redeem_note": "Enter this code in the Little Inkers app (Parent Zone → Redeem a coloring code) to unlock this design as a coloring page.",
-    "redeem_how": "One-time use, expires in 30 days."
+    "redeem_how": "One-time use, expires in 30 days.",
+    "aftercare_title": "이걸 타투이스트에게 가져가세요?",
+    "aftercare_text": "제대로 치유하세요 — 새 타투에는 Base Labs 애프터케어를 추천합니다.",
+    "aftercare_cta": "Base Labs 구매하기 (할인 적용됨)",
+    "aftercare_note": "제휴 링크 — 추가 비용 없이 저희가 수수료를 받습니다."
   },
   "raffle": {
     "already": "1인 1회 — 이미 참여하셨어요. 행운을 빌어요!",

@@ -665,7 +665,11 @@
     "socials_note": "请使用我们社交账号上的支付链接，然后在此记录。",
     "redeem_title": "Your Little Inkers redeem code",
     "redeem_note": "Enter this code in the Little Inkers app (Parent Zone → Redeem a coloring code) to unlock this design as a coloring page.",
-    "redeem_how": "One-time use, expires in 30 days."
+    "redeem_how": "One-time use, expires in 30 days.",
+    "aftercare_title": "要把这个带给你的纹身师吗？",
+    "aftercare_text": "好好愈合 — 新纹身我们推荐使用 Base Labs 护理产品。",
+    "aftercare_cta": "购买 Base Labs（已应用折扣）",
+    "aftercare_note": "联盟链接 — 我们赚取佣金，您无需额外付费。"
   },
   "raffle": {
     "already": "每人限1次——您已参加。祝好运！",

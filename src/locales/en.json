@@ -665,7 +665,11 @@
     "socials_note": "Use the payment links on our socials, then record it here.",
     "redeem_title": "Your Little Inkers redeem code",
     "redeem_note": "Enter this code in the Little Inkers app (Parent Zone → Redeem a coloring code) to unlock this design as a coloring page.",
-    "redeem_how": "One-time use, expires in 30 days."
+    "redeem_how": "One-time use, expires in 30 days.",
+    "aftercare_title": "Taking this to your artist?",
+    "aftercare_text": "Heal it right — Base Labs aftercare is what we recommend for fresh ink.",
+    "aftercare_cta": "Get Base Labs (discount applied)",
+    "aftercare_note": "Affiliate link — we earn a commission at no extra cost to you."
   },
   "raffle": {
     "already": "One entry per person — you're already entered. Good luck!",
