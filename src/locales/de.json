@@ -896,5 +896,13 @@
     "empty": "Noch keine Show-Designs — schau bald wieder vorbei.",
     "browse_all": "Alle Designs ansehen",
     "starts_when_airs": "Der Mitglieder-Rabatt startet mit der Ausstrahlung der Folge."
+  },
+  "newsletter": {
+    "title": "Mailingliste beitreten",
+    "blurb": "Neue Designs, Sales und Drops — direkt in dein Postfach.",
+    "placeholder": "Deine E-Mail-Adresse",
+    "subscribe": "Anmelden",
+    "success": "Du bist auf der Liste — achte auf neue Designs und Angebote in deinem Postfach.",
+    "invalid": "Bitte gib eine gültige E-Mail-Adresse ein."
   }
 }

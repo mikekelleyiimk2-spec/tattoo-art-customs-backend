@@ -896,5 +896,13 @@
     "empty": "Aún no hay diseños del programa — vuelve pronto.",
     "browse_all": "Ver todos los diseños",
     "starts_when_airs": "La oferta para miembros empieza cuando se emita el episodio."
+  },
+  "newsletter": {
+    "title": "Únete a la lista de correo",
+    "blurb": "Nuevos diseños, ofertas y lanzamientos — directo a tu bandeja.",
+    "placeholder": "Tu correo electrónico",
+    "subscribe": "Suscribirse",
+    "success": "Estás en la lista — revisa tu bandeja para nuevos diseños y ofertas.",
+    "invalid": "Por favor ingresa un correo electrónico válido."
   }
 }

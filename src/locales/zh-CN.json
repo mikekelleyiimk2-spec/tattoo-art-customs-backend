@@ -896,5 +896,13 @@
     "empty": "暂无节目设计，敬请期待。",
     "browse_all": "浏览全部设计",
     "starts_when_airs": "节目播出后会员优惠开启。"
+  },
+  "newsletter": {
+    "title": "加入邮件列表",
+    "blurb": "新设计、促销和上新 — 直接发送到您的邮箱。",
+    "placeholder": "您的电子邮箱",
+    "subscribe": "订阅",
+    "success": "您已加入列表 — 请留意邮箱中的新设计和优惠。",
+    "invalid": "请输入有效的电子邮箱地址。"
   }
 }

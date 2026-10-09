@@ -896,5 +896,13 @@
     "empty": "Aucun design de l’émission pour le moment — revenez bientôt.",
     "browse_all": "Voir tous les designs",
     "starts_when_airs": "La promo membres commence à la diffusion de l’épisode."
+  },
+  "newsletter": {
+    "title": "Rejoindre la liste de diffusion",
+    "blurb": "Nouveaux designs, promos et nouveautés — directement dans ta boîte mail.",
+    "placeholder": "Ton adresse e-mail",
+    "subscribe": "S'inscrire",
+    "success": "Tu es sur la liste — surveille ta boîte mail pour les nouveaux designs et offres.",
+    "invalid": "Veuillez saisir une adresse e-mail valide."
   }
 }

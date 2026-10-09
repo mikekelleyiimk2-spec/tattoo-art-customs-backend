@@ -896,5 +896,13 @@
     "empty": "No show designs yet — check back soon.",
     "browse_all": "Browse all designs",
     "starts_when_airs": "Member sale starts when the episode airs."
+  },
+  "newsletter": {
+    "title": "Join the mailing list",
+    "blurb": "New designs, sales, and drops — straight to your inbox.",
+    "placeholder": "Your email address",
+    "subscribe": "Sign up",
+    "success": "You are on the list — watch your inbox for new designs and deals.",
+    "invalid": "Please enter a valid email address."
   }
 }

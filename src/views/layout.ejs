@@ -145,6 +145,16 @@
       <% if (littleInkersYoutubeUrl) { %><a href="<%= littleInkersYoutubeUrl %>" target="_blank" rel="noopener">🖍️ <%= t('footer.lil_youtube') %></a><% } %>
       <% if (playStoreUrl) { %><a href="<%= playStoreUrl %>" target="_blank" rel="noopener"><%= t('home.get_play_free') %></a><% } %><% if (playStoreProUrl) { %><a href="<%= playStoreProUrl %>" target="_blank" rel="noopener"><%= t('home.get_play_pro') %></a><% } %>
     </nav>
+    <div class="footer-newsletter">
+      <strong><%= t('newsletter.title') %></strong>
+      <p><%= t('newsletter.blurb') %></p>
+      <form method="post" action="/newsletter" class="newsletter-form">
+        <input type="hidden" name="back" value="<%= typeof currentPath !== 'undefined' ? currentPath : '/' %>">
+        <input type="email" name="email" required maxlength="120" placeholder="<%= t('newsletter.placeholder') %>" aria-label="<%= t('newsletter.placeholder') %>">
+        <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button type="submit" class="btn"><%= t('newsletter.subscribe') %></button>
+      </form>
+    </div>
   </div>
   <p class="fineprint">© <%= new Date().getFullYear() %> Tattoo Art Customs™. <%= t('footer.rights') %></p>
 </footer>

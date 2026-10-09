@@ -896,5 +896,13 @@
     "empty": "Nessun design dello show per ora — torna presto.",
     "browse_all": "Sfoglia tutti i design",
     "starts_when_airs": "Lo sconto membri parte quando va in onda l’episodio."
+  },
+  "newsletter": {
+    "title": "Iscriviti alla mailing list",
+    "blurb": "Nuovi design, saldi e uscite — direttamente nella tua inbox.",
+    "placeholder": "Il tuo indirizzo email",
+    "subscribe": "Iscriviti",
+    "success": "Sei nella lista — controlla la tua inbox per nuovi design e offerte.",
+    "invalid": "Inserisci un indirizzo email valido."
   }
 }

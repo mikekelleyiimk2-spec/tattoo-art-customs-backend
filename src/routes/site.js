@@ -853,6 +853,26 @@ router.post('/app-notify', formLimiter, checkHoneypot, async (req, res) => {
   res.redirect('/#app');
 });
 
+// Newsletter / mailing list signup (footer form on every page).
+router.post('/newsletter', formLimiter, checkHoneypot, async (req, res) => {
+  const raw = String(req.body.email || '').trim().toLowerCase().slice(0, 120);
+  const back = String(req.body.back || '/').slice(0, 200) || '/';
+  if (!EMAIL_RE.test(raw)) {
+    req.session.flash = req.t('newsletter.invalid');
+    return res.redirect(back);
+  }
+  try {
+    const existing = await db.get('SELECT id, unsubscribed_at FROM mailing_list WHERE email = ?', [raw]);
+    if (existing && existing.unsubscribed_at) {
+      await db.run('UPDATE mailing_list SET unsubscribed_at = NULL, source = ?, subscribed_at = ? WHERE id = ?', ['footer-resub', db.now(), existing.id]);
+    } else if (!existing) {
+      await db.insert('mailing_list', { email: raw, source: 'footer', subscribed_at: db.now(), unsubscribed_at: null });
+    }
+  } catch (e) { console.error('newsletter insert failed:', e.message); }
+  req.session.flash = req.t('newsletter.success');
+  res.redirect(back);
+});
+
 // Public opening-raffle page: prizes, entry progress, winners once drawn.
 router.get('/raffle', async (req, res) => {
   const founding = require('../lib/founding');

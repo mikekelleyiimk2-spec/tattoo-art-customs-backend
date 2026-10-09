@@ -896,5 +896,13 @@
     "empty": "Inga showdesigner ännu — kom tillbaka snart.",
     "browse_all": "Bläddra bland alla designer",
     "starts_when_airs": "Medlemsrean startar när avsnittet sänds."
+  },
+  "newsletter": {
+    "title": "Gå med i mejllistan",
+    "blurb": "Nya designer, reor och släpp — direkt till din inkorg.",
+    "placeholder": "Din e-postadress",
+    "subscribe": "Prenumerera",
+    "success": "Du är med på listan — håll koll på inkorgen för nya designer och erbjudanden.",
+    "invalid": "Ange en giltig e-postadress."
   }
 }
