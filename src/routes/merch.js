@@ -74,7 +74,10 @@ router.post('/notify', formLimiter, checkHoneypot, async (req, res) => {
   }
   const existing = await db.get('SELECT id FROM merch_notify WHERE email = ?', [email]).catch(() => null);
   if (!existing) {
-    await db.insert('merch_notify', { id: db.newId(), email, created_at: db.now() });
+    // Guarded like /app-notify: a missing/failed table must never 500 the form.
+    try {
+      await db.insert('merch_notify', { id: db.newId(), email, created_at: db.now() });
+    } catch (e) { console.error('merch-notify insert failed:', e.message); }
   }
   req.session.flash = "You're on the list — we'll email you the moment merch drops.";
   res.redirect('/merch');
