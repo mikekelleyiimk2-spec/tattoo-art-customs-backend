@@ -116,6 +116,8 @@ app.use((req, res, next) => {
   }
   res.locals.paypalReady = config.paypalConfigured();
   res.locals.paypalClientId = config.paypal.clientId || '';
+  res.locals.klarnaReady = config.klarnaConfigured();
+  res.locals.afterpayReady = config.afterpayConfigured();
   res.locals.adsenseId = config.adsense.publisherId;
   res.locals.siteName = 'Tattoo Art Customs';
   res.locals.baseUrl = config.baseUrl;

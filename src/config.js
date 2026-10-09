@@ -120,6 +120,26 @@ const config = {
   // stays OFF until explicitly enabled — never attempt a charge otherwise.
   autoChargeEnabled: process.env.AUTO_CHARGE_ENABLED === '1',
 
+  // Buy Now Pay Later providers (owner directive 2026-10-09).
+  // Klarna: sign up at https://www.klarna.com/us/business/
+  klarna: {
+    username: process.env.KLARNA_USERNAME || '',
+    password: process.env.KLARNA_PASSWORD || '',
+    region: (process.env.KLARNA_REGION || 'us').toLowerCase(),
+  },
+  klarnaConfigured() {
+    return !!(this.klarna.username && this.klarna.password);
+  },
+  // Afterpay/Clearpay: sign up at https://www.afterpay.com/
+  afterpay: {
+    merchantId: process.env.AFTERPAY_MERCHANT_ID || '',
+    secretKey: process.env.AFTERPAY_SECRET_KEY || '',
+    region: (process.env.AFTERPAY_REGION || 'us').toLowerCase(),
+  },
+  afterpayConfigured() {
+    return !!(this.afterpay.merchantId && this.afterpay.secretKey);
+  },
+
   smtp: {
     host: process.env.SMTP_HOST || '',
     port: parseInt(process.env.SMTP_PORT || '587', 10),
