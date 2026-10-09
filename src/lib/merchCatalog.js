@@ -29,6 +29,15 @@ const CATALOG = [
     ctaKey: 'merch.aff_cta',
   },
   {
+    id: 'amazon-recommends',
+    kind: 'affiliate',
+    status: 'live',
+    nameKey: 'merch.aff_amazon_name',
+    blurbKey: 'merch.aff_amazon_blurb',
+    url: 'https://www.amazon.com/?tag=tattooartcust-20',
+    ctaKey: 'merch.aff_cta',
+  },
+  {
     id: 'tee-music-genres',
     kind: 'pod',
     status: 'coming-soon',
