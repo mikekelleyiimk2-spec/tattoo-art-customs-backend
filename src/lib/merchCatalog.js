@@ -138,6 +138,59 @@ const CATALOG = [
     url: 'https://club.co/s/R6gQCOlWghEC9',
     ctaKey: 'merch.aff_cta',
   },
+  // --- Recovery Aftercare (Lasso Affiliate+, live 2026-10-09) ---
+  // NOTE: URLs below are brand direct links as placeholders. Replace with
+  // Lasso "Get link" URLs from the Recovery Aftercare brand page in Lasso
+  // Marketplace once generated (up to 5.25%, 14-day cookie).
+  {
+    id: 'recovery-salve',
+    kind: 'affiliate',
+    status: 'live',
+    nameKey: 'merch.aff_recoverysalve_name',
+    blurbKey: 'merch.aff_recoverysalve_blurb',
+    url: 'https://recoveryaftercare.com/collections/tattoo-salve',
+    ctaKey: 'merch.aff_cta',
+  },
+  {
+    id: 'recovery-lotion',
+    kind: 'affiliate',
+    status: 'live',
+    nameKey: 'merch.aff_recoverylotion_name',
+    blurbKey: 'merch.aff_recoverylotion_blurb',
+    url: 'https://recoveryaftercare.com/collections/tattoo-products/products/recovery-tattoo-lotion-enriched-moisturizing-formula-3-oz',
+    ctaKey: 'merch.aff_cta',
+  },
+  {
+    id: 'recovery-soap',
+    kind: 'affiliate',
+    status: 'live',
+    nameKey: 'merch.aff_recoverysoap_name',
+    blurbKey: 'merch.aff_recoverysoap_blurb',
+    url: 'https://recoveryaftercare.com/collections/tattoo-products/products/aftercare-soap-4-oz',
+    ctaKey: 'merch.aff_cta',
+  },
+  // --- Leda Art Supply (Lasso Affiliate+, live 2026-10-09) ---
+  // NOTE: URLs below are brand direct links as placeholders. Replace with
+  // Lasso "Your affiliate link" URLs from Lasso Marketplace once generated
+  // (15.8% Large Sketchbook, 10.5% sketchbook set, 14-day cookie).
+  {
+    id: 'leda-sketchbook-large',
+    kind: 'affiliate',
+    status: 'live',
+    nameKey: 'merch.aff_ledalarge_name',
+    blurbKey: 'merch.aff_ledalarge_blurb',
+    url: 'https://ledaartsupply.com/collections/premium-leda-sketchbooks-for-artists',
+    ctaKey: 'merch.aff_cta',
+  },
+  {
+    id: 'leda-sketchbook-medium',
+    kind: 'affiliate',
+    status: 'live',
+    nameKey: 'merch.aff_ledamedium_name',
+    blurbKey: 'merch.aff_ledamedium_blurb',
+    url: 'https://ledaartsupply.com/collections/premium-leda-sketchbooks-for-artists/products/mother-leda-medium-art-sketchbook',
+    ctaKey: 'merch.aff_cta',
+  },
   {
     id: 'tee-music-genres',
     kind: 'pod',
