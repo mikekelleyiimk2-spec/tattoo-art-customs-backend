@@ -455,7 +455,7 @@ router.get('/pending-designs', async (req, res) => {
   const q = String(req.query.artist || '').toLowerCase();
   const since = Number(req.query.since || 0) || 0;
   try {
-    const rows = await db.query(
+    const { rows } = await db.query(
       `SELECT d.id, d.title, d.description, d.color_path, d.linework_path,
               d.linework_wm_path, d.status AS design_status, d.created_at,
               d.artist_id, u.display_name AS artist_name, u.email AS artist_email,
