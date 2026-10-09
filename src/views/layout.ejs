@@ -29,6 +29,12 @@
 <meta property="og:image" content="<%= ogImage %>">
 <% } %>
 <meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1c1a17">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="/icon.png">
 <meta name="twitter:title" content="<%= typeof title !== 'undefined' ? title : 'Tattoo Art Customs™' %>">
 <% if (typeof metaDescription !== 'undefined' && metaDescription) { %>
 <meta name="twitter:description" content="<%= metaDescription %>">

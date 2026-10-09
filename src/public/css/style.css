@@ -52,7 +52,78 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   min-height: 44px; line-height: 1.4;
 }
 .btn:hover, .btn:focus { background: var(--accent-dark); color: #fff; }
-.btn-secondary { background: var(--ink); }
+.btn-secondary, .btn.secondary { background: var(--ink); }
+.btn-secondary:hover, .btn-secondary:focus,
+.btn.secondary:hover, .btn.secondary:focus { background: #000; color: #fff; }
+/* Standalone .secondary for buttons not using .btn (shop tools) */
+button.secondary, input[type=submit].secondary { background: var(--ink); color: #fff; border: none; padding: .6em 1.1em; border-radius: var(--radius); cursor: pointer; font-size: .95rem; min-height: 44px; }
+button.secondary:hover, button.secondary:focus { background: #000; }
+button.secondary.danger, .btn.danger { background: #b3261e; }
+button.secondary.danger:hover, .btn.danger:hover { background: #7c0f18; }
+/* Inline forms: buttons side-by-side (shop inventory adjusters) */
+form.form.inline { display: inline-block; max-width: none; margin-right: .5rem; vertical-align: middle; }
+form.form.inline p { margin: 0; }
+/* Low-stock highlight (shop inventory) */
+.low-stock { border-left: 4px solid var(--warn); }
+
+/* ---- Missing-class backfill (2026-10-09 responsive audit) ----
+   Classes used across views that never had definitions. Mobile-first,
+   matching the site design system. */
+/* Buttons */
+.btn-small { padding: .4em .9em; font-size: .85rem; min-height: 36px; }
+.btn-big { padding: 1em 2em; font-size: 1.15rem; }
+.btn-primary { background: var(--accent); }
+.btn-quiet { background: transparent; color: var(--ink); border: 1px solid var(--line); padding: .5em 1em; min-height: 44px; border-radius: var(--radius); cursor: pointer; }
+.btn-quiet:hover { background: var(--paper-dim); }
+/* Forms */
+.inline-form { display: inline-block; margin-right: .5rem; vertical-align: middle; }
+/* Feedback */
+.notice { background: #e8f0fe; border: 1px solid #b6cbe8; color: #1a3a6b; padding: .7em 1em; border-radius: var(--radius); margin: 1em 0; }
+.error { background: #fdecea; border: 1px solid #f5c6c2; color: #7c0f18; padding: .7em 1em; border-radius: var(--radius); margin: 1em 0; }
+/* Product / discount cards (aftercare, discounts, merch affiliate cards) */
+.aftercare-products, .discount-grid, .design-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin: 1rem 0; }
+.product-card, .discount-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 1.2rem; display: flex; flex-direction: column; gap: .5rem; }
+.product-card h3, .discount-card h3 { margin: 0; }
+.product-card .btn, .discount-card .btn { margin-top: auto; align-self: flex-start; }
+.discount-badge { display: inline-block; background: var(--accent); color: #fff; font-weight: 700; font-size: .8rem; padding: .2em .8em; border-radius: 20px; text-transform: uppercase; letter-spacing: .5px; }
+.discount-code { font-family: monospace; background: var(--paper-dim); border: 1px dashed var(--muted); border-radius: 6px; padding: .4em .8em; font-size: 1.1rem; letter-spacing: 1px; display: inline-block; }
+.design-card-body { padding: .7rem; }
+/* Booking slot picker */
+.slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: .5rem; margin: 1rem 0; }
+.slot-grid button { min-height: 48px; padding: .6em; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; cursor: pointer; font-size: .95rem; }
+.slot-grid button:hover, .slot-grid button.selected { background: var(--accent); color: #fff; border-color: var(--accent); }
+/* Waiver signing */
+.sigpad { border: 2px solid var(--line); border-radius: var(--radius); background: #fff; width: 100%; max-width: 600px; height: 220px; touch-action: none; cursor: crosshair; }
+.legal-box { background: var(--paper-dim); border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem; max-height: 300px; overflow-y: auto; font-size: .9rem; margin: 1rem 0; }
+/* Shop client tattoo entries */
+.tattoo-entry { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem; margin: .8rem 0; }
+/* Photo grids (aftercare toolkit) */
+.photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .8rem; margin: 1rem 0; }
+.photo-item img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius); border: 1px solid var(--line); }
+/* Membership pricing */
+.price { font-size: 1.6rem; font-weight: 700; color: var(--accent); }
+.tagline { color: var(--muted); font-style: italic; }
+/* Misc */
+.big { font-size: 1.25rem; }
+.check { color: var(--ok); font-weight: 700; }
+.current { font-weight: 700; color: var(--accent); }
+.low { color: var(--warn); font-weight: 700; }
+.respond { margin-top: 1rem; }
+.flow-explain { background: var(--paper-dim); border-radius: var(--radius); padding: 1rem; margin: 1rem 0; font-size: .95rem; }
+.muted-badge { display: inline-block; padding: .15em .7em; border-radius: 20px; font-size: .8rem; background: var(--paper-dim); color: var(--muted); }
+.ad-direct { border: 2px solid var(--accent); }
+.aftercare-promo { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem; margin: 1rem 0; }
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 1rem 0; }
+.sort, .filter { display: inline-flex; gap: .5rem; align-items: center; margin: .5rem .5rem .5rem 0; flex-wrap: wrap; }
+.stack { display: flex; flex-direction: column; gap: .8rem; }
+.chips { display: flex; gap: .5rem; flex-wrap: wrap; margin: .5rem 0; }
+.footer-newsletter, .newsletter-form { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+.footer-newsletter input, .newsletter-form input { flex: 1; min-width: 200px; }
+@media (max-width: 640px) {
+  .aftercare-products, .discount-grid, .design-grid { grid-template-columns: 1fr 1fr; gap: .7rem; }
+  .product-card, .discount-card { padding: .8rem; }
+  .slot-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+}
 .flash {
   background: #fff3cd; border: 1px solid #e0c36a; color: #5c4a00;
   max-width: 1080px; margin: 1rem auto; padding: .7em 1em; border-radius: var(--radius);
