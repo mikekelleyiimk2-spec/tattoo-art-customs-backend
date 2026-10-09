@@ -458,7 +458,7 @@ router.get('/pending-designs', async (req, res) => {
     const rows = await db.query(
       `SELECT d.id, d.title, d.description, d.color_path, d.linework_path,
               d.linework_wm_path, d.status AS design_status, d.created_at,
-              d.artist_id, u.name AS artist_name, u.email AS artist_email,
+              d.artist_id, u.display_name AS artist_name, u.email AS artist_email,
               rq.id AS review_id
          FROM designs d
          LEFT JOIN users u ON u.id = d.artist_id
