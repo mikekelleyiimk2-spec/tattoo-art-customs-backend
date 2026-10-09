@@ -211,7 +211,7 @@ async function recordSaleCommissions(order) {
       return;
     }
   }
-  const design = order.design_id ? await db.get('SELECT artist_id, color_source FROM designs WHERE id = ?', [order.design_id]) : null;
+  const design = order.design_id ? await db.get('SELECT artist_id, color_source, by_request_character FROM designs WHERE id = ?', [order.design_id]) : null;
   const artistId = design && design.artist_id ? design.artist_id : null;
   const rawShopId = order.referred_shop_id || null;
   // Anti-gaming: a shop cannot earn a referral commission on its own artist
@@ -264,6 +264,16 @@ async function recordSaleCommissions(order) {
       const extra = Math.min(0.02, ownerRate);
       ownerRate -= extra;
       shopRate += extra;
+    }
+    // By-request boost (owner rule 2026-10-09): designers fulfilling
+    // by-request characters earn +10pts on the sale (they're doing custom
+    // fan-art work). Funded from the owner's share, capped at available
+    // funds — the site's 10% overhead is never cut. With no referring
+    // shop this takes the designer from 70% to 80%.
+    if (artistId && design && design.by_request_character) {
+      const extra = Math.min(0.10, ownerRate);
+      ownerRate -= extra;
+      designerRate += extra;
     }
     // Referral volume tiers (owner rule 2026-09-29): 20% base -> 22% at
     // 25+ verified referral sales in the calendar month -> 25% at 50+.

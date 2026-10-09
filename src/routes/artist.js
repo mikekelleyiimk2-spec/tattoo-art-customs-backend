@@ -478,4 +478,112 @@ router.post('/payout-email', formLimiter, checkHoneypot, async (req, res) => {
   res.redirect('/artist');
 });
 
+// ---- By-request batch submission (owner directive 2026-10-09).
+// Designers submit up to 10 by-request designs at once, each tagged with
+// the character slug it fulfills. Designs are auto-flagged request_only by
+// the existing title matcher, and get by_request_character set here for
+// the leaderboard + commission boost.
+router.get('/by-request/submit', async (req, res) => {
+  const byRequest = require('../lib/byRequest');
+  const fs = require('fs');
+  let catalog = [];
+  try {
+    const raw = fs.readFileSync(
+      path.join(__dirname, '..', '..', 'assets/catalog/by-request.json'), 'utf8');
+    catalog = JSON.parse(raw).items || [];
+  } catch (e) { /* empty */ }
+  const claimMap = await byRequest.activeClaimsMap().catch(() => ({}));
+  const myClaims = await byRequest.designerClaims(req.user.id).catch(() => []);
+  res.render('artist/by-request-submit', {
+    title: 'Submit by-request designs — Tattoo Art Customs',
+    styles: DESIGN_STYLES, maxItems: 10,
+    catalog, claimMap, myClaims: myClaims.map((c) => c.character_slug),
+    customPrice: pricing.customFullCents(), premadePrice: pricing.premadePriceCents(),
+  });
+});
+
+router.post('/by-request/submit', formLimiter, (req, res, next) => {
+  batchUploadMulter(req, res, (err) => {
+    if (err) { req.session.flash = err.message; return res.redirect('/artist/by-request/submit'); }
+    next();
+  });
+}, checkHoneypot, async (req, res) => {
+  try {
+    const byRequest = require('../lib/byRequest');
+    const byField = {};
+    for (const f of (req.files || [])) byField[f.fieldname] = f;
+    for (const f of (req.files || [])) {
+      if (f.size > IMAGE_MAX_BYTES) {
+        req.session.flash = 'Each image must be under 15 MB.';
+        return res.redirect('/artist/by-request/submit');
+      }
+    }
+    const results = [];
+    for (let i = 0; i < 10; i++) {
+      const lw = byField[`linework_${i}`];
+      if (!lw) continue;
+      const charSlug = String(req.body[`character_${i}`] || '').trim().toLowerCase();
+      if (!charSlug) {
+        results.push({ index: i, ok: false, error: 'Pick which character this design is for.' });
+        continue;
+      }
+      // Verify the claim (or that the character is unclaimed and claim it).
+      const claim = await byRequest.activeClaimFor(charSlug);
+      if (claim && claim.designer_id !== req.user.id) {
+        results.push({ index: i, ok: false, error: 'That character is claimed by another designer.' });
+        continue;
+      }
+      if (!claim) {
+        // Auto-claim on submit if still available.
+        const data = (() => { try {
+          return JSON.parse(fs.readFileSync(
+            path.join(__dirname, '..', '..', 'assets/catalog/by-request.json'), 'utf8'));
+        } catch { return { items: [] }; } })();
+        const item = data.items.find((x) => x.slug === charSlug);
+        const cr = await byRequest.claimCharacter(charSlug, item ? item.name : charSlug, req.user.id);
+        if (!cr.ok) {
+          results.push({ index: i, ok: false, error: 'Could not claim that character — try another.' });
+          continue;
+        }
+      }
+      const fields = {
+        description: req.body.description || '',
+        categories: req.body.categories || '',
+        listing_type: 'custom', // by-request designs are never gallery predesigns
+        watermark_choice: req.body.watermark_choice || 'site',
+        sensitivity: req.body.sensitivity || 'normal',
+        title: req.body[`title_${i}`] || charSlug,
+        style: req.body[`style_${i}`] || '',
+      };
+      try {
+        const r = await uploadOneDesign(req.user, {
+          linework: lw,
+          color: byField[`color_${i}`] || null,
+          watermark: byField['watermark'] || null,
+        }, fields);
+        if (r.ok && r.id) {
+          await db.update('designs', r.id, { by_request_character: charSlug });
+          await byRequest.completeClaim(charSlug, req.user.id, r.id);
+        }
+        results.push({ index: i, ...r, character: charSlug });
+      } catch (e) {
+        console.error('by-request submit item failed:', e.message);
+        results.push({ index: i, ok: false, error: 'Upload failed — please try this one again.' });
+      }
+    }
+    if (!results.length) {
+      req.session.flash = 'Add at least one linework image to submit.';
+      return res.redirect('/artist/by-request/submit');
+    }
+    res.render('artist/portfolio-upload-result', {
+      title: 'By-request submission results — Tattoo Art Customs',
+      results, note: '',
+    });
+  } catch (e) {
+    console.error('by-request submit handler failed:', e);
+    req.session.flash = 'Something went wrong processing that submission — please try again.';
+    return res.redirect('/artist/by-request/submit');
+  }
+});
+
 module.exports = router;

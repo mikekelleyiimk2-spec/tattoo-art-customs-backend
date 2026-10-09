@@ -1,0 +1,57 @@
+<h1><%= t('brsubmit.title') %></h1>
+<p class="muted"><%= t('brsubmit.sub', {n: maxItems}) %></p>
+<p class="muted"><%= t('brsubmit.note') %></p>
+<p><a href="/designers/guide"><%= t('brsubmit.guide_link') %></a></p>
+<form method="post" action="/artist/by-request/submit" enctype="multipart/form-data" class="form">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <% for (let i = 0; i < maxItems; i++) { %>
+  <fieldset class="card" style="margin-bottom:1rem">
+    <legend><strong><%= t('brsubmit.piece', {n: i + 1}) %></strong></legend>
+    <label for="character_<%= i %>"><%= t('brsubmit.character') %></label>
+    <select id="character_<%= i %>" name="character_<%= i %>">
+      <option value=""><%= t('brsubmit.pick_char') %></option>
+      <% catalog.forEach(function(c) { %>
+        <% const cl = claimMap[c.slug]; const mine = myClaims.includes(c.slug); %>
+        <% if (!cl || mine) { %>
+        <option value="<%= c.slug %>"><%= c.name %><%= mine ? ' (' + t('brsubmit.yours') + ')' : '' %></option>
+        <% } %>
+      <% }); %>
+    </select>
+    <label for="linework_<%= i %>"><%= t('brsubmit.linework') %></label>
+    <input type="file" id="linework_<%= i %>" name="linework_<%= i %>" accept="image/jpeg,image/png,image/webp">
+    <label for="color_<%= i %>"><%= t('brsubmit.color') %></label>
+    <input type="file" id="color_<%= i %>" name="color_<%= i %>" accept="image/jpeg,image/png,image/webp">
+    <label for="title_<%= i %>"><%= t('brsubmit.title') %></label>
+    <input type="text" id="title_<%= i %>" name="title_<%= i %>" maxlength="120">
+    <label for="style_<%= i %>"><%= t('brsubmit.style') %></label>
+    <select id="style_<%= i %>" name="style_<%= i %>">
+      <option value=""><%= t('brsubmit.pick_style') %></option>
+      <% styles.forEach(function(s) { %><option value="<%= s %>"><%= s %></option><% }); %>
+    </select>
+  </fieldset>
+  <% } %>
+
+  <h2><%= t('brsubmit.shared_h') %></h2>
+  <label for="description"><%= t('brsubmit.desc') %></label>
+  <textarea id="description" name="description" maxlength="2000"></textarea>
+  <label for="categories"><%= t('brsubmit.cats') %></label>
+  <input type="text" id="categories" name="categories" maxlength="300">
+
+  <h2><%= t('brsubmit.wm_h') %></h2>
+  <label><input type="radio" name="watermark_choice" value="site" checked>
+    <strong><%= t('brsubmit.wm_site') %></strong></label>
+  <label><input type="radio" name="watermark_choice" value="custom">
+    <strong><%= t('brsubmit.wm_custom') %></strong></label>
+  <label for="watermark"><%= t('brsubmit.wm_file') %></label>
+  <input type="file" id="watermark" name="watermark" accept="image/jpeg,image/png,image/webp">
+
+  <h2><%= t('brsubmit.rating_h') %></h2>
+  <label for="sensitivity"><%= t('brsubmit.rating') %></label>
+  <select id="sensitivity" name="sensitivity">
+    <option value="normal" selected><%= t('brsubmit.r_normal') %></option>
+    <option value="nude"><%= t('brsubmit.r_nude') %></option>
+    <option value="explicit"><%= t('brsubmit.r_explicit') %></option>
+  </select>
+
+  <p><button class="btn" type="submit"><%= t('brsubmit.submit') %></button></p>
+</form>

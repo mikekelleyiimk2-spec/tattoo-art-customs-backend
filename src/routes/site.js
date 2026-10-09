@@ -255,13 +255,76 @@ router.get('/by-request', async (req, res) => {
   let items = data.items;
   if (q) items = items.filter((i) => i.name.toLowerCase().includes(q));
   const base = config.baseUrl.replace(/\/$/, '');
+  // Designer enticement systems (owner directive 2026-10-09): claim status,
+  // leaderboard, and designer spotlight.
+  const byRequest = require('./lib/byRequest');
+  let claimMap = {};
+  let myClaims = [];
+  let board = [];
+  let spotlight = [];
+  try {
+    claimMap = await byRequest.activeClaimsMap();
+    board = await byRequest.leaderboard(10);
+    spotlight = await byRequest.spotlightDesigners(3);
+    if (req.user) myClaims = (await byRequest.designerClaims(req.user.id)).map((c) => c.character_slug);
+  } catch (e) { /* tables may not exist yet on old deploys */ }
+  const { isAdminRole } = require('./middleware/auth');
+  const canClaim = !!req.user && (req.user.role === 'design_artist' || req.user.role === 'tattoo_shop' || isAdminRole(req.user.role));
   res.render('site/by-request', {
     title: 'By-Request Characters — Tattoo Art Customs',
-    items, q: req.query.q || '',
+    items, q: req.query.q || '', claimMap, myClaims, board, spotlight, canClaim,
     updated: data.updated ? new Date(data.updated).toLocaleDateString() : '',
     customPrice: withFeeCents(config.pricing.customFull),
     metaDescription: 'Request any of these characters as a custom tattoo design — drawn for you in 48 hours. Names list updated daily.',
     canonical: `${base}/by-request`,
+  });
+});
+
+// Claim a character (designer-gated: first come, first served).
+router.post('/by-request/claim', async (req, res) => {
+  const { requireLogin } = require('./middleware/auth');
+  const { requireDesignerAccess } = require('./shop/shopDesigner');
+  // Inline guard chain since router-level middleware differs per route.
+  if (!req.user) return res.redirect('/login?next=' + encodeURIComponent('/by-request'));
+  try { await new Promise((resolve, reject) => requireDesignerAccess()(req, res, (e) => e ? reject(e) : resolve())); }
+  catch (e) { req.session.flash = 'Designer access required to claim characters.'; return res.redirect('/membership'); }
+  const slug = String(req.body.slug || '').trim().toLowerCase();
+  if (!slug) return res.redirect('/by-request');
+  const data = byRequestList();
+  const item = data.items.find((i) => i.slug === slug);
+  if (!item) return res.redirect('/by-request');
+  const byRequest = require('./lib/byRequest');
+  const result = await byRequest.claimCharacter(slug, item.name, req.user.id);
+  if (!result.ok) {
+    req.session.flash = result.reason === 'already_yours'
+      ? 'You already claimed this character.'
+      : 'Someone already claimed this character — pick another one!';
+  } else {
+    req.session.flash = `Claimed: ${item.name}. It's yours — submit your design when ready!`;
+  }
+  res.redirect('/by-request');
+});
+
+// Release your own claim.
+router.post('/by-request/release', async (req, res) => {
+  if (!req.user) return res.redirect('/login?next=' + encodeURIComponent('/by-request'));
+  const slug = String(req.body.slug || '').trim().toLowerCase();
+  if (slug) {
+    const byRequest = require('./lib/byRequest');
+    await byRequest.releaseClaim(slug, req.user.id);
+    req.session.flash = 'Claim released — the character is available again.';
+  }
+  res.redirect('/by-request');
+});
+
+// Designer guide: specs and requirements for by-request submissions
+// (owner directive 2026-10-09 — designer enticement systems).
+router.get('/designers/guide', async (req, res) => {
+  const base = config.baseUrl.replace(/\/$/, '');
+  res.render('site/designer-guide', {
+    title: 'Designer Guide — Tattoo Art Customs',
+    metaDescription: 'Submission specs, style requirements, and commission details for Tattoo Art Customs designers.',
+    canonical: `${base}/designers/guide`,
   });
 });
 

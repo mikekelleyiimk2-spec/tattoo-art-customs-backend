@@ -2,6 +2,38 @@
 <p class="muted"><%= t('byrequest.sub', {price: fmtMoney(customPrice)}) %></p>
 <% if (updated) { %><p class="muted fineprint"><%= t('byrequest.updated', {date: updated}) %></p><% } %>
 
+<% /* Designer spotlight — top contributors (owner directive 2026-10-09) */ %>
+<% if (spotlight && spotlight.length) { %>
+<section class="card">
+  <h2><%= t('byrequest.spotlight_h') %></h2>
+  <div class="grid">
+    <% spotlight.forEach(function(s, idx) { %>
+    <article class="design-card">
+      <div class="pad">
+        <h3><%= idx + 1 %>. <%= s.name %></h3>
+        <p class="muted"><%= t('byrequest.spotlight_n', {n: s.completed}) %></p>
+      </div>
+    </article>
+    <% }); %>
+  </div>
+</section>
+<% } %>
+
+<% /* Designer enticement banner */ %>
+<% if (canClaim) { %>
+<section class="card">
+  <h2><%= t('byrequest.designer_h') %></h2>
+  <p><%= t('byrequest.designer_pitch') %></p>
+  <p>
+    <a class="btn" href="/artist/by-request/submit"><%= t('byrequest.submit_btn') %></a>
+    <a class="btn btn-small" href="/designers/guide"><%= t('byrequest.guide_btn') %></a>
+  </p>
+  <% if (myClaims && myClaims.length) { %>
+  <p class="muted"><%= t('byrequest.your_claims', {n: myClaims.length}) %></p>
+  <% } %>
+</section>
+<% } %>
+
 <form method="get" action="/by-request" class="card" role="search" aria-label="<%= t('byrequest.search_aria') %>">
   <div>
     <label for="q"><%= t('byrequest.search_label') %></label>
@@ -18,10 +50,25 @@
 <p class="muted fineprint"><%= t('byrequest.fanart_note') %></p>
 <div class="grid">
   <% withArt.forEach(function(i) { %>
+  <% const claim = claimMap[i.slug]; const mine = myClaims.includes(i.slug); %>
   <article class="design-card byrequest-card">
     <a href="/order/custom?character=<%= encodeURIComponent(i.slug) %>"><img src="<%= i.img %>" alt="<%= i.name %>" loading="lazy" decoding="async"></a>
     <div class="pad">
       <h3><%= i.name %></h3>
+      <% if (claim) { %>
+        <p class="muted fineprint"><%= mine ? t('byrequest.claimed_yours') : t('byrequest.claimed') %></p>
+        <% if (mine) { %>
+        <form method="post" action="/by-request/release" style="display:inline">
+          <input type="hidden" name="slug" value="<%= i.slug %>">
+          <button class="btn btn-small" type="submit"><%= t('byrequest.release_btn') %></button>
+        </form>
+        <% } %>
+      <% } else if (canClaim) { %>
+        <form method="post" action="/by-request/claim" style="display:inline">
+          <input type="hidden" name="slug" value="<%= i.slug %>">
+          <button class="btn btn-small" type="submit"><%= t('byrequest.claim_btn') %></button>
+        </form>
+      <% } %>
       <p><a class="btn btn-small" href="/order/custom?character=<%= encodeURIComponent(i.slug) %>"><%= t('byrequest.request_btn') %></a></p>
     </div>
   </article>
@@ -33,12 +80,40 @@
 <h2><%= t('byrequest.soon_h') %></h2>
 <ul class="byrequest-list">
   <% comingSoon.forEach(function(i) { %>
+  <% const claim = claimMap[i.slug]; const mine = myClaims.includes(i.slug); %>
   <li>
     <span class="byrequest-name"><%= i.name %></span>
+    <% if (claim) { %>
+      <span class="muted fineprint"><%= mine ? t('byrequest.claimed_yours') : t('byrequest.claimed') %></span>
+      <% if (mine) { %>
+      <form method="post" action="/by-request/release" style="display:inline">
+        <input type="hidden" name="slug" value="<%= i.slug %>">
+        <button class="btn btn-small" type="submit"><%= t('byrequest.release_btn') %></button>
+      </form>
+      <% } %>
+    <% } else if (canClaim) { %>
+      <form method="post" action="/by-request/claim" style="display:inline">
+        <input type="hidden" name="slug" value="<%= i.slug %>">
+        <button class="btn btn-small" type="submit"><%= t('byrequest.claim_btn') %></button>
+      </form>
+    <% } %>
     <a class="btn btn-small" href="/order/custom?character=<%= encodeURIComponent(i.slug) %>"><%= t('byrequest.request_btn') %></a>
   </li>
   <% }); %>
 </ul>
 <% } %>
 <% if (!items.length) { %><p><%= t('byrequest.no_match') %></p><% } %>
+
+<% /* Leaderboard — designers ranked by completed by-request designs */ %>
+<% if (board && board.length) { %>
+<section class="card">
+  <h2><%= t('byrequest.board_h') %></h2>
+  <ol>
+    <% board.forEach(function(b) { %>
+    <li><strong><%= b.name %></strong> — <%= t('byrequest.board_n', {n: b.completed}) %></li>
+    <% }); %>
+  </ol>
+</section>
+<% } %>
+
 <p class="muted fineprint"><%= t('byrequest.note') %></p>
