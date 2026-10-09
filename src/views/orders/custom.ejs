@@ -41,5 +41,6 @@
   <p><label><input type="checkbox" name="use_credit" value="1"> <%= t('customs.pay_credit_deposit') %></label></p>
   <% const _cfx = fxNote(depositTotal); if (_cfx) { %><p class="muted fineprint"><%= _cfx %></p><% } %>
   <p><button class="btn" id="custom-submit-btn" type="submit"><%= t('customs.pay_deposit', {deposit: fmtMoney(depositTotal)}) %></button></p>
+  <% if (typeof paypalClientId !== 'undefined' && paypalClientId && typeof depositTotal !== 'undefined' && depositTotal >= 3000) { %><div data-pp-message data-pp-amount="<%= (depositTotal/100).toFixed(2) %>"></div><% } %>
 </form>
 <p class="muted"><%= t('customs.final_note') %></p>

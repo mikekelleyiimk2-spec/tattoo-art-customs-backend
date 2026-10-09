@@ -53,6 +53,7 @@
       </form>
       <% } %></p><% } %>
     <p><strong><%= fmtMoney(priceTotal) %></strong> <span class="muted"><%= t('design.price_includes', {fee: fmtMoney(priceFee)}) %></span> <% if (sale) { %><span class="badge ok"><%= t('design.sale_price') %></span><% } %> <% if (typeof isCustom !== 'undefined' && isCustom) { %><span class="badge"><%= t('design.custom_portfolio') %></span><% } %></p>
+    <% if (typeof paypalClientId !== 'undefined' && paypalClientId && priceTotal >= 3000) { %><div data-pp-message data-pp-amount="<%= (priceTotal/100).toFixed(2) %>"></div><% } %>
     <% if (typeof showDiscountApplied !== 'undefined' && showDiscountApplied) { %><p><span class="badge ok"><%= t('show.member_save', {pct: showDiscountPct}) %></span></p><% } %>
     <% if (design.show_featured && !(typeof showDiscountApplied !== 'undefined' && showDiscountApplied) && typeof showAired !== 'undefined' && !showAired) { %><p class="muted"><%= t('show.starts_when_airs') %></p><% } %>
     <% if (design.show_featured && !(typeof showDiscountApplied !== 'undefined' && showDiscountApplied) && (typeof showAired === 'undefined' || showAired)) { %><p class="muted"><%= t('show.member_callout', {pct: typeof showDiscountPct !== 'undefined' ? showDiscountPct : 20}) %></p><% } %>

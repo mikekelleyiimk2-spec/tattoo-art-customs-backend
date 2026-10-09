@@ -12,6 +12,7 @@
   <form method="post" action="/bookings/checkout/<%= booking.id %>" class="form">
     <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
     <p><button class="btn" type="submit">Pay <%= money(fees.total) %> with PayPal</button></p>
+    <% if (typeof paypalClientId !== 'undefined' && paypalClientId && typeof fees !== 'undefined' && fees.total >= 3000) { %><div data-pp-message data-pp-amount="<%= (fees.total/100).toFixed(2) %>"></div><% } %>
   </form>
   <form method="post" action="/bookings/<%= booking.id %>/cancel" class="form">
     <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">

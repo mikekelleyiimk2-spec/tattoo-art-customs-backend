@@ -66,6 +66,7 @@
   </div>
 
   <p><button class="btn" type="submit"><%= t('merch.continue_payment') %></button></p>
+  <% if (typeof paypalClientId !== 'undefined' && paypalClientId) { %><div data-pp-message data-pp-placement="product" data-pp-amount="25.00"></div><% } %>
 </form>
 <% if (vatNote) { %><p class="muted fineprint"><%= vatNote %></p><% } %>
 <p class="muted"><%= t('merch.made_order') %></p>

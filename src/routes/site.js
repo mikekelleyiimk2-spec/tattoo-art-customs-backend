@@ -864,9 +864,9 @@ router.post('/newsletter', formLimiter, checkHoneypot, async (req, res) => {
   try {
     const existing = await db.get('SELECT id, unsubscribed_at FROM mailing_list WHERE email = ?', [raw]);
     if (existing && existing.unsubscribed_at) {
-      await db.run('UPDATE mailing_list SET unsubscribed_at = NULL, source = ?, subscribed_at = ? WHERE id = ?', ['footer-resub', db.now(), existing.id]);
+      await db.run('UPDATE mailing_list SET unsubscribed_at = NULL, source = ? WHERE id = ?', ['footer-resub', existing.id]);
     } else if (!existing) {
-      await db.insert('mailing_list', { email: raw, source: 'footer', subscribed_at: db.now(), unsubscribed_at: null });
+      await db.insert('mailing_list', { email: raw, source: 'footer', unsubscribed_at: null });
     }
   } catch (e) { console.error('newsletter insert failed:', e.message); }
   req.session.flash = req.t('newsletter.success');

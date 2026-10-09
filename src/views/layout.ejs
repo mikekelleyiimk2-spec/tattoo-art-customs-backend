@@ -215,5 +215,9 @@ window.TAC_LOGGED_IN = <%= currentUser ? 'true' : 'false' %>;
 window.TAC_FAV_STRINGS = <%- JSON.stringify({ add: t('fav.add'), remove: t('fav.remove'), buy: t('fav.buy'), saved: t('fav.saved') }) %>;
 </script>
 <script src="/js/favorites.js" defer></script>
+<% if (typeof paypalClientId !== 'undefined' && paypalClientId) { %>
+<!-- PayPal Pay Later messaging: shows "Pay in 4" / "Pay Monthly" banners wherever data-pp-message appears -->
+<script src="https://www.paypal.com/sdk/js?client-id=<%= paypalClientId %>&components=messages"></script>
+<% } %>
 </body>
 </html>

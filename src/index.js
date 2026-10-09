@@ -115,6 +115,7 @@ app.use((req, res, next) => {
     res.set('Pragma', 'no-cache');
   }
   res.locals.paypalReady = config.paypalConfigured();
+  res.locals.paypalClientId = config.paypal.clientId || '';
   res.locals.adsenseId = config.adsense.publisherId;
   res.locals.siteName = 'Tattoo Art Customs';
   res.locals.baseUrl = config.baseUrl;
