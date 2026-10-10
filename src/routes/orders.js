@@ -19,6 +19,7 @@ const { onCustomPieceSold } = require('../lib/replacements');
 const { onOrderPaid } = require('../lib/printful');
 const { fulfillPremadeOrder, sendCustomDepositReceipt } = require('../lib/fulfillment');
 const firstCustom = require('../lib/firstCustom');
+const halloweenFlash = require('../lib/halloweenFlash');
 
 const router = express.Router();
 
@@ -45,19 +46,26 @@ router.post('/buy/:designId', requireLogin, formLimiter, checkHoneypot, async (r
     return res.redirect(`/orders/custom?design=${encodeURIComponent(design.id)}`);
   }
   const isCustom = design.listing_type === 'custom';
-  // Best-deal-wins at checkout: Saturday sale, the standing 20% CUSTOMER
-  // member discount, the show-featured discount (designs used on the Little
-  // Inkers "Color With Us!" show — same customer-member eligibility, code
-  // show_featured_20 so show-driven sales are trackable), or regular — never
-  // stacked. (The one-time first-custom discount applies only to made-to-order
+  // Best-deal-wins at checkout: Halloween flash sale ($80 flash designs,
+  // $120 custom, 2026-10-09 -> 2026-10-31 CT), Saturday sale, the standing
+  // 20% CUSTOMER member discount, the show-featured discount (designs used
+  // on the Little Inkers "Color With Us!" show — same customer-member
+  // eligibility, code show_featured_20 so show-driven sales are trackable),
+  // or regular — never stacked. (The one-time first-custom discount applies only to made-to-order
   // customs via POST /custom, never to already-made portfolio pieces here.
   // member_20 is customer-plan only: artists, shops, and admins never get
   // it — see isCustomerMember.)
   const saleOn = await pricing.salePriceActive(req.user);
+  const hfOn = halloweenFlash.isHalloweenFlashWindow(new Date());
   const customerMember = await isCustomerMember(req.user);
   let listPrice, discountApplied;
   if (isCustom) {
-    if (saleOn) {
+    if (hfOn) {
+      // Halloween flash sale: $120 custom (best-deal-wins — undercuts the
+      // Saturday sale and both 20% discounts).
+      listPrice = pricing.customFullCents(new Date(), member);
+      discountApplied = halloweenFlash.HALLOWEEN_FLASH_DISCOUNT_CODE;
+    } else if (saleOn) {
       listPrice = pricing.customFullCents(new Date(), member);
       discountApplied = 'saturday_sale';
     } else if (customerMember) {
@@ -440,6 +448,8 @@ router.get('/approve/:orderId', requireLogin, async (req, res) => {
     await routeCustomOrder(fresh);
     await onCustomPieceSold(fresh); // sold custom pieces delist + queue a replacement
     await fulfillPremadeOrder(fresh); // premades deliver instantly: token + receipt email
+    try { await require('../lib/requestZipDelivery').fulfillRequestZipOrder(fresh); } // request orders: auto-deliver the matching ZIP (fail-closed on ambiguity)
+    catch (e) { console.error('request-zip delivery failed:', e.message); }
     await require('../lib/littleInkers').fulfillSendToApp(fresh); // send-to-app: mint LIL- code
     if (fresh.order_type === 'custom') await sendCustomDepositReceipt(fresh); // deposit receipt (+ first-custom line item)
     try { await require('../lib/saleWatch').watchOrderPaid(fresh); } catch (e) { console.error('sale watch failed:', e.message); }
@@ -519,6 +529,14 @@ router.get('/download/:token', async (req, res) => {
       message: 'You purchased the clean linework only — the color version is not included in this order.',
     });
   }
+  // Request-ZIP delivery: a paid request order's ZIP collection is served
+  // here (private R2 presigned URL, or the baked-in library copy).
+  const zipDl = await db.get('SELECT zip_file FROM request_zip_deliveries WHERE order_id = ?', [order.id]);
+  if (zipDl) {
+    const { servePrivateFile } = require('../lib/storage');
+    const { zipStoredRef } = require('../lib/requestZipDelivery');
+    return servePrivateFile(res, zipStoredRef(zipDl.zip_file), { downloadName: zipDl.zip_file });
+  }
   let absPath = null;
   if (order.order_type === 'ios_app') {
     // iOS app IPA: served from the configured path.
@@ -563,9 +581,13 @@ router.get('/download/:token/view', async (req, res) => {
     return res.status(410).render('error', { title: 'Link expired', message: 'This download link has expired.' });
   }
   const order = await db.get('SELECT linework_only FROM orders WHERE id = ?', [dl.order_id]);
+  const zipDl = await db.get('SELECT zip_file, zip_key FROM request_zip_deliveries WHERE order_id = ?', [dl.order_id]);
+  const zipLabels = { 'request-only-31': 'Request-Only Designs (31 designs — linework + full color)', 'video-game': 'Video Game Characters (19 games — linework + full color)', 'by-request': 'By-Request Character Designs' };
   res.render('orders/download', {
     title: 'Your download — Tattoo Art Customs', token: req.params.token,
     lineworkOnly: !!(order && order.linework_only),
+    zipFile: zipDl ? zipDl.zip_file : null,
+    zipLabel: zipDl ? (zipLabels[zipDl.zip_key] || 'Your design collection') : null,
   });
 });
 

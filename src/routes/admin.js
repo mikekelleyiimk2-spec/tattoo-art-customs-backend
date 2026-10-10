@@ -199,6 +199,8 @@ router.post('/orders/:id/confirm-manual', formLimiter, checkHoneypot, async (req
   await routeCustomOrder(fresh);
   await onCustomPieceSold(fresh); // sold custom pieces delist + queue a replacement
   await fulfillPremadeOrder(fresh); // premades deliver instantly: token + receipt email
+  try { await require('../lib/requestZipDelivery').fulfillRequestZipOrder(fresh); } // request orders: auto-deliver the matching ZIP (fail-closed on ambiguity)
+  catch (e) { console.error('request-zip delivery failed:', e.message); }
   try { await require('../lib/saleWatch').watchOrderPaid(fresh); } catch (e) { console.error('sale watch failed:', e.message); }
   await payAdmin(req, 'order_confirm_manual', 'order', order.id);
   req.session.flash = 'Manual payment confirmed — buyer download unlocked, commissions recorded.' +

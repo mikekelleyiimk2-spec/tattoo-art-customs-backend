@@ -7,6 +7,18 @@ website's version — package.json stays 1.0.0 between releases.
 
 ## 2026-10-09
 
+### Added — automatic ZIP delivery for paid request orders
+- New `src/lib/requestZipDelivery.js`: when a custom request order is confirmed PAID (PayPal capture, site-credit, or admin manual confirm), the matching request-only ZIP collection is delivered automatically — download token issued + receipt email with the private link, same bearer-token mechanism as premade purchases.
+- Order-type → ZIP mapping (exactly one ZIP each): request-only design orders (`Request-only design "…" (ID: …)`, design verified request-only in DB) → `zips/Tattoo-Art-Customs-Request-Only-Designs-Linework-and-Color-31.zip`; by-request character orders for the 19 video-game franchises → `zips/video-game-characters-request-only.zip`; all other listed by-request characters → `zips/By-Request-Designs.zip`.
+- Fail-closed safety: unparseable briefs, unknown design IDs, non-request-only designs, or off-list character names are NEVER delivered — the order lands in `request_zip_review` and the owner gets an email with the order details.
+- ZIPs served from the private R2 bucket via 15-minute presigned URL (`r2://tattoo-art-customs-private/zips/…`), falling back to the baked-in `assets/library/` copy; bucket stays private, only the paying buyer gets a link.
+- Migration 080 (`request_zip_deliveries` delivery records, `request_zip_review` owner queue); download page shows a single ZIP link for these orders; i18n keys added across all 12 locales.
+- Verified with a no-money end-to-end test (27 assertions: mapping, idempotency, fail-closed, token issuance, ZIP bytes served, emails) — all passing; full backend suite (1766 tests) green.
+
+### Added — raffle entrant watcher pipe
+- New service-token endpoint `GET /api/muse/raffle-entrants` (read-only): returns recent opening-raffle entrants with warmth signals (entry date, signup date, email_verified, referred_by, order_count, last_order_at). Same Bearer auth as the other Muse pipes; 404s when MUSE_SERVICE_TOKEN is unset. Feeds the daily warm-entrant watcher cron (`raffle-entrant-watch`).
+- Test coverage in the backend suite for the new endpoint (401 on missing/wrong token, 200 with valid token, entrant row shape verified).
+
 ### Changed — Leda Art Supply affiliate link live
 - Swapped both Leda merch entries (`leda-sketchbook-large`,
   `leda-sketchbook-medium`) from placeholder brand-direct URLs to the real

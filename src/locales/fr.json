@@ -813,7 +813,10 @@
     "runners_text": "chacun reçoit un design prêt gratuit au choix",
     "title": "Tattoo Art Customs Opening Raffle",
     "winners": "Gagnants",
-    "youre_in": "Tu es dedans !"
+    "youre_in": "Tu es dedans !",
+    "share_title": "Invite friends, earn bonus entries",
+    "share_text": "Share your personal link — every friend who creates an account through it earns you 3 bonus raffle entries.",
+    "share_count": "{count} joined through your link · {bonus} bonus entries"
   },
   "wallet": {
     "auto_note": "Les payouts partent automatiquement chaque lundi matin, ou retire ci-dessous quand tu veux (3 % de frais early).",

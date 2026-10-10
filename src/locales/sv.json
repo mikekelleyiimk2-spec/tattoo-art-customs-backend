@@ -813,7 +813,10 @@
     "runners_text": "vardera får en gratis färdig design efter eget val",
     "title": "Tattoo Art Customs Opening Raffle",
     "winners": "Vinnare",
-    "youre_in": "Du är med!"
+    "youre_in": "Du är med!",
+    "share_title": "Invite friends, earn bonus entries",
+    "share_text": "Share your personal link — every friend who creates an account through it earns you 3 bonus raffle entries.",
+    "share_count": "{count} joined through your link · {bonus} bonus entries"
   },
   "wallet": {
     "auto_note": "Uttag går automatiskt varje måndag morgon, eller ta ut nedan när du vill (3 % early-avgift).",

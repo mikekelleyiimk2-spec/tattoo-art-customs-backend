@@ -813,7 +813,10 @@
     "runners_text": "각각 원하는 프리 디자인 1점 무료",
     "title": "Tattoo Art Customs 오픈 추첨",
     "winners": "수상자",
-    "youre_in": "참여 완료!"
+    "youre_in": "참여 완료!",
+    "share_title": "Invite friends, earn bonus entries",
+    "share_text": "Share your personal link — every friend who creates an account through it earns you 3 bonus raffle entries.",
+    "share_count": "{count} joined through your link · {bonus} bonus entries"
   },
   "wallet": {
     "auto_note": "커미션은 매주 월요일 아침에 자동으로 정산돼요. 또는 아래에서 언제든 인출할 수 있어요 (조기 인출 수수료 3%).",

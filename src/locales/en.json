@@ -813,7 +813,10 @@
     "runners_text": "each gets one free premade design of their choice",
     "title": "Tattoo Art Customs Opening Raffle",
     "winners": "Winners",
-    "youre_in": "You're in!"
+    "youre_in": "You're in!",
+    "share_title": "Invite friends, earn bonus entries",
+    "share_text": "Share your personal link — every friend who creates an account through it earns you 3 bonus raffle entries.",
+    "share_count": "{count} joined through your link · {bonus} bonus entries"
   },
   "wallet": {
     "auto_note": "Payouts go out automatically every Monday morning, or cash out below anytime (3% early fee).",

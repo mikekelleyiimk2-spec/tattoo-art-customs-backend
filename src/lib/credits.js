@@ -167,6 +167,8 @@ async function payOrderWithCredit({ userId, orderId }) {
   const fulfil = await onOrderPaid(fresh);
   await routeCustomOrder(fresh);
   await fulfillPremadeOrder(fresh); // premades deliver instantly: token + receipt email
+  try { await require('./requestZipDelivery').fulfillRequestZipOrder(fresh); } // request orders: auto-deliver the matching ZIP (fail-closed on ambiguity)
+  catch (e) { console.error('request-zip delivery failed:', e.message); }
   await require('./littleInkers').fulfillSendToApp(fresh); // send-to-app: mint LIL- code
   if (fresh.order_type === 'custom') await sendCustomDepositReceipt(fresh); // deposit receipt (+ first-custom line item)
   try { await require('./saleWatch').watchOrderPaid(fresh); } catch (e) { console.error('sale watch failed:', e.message); }

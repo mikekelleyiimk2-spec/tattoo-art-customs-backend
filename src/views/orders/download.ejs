@@ -1,5 +1,10 @@
 <h1><%= t('orders.download_title') %></h1>
-<% if (lineworkOnly) { %>
+<% if (typeof zipFile !== 'undefined' && zipFile) { %>
+<p class="muted"><%= t('orders.zip_note', {label: zipLabel || ''}) %></p>
+<ul>
+  <li><a class="btn" href="/orders/download/<%= token %>"><%= t('orders.dl_zip') %></a></li>
+</ul>
+<% } else if (lineworkOnly) { %>
 <p class="muted"><%= t('orders.linework_only_note') %></p>
 <ul>
   <li><a class="btn" href="/orders/download/<%= token %>?file=linework"><%= t('orders.dl_linework') %></a></li>
