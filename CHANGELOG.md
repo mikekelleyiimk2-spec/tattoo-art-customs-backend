@@ -5,6 +5,15 @@ https://tattoo-art-customs.onrender.com.
 **Versioning:** the deployed git commit (reported by `/health`) is the
 website's version — package.json stays 1.0.0 between releases.
 
+## 2026-10-09
+
+### Changed — Leda Art Supply affiliate link live
+- Swapped both Leda merch entries (`leda-sketchbook-large`,
+  `leda-sketchbook-medium`) from placeholder brand-direct URLs to the real
+  Lasso affiliate link (https://lasso.to/hARs5ZDmxA/, ~10.5–15.8%, 14-day
+  cookie). TAC public /merch; rel="noopener nofollow sponsored" + FTC
+  disclosure render from the shared merch view.
+
 ## 2026-10-02
 
 ### Changed — codebase optimization pass (no behavior changes)
