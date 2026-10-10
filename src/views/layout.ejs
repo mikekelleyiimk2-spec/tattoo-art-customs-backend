@@ -163,6 +163,7 @@
     </div>
   </div>
   <p class="fineprint">© <%= new Date().getFullYear() %> Tattoo Art Customs™. <%= t('footer.rights') %></p>
+  <p class="fineprint"><%= t('footer.affiliate_note') %></p>
 </footer>
 <div id="cookie-banner" style="display:none;position:fixed;left:0;right:0;bottom:0;background:#1a1a1a;color:#fff;padding:12px 16px;gap:12px;align-items:center;justify-content:space-between;z-index:9999;font-size:14px;">
   <span><%- t('cookie.text', {privacy: '<a href="/privacy" style="color:#ffd166;">' + t('cookie.privacy') + '</a>'}) %></span>
@@ -212,6 +213,30 @@ document.addEventListener('submit', function (ev) {
         if (c.tagName === 'TD' && heads[i]) c.setAttribute('data-label', heads[i]);
       });
     });
+  });
+})();
+// Living-picture atmosphere (owner directive 2026-10-09): spawn soft light
+// motes inside every .living-atmosphere overlay. The artwork underneath is
+// never touched — all motion lives in this composited layer.
+(function () {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  document.querySelectorAll('.living-atmosphere').forEach(function (box) {
+    if (box.dataset.seeded) return;
+    box.dataset.seeded = '1';
+    var n = 10 + Math.floor(Math.random() * 5);
+    for (var k = 0; k < n; k++) {
+      var m = document.createElement('i');
+      var size = (3 + Math.random() * 4).toFixed(1);
+      m.style.setProperty('--x', (Math.random() * 100).toFixed(1) + '%');
+      m.style.setProperty('--s', size + 'px');
+      m.style.setProperty('--o', (0.35 + Math.random() * 0.4).toFixed(2));
+      m.style.setProperty('--d', (8 + Math.random() * 7).toFixed(1) + 's');
+      m.style.setProperty('--dl', (-Math.random() * 14).toFixed(1) + 's');
+      m.style.setProperty('--sd', (2.4 + Math.random() * 2).toFixed(1) + 's');
+      m.style.setProperty('--sdl', (-Math.random() * 4).toFixed(1) + 's');
+      m.style.setProperty('--sway', (10 + Math.random() * 16).toFixed(0) + 'px');
+      box.appendChild(m);
+    }
   });
 })();
 </script>

@@ -258,7 +258,7 @@ router.get('/by-request', async (req, res) => {
   const base = config.baseUrl.replace(/\/$/, '');
   // Designer enticement systems (owner directive 2026-10-09): claim status,
   // leaderboard, and designer spotlight.
-  const byRequest = require('./lib/byRequest');
+  const byRequest = require('../lib/byRequest');
   let claimMap = {};
   let myClaims = [];
   let board = [];
@@ -269,7 +269,7 @@ router.get('/by-request', async (req, res) => {
     spotlight = await byRequest.spotlightDesigners(3);
     if (req.user) myClaims = (await byRequest.designerClaims(req.user.id)).map((c) => c.character_slug);
   } catch (e) { /* tables may not exist yet on old deploys */ }
-  const { isAdminRole } = require('./middleware/auth');
+  const { isAdminRole } = require('../middleware/auth');
   const canClaim = !!req.user && (req.user.role === 'design_artist' || req.user.role === 'tattoo_shop' || isAdminRole(req.user.role));
   res.render('site/by-request', {
     title: 'By-Request Characters — Tattoo Art Customs',
@@ -283,7 +283,7 @@ router.get('/by-request', async (req, res) => {
 
 // Claim a character (designer-gated: first come, first served).
 router.post('/by-request/claim', async (req, res) => {
-  const { requireLogin } = require('./middleware/auth');
+  const { requireLogin } = require('../middleware/auth');
   const { requireDesignerAccess } = require('./shop/shopDesigner');
   // Inline guard chain since router-level middleware differs per route.
   if (!req.user) return res.redirect('/login?next=' + encodeURIComponent('/by-request'));
@@ -294,7 +294,7 @@ router.post('/by-request/claim', async (req, res) => {
   const data = byRequestList();
   const item = data.items.find((i) => i.slug === slug);
   if (!item) return res.redirect('/by-request');
-  const byRequest = require('./lib/byRequest');
+  const byRequest = require('../lib/byRequest');
   const result = await byRequest.claimCharacter(slug, item.name, req.user.id);
   if (!result.ok) {
     req.session.flash = result.reason === 'already_yours'
@@ -311,7 +311,7 @@ router.post('/by-request/release', async (req, res) => {
   if (!req.user) return res.redirect('/login?next=' + encodeURIComponent('/by-request'));
   const slug = String(req.body.slug || '').trim().toLowerCase();
   if (slug) {
-    const byRequest = require('./lib/byRequest');
+    const byRequest = require('../lib/byRequest');
     await byRequest.releaseClaim(slug, req.user.id);
     req.session.flash = 'Claim released — the character is available again.';
   }
@@ -1050,6 +1050,7 @@ router.get('/halloween-flash', async (req, res) => {
     designs,
   });
 });
+
 // --- Holiday Doodle Raffle (Dec 2026): entries for memberships, purchases,
 // and direct entry packs. Prize: free turn-your-kid's-art-into-merchandise
 // codes, 1 winner per 100 entries. Kid-safe copy throughout (no tattoo talk).

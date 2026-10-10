@@ -22,7 +22,7 @@
 <div class="grid">
 <% pieces.forEach(function(p) { %>
   <div class="card">
-    <a href="/design/<%= p.id %>"><img src="/img/designs/<%= p.thumb || p.linework_wm_path.split('/').pop() %>" alt="<%= t('home.design_alt', {title: p.title}) %>" loading="lazy" decoding="async"></a>
+    <a href="/design/<%= p.id %>"><span class="living-frame"><img class="living-picture" src="/img/designs/<%= p.thumb || p.linework_wm_path.split('/').pop() %>" alt="<%= t('home.design_alt', {title: p.title}) %>" loading="lazy" decoding="async"><span class="living-atmosphere" aria-hidden="true"></span></span></a>
     <h3><a href="/design/<%= p.id %>"><%= p.title %></a></h3>
     <p><strong><%= fmtMoney(p.price) %></strong>
       <% if (p.listing_type === 'custom') { %><span class="badge"><%= t('design.custom_portfolio') %></span><% } else { %><span class="badge"><%= t('design.pre_design') %></span><% } %>

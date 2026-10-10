@@ -52,7 +52,7 @@
   <% withArt.forEach(function(i) { %>
   <% const claim = claimMap[i.slug]; const mine = myClaims.includes(i.slug); %>
   <article class="design-card byrequest-card">
-    <a href="/order/custom?character=<%= encodeURIComponent(i.slug) %>"><img src="<%= i.img %>" alt="<%= i.name %>" loading="lazy" decoding="async"></a>
+    <a href="/order/custom?character=<%= encodeURIComponent(i.slug) %>"><span class="living-frame"><img class="living-picture" src="<%= i.img %>" alt="<%= i.name %>" loading="lazy" decoding="async"><span class="living-atmosphere" aria-hidden="true"></span></span></a>
     <div class="pad">
       <h3><%= i.name %></h3>
       <% if (claim) { %>

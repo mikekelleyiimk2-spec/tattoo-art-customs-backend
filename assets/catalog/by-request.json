@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-09T11:46:32.767Z",
+ "updated": "2026-10-10T11:43:30.232Z",
  "items": [
   {
    "name": "Goku (Dragon Ball)",
@@ -658,44 +658,44 @@
   {
    "name": "Ben 10",
    "slug": "ben-10",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/ben-10.jpg"
   },
   {
    "name": "Danny Phantom",
    "slug": "danny-phantom",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/danny-phantom.jpg"
   },
   {
    "name": "Johnny Bravo",
    "slug": "johnny-bravo",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/johnny-bravo.jpg"
   },
   {
    "name": "Dexter (Dexter's Laboratory)",
    "slug": "dexter",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/dexter.jpg"
   },
   {
    "name": "Courage the Cowardly Dog",
    "slug": "courage-the-cowardly-dog",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/courage-the-cowardly-dog.jpg"
   },
   {
    "name": "Ren & Stimpy",
    "slug": "ren-stimpy",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/ren-stimpy.jpg"
   },
   {
    "name": "Pinky and the Brain",
    "slug": "pinky-and-the-brain",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/pinky-and-the-brain.jpg"
   },
   {
    "name": "Yakko, Wakko & Dot (Animaniacs)",

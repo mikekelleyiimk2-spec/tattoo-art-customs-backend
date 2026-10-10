@@ -42,7 +42,7 @@
 <div class="grid">
   <% designs.forEach(function(d) { %>
   <article class="design-card">
-    <a href="/design/<%= d.id %>"><img src="/img/designs/<%= d.thumb || d.linework_wm_path.split('/').pop() %>" alt="<%= t('home.design_alt', {title: d.title}) %>" loading="lazy" decoding="async"></a>
+    <a href="/design/<%= d.id %>"><span class="living-frame"><img class="living-picture" src="/img/designs/<%= d.thumb || d.linework_wm_path.split('/').pop() %>" alt="<%= t('home.design_alt', {title: d.title}) %>" loading="lazy" decoding="async"><span class="living-atmosphere" aria-hidden="true"></span></span></a>
     <button type="button" class="fav-heart" data-fav-id="<%= d.id %>" aria-pressed="false" aria-label="<%= t('fav.add') %>" title="<%= t('fav.add') %>"></button>
     <div class="pad">
       <h3><a href="/design/<%= d.id %>"><%= d.title %></a></h3>

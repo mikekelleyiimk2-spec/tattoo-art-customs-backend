@@ -251,3 +251,53 @@ th { background: var(--paper-dim); }
 .byrequest-list { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .5rem; }
 .byrequest-list li { display: flex; align-items: center; gap: .5rem; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: .5rem .75rem; }
 .byrequest-name { flex: 1; font-weight: 600; }
+
+/* Living-picture idle animation (owner directive 2026-10-09): gentle breathe
+   + soft sway, like a living profile photo. Transform-only (individual
+   translate/rotate/scale properties) — art pixels are never altered.
+   Breathe runs ~5s, sway runs ~6s; they compose because the properties are
+   independent. NEVER apply to the coloring canvas or any interactive surface. */
+@keyframes living-breathe {
+  0%, 100% { translate: 0 0; scale: 1; }
+  50% { translate: 0 -8px; scale: 1.025; }
+}
+@keyframes living-sway {
+  0%, 100% { rotate: -0.8deg; }
+  50% { rotate: 0.8deg; }
+}
+.living-picture {
+  animation: living-breathe 5s ease-in-out infinite, living-sway 6s ease-in-out infinite;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .living-picture { animation: none; }
+}
+
+/* Living-picture atmosphere (owner directive 2026-10-09, revised): composited
+   light motes drifting OVER the untouched art. The artwork pixels are never
+   modified — motion lives only in this overlay + the gentle float underneath.
+   Mote <i> elements are spawned by the layout script; never put content here. */
+.living-frame { position: relative; display: inline-block; line-height: 0; border-radius: inherit; overflow: hidden; }
+.living-atmosphere { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.living-atmosphere i {
+  position: absolute; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.95) 0%, rgba(255,255,255,0) 70%);
+  left: var(--x, 50%); top: 105%;
+  width: var(--s, 5px); height: var(--s, 5px);
+  opacity: 0;
+  animation: living-rise var(--d, 9s) linear infinite, living-mote-sway var(--sd, 3s) ease-in-out infinite;
+  animation-delay: var(--dl, 0s), var(--sdl, 0s);
+}
+@keyframes living-rise {
+  0% { top: 105%; opacity: 0; }
+  12% { opacity: var(--o, .6); }
+  88% { opacity: var(--o, .6); }
+  100% { top: -12%; opacity: 0; }
+}
+@keyframes living-mote-sway {
+  0%, 100% { transform: translateX(calc(var(--sway, 18px) * -1)); }
+  50% { transform: translateX(var(--sway, 18px)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .living-atmosphere { display: none; }
+}
