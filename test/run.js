@@ -1237,14 +1237,26 @@ async function main() {
       .run(randomUUID(), fcBuyerId, fcPlan, 'active', Date.now());
     const fcUser = { id: fcBuyerId, role: 'customer' };
     ok(await fc.firstCustomEligible(fcUser), 'active subscriber with no customs is eligible');
-    const q = await fc.customPriceQuote(fcUser);
+    // The Halloween flash window (Oct 9–31) undercuts the first-custom price
+    // ($120 < $124.59), so best-deal-wins serves halloween_flash on live
+    // wall-clock requests and the one-time first_custom_20 redemption is left
+    // untouched. Pin the lib-level quote to a September date so the
+    // first_custom_20 mechanics stay deterministic year-round.
+    const halloweenNow = require('../src/lib/halloweenFlash').isHalloweenFlashWindow();
+    const q = await fc.customPriceQuote(fcUser, new Date('2026-09-15T12:00:00-05:00'));
     ok(q.full === 12459 && q.deposit === 6230 && q.discount === 'first_custom_20',
       'eligible quote: $124.59 base, $62.30 deposit, first_custom_20 code');
 
-    // Checkout page carries the Opening sale line item (no cap numbers shown).
+    // Checkout page carries the Opening sale line item (no cap numbers shown)
+    // — outside the Halloween window, when the flash price wins instead.
     fcr = await fcreq('GET', '/orders/custom');
-    ok(fcr.status === 200 && fcr.text.includes('Opening sale') && !fcr.text.includes('5,500') && !fcr.text.includes('150 sales'),
-      'custom page shows Opening sale copy without internal cap numbers');
+    if (halloweenNow) {
+      ok(fcr.status === 200 && !fcr.text.includes('Opening sale'),
+        'custom page shows Halloween flash pricing instead of the Opening sale line');
+    } else {
+      ok(fcr.status === 200 && fcr.text.includes('Opening sale') && !fcr.text.includes('5,500') && !fcr.text.includes('150 sales'),
+        'custom page shows Opening sale copy without internal cap numbers');
+    }
 
     // POST /custom creates the discounted order + records redemption once.
     // (PayPal is unconfigured in tests, so checkout falls through to manual pay.)
@@ -1253,17 +1265,22 @@ async function main() {
     ok(fcr.status === 302 && (fcr.location || '').includes('/orders/manual/'), 'discounted custom order created (manual-pay fallback)');
     const ordId1 = (fcr.location || '').split('/orders/manual/')[1];
     const o1 = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(ordId1);
-    ok(o1 && o1.amount_cents === 12459 && o1.deposit_cents === 6230 && o1.fee_cents === 267,
-      'order stores discounted base, deposit, and fee-on-discounted-deposit');
-    ok(o1 && o1.discount_applied === 'first_custom_20', 'order records the first_custom_20 discount');
-    ok(sdb.prepare('SELECT COUNT(*) AS n FROM first_custom_redemptions WHERE user_id = ?').get(fcBuyerId).n === 1,
-      'redemption recorded exactly once');
+    const expFull = halloweenNow ? 12000 : 12459;
+    const expDeposit = halloweenNow ? 6000 : 6230;
+    const expFee = fcp.processingFeeCents(expDeposit);
+    const expCode = halloweenNow ? 'halloween_flash' : 'first_custom_20';
+    const expRedemptions = halloweenNow ? 0 : 1;
+    ok(o1 && o1.amount_cents === expFull && o1.deposit_cents === expDeposit && o1.fee_cents === expFee,
+      'order stores quoted base, deposit, and fee-on-deposit');
+    ok(o1 && o1.discount_applied === expCode, 'order records the winning discount code');
+    ok(sdb.prepare('SELECT COUNT(*) AS n FROM first_custom_redemptions WHERE user_id = ?').get(fcBuyerId).n === expRedemptions,
+      'first_custom_20 redemption recorded exactly once (untouched when Halloween wins)');
 
     // Idempotent double-submit: same brief within 2 minutes reuses the order.
     fcr = await fcreq('POST', '/orders/custom', { body: { brief: brief1 }, follow: false });
     ok(fcr.status === 302 && (fcr.location || '').includes(`/orders/${ordId1}`),
       'double-submit redirects to the existing order (no duplicate)');
-    ok(sdb.prepare('SELECT COUNT(*) AS n FROM first_custom_redemptions WHERE user_id = ?').get(fcBuyerId).n === 1,
+    ok(sdb.prepare('SELECT COUNT(*) AS n FROM first_custom_redemptions WHERE user_id = ?').get(fcBuyerId).n === expRedemptions,
       'no second redemption on double-submit');
 
     // Second custom (different brief): no discount, redemption stays single.
@@ -1271,10 +1288,11 @@ async function main() {
     fcr = await fcreq('POST', '/orders/custom', { body: { brief: brief2 }, follow: false });
     const ordId2 = (fcr.location || '').split('/orders/manual/')[1];
     const o2 = sdb.prepare('SELECT * FROM orders WHERE id = ?').get(ordId2);
-    ok(o2 && o2.discount_applied === 'member_20' && o2.amount_cents === 12459,
-      'second custom gets the standing member_20 (customer plan), not first_custom_20');
-    ok(sdb.prepare('SELECT COUNT(*) AS n FROM first_custom_redemptions WHERE user_id = ?').get(fcBuyerId).n === 1,
-      'redemption still exactly one row after second custom');
+    const expCode2 = halloweenNow ? 'halloween_flash' : 'member_20';
+    ok(o2 && o2.discount_applied === expCode2 && o2.amount_cents === expFull,
+      'second custom gets the best available deal, not first_custom_20');
+    ok(sdb.prepare('SELECT COUNT(*) AS n FROM first_custom_redemptions WHERE user_id = ?').get(fcBuyerId).n === expRedemptions,
+      'redemption count unchanged after second custom');
     ok(!(await fc.firstCustomEligible(fcUser)), 'buyer with a prior custom is no longer eligible');
 
     // Non-subscriber: no discount.
