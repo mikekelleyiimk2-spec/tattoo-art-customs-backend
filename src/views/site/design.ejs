@@ -4,7 +4,7 @@
 <div class="two-col">
   <div>
     <div class="design-swipe" id="designSwipe"<% if (typeof prevId !== 'undefined' && prevId) { %> data-prev="/design/<%= prevId %>"<% } %><% if (typeof nextId !== 'undefined' && nextId) { %> data-next="/design/<%= nextId %>"<% } %>>
-      <img class="detail-img" src="/img/designs/<%= imgFile || design.linework_wm_path.split('/').pop() %>" alt="<%= t('design.linework_alt', {title: design.title}) %>" decoding="async">
+      <span class="living-frame"><img class="detail-img living-picture" src="/img/designs/<%= imgFile || design.linework_wm_path.split('/').pop() %>" alt="<%= t('design.linework_alt', {title: design.title}) %>" decoding="async"><span class="living-atmosphere" aria-hidden="true"></span></span>
       <% if (typeof prevId !== 'undefined' && prevId) { %><a class="swipe-arrow left" href="/design/<%= prevId %>" aria-label="<%= t('design.prev_design') %>">‹</a><% } %>
       <% if (typeof nextId !== 'undefined' && nextId) { %><a class="swipe-arrow right" href="/design/<%= nextId %>" aria-label="<%= t('design.next_design') %>">›</a><% } %>
     </div>
@@ -81,6 +81,7 @@
       <% } %>
       <% const _fx = fxNote(priceTotal); if (_fx) { %><p class="muted fineprint"><%= _fx %></p><% } %>
       <p><button class="btn" type="submit"><%= t('design.buy_now') %></button></p>
+      <p class="muted fineprint"><%= t('design.license_line') %> <a href="/terms#license">Terms</a></p>
       <% if (typeof creditBalance !== 'undefined' && creditBalance >= lineworkPrice) { %>
       <p><button class="btn btn-secondary" type="submit" name="use_credit" value="1"><%= t('design.pay_credit', {balance: fmtMoney(creditBalance)}) %></button></p>
       <% } %>

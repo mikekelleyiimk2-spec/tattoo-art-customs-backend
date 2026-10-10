@@ -63,6 +63,7 @@ async function fulfillPremadeOrder(order) {
       orderUrl,
       ``,
       `Please don't share these files — they're licensed to you only.`,
+      `Single-use tattoo license: full terms at https://tattoo-art-customs.onrender.com/terms#license`,
       `— Tattoo Art Customs`
     );
     try {
