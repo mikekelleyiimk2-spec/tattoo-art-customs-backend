@@ -43,7 +43,8 @@ async function loadUser(req, res, next) {
 
 function requireLogin(req, res, next) {
   if (!req.user) {
-    req.session.returnTo = req.originalUrl;
+    // 2026-10-10: guard session access — never 500 on a session-store hiccup.
+    try { if (req.session) req.session.returnTo = req.originalUrl; } catch (e) { /* session unavailable */ }
     return res.redirect('/login?next=' + encodeURIComponent(req.originalUrl));
   }
   next();

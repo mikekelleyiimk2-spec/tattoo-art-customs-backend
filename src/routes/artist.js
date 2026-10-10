@@ -504,7 +504,12 @@ router.get('/by-request/submit', async (req, res) => {
 
 router.post('/by-request/submit', formLimiter, (req, res, next) => {
   batchUploadMulter(req, res, (err) => {
-    if (err) { req.session.flash = err.message; return res.redirect('/artist/by-request/submit'); }
+    if (err) {
+      // 2026-10-10: guard session access — a session-store hiccup must not
+      // turn a file-upload error into an unhandled 500.
+      try { if (req.session) req.session.flash = err.message; } catch (e) { /* session unavailable */ }
+      return res.redirect('/artist/by-request/submit');
+    }
     next();
   });
 }, checkHoneypot, async (req, res) => {
@@ -572,7 +577,7 @@ router.post('/by-request/submit', formLimiter, (req, res, next) => {
       }
     }
     if (!results.length) {
-      req.session.flash = 'Add at least one linework image to submit.';
+      try { if (req.session) req.session.flash = 'Add at least one linework image to submit.'; } catch (e) { /* session unavailable */ }
       return res.redirect('/artist/by-request/submit');
     }
     res.render('artist/portfolio-upload-result', {
@@ -581,7 +586,7 @@ router.post('/by-request/submit', formLimiter, (req, res, next) => {
     });
   } catch (e) {
     console.error('by-request submit handler failed:', e);
-    req.session.flash = 'Something went wrong processing that submission — please try again.';
+    try { if (req.session) req.session.flash = 'Something went wrong processing that submission — please try again.'; } catch (se) { /* session unavailable */ }
     return res.redirect('/artist/by-request/submit');
   }
 });
