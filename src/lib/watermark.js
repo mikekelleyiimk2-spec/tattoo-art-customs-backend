@@ -32,8 +32,8 @@ const REPO_WM_DIR = path.join(__dirname, '..', '..', 'watermarks');
 // Lettering crops (fractions of each site watermark image) used for the
 // solid-black anti-trace marks.
 const BLACK_CROPS = [
-  { file: SITE_WM_1, left: 0.18, top: 0.30, w: 0.44, h: 0.32 },
-  { file: SITE_WM_2, left: 0.42, top: 0.22, w: 0.32, h: 0.30 },
+  { file: SITE_WM_1, left: 0.00, top: 0.15, w: 0.40, h: 0.30 },
+  { file: SITE_WM_2, left: 0.42, top: 0.62, w: 0.40, h: 0.30 },
 ];
 // Fallback positions (fractions of W/H) if density analysis fails.
 const MARK_POSITIONS = [
