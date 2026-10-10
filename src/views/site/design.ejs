@@ -43,6 +43,18 @@
     <% if (design.show_featured) { %><p><a href="/show-designs" class="badge ok" style="text-decoration:none"><%= t('show.badge') %></a></p><% } %>
     <% design.categories.forEach(function(c) { %><span class="tag"><%= c %></span><% }); %>
     <p><%= design.description %></p>
+    <% /* Video-game backgrounds link to their matching by-request characters */ %>
+    <% if (typeof vgCharacters !== 'undefined' && vgCharacters && vgCharacters.length) { %>
+    <section class="card" aria-label="<%= t('design.vg_chars_title') %>">
+      <h2><%= t('design.vg_chars_title') %></h2>
+      <p class="muted"><%= t('design.vg_chars_note') %></p>
+      <p>
+        <% vgCharacters.forEach(function(c) { %>
+        <a class="btn btn-small" href="/order/custom?character=<%= encodeURIComponent(c.slug) %>"><%= t('design.vg_chars_btn', {name: c.name}) %></a>
+        <% }); %>
+      </p>
+    </section>
+    <% } %>
     <% if (artist) { %><p class="muted"><%= t('design.by') %> <a href="/artists/<%= design.artist_id %>"><%= artist.display_name %></a>
       <% if (currentUser && currentUser.id !== design.artist_id) { %>
       <form method="post" action="/messages/start" style="display:inline">

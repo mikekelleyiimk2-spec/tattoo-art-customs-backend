@@ -732,6 +732,10 @@ router.get('/design/:id', async (req, res) => {
     title: `${design.title} — ${styleBit}Tattoo Design for Sale | Tattoo Art Customs`,
     design, artist, price, isCustom, sale: await salePriceActive(req.user), owned,
     imgFile, blurred, prevId, nextId,
+    // Video-game backgrounds link to their matching by-request characters
+    // (owner directive 2026-10-10): vg-<game>-bg designs resolve to the
+    // character slugs drawn to fit them.
+    vgCharacters: require('../lib/vgBackgroundCharacters').matchingCharacters(design.id),
     // Show-featured discount state for the badge + member callout. The badge
     // is never air-gated; the discount is (server-side, in the quote above).
     showDiscountApplied: !!(quote && quote.discount === SHOW_FEATURED_DISCOUNT_CODE),

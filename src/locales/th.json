@@ -205,7 +205,10 @@
     "send_to_app": "Send to Little Inkers",
     "send_to_app_note": "Color it before you ink it — get this design as a coloring page in the Little Inkers kids app ({price} incl. fee). Kids color it for fun, adults preview it in color before committing. You'll get a redeem code for the app's parent zone.",
     "send_to_app_btn": "Get redeem code",
-    "license_line": "Buying gives you a single-use tattoo license — see Terms §8 for details."
+    "license_line": "Buying gives you a single-use tattoo license — see Terms §8 for details.",
+    "vg_chars_title": "Matching characters available on request",
+    "vg_chars_note": "Drawn to fit this background — request one through a custom order.",
+    "vg_chars_btn": "Request {name}"
   },
   "footer": {
     "advertise": "โฆษณา",
