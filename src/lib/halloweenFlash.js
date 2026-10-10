@@ -1,7 +1,7 @@
 // Halloween flash-day sale (owner-confirmed 2026-10-09).
 //
 // Timed site sale: 2026-10-09 through 2026-10-31 11:59:59 PM America/Chicago.
-// - 31 featured flash designs at $80 ready-made. Best-deal-wins: the standing
+// - 31 featured flash designs at $70 ready-made. Best-deal-wins: the standing
 //   Saturday-night $50 sale still beats it when both windows overlap — the
 //   buyer always pays the lower price, never stacked.
 // - Custom designs at $120 full / $60 deposit during the window (best-deal-wins
@@ -13,7 +13,7 @@
 // The client countdown is display-only and never trusted for pricing.
 const HALLOWEEN_FLASH_START_ISO = '2026-10-09T00:00:00-05:00';
 const HALLOWEEN_FLASH_END_ISO = '2026-10-31T23:59:59-05:00';
-const HALLOWEEN_FLASH_PREMADE_CENTS = 8000; // $80 ready-made
+const HALLOWEEN_FLASH_PREMADE_CENTS = 7000; // $70 ready-made
 const HALLOWEEN_FLASH_CUSTOM_CENTS = 12000; // $120 custom full
 const HALLOWEEN_FLASH_DISCOUNT_CODE = 'halloween_flash';
 

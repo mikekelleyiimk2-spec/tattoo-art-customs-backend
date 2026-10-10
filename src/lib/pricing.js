@@ -195,7 +195,7 @@ async function premadeQuoteForDesign(user, design, date = new Date()) {
     if (options[0].price < price) { price = options[0].price; discount = options[0].code; }
   }
   // Halloween flash sale (owner-confirmed 2026-10-09): the 31 featured flash
-  // designs ring up at the confirmed $80 while the window is open, replacing
+  // designs ring up at the confirmed $70 while the window is open, replacing
   // the regular price for those designs. Best-deal-wins is preserved: an
   // already-lower price (Saturday-night $50, member/show $62.50) still wins —
   // the flash price never overrides a lower price and discounts never stack.
