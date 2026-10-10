@@ -211,6 +211,34 @@ router.get('/raffle-entrants', async (req, res) => {
   }
 });
 
+// POST /api/muse/grant-admin
+// body: { email, role, population_admin }
+//   email: the user's login email (required)
+//   role: 'admin' or 'head_admin' (default 'admin')
+//   population_admin: true/false — sets the population_admin flag (default false)
+// Grants an admin role + optionally the population-admin flag to an existing
+// user. Same service-token auth as /owner-sweep; 404s when MUSE_SERVICE_TOKEN unset.
+router.post('/grant-admin', express.json(), async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    const role = String(req.body?.role || 'admin').trim();
+    const popAdmin = !!req.body?.population_admin;
+    if (!email || !['admin', 'head_admin'].includes(role)) {
+      return res.status(400).json({ ok: false, error: 'email and valid role required' });
+    }
+    const user = await db.get('SELECT id, email, role, population_admin FROM users WHERE lower(email) = ?', [email]);
+    if (!user) return res.status(404).json({ ok: false, error: 'user not found' });
+    await db.update('users', user.id, { role, population_admin: popAdmin ? 1 : 0 });
+    const updated = await db.get('SELECT id, email, role, population_admin FROM users WHERE id = ?', [user.id]);
+    return res.json({ ok: true, user: updated });
+  } catch (e) {
+    console.error('[muse/grant-admin] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'grant failed' });
+  }
+});
+
 router.post('/upload-ipa', (req, res) => {
   if (!serviceToken()) return res.status(404).json({ ok: false });
   if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
