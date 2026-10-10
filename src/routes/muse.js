@@ -177,6 +177,40 @@ router.post('/owner-sweep', async (req, res) => {
   }
 });
 
+// GET /api/muse/raffle-entrants
+// Read-only feed for the owner's raffle-entrant watcher: opening-raffle
+// entrants with the engagement signals the site actually stores (entry date,
+// signup date, referred_by, email_verified) plus purchase state, so the
+// watcher can rank warm signups without guessing. Returns { ok, total_entries,
+// entrants: [{ user_id, email, display_name, entered_at, signup_at,
+// email_verified, referred_by, order_count, last_order_at }] }.
+// Read-only — writes nothing. Same service-token auth as /owner-sweep; 404s
+// when MUSE_SERVICE_TOKEN unset.
+router.get('/raffle-entrants', async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const limit = Math.min(parseInt(req.query.limit, 10) || 200, 2000);
+    const total = await db.get('SELECT COUNT(*) AS n FROM raffle_entries');
+    const entrants = await db.all(
+      `SELECT r.user_id, r.entered_at, r.drawn_at,
+              u.email, u.display_name, u.created_at AS signup_at,
+              u.email_verified, u.referred_by,
+              (SELECT COUNT(*) FROM orders o WHERE o.buyer_id = u.id AND o.status != 'canceled') AS order_count,
+              (SELECT MAX(o2.created_at) FROM orders o2 WHERE o2.buyer_id = u.id AND o2.status != 'canceled') AS last_order_at
+         FROM raffle_entries r
+         JOIN users u ON u.id = r.user_id
+        ORDER BY r.entered_at DESC
+        LIMIT ?`,
+      [limit]
+    );
+    return res.json({ ok: true, total_entries: total ? total.n : 0, entrants });
+  } catch (e) {
+    console.error('[muse/raffle-entrants] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'entrant feed failed' });
+  }
+});
+
 router.post('/upload-ipa', (req, res) => {
   if (!serviceToken()) return res.status(404).json({ ok: false });
   if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });

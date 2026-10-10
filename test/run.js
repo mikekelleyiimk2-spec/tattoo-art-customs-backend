@@ -855,6 +855,29 @@ async function main() {
       'owner-sweep returns summary with valid Bearer <redacted>');
   }
 
+  // Muse service pipe: GET /api/muse/raffle-entrants feeds the raffle watcher
+  // (read-only: recent opening-raffle entrants + warmth signals).
+  {
+    const entrantsGet = (token) => fetch(`http://localhost:${PORT}/api/muse/raffle-entrants`, {
+      headers: { ...(token ? { authorization: `Bearer ${token}` } : {}) },
+    });
+    let er = await entrantsGet();
+    ok(er.status === 401, 'raffle-entrants rejects missing Bearer token');
+    er = await entrantsGet('wrong-token');
+    ok(er.status === 401, 'raffle-entrants rejects wrong Bearer token');
+    const entrantId = 'watchertest-entrant';
+    sdb.prepare('INSERT INTO users (id, email, password_hash, role, display_name, created_at, email_verified, referred_by) VALUES (?,?,?,?,?,?,?,?)')
+      .run(entrantId, 'entrant@test.local', 'x', 'customer', 'Entrant', Date.now(), 1, 'friend');
+    sdb.prepare('INSERT INTO raffle_entries (id, user_id, entered_at, created_at) VALUES (?,?,?,?)')
+      .run('watchertest-re', entrantId, Date.now(), Date.now());
+    er = await entrantsGet(process.env.MUSE_SERVICE_TOKEN);
+    const ej = await er.json();
+    const row = ej.entrants && ej.entrants.find(e => e.user_id === entrantId);
+    ok(er.status === 200 && ej.ok && typeof ej.total_entries === 'number' && row && row.email === 'entrant@test.local' &&
+       typeof row.order_count === 'number' && row.email_verified === 1 && row.referred_by === 'friend',
+      'raffle-entrants returns entrant rows with warmth signals under valid Bearer token');
+  }
+
   // Muse service pipe: POST /api/muse/upload-ipa stores the iOS IPA (zip magic checked).
   {
     const { Blob } = require('buffer');
