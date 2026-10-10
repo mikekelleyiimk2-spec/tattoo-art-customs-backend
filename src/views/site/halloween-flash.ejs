@@ -1,0 +1,77 @@
+<h1>&#127875; Halloween Flash-Day Sale</h1>
+<p class="muted">31 original Halloween flash designs at <strong>$80</strong> ready-made. Custom work at <strong>$120</strong>. Now through October 31.</p>
+
+<% if (saleOpen) { %>
+<div class="card" role="status" style="text-align:center">
+  <h2 style="margin-top:0">Sale ends in</h2>
+  <p id="hf-countdown" style="font-size:2em;font-weight:bold;margin:0.25em 0">--</p>
+  <p class="muted">October 31, 2026 at 11:59 PM CT. When the clock hits zero, flash prices are gone.</p>
+  <p id="hf-ended-note" style="display:none"><span class="badge ok">Sale ended</span> Flash prices are no longer available.</p>
+</div>
+
+<div class="grid">
+  <section class="card">
+    <h2>Ready-made &mdash; $80</h2>
+    <p>Any of the 31 flash designs below. Watermarked preview here; clean files delivered after checkout.</p>
+    <p><a class="btn" href="#hf-designs" data-hf-cta>Shop the 31 designs</a></p>
+  </section>
+  <section class="card">
+    <h2>Custom &mdash; $120</h2>
+    <p>Drawn for you in 48 hours. 50% deposit (<strong>$60</strong>) today, the rest on delivery.</p>
+    <p><a class="btn" href="/orders/custom" data-hf-cta>Start a custom design</a></p>
+  </section>
+</div>
+
+<h2 id="hf-designs">The 31 flash designs</h2>
+<div class="grid">
+  <% designs.forEach(function(d) { %>
+  <article class="design-card">
+    <a href="/design/<%= d.id %>">
+      <img src="<%= d.img %>" alt="<%= d.title %> — Halloween flash tattoo design" loading="lazy" decoding="async">
+      <div class="pad">
+        <strong><%= d.title %></strong>
+        <p class="muted">$80 <span class="badge ok">Flash</span></p>
+      </div>
+    </a>
+  </article>
+  <% }); %>
+</div>
+
+<p class="muted fineprint">Flash prices end October 31, 2026 at 11:59 PM CT &mdash; this page stops taking flash orders then and regular prices return automatically. If a Saturday-night sale window is running, you pay the lower price (best deal always wins). Customs: 50% deposit up front, files delivered within 48 hours.</p>
+
+<script>
+(function () {
+  var end = new Date(<%= JSON.stringify(saleEndsAt) %>).getTime();
+  var el = document.getElementById('hf-countdown');
+  if (!el) return;
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function tick() {
+    var d = end - Date.now();
+    if (d <= 0) {
+      el.textContent = '0d 00h 00m 00s';
+      var note = document.getElementById('hf-ended-note');
+      if (note) note.style.display = 'block';
+      var ctas = document.querySelectorAll('[data-hf-cta]');
+      for (var i = 0; i < ctas.length; i++) {
+        ctas[i].classList.add('btn-secondary');
+        ctas[i].setAttribute('aria-disabled', 'true');
+      }
+      return;
+    }
+    var days = Math.floor(d / 86400000);
+    var hrs = Math.floor((d % 86400000) / 3600000);
+    var min = Math.floor((d % 3600000) / 60000);
+    var sec = Math.floor((d % 60000) / 1000);
+    el.textContent = days + 'd ' + pad(hrs) + 'h ' + pad(min) + 'm ' + pad(sec) + 's';
+    setTimeout(tick, 1000);
+  }
+  tick();
+})();
+</script>
+<% } else { %>
+<div class="card" style="text-align:center">
+  <h2>The Halloween flash-day sale has ended</h2>
+  <p class="muted">Thanks for a killer October. Flash prices are gone &mdash; the gallery is still open at regular prices.</p>
+  <p><a class="btn" href="/gallery">Browse the gallery</a></p>
+</div>
+<% } %>

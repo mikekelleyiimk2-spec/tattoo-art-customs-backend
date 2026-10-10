@@ -9,6 +9,7 @@
 // salePriceActive(user) helper) to price for a member.
 const config = require('../config');
 const { isActiveMember, isCustomerMember } = require('../middleware/auth');
+const halloweenFlash = require('./halloweenFlash');
 
 function chicagoParts(date = new Date()) {
   const fmt = new Intl.DateTimeFormat('en-US', {
@@ -45,8 +46,14 @@ function premadePriceCents(date = new Date(), member = false) {
     : config.pricing.premadeRegular;
 }
 
-// Custom design full price: $125 during the Saturday sale, $150 regular.
+// Custom design full price: $120 during the Halloween flash sale
+// (2026-10-09 -> 2026-10-31 CT), $125 during the Saturday sale, $150
+// regular. The Halloween price wins when both sale windows overlap
+// (best-deal-wins: $120 is the lowest custom price on the site).
 function customFullCents(date = new Date(), member = false) {
+  if (halloweenFlash.isHalloweenFlashWindow(date)) {
+    return halloweenFlash.HALLOWEEN_FLASH_CUSTOM_CENTS;
+  }
   return (isSaleWindow(date) || (member && isMemberSaleWindow(date)))
     ? config.pricing.customSaleFull
     : config.pricing.customFull;
@@ -187,6 +194,19 @@ async function premadeQuoteForDesign(user, design, date = new Date()) {
     options.sort((a, b) => a.price - b.price);
     if (options[0].price < price) { price = options[0].price; discount = options[0].code; }
   }
+  // Halloween flash sale (owner-confirmed 2026-10-09): the 31 featured flash
+  // designs ring up at the confirmed $80 while the window is open, replacing
+  // the regular price for those designs. Best-deal-wins is preserved: an
+  // already-lower price (Saturday-night $50, member/show $62.50) still wins —
+  // the flash price never overrides a lower price and discounts never stack.
+  if (design && halloweenFlash.isHalloweenFlashWindow(date) &&
+      halloweenFlash.isFlashDesign(design.id)) {
+    const hfPrice = halloweenFlash.HALLOWEEN_FLASH_PREMADE_CENTS;
+    if (price >= config.pricing.premadeRegular) {
+      price = hfPrice;
+      discount = halloweenFlash.HALLOWEEN_FLASH_DISCOUNT_CODE;
+    }
+  }
   return { price, discount, sale: saleOn, member };
 }
 
@@ -242,5 +262,5 @@ function teeColorLabel(color) {
   return TEE_COLORS.includes(c) ? c : 'black';
 }
 
-module.exports = { isSaleWindow, salePriceActive, premadePriceCents, customFullCents, money, LINEWORK_ONLY_DISCOUNT, lineworkOnlyPriceCents, processingFeeCents, withFeeCents, withPlayFeeCents, FIRST_CUSTOM_DISCOUNT_CODE, firstCustomFullCents, firstCustomDepositCents, MEMBER_DISCOUNT_CODE, MEMBER_DISCOUNT_RATE, memberPremadeCents, memberCustomFullCents, memberCustomDepositCents, premadePriceQuote, premadeQuoteForDesign, SHOW_FEATURED_DISCOUNT_CODE, showFeaturedDiscountRate, showFeaturedPremadeCents, showDiscountLive, RUSH_FEE_CENTS, RUSH_DESIGNER_CENTS, RUSH_SITE_CENTS, RUSH_SLA_HOURS, STANDARD_SLA_HOURS, TEE_SIZES, TEE_COLORS, teePriceCents, teeSizeLabel, teeColorLabel };
+module.exports = { isSaleWindow, salePriceActive, premadePriceCents, customFullCents, money, LINEWORK_ONLY_DISCOUNT, lineworkOnlyPriceCents, processingFeeCents, withFeeCents, withPlayFeeCents, FIRST_CUSTOM_DISCOUNT_CODE, firstCustomFullCents, firstCustomDepositCents, MEMBER_DISCOUNT_CODE, MEMBER_DISCOUNT_RATE, memberPremadeCents, memberCustomFullCents, memberCustomDepositCents, premadePriceQuote, premadeQuoteForDesign, SHOW_FEATURED_DISCOUNT_CODE, showFeaturedDiscountRate, showFeaturedPremadeCents, showDiscountLive, RUSH_FEE_CENTS, RUSH_DESIGNER_CENTS, RUSH_SITE_CENTS, RUSH_SLA_HOURS, STANDARD_SLA_HOURS, TEE_SIZES, TEE_COLORS, teePriceCents, teeSizeLabel, teeColorLabel, isHalloweenFlashWindow: halloweenFlash.isHalloweenFlashWindow };
 

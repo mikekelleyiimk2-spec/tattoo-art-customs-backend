@@ -20,6 +20,7 @@
 const db = require('../db');
 const config = require('../config');
 const pricing = require('./pricing');
+const halloweenFlash = require('./halloweenFlash');
 const { visitorCount, paidSalesCount } = require('./visitors');
 const { isActiveMember, isCustomerMember } = require('../middleware/auth');
 
@@ -49,15 +50,20 @@ async function firstCustomEligible(user) {
 
 // Best-deal-wins custom quote. Returns { full, deposit, discount, sale, member }.
 // `discount` is a single code ('first_custom_20' | 'member_20' |
-// 'saturday_sale' | null) — discounts are never stacked; the buyer always
-// gets the lowest single price. Note the member price ($124.59) undercuts
-// the Saturday sale price ($125), so member_20 wins over saturday_sale.
+// 'saturday_sale' | 'halloween_flash' | null) — discounts are never stacked;
+// the buyer always gets the lowest single price. Note the member price
+// ($124.59) undercuts the Saturday sale price ($125), so member_20 wins
+// over saturday_sale; the Halloween flash price ($120) undercuts both.
 async function customPriceQuote(user, date = new Date()) {
   const member = await isActiveMember(user);
   const customerMember = await isCustomerMember(user);
   const saleOn = await pricing.salePriceActive(user, date);
+  const hfOn = halloweenFlash.isHalloweenFlashWindow(date);
   let full = pricing.customFullCents(date, member);
-  let discount = saleOn ? 'saturday_sale' : null;
+  // The Halloween flash price ($120) undercuts every other custom price on
+  // the site, so when its window is open it always wins best-deal-wins.
+  let discount = hfOn ? halloweenFlash.HALLOWEEN_FLASH_DISCOUNT_CODE
+    : (saleOn ? 'saturday_sale' : null);
   const fcEligible = await firstCustomEligible(user);
   if (customerMember && !fcEligible) {
     const mFull = pricing.memberCustomFullCents();

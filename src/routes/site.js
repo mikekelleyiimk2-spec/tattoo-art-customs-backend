@@ -95,6 +95,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/by-request`, changefreq: 'daily', priority: '0.8' },
     { loc: `${base}/doodle-to-tattoo`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/holiday-raffle`, changefreq: 'weekly', priority: '0.7' },
+    { loc: `${base}/halloween-flash`, changefreq: 'daily', priority: '0.9' },
     { loc: `${base}/show-designs`, changefreq: 'daily', priority: '0.8' },
   ];
   try {
@@ -995,6 +996,40 @@ router.get('/raffle', async (req, res) => {
   });
 });
 
+// --- Halloween flash-day sale (owner-confirmed 2026-10-09): 31 featured
+// flash designs at $80 ready-made, customs at $120 (50% deposit, 48-hour
+// delivery), through Oct 31 2026 11:59:59 PM CT. Server-side window gate:
+// after the window the page renders the ended state, and checkout prices
+// revert automatically via pricing.js / firstCustom.js — the client
+// countdown is display-only and never trusted for pricing.
+router.get('/halloween-flash', async (req, res) => {
+  const hf = require('../lib/halloweenFlash');
+  const saleOpen = hf.isHalloweenFlashWindow(new Date());
+  let designs = [];
+  try {
+    const placeholders = hf.HALLOWEEN_FLASH_DESIGN_IDS.map(() => '?').join(',');
+    const rows = await db.all(
+      `SELECT id, title, linework_wm_path FROM designs
+       WHERE id IN (${placeholders}) AND status = 'approved'`,
+      hf.HALLOWEEN_FLASH_DESIGN_IDS);
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    designs = hf.HALLOWEEN_FLASH_DESIGN_IDS.map((id) => byId.get(id))
+      .filter(Boolean)
+      .map((d) => ({
+        id: d.id,
+        title: d.title,
+        img: `/img/designs/${String(d.linework_wm_path || '').split('/').pop() || (d.id + '.jpg')}`,
+      }));
+  } catch (e) { console.error('halloween-flash designs failed:', e.message); }
+  res.render('site/halloween-flash', {
+    title: 'Halloween Flash-Day Sale — $80 Ready-Made, $120 Custom | Tattoo Art Customs',
+    metaDescription: 'Halloween flash-day sale at Tattoo Art Customs: 31 original Halloween flash designs at $80 ready-made, custom designs at $120 (50% deposit, 48-hour delivery). Ends October 31.',
+    canonical: `${config.baseUrl.replace(/\/$/, '')}/halloween-flash`,
+    saleOpen,
+    saleEndsAt: hf.HALLOWEEN_FLASH_END_ISO,
+    designs,
+  });
+});
 // --- Holiday Doodle Raffle (Dec 2026): entries for memberships, purchases,
 // and direct entry packs. Prize: free turn-your-kid's-art-into-merchandise
 // codes, 1 winner per 100 entries. Kid-safe copy throughout (no tattoo talk).
