@@ -59,6 +59,16 @@ function startScheduler() {
       console.error('[scheduler] Weekly payouts crashed:', e.message);
     }
   }, { timezone: 'America/Chicago' });
+  // Merch auto-pipeline: every 5 min, process queued full-auto Printful
+  // product creations from the admin sorter (ticking "Merch").
+  schedule('*/5 * * * *', async () => {
+    try {
+      const { processMerchJobs } = require('./merchAuto');
+      await processMerchJobs();
+    } catch (e) {
+      console.error('[scheduler] merch auto-pipeline crashed:', e.message);
+    }
+  }, { timezone: 'America/Chicago' });
   // Daily 6:00 AM America/Chicago: resume PayPal subscriptions whose referral
   // free month has ended, so billing picks back up.
   schedule('0 6 * * *', async () => {

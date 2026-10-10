@@ -1,0 +1,59 @@
+<h1>Design Sorter</h1>
+<p><a href="/admin">← Dashboard</a> · <a href="/admin/designs">All designs</a></p>
+<p class="muted">Tick where each design belongs — a design can go to <strong>both</strong> Gallery and Merch. Trash clears the others. Ticking <strong>Merch</strong> queues the full-auto Printful product creation (runs in the background, product goes live automatically).</p>
+
+<% if (jobs && jobs.length) { %>
+<h2>Merch queue</h2>
+<table>
+  <thead><tr><th>Design</th><th>Status</th><th>Queued</th></tr></thead>
+  <tbody>
+  <% jobs.forEach(function(j) { %>
+    <tr>
+      <td><%= j.design_id %></td>
+      <td><span class="badge <%= j.status === 'done' ? 'ok' : (j.status === 'failed' ? 'bad' : 'warn') %>"><%= j.status %></span></td>
+      <td><%= new Date(j.created_at).toLocaleString() %></td>
+    </tr>
+  <% }); %>
+  </tbody>
+</table>
+<% } %>
+
+<h2>Unsorted designs (<%= designs.length %>)</h2>
+<form method="post" action="/admin/sort">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <table>
+    <thead><tr><th>Art</th><th>Title</th><th>Gallery</th><th>Merch</th><th>Trash</th></tr></thead>
+    <tbody>
+    <% designs.forEach(function(d) { %>
+      <tr>
+        <td>
+          <% const artFile = String(d.linework_wm_path || d.linework_path || '').split('/').pop(); %>
+          <% if (artFile) { %>
+            <img src="/img/designs/<%= artFile %>" alt="" style="width:100px;height:auto;display:block;border:1px solid #ccc;">
+          <% } else { %><span class="muted">no image</span><% } %>
+        </td>
+        <td><%= d.title %><br><span class="muted"><%= d.id %></span></td>
+        <td style="text-align:center"><input type="checkbox" name="gallery_<%= d.id %>" value="1" style="width:22px;height:22px"></td>
+        <td style="text-align:center"><input type="checkbox" name="merch_<%= d.id %>" value="1" style="width:22px;height:22px"></td>
+        <td style="text-align:center"><input type="checkbox" name="trash_<%= d.id %>" value="1" style="width:22px;height:22px"></td>
+      </tr>
+    <% }); %>
+    </tbody>
+  </table>
+  <p><button class="btn" type="submit">Apply sorting</button></p>
+</form>
+
+<script>
+// Trash clears Gallery + Merch in the same row (client-side convenience)
+document.querySelectorAll('input[name^="trash_"]').forEach(function(trash) {
+  trash.addEventListener('change', function() {
+    if (trash.checked) {
+      const id = trash.name.replace('trash_', '');
+      const g = document.querySelector('input[name="gallery_' + id + '"]');
+      const m = document.querySelector('input[name="merch_' + id + '"]');
+      if (g) g.checked = false;
+      if (m) m.checked = false;
+    }
+  });
+});
+</script>

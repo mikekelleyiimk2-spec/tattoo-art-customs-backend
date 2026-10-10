@@ -786,6 +786,49 @@ router.get('/designs', async (req, res) => {
   res.render('admin/designs', { title: 'Designs — Admin', designs });
 });
 
+// --- Design sorter: Gallery / Merch / Trash multi-select ---
+// Gallery + Merch are independent (a design can go to both). Trash clears both.
+// Ticking Merch queues a full-auto Printful product creation job (runs in bg).
+router.get('/sort', async (req, res) => {
+  const designs = await db.all(
+    `SELECT d.*, u.email AS artist_email FROM designs d LEFT JOIN users u ON u.id = d.artist_id
+     WHERE d.status = 'pending' ORDER BY d.created_at DESC LIMIT 200`);
+  const jobs = await db.all(
+    `SELECT * FROM merch_jobs ORDER BY created_at DESC LIMIT 50`);
+  res.render('admin/sort', { title: 'Design sorter — Admin', designs, jobs });
+});
+
+router.post('/sort', formLimiter, checkHoneypot, async (req, res) => {
+  const designs = await db.all(`SELECT id FROM designs WHERE status = 'pending'`);
+  let galleryN = 0, merchN = 0, trashN = 0;
+  for (const d of designs) {
+    const id = d.id;
+    const trash = req.body['trash_' + id] === '1';
+    const gallery = req.body['gallery_' + id] === '1';
+    const merch = req.body['merch_' + id] === '1';
+    if (trash) {
+      await db.update('designs', id, { status: 'rejected' });
+      trashN++;
+    } else {
+      if (gallery) {
+        await db.update('designs', id, { status: 'approved', listing_scope: 'gallery' });
+        galleryN++;
+      }
+      if (merch) {
+        const jobId = 'mj_' + Date.now().toString(36) + '_' + id.replace(/[^a-z0-9]/gi, '').slice(0, 12);
+        const now = Date.now();
+        await db.query(
+          `INSERT INTO merch_jobs (id, design_id, status, attempts, result, created_at, updated_at)
+           VALUES (?, ?, 'pending', 0, '{}', ?, ?)
+           ON CONFLICT (id) DO NOTHING`, [jobId, id, now, now]);
+        merchN++;
+      }
+    }
+  }
+  req.session.flash = `Sorted: ${galleryN} to gallery, ${merchN} queued for merch, ${trashN} trashed.`;
+  res.redirect('/admin/sort');
+});
+
 // --- Colorization queue: linework-only uploads waiting on the site-created
 // color version. The assistant creates the color in a work session; the admin
 // attaches the finished file here (attaching IS the administrator approval).
