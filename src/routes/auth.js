@@ -57,7 +57,16 @@ router.post('/signup', authLimiter, checkHoneypot, async (req, res) => {
   // entry (idempotent, one entry per person ever).
   try {
     const entry = await require('../lib/founding').enterRaffleOnSignup(id);
-    if (entry.entered) req.session.flash = "Welcome to Tattoo Art Customs! You're entered in the Opening Raffle — good luck!";
+    if (entry.entered) {
+      req.session.flash = "Welcome to Tattoo Art Customs! You're entered in the Opening Raffle — good luck!";
+      // Opening-raffle welcome email (owner-approved copy, 2026-10-09).
+      // Fires exactly once: enterRaffleOnSignup reports entered:true only for
+      // a genuinely new entry, so existing entrants never get a resend.
+      // Best effort — a mail failure must never block signup.
+      try {
+        await require('../lib/raffleWelcome').sendRaffleWelcomeEmail(email);
+      } catch (e) { console.error('raffle welcome email failed:', e.message); }
+    }
   } catch (e) { console.error('raffle entry on signup failed:', e.message); }
   req.session.userId = id;
   await enforceSessionCap(req); // new account: no other sessions, a no-op
