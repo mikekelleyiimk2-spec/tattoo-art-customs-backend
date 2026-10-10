@@ -85,6 +85,15 @@ router.get('/', async (req, res) => {
   });
 });
 
+// Shop Perks — professional supply affiliate links, shop-subscriber gated.
+// (owner directive 2026-10-09 — CNC Tattoo approved affiliate, shop-only surface).
+router.get('/perks', async (req, res) => {
+  res.render('shop/perks', {
+    title: 'Shop Perks — Tattoo Art Customs',
+    metaDescription: 'Exclusive professional supply deals for tattoo shop subscribers.',
+  });
+});
+
 // Mark a client bill paid (Phase 2: the shop collected the art cost from the client).
 router.post('/client-bills/:billId/paid', formLimiter, checkHoneypot, async (req, res) => {
   const bill = await db.get('SELECT * FROM client_bills WHERE id = ? AND shop_user_id = ?', [req.params.billId, req.user.id]);
