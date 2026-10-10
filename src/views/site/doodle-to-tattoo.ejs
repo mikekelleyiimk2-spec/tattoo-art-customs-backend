@@ -24,7 +24,7 @@
 
   <h2><%= t('doodle.step2') %></h2>
   <label>
-    <input type="radio" name="product" value="tee">
+    <input type="radio" name="product" value="tee" checked>
     <strong><%= t('doodle.product_tee') %></strong><br>
     <span class="muted"><%= t('doodle.product_tee_note', {price: fmtMoney(teeFrom)}) %></span>
   </label>
@@ -33,13 +33,19 @@
     <strong><%= t('doodle.product_print') %></strong><br>
     <span class="muted"><%= t('doodle.product_print_note', {minprice: fmtMoney(minPrintPrice)}) %></span>
   </label>
+  <% if (parentUnlocked) { %>
   <label>
-    <input type="radio" name="product" value="tattoo" checked>
+    <input type="radio" name="product" value="tattoo">
     <strong><%= t('doodle.product_tattoo') %></strong><br>
     <span class="muted"><%= t('doodle.product_tattoo_note') %></span>
   </label>
+  <% } else { %>
+  <p class="muted fineprint"><%= t('doodle.parent_teaser') %>
+    <a href="/account#content"><%= t('doodle.parent_cta') %></a>
+  </p>
+  <% } %>
 
-  <div id="doodle-tee" hidden>
+  <div id="doodle-tee">
     <p>
       <label><%= t('doodle.tee_size') %>
         <select name="size">
@@ -70,7 +76,7 @@
     </p>
   </div>
 
-  <div id="doodle-ship" hidden>
+  <div id="doodle-ship">
     <h3><%= t('merch.shipping_address') %></h3>
     <p>
       <label><%= t('merch.full_name') %><br><input type="text" name="ship_name" maxlength="120"></label>
@@ -90,7 +96,8 @@
     <p class="muted fineprint"><%= t('doodle.merch_note') %></p>
   </div>
 
-  <div id="doodle-tattoo">
+  <% if (parentUnlocked) { %>
+  <div id="doodle-tattoo" hidden>
     <p><strong><%= t('doodle.tattoo_tier_label') %></strong></p>
     <label>
       <input type="radio" name="tier" value="light" checked>
@@ -104,6 +111,7 @@
     </label>
     <p class="muted fineprint"><%= t('doodle.deposit_note') %></p>
   </div>
+  <% } %>
 
   <h2><%= t('doodle.step3') %></h2>
   <p>
@@ -128,11 +136,11 @@
       tattoo = document.getElementById('doodle-tattoo');
   function sync() {
     var checked = form.querySelector('input[name="product"]:checked');
-    var v = checked ? checked.value : 'tattoo';
+    var v = checked ? checked.value : 'tee';
     tee.hidden = v !== 'tee';
     print.hidden = v !== 'print';
     ship.hidden = v === 'tattoo';
-    tattoo.hidden = v !== 'tattoo';
+    if (tattoo) tattoo.hidden = v !== 'tattoo';
   }
   form.addEventListener('change', sync);
   sync();

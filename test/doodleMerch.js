@@ -1,6 +1,9 @@
 // Doodle-to-merchandise tests (owner directive 2026-10-07).
-// The /doodle-to-tattoo page is merchandise-first: T-shirt, Poster/Print,
-// or Tattoo design (the original two-tier 48h pipeline, unchanged).
+// The /doodle-to-tattoo page is merchandise-first: T-shirt and Poster/Print
+// for everyone; the Tattoo design tier (the original two-tier 48h pipeline,
+// unchanged) sits behind the parent gate — the site's existing 18+ age
+// verification. The tattoo option is invisible to kids/guest copy (one-way
+// cross-promo rule) and rejected server-side for non-verified users.
 // The coordinator (test/run.js) wires this in; do not run from here.
 const { randomUUID } = require('crypto');
 
@@ -53,11 +56,15 @@ async function runHttpTests(ok, req) {
     ship_state: 'LA', ship_zip: '70510', ship_country: 'US',
   };
 
-  // Page renders with the merchandise-first copy.
+  // Page renders with the merchandise-first copy. The tattoo tier is
+  // parent-gated: guests see tee/print only, plus the parent unlock teaser.
   let r = await req('GET', '/doodle-to-tattoo');
   ok(r.status === 200 && r.text.includes('Turn Their Doodle Into Merchandise'), 'GET /doodle-to-tattoo 200 with merchandise title');
-  ok(r.text.includes('name="product"') && r.text.includes('value="tee"') && r.text.includes('value="print"') && r.text.includes('value="tattoo"'),
-    'product picker offers tee / print / tattoo');
+  ok(r.text.includes('name="product"') && r.text.includes('value="tee"') && r.text.includes('value="print"'),
+    'guest picker offers tee / print');
+  ok(!r.text.includes('value="tattoo"') && !r.text.includes('name="tier"'),
+    'guest picker shows NO tattoo option (parent gate)');
+  ok(r.text.includes('/account#content'), 'guest sees the parent unlock teaser');
 
   // Guest POST bounces to login.
   const guest = makeClient();
@@ -69,6 +76,20 @@ async function runHttpTests(ok, req) {
   const email = `doodleparent-${randomUUID().slice(0, 8)}@test.local`;
   r = await user('POST', '/signup', { ...form({ display_name: 'Doodle Parent', email, password: 'password123' }), follow: false });
   ok(r.status === 302, 'signup redirects');
+
+  // Non-age-verified user: tattoo POST is rejected server-side (gate).
+  r = await user('POST', '/doodle-to-tattoo', { ...doodleForm({ product: 'tattoo', tier: 'light', rights: '1' }), follow: false });
+  ok(r.status === 302 && r.location === '/doodle-to-tattoo',
+    'non-verified tattoo POST -> back to form, got ' + r.location);
+  r = await user('GET', '/doodle-to-tattoo');
+  ok(!r.text.includes('value="tattoo"'), 'non-verified logged-in user still sees no tattoo option');
+
+  // Age-verify the parent (the site's existing parent gate).
+  r = await user('POST', '/account/age-verify', { ...form({ dob: '1980-01-01' }), follow: false });
+  ok(r.status === 302, 'age-verify redirects');
+  r = await user('GET', '/doodle-to-tattoo');
+  ok(r.text.includes('value="tattoo"') && r.text.includes('name="tier"'),
+    'verified parent sees the tattoo tier');
 
   // Tattoo flow (original behavior): file + tier=light -> custom order.
   r = await user('POST', '/doodle-to-tattoo', { ...doodleForm({ product: 'tattoo', tier: 'light', rights: '1' }), follow: false });

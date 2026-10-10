@@ -330,10 +330,13 @@ router.get('/designers/guide', async (req, res) => {
 
 // --- Doodle-to-Merchandise ("Turn Their Doodle Into Merchandise") ---
 // Parents upload a kid's doodle/coloring (or enter a TAC-XXXXXX code from the
-// Little Inkers app) and pick what to make: a T-shirt, a poster/print
-// (printed as-is via the print_orders + Printful path), or a tattoo design
-// (the original two-tier 48h custom pipeline). Merch needs the uploaded
-// file; tattoo orders keep the old behavior.
+// Little Inkers app) and pick what to make: a T-shirt or a poster/print
+// (printed as-is via the print_orders + Printful path). The kid-facing copy
+// is merchandise-only (zero tattoo references, per the one-way cross-promo
+// rule). The tattoo design tier (the original two-tier 48h custom pipeline)
+// exists but is visible AND orderable only behind the parent gate: the
+// site's existing 18+ age verification (/account#content).
+// Merch needs the uploaded file; tattoo orders keep the old behavior.
 const doodleStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     const dir = path.join(config.uploadDir, 'doodles');
@@ -367,9 +370,20 @@ router.get('/doodle-to-tattoo', async (req, res) => {
     id, name: PRODUCTS[id].name, price: PRODUCTS[id].price_cents,
   }));
   const base = config.baseUrl.replace(/\/$/, '');
+  // Parent gate: the tattoo tier is only visible (and orderable) to
+  // age-verified adults — the site's existing parent gate is the 18+
+  // verification on /account#content (account.js /age-verify).
+  let parentUnlocked = false;
+  if (req.user) {
+    try {
+      const ageRow = await db.get('SELECT age_verified FROM users WHERE id = ?', [req.user.id]);
+      parentUnlocked = !!(ageRow && ageRow.age_verified);
+    } catch (e) { /* gate stays locked on db error */ }
+  }
   res.render('site/doodle-to-tattoo', {
     title: 'Turn Their Doodle Into Merchandise | Tattoo Art Customs',
     code: (req.query.code || '').trim().toUpperCase(),
+    parentUnlocked,
     lightFull, lightDeposit,
     lightTotal: withFeeCents(lightFull), lightDepositTotal: withFeeCents(lightDeposit),
     reworkFull, reworkDeposit,
@@ -379,7 +393,7 @@ router.get('/doodle-to-tattoo', async (req, res) => {
     printProducts,
     minPrintPrice: Math.min(...printProducts.map((p) => p.price)),
     feeNote: `$${(processingFeeCents(100) / 100).toFixed(2)}`,
-    metaDescription: 'Turn your kid\'s drawing into merchandise — a custom t-shirt, a poster for their wall, or tattoo-ready art. Upload their doodle and pick what to make.',
+    metaDescription: 'Turn your kid\'s drawing into merchandise — a custom t-shirt or a poster for their wall. Upload their doodle and pick what to make.',
     canonical: `${base}/doodle-to-tattoo`,
   });
 });
@@ -389,11 +403,21 @@ router.post('/doodle-to-tattoo', requireLogin, formLimiter, checkHoneypot, uploa
   const pricing = require('../lib/pricing');
   const { customFullCents, processingFeeCents } = pricing;
   const { PRODUCTS } = require('../lib/print');
-  const product = ['tee', 'print', 'tattoo'].includes(req.body.product) ? req.body.product : 'tattoo';
+  const product = ['tee', 'print', 'tattoo'].includes(req.body.product) ? req.body.product : 'tee';
   const tier = req.body.tier === 'rework' ? 'rework' : 'light';
   const rights = req.body.rights === '1';
   const notes = String(req.body.notes || '').trim().slice(0, 1000);
   const tacCode = String(req.body.tac_code || '').trim().toUpperCase();
+
+  // Parent gate (server-side): the tattoo tier is only orderable by
+  // age-verified adults, matching the visibility gate on the GET page.
+  if (product === 'tattoo') {
+    const ageRow = await db.get('SELECT age_verified FROM users WHERE id = ?', [req.user.id]);
+    if (!ageRow || !ageRow.age_verified) {
+      req.session.flash = 'The grown-ups-only option unlocks after age verification — visit your account\'s content preferences to verify.';
+      return res.redirect('/doodle-to-tattoo');
+    }
+  }
 
   if (!rights) {
     req.session.flash = 'Please confirm the artwork rights checkbox.';
