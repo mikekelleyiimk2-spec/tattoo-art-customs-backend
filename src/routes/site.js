@@ -981,6 +981,24 @@ router.get('/raffle', async (req, res) => {
      FROM raffle_entries r JOIN users u ON u.id = r.user_id
      WHERE r.prize_won IS NOT NULL ORDER BY
        CASE r.prize_won WHEN 'grand' THEN 0 ELSE 1 END`) : [];
+  // Refer-a-friend: logged-in entrants see their personal share link plus
+  // how many friends joined through it and how many bonus entries they earned.
+  let shareLink = null, referralCount = 0, myBonusEntries = 0, alreadyEntered = false;
+  if (req.user) {
+    const myEntry = await db.get(
+      'SELECT id, bonus_entries FROM raffle_entries WHERE user_id = ?', [req.user.id]);
+    alreadyEntered = !!myEntry;
+    myBonusEntries = (myEntry && myEntry.bonus_entries) || 0;
+    if (alreadyEntered) {
+      const { ensureReferralCode } = require('../lib/referrals');
+      const code = await ensureReferralCode(req.user.id);
+      if (code) shareLink = `${config.baseUrl.replace(/\/$/, '')}/raffle?ref=${code}`;
+      const rc = await db.get(
+        'SELECT COUNT(*) AS n FROM raffle_referral_credits WHERE referrer_user_id = ?',
+        [req.user.id]);
+      referralCount = (rc && rc.n) || 0;
+    }
+  }
   res.render('site/raffle', {
     title: 'Tattoo Art Customs Opening Raffle — Free Entry',
     metaDescription: 'The Tattoo Art Customs Opening Raffle: free entry with a free account. Grand prize is any premade design of your choice plus a free month of membership; two runners-up win a free premade design each.',
@@ -991,8 +1009,10 @@ router.get('/raffle', async (req, res) => {
     minClosesAt: founding.RAFFLE_ENTRY_MIN_CLOSE_AT,
     profitTargetCents: founding.RAFFLE_OWNER_PROFIT_TARGET_CENTS,
     winners,
-    alreadyEntered: req.user ? !!(await db.get(
-      'SELECT id FROM raffle_entries WHERE user_id = ?', [req.user.id])) : false,
+    alreadyEntered,
+    shareLink,
+    referralCount,
+    myBonusEntries,
   });
 });
 

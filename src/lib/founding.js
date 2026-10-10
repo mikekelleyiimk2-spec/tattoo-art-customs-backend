@@ -149,16 +149,56 @@ async function claimFoundingShop(userId, now = Date.now()) {
 // One entry per user, ever (UNIQUE on user_id), granted automatically when
 // a free account is created while entries are open. Safe to call twice —
 // the second call is a no-op.
+//
+// Refer-a-friend: each entrant's personal share link is /raffle?ref=CODE
+// (the existing referral-code plumbing sets referred_by at signup). When a
+// friend signs up through the link, the referrer earns RAFFLE_REFERRAL_BONUS
+// bonus entries. Credits are idempotent per referred user
+// (raffle_referral_credits has a UNIQUE index on referred_user_id).
+const RAFFLE_REFERRAL_BONUS = 3;
+
+async function creditRaffleReferralBonus(referrerId, referredUserId, now = Date.now()) {
+  if (!referrerId || !referredUserId || referrerId === referredUserId) return { credited: false };
+  const dupe = await db.get(
+    'SELECT id FROM raffle_referral_credits WHERE referred_user_id = ?', [referredUserId]);
+  if (dupe) return { credited: false, reason: 'already credited' };
+  const entry = await db.get(
+    'SELECT id, bonus_entries FROM raffle_entries WHERE user_id = ?', [referrerId]);
+  if (!entry) return { credited: false, reason: 'referrer not entered' };
+  await db.update('raffle_entries', entry.id, { bonus_entries: (entry.bonus_entries || 0) + RAFFLE_REFERRAL_BONUS });
+  await db.insert('raffle_referral_credits', {
+    referrer_user_id: referrerId,
+    referred_user_id: referredUserId,
+    bonus_entries: RAFFLE_REFERRAL_BONUS,
+    credited_at: now,
+  });
+  return { credited: true, bonus: RAFFLE_REFERRAL_BONUS };
+}
+
 async function enterRaffleOnSignup(userId, now = Date.now()) {
   const open = await raffleEntriesOpen(now);
   if (!open.open) return { entered: false, reason: open.reason };
   try {
     await db.insert('raffle_entries', { user_id: userId, entered_at: now });
-    return { entered: true };
   } catch (e) {
     if (/UNIQUE/i.test(e.message)) return { entered: false, reason: 'already entered' };
     throw e;
   }
+  // Refer-a-friend bonus crediting (best effort — never blocks the entry).
+  try {
+    const me = await db.get('SELECT referred_by FROM users WHERE id = ?', [userId]);
+    if (me && me.referred_by) await creditRaffleReferralBonus(me.referred_by, userId, now);
+    // Retroactive: friends may have signed up before the referrer entered.
+    const pending = await db.all(
+      `SELECT u.id FROM users u JOIN raffle_entries r ON r.user_id = u.id
+       WHERE u.referred_by = ? AND NOT EXISTS
+         (SELECT 1 FROM raffle_referral_credits c WHERE c.referred_user_id = u.id)`,
+      [userId]);
+    for (const p of pending) await creditRaffleReferralBonus(userId, p.id, now);
+  } catch (e) {
+    console.error('raffle referral bonus failed:', e.message);
+  }
+  return { entered: true };
 }
 
 // Draw the raffle: grand prize first, then 2 runners-up.
@@ -170,11 +210,23 @@ async function drawRaffle({ now = Date.now() } = {}) {
     `SELECT * FROM raffle_entries WHERE prize_won IS NULL ORDER BY entered_at ASC`);
   if (!entries.length) throw new Error('There are no raffle entries to draw.');
 
-  // Fisher-Yates shuffle with cryptographic randomness.
-  const pool = entries.slice();
+  // Weighted pool: each entry appears 1 + bonus_entries times, so referred
+  // friends convert into real extra chances. Fisher-Yates shuffle with
+  // cryptographic randomness.
+  const pool = [];
+  for (const e of entries) {
+    const tickets = 1 + (e.bonus_entries || 0);
+    for (let i = 0; i < tickets; i++) pool.push(e);
+  }
   for (let i = pool.length - 1; i > 0; i--) {
     const j = crypto.randomInt(i + 1);
     [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  // One prize per user: walk the shuffled pool, first distinct users win.
+  const ordered = [];
+  const seenUsers = new Set();
+  for (const e of pool) {
+    if (!seenUsers.has(e.user_id)) { seenUsers.add(e.user_id); ordered.push(e); }
   }
 
   const winners = [];
@@ -208,8 +260,8 @@ async function drawRaffle({ now = Date.now() } = {}) {
   // membership. The premade is fulfilled manually by the owner once the
   // winner names their design; the free month uses the same
   // membership_extended_until machinery as referral free months.
-  if (pool.length >= 1) {
-    await award(pool[0], 'grand', async (entry) => {
+  if (ordered.length >= 1) {
+    await award(ordered[0], 'grand', async (entry) => {
       const u = await db.get('SELECT membership_extended_until FROM users WHERE id = ?', [entry.user_id]);
       const base = Math.max(now, (u && u.membership_extended_until) || 0);
       const until = base + RAFFLE_FREE_MONTH_MS;
@@ -223,7 +275,7 @@ async function drawRaffle({ now = Date.now() } = {}) {
     });
   }
   // Runners-up (2): one free premade design of their choice each.
-  for (const entry of pool.slice(1, 3)) {
+  for (const entry of ordered.slice(1, 3)) {
     await award(entry, 'runnerup', async (e2) => {
       await notify(e2, 'You won a premade design in the Tattoo Art Customs Opening Raffle!',
         'Congratulations! You are a RUNNER-UP in the Tattoo Art Customs Opening Raffle.\n\n' +
@@ -244,5 +296,6 @@ module.exports = {
   foundingArtistActive, foundingShopActive,
   claimFoundingArtist, claimFoundingShop,
   enterRaffleOnSignup, drawRaffle,
+  creditRaffleReferralBonus, RAFFLE_REFERRAL_BONUS,
   raffleOwnerSubscriptionProfits,
 };

@@ -244,6 +244,24 @@ router.get('/founding-status', async (req, res) => {
   });
 });
 
+// Owner's raffle share link for promo posts. The referral code is public by
+// design (it ships inside every promo post), so this returns only the share
+// URL — no user id, no email, nothing else.
+router.get('/raffle/owner-share', async (req, res) => {
+  try {
+    const { ownerUserId } = require('../lib/commissions');
+    const { ensureReferralCode } = require('../lib/referrals');
+    const config = require('../config');
+    const ownerId = await ownerUserId();
+    if (!ownerId) return res.status(503).json({ ok: false, error: 'owner not configured' });
+    const code = await ensureReferralCode(ownerId);
+    if (!code) return res.status(503).json({ ok: false, error: 'no referral code' });
+    res.json({ ok: true, share_url: `${config.baseUrl.replace(/\/$/, '')}/raffle?ref=${code}` });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: 'unavailable' });
+  }
+});
+
 // ---- Push notifications ----
 // VAPID public key for Web Push subscriptions (site).
 router.get('/push/vapid-key', async (req, res) => {

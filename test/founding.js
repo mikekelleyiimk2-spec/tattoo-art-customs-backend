@@ -202,6 +202,52 @@ async function runDbTests(ok) {
   const e4 = await founding.enterRaffleOnSignup(lateUser, founding.RAFFLE_ENTRY_MIN_CLOSE_AT + 1);
   ok(e4.entered, 'entry still granted after the minimum close date when close conditions are unmet');
 
+  // --- Refer-a-friend bonus entries ---
+  const { ensureReferralCode, recordSignupReferral } = require('../src/lib/referrals');
+  const referrer = await mkUser('ref1@test.local');
+  ok((await founding.enterRaffleOnSignup(referrer)).entered, 'referrer enters the raffle');
+  const refCode = await ensureReferralCode(referrer);
+  ok(refCode && refCode.startsWith('TAC-'), 'entrant gets a personal referral code');
+
+  const friend1 = await mkUser('friend1@test.local');
+  await recordSignupReferral(friend1, refCode);
+  ok((await founding.enterRaffleOnSignup(friend1)).entered, 'friend enters through the share link');
+  const rEntry = await db.get('SELECT bonus_entries FROM raffle_entries WHERE user_id = ?', [referrer]);
+  ok(rEntry.bonus_entries === 3, 'referrer earns 3 bonus entries per referred signup');
+  const credit = await db.get('SELECT bonus_entries FROM raffle_referral_credits WHERE referred_user_id = ?', [friend1]);
+  ok(!!credit && credit.bonus_entries === 3, 'referral credit row recorded');
+
+  const dupeCredit = await founding.creditRaffleReferralBonus(referrer, friend1);
+  ok(!dupeCredit.credited, 'duplicate referral credit is a no-op');
+  const rEntry2 = await db.get('SELECT bonus_entries FROM raffle_entries WHERE user_id = ?', [referrer]);
+  ok(rEntry2.bonus_entries === 3, 'no double credit on repeat');
+
+  const selfRef = await mkUser('selfref@test.local');
+  await founding.enterRaffleOnSignup(selfRef);
+  ok(!(await founding.creditRaffleReferralBonus(selfRef, selfRef)).credited,
+    'self-referral earns nothing');
+
+  // Retroactive: friend signs up before the referrer enters the raffle.
+  const laterRef = await mkUser('laterref@test.local');
+  const laterCode = await ensureReferralCode(laterRef);
+  const earlyFriend = await mkUser('earlyfriend@test.local');
+  await recordSignupReferral(earlyFriend, laterCode);
+  ok((await founding.enterRaffleOnSignup(earlyFriend)).entered, 'friend enters before referrer');
+  ok(!(await db.get('SELECT id FROM raffle_entries WHERE user_id = ?', [laterRef])),
+    'no bonus before the referrer has entered');
+  ok((await founding.enterRaffleOnSignup(laterRef)).entered, 'referrer enters later');
+  const laterEntry = await db.get('SELECT bonus_entries FROM raffle_entries WHERE user_id = ?', [laterRef]);
+  ok(laterEntry.bonus_entries === 3, 'retroactive bonus credited when the referrer enters');
+
+  // Referrer who never entered the raffle earns nothing.
+  const noEntry = await mkUser('noentry@test.local');
+  const noEntryCode = await ensureReferralCode(noEntry);
+  const friendX = await mkUser('friendx@test.local');
+  await recordSignupReferral(friendX, noEntryCode);
+  await founding.enterRaffleOnSignup(friendX);
+  ok(!(await db.get('SELECT id FROM raffle_referral_credits WHERE referrer_user_id = ?', [noEntry])),
+    'no bonus when the referrer never entered the raffle');
+
   // --- Draw ---
   const entrants = [rUser, lateUser];
   for (let i = 0; i < 4; i++) {
@@ -210,9 +256,9 @@ async function runDbTests(ok) {
     if (!e.entered) throw new Error(`entrant ${i} failed to enter`);
     entrants.push(u);
   }
-  ok((await db.get('SELECT COUNT(*) AS n FROM raffle_entries')).n === 6, '6 raffle entries banked');
+  ok((await db.get('SELECT COUNT(*) AS n FROM raffle_entries')).n === 12, '12 raffle entries banked');
   const draw = await founding.drawRaffle();
-  ok(draw.winners.length === 3, 'draw picks 3 winners from 6 entries');
+  ok(draw.winners.length === 3, 'draw picks 3 winners from 12 entries');
   const winnerIds = draw.winners.map((w) => w.user_id);
   ok(new Set(winnerIds).size === 3, 'all winners are distinct users');
   const prizeCount = {};

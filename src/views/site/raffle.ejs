@@ -44,6 +44,15 @@
 </section>
 <% } %>
 
+<% if (alreadyEntered && shareLink) { %>
+<section class="card">
+  <h2><%= t('raffle.share_title') %></h2>
+  <p><%= t('raffle.share_text') %></p>
+  <p><input type="text" readonly value="<%= shareLink %>" onclick="this.select()" style="width:100%" aria-label="<%= t('raffle.share_title') %>"></p>
+  <p class="muted"><%= t('raffle.share_count', {count: referralCount, bonus: myBonusEntries}) %></p>
+</section>
+<% } %>
+
 <% if (winners && winners.length) { %>
 <section class="card">
   <h2><%= t('raffle.winners') %></h2>
