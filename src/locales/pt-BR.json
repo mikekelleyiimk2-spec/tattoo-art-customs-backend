@@ -920,7 +920,9 @@
   "buy": "Comprar agora",
   "add": "Salvar na lista de desejos",
   "remove": "Remover da lista de desejos",
-  "saved": "Designs salvos"
+  "saved": "Designs salvos",
+  "signin_like": "Entre para que sua curtida conte",
+  "signin": "Entrar"
  },
  "transfer": {
   "send_title": "Send art to your shop",

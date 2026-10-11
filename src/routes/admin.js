@@ -84,6 +84,13 @@ router.get('/', async (req, res) => {
   // is a manual-admin-only flag — automatic enforcement never touches it.
   const { offenderWatch } = require('../lib/slaEnforcer');
   const designerWatch = await offenderWatch({ now: Date.now() });
+  // Top liked designs (owner likes campaign 2026-10-11): from the
+  // design_like_counts rollup — likes live in our DB, GA can't do this.
+  const topLiked = await db.all(
+    `SELECT d.id, d.title, COALESCE(c.like_count, 0) AS like_count
+     FROM designs d LEFT JOIN design_like_counts c ON c.design_id = d.id
+     WHERE d.status = 'approved' AND COALESCE(c.like_count, 0) > 0
+     ORDER BY like_count DESC, d.created_at DESC LIMIT 10`);
   const terminatedOrders = await db.all(
     `SELECT o.id, o.replacement_status, u.email AS buyer_email
      FROM orders o JOIN users u ON u.id = o.buyer_id
@@ -111,7 +118,7 @@ router.get('/', async (req, res) => {
   }
   res.render('admin/dashboard', {
     title: 'Admin — Tattoo Art Customs', stats, designerWatch, terminatedOrders,
-    testAccounts,
+    testAccounts, topLiked,
   });
 });
 

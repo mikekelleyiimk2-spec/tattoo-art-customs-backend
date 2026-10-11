@@ -8,7 +8,7 @@
   var HEART_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 21s-7.5-4.9-10-9.3C.4 8.6 2 4.5 6 4.5c2.2 0 3.7 1.2 4.6 2.6.9-1.4 2.4-2.6 4.6-2.6 4 0 5.6 4.1 4 7.2C19.5 16.1 12 21 12 21z"/></svg>';
 
   function strings() {
-    return window.TAC_FAV_STRINGS || { add: 'Save to wishlist', remove: 'Remove from wishlist', buy: 'Buy now', saved: 'Saved' };
+    return window.TAC_FAV_STRINGS || { add: 'Save to wishlist', remove: 'Remove from wishlist', buy: 'Buy now', saved: 'Saved', signin_like: 'Sign in to count your like', signin: 'Sign in' };
   }
   function loggedIn() { return !!window.TAC_LOGGED_IN; }
 
@@ -97,7 +97,13 @@
     else { local = local.filter(function (x) { return x !== id; }); }
     writeLocal(local);
     paint();
-    pingLike(id, on); // [toploved] leaderboard vote — best-effort, never blocks wishlist
+    if (loggedIn()) {
+      pingLike(id, on); // [toploved] leaderboard vote — best-effort, never blocks wishlist
+    } else if (on) {
+      // Owner rule 2026-10-11: likes count only for signed-in users.
+      // Guests keep the local wishlist; the vote is held until they sign in.
+      showSigninToast();
+    }
     if (loggedIn()) {
       api(on ? 'POST' : 'DELETE', '/api/favorites/' + encodeURIComponent(id))
         .then(function () { return refreshServerIds(); })
@@ -115,36 +121,44 @@
     }
   }
 
-  // [toploved] — every heart doubles as a leaderboard vote. Logged-in users
-  // are keyed by their user id server-side; guests get a stable UUID in
-  // localStorage. Fire-and-forget: the wishlist is the source of truth.
-  var VOTER_KEY = 'tac_voter_uuid';
-  function voterKey() {
-    try {
-      var v = localStorage.getItem(VOTER_KEY);
-      if (!v) {
-        v = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-          var r = Math.random() * 16 | 0;
-          return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-        });
-        localStorage.setItem(VOTER_KEY, v);
-      }
-      return v;
-    } catch (e) { return null; }
+  // [toploved] — heart doubles as a leaderboard vote. Owner rule 2026-10-11:
+  // likes require sign-in; logged-in users are keyed by user id server-side.
+  // Fire-and-forget: the wishlist is the source of truth.
+  function paintLikeCount(id, n) {
+    Array.prototype.forEach.call(
+      document.querySelectorAll('[data-like-count="' + id + '"]'),
+      function (el) { el.textContent = '♥ ' + n; });
   }
   function pingLike(id, on) {
-    var body = {};
-    if (!loggedIn()) {
-      var vk = voterKey();
-      if (!vk) return;
-      body.voter_key = vk;
-    }
     fetch('/api/likes/' + encodeURIComponent(id), {
       method: on ? 'POST' : 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'same-origin',
-      body: JSON.stringify(body),
+      body: JSON.stringify({}),
+    }).then(function (r) {
+      if (!r.ok) return null;
+      return r.json();
+    }).then(function (j) {
+      if (j && j.ok && typeof j.like_count === 'number') paintLikeCount(id, j.like_count);
     }).catch(function () {});
+  }
+
+  // Guest nudge: one toast per tap, auto-dismisses, tap-to-dismiss.
+  function showSigninToast() {
+    if (document.getElementById('tac-signin-toast')) return;
+    var s = strings();
+    var el = document.createElement('div');
+    el.id = 'tac-signin-toast';
+    el.setAttribute('role', 'status');
+    var link = document.createElement('a');
+    link.href = '/login';
+    link.textContent = s.signin;
+    el.appendChild(document.createTextNode('♥ ' + s.signin_like + ' '));
+    el.appendChild(link);
+    document.body.appendChild(el);
+    var dismiss = function () { if (el.parentNode) el.parentNode.removeChild(el); };
+    el.addEventListener('click', dismiss);
+    setTimeout(dismiss, 5000);
   }
 
   function onWishlistPage() { return !!document.getElementById('wishlist-grid'); }

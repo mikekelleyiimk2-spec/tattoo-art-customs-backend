@@ -920,7 +920,9 @@
   "buy": "Acheter",
   "add": "Ajouter aux favoris",
   "remove": "Retirer des favoris",
-  "saved": "Designs enregistrés"
+  "saved": "Designs enregistrés",
+  "signin_like": "Connectez-vous pour que votre like compte",
+  "signin": "Se connecter"
  },
  "transfer": {
   "send_title": "Send art to your shop",

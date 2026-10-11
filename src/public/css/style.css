@@ -239,6 +239,25 @@ th { background: var(--paper-dim); }
 .fav-heart-inline { position: static; vertical-align: middle; margin-left: .5rem; width: 2.2rem; height: 2.2rem; }
 .nav-links [data-fav-count] { background: var(--accent); color: #fff; }
 
+/* Like counts shown next to gallery hearts ([toploved] votes) */
+.like-count {
+  position: absolute; top: .5rem; right: 3.1rem; z-index: 2;
+  font-size: .8rem; font-weight: 700; color: var(--ink);
+  background: rgba(255,255,255,.94); border: 1px solid var(--line);
+  border-radius: 999px; padding: .3rem .55rem; line-height: 1;
+  pointer-events: none; white-space: nowrap;
+}
+.like-count-inline { position: static; margin-left: .25rem; vertical-align: middle; }
+
+/* Guest sign-in nudge toast (likes require sign-in, owner rule 2026-10-11) */
+#tac-signin-toast {
+  position: fixed; bottom: 1.25rem; left: 50%; transform: translateX(-50%); z-index: 9999;
+  background: var(--ink); color: #fff; border-radius: 999px; padding: .7rem 1.1rem;
+  font-size: .9rem; box-shadow: 0 4px 16px rgba(0,0,0,.25);
+  display: flex; gap: .6rem; align-items: center; cursor: pointer; max-width: 92vw;
+}
+#tac-signin-toast a { color: #fff; font-weight: 700; text-decoration: underline; white-space: nowrap; }
+
 /* Top loved leaderboard */
 .top-loved-badge {
   position: absolute; top: .5rem; left: .5rem; z-index: 2;

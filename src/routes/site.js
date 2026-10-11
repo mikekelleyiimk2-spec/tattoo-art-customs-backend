@@ -134,9 +134,12 @@ async function approvedDesigns(member = false) {
   // Main gallery: approved pre-designs only. Portfolio-only custom pieces
   // never appear here — they live on the artist's own portfolio page.
   // Member-exclusive designs are hidden from non-members everywhere.
+  // LEFT JOIN keeps every design even when it has no likes yet.
   const rows = await db.all(
-    `SELECT * FROM designs WHERE status = 'approved' AND listing_scope = 'gallery'
-     AND (members_only = 0 OR ? = 1) ORDER BY created_at DESC`, [member ? 1 : 0]);
+    `SELECT d.*, COALESCE(c.like_count, 0) AS like_count
+     FROM designs d LEFT JOIN design_like_counts c ON c.design_id = d.id
+     WHERE d.status = 'approved' AND d.listing_scope = 'gallery'
+     AND (d.members_only = 0 OR ? = 1) ORDER BY d.created_at DESC`, [member ? 1 : 0]);
   return rows.map(parseDesign);
 }
 
@@ -675,6 +678,9 @@ router.get('/design/:id', async (req, res) => {
   const artist = design.artist_id
     ? await db.get('SELECT display_name FROM users WHERE id = ?', [design.artist_id])
     : null;
+  // Like count for the visible heart (design_like_counts rollup; 0 when none).
+  design.like_count = Number(
+    (await db.get('SELECT like_count FROM design_like_counts WHERE design_id = ?', [design.id]) || {}).like_count || 0);
   // Portfolio custom pieces sell at the custom-design price (sale-aware);
   // pre-designs sell at the premade price. Members get the early sale entry.
   // Show-featured designs (used on "Color With Us!") quote the member

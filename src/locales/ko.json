@@ -920,7 +920,9 @@
   "buy": "지금 구매",
   "add": "위시리스트에 저장",
   "remove": "위시리스트에서 삭제",
-  "saved": "저장된 디자인"
+  "saved": "저장된 디자인",
+  "signin_like": "좋아요를 반영하려면 로그인하세요",
+  "signin": "로그인"
  },
  "transfer": {
   "send_title": "Send art to your shop",

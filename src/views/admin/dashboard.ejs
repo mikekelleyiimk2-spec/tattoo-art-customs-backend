@@ -44,6 +44,21 @@
   <div class="card"><h3>Ad space</h3><p>Orders + record ad-revenue payouts</p><p><a href="/admin/ads">Open</a></p></div>
 </div>
 
+<h2>Top liked designs</h2>
+<div class="card">
+  <% if (typeof topLiked !== 'undefined' && topLiked.length) { %>
+  <table>
+    <thead><tr><th>#</th><th>Design</th><th>Likes</th></tr></thead>
+    <tbody>
+      <% topLiked.forEach(function(d, i) { %>
+      <tr><td><%= i + 1 %></td><td><a href="/design/<%= d.id %>"><%= d.title %></a></td><td><strong>♥ <%= d.like_count %></strong></td></tr>
+      <% }); %>
+    </tbody>
+  </table>
+  <% } else { %><p class="muted">No likes yet — the hearts on the gallery feed this board.</p><% } %>
+  <p><a href="/top-loved">Public leaderboard</a></p>
+</div>
+
 <% if ((typeof designerWatch !== 'undefined' && designerWatch.length) || (typeof terminatedOrders !== 'undefined' && terminatedOrders.length)) { %>
 <h2>Designer deadline watch</h2>
 <div class="grid">
