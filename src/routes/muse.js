@@ -127,6 +127,35 @@ router.get('/ios-sales', async (req, res) => {
   return res.json({ ok: true, sales: rows });
 });
 
+// GET /api/muse/all-sales?since=<paid_at ms>
+// Returns ALL paid orders (any order_type) with paid_at newer than `since`
+// (unix ms), newest first, max 100. Also includes refunded orders so the
+// money watcher can catch refunds/chargebacks.
+// Powers the owner's unified money watcher ("watch all incoming and outgoing").
+// Uses paid_at (not id) because order ids are random hex, not sequential.
+// Same service-token auth as /notify; 404s when MUSE_SERVICE_TOKEN unset.
+router.get('/all-sales', async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  const since = parseInt(req.query.since, 10) || 0;
+  let rows = [];
+  try {
+    rows = await db.all(
+      `SELECT o.id, o.order_type, o.amount_cents, o.amount_paid_cents, o.fee_cents,
+              o.paid_at, o.status, o.payment_method, u.email AS buyer_email
+       FROM orders o LEFT JOIN users u ON u.id = o.buyer_id
+       WHERE o.paid_at IS NOT NULL AND o.paid_at > ?
+         AND o.status IN ('paid', 'refunded', 'chargedback')
+       ORDER BY o.paid_at DESC LIMIT 100`,
+      [since]
+    );
+  } catch (e) {
+    console.error('[muse/all-sales] query failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'query failed' });
+  }
+  return res.json({ ok: true, sales: rows });
+});
+
 // GET /api/muse/money-stats
 // Returns production money totals for the owner's daily sweep: gross revenue,
 // order counts, commissions owed, and signups. Read-only.
