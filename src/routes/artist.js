@@ -533,23 +533,30 @@ router.post('/by-request/submit', formLimiter, (req, res, next) => {
         continue;
       }
       // Verify the claim (or that the character is unclaimed and claim it).
-      const claim = await byRequest.activeClaimFor(charSlug);
-      if (claim && claim.designer_id !== req.user.id) {
-        results.push({ index: i, ok: false, error: 'That character is claimed by another designer.' });
-        continue;
-      }
-      if (!claim) {
-        // Auto-claim on submit if still available.
-        const data = (() => { try {
-          return JSON.parse(fs.readFileSync(
-            path.join(__dirname, '..', '..', 'assets/catalog/by-request.json'), 'utf8'));
-        } catch { return { items: [] }; } })();
-        const item = data.items.find((x) => x.slug === charSlug);
-        const cr = await byRequest.claimCharacter(charSlug, item ? item.name : charSlug, req.user.id);
-        if (!cr.ok) {
-          results.push({ index: i, ok: false, error: 'Could not claim that character — try another.' });
+      // Wrapped in try/catch: a claim-system failure must not 500 the whole
+      // submission — log it and continue with the upload.
+      try {
+        const claim = await byRequest.activeClaimFor(charSlug);
+        if (claim && claim.designer_id !== req.user.id) {
+          results.push({ index: i, ok: false, error: 'That character is claimed by another designer.' });
           continue;
         }
+        if (!claim) {
+          // Auto-claim on submit if still available.
+          const data = (() => { try {
+            return JSON.parse(fs.readFileSync(
+              path.join(__dirname, '..', '..', 'assets/catalog/by-request.json'), 'utf8'));
+          } catch { return { items: [] }; } })();
+          const item = data.items.find((x) => x.slug === charSlug);
+          const cr = await byRequest.claimCharacter(charSlug, item ? item.name : charSlug, req.user.id);
+          if (!cr.ok) {
+            results.push({ index: i, ok: false, error: 'Could not claim that character — try another.' });
+            continue;
+          }
+        }
+      } catch (claimErr) {
+        console.error('by-request claim check failed (continuing without claim):', claimErr.message);
+        // Continue with the upload — the claim system is best-effort.
       }
       const fields = {
         description: req.body.description || '',
@@ -567,8 +574,18 @@ router.post('/by-request/submit', formLimiter, (req, res, next) => {
           watermark: byField['watermark'] || null,
         }, fields);
         if (r.ok && r.id) {
-          await db.update('designs', r.id, { by_request_character: charSlug });
-          await byRequest.completeClaim(charSlug, req.user.id, r.id);
+          // Best-effort: link the design to the by-request character.
+          // A failure here must not mark a successful upload as failed.
+          try {
+            await db.update('designs', r.id, { by_request_character: charSlug });
+          } catch (linkErr) {
+            console.error('by-request character link failed:', linkErr.message);
+          }
+          try {
+            await byRequest.completeClaim(charSlug, req.user.id, r.id);
+          } catch (claimErr) {
+            console.error('by-request completeClaim failed:', claimErr.message);
+          }
         }
         results.push({ index: i, ...r, character: charSlug });
       } catch (e) {
