@@ -300,6 +300,24 @@ router.get('/by-request', async (req, res) => {
     return res.status(500).send('By-request catalog not found');
   }
   const items = catalog.items || [];
+  // Gather all images per slug: catalog img + any extras in the img dir
+  // (e.g. slug-2.jpg, slug-alt.jpg). Extras pile up in a scrollable row.
+  const imgDir = path.join(__dirname, '..', '..', 'assets', 'img', 'by-request');
+  let dirFiles = [];
+  try { dirFiles = fs.readdirSync(imgDir); } catch (e) { dirFiles = []; }
+  for (const item of items) {
+    const slug = item.slug || '';
+    const imgs = [];
+    if (item.img) imgs.push(item.img);
+    for (const f of dirFiles) {
+      if (!/\.(jpe?g|png|webp)$/i.test(f)) continue;
+      const base = f.replace(/\.(jpe?g|png|webp)$/i, '');
+      if (base !== slug && base.startsWith(slug + '-') && !imgs.includes('/img/by-request/' + f)) {
+        imgs.push('/img/by-request/' + f);
+      }
+    }
+    item.allImages = imgs;
+  }
   res.render('admin/by-request', {
     title: 'By-request catalog — Admin',
     total: items.length, items,
