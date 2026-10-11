@@ -575,3 +575,32 @@ router.post('/pending-designs/:id/approve', express.json(), async (req, res) => 
 });
 
 module.exports = router;
+
+// POST /api/muse/designs/:id/delete
+// Permanently deletes a design and its asset files. Blocked when the piece
+// has sales (same rule as the admin UI). Owner-authorized moderation action
+// for the owner's own assistant — e.g. removing third-party art uploaded by
+// mistake. Same service-token auth as /notify; 404s when MUSE_SERVICE_TOKEN unset.
+router.post('/designs/:id/delete', express.json(), async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const design = await db.get('SELECT * FROM designs WHERE id = ?', [req.params.id]);
+    if (!design) return res.status(404).json({ ok: false, error: 'not found' });
+    const paid = await db.get("SELECT id FROM orders WHERE design_id = ? AND status = 'paid' LIMIT 1", [design.id]);
+    if (paid || (design.sale_count || 0) > 0) {
+      return res.status(400).json({ ok: false, error: 'blocked-has-sales' });
+    }
+    const fs = require('fs');
+    const { resolveStoredPath } = require('../lib/storage');
+    for (const p of [design.color_path, design.linework_path, design.linework_wm_path, design.custom_watermark_path]) {
+      const abs = p ? resolveStoredPath(p) : null;
+      if (abs) { try { fs.unlinkSync(abs); } catch { /* already gone */ } }
+    }
+    await db.query('DELETE FROM designs WHERE id = ?', [design.id]);
+    return res.json({ ok: true, deleted: design.id });
+  } catch (e) {
+    console.error('[muse/designs-delete] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'delete failed' });
+  }
+});
