@@ -290,6 +290,25 @@ router.get('/library/download/:file', async (req, res) => {
   res.download(full, file);
 });
 
+// By-request character catalog overview: what's drawn, what's still missing.
+router.get('/by-request', async (req, res) => {
+  let catalog = { items: [], updated: null };
+  try {
+    catalog = JSON.parse(fs.readFileSync(
+      path.join(__dirname, '..', '..', 'assets', 'catalog', 'by-request.json'), 'utf8'));
+  } catch (e) {
+    return res.status(500).send('By-request catalog not found');
+  }
+  const items = catalog.items || [];
+  res.render('admin/by-request', {
+    title: 'By-request catalog — Admin',
+    total: items.length, items,
+    doneCount: items.filter((i) => i.done).length,
+    missingCount: items.filter((i) => !i.done).length,
+    updated: catalog.updated,
+  });
+});
+
 router.get('/custom-orders', async (req, res) => {
   const filter = String(req.query.status || 'open');
   let where = "o.order_type = 'custom' AND o.status = 'paid'";

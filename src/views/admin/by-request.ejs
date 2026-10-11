@@ -1,0 +1,22 @@
+<h1>By-request catalog</h1>
+<p><a href="/admin">← Dashboard</a></p>
+
+<div class="grid">
+  <div class="card"><h3>Total</h3><p><strong><%= total %></strong></p></div>
+  <div class="card"><h3>Drawn</h3><p><strong><%= doneCount %></strong></p></div>
+  <div class="card"><h3>Missing</h3><p><strong><%= missingCount %></strong></p></div>
+</div>
+<% if (updated) { %><p class="muted fineprint">Catalog updated <%= updated.slice(0, 10) %></p><% } %>
+
+<div class="grid">
+  <% items.forEach(function(item) { %>
+  <div class="card" style="text-align:center">
+    <% if (item.img) { %>
+    <img src="<%= item.img %>" alt="<%= item.name %>" loading="lazy" style="max-width:100%;height:120px;object-fit:contain;background:#f5f2ec;border-radius:4px">
+    <% } else { %>
+    <div class="muted" style="height:120px;line-height:120px">—</div>
+    <% } %>
+    <p style="margin:8px 0 0;font-size:14px"><strong><%= item.name %></strong></p>
+  </div>
+  <% }); %>
+</div>
