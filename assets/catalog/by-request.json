@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-10T11:43:30.232Z",
+ "updated": "2026-10-11T11:43:41.545Z",
  "items": [
   {
    "name": "Goku (Dragon Ball)",
@@ -700,20 +700,20 @@
   {
    "name": "Yakko, Wakko & Dot (Animaniacs)",
    "slug": "yakko-wakko-dot",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/yakko-wakko-dot.jpg"
   },
   {
    "name": "Finn & Jake (Adventure Time)",
    "slug": "finn-jake",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/finn-jake.jpg"
   },
   {
    "name": "Gumball (The Amazing World of Gumball)",
    "slug": "gumball",
-   "done": false,
-   "img": null
+   "done": true,
+   "img": "/img/by-request/gumball.jpg"
   },
   {
    "name": "Aang (Avatar: The Last Airbender)",
