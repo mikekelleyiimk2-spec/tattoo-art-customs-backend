@@ -293,6 +293,41 @@ router.post('/revoke-admin', express.json(), async (req, res) => {
   }
 });
 
+// POST /api/muse/rewatermark-missing — regenerate watermarked linework for
+// pending designs stuck without it (service-token auth). Idempotent: skips
+// designs that already have linework_wm_path unless {force:true}.
+// Fixes the admin approval page showing broken thumbnails for un-watermarked
+// pending designs (2026-10-12: Chris Jones report).
+router.post('/rewatermark-missing', express.json(), async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const { applyWatermarkedLinework } = require('../lib/watermark');
+    const { resolveStoredPath } = require('../lib/storage');
+    const force = req.body?.force === true;
+    const rows = await db.all(
+      "SELECT id, title, linework_path, linework_wm_path FROM designs WHERE status = 'pending' AND (linework_wm_path IS NULL OR linework_wm_path = '')"
+    );
+    const results = [];
+    for (const d of rows) {
+      if (d.linework_wm_path && !force) { results.push({ id: d.id, title: d.title, result: 'skipped' }); continue; }
+      const lwAbs = resolveStoredPath(d.linework_path);
+      if (!lwAbs) { results.push({ id: d.id, title: d.title, result: 'no-file' }); continue; }
+      try {
+        const wmRel = await applyWatermarkedLinework({ designId: d.id, lineworkAbs: lwAbs, choice: 'site' });
+        await db.update('designs', d.id, { linework_wm_path: wmRel });
+        results.push({ id: d.id, title: d.title, result: 'ok', wm: wmRel });
+      } catch (e) {
+        results.push({ id: d.id, title: d.title, result: 'error', error: e.message });
+      }
+    }
+    return res.json({ ok: true, count: rows.length, results });
+  } catch (e) {
+    console.error('[muse/rewatermark-missing] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'rewatermark failed' });
+  }
+});
+
 router.post('/upload-ipa', (req, res) => {
   if (!serviceToken()) return res.status(404).json({ ok: false });
   if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
