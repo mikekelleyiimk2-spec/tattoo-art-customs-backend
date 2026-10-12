@@ -268,6 +268,31 @@ router.post('/grant-admin', express.json(), async (req, res) => {
   }
 });
 
+// body: { email }
+// Revokes admin access: sets role to 'customer' and clears population_admin.
+// Same service-token auth as /grant-admin; 404s when MUSE_SERVICE_TOKEN unset.
+router.post('/revoke-admin', express.json(), async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    if (!email) {
+      return res.status(400).json({ ok: false, error: 'email required' });
+    }
+    const user = await db.get('SELECT id, email, role, population_admin FROM users WHERE lower(email) = ?', [email]);
+    if (!user) return res.status(404).json({ ok: false, error: 'user not found' });
+    if (user.role === 'head_admin') {
+      return res.status(400).json({ ok: false, error: 'cannot revoke head_admin via this endpoint' });
+    }
+    await db.update('users', user.id, { role: 'customer', population_admin: 0 });
+    const updated = await db.get('SELECT id, email, role, population_admin FROM users WHERE id = ?', [user.id]);
+    return res.json({ ok: true, user: updated });
+  } catch (e) {
+    console.error('[muse/revoke-admin] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'revoke failed' });
+  }
+});
+
 router.post('/upload-ipa', (req, res) => {
   if (!serviceToken()) return res.status(404).json({ ok: false });
   if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
