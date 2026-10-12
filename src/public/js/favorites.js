@@ -174,8 +174,11 @@
     var tags = (d.categories || []).map(function (c) {
       return '<span class="tag">' + esc(c) + '</span>';
     }).join('');
+    // d.thumb is either a full path (API thumb_url — the compressed grid
+    // thumbnail) or a path fragment the views prefix with /img/designs/.
+    var src = d.thumb && d.thumb.charAt(0) === '/' ? d.thumb : '/img/designs/' + (d.thumb || '');
     return '<article class="design-card">' +
-      '<a href="/design/' + esc(d.id) + '"><img src="/img/designs/' + esc(d.thumb) + '" alt="' + esc(d.title) + '" loading="lazy" decoding="async"></a>' +
+      '<a href="/design/' + esc(d.id) + '"><img src="' + esc(src) + '" alt="' + esc(d.title) + '" loading="lazy" decoding="async"></a>' +
       '<button type="button" class="fav-heart' + (isFav(d.id) ? ' on' : '') + '" data-fav-id="' + esc(d.id) + '" aria-pressed="' + (isFav(d.id) ? 'true' : 'false') + '" aria-label="' + esc(labels.add) + '" title="' + esc(labels.add) + '">' + HEART_SVG + '</button>' +
       '<div class="pad"><h3><a href="/design/' + esc(d.id) + '">' + esc(d.title) + '</a></h3>' +
       tags +
@@ -214,9 +217,8 @@
         done(favs.map(function (id) {
           var d = byId[id];
           if (!d) return null;
-          var f = (d.thumb_url || '').split('/').pop();
           return {
-            id: d.id, title: d.title, thumb: f,
+            id: d.id, title: d.title, thumb: d.thumb_url || '',
             categories: (d.categories || []).slice(0, 3),
             price: typeof d.price_cents === 'number' ? '$' + (d.price_cents / 100).toFixed(2) : '',
           };

@@ -170,6 +170,25 @@ for (const d of [wmDir, uploadWmDir, photosDir, avatarsDir, adsDir, healedDir]) 
 // Gallery previews change rarely (watermarked files can be regenerated in
 // place on re-approval), so allow a week of caching with ETag revalidation.
 const imgCacheOpts = { maxAge: '7d' };
+// Grid thumbnails (perf fix 2026-10-12): 640px compressed derivatives of
+// the watermarked previews, generated on demand and cached on disk. Grid
+// surfaces link here instead of the full-size previews. On any failure,
+// fall back to the full watermarked preview so a card never breaks.
+app.get('/img/designs/thumb/:file', async (req, res) => {
+  try {
+    const { ensureDesignThumb } = require('./lib/designThumbs');
+    const cached = await ensureDesignThumb(req.params.file);
+    if (cached) {
+      res.set('Cache-Control', 'public, max-age=604800');
+      return res.sendFile(cached);
+    }
+  } catch (e) {
+    console.error('design thumb route failed:', e.message);
+  }
+  const base = path.basename(String(req.params.file || ''));
+  if (/^[A-Za-z0-9._-]+$/.test(base)) return res.redirect(302, `/img/designs/${base}`);
+  return res.status(404).end();
+});
 app.use('/img/designs', express.static(uploadWmDir, imgCacheOpts));
 app.use('/img/designs', express.static(wmDir, imgCacheOpts));
 // R2 fallback for gallery previews: when a file isn't on local disk (e.g.

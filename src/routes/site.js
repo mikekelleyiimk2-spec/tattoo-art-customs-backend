@@ -140,8 +140,14 @@ async function approvedDesigns(member = false) {
   // never appear here — they live on the artist's own portfolio page.
   // Member-exclusive designs are hidden from non-members everywhere.
   // LEFT JOIN keeps every design even when it has no likes yet.
+  // Column list is explicit (perf fix 2026-10-12): SELECT d.* hauled
+  // every field of every design into memory for grid pages.
   const rows = await db.all(
-    `SELECT d.*, COALESCE(c.like_count, 0) AS like_count
+    `SELECT d.id, d.title, d.description, d.style, d.categories,
+            d.linework_wm_path, d.linework_blur_path, d.sensitivity,
+            d.artist_id, d.listing_type, d.listing_scope, d.members_only,
+            d.show_featured, d.created_at,
+            COALESCE(c.like_count, 0) AS like_count
      FROM designs d LEFT JOIN design_like_counts c ON c.design_id = d.id
      WHERE d.status = 'approved' AND d.listing_scope = 'gallery'
      AND (d.members_only = 0 OR ? = 1) ORDER BY d.created_at DESC`, [member ? 1 : 0]);
@@ -193,7 +199,23 @@ router.get('/gallery', async (req, res) => {
       d.categories.some((c) => c.toLowerCase().includes(q)));
   }
   const viewer = await viewerFor(req.user);
-  const thumbs = designs.map((d) => ({ ...d, thumb: displayImgFile(d, viewer) }));
+  // Server-side pagination (perf fix 2026-10-12): the gallery used to
+  // render ALL ~2,600 cards into one 2.3 MB HTML page that never finished
+  // loading on a phone. Now 96 cards per page with Previous/Next links;
+  // filters and sort are preserved across pages. Card images use the
+  // compressed grid thumbnails (/img/designs/thumb/…) — the views prefix
+  // them with /img/designs/, hence the 'thumb/' prefix on the filename.
+  const GALLERY_PAGE_SIZE = 96;
+  const totalDesigns = designs.length;
+  const totalPages = Math.max(1, Math.ceil(totalDesigns / GALLERY_PAGE_SIZE));
+  let page = parseInt(req.query.page, 10);
+  if (!Number.isFinite(page) || page < 1) page = 1;
+  if (page > totalPages) page = totalPages;
+  const pageDesigns = designs.slice((page - 1) * GALLERY_PAGE_SIZE, page * GALLERY_PAGE_SIZE);
+  const thumbs = pageDesigns.map((d) => {
+    const f = displayImgFile(d, viewer);
+    return { ...d, thumb: f ? `thumb/${f}` : '' };
+  });
   // Sort-chip links keep the current search/category/style filters.
   const galleryUrl = (sortVal) => {
     const p = new URLSearchParams();
@@ -204,12 +226,27 @@ router.get('/gallery', async (req, res) => {
     const s = p.toString();
     return '/gallery' + (s ? `?${s}` : '');
   };
+  const galleryPageUrl = (pageNum) => {
+    const p = new URLSearchParams();
+    if (req.query.q) p.set('q', req.query.q);
+    if (req.query.cat) p.set('cat', req.query.cat);
+    if (req.query.style) p.set('style', req.query.style);
+    if (newestOnly) p.set('sort', 'newest');
+    if (pageNum > 1) p.set('page', String(pageNum));
+    const s = p.toString();
+    return '/gallery' + (s ? `?${s}` : '');
+  };
   res.render('site/gallery', {
     title: 'Tattoo Design Gallery — Buy Original Tattoo Designs | Tattoo Art Customs',
     designs: thumbs, allCats, allStyles, q: req.query.q || '', cat: req.query.cat || '', style: req.query.style || '', sale: await salePriceActive(req.user),
     premadePrice: withFeeCents(premadePriceCents(new Date(), member)),
     sort: newestOnly ? 'newest' : '',
     newestUrl: galleryUrl('newest'), allUrl: galleryUrl(''),
+    pagination: {
+      page, totalPages, total: totalDesigns,
+      prevUrl: page > 1 ? galleryPageUrl(page - 1) : null,
+      nextUrl: page < totalPages ? galleryPageUrl(page + 1) : null,
+    },
     metaDescription: 'Search 900+ original tattoo designs by style and category. Buy ready-made tattoo designs from independent artists — full color and linework included.',
     canonical: `${config.baseUrl.replace(/\/$/, '')}/gallery`,
   });
@@ -231,7 +268,10 @@ router.get('/show-designs', async (req, res) => {
   // discount callout stay hidden until the episode airs (gated server-side
   // in the pricing quote too — the UI never grants the discount early).
   const now = new Date();
-  const thumbs = designs.map((d) => ({ ...d, thumb: displayImgFile(d, viewer), show_aired: showDiscountLive(d, now) }));
+  const thumbs = designs.map((d) => {
+    const f = displayImgFile(d, viewer);
+    return { ...d, thumb: f ? `thumb/${f}` : '', show_aired: showDiscountLive(d, now) };
+  });
   const customerMember = await require('../middleware/auth').isCustomerMember(req.user);
   const base = config.baseUrl.replace(/\/$/, '');
   res.render('site/show-designs', {
@@ -605,7 +645,7 @@ router.get('/wishlist', async (req, res) => {
     serverDesigns = designs.map((d) => ({
       id: d.id,
       title: d.title,
-      thumb: displayImgFile(d, viewer),
+      thumb: (() => { const f = displayImgFile(d, viewer); return f ? `thumb/${f}` : ''; })(),
       categories: d.categories.slice(0, 3),
       price: priceStr,
     }));
@@ -633,7 +673,8 @@ router.get('/top-loved', async (req, res) => {
   const designs = rows.map((r) => {
     const d = parseDesign(r);
     d.like_count = Number(r.like_count || 0);
-    d.thumb = displayImgFile(d, viewer);
+    const tf = displayImgFile(d, viewer);
+    d.thumb = tf ? `thumb/${tf}` : '';
     return d;
   });
   // Real urgency signals: rank badges from real like counts, velocity badges
@@ -791,7 +832,10 @@ router.get('/artists/:id', async (req, res) => {
     return { ...d, price: isCustom ? customFullCents(new Date(), member) : premadePriceCents(new Date(), member), isCustom };
   });
   const artViewer = await viewerFor(req.user);
-  const piecesWithThumbs = pieces.map((p) => ({ ...p, thumb: displayImgFile(p, artViewer) }));
+  const piecesWithThumbs = pieces.map((p) => {
+    const f = displayImgFile(p, artViewer);
+    return { ...p, thumb: f ? `thumb/${f}` : '' };
+  });
   res.render('site/artist', {
     title: `${artist.display_name || 'Artist'} — Tattoo Designs for Sale | Tattoo Art Customs`,
     artist, bio: profile ? profile.bio : '', pieces: piecesWithThumbs, sale: await salePriceActive(req.user),

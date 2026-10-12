@@ -53,3 +53,10 @@
   </article>
   <% }); %>
 </div>
+<% if (pagination && pagination.totalPages > 1) { %>
+<nav class="gallery-pagination" aria-label="Gallery pages" style="display:flex;gap:1rem;justify-content:center;align-items:center;margin:2rem 0;">
+  <% if (pagination.prevUrl) { %><a class="btn" href="<%= pagination.prevUrl %>">&larr; Previous</a><% } %>
+  <span class="muted">Page <%= pagination.page %> of <%= pagination.totalPages %> &middot; <%= pagination.total %> designs</span>
+  <% if (pagination.nextUrl) { %><a class="btn" href="<%= pagination.nextUrl %>">Next &rarr;</a><% } %>
+</nav>
+<% } %>

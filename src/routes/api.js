@@ -8,6 +8,7 @@ const db = require('../db');
 const { hasAnyActiveSubscription, isAdminRole, isActiveMember, isCustomerMember } = require('../middleware/auth');
 const { isSaleWindow, premadePriceCents, customFullCents, salePriceActive } = require('../lib/pricing');
 const { viewerFor, displayImgFile } = require('../lib/contentPolicy');
+const { designThumbUrl } = require('../lib/designThumbs');
 const { authLimiter, formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { enforceSessionCap } = require('../lib/sessionLimits');
 
@@ -179,18 +180,80 @@ router.get('/designs', async (req, res) => {
      WHERE d.status = 'approved' AND d.listing_scope = 'gallery'
        AND (d.members_only = 0 OR ? = 1)
      ORDER BY d.created_at DESC`, [member ? 1 : 0]);
+  // Pagination (perf fix 2026-10-12): ?limit= / ?offset= are honored —
+  // previously limit was ignored and every call returned the whole
+  // catalog. With no limit param the full list is still returned
+  // (back-compat for existing clients); thumb_url now points at the
+  // compressed 640px grid thumbnail, preview_url at the full
+  // watermarked preview.
+  const total = rows.length;
+  let offset = parseInt(req.query.offset, 10);
+  if (!Number.isFinite(offset) || offset < 0) offset = 0;
+  let limit = parseInt(req.query.limit, 10);
+  const paged = Number.isFinite(limit) && limit > 0;
+  limit = paged ? Math.min(limit, 1000) : total;
+  const pageRows = rows.slice(offset, offset + limit);
+  res.set('X-Total-Count', String(total));
   res.json({
     ok: true,
     sale: await salePriceActive(user),
     premade_price_cents: premadePriceCents(new Date(), member),
-    designs: rows.map((d) => ({
-      id: d.id, title: d.title, style: d.style || '',
+    pagination: { total, limit, offset, has_more: offset + pageRows.length < total },
+    designs: pageRows.map((d) => {
+      const f = displayImgFile(d, viewer);
+      return {
+        id: d.id, title: d.title, style: d.style || '',
+        categories: JSON.parse(d.categories || '[]'),
+        thumb_url: f ? designThumbUrl(f) : null,
+        preview_url: f ? `/img/designs/${f}` : null,
+        price_cents: premadePriceCents(new Date(), member),
+        listing_type: d.listing_type || 'predesign',
+        artist_name: d.artist_name || '',
+      };
+    }),
+  });
+});
+
+// Full detail for ONE design (perf fix 2026-10-12): the list endpoint
+// above stays slim for grids; clients that open a design fetch its full
+// record here. Same visibility rules as the list (approved, gallery
+// scope, members-only hidden from non-members) and the same content
+// policy — only the viewer's watermarked (or blurred) preview is ever
+// exposed, never a clean color/linework path.
+router.get('/designs/:id', async (req, res) => {
+  const user = await userFromToken(req);
+  const member = await isActiveMember(user);
+  const viewer = await viewerFor(user);
+  const d = await db.get(
+    `SELECT d.id, d.title, d.description, d.style, d.categories, d.linework_wm_path,
+            d.linework_blur_path, d.sensitivity, d.artist_id, d.listing_type,
+            d.members_only, d.created_at,
+            u.display_name AS artist_name
+     FROM designs d LEFT JOIN users u ON u.id = d.artist_id
+     WHERE d.id = ? AND d.status = 'approved' AND d.listing_scope = 'gallery'`,
+    [req.params.id]);
+  if (!d || (d.members_only && !member)) {
+    return res.status(404).json({ ok: false, error: 'not found' });
+  }
+  const f = displayImgFile(d, viewer);
+  res.json({
+    ok: true,
+    sale: await salePriceActive(user),
+    design: {
+      id: d.id, title: d.title, description: d.description || '',
+      style: d.style || '',
       categories: JSON.parse(d.categories || '[]'),
-      thumb_url: (() => { const f = displayImgFile(d, viewer); return f ? `/img/designs/${f}` : null; })(),
-      price_cents: premadePriceCents(new Date(), member),
+      thumb_url: f ? designThumbUrl(f) : null,
+      preview_url: f ? `/img/designs/${f}` : null,
+      price_cents: d.listing_type === 'custom'
+        ? customFullCents(new Date(), member)
+        : premadePriceCents(new Date(), member),
       listing_type: d.listing_type || 'predesign',
+      artist_id: d.artist_id || null,
       artist_name: d.artist_name || '',
-    })),
+      members_only: !!d.members_only,
+      created_at: d.created_at,
+    },
   });
 });
 
@@ -218,13 +281,17 @@ router.get('/artists/:id', async (req, res) => {
     artist: { id: artist.id, display_name: artist.display_name || '', bio: profile ? profile.bio : '', is_founding_artist: !!artist.is_founding_artist },
     custom_price_cents: customFullCents(new Date(), member),
     premade_price_cents: premadePriceCents(new Date(), member),
-    pieces: rows.map((d) => ({
-      id: d.id, title: d.title, style: d.style || '',
-      categories: JSON.parse(d.categories || '[]'),
-      thumb_url: (() => { const f = displayImgFile(d, viewer); return f ? `/img/designs/${f}` : null; })(),
-      listing_type: d.listing_type || 'predesign',
-      price_cents: d.listing_type === 'custom' ? customFullCents(new Date(), member) : premadePriceCents(new Date(), member),
-    })),
+    pieces: rows.map((d) => {
+      const f = displayImgFile(d, viewer);
+      return {
+        id: d.id, title: d.title, style: d.style || '',
+        categories: JSON.parse(d.categories || '[]'),
+        thumb_url: f ? designThumbUrl(f) : null,
+        preview_url: f ? `/img/designs/${f}` : null,
+        listing_type: d.listing_type || 'predesign',
+        price_cents: d.listing_type === 'custom' ? customFullCents(new Date(), member) : premadePriceCents(new Date(), member),
+      };
+    }),
   });
 });
 

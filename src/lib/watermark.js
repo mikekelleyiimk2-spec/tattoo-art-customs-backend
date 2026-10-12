@@ -207,8 +207,18 @@ async function texturePass(abs, baseW, baseH, scale, angle, dxFrac = 0, dyFrac =
 async function applyWatermarkedLinework({ designId, lineworkAbs, choice = 'site', customWatermarkAbs = null, customInvert = false }) {
   if (!fs.existsSync(lineworkAbs)) throw new Error('linework file not found: ' + lineworkAbs);
   const meta = await sharp(lineworkAbs).metadata();
-  const W = meta.width || 1024;
-  const H = meta.height || 1024;
+  // Cap preview dimensions (perf fix 2026-10-12): public previews were
+  // composited at full source size (up to 1920px+, >1 MB JPEGs), which
+  // stalled the gallery on phones. 1600px max keeps the design page
+  // crisp; grid surfaces use the 640px thumbnails on top of this.
+  const MAX_PREVIEW_DIM = 1600;
+  let W = meta.width || 1024;
+  let H = meta.height || 1024;
+  const dimScale = Math.min(1, MAX_PREVIEW_DIM / Math.max(W, H));
+  if (dimScale < 1) {
+    W = Math.max(1, Math.round(W * dimScale));
+    H = Math.max(1, Math.round(H * dimScale));
+  }
   const overlays = [];
   const rng = seededRng('wmtex:' + designId);
   const jitter = (base, spread) => base + (rng() * 2 - 1) * spread;
@@ -258,7 +268,9 @@ async function applyWatermarkedLinework({ designId, lineworkAbs, choice = 'site'
   const outRel = `designs/linework-wm/${designId}-auto.jpg`;
   const outAbs = path.join(config.uploadDir, outRel);
   fs.mkdirSync(path.dirname(outAbs), { recursive: true });
-  await sharp(lineworkAbs).composite(overlays).jpeg({ quality: 88 }).toFile(outAbs);
+  await sharp(lineworkAbs)
+    .resize({ width: W, height: H, fit: 'inside', withoutEnlargement: true })
+    .composite(overlays).jpeg({ quality: 82 }).toFile(outAbs);
   return outRel;
 }
 
@@ -274,7 +286,9 @@ async function applyBlurredVariant({ designId, watermarkedAbs }) {
   const outRel = `designs/linework-wm/${designId}-blur.jpg`;
   const outAbs = path.join(config.uploadDir, outRel);
   fs.mkdirSync(path.dirname(outAbs), { recursive: true });
-  await sharp(watermarkedAbs).blur(40).jpeg({ quality: 82 }).toFile(outAbs);
+  await sharp(watermarkedAbs)
+    .resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true })
+    .blur(40).jpeg({ quality: 78 }).toFile(outAbs);
   return outRel;
 }
 
