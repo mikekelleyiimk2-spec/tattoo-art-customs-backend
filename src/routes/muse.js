@@ -487,11 +487,36 @@ router.get('/disk', async (req, res) => {
         });
       } catch { return []; }
     };
+    // Bounded recursive size of one directory (entry-capped walk).
+    const dirSize = (abs, cap = 50000) => {
+      let total = 0; let count = 0;
+      const walk = (dir) => {
+        let entries;
+        try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+        for (const e of entries) {
+          if (count > cap) return;
+          const p = path.join(dir, e.name);
+          if (e.isDirectory()) walk(p);
+          else { try { total += fs.statSync(p).size; count++; } catch { /* vanished */ } }
+        }
+      };
+      walk(abs);
+      return { bytes: total, files: count };
+    };
+    const topLevel = {};
+    try {
+      for (const e of fs.readdirSync(config.uploadDir, { withFileTypes: true })) {
+        const p = path.join(config.uploadDir, e.name);
+        topLevel[e.name] = e.isDirectory() ? dirSize(p) : { bytes: fs.statSync(p).size, files: 1 };
+      }
+    } catch { /* uploadDir unreadable — filesystems block already reports */ }
     return res.json({
       ok: true,
       filesystems: [fsInfo(config.uploadDir), fsInfo(os.tmpdir())],
       uploadDir: config.uploadDir,
+      topLevel,
       sideload: listDir('uploads/sideload'),
+      legacySideload: listDir('sideload'),
       iosApp: listDir('ios-app'),
     });
   } catch (e) {
