@@ -880,7 +880,7 @@ router.post('/contact', formLimiter, checkHoneypot, async (req, res) => {
 // Aftercare, Amazon picks.
 router.get('/discounts', (req, res) => res.render('site/discounts', {
   title: 'Tattoo Discounts & Deals — Tattoo Art Customs',
-  metaDescription: 'Real tattoo discounts: 20% off Electrum Supply with code TATART20, Base Labs TAC20, Recovery Aftercare, and our Amazon picks.',
+  metaDescription: 'Real tattoo discounts: 20% off Electrum Supply with code TATART20, Base Labs TAC20, Recovery Aftercare, our Amazon picks, plus a $100 Chime referral bonus.',
   canonical: `${config.baseUrl.replace(/\/$/, '')}/discounts`,
 }));
 
