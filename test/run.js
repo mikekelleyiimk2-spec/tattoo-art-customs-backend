@@ -951,6 +951,16 @@ async function main() {
     const dbuf = Buffer.from(await dr.arrayBuffer());
     ok(dr.status === 200 && dbuf.equals(fakeApk),
       'minted Pro APK link serves the uploaded bytes via /orders/download/:token');
+    // GET /api/muse/disk: read-only disk probe, same auth.
+    let kr = await fetch(`http://localhost:${PORT}/api/muse/disk`);
+    ok(kr.status === 401, 'disk probe rejects missing Bearer <redacted>');
+    kr = await fetch(`http://localhost:${PORT}/api/muse/disk`, {
+      headers: { authorization: `Bearer ${process.env.MUSE_SERVICE_TOKEN}` },
+    });
+    const kj = await kr.json();
+    ok(kr.status === 200 && kj.ok && Array.isArray(kj.filesystems) && kj.filesystems.length === 2 &&
+      kj.sideload.some((f) => f.name === 'tac-android-pro.apk' && f.size === fakeApk.length),
+      'disk probe reports filesystems + sideload inventory under valid Bearer <redacted>');
   }
 
   // Production custom-draft fulfillment: POST /api/muse/custom-orders/:id/drafts

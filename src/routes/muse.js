@@ -462,6 +462,44 @@ router.post('/pro-apk-download-link', express.json(), async (req, res) => {
   }
 });
 
+// GET /api/muse/disk
+// Read-only disk probe (service-token auth): free/total bytes for the
+// upload dir's filesystem and the OS tmpdir, plus the sideload + ios-app
+// file inventory. Exists because the 1GB Render disk is shared by every
+// upload pipe and an ENOSPC otherwise surfaces only as a bare
+// 'store failed' on upload.
+router.get('/disk', async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const fsInfo = (dir) => {
+      try {
+        const s = fs.statfsSync(dir);
+        return { dir, totalBytes: s.blocks * s.bsize, freeBytes: s.bavail * s.bsize };
+      } catch (e) { return { dir, error: e.message }; }
+    };
+    const listDir = (rel) => {
+      const abs = path.join(config.uploadDir, rel);
+      try {
+        return fs.readdirSync(abs).map((name) => {
+          const st = fs.statSync(path.join(abs, name));
+          return { name, size: st.size, mtime: st.mtimeMs };
+        });
+      } catch { return []; }
+    };
+    return res.json({
+      ok: true,
+      filesystems: [fsInfo(config.uploadDir), fsInfo(os.tmpdir())],
+      uploadDir: config.uploadDir,
+      sideload: listDir('uploads/sideload'),
+      iosApp: listDir('ios-app'),
+    });
+  } catch (e) {
+    console.error('[muse/disk] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'disk probe failed' });
+  }
+});
+
 // POST /api/muse/publish-lil-bundle
 // Publishes a Little Inkers weekly coloring-page bundle to production over
 // HTTPS — lets the owner's automation publish the weekly bundle without shell
