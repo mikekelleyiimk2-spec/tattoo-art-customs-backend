@@ -241,13 +241,18 @@
     "search_ph": "lobo, mandala, rosa…",
     "sort_all": "Todos los diseños",
     "sort_newest": "Novedades",
-    "sub": "Busca entre más de 900 diseños de tatuaje originales por estilo y categoría. Solo vistas previas en linework — el color completo se entrega al comprador tras la compra.",
+    "sub": "Busca más de 2.500 diseños de tatuajes originales por estilo y categoría. Solo se muestran vistas previas en línea: el color completo se entrega a los compradores tras la compra.",
     "title": "Galería de diseños de tatuaje — compra diseños originales",
     "style": "Estilo",
     "all_styles": "Todos los estilos",
     "mix_match": "Más de 50 estilos. Cientos de categorías. Combínalos: elige tu estilo, elige tu categoría.",
     "deals_banner_1": "Oferta de socio: 20% de descuento en el cuidado Base Labs con el código TAC20",
-    "deals_banner_2": "Ver todas las ofertas y descuentos de tatuajes"
+    "deals_banner_2": "Ver todas las ofertas y descuentos de tatuajes",
+    "intro_h": "Diseños originales de artistas independientes",
+    "intro_1": "Cada diseño de esta galería es una obra original creada por un tatuador o artista de diseño independiente y puesta a la venta aquí. La galería muestra una vista previa limpia en línea de cada pieza: así la obra terminada queda protegida de copias antes de comprarse. Al comprar un diseño, recibes la obra final a todo color y el archivo de línea (stencil), listo para llevar a tu tatuador.",
+    "intro_2": "¿No encuentras exactamente la pieza que imaginabas? Encárgala a medida. Los diseños personalizados se dibujan por encargo: describe tu idea, aprueba la dirección y el diseño terminado se entrega en 48 horas. También puedes convertir una foto o un boceto rápido en un diseño de tatuaje terminado, o pedir cambios en cualquier diseño de la galería — otras flores, un nombre añadido, colores distintos — al encargarlo como variante personalizada.",
+    "cat_fallback": "Explora {count} diseños de tatuajes originales de {name} de la galería de Tattoo Art Customs. Cada diseño se vende con la obra a todo color y una plantilla de línea limpia, entregados digitalmente tras la compra: imprímelo, define el tamaño con tu artista y tatúatelo donde quieras.",
+    "cat_note": "Se añaden nuevos diseños de {name} a medida que los artistas los suben. ¿Quieres cambiar uno — otras flores, un nombre, otros colores? Encárgalo como variante personalizada desde cualquier página de diseño."
   },
   "giftcards": {
     "a_customer": "un cliente",
@@ -545,6 +550,9 @@
     "shop_page_link": "Mira todo lo que incluye el plan de estudio"
   },
   "merch": {
+    "hw_banner_standard": "🎃 Merch de Halloween: Dark Skull, Graffiti Skull, Stone Gargoyle, Blood Moon, Hollow Wings, Veil Between y más diseños oscuros — pide antes del 18 de oct. para recibirlo en Halloween (envío estándar).",
+    "hw_banner_express": "🎃 Halloween ya casi llega: Dark Skull, Graffiti Skull, Stone Gargoyle, Blood Moon y más diseños oscuros — pide antes del 24 de oct. con envío exprés para recibirlo en Halloween.",
+    "hw_banner_digital": "🎃 ¿Se te pasó la fecha de envío? Los diseños flash de Halloween son descargas digitales — entrega instantánea, sin plazos de envío. Ver la venta flash de Halloween.",
     "account": "cuenta",
     "apt": "Apto / suite (opcional)",
     "browse_tail": "— compra un diseño y ponlo en la camiseta.",
@@ -977,7 +985,10 @@
     "badge_most_loved": "Más amado",
     "badge_most_wanted": "Más deseado",
     "badge_trending": "Tendencia",
-    "badge_selling_fast": "Se vende rápido"
+    "badge_selling_fast": "Se vende rápido",
+    "intro_h": "Clasificados por la gente que los visita",
+    "intro_1": "Cada corazón en un diseño es un voto. Esta página ordena toda la galería por esos votos, los más queridos primero, y el orden se mueve según la gente navega. Toca el corazón de cualquier diseño para votar por él: se guarda en tu lista de deseos al mismo tiempo, para que tus favoritos te esperen cuando vuelvas.",
+    "intro_2": "Las insignias se ganan, no se asignan: el primer puesto lleva «Más querido», y las insignias «En tendencia» y «Se vende rápido» salen de los corazones y los pedidos pagados reales de los últimos siete días. Nada en esta página es selección manual ni colocación pagada. Si un diseño destacado se acerca pero no es del todo tu historia, ábrelo y encarga una variante personalizada dibujada a tu manera."
   },
   "apps": {
     "free_label": "Gratis",
@@ -1098,7 +1109,10 @@
     "join_link": "Hazte miembro",
     "empty": "Aún no hay diseños del programa — vuelve pronto.",
     "browse_all": "Ver todos los diseños",
-    "starts_when_airs": "La oferta para miembros empieza cuando se emita el episodio."
+    "starts_when_airs": "La oferta para miembros empieza cuando se emita el episodio.",
+    "intro_h": "Los diseños detrás del programa",
+    "intro_1": "Estos son los diseños de tatuajes reales que se colorean en Color With Us!, el programa de colorear de Little Inkers. Los episodios toman diseños de esta galería y los colorean de principio a fin; esta página reúne cada pieza destacada en un solo lugar para que los espectadores puedan tener la obra original.",
+    "intro_2": "Al comprar un diseño destacado recibes la obra terminada a todo color más la versión en línea limpia: la misma línea desde la que colorea el programa. Los miembros de Tattoo Art Customs ahorran en los diseños del programa una vez que su episodio se emite, y cada compra paga al artista que dibujó la pieza."
   },
   "newsletter": {
     "title": "Únete a la lista de correo",
@@ -1360,5 +1374,11 @@
     "r_nude": "Contains nudity",
     "r_explicit": "Explicit — preview blurred",
     "submit": "Submit Designs"
+  },
+  "trust": {
+    "h": "Un mercado real, gestionado por personas reales",
+    "text": "Tattoo Art Customs es un mercado independiente donde los artistas venden diseños de tatuajes originales y aceptan encargos personalizados. Los artistas cobran en cada venta, cada pedido sigue las reglas de la casa de nuestra página Sobre nosotros, y una persona responde el formulario de contacto: nada de agujeros negros de tickets.",
+    "guides": "Lee nuestras guías de tatuajes",
+    "aftercare": "Guía de cuidados del tatuaje"
   }
 }

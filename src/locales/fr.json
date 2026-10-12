@@ -241,13 +241,18 @@
     "search_ph": "loup, mandala, rose…",
     "sort_all": "Tous les designs",
     "sort_newest": "Nouveautés",
-    "sub": "Cherche parmi 900+ designs de tatouage originaux par style et catégorie. Aperçus linework uniquement — la couleur est livrée aux acheteurs après l'achat.",
+    "sub": "Recherchez plus de 2 500 tatouages originaux par style et catégorie. Seuls les aperçus en lignes sont affichés — la couleur complète est livrée aux acheteurs après l’achat.",
     "title": "Galerie de designs de tatouage — achète des designs originaux",
     "style": "Style",
     "all_styles": "Tous les styles",
     "mix_match": "Plus de 50 styles. Des centaines de catégories. Mix and match : choisis ton style, choisis ta catégorie.",
     "deals_banner_1": "Offre partenaire : -20 % sur les soins Base Labs avec le code TAC20",
-    "deals_banner_2": "Voir toutes les offres et remises tatouage"
+    "deals_banner_2": "Voir toutes les offres et remises tatouage",
+    "intro_h": "Des designs originaux d’artistes indépendants",
+    "intro_1": "Chaque design de cette galerie est une œuvre originale créée par un tatoueur ou un artiste indépendant et proposée ici à la vente. La galerie affiche un aperçu propre en lignes de chaque pièce — c’est ce qui protège l’œuvre terminée des copies avant l’achat. Quand vous achetez un design, vous recevez l’œuvre finale en couleur et le fichier de lignes (stencil), prêts à emmener chez votre tatoueur.",
+    "intro_2": "Vous ne trouvez pas exactement la pièce imaginée ? Commandez-la sur mesure. Les designs personnalisés sont dessinés à la commande : décrivez votre idée, validez la direction, et le design terminé est livré sous 48 heures. Vous pouvez aussi transformer une photo ou un croquis rapide en design de tatouage terminé, ou demander des modifications sur n’importe quel design de la galerie — d’autres fleurs, un prénom ajouté, des couleurs échangées — en le commandant comme variante personnalisée.",
+    "cat_fallback": "Parcourez {count} tatouages originaux {name} de la galerie Tattoo Art Customs. Chaque design est vendu avec l’œuvre en couleur et un stencil en lignes propre, livrés en numérique après l’achat — imprimez-le, choisissez la taille avec votre artiste, et faites-vous tatouer où vous voulez.",
+    "cat_note": "De nouveaux designs {name} sont ajoutés au fur et à mesure que les artistes les mettent en ligne. Vous voulez en modifier un — d’autres fleurs, un prénom, d’autres couleurs ? Commandez-le comme variante personnalisée depuis n’importe quelle page de design."
   },
   "giftcards": {
     "a_customer": "un client",
@@ -545,6 +550,9 @@
     "shop_page_link": "Voir tout ce que l’abonnement studio inclut"
   },
   "merch": {
+    "hw_banner_standard": "🎃 Merch Halloween : Dark Skull, Graffiti Skull, Stone Gargoyle, Blood Moon, Hollow Wings, Veil Between et d'autres designs sombres — commandez avant le 18 oct. pour une livraison Halloween (expédition standard).",
+    "hw_banner_express": "🎃 Halloween approche : Dark Skull, Graffiti Skull, Stone Gargoyle, Blood Moon et d'autres designs sombres — commandez avant le 24 oct. en expédition express pour une livraison Halloween.",
+    "hw_banner_digital": "🎃 Date limite d'expédition passée ? Les designs flash Halloween sont des téléchargements numériques — livraison instantanée, sans délais d'expédition. Voir la vente flash Halloween.",
     "account": "compte",
     "apt": "Appt / suite (facultatif)",
     "browse_tail": "— achète un design puis mets-le sur un tee.",
@@ -977,7 +985,10 @@
     "badge_most_loved": "Le plus aimé",
     "badge_most_wanted": "Le plus convoité",
     "badge_trending": "Tendance",
-    "badge_selling_fast": "Se vend vite"
+    "badge_selling_fast": "Se vend vite",
+    "intro_h": "Classés par les personnes qui les parcourent",
+    "intro_1": "Chaque cœur sur un design est un vote. Cette page classe toute la galerie selon ces votes, les plus aimés d’abord, et l’ordre bouge au fil des visites. Touchez le cœur d’un design pour voter pour lui — il est en même temps enregistré dans votre liste de favoris, pour que vos préférés vous attendent à votre retour.",
+    "intro_2": "Les badges se méritent, ils ne s’attribuent pas : la première place porte « Le plus aimé », et les badges « Tendance » et « Se vend vite » viennent des cœurs et des commandes payées réelles des sept derniers jours. Rien sur cette page n’est choisi à la main ni placé contre paiement. Si un design en tête est proche mais pas tout à fait votre histoire, ouvrez-le et commandez une variante personnalisée dessinée à votre façon."
   },
   "apps": {
     "free_label": "Gratuit",
@@ -1098,7 +1109,10 @@
     "join_link": "Devenir membre",
     "empty": "Aucun design de l’émission pour le moment — revenez bientôt.",
     "browse_all": "Voir tous les designs",
-    "starts_when_airs": "La promo membres commence à la diffusion de l’épisode."
+    "starts_when_airs": "La promo membres commence à la diffusion de l’épisode.",
+    "intro_h": "Les designs derrière l’émission",
+    "intro_1": "Voici les vrais designs de tatouage coloriés dans Color With Us!, l’émission de coloriage Little Inkers. Les épisodes prennent des designs de cette galerie et les colorient du début à la fin — cette page rassemble chaque pièce présentée au même endroit pour que les spectateurs puissent posséder l’œuvre originale.",
+    "intro_2": "En achetant un design présenté, vous recevez l’œuvre terminée en couleur plus la version en lignes propre — les mêmes lignes que l’émission colorie. Les membres Tattoo Art Customs économisent sur les designs de l’émission dès la diffusion de leur épisode, et chaque achat rémunère l’artiste qui a dessiné la pièce."
   },
   "newsletter": {
     "title": "Rejoindre la liste de diffusion",
@@ -1360,5 +1374,11 @@
     "r_nude": "Contains nudity",
     "r_explicit": "Explicit — preview blurred",
     "submit": "Submit Designs"
+  },
+  "trust": {
+    "h": "Une vraie place de marché, tenue par de vraies personnes",
+    "text": "Tattoo Art Customs est une place de marché indépendante où les artistes vendent des tatouages originaux et acceptent des commandes personnalisées. Les artistes sont payés à chaque vente, chaque commande suit les règles de la maison sur notre page À propos, et un humain répond au formulaire de contact — pas de trou noir à tickets.",
+    "guides": "Lire nos guides tatouage",
+    "aftercare": "Guide d’entretien du tatouage"
   }
 }

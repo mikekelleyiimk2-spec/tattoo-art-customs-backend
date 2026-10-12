@@ -241,13 +241,18 @@
     "search_ph": "lobo, mandala, rosa…",
     "sort_all": "Todos os designs",
     "sort_newest": "Novidades",
-    "sub": "Busque entre 900+ designs originais de tatuagem por estilo e categoria. Exibimos só prévias em linework — o colorido é entregue ao comprador após a compra.",
+    "sub": "Pesquise mais de 2.500 designs de tatuagem originais por estilo e categoria. Mostramos apenas pré-visualizações em linhas — a cor completa é entregue aos compradores após a compra.",
     "title": "Galeria de designs de tatuagem — compre designs originais",
     "style": "Estilo",
     "all_styles": "Todos os estilos",
     "mix_match": "Mais de 50 estilos. Centenas de categorias. Combine à vontade: escolha seu estilo, escolha sua categoria.",
     "deals_banner_1": "Oferta de parceiro: 20% de desconto no cuidado Base Labs com o código TAC20",
-    "deals_banner_2": "Ver todas as ofertas e descontos de tatuagem"
+    "deals_banner_2": "Ver todas as ofertas e descontos de tatuagem",
+    "cat_fallback": "Navegue por {count} designs de tatuagem originais de {name} da galeria Tattoo Art Customs. Cada design é vendido com a arte em cores e um stencil de linhas limpo, entregues digitalmente após a compra — imprima, defina o tamanho com seu artista e tatue onde quiser.",
+    "cat_note": "Novos designs de {name} são adicionados conforme os artistas os enviam. Quer mudar um deles — outras flores, um nome, outras cores? Encomende como variação personalizada em qualquer página de design.",
+    "intro_1": "Cada design desta galeria é uma arte original criada por um tatuador ou artista de design independente e colocada à venda aqui. A galeria mostra uma pré-visualização limpa em linhas de cada peça — é o que protege a arte finalizada de cópias antes da compra. Ao comprar um design, você recebe a arte final em cores e o arquivo de linhas (stencil), pronto para levar ao seu tatuador.",
+    "intro_2": "Não achou exatamente a peça que imaginou? Encomende uma personalizada. Os designs personalizados são desenhados sob encomenda: descreva sua ideia, aprove a direção e o design final é entregue em até 48 horas. Você também pode transformar uma foto ou um rascunho rápido em um design de tatuagem finalizado, ou pedir alterações em qualquer design da galeria — outras flores, um nome adicionado, cores trocadas — ao encomendá-lo como variação personalizada.",
+    "intro_h": "Designs originais de artistas independentes"
   },
   "giftcards": {
     "a_customer": "um cliente",
@@ -545,6 +550,9 @@
     "shop_page_link": "Veja tudo que o plano de estúdio inclui"
   },
   "merch": {
+    "hw_banner_standard": "🎃 Merch de Halloween: Dark Skull, Graffiti Skull, Stone Gargoyle, Blood Moon, Hollow Wings, Veil Between e mais designs sombrios — peça até 18 de out. para entrega no Halloween (frete padrão).",
+    "hw_banner_express": "🎃 O Halloween está chegando: Dark Skull, Graffiti Skull, Stone Gargoyle, Blood Moon e mais designs sombrios — peça até 24 de out. com frete expresso para entrega no Halloween.",
+    "hw_banner_digital": "🎃 Perdeu o prazo de envio? Os designs flash de Halloween são downloads digitais — entrega instantânea, sem prazos de envio. Veja a venda flash de Halloween.",
     "account": "conta",
     "apt": "Apto / sala (opcional)",
     "browse_tail": "— compre um design e coloque na camiseta.",
@@ -977,7 +985,10 @@
     "badge_most_loved": "Mais amado",
     "badge_most_wanted": "Mais desejado",
     "badge_trending": "Em alta",
-    "badge_selling_fast": "Vendendo rápido"
+    "badge_selling_fast": "Vendendo rápido",
+    "intro_1": "Cada coração em um design é um voto. Esta página classifica toda a galeria por esses votos, os mais amados primeiro, e a ordem muda conforme as pessoas navegam. Toque no coração de qualquer design para votar nele — ele é salvo na sua lista de desejos ao mesmo tempo, para que seus favoritos estejam esperando quando você voltar.",
+    "intro_2": "Os selos são conquistados, não atribuídos: o primeiro lugar carrega «Mais amado», e os selos «Em alta» e «Vende rápido» vêm de corações e pedidos pagos reais dos últimos sete dias. Nada nesta página é escolhido a dedo ou pago. Se um design no topo chega perto, mas não é bem a sua história, abra-o e encomende uma variação personalizada desenhada do seu jeito.",
+    "intro_h": "Classificados por quem navega por eles"
   },
   "apps": {
     "free_label": "Grátis",
@@ -1098,7 +1109,10 @@
     "join_link": "Seja membro",
     "empty": "Nenhum design do programa ainda — volte em breve.",
     "browse_all": "Ver todos os designs",
-    "starts_when_airs": "A promoção para membros começa quando o episódio for ao ar."
+    "starts_when_airs": "A promoção para membros começa quando o episódio for ao ar.",
+    "intro_1": "Estes são os designs de tatuagem de verdade coloridos no Color With Us!, o programa de colorir da Little Inkers. Os episódios pegam designs desta galeria e os colorem do início ao fim — esta página reúne cada peça apresentada em um só lugar para que os espectadores possam ter a arte original.",
+    "intro_2": "Ao comprar um design apresentado, você recebe a arte final em cores mais a versão em linhas limpa — as mesmas linhas que o programa colore. Os membros da Tattoo Art Customs economizam nos designs do programa assim que o episódio vai ao ar, e cada compra paga o artista que desenhou a peça.",
+    "intro_h": "Os designs por trás do programa"
   },
   "newsletter": {
     "title": "Entrar para a lista de e-mails",
@@ -1360,5 +1374,11 @@
     "r_nude": "Contains nudity",
     "r_explicit": "Explicit — preview blurred",
     "submit": "Submit Designs"
+  },
+  "trust": {
+    "aftercare": "Guia de cuidados com a tatuagem",
+    "guides": "Leia nossos guias de tatuagem",
+    "h": "Um marketplace de verdade, feito por pessoas de verdade",
+    "text": "A Tattoo Art Customs é um marketplace independente onde artistas vendem designs de tatuagem originais e aceitam encomendas personalizadas. Os artistas são pagos em cada venda, cada pedido segue as regras da casa na nossa página Sobre, e uma pessoa responde ao formulário de contato — sem buraco negro de tickets."
   }
 }

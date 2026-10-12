@@ -241,13 +241,18 @@
     "search_ph": "wolf, mandala, rose…",
     "sort_all": "All designs",
     "sort_newest": "Newest arrivals",
-    "sub": "Search 900+ original tattoo designs by style and category. Showing linework previews only — full color is delivered to buyers after purchase.",
+    "sub": "Search 2,500+ original tattoo designs by style and category. Showing linework previews only — full color is delivered to buyers after purchase.",
     "title": "Tattoo design gallery — buy original designs",
     "style": "Style",
     "all_styles": "All styles",
     "mix_match": "50+ styles. Hundreds of categories. Mix and match — pick your style, pick your category.",
     "deals_banner_1": "Partner deal: 20% off Base Labs aftercare with code TAC20",
-    "deals_banner_2": "See all tattoo deals & discounts"
+    "deals_banner_2": "See all tattoo deals & discounts",
+    "intro_h": "Original designs from independent artists",
+    "intro_1": "Every design in this gallery is original artwork created by an independent tattoo artist or design artist and offered here for sale. The gallery shows a clean linework preview of each piece — that keeps the finished art from being copied before it is bought. When you buy a design, you receive the full-color finished artwork and the linework stencil file, ready to take to your tattoo artist.",
+    "intro_2": "Can't find the exact piece you pictured? Commission it instead. Custom designs are drawn to order: describe your idea, approve the direction, and the finished design is delivered within 48 hours. You can also turn a photo or a rough doodle into a finished tattoo design, or ask for changes to any gallery design — different flowers, a name added, colors swapped — when you order it as a custom variation.",
+    "cat_fallback": "Browse {count} original {name} tattoo designs from the Tattoo Art Customs gallery. Every design is sold with the full-color artwork and a clean linework stencil, delivered digitally after purchase — print it, size it with your artist, and get it tattooed anywhere.",
+    "cat_note": "New {name} designs are added as artists upload them. Want one changed — different flowers, a name added, colors swapped? Order it as a custom variation from any design page."
   },
   "giftcards": {
     "a_customer": "a customer",
@@ -545,6 +550,9 @@
     "shop_page_link": "See everything the shop plan includes"
   },
   "merch": {
+    "hw_banner_standard": "🎃 Halloween merch drop: Dark Skull, Graffiti Skull, Stone Gargoyle, Blood Moon, Hollow Wings, Veil Between & more dark designs — order by Oct 18 for Halloween delivery (standard shipping).",
+    "hw_banner_express": "🎃 Halloween is almost here: Dark Skull, Graffiti Skull, Stone Gargoyle, Blood Moon & more dark designs — order by Oct 24 with express shipping for Halloween delivery.",
+    "hw_banner_digital": "🎃 Missed the shipping cutoff? Halloween flash designs are digital downloads — delivered instantly, no shipping deadlines. Shop the Halloween flash sale.",
     "account": "account",
     "apt": "Apt / suite (optional)",
     "browse_tail": "— buy a design, then put it on a tee.",
@@ -977,7 +985,10 @@
     "badge_most_loved": "Most loved",
     "badge_most_wanted": "Most wanted",
     "badge_trending": "Trending",
-    "badge_selling_fast": "Selling fast"
+    "badge_selling_fast": "Selling fast",
+    "intro_h": "Ranked by the people browsing them",
+    "intro_1": "Every heart on a design is a vote. This page ranks the whole gallery by those votes, most-loved first, and the order moves as people browse. Tap the heart on any design to vote for it — it is saved to your wishlist at the same time, so your favorites are waiting when you come back.",
+    "intro_2": "The badges are earned, not assigned: the top spot carries Most Loved, and the Trending and Selling Fast badges come from hearts and real paid orders in the last seven days. Nothing on this page is hand-picked or paid placement. If a top design is close but not quite your story, open it and order a custom variation drawn your way."
   },
   "apps": {
     "free_label": "Free",
@@ -1153,7 +1164,10 @@
     "join_link": "Become a member",
     "empty": "No show designs yet — check back soon.",
     "browse_all": "Browse all designs",
-    "starts_when_airs": "Member sale starts when the episode airs."
+    "starts_when_airs": "Member sale starts when the episode airs.",
+    "intro_h": "The designs behind the show",
+    "intro_1": "These are the actual tattoo designs colored on Color With Us!, the Little Inkers coloring show. Episodes take designs from this gallery and color them in, start to finish — this page collects every featured piece in one place so viewers can own the original artwork themselves.",
+    "intro_2": "Buy a featured design and you get the full-color finished artwork plus the clean linework version — the same linework the show colors from. Tattoo Art Customs members save on show designs once their episode airs, and every purchase pays the artist who drew the piece."
   },
   "newsletter": {
     "title": "Join the mailing list",
@@ -1360,5 +1374,11 @@
     "sharekit_intro": "Everything you need to post this finished piece — made for {shop}.",
     "sharekit_post": "Post it",
     "sharekit_title": "Portfolio share kit"
+  },
+  "trust": {
+    "h": "A real marketplace, run by real people",
+    "text": "Tattoo Art Customs is an independent marketplace where artists sell original tattoo designs and take custom commissions. Artists are paid on every sale, every order follows the house rules on our About page, and a human answers the contact form — no ticket black hole.",
+    "guides": "Read our tattoo guides",
+    "aftercare": "Tattoo aftercare guide"
   }
 }

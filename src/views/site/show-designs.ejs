@@ -1,5 +1,11 @@
 <h1><%= t('show.title') %></h1>
 <p class="muted"><%= t('show.sub', {pct: showDiscountPct}) %></p>
+
+<section class="card show-intro">
+  <h2><%= t('show.intro_h') %></h2>
+  <p><%= t('show.intro_1') %></p>
+  <p><%= t('show.intro_2') %></p>
+</section>
 <% if (customerMember && anyAired) { %>
 <p><span class="badge ok"><%= t('show.member_save', {pct: showDiscountPct}) %></span>
 <span class="muted"><%= fmtMoney(memberPrice) %> <%= t('show.vs_regular', {price: fmtMoney(regularPrice)}) %></span></p>
@@ -29,3 +35,5 @@
   <% }); %>
 </div>
 <p><a class="btn btn-secondary" href="/gallery"><%= t('show.browse_all') %></a></p>
+
+<%- include('../partials/trust-block') %>

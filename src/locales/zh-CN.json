@@ -241,13 +241,18 @@
     "search_ph": "wolf, mandala, rose…",
     "sort_all": "所有设计",
     "sort_newest": "最新上架",
-    "sub": "按风格和分类搜索900多件原创纹身设计。仅显示线稿预览——全彩版本在购买后交付给买家。",
+    "sub": "按风格和类别搜索 2,500 多款原创纹身设计。仅显示线条预览——全彩成品在购买后交付给买家。",
     "title": "纹身设计画廊——购买原创设计",
     "style": "Style",
     "all_styles": "All styles",
     "mix_match": "50+ styles. Hundreds of categories. Mix and match — pick your style, pick your category.",
     "deals_banner_1": "合作伙伴优惠：使用代码 TAC20 购买 Base Labs 护理产品享 8 折",
-    "deals_banner_2": "查看全部纹身优惠与折扣"
+    "deals_banner_2": "查看全部纹身优惠与折扣",
+    "cat_fallback": "浏览 Tattoo Art Customs 画廊中的 {count} 款原创 {name} 纹身设计。每款设计均附带全彩成品图和干净的线条模板,购买后以数字形式交付——打印出来,与你的纹身师确定尺寸,想纹在哪里都可以。",
+    "cat_note": "随着艺术家上传,{name} 的新设计会不断加入。想改一款——换花、加名字、换颜色?在任意设计页面将其订为定制变体即可。",
+    "intro_1": "本画廊中的每一款设计都是独立纹身师或设计艺术家创作的原创作品,并在此出售。画廊展示每件作品的干净线条预览——这样成品在售出前不会被复制。购买设计后,你将收到全彩成品图和线条模板文件,可以直接带给你的纹身师。",
+    "intro_2": "找不到心里想的那一款?可以定制。定制作品按单绘制:描述你的想法,确认方向,成品将在 48 小时内交付。你也可以把一张照片或随手涂鸦变成完整的纹身设计,或对任何画廊设计提出修改——换花、加名字、换颜色——将其订为定制变体即可。",
+    "intro_h": "来自独立艺术家的原创设计"
   },
   "giftcards": {
     "a_customer": "客户",
@@ -545,6 +550,9 @@
     "shop_page_link": "查看店铺计划的全部内容"
   },
   "merch": {
+    "hw_banner_standard": "🎃 万圣节周边：Dark Skull、Graffiti Skull、Stone Gargoyle、Blood Moon、Hollow Wings、Veil Between 及更多暗黑设计 — 10月18日前下单，万圣节前送达（标准配送）。",
+    "hw_banner_express": "🎃 万圣节将至：Dark Skull、Graffiti Skull、Stone Gargoyle、Blood Moon 及更多暗黑设计 — 10月24日前选择加急配送下单，万圣节前送达。",
+    "hw_banner_digital": "🎃 错过配送截止日？万圣节闪购设计为数字下载 — 即时交付，无配送期限。查看万圣节闪购。",
     "account": "账户",
     "apt": "房号（可选）",
     "browse_tail": "——购买设计，然后印到T恤上。",
@@ -977,7 +985,10 @@
     "badge_most_loved": "最受欢迎",
     "badge_most_wanted": "最受追捧",
     "badge_trending": "热门趋势",
-    "badge_selling_fast": "热销中"
+    "badge_selling_fast": "热销中",
+    "intro_1": "设计上的每一颗心都是一票。本页按这些票数对整个画廊进行排名,最受欢迎的排在最前,顺序会随着人们的浏览而变化。点按任意设计上的心形即可为它投票——同时它会被保存到你的心愿单,这样你回来时收藏还在等你。",
+    "intro_2": "徽章是赢来的,不是指派的:第一名佩戴“最受欢迎”,“热门”和“热卖”徽章来自过去七天的点赞和真实付费订单。本页没有任何人工挑选或付费排名。如果某个榜首设计与你的故事接近但还不完全对,打开它,订一款按你的想法绘制的定制变体。",
+    "intro_h": "由浏览者评出的排名"
   },
   "apps": {
     "free_label": "免费",
@@ -1098,7 +1109,10 @@
     "join_link": "成为会员",
     "empty": "暂无节目设计，敬请期待。",
     "browse_all": "浏览全部设计",
-    "starts_when_airs": "节目播出后会员优惠开启。"
+    "starts_when_airs": "节目播出后会员优惠开启。",
+    "intro_1": "这些是 Little Inkers 涂色节目《Color With Us!》中实际被涂色的纹身设计。每集都会从本画廊选取设计,从头到尾为其上色——本页将所有被选中的作品汇集在一处,让观众可以拥有原创作品本身。",
+    "intro_2": "购买这些精选设计,你将获得全彩成品图和干净的线条版本——与节目上色所用的同一套线条。Tattoo Art Customs 会员在其剧集播出后购买节目设计可享折扣,每一笔购买都会向绘制该作品的艺术家付款。",
+    "intro_h": "节目背后的设计"
   },
   "newsletter": {
     "title": "加入邮件列表",
@@ -1360,5 +1374,11 @@
     "r_nude": "Contains nudity",
     "r_explicit": "Explicit — preview blurred",
     "submit": "Submit Designs"
+  },
+  "trust": {
+    "aftercare": "纹身护理指南",
+    "guides": "阅读我们的纹身指南",
+    "h": "由真实的人运营的真实市场",
+    "text": "Tattoo Art Customs 是一个独立市场,艺术家在这里出售原创纹身设计并接受定制委托。艺术家在每笔销售中获得报酬,每个订单都遵循我们“关于”页面上的店规,联系表单由真人回复——没有工单黑洞。"
   }
 }

@@ -9,6 +9,7 @@ const { requireLogin, isActiveMember } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { premadePriceCents, customFullCents, isSaleWindow, lineworkOnlyPriceCents, LINEWORK_ONLY_DISCOUNT, salePriceActive, withFeeCents, processingFeeCents, money, premadeQuoteForDesign, SHOW_FEATURED_DISCOUNT_CODE, showFeaturedDiscountRate, showFeaturedPremadeCents, showDiscountLive } = require('../lib/pricing');
 const { viewerFor, displayImgFile, canViewUnblurred } = require('../lib/contentPolicy');
+const { blurbFor: categoryBlurbFor, SITEMAP_CATEGORIES } = require('../lib/categoryContent');
 
 const router = express.Router();
 
@@ -82,7 +83,13 @@ router.get('/sitemap.xml', async (req, res) => {
   const base = config.baseUrl.replace(/\/$/, '');
   const urls = [
     { loc: `${base}/`, changefreq: 'daily', priority: '1.0' },
-    { loc: `${base}/gallery`, changefreq: 'daily', priority: '0.9' },
+    { loc: `${base}/gallery`, changefreq: 'daily', priority: '0.9', lastmod: new Date().toISOString().slice(0, 10) },
+    { loc: `${base}/top-loved`, changefreq: 'daily', priority: '0.8', lastmod: new Date().toISOString().slice(0, 10) },
+    // Curated category pages (each carries its own editorial intro copy).
+    ...SITEMAP_CATEGORIES.map((c) => ({
+      loc: `${base}/gallery?cat=${encodeURIComponent(c)}`,
+      changefreq: 'weekly', priority: '0.7', lastmod: new Date().toISOString().slice(0, 10),
+    })),
     { loc: `${base}/membership`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/membership/shops`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/advertise`, changefreq: 'weekly', priority: '0.6' },
@@ -96,7 +103,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/doodle-to-tattoo`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/holiday-raffle`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/halloween-flash`, changefreq: 'daily', priority: '0.9' },
-    { loc: `${base}/show-designs`, changefreq: 'daily', priority: '0.8' },
+    { loc: `${base}/show-designs`, changefreq: 'daily', priority: '0.8', lastmod: new Date().toISOString().slice(0, 10) },
     { loc: `${base}/guides`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/guides/aftercare`, changefreq: 'monthly', priority: '0.7' },
     { loc: `${base}/guides/choosing-a-design`, changefreq: 'monthly', priority: '0.7' },
@@ -195,7 +202,11 @@ router.get('/gallery', async (req, res) => {
     const cutoff = Date.now() - 90 * 24 * 3600 * 1000;
     designs = designs.filter((d) => Number(d.created_at || 0) >= cutoff);
   }
-  if (cat) designs = designs.filter((d) => d.categories.some((c) => c.toLowerCase() === cat));
+  let catCount = null;
+  if (cat) {
+    designs = designs.filter((d) => d.categories.some((c) => c.toLowerCase() === cat));
+    catCount = designs.length;
+  }
   if (styleQ) designs = designs.filter((d) => (d.style || '').toLowerCase() === styleQ);
   if (q) {
     designs = designs.filter((d) =>
@@ -240,19 +251,40 @@ router.get('/gallery', async (req, res) => {
     const s = p.toString();
     return '/gallery' + (s ? `?${s}` : '');
   };
+  // Category pages carry their own editorial intro (curated blurb for the
+  // collection, localized fallback otherwise) plus a category-specific
+  // title/meta/canonical — content depth added 2026-10-12.
+  const base = config.baseUrl.replace(/\/$/, '');
+  let catIntro = null;
+  let galleryTitle = 'Tattoo Design Gallery — Buy Original Tattoo Designs | Tattoo Art Customs';
+  let galleryMeta = `Browse ${totalDesigns.toLocaleString('en-US')} original tattoo designs by style and category. Buy ready-made tattoo designs from independent artists — full color and linework included.`;
+  let galleryCanonical = `${base}/gallery`;
+  if (cat) {
+    const canonName = allCats.find((c) => c.toLowerCase() === cat) || null;
+    if (canonName && catCount > 0) {
+      const blurb = categoryBlurbFor(canonName);
+      catIntro = { name: canonName, count: catCount, blurb };
+      galleryTitle = `${canonName} Tattoo Designs — Buy Original ${canonName} Tattoos | Tattoo Art Customs`;
+      galleryMeta = blurb
+        ? `${blurb.slice(0, 155)}…`
+        : `Browse ${catCount} original ${canonName} tattoo designs from independent artists — full color artwork and linework stencil included with every design.`;
+      galleryCanonical = `${base}/gallery?cat=${encodeURIComponent(canonName)}`;
+    }
+  }
   res.render('site/gallery', {
-    title: 'Tattoo Design Gallery — Buy Original Tattoo Designs | Tattoo Art Customs',
+    title: galleryTitle,
     designs: thumbs, allCats, allStyles, q: req.query.q || '', cat: req.query.cat || '', style: req.query.style || '', sale: await salePriceActive(req.user),
     premadePrice: withFeeCents(premadePriceCents(new Date(), member)),
     sort: newestOnly ? 'newest' : '',
     newestUrl: galleryUrl('newest'), allUrl: galleryUrl(''),
+    catIntro,
     pagination: {
       page, totalPages, total: totalDesigns,
       prevUrl: page > 1 ? galleryPageUrl(page - 1) : null,
       nextUrl: page < totalPages ? galleryPageUrl(page + 1) : null,
     },
-    metaDescription: 'Search 900+ original tattoo designs by style and category. Buy ready-made tattoo designs from independent artists — full color and linework included.',
-    canonical: `${config.baseUrl.replace(/\/$/, '')}/gallery`,
+    metaDescription: galleryMeta,
+    canonical: galleryCanonical,
   });
 });
 

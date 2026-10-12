@@ -55,6 +55,14 @@
 
 <%- include('../partials/ad-slot', {slot: 'gallery_inline'}) %>
 
+<% if (typeof catIntro !== 'undefined' && catIntro) { %>
+<section class="card cat-intro">
+  <h2><%= catIntro.name %></h2>
+  <% if (catIntro.blurb) { %><p><%= catIntro.blurb %></p><% } else { %><p><%= t('gallery.cat_fallback', {name: catIntro.name, count: catIntro.count}) %></p><% } %>
+  <p class="muted"><%= t('gallery.cat_note', {name: catIntro.name}) %></p>
+</section>
+<% } %>
+
 <% if (!designs.length) { %><p><%= t('gallery.no_match') %></p><% } %>
 <div class="grid">
   <% designs.forEach(function(d) { %>
@@ -77,3 +85,16 @@
   <% if (pagination.nextUrl) { %><a class="btn" href="<%= pagination.nextUrl %>">Next &rarr;</a><% } %>
 </nav>
 <% } %>
+
+<section class="card gallery-about" style="margin-top:2rem;">
+  <h2><%= t('gallery.intro_h') %></h2>
+  <p><%= t('gallery.intro_1') %></p>
+  <p><%= t('gallery.intro_2') %></p>
+  <p>
+    <a href="/guides/choosing-a-design"><%= t('trust.guides') %></a> &middot;
+    <a href="/guides/custom-design-process"><%= t('nav.custom_design') %></a> &middot;
+    <a href="/guides/aftercare"><%= t('trust.aftercare') %></a>
+  </p>
+</section>
+
+<%- include('../partials/trust-block') %>

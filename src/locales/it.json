@@ -241,13 +241,18 @@
     "search_ph": "lupo, mandala, rosa…",
     "sort_all": "Tutti i design",
     "sort_newest": "Ultimi arrivi",
-    "sub": "Cerca tra oltre 900 design per tatuaggi originali per stile e categoria. Solo anteprime linework — il colore pieno viene consegnato agli acquirenti dopo l'acquisto.",
+    "sub": "Cerca oltre 2.500 disegni di tatuaggi originali per stile e categoria. Vengono mostrate solo anteprime in linea: il colore completo viene consegnato agli acquirenti dopo l’acquisto.",
     "title": "Galleria design per tatuaggi — compra design originali",
     "style": "Stile",
     "all_styles": "Tutti gli stili",
     "mix_match": "Oltre 50 stili. Centinaia di categorie. Combinali: scegli il tuo stile, scegli la tua categoria.",
     "deals_banner_1": "Offerta partner: 20% di sconto sulla cura Base Labs con il codice TAC20",
-    "deals_banner_2": "Vedi tutte le offerte e gli sconti tattoo"
+    "deals_banner_2": "Vedi tutte le offerte e gli sconti tattoo",
+    "cat_fallback": "Sfoglia {count} disegni di tatuaggi originali {name} dalla galleria Tattoo Art Customs. Ogni disegno è venduto con l’opera a colori e uno stencil in linea pulito, consegnati in digitale dopo l’acquisto: stampalo, decidi la misura con il tuo artista e tatuatelo dove vuoi.",
+    "cat_note": "Nuovi disegni {name} vengono aggiunti man mano che gli artisti li caricano. Vuoi modificarne uno — fiori diversi, un nome, colori diversi? Ordinalo come variante personalizzata da qualsiasi pagina del disegno.",
+    "intro_1": "Ogni disegno in questa galleria è un’opera originale creata da un tatuatore o disegnatore indipendente e messa in vendita qui. La galleria mostra un’anteprima pulita in linea di ogni pezzo: così l’opera finita resta protetta dalle copie prima dell’acquisto. Quando compri un disegno, ricevi l’opera finale a colori e il file con le linee (stencil), pronto da portare al tuo tatuatore.",
+    "intro_2": "Non trovi esattamente il pezzo che immaginavi? Commissionane uno su misura. I disegni personalizzati vengono realizzati su ordinazione: descrivi la tua idea, approva la direzione e il disegno finito viene consegnato entro 48 ore. Puoi anche trasformare una foto o uno schizzo veloce in un disegno per tatuaggio finito, oppure chiedere modifiche a qualsiasi disegno della galleria — fiori diversi, un nome aggiunto, colori cambiati — ordinandolo come variante personalizzata.",
+    "intro_h": "Disegni originali di artisti indipendenti"
   },
   "giftcards": {
     "a_customer": "un cliente",
@@ -545,6 +550,9 @@
     "shop_page_link": "Vedi tutto ciò che include il piano studio"
   },
   "merch": {
+    "hw_banner_standard": "🎃 Merch di Halloween: Dark Skull, Graffiti Skull, Stone Gargoyle, Blood Moon, Hollow Wings, Veil Between e altri design dark — ordina entro il 18 ott. per la consegna a Halloween (spedizione standard).",
+    "hw_banner_express": "🎃 Halloween si avvicina: Dark Skull, Graffiti Skull, Stone Gargoyle, Blood Moon e altri design dark — ordina entro il 24 ott. con spedizione espressa per la consegna a Halloween.",
+    "hw_banner_digital": "🎃 Hai perso la scadenza di spedizione? I design flash di Halloween sono download digitali — consegna immediata, nessuna scadenza di spedizione. Vai alla vendita flash di Halloween.",
     "account": "account",
     "apt": "Appartamento / interno (facoltativo)",
     "browse_tail": "— compra un design e mettilo sulla maglietta.",
@@ -977,7 +985,10 @@
     "badge_most_loved": "Più amato",
     "badge_most_wanted": "Più desiderato",
     "badge_trending": "Tendenza",
-    "badge_selling_fast": "Vende veloce"
+    "badge_selling_fast": "Vende veloce",
+    "intro_1": "Ogni cuore su un disegno è un voto. Questa pagina ordina l’intera galleria in base a quei voti, i più amati per primi, e l’ordine si muove mentre la gente naviga. Tocca il cuore su qualsiasi disegno per votarlo: viene salvato nella tua lista dei desideri allo stesso tempo, così i tuoi preferiti ti aspettano quando torni.",
+    "intro_2": "I badge si guadagnano, non si assegnano: il primo posto porta «Il più amato», e i badge «Di tendenza» e «Vendita veloce» nascono dai cuori e dagli ordini pagati reali degli ultimi sette giorni. Niente in questa pagina è scelto a mano o piazzato a pagamento. Se un disegno in cima si avvicina ma non è del tutto la tua storia, aprilo e ordina una variante personalizzata disegnata a modo tuo.",
+    "intro_h": "Classificati dalle persone che li guardano"
   },
   "apps": {
     "free_label": "Gratis",
@@ -1098,7 +1109,10 @@
     "join_link": "Diventa membro",
     "empty": "Nessun design dello show per ora — torna presto.",
     "browse_all": "Sfoglia tutti i design",
-    "starts_when_airs": "Lo sconto membri parte quando va in onda l’episodio."
+    "starts_when_airs": "Lo sconto membri parte quando va in onda l’episodio.",
+    "intro_1": "Questi sono i veri disegni di tatuaggi colorati in Color With Us!, lo show da colorare di Little Inkers. Gli episodi prendono disegni da questa galleria e li colorano dall’inizio alla fine: questa pagina raccoglie ogni pezzo presentato in un unico posto, così gli spettatori possono possedere l’opera originale.",
+    "intro_2": "Comprando un disegno presentato ricevi l’opera finita a colori più la versione in linea pulita — le stesse linee da cui lo show colora. I membri di Tattoo Art Customs risparmiano sui disegni dello show una volta che il loro episodio va in onda, e ogni acquisto paga l’artista che ha disegnato il pezzo.",
+    "intro_h": "I disegni dietro lo show"
   },
   "newsletter": {
     "title": "Iscriviti alla mailing list",
@@ -1360,5 +1374,11 @@
     "r_nude": "Contains nudity",
     "r_explicit": "Explicit — preview blurred",
     "submit": "Submit Designs"
+  },
+  "trust": {
+    "aftercare": "Guida alla cura del tatuaggio",
+    "guides": "Leggi le nostre guide sui tatuaggi",
+    "h": "Un marketplace vero, gestito da persone vere",
+    "text": "Tattoo Art Customs è un marketplace indipendente dove gli artisti vendono disegni di tatuaggi originali e accettano commissioni personalizzate. Gli artisti vengono pagati a ogni vendita, ogni ordine segue le regole della casa nella nostra pagina Chi siamo, e una persona risponde al modulo di contatto: niente buchi neri di ticket."
   }
 }

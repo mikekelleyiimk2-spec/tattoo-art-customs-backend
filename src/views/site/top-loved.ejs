@@ -1,6 +1,12 @@
 <h1><%= t('toploved.title') %></h1>
 <p class="muted"><%= t('toploved.sub') %></p>
 
+<section class="card toploved-intro">
+  <h2><%= t('toploved.intro_h') %></h2>
+  <p><%= t('toploved.intro_1') %></p>
+  <p><%= t('toploved.intro_2') %></p>
+</section>
+
 <% if (!designs.length) { %>
   <p><strong><%= t('toploved.empty_title') %></strong></p>
   <p class="muted"><%= t('toploved.empty_text') %></p>
@@ -28,3 +34,5 @@
   <% if (pagination.nextUrl) { %><a class="btn" href="<%= pagination.nextUrl %>">Next &rarr;</a><% } %>
 </nav>
 <% } %>
+
+<%- include('../partials/trust-block') %>

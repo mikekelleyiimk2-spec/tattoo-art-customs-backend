@@ -241,13 +241,18 @@
     "search_ph": "Wolf, Mandala, Rose…",
     "sort_all": "Alle Designs",
     "sort_newest": "Neueste Designs",
-    "sub": "Durchsuche über 900 originale Tattoo-Designs nach Stil und Kategorie. Es werden nur Linework-Vorschauen gezeigt — die Vollfarbe erhalten Käufer nach dem Kauf.",
+    "sub": "Durchsuche 2.500+ originale Tattoo-Designs nach Stil und Kategorie. Angezeigt werden nur Linienvorschauen — die Farbversion erhalten Käufer nach dem Kauf.",
     "title": "Tattoo-Design-Galerie — originale Designs kaufen",
     "style": "Stil",
     "all_styles": "Alle Stile",
     "mix_match": "Über 50 Stile. Hunderte Kategorien. Mix and Match – wähle deinen Stil, wähle deine Kategorie.",
     "deals_banner_1": "Partner-Deal: 20% Rabatt auf Base Labs Pflege mit Code TAC20",
-    "deals_banner_2": "Alle Tattoo-Angebote & Rabatte ansehen"
+    "deals_banner_2": "Alle Tattoo-Angebote & Rabatte ansehen",
+    "intro_h": "Originale Designs von unabhängigen Künstlern",
+    "intro_1": "Jedes Design in dieser Galerie ist ein Originalwerk eines unabhängigen Tätowierers oder Designkünstlers und wird hier zum Verkauf angeboten. Die Galerie zeigt eine saubere Linienvorschau jedes Motivs — so bleibt das fertige Werk vor dem Kauf vor Kopien geschützt. Beim Kauf erhältst du das fertige Farbwerk und die Linienvorlage (Stencil), bereit für deinen Tätowierer.",
+    "intro_2": "Nicht genau das Motiv gefunden, das du dir vorgestellt hast? Bestelle es als Custom-Design. Wunschmotive werden auf Bestellung gezeichnet: Beschreibe deine Idee, gib die Richtung frei, und das fertige Design wird innerhalb von 48 Stunden geliefert. Du kannst auch ein Foto oder eine grobe Skizze in ein fertiges Tattoo-Design verwandeln lassen oder Änderungen an jedem Galerie-Design bestellen — andere Blumen, ein Name, andere Farben — als Custom-Variante.",
+    "cat_fallback": "Durchsuche {count} originale {name} Tattoo-Designs aus der Tattoo Art Customs Galerie. Jedes Design wird mit dem fertigen Farbwerk und einer sauberen Linienvorlage verkauft und nach dem Kauf digital geliefert — ausdrucken, mit deinem Künstler die Größe festlegen und überall tätowieren lassen.",
+    "cat_note": "Neue {name} Designs kommen hinzu, sobald Künstler sie hochladen. Eines ändern lassen — andere Blumen, ein Name, andere Farben? Bestelle es als Custom-Variante auf jeder Designseite."
   },
   "giftcards": {
     "a_customer": "ein Kunde",
@@ -545,6 +550,9 @@
     "shop_page_link": "Sieh dir an, was der Studio-Plan alles enthält"
   },
   "merch": {
+    "hw_banner_standard": "🎃 Halloween-Merch: Dark Skull, Graffiti Skull, Stone Gargoyle, Blood Moon, Hollow Wings, Veil Between & weitere dunkle Designs — bis 18. Okt. bestellen für Halloween-Lieferung (Standardversand).",
+    "hw_banner_express": "🎃 Halloween steht vor der Tür: Dark Skull, Graffiti Skull, Stone Gargoyle, Blood Moon & weitere dunkle Designs — bis 24. Okt. mit Expressversand bestellen für Halloween-Lieferung.",
+    "hw_banner_digital": "🎃 Versandfrist verpasst? Halloween-Flash-Designs sind digitale Downloads — sofort geliefert, keine Versandfristen. Zum Halloween-Flash-Sale.",
     "account": "Konto",
     "apt": "Appartement / Suite (optional)",
     "browse_tail": "— kaufe ein Design und druck es aufs Shirt.",
@@ -977,7 +985,10 @@
     "badge_most_loved": "Beliebtestes",
     "badge_most_wanted": "Meistgewolltes",
     "badge_trending": "Trend",
-    "badge_selling_fast": "Verkauft sich schnell"
+    "badge_selling_fast": "Verkauft sich schnell",
+    "intro_h": "Bewertet von den Menschen, die hier stöbern",
+    "intro_1": "Jedes Herz an einem Design ist eine Stimme. Diese Seite ordnet die gesamte Galerie nach diesen Stimmen, die beliebtesten zuerst, und die Reihenfolge bewegt sich mit dem Stöbern. Tippe auf das Herz an einem Design, um dafür zu stimmen — es wird gleichzeitig auf deiner Wunschliste gespeichert, sodass deine Favoriten bei deiner Rückkehr warten.",
+    "intro_2": "Die Abzeichen werden verdient, nicht vergeben: Der erste Platz trägt „Meistgeliebt“, und die Abzeichen „Trend“ und „Verkauft sich schnell“ entstehen aus Herzen und echten bezahlten Bestellungen der letzten sieben Tage. Nichts auf dieser Seite ist handverlesen oder bezahlte Platzierung. Wenn ein Top-Design fast, aber nicht ganz deine Geschichte ist, öffne es und bestelle eine Custom-Variante nach deinen Wünschen."
   },
   "apps": {
     "free_label": "Kostenlos",
@@ -1098,7 +1109,10 @@
     "join_link": "Mitglied werden",
     "empty": "Noch keine Show-Designs — schau bald wieder vorbei.",
     "browse_all": "Alle Designs ansehen",
-    "starts_when_airs": "Der Mitglieder-Rabatt startet mit der Ausstrahlung der Folge."
+    "starts_when_airs": "Der Mitglieder-Rabatt startet mit der Ausstrahlung der Folge.",
+    "intro_h": "Die Designs hinter der Show",
+    "intro_1": "Dies sind die tatsächlichen Tattoo-Designs, die in Color With Us!, der Little-Inkers-Ausmalshow, koloriert werden. Die Folgen nehmen Designs aus dieser Galerie und malen sie von Anfang bis Ende aus — diese Seite sammelt jedes vorgestellte Motiv an einem Ort, damit Zuschauer das Originalwerk selbst besitzen können.",
+    "intro_2": "Kaufst du ein vorgestelltes Design, erhältst du das fertige Farbwerk plus die saubere Linienversion — dieselbe Linienvorlage, von der die Show ausmalt. Mitglieder von Tattoo Art Customs sparen bei Show-Designs, sobald ihre Folge ausgestrahlt wird, und jeder Kauf bezahlt den Künstler, der das Motiv gezeichnet hat."
   },
   "newsletter": {
     "title": "Mailingliste beitreten",
@@ -1360,5 +1374,11 @@
     "r_nude": "Contains nudity",
     "r_explicit": "Explicit — preview blurred",
     "submit": "Submit Designs"
+  },
+  "trust": {
+    "h": "Ein echter Marktplatz, von echten Menschen betrieben",
+    "text": "Tattoo Art Customs ist ein unabhängiger Marktplatz, auf dem Künstler originale Tattoo-Designs verkaufen und Custom-Aufträge annehmen. Künstler werden bei jedem Verkauf bezahlt, jede Bestellung folgt den Hausregeln auf unserer Über-uns-Seite, und ein Mensch beantwortet das Kontaktformular — kein Ticket-Nirwana.",
+    "guides": "Unsere Tattoo-Ratgeber lesen",
+    "aftercare": "Ratgeber zur Tattoo-Pflege"
   }
 }
