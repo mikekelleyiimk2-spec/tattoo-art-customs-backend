@@ -350,6 +350,13 @@ function extractZipImages(zipPath, opts = {}) {
 // Returns { ok:true, id, title, listingType, finalStatus, selfApproved,
 //   holdForHate, screenOk, colorSource, sensitivity, wmNote, reviewFeeNote }
 // or { ok:false, error }. Never redirects — callers decide the response.
+//
+// fields.quiet (batch population imports only, e.g. the Cosmos handoff
+// import): suppresses the per-design notification fan-out (artist live
+// email, admin review pings, colorization-needed ping). A multi-thousand
+// design population import would otherwise send one email per design;
+// the historical seed-batch population imports were silent the same way.
+// Status, validation, screening, fees and watermarking are unaffected.
 async function uploadOneDesign(user, fileSet, fields) {
   const files = {
     linework: fileSet.linework ? [fileSet.linework] : null,
@@ -517,10 +524,12 @@ function titleIsByRequest(title) {
       finalStatus = 'approved';
       selfApproved = true;
       await db.update('designs', id, { status: 'approved', approved_by: user.id });
-      try { await notifyDesignLive(id, 'self-approved'); } catch (e) { console.error('self-approve live notify failed:', e.message); }
+      if (!fields.quiet) {
+        try { await notifyDesignLive(id, 'self-approved'); } catch (e) { console.error('self-approve live notify failed:', e.message); }
+      }
     }
   } catch (e) { console.error('self-approve check failed:', e.message); }
-  if (!selfApproved) {
+  if (!selfApproved && !fields.quiet) {
   try {
     const artistName = (user.display_name || user.email || 'A designer');
     await notifyAdmins({
@@ -540,7 +549,7 @@ function titleIsByRequest(title) {
     console.error('admin notify failed for design', id, e.message);
   }
   }
-  if (colorSource === 'none' && screen.ok) {
+  if (colorSource === 'none' && screen.ok && !fields.quiet) {
     // Tell the owner a color version needs creating (the assistant creates
     // it in a work session; attaching happens in /admin/colorization).
     try {

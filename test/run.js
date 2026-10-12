@@ -963,6 +963,192 @@ async function main() {
       'disk probe reports filesystems + sideload inventory under valid Bearer <redacted>');
   }
 
+  // Muse service pipe: Cosmos handoff ZIP receiver — POST/GET/DELETE
+  // /api/muse/handoff-zips + POST /:name/import. ZIPs stage on the
+  // ephemeral tmp filesystem (NOT the persistent disk); import runs the
+  // canonical population path (extract → pair → uploadOneDesign, quiet)
+  // attributed to the head_admin account, so designs self-approve.
+  {
+    const hToken = process.env.MUSE_SERVICE_TOKEN;
+    const sharpT = require('sharp');
+    const cryptoT = require('crypto');
+    const fsT = require('fs');
+    const pathT = require('path');
+    // Distinct bytes per file: the extractor dedups identical
+    // content+role, which would merge the two pairs into one.
+    const mkPng = (r, g, b, s) => sharpT({ create: { width: s, height: s, channels: 3, background: { r, g, b } } }).png().toBuffer();
+    const hAlphaColor = await mkPng(180, 40, 40, 48);
+    const hAlphaLine = await mkPng(245, 245, 245, 48);
+    const hBetaColor = await mkPng(40, 160, 60, 64);
+    const hBetaLine = await mkPng(230, 230, 230, 64);
+    // Minimal stored-entry ZIP builder (test-local, no deps).
+    const crcTable = [];
+    for (let n = 0; n < 256; n++) {
+      let c = n;
+      for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      crcTable[n] = c >>> 0;
+    }
+    const crc32T = (buf) => {
+      let crc = 0xFFFFFFFF;
+      for (let i = 0; i < buf.length; i++) crc = crcTable[(crc ^ buf[i]) & 0xFF] ^ (crc >>> 8);
+      return (crc ^ 0xFFFFFFFF) >>> 0;
+    };
+    const makeHZip = (entries) => {
+      const chunks = [], central = [];
+      let offset = 0;
+      for (const e of entries) {
+        const nameBuf = Buffer.from(e.name, 'utf8');
+        const lh = Buffer.alloc(30);
+        lh.writeUInt32LE(0x04034b50, 0); lh.writeUInt16LE(20, 4); lh.writeUInt16LE(0x0800, 6);
+        lh.writeUInt32LE(crc32T(e.data), 14); lh.writeUInt32LE(e.data.length, 18); lh.writeUInt32LE(e.data.length, 22);
+        lh.writeUInt16LE(nameBuf.length, 26);
+        chunks.push(lh, nameBuf, e.data);
+        const cd = Buffer.alloc(46);
+        cd.writeUInt32LE(0x02014b50, 0); cd.writeUInt16LE(20, 4); cd.writeUInt16LE(20, 6); cd.writeUInt16LE(0x0800, 8);
+        cd.writeUInt32LE(crc32T(e.data), 16); cd.writeUInt32LE(e.data.length, 20); cd.writeUInt32LE(e.data.length, 24);
+        cd.writeUInt16LE(nameBuf.length, 28); cd.writeUInt32LE(offset, 42);
+        central.push(cd, nameBuf);
+        offset += lh.length + nameBuf.length + e.data.length;
+      }
+      const cdBuf = Buffer.concat(central);
+      chunks.push(cdBuf);
+      const eocd = Buffer.alloc(22);
+      eocd.writeUInt32LE(0x06054b50, 0);
+      eocd.writeUInt16LE(entries.length, 8); eocd.writeUInt16LE(entries.length, 10);
+      eocd.writeUInt32LE(cdBuf.length, 12); eocd.writeUInt32LE(offset, 16);
+      chunks.push(eocd);
+      return Buffer.concat(chunks);
+    };
+    const hZip = makeHZip([
+      { name: 'handoff-alpha_color.png', data: hAlphaColor },
+      { name: 'handoff-alpha_linework.png', data: hAlphaLine },
+      { name: 'handoff-beta_color.png', data: hBetaColor },
+      { name: 'handoff-beta_linework.png', data: hBetaLine },
+    ]);
+    const hSha = cryptoT.createHash('sha256').update(hZip).digest('hex');
+    const hPost = (buf, filename, fields = {}, token) => {
+      const fd = new FormData();
+      fd.append('file', new Blob([buf], { type: 'application/zip' }), filename);
+      for (const [k, v] of Object.entries(fields)) fd.append(k, v);
+      const headers = {};
+      if (token !== undefined) headers.authorization = `Bearer ${token}`;
+      return fetch(`http://localhost:${PORT}/api/muse/handoff-zips`, { method: 'POST', headers, body: fd });
+    };
+    const hGet = (token) => fetch(`http://localhost:${PORT}/api/muse/handoff-zips`,
+      token === undefined ? {} : { headers: { authorization: `Bearer ${token}` } });
+    const hImport = (name, token) => fetch(`http://localhost:${PORT}/api/muse/handoff-zips/${name}/import`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+      body: '{}',
+    });
+
+    let hr = await hPost(hZip, 'cosmos-test.zip', { sha256: hSha });
+    ok(hr.status === 401, 'handoff upload rejects missing Bearer <redacted>');
+    hr = await hGet();
+    ok(hr.status === 401, 'handoff list rejects missing Bearer <redacted>');
+    hr = await hPost(hZip, 'cosmos-test.zip', { sha256: hSha }, 'wrong-token');
+    ok(hr.status === 401, 'handoff upload rejects a wrong Bearer <redacted>');
+    hr = await hPost(Buffer.from('definitely not a zip'), 'cosmos-test.zip', {}, hToken);
+    ok(hr.status === 400, 'handoff upload rejects a non-zip payload');
+    hr = await hPost(hZip, 'cosmos-test.zip', { sha256: '0'.repeat(64) }, hToken);
+    ok(hr.status === 422, 'handoff upload rejects a sha256 mismatch');
+    hr = await hPost(hZip, 'cosmos-test.zip', { sha256: hSha }, hToken);
+    const hj = await hr.json();
+    ok(hr.status === 200 && hj.ok && hj.name === 'cosmos-test.zip' && hj.bytes === hZip.length && hj.sha256 === hSha,
+      'handoff upload stages the ZIP and echoes exact bytes + sha256');
+    hr = await hGet(hToken);
+    const hl = await hr.json();
+    const hEntry = hl.ok && hl.zips.find((z) => z.name === 'cosmos-test.zip');
+    ok(hr.status === 200 && hEntry && hEntry.status === 'received' && hEntry.bytes === hZip.length &&
+      hEntry.sha256 === hSha && hEntry.on_disk === true && hl.storage && hl.storage.r2_configured === false,
+      'handoff list shows the staged ZIP with bytes/sha256/status + storage state');
+
+    hr = await hImport('cosmos-test.zip', hToken);
+    const hi = await hr.json();
+    ok(hr.status === 200 && hi.ok && hi.report.pairs === 2 && hi.report.imported.length === 2 && hi.report.failed.length === 0,
+      'handoff import creates one design per pair');
+    const ha = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('handoff alpha');
+    const hb = sdb.prepare('SELECT * FROM designs WHERE title = ?').get('handoff beta');
+    ok(ha && hb && ha.status === 'approved' && hb.status === 'approved',
+      'handoff designs self-approve under head_admin attribution');
+    ok(ha && ha.color_path && ha.linework_path && ha.linework_wm_path,
+      'handoff designs carry canonical color/linework/wm stored paths');
+    ok(ha && fsT.existsSync(pathT.join(TMP, 'assets', 'uploads', ha.linework_wm_path)),
+      'handoff import generated the watermarked preview via the canonical path');
+    hr = await hGet(hToken);
+    const hl2 = await hr.json();
+    const hEntry2 = hl2.zips.find((z) => z.name === 'cosmos-test.zip');
+    ok(hEntry2 && hEntry2.status === 'imported' && hEntry2.on_disk === false && hEntry2.import.imported === 2,
+      'handoff list marks the ZIP imported (staged file deleted) with counts');
+    hr = await hImport('never-arrived.zip', hToken);
+    ok(hr.status === 404, 'handoff import 404s for an unknown ZIP');
+
+    hr = await hPost(hZip, 'cosmos-del.zip', {}, hToken);
+    ok(hr.status === 200, 'second handoff ZIP uploads for the delete check');
+    hr = await fetch(`http://localhost:${PORT}/api/muse/handoff-zips/cosmos-del.zip`, {
+      method: 'DELETE', headers: { authorization: `Bearer ${hToken}` },
+    });
+    const hd = await hr.json();
+    ok(hr.status === 200 && hd.ok && hd.deleted === true, 'handoff delete removes a staged ZIP');
+    hr = await hGet(hToken);
+    const hl3 = await hr.json();
+    ok(!hl3.zips.some((z) => z.name === 'cosmos-del.zip'), 'deleted handoff ZIP leaves the list');
+
+    // R2 relocation unit check (runs in-process against the lib): with a
+    // fake S3 client, an imported design's files are PutObject'd to the
+    // public bucket (wm preview under designs/<file>) and the private
+    // bucket (originals), the stored paths are rewritten to the
+    // production shapes, and the local copies are deleted.
+    {
+      process.env.R2_ACCOUNT_ID = 'testacct';
+      process.env.R2_ACCESS_KEY_ID = 'testkey';
+      process.env.R2_SECRET_ACCESS_KEY = 'testsecret';
+      process.env.R2_PUBLIC_BUCKET = 'testpub';
+      process.env.R2_PRIVATE_BUCKET = 'testpriv';
+      process.env.R2_PUBLIC_URL = 'https://pub.example.com';
+      const handoffLib = require('../src/lib/handoffImport');
+      const before = sdb.prepare('SELECT color_path, linework_path, linework_wm_path FROM designs WHERE id = ?').get(ha.id);
+      const colorAbs = pathT.join(TMP, 'assets', 'uploads', before.color_path);
+      ok(fsT.existsSync(colorAbs), 'pre-relocation color file exists locally');
+      const sent = [];
+      // The fake must fully consume the Body stream like the real S3
+      // client does — otherwise the stream opens the file lazily and
+      // races the relocation unlink (ENOENT, unhandled stream error).
+      const fakeS3 = {
+        send: async (cmd) => {
+          const bytes = await require('stream/consumers').buffer(cmd.input.Body);
+          sent.push({ ...cmd.input, bodyBytes: bytes.length });
+          return {};
+        },
+      };
+      // The harness closed the in-process app db handle before the HTTP
+      // phase (documented quirk) — drive the db through the raw sdb
+      // handle via the lib's injectable dbLike.
+      const dbLike = {
+        get: async (sql, params) => sdb.prepare(sql).get(...params),
+        update: async (table, id, data) => {
+          const cols = Object.keys(data);
+          sdb.prepare(`UPDATE ${table} SET ${cols.map((c) => `${c} = ?`).join(', ')} WHERE id = ?`)
+            .run(...cols.map((c) => data[c]), id);
+        },
+      };
+      const rel = await handoffLib.relocateDesignToR2(ha.id, fakeS3, dbLike);
+      ok(rel.relocated === 3 && rel.localKept === 0, 'relocation moves all three stored files to R2');
+      ok(sent.length === 3 &&
+        sent.some((c) => c.Bucket === 'testpub' && c.Key === `designs/${pathT.basename(before.linework_wm_path)}`) &&
+        sent.filter((c) => c.Bucket === 'testpriv').length === 2,
+        'relocation PutObjects the preview to the public bucket and originals to the private bucket under designs/<file>');
+      const after = sdb.prepare('SELECT color_path, linework_path, linework_wm_path FROM designs WHERE id = ?').get(ha.id);
+      ok(after.linework_wm_path === `https://pub.example.com/designs/${pathT.basename(before.linework_wm_path)}` &&
+        after.color_path.indexOf('r2://testpriv/designs/') === 0 &&
+        after.linework_path.indexOf('r2://testpriv/designs/') === 0,
+        'relocation rewrites stored paths to the production R2 shapes');
+      ok(!fsT.existsSync(colorAbs), 'relocation deletes the local copies');
+      delete process.env.R2_ACCOUNT_ID; delete process.env.R2_ACCESS_KEY_ID; delete process.env.R2_SECRET_ACCESS_KEY;
+      delete process.env.R2_PUBLIC_BUCKET; delete process.env.R2_PRIVATE_BUCKET; delete process.env.R2_PUBLIC_URL;
+    }
+  }
+
   // Production custom-draft fulfillment: POST /api/muse/custom-orders/:id/drafts
   // uploads 3-5 generated draft images, records them, flips the order to
   // drafts_ready — the production half of the 48h draft worker loop.

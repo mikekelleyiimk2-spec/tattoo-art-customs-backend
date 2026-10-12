@@ -525,6 +525,140 @@ router.get('/disk', async (req, res) => {
   }
 });
 
+// ── Cosmos handoff ZIP receiver ─────────────────────────────────────
+// POST /api/muse/handoff-zips — receive ONE handoff ZIP (multipart form
+// field "file", .zip, max 512 MB), streamed to disk, never memory. The
+// ZIP lands in the ephemeral tmp staging area (os.tmpdir) — NOT the 1 GB
+// persistent disk, which cannot hold even one ~390 MB handoff ZIP.
+// Optional form fields: "name" (final filename; defaults to the uploaded
+// filename) and "sha256" (the sender's hash — a mismatch deletes the
+// staged file and returns 422, so a corrupted transfer never imports).
+// Auth: Authorization: Bearer <MUSE_SERVICE_TOKEN>. Support code:
+// src/lib/handoffImport.js (capacity design documented there).
+router.post('/handoff-zips', (req, res) => {
+  const token = serviceToken();
+  if (!token) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  // A ~390 MB transfer from a phone can run for minutes; Node's default
+  // request timeout would kill it mid-upload. This route only.
+  req.setTimeout(0);
+  handoffUpload(req, res, async (err) => {
+    if (err) return res.status(400).json({ ok: false, error: err.message });
+    if (!req.file) return res.status(400).json({ ok: false, error: 'no file uploaded' });
+    const handoff = require('../lib/handoffImport');
+    const stagedAbs = req.file.path;
+    const discard = () => { try { fs.unlinkSync(stagedAbs); } catch { /* already gone */ } };
+    try {
+      // Same zip-magic check as upload-ipa: PK\x03\x04 local file header.
+      const head = Buffer.alloc(4);
+      const fd = fs.openSync(stagedAbs, 'r');
+      fs.readSync(fd, head, 0, 4, 0);
+      fs.closeSync(fd);
+      if (!(head[0] === 0x50 && head[1] === 0x4b && head[2] === 0x03 && head[3] === 0x04)) {
+        discard();
+        return res.status(400).json({ ok: false, error: 'uploaded file is not a ZIP (missing PK header)' });
+      }
+      const name = handoff.sanitizeZipName(req.body.name || req.file.originalname);
+      if (!name) {
+        discard();
+        return res.status(400).json({ ok: false, error: 'bad zip name (letters/digits/dot/dash/underscore only, must end .zip)' });
+      }
+      // Collision → suffix (-2, -3, …) instead of overwriting an
+      // un-imported ZIP that arrived earlier under the same name.
+      let finalName = name;
+      for (let i = 2; fs.existsSync(path.join(handoff.stageDir(), finalName)); i++) {
+        finalName = name.replace(/\.zip$/i, `-${i}.zip`);
+      }
+      const finalAbs = path.join(handoff.stageDir(), finalName);
+      fs.renameSync(stagedAbs, finalAbs); // same directory — instant
+      const bytes = fs.statSync(finalAbs).size;
+      const sha256 = await handoff.sha256File(finalAbs);
+      const declared = String(req.body.sha256 || '').trim().toLowerCase();
+      if (declared && declared !== sha256) {
+        try { fs.unlinkSync(finalAbs); } catch { /* ignore */ }
+        return res.status(422).json({ ok: false, error: 'sha256 mismatch — staged copy deleted, please re-send', bytes, sha256 });
+      }
+      handoff.recordArrival(finalName, bytes, sha256);
+      return res.json({ ok: true, name: finalName, bytes, sha256 });
+    } catch (e) {
+      console.error('muse handoff upload failed:', e);
+      discard();
+      return res.status(500).json({ ok: false, error: 'store failed' });
+    }
+  });
+});
+
+// GET /api/muse/handoff-zips — what has arrived: every staged/imported
+// ZIP with filename, bytes, sha256, status, plus the storage state the
+// import will use (R2 relocation when configured). Auth: Bearer token.
+router.get('/handoff-zips', async (req, res) => {
+  const token = serviceToken();
+  if (!token) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const handoff = require('../lib/handoffImport');
+    const storage = require('../lib/storage');
+    const data = await handoff.listHandoffs();
+    return res.json({
+      ok: true,
+      stage: data.stage,
+      storage: { provider: storage.provider(), r2_configured: storage.r2Configured() },
+      zips: data.zips,
+    });
+  } catch (e) {
+    console.error('muse handoff list failed:', e);
+    return res.status(500).json({ ok: false, error: 'list failed' });
+  }
+});
+
+// POST /api/muse/handoff-zips/:name/import — import one staged ZIP into
+// the gallery through the canonical population path (see
+// lib/handoffImport.js). JSON body (all optional): attributed_email,
+// style (a design style slug; anything else → "other"), categories
+// (comma-separated), description. On success the staged ZIP is deleted
+// and the manifest entry is marked imported with the counts; on failure
+// the ZIP stays staged for a retry. Long-running for big ZIPs (a few
+// minutes for ~373 pairs) — callers should use a generous timeout.
+router.post('/handoff-zips/:name/import', express.json(), async (req, res) => {
+  const token = serviceToken();
+  if (!token) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  req.setTimeout(0);
+  const handoff = require('../lib/handoffImport');
+  const name = handoff.sanitizeZipName(req.params.name);
+  if (!name) return res.status(400).json({ ok: false, error: 'bad zip name' });
+  try {
+    const body = req.body || {};
+    const report = await handoff.importHandoffZip(name, {
+      attributedEmail: body.attributed_email,
+      style: body.style,
+      categories: body.categories,
+      description: body.description,
+    });
+    handoff.markImported(name, report);
+    return res.json({ ok: true, name, report });
+  } catch (e) {
+    console.error('muse handoff import failed:', e);
+    handoff.markImportError(name, e.message);
+    const status = e.code === 'not_found' ? 404 : e.code === 'insufficient_storage' ? 422 : 500;
+    return res.status(status).json({ ok: false, error: e.message, code: e.code || 'import_failed' });
+  }
+});
+
+// DELETE /api/muse/handoff-zips/:name — remove a staged ZIP (and its
+// manifest entry). Used to discard test/duplicate transfers; imported
+// entries are already deleted from disk by the import itself.
+router.delete('/handoff-zips/:name', (req, res) => {
+  const token = serviceToken();
+  if (!token) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  const handoff = require('../lib/handoffImport');
+  const name = handoff.sanitizeZipName(req.params.name);
+  if (!name) return res.status(400).json({ ok: false, error: 'bad zip name' });
+  const deleted = handoff.deleteHandoff(name);
+  return res.json({ ok: true, name, deleted });
+});
+
 // POST /api/muse/publish-lil-bundle
 // Publishes a Little Inkers weekly coloring-page bundle to production over
 // HTTPS — lets the owner's automation publish the weekly bundle without shell
@@ -760,6 +894,26 @@ const sideloadUpload = multer({
   fileFilter: (req, file, cb) => {
     if (/\.(ipa|apk)$/i.test(file.originalname)) cb(null, true);
     else cb(new Error('Only .ipa or .apk files are allowed.'));
+  },
+}).single('file');
+
+// Handoff ZIP upload middleware (used by POST /handoff-zips defined
+// above; kept here next to the other upload middlewares so multer/fs/
+// path/os/crypto are initialized). Disk-streamed into the handoff
+// staging area on the ephemeral tmp filesystem under an stg- prefix;
+// the route renames it to its final name after the zip-magic and
+// sha256 checks. 512 MB cap (handoff ZIPs run ~390 MB).
+const handoffUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      try { cb(null, require('../lib/handoffImport').stageDir()); } catch (e) { cb(e); }
+    },
+    filename: (req, file, cb) => cb(null, `stg-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.zip`),
+  }),
+  limits: { fileSize: require('../lib/handoffImport').HANDOFF_MAX_ZIP_BYTES, files: 1 },
+  fileFilter: (req, file, cb) => {
+    if (/\.zip$/i.test(file.originalname || '')) cb(null, true);
+    else cb(new Error('Only .zip files are accepted.'));
   },
 }).single('file');
 
