@@ -412,6 +412,56 @@ router.post('/upload-sideload', (req, res) => {
   });
 });
 
+// POST /api/muse/pro-apk-download-link
+// Mints a direct-install download link for the TAC Android Pro sideload APK
+// (uploaded via /upload-sideload, app=tac-android-pro) so the owner can
+// install the current build on his own phone without buying his own app.
+// Reuses the paid-order download machinery: find-or-creates a $0 comp order
+// (payment_method 'comp', status 'paid') owned by the head_admin account and
+// issues a standard 24h bearer download token for it — the APK itself is
+// served by GET /orders/download/:token like any paid Pro order.
+// Same service-token auth as the other /api/muse routes; 404 when unset.
+router.post('/pro-apk-download-link', express.json(), async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const { resolveStoredPath } = require('../lib/storage');
+    const apkRel = process.env.TAC_ANDROID_PRO_APK_PATH || 'uploads/sideload/tac-android-pro.apk';
+    const apkAbs = resolveStoredPath(apkRel);
+    if (!apkAbs) return res.status(404).json({ ok: false, error: 'pro apk not uploaded' });
+    let owner = await db.get(
+      "SELECT id FROM users WHERE role = 'head_admin' ORDER BY created_at ASC LIMIT 1"
+    );
+    if (!owner && process.env.ADMIN_EMAIL) {
+      owner = await db.get('SELECT id FROM users WHERE email = ?', [process.env.ADMIN_EMAIL]);
+    }
+    if (!owner) return res.status(500).json({ ok: false, error: 'owner account not found' });
+    let order = await db.get(
+      "SELECT * FROM orders WHERE buyer_id = ? AND order_type = 'tac_android_pro' AND payment_method = 'comp' AND status = 'paid' ORDER BY created_at DESC LIMIT 1",
+      [owner.id]
+    );
+    if (!order) {
+      const orderId = await db.insert('orders', {
+        buyer_id: owner.id, order_type: 'tac_android_pro',
+        amount_cents: 0, fee_cents: 0, status: 'paid', payment_method: 'comp',
+        created_at: db.now(), paid_at: db.now(),
+      });
+      order = await db.get('SELECT * FROM orders WHERE id = ?', [orderId]);
+    }
+    const { issueDownloadToken } = require('../lib/fulfillment');
+    const dl = await issueDownloadToken(order.id);
+    return res.json({
+      ok: true,
+      url: `${config.baseUrl}/orders/download/${dl.token}`,
+      expires_at: dl.expires_at,
+      size: fs.statSync(apkAbs).size,
+    });
+  } catch (e) {
+    console.error('[muse/pro-apk-download-link] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'link failed' });
+  }
+});
+
 // POST /api/muse/publish-lil-bundle
 // Publishes a Little Inkers weekly coloring-page bundle to production over
 // HTTPS — lets the owner's automation publish the weekly bundle without shell

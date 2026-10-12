@@ -909,6 +909,50 @@ async function main() {
       'upload-ipa stores valid ipa with valid Bearer <redacted>');
   }
 
+  // Muse service pipe: POST /api/muse/pro-apk-download-link mints a 24h
+  // bearer download link for the TAC Android Pro sideload APK (owner direct
+  // install). Upload goes through /api/muse/upload-sideload (app key
+  // tac-android-pro); the minted link serves via /orders/download/:token.
+  {
+    const { Blob } = require('buffer');
+    const linkPost = async (token) => fetch(`http://localhost:${PORT}/api/muse/pro-apk-download-link`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        ...(token ? { authorization: `Bearer ${token}` } : {}),
+      },
+      body: '{}',
+    });
+    let lr = await linkPost(undefined);
+    ok(lr.status === 401, 'pro-apk-download-link rejects missing Bearer <redacted>');
+    lr = await linkPost('wrong-token');
+    ok(lr.status === 401, 'pro-apk-download-link rejects wrong Bearer <redacted>');
+    lr = await linkPost(process.env.MUSE_SERVICE_TOKEN);
+    ok(lr.status === 404, 'pro-apk-download-link 404s before the Pro APK is uploaded');
+    // Upload a fake Pro APK through the sideload pipe.
+    const fakeApk = Buffer.concat([Buffer.from([0x50, 0x4b, 0x03, 0x04]), Buffer.from('fake-pro-apk-payload')]);
+    const fd = new FormData();
+    fd.append('app', 'tac-android-pro');
+    fd.append('file', new Blob([fakeApk], { type: 'application/octet-stream' }), 'tac-pro.apk');
+    const sr = await fetch(`http://localhost:${PORT}/api/muse/upload-sideload`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${process.env.MUSE_SERVICE_TOKEN}` },
+      body: fd,
+    });
+    const sj = await sr.json();
+    ok(sr.status === 200 && sj.ok && sj.path === 'uploads/sideload/tac-android-pro.apk' && sj.size === fakeApk.length,
+      'upload-sideload stores the Pro APK under app key tac-android-pro');
+    lr = await linkPost(process.env.MUSE_SERVICE_TOKEN);
+    const lj = await lr.json();
+    ok(lr.status === 200 && lj.ok && typeof lj.url === 'string' && lj.url.includes('/orders/download/') && lj.size === fakeApk.length,
+      'pro-apk-download-link mints a download URL once the APK is uploaded');
+    const tokenPart = lj.url.split('/orders/download/')[1];
+    const dr = await fetch(`http://localhost:${PORT}/orders/download/${tokenPart}`);
+    const dbuf = Buffer.from(await dr.arrayBuffer());
+    ok(dr.status === 200 && dbuf.equals(fakeApk),
+      'minted Pro APK link serves the uploaded bytes via /orders/download/:token');
+  }
+
   // Production custom-draft fulfillment: POST /api/muse/custom-orders/:id/drafts
   // uploads 3-5 generated draft images, records them, flips the order to
   // drafts_ready — the production half of the 48h draft worker loop.
