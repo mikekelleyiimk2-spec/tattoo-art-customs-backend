@@ -694,13 +694,35 @@ router.get('/top-loved', async (req, res) => {
     else if ((likeVel.get(d.id) || 0) >= 3) badge = 'trending';
     else if ((saleVel.get(d.id) || 0) >= 2) badge = 'selling_fast';
     d.badge = badge;
+    d.rank = rank;
   });
+  // Server-side pagination (perf fix 2026-10-12, same as /gallery in
+  // 1464ced): the leaderboard used to render ALL ~2,600 cards into one
+  // ~2.2 MB HTML page. Now 96 cards per page with Previous/Next links.
+  // Badges and ranks above are computed over the FULL ranking first, so
+  // page 2+ keeps its true global rank numbers (#97, #98, …).
+  const TOP_LOVED_PAGE_SIZE = 96;
+  const totalDesigns = designs.length;
+  const totalPages = Math.max(1, Math.ceil(totalDesigns / TOP_LOVED_PAGE_SIZE));
+  let page = parseInt(req.query.page, 10);
+  if (!Number.isFinite(page) || page < 1) page = 1;
+  if (page > totalPages) page = totalPages;
+  const pageDesigns = designs.slice((page - 1) * TOP_LOVED_PAGE_SIZE, page * TOP_LOVED_PAGE_SIZE);
+  const topLovedPageUrl = (pageNum) => {
+    const p = new URLSearchParams();
+    for (const [k, v] of Object.entries(req.query)) {
+      if (k !== 'page' && v != null && v !== '') p.set(k, String(v));
+    }
+    if (pageNum > 1) p.set('page', String(pageNum));
+    const s = p.toString();
+    return '/top-loved' + (s ? `?${s}` : '');
+  };
   const { fmtMoney } = require('../i18n');
   const locale = res.locals.locale || 'en';
   const priceStr = fmtMoney(locale, withFeeCents(premadePriceCents(new Date(), member)));
   res.render('site/top-loved', {
     title: 'Top Loved — Most-Hearted Tattoo Designs | Tattoo Art Customs',
-    designs: designs.map((d) => ({
+    designs: pageDesigns.map((d) => ({
       id: d.id,
       title: d.title,
       thumb: d.thumb,
@@ -708,7 +730,13 @@ router.get('/top-loved', async (req, res) => {
       price: priceStr,
       like_count: d.like_count,
       badge: d.badge,
+      rank: d.rank,
     })),
+    pagination: {
+      page, totalPages, total: totalDesigns,
+      prevUrl: page > 1 ? topLovedPageUrl(page - 1) : null,
+      nextUrl: page < totalPages ? topLovedPageUrl(page + 1) : null,
+    },
     metaDescription: 'The Tattoo Art Customs community leaderboard — the most-hearted original tattoo designs, ranked by love.',
     canonical: `${config.baseUrl.replace(/\/$/, '')}/top-loved`,
   });
