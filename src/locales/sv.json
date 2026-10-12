@@ -214,6 +214,10 @@
     "advertise": "Annonsera",
     "affiliate_note": "Vissa länkar på den här webbplatsen är affiliatelänkar — vi kan tjäna en provision på kvalificerade köp, utan extra kostnad för dig.",
     "aftercare": "Aftercare",
+    "aftercare_guide": "Skötselguide",
+    "choosing_guide": "Välja rätt motiv",
+    "custom_guide": "Så går en specialdesign till",
+    "shops_guide": "För tatueringsstudior",
     "contact": "Kontakt",
     "nav": "Sidfotsnavigering",
     "privacy": "Integritet",
@@ -420,6 +424,11 @@
       "text": "Sälj dina designer till samlare världen över, behåll upp till 80 % av varje försäljning och bli upptäckt av kunder som letar efter sitt nästa verk.",
       "designer_btn": "Gå med som designer — {price}/mån",
       "shop_btn": "Lista din studio — {price}/år"
+    },
+    "guides": {
+      "title": "Guider & resurser om tatueringar",
+      "text": "Första tatueringen – eller planerar du nästa? Våra gratis guider bygger på verklig studioerfarenhet: hur du väljer ett motiv som fortfarande ser bra ut om tjugo år, vad som faktiskt händer när du beställer en specialdesign, hur du läker nytt bläck utan att förstöra det, och hur verifierade studior driver sin verksamhet på Tattoo Art Customs.",
+      "text2": "Varje motiv i vårt galleri är ett original, licensierat för en enda tatuering – och varje guide nedan är gratis, oavsett om du handlar hos oss eller inte."
     },
     "li_sub": {
       "title": "🖍️ Little Inkers — Free Coloring Fun for Kids",

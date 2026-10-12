@@ -214,6 +214,10 @@
     "advertise": "Advertise",
     "affiliate_note": "Some links on this site are affiliate links — we may earn a commission on qualifying purchases, at no extra cost to you.",
     "aftercare": "Aftercare",
+    "aftercare_guide": "Aftercare Guide",
+    "choosing_guide": "Choosing a Design",
+    "custom_guide": "Custom Design Process",
+    "shops_guide": "For Tattoo Shops",
     "contact": "Contact",
     "nav": "Footer navigation",
     "privacy": "Privacy",
@@ -420,6 +424,11 @@
       "text": "Sell your designs to collectors worldwide, keep up to 80% of every sale, and get discovered by clients looking for their next piece.",
       "designer_btn": "Join as a designer — {price}/mo",
       "shop_btn": "List your shop — {price}/yr"
+    },
+    "guides": {
+      "title": "Tattoo guides & resources",
+      "text": "New to tattoos — or planning your next piece? Our free guides are written from real shop experience: how to choose a design that still looks good in twenty years, what actually happens when you commission a custom piece, how to heal new ink without wrecking it, and how verified shops run their business on Tattoo Art Customs.",
+      "text2": "Every design in our gallery is an original, licensed for a single tattoo — and every guide below is free, whether you buy from us or not."
     },
     "li_sub": {
       "title": "🖍️ Little Inkers — Free Coloring Fun for Kids",

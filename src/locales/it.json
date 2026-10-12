@@ -214,6 +214,10 @@
     "advertise": "Pubblicità",
     "affiliate_note": "Alcuni link su questo sito sono link di affiliazione: potremmo guadagnare una commissione sugli acquisti idonei, senza costi aggiuntivi per te.",
     "aftercare": "Aftercare",
+    "aftercare_guide": "Guida alla cura",
+    "choosing_guide": "Scegliere un design",
+    "custom_guide": "Design su misura: come funziona",
+    "shops_guide": "Per gli studi di tatuaggi",
     "contact": "Contatti",
     "nav": "Navigazione footer",
     "privacy": "Privacy",
@@ -420,6 +424,11 @@
       "text": "Vendi i tuoi design a collezionisti in tutto il mondo, trattieni fino all'80% di ogni vendita e fatti scoprire da clienti in cerca del loro prossimo pezzo.",
       "designer_btn": "Unisciti come designer — {price}/mese",
       "shop_btn": "Registra il tuo studio — {price}/anno"
+    },
+    "guides": {
+      "title": "Guide e risorse sui tatuaggi",
+      "text": "Primo tatuaggio — o stai pianificando il prossimo? Le nostre guide gratuite nascono dall'esperienza vera in studio: come scegliere un design che resta bello anche tra vent'anni, cosa succede davvero quando commissioni un pezzo su misura, come far guarire l'inchiostro nuovo senza rovinarlo e come gli studi verificati lavorano su Tattoo Art Customs.",
+      "text2": "Ogni design della galleria è un originale con licenza per un singolo tatuaggio — e ogni guida qui sotto è gratuita, che tu compri da noi o no."
     },
     "li_sub": {
       "title": "🖍️ Little Inkers — Free Coloring Fun for Kids",

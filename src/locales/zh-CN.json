@@ -214,6 +214,10 @@
     "advertise": "广告",
     "affiliate_note": "本网站上的部分链接为联盟链接——我们可能便从符合条件的购买中获得佣金，您无需支付额外费用。",
     "aftercare": "护理",
+    "aftercare_guide": "纹身护理指南",
+    "choosing_guide": "如何挑选图案",
+    "custom_guide": "定制设计的流程",
+    "shops_guide": "纹身店指南",
     "contact": "联系",
     "nav": "页脚导航",
     "privacy": "隐私",
@@ -420,6 +424,11 @@
       "text": "向全球收藏家出售您的设计，每笔销售最高保留80%，让寻找下一个作品的客户发现您。",
       "designer_btn": "成为设计师加入——{price}/月",
       "shop_btn": "店铺入驻——{price}/年"
+    },
+    "guides": {
+      "title": "纹身指南与资源",
+      "text": "第一次纹身——还是在计划下一件作品？我们的免费指南源于真实的纹身店经验：如何选择二十年后依然好看的图案，定制一件作品时实际会经历什么，如何让新纹身顺利愈合而不毁掉它，以及认证纹身店如何在 Tattoo Art Customs 上经营业务。",
+      "text2": "我们图库中的每个图案都是原创，仅授权一次纹身使用——以下每份指南都完全免费，无论您是否在我们这里消费。"
     },
     "li_sub": {
       "title": "🖍️ Little Inkers — Free Coloring Fun for Kids",

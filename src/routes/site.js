@@ -97,6 +97,11 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/holiday-raffle`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/halloween-flash`, changefreq: 'daily', priority: '0.9' },
     { loc: `${base}/show-designs`, changefreq: 'daily', priority: '0.8' },
+    { loc: `${base}/guides`, changefreq: 'weekly', priority: '0.7' },
+    { loc: `${base}/guides/aftercare`, changefreq: 'monthly', priority: '0.7' },
+    { loc: `${base}/guides/choosing-a-design`, changefreq: 'monthly', priority: '0.7' },
+    { loc: `${base}/guides/custom-design-process`, changefreq: 'monthly', priority: '0.7' },
+    { loc: `${base}/guides/for-tattoo-shops`, changefreq: 'monthly', priority: '0.7' },
   ];
   try {
     const designs = await db.all(
@@ -888,6 +893,39 @@ router.get('/aftercare', (req, res) => res.render('site/aftercare', {
   title: 'Tattoo Aftercare Guide — Tattoo Art Customs',
   metaDescription: 'How to heal your new tattoo, plus the aftercare products we recommend.',
   affTag: 'tattooartcust-20',
+}));
+
+// Guides hub + long-form guide pages (added 2026-10-12 for AdSense "low value
+// content" fix: substantial unique editorial content, hardcoded English like
+// /terms and /privacy; nav labels live in the footer.* catalog keys).
+router.get('/guides', (req, res) => res.render('site/guides', {
+  title: 'Tattoo Guides & Resources — Tattoo Art Customs',
+  metaDescription: 'Free tattoo guides: complete aftercare instructions, how to choose a design that ages well, how custom tattoo designs work, and resources for tattoo shops.',
+  canonical: `${config.baseUrl.replace(/\/$/, '')}/guides`,
+}));
+
+router.get('/guides/aftercare', (req, res) => res.render('site/guide-aftercare', {
+  title: 'The Complete Tattoo Aftercare Guide — Tattoo Art Customs',
+  metaDescription: 'Complete tattoo aftercare, day by day: the first wash, the peel and itch phase, moisturizing, sun, swimming and exercise rules, infection warning signs, and long-term care.',
+  canonical: `${config.baseUrl.replace(/\/$/, '')}/guides/aftercare`,
+}));
+
+router.get('/guides/choosing-a-design', (req, res) => res.render('site/guide-choosing-design', {
+  title: 'How to Choose a Tattoo Design That Ages Well — Tattoo Art Customs',
+  metaDescription: 'How to choose a tattoo design that still looks good in twenty years: placement, size and detail, how each tattoo style ages, judging linework, color and skin tone, and design licenses.',
+  canonical: `${config.baseUrl.replace(/\/$/, '')}/guides/choosing-a-design`,
+}));
+
+router.get('/guides/custom-design-process', (req, res) => res.render('site/guide-custom-process', {
+  title: 'How Custom Tattoo Designs Work, Step by Step — Tattoo Art Customs',
+  metaDescription: 'How custom tattoo designs work: writing a brief, the 50% deposit, 48-hour drawing, the files and single-use license you receive, plus by-request and doodle-to-tattoo.',
+  canonical: `${config.baseUrl.replace(/\/$/, '')}/guides/custom-design-process`,
+}));
+
+router.get('/guides/for-tattoo-shops', (req, res) => res.render('site/guide-for-shops', {
+  title: 'For Tattoo Shops: Run Your Business on Tattoo Art Customs',
+  metaDescription: 'What a Tattoo Art Customs shop membership includes: verified storefront, bookings and client profiles, tap-to-pay with no card reader, 20% referral earnings, design sales, and back-office tools.',
+  canonical: `${config.baseUrl.replace(/\/$/, '')}/guides/for-tattoo-shops`,
 }));
 
 // Tester bug reports: anyone (signed in or not) can file one. Each report is

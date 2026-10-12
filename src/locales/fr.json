@@ -214,6 +214,10 @@
     "advertise": "Publicité",
     "affiliate_note": "Certains liens de ce site sont des liens d’affiliation — nous pouvons percevoir une commission sur les achats éligibles, sans frais supplémentaires pour vous.",
     "aftercare": "Aftercare",
+    "aftercare_guide": "Guide de soins",
+    "choosing_guide": "Choisir un motif",
+    "custom_guide": "Le design personnalisé, étape par étape",
+    "shops_guide": "Pour les salons de tatouage",
     "contact": "Contact",
     "nav": "Navigation de pied de page",
     "privacy": "Confidentialité",
@@ -420,6 +424,11 @@
       "text": "Vendez vos designs à des collectionneurs du monde entier, gardez jusqu'à 80 % de chaque vente et faites-vous découvrir par des clients en quête de leur prochaine pièce.",
       "designer_btn": "Rejoindre comme designer — {price}/mois",
       "shop_btn": "Référencer votre shop — {price}/an"
+    },
+    "guides": {
+      "title": "Guides & ressources tatouage",
+      "text": "Premier tatouage — ou le prochain en préparation ? Nos guides gratuits viennent de l'expérience réelle en salon : comment choisir un motif qui reste beau dans vingt ans, ce qui se passe vraiment quand vous commandez une pièce sur mesure, comment cicatriser une encre fraîche sans l'abîmer, et comment les salons vérifiés travaillent sur Tattoo Art Customs.",
+      "text2": "Chaque motif de notre galerie est un original, licencié pour un seul tatouage — et chaque guide ci-dessous est gratuit, que vous achetiez chez nous ou non."
     },
     "li_sub": {
       "title": "🖍️ Little Inkers — Free Coloring Fun for Kids",
