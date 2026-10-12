@@ -169,27 +169,10 @@ const CATALOG = [
     url: 'https://recoveryaftercare.com/collections/tattoo-products/products/aftercare-soap-4-oz',
     ctaKey: 'merch.aff_cta',
   },
-  // --- Leda Art Supply (Lasso Affiliate, live 2026-10-09) ---
-  // Lasso "Your affiliate link" (10.5% sketchbook set, 15.8% Large Sketchbook,
-  // 14-day cookie). Updated 2026-10-09 ~7:18 PM CDT per owner order.
-  {
-    id: 'leda-sketchbook-large',
-    kind: 'affiliate',
-    status: 'live',
-    nameKey: 'merch.aff_ledalarge_name',
-    blurbKey: 'merch.aff_ledalarge_blurb',
-    url: 'https://lasso.to/hARs5ZDmxA/',
-    ctaKey: 'merch.aff_cta',
-  },
-  {
-    id: 'leda-sketchbook-medium',
-    kind: 'affiliate',
-    status: 'live',
-    nameKey: 'merch.aff_ledamedium_name',
-    blurbKey: 'merch.aff_ledamedium_blurb',
-    url: 'https://lasso.to/hARs5ZDmxA/',
-    ctaKey: 'merch.aff_cta',
-  },
+  // --- Leda Art Supply REMOVED 2026-10-12 per owner directive ---
+  // The Lasso link https://lasso.to/hARs5ZDmxA/ resolved to our own site
+  // instead of Leda (misleading). Cards pulled until a working Leda link
+  // is generated in the Lasso Marketplace dashboard.
   // --- DrTattooSkin (Social Snowball, live 2026-10-09) ---
   // 20% commission on every sale. Tracking link verified live.
   {
