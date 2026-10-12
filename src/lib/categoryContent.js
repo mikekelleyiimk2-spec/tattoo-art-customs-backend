@@ -91,6 +91,14 @@ const BLURBS = {
     'Castles, enchanted forests, fairy folk and storybook animals, drawn as gentle illustrative tattoos. Storybook designs suit soft color and fine lines, and this collection keeps both — small magical pieces alongside full scene work for arms and backs.',
   'Zodiac / Astrology':
     'All twelve signs as symbols, animals and figures, plus star charts and birth-sign compositions. Zodiac pieces are naturally personal — most people add their date or initials — so these layouts keep clean space for that custom touch, in styles from fine-line minimal to full traditional.',
+  'Cartoon / Pop Culture':
+    'Parody takes on cartoon icons, video-game heroes, anime faces and pop-culture mashups — drawn as original artwork, labelled honestly as parody, and built to be tattooed rather than traced off a screen. Bold outlines and flat, bright color make these pieces read from across the room and hold up on forearms, calves and ankles. Want a mashup that does not exist yet — your favorite character in the wrong movie, the wrong century, the wrong species? That is exactly what a custom variation is for.',
+  'Vehicles':
+    'Classic cars, lowriders, motorcycles, hot rods, trucks and ships — vehicle tattoos are portraits of machines, and this collection draws them that way: correct lines, honest chrome, and enough detail for a black-and-grey realism piece or a bold traditional one. Wheels, flames and pinstripe-style accents are already worked into many of the designs. Bring your artist one as drawn, or order a custom variation with your own make, model and year.',
+  'Western':
+    'Cowboys, outlaws, six-shooters, longhorns, desert scenes, wanted posters and frontier lettering. Western designs run on bold linework and dusty color, and they sit naturally on upper arms, chests and backs where there is room for a scene. You will find traditional Americana pieces alongside black-and-grey realism and a few playful cartoon takes. Any design here can be ordered as a custom variation with a name, a date or a different scene worked in.',
+  'Steampunk':
+    'Gears, goggles, airships, clockwork hearts, brass and Victorian machinery reimagined as tattoo art. Steampunk lives on mechanical detail, so these designs are drawn with linework dense enough to reward a close look but clean enough to transfer as a stencil. They build beautifully into sleeves and chest pieces, and they pair well with the Time / Clocks and Objects & Mechanical collections if you are planning a larger composition.',
   'Time / Clocks':
     'Pocket watches, hourglasses, grandfather clocks and clock faces set with roses, skulls and banners. Clock tattoos usually mark a time that matters — a birth, a loss, a beginning — and these designs leave the hands and face ready to be set to your moment as a custom detail.',
 };
