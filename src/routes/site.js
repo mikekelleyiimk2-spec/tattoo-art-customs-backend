@@ -174,6 +174,10 @@ router.get('/', async (req, res) => {
     playStoreUrl: config.playStoreUrl,
     playStoreProUrl: config.playStoreProUrl,
     appStoreUrl: config.appStoreUrl,
+    // "Complete the kit" affiliate cross-sell (partials/affiliate-kit) —
+    // same partner set as the design pages; catalog is the single source.
+    kitPartners: ['baselabs-aftercare', 'drtattoo-aftercare-system']
+      .map((id) => require('../lib/merchCatalog').getProduct(id)).filter(Boolean),
   });
 });
 
