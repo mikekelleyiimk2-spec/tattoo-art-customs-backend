@@ -412,6 +412,148 @@ router.post('/upload-sideload', (req, res) => {
   });
 });
 
+// POST /api/muse/publish-lil-bundle
+// Publishes a Little Inkers weekly coloring-page bundle to production over
+// HTTPS — lets the owner's automation publish the weekly bundle without shell
+// access (same rationale as /upload-sideload). Multipart body:
+//   id          text, bundle id, format YYYY-Www (e.g. 2026-W42)
+//   title       text, e.g. "Spooky Friends"
+//   theme       text, e.g. "Halloween"
+//   publishedAt text, epoch millis (13 digits)
+//   designs     text, JSON array of {id, title, file}
+//   pages       files (field "pages", up to 50): the page images, JPG/PNG/WebP,
+//               magic-byte sniffed, each <= 2MB
+// Server-side: uploads each page to the R2 public bucket under
+// lil-bundles/<id>/, writes + uploads bundle.json, inserts the lil_bundles
+// manifest row (skipped when the id already exists), then GETs every public
+// URL to verify 200 + non-empty body. Returns the manifest + public URLs.
+// Same service-token auth as /notify; 404s when MUSE_SERVICE_TOKEN unset.
+router.post('/publish-lil-bundle', (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  lilBundleUpload(req, res, async (err) => {
+    const staged = (req.files || []).map((f) => f.path);
+    const cleanup = () => { for (const p of staged) { try { fs.unlinkSync(p); } catch { /* best effort */ } } };
+    if (err) { cleanup(); return res.status(400).json({ ok: false, error: err.message }); }
+    try {
+      const { id, title, theme, publishedAt, designs } = req.body || {};
+      if (!/^\d{4}-W\d{2}$/.test(id || '')) { cleanup(); return res.status(400).json({ ok: false, error: 'bad bundle id (want YYYY-Www)' }); }
+      if (!title || !theme) { cleanup(); return res.status(400).json({ ok: false, error: 'title and theme required' }); }
+      if (!/^\d{13}$/.test(publishedAt || '')) { cleanup(); return res.status(400).json({ ok: false, error: 'publishedAt must be 13-digit epoch millis' }); }
+      let list;
+      try { list = JSON.parse(designs || ''); } catch { list = null; }
+      if (!Array.isArray(list) || !list.length || list.length > 50) { cleanup(); return res.status(400).json({ ok: false, error: 'designs must be a JSON array of 1-50' }); }
+      const seenIds = new Set(), seenFiles = new Set();
+      for (const d of list) {
+        if (!d || typeof d.id !== 'string' || typeof d.title !== 'string' || typeof d.file !== 'string' ||
+            !/^[a-z0-9][a-z0-9_-]*$/.test(d.id) || !d.title.trim() ||
+            !/^[a-z0-9][a-z0-9_-]*\.(jpg|jpeg|png|webp)$/.test(d.file) ||
+            seenIds.has(d.id) || seenFiles.has(d.file)) {
+          cleanup(); return res.status(400).json({ ok: false, error: 'bad designs entry (ids/files must be unique, file names safe)' });
+        }
+        seenIds.add(d.id); seenFiles.add(d.file);
+      }
+      // Every declared file must have exactly one uploaded page, and vice versa.
+      const byName = new Map();
+      for (const f of (req.files || [])) {
+        const name = (f.originalname || '').toLowerCase();
+        if (byName.has(name)) { cleanup(); return res.status(400).json({ ok: false, error: `duplicate upload: ${name}` }); }
+        byName.set(name, f);
+      }
+      for (const d of list) {
+        if (!byName.has(d.file)) { cleanup(); return res.status(400).json({ ok: false, error: `missing upload for ${d.file}` }); }
+      }
+      if (byName.size !== list.length) { cleanup(); return res.status(400).json({ ok: false, error: 'uploaded files must match designs exactly' }); }
+      // Magic-byte sniff every staged file (mimetype/extension can lie).
+      const contentTypes = new Map();
+      for (const d of list) {
+        const buf = fs.readFileSync(byName.get(d.file).path);
+        const kind = sniffImageType(buf);
+        if (!kind) { cleanup(); return res.status(400).json({ ok: false, error: `${d.file} is not a real image` }); }
+        contentTypes.set(d.file, kind === 'png' ? 'image/png' : kind === 'webp' ? 'image/webp' : 'image/jpeg');
+      }
+      for (const v of ['R2_ACCOUNT_ID', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY', 'R2_PUBLIC_BUCKET', 'R2_PUBLIC_URL']) {
+        if (!process.env[v]) { cleanup(); return res.status(500).json({ ok: false, error: 'r2 not configured' }); }
+      }
+      const bucket = process.env.R2_PUBLIC_BUCKET;
+      const base = process.env.R2_PUBLIC_URL.replace(/\/$/, '');
+      const prefix = `lil-bundles/${id}/`;
+      const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+      const s3 = new S3Client({
+        region: 'auto',
+        endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+        credentials: {
+          accessKeyId: process.env.R2_ACCESS_KEY_ID,
+          secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+        },
+      });
+      const urlFor = (file) => `${base}/${prefix}${file}`;
+      // Upload page images (skip objects already present — re-runs are safe).
+      const { HeadObjectCommand } = require('@aws-sdk/client-s3');
+      for (const d of list) {
+        const key = prefix + d.file;
+        let exists = false;
+        try { await s3.send(new HeadObjectCommand({ Bucket: bucket, Key: key })); exists = true; }
+        catch (e) { if (!(e.name === 'NotFound' || e.$metadata?.httpStatusCode === 404)) throw e; }
+        if (!exists) {
+          await s3.send(new PutObjectCommand({
+            Bucket: bucket, Key: key,
+            Body: fs.readFileSync(byName.get(d.file).path),
+            ContentType: contentTypes.get(d.file),
+          }));
+        }
+      }
+      // Bundle JSON (always re-uploaded; PUT is idempotent).
+      const bundle = {
+        id, title, theme,
+        publishedAt: Number(publishedAt),
+        designs: list.map((d) => ({ id: d.id, title: d.title, file: d.file, imageUrl: urlFor(d.file) })),
+      };
+      await s3.send(new PutObjectCommand({
+        Bucket: bucket, Key: prefix + 'bundle.json',
+        Body: Buffer.from(JSON.stringify(bundle, null, 2)),
+        ContentType: 'application/json',
+      }));
+      // Manifest row (skip when the id already exists).
+      const fileUrl = urlFor('bundle.json');
+      const existing = await db.get('SELECT id FROM lil_bundles WHERE id = ?', [id]);
+      if (!existing) {
+        await db.insert('lil_bundles', {
+          id, title, theme,
+          design_count: list.length,
+          published_at: Number(publishedAt),
+          file_url: fileUrl,
+          active: 1,
+        });
+      }
+      // Verify every public URL.
+      const urls = [...list.map((d) => urlFor(d.file)), fileUrl];
+      const failed = [];
+      for (const u of urls) {
+        const r = await lilFetchOk(u);
+        if (!(r.status === 200 && r.bytes > 0)) failed.push(`${r.status}/${r.bytes}b ${u}`);
+      }
+      cleanup();
+      if (failed.length) {
+        console.error('[muse/publish-lil-bundle] URL verification failed:', failed.join(' | '));
+        return res.status(500).json({ ok: false, error: 'url verification failed', failed });
+      }
+      return res.json({
+        ok: true, alreadyPublished: !!existing,
+        id, title, theme,
+        designCount: list.length,
+        publishedAt: Number(publishedAt),
+        fileUrl,
+        designs: bundle.designs,
+      });
+    } catch (e) {
+      cleanup();
+      console.error('[muse/publish-lil-bundle] failed:', e.message);
+      return res.status(500).json({ ok: false, error: 'publish failed' });
+    }
+  });
+});
+
 // GET /api/muse/custom-orders-needing-drafts
 // Returns paid custom orders with custom_status='needs_drafts' (oldest due first, max 50).
 // Powers the owner's custom-draft worker so it can see PRODUCTION state over HTTPS
@@ -507,6 +649,40 @@ const sideloadUpload = multer({
     else cb(new Error('Only .ipa or .apk files are allowed.'));
   },
 }).single('file');
+
+// Little Inkers bundle upload middleware (used by POST /publish-lil-bundle
+// defined above; kept here next to the other upload middlewares so
+// multer/fs/path/os/crypto are initialized).
+const lilStageDir = path.join(os.tmpdir(), 'tac-lil-bundle-stage');
+try { fs.mkdirSync(lilStageDir, { recursive: true }); } catch { /* best effort */ }
+
+const lilBundleUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, lilStageDir),
+    filename: (req, file, cb) => cb(null, `stg-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.img`),
+  }),
+  limits: { fileSize: 2 * 1024 * 1024, files: 50 },
+  fileFilter: (req, file, cb) => {
+    if (/^image\/(jpeg|png|webp)$/.test(file.mimetype)) cb(null, true);
+    else cb(new Error('Only JPG, PNG, or WebP page images are allowed.'));
+  },
+}).array('pages', 50);
+
+function lilFetchOk(url, redirects = 3) {
+  return new Promise((resolve) => {
+    const lib = url.startsWith('https:') ? require('https') : require('http');
+    lib.get(url, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location && redirects > 0) {
+        res.resume();
+        return resolve(lilFetchOk(res.headers.location, redirects - 1));
+      }
+      let bytes = 0;
+      res.on('data', (c) => { bytes += c.length; });
+      res.on('end', () => resolve({ status: res.statusCode, bytes }));
+      res.on('error', () => resolve({ status: 0, bytes: 0 }));
+    }).on('error', () => resolve({ status: 0, bytes: 0 }));
+  });
+}
 
 
 // Magic-byte sniff: mimetype/extension can lie; read the real file header.

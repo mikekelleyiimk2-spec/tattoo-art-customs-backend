@@ -124,6 +124,12 @@
   <p><a class="btn" href="<%= (typeof littleInkersYoutubeUrl !== 'undefined' && littleInkersYoutubeUrl ? littleInkersYoutubeUrl : 'https://www.youtube.com/@littleinkersapp') + '?sub_confirmation=1' %>" target="_blank" rel="noopener"><%= t('landing.li_sub.btn') %></a></p>
 </div>
 
+<div class="lp-cta-band" style="background: linear-gradient(135deg, #E8F7FF, #D3EEFF); border-color: #7cc7f5;">
+  <h2><%= t('landing.tipjar.title') %></h2>
+  <p><%= t('landing.tipjar.text') %></p>
+  <p><a class="btn" href="https://www.venmo.com/u/mikekelleyiimk2" target="_blank" rel="noopener"><%= t('landing.tipjar.btn') %></a></p>
+</div>
+
 <section class="card" id="app">
   <% if (playStoreUrl || playStoreProUrl || appStoreUrl) { %>
   <h2><%= t('home.app_title_live') %></h2>
