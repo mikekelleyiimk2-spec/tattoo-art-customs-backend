@@ -208,7 +208,10 @@
     "license_line": "Buying gives you a single-use tattoo license — see Terms §8 for details.",
     "vg_chars_title": "Matching characters available on request",
     "vg_chars_note": "Drawn to fit this background — request one through a custom order.",
-    "vg_chars_btn": "Request {name}"
+    "vg_chars_btn": "Request {name}",
+    "kit_h": "キットを完成させよう",
+    "kit_sub": "新しいタトゥーは正しいアフターケアで最もよく治ります — おすすめの製品：",
+    "kit_deals": "すべてのセールと割引を見る"
   },
   "footer": {
     "advertise": "広告",
@@ -242,7 +245,9 @@
     "title": "タトゥーデザインギャラリー — オリジナルデザインを購入",
     "style": "スタイル",
     "all_styles": "すべてのスタイル",
-    "mix_match": "50以上のスタイル。数百のカテゴリー。組み合わせ自由 — 好きなスタイルとカテゴリーを選ぼう。"
+    "mix_match": "50以上のスタイル。数百のカテゴリー。組み合わせ自由 — 好きなスタイルとカテゴリーを選ぼう。",
+    "deals_banner_1": "パートナー特典：コード TAC20 で Base Labs アフターケアが20%オフ",
+    "deals_banner_2": "タトゥーのセールと割引をすべて見る"
   },
   "giftcards": {
     "a_customer": "お客様",

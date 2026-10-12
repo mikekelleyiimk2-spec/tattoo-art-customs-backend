@@ -208,7 +208,10 @@
     "license_line": "Buying gives you a single-use tattoo license — see Terms §8 for details.",
     "vg_chars_title": "Matching characters available on request",
     "vg_chars_note": "Drawn to fit this background — request one through a custom order.",
-    "vg_chars_btn": "Request {name}"
+    "vg_chars_btn": "Request {name}",
+    "kit_h": "补齐你的装备",
+    "kit_sub": "新纹身需要正确护理才能更好愈合 — 我们推荐的产品：",
+    "kit_deals": "查看全部优惠与折扣"
   },
   "footer": {
     "advertise": "广告",
@@ -242,7 +245,9 @@
     "title": "纹身设计画廊——购买原创设计",
     "style": "Style",
     "all_styles": "All styles",
-    "mix_match": "50+ styles. Hundreds of categories. Mix and match — pick your style, pick your category."
+    "mix_match": "50+ styles. Hundreds of categories. Mix and match — pick your style, pick your category.",
+    "deals_banner_1": "合作伙伴优惠：使用代码 TAC20 购买 Base Labs 护理产品享 8 折",
+    "deals_banner_2": "查看全部纹身优惠与折扣"
   },
   "giftcards": {
     "a_customer": "客户",

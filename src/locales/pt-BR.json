@@ -208,7 +208,10 @@
     "license_line": "Buying gives you a single-use tattoo license — see Terms §8 for details.",
     "vg_chars_title": "Matching characters available on request",
     "vg_chars_note": "Drawn to fit this background — request one through a custom order.",
-    "vg_chars_btn": "Request {name}"
+    "vg_chars_btn": "Request {name}",
+    "kit_h": "Complete o kit",
+    "kit_sub": "Tinta fresca cicatriza melhor com o cuidado certo — os produtos que recomendamos:",
+    "kit_deals": "Ver todas as ofertas e descontos"
   },
   "footer": {
     "advertise": "Anuncie",
@@ -242,7 +245,9 @@
     "title": "Galeria de designs de tatuagem — compre designs originais",
     "style": "Estilo",
     "all_styles": "Todos os estilos",
-    "mix_match": "Mais de 50 estilos. Centenas de categorias. Combine à vontade: escolha seu estilo, escolha sua categoria."
+    "mix_match": "Mais de 50 estilos. Centenas de categorias. Combine à vontade: escolha seu estilo, escolha sua categoria.",
+    "deals_banner_1": "Oferta de parceiro: 20% de desconto no cuidado Base Labs com o código TAC20",
+    "deals_banner_2": "Ver todas as ofertas e descontos de tatuagem"
   },
   "giftcards": {
     "a_customer": "um cliente",

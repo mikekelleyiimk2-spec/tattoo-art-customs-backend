@@ -208,7 +208,10 @@
     "license_line": "Buying gives you a single-use tattoo license — see Terms §8 for details.",
     "vg_chars_title": "Matching characters available on request",
     "vg_chars_note": "Drawn to fit this background — request one through a custom order.",
-    "vg_chars_btn": "Request {name}"
+    "vg_chars_btn": "Request {name}",
+    "kit_h": "Komplettera kitet",
+    "kit_sub": "Färskt bläck läker bäst med rätt eftervård — produkterna vi rekommenderar:",
+    "kit_deals": "Se alla erbjudanden och rabatter"
   },
   "footer": {
     "advertise": "Annonsera",
@@ -242,7 +245,9 @@
     "title": "Tatueringsdesigngalleri — köp originella designer",
     "style": "Stil",
     "all_styles": "Alla stilar",
-    "mix_match": "Över 50 stilar. Hundratals kategorier. Mixa och matcha — välj din stil, välj din kategori."
+    "mix_match": "Över 50 stilar. Hundratals kategorier. Mixa och matcha — välj din stil, välj din kategori.",
+    "deals_banner_1": "Partnererbjudande: 20 % rabatt på Base Labs eftervård med koden TAC20",
+    "deals_banner_2": "Se alla tatueringserbjudanden och rabatter"
   },
   "giftcards": {
     "a_customer": "en kund",

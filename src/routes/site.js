@@ -816,6 +816,10 @@ router.get('/design/:id', async (req, res) => {
     // (owner directive 2026-10-10): vg-<game>-bg designs resolve to the
     // character slugs drawn to fit them.
     vgCharacters: require('../lib/vgBackgroundCharacters').matchingCharacters(design.id),
+    // "Complete the kit" affiliate cross-sell (partials/affiliate-kit):
+    // partner data comes from the merch catalog — never duplicated here.
+    kitPartners: ['baselabs-aftercare', 'drtattoo-aftercare-system']
+      .map((id) => require('../lib/merchCatalog').getProduct(id)).filter(Boolean),
     // Show-featured discount state for the badge + member callout. The badge
     // is never air-gated; the discount is (server-side, in the quote above).
     showDiscountApplied: !!(quote && quote.discount === SHOW_FEATURED_DISCOUNT_CODE),

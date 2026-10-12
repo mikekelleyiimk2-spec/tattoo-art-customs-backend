@@ -208,7 +208,10 @@
     "license_line": "Buying gives you a single-use tattoo license — see Terms §8 for details.",
     "vg_chars_title": "Matching characters available on request",
     "vg_chars_note": "Drawn to fit this background — request one through a custom order.",
-    "vg_chars_btn": "Request {name}"
+    "vg_chars_btn": "Request {name}",
+    "kit_h": "เติมเต็มชุดของคุณ",
+    "kit_sub": "รอยสักใหม่จะหายดีที่สุดด้วยการดูแลที่ถูกต้อง — ผลิตภัณฑ์ที่เราแนะนำ:",
+    "kit_deals": "ดูดีลและส่วนลดทั้งหมด"
   },
   "footer": {
     "advertise": "โฆษณา",
@@ -242,7 +245,9 @@
     "title": "แกลเลอรีดีไซน์รอยสัก — ซื้อดีไซน์ต้นฉบับ",
     "style": "Style",
     "all_styles": "All styles",
-    "mix_match": "50+ styles. Hundreds of categories. Mix and match — pick your style, pick your category."
+    "mix_match": "50+ styles. Hundreds of categories. Mix and match — pick your style, pick your category.",
+    "deals_banner_1": "ดีลพันธมิตร: ลด 20% สำหรับผลิตภัณฑ์ดูแล Base Labs ด้วยรหัส TAC20",
+    "deals_banner_2": "ดูดีลและส่วนลดรอยสักทั้งหมด"
   },
   "giftcards": {
     "a_customer": "ลูกค้า",

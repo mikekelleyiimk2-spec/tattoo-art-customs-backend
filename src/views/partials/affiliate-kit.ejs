@@ -1,0 +1,24 @@
+<%# Affiliate cross-sell ("Complete the kit"): partner cards fed from
+    lib/merchCatalog.js via the kitPartners local — URLs, names, blurbs and
+    CTAs live in the catalog only, never duplicated here. Tattoo surfaces
+    only (TAC layout); never include this partial in Little Inkers views.
+    Expects `kitPartners` (array of catalog affiliate entries) in scope. %>
+<% const _kit = (typeof kitPartners !== 'undefined' && kitPartners) || []; %>
+<% if (_kit.length) { %>
+<section class="affiliate-kit" aria-label="<%= t('design.kit_h') %>">
+  <h2><%= t('design.kit_h') %></h2>
+  <p class="muted"><%= t('design.kit_sub') %></p>
+  <div class="aftercare-products">
+    <% _kit.forEach(function(a) { %>
+    <div class="product-card">
+      <% if (a.image) { %><img src="<%= a.image %>" alt="<%= t(a.nameKey) %>" loading="lazy" style="max-width:100%;height:auto;display:block;"><% } %>
+      <h3><%= t(a.nameKey) %></h3>
+      <p><%= t(a.blurbKey) %></p>
+      <a class="btn" href="<%= a.url %>" target="_blank" rel="noopener nofollow sponsored"><%= t(a.ctaKey) %></a>
+    </div>
+    <% }); %>
+  </div>
+  <p><a href="/discounts"><%= t('design.kit_deals') %></a></p>
+  <p class="fineprint"><%= t('footer.affiliate_note') %></p>
+</section>
+<% } %>

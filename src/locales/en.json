@@ -208,7 +208,10 @@
     "license_line": "Buying gives you a single-use tattoo license — see Terms §8 for details.",
     "vg_chars_title": "Matching characters available on request",
     "vg_chars_note": "Drawn to fit this background — request one through a custom order.",
-    "vg_chars_btn": "Request {name}"
+    "vg_chars_btn": "Request {name}",
+    "kit_h": "Complete the kit",
+    "kit_sub": "Fresh ink heals best with proper aftercare — the products we recommend:",
+    "kit_deals": "See all deals & discounts"
   },
   "footer": {
     "advertise": "Advertise",
@@ -242,7 +245,9 @@
     "title": "Tattoo design gallery — buy original designs",
     "style": "Style",
     "all_styles": "All styles",
-    "mix_match": "50+ styles. Hundreds of categories. Mix and match — pick your style, pick your category."
+    "mix_match": "50+ styles. Hundreds of categories. Mix and match — pick your style, pick your category.",
+    "deals_banner_1": "Partner deal: 20% off Base Labs aftercare with code TAC20",
+    "deals_banner_2": "See all tattoo deals & discounts"
   },
   "giftcards": {
     "a_customer": "a customer",

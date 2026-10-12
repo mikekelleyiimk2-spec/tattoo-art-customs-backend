@@ -208,7 +208,10 @@
     "license_line": "Buying gives you a single-use tattoo license — see Terms §8 for details.",
     "vg_chars_title": "Matching characters available on request",
     "vg_chars_note": "Drawn to fit this background — request one through a custom order.",
-    "vg_chars_btn": "Request {name}"
+    "vg_chars_btn": "Request {name}",
+    "kit_h": "Дополните набор",
+    "kit_sub": "Свежая татуировка заживает лучше при правильном уходе — продукты, которые мы рекомендуем:",
+    "kit_deals": "Все акции и скидки"
   },
   "footer": {
     "advertise": "Реклама",
@@ -242,7 +245,9 @@
     "title": "Галерея тату-дизайнов — купить оригинальные дизайны",
     "style": "Стиль",
     "all_styles": "Все стили",
-    "mix_match": "Более 50 стилей. Сотни категорий. Комбинируйте — выберите свой стиль и свою категорию."
+    "mix_match": "Более 50 стилей. Сотни категорий. Комбинируйте — выберите свой стиль и свою категорию.",
+    "deals_banner_1": "Предложение партнёра: скидка 20% на уход Base Labs по коду TAC20",
+    "deals_banner_2": "Все акции и скидки на тату"
   },
   "giftcards": {
     "a_customer": "клиент",

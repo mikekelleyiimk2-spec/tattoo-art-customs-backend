@@ -1,3 +1,20 @@
+<a class="deals-strip" href="/discounts" id="dealsStrip" aria-label="<%= t('design.kit_deals') %>"><span class="deals-strip-msg"><%= t('gallery.deals_banner_1') %></span><span class="deals-strip-msg" hidden><%= t('gallery.deals_banner_2') %></span></a>
+<script>
+(function () {
+  var msgs = document.querySelectorAll('#dealsStrip .deals-strip-msg');
+  if (msgs.length < 2) return;
+  var i = 0;
+  setInterval(function () {
+    msgs[i].hidden = true;
+    i = (i + 1) % msgs.length;
+    msgs[i].hidden = false;
+  }, 5000);
+})();
+</script>
+<style>
+.deals-strip { display: block; border: 1px solid var(--accent); color: var(--accent); padding: .5em 1em; border-radius: var(--radius); text-align: center; font-weight: bold; margin-bottom: 1rem; text-decoration: none; }
+</style>
+
 <h1><%= t('gallery.title') %></h1>
 <p class="muted"><%= t('gallery.sub') %></p>
 <p class="mix-match"><strong><%= t('gallery.mix_match') %></strong></p>

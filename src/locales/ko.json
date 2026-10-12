@@ -208,7 +208,10 @@
     "license_line": "Buying gives you a single-use tattoo license — see Terms §8 for details.",
     "vg_chars_title": "Matching characters available on request",
     "vg_chars_note": "Drawn to fit this background — request one through a custom order.",
-    "vg_chars_btn": "Request {name}"
+    "vg_chars_btn": "Request {name}",
+    "kit_h": "키트를 완성하세요",
+    "kit_sub": "새 타투는 올바른 애프터케어로 가장 잘 아뭅니다 — 추천 제품:",
+    "kit_deals": "모든 할인과 특가 보기"
   },
   "footer": {
     "advertise": "광고",
@@ -242,7 +245,9 @@
     "title": "타투 디자인 갤러리 — 오리지널 디자인 구매",
     "style": "스타일",
     "all_styles": "모든 스타일",
-    "mix_match": "50개 이상의 스타일. 수백 개의 카테고리. 믹스 앤 매치 — 스타일과 카테고리를 골라보세요."
+    "mix_match": "50개 이상의 스타일. 수백 개의 카테고리. 믹스 앤 매치 — 스타일과 카테고리를 골라보세요.",
+    "deals_banner_1": "파트너 특가: 코드 TAC20으로 Base Labs 애프터케어 20% 할인",
+    "deals_banner_2": "모든 타투 할인과 특가 보기"
   },
   "giftcards": {
     "a_customer": "고객",
