@@ -457,7 +457,7 @@ router.post('/little-inkers/mint-submit', express.json(), async (req, res) => {
 router.get('/little-inkers/bundles', async (req, res) => {
   try {
     const rows = await db.all(
-      "SELECT id, title, theme, design_count, published_at, file_url FROM lil_bundles WHERE active = 1 OR active = 't' ORDER BY published_at DESC LIMIT 52"
+      "SELECT id, title, theme, design_count, published_at, file_url FROM lil_bundles WHERE active = 1 ORDER BY published_at DESC LIMIT 52"
     );
     res.json({
       ok: true,
