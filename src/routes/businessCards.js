@@ -3,12 +3,18 @@
 //
 // A merch item only shops with an active tattoo_shop subscription can
 // order (admins included) — the shop's own name/contact/art on the cards.
-// Pricing is cost x 1.05 per tier (owner rule; costs in config.js,
-// math in lib/businessCards.js). Orders ride the standard plumbing:
-// orders row -> PayPal checkout (/orders/approve/:id capture) ->
-// print_orders row -> lib/printful onOrderPaid submits to Printful
-// (product 724) when PRINTFUL_API_KEY is set, otherwise the order waits
-// in the admin print queue as a clearly-labeled manual-fulfillment job.
+// Pricing — FINAL (owner, 2026-10-14): paid orders at cost x 1.25 per
+// tier (costs in config.js, math in lib/businessCards.js), PLUS one
+// FREE box of the 50-card set for shops on the ANNUAL tattoo_shop
+// plan — once per shop, ever, tracked by business_card_orders
+// .is_free_box (migration 088). Paid orders ride the standard
+// plumbing: orders row -> PayPal checkout (/orders/approve/:id
+// capture) -> print_orders row -> lib/printful onOrderPaid submits to
+// Printful (product 724) when PRINTFUL_API_KEY is set, otherwise the
+// order waits in the admin print queue as a clearly-labeled
+// manual-fulfillment job. A free-box order skips PayPal entirely: its
+// orders row is created already 'paid' at $0 and onOrderPaid is
+// called directly, so it lands in the exact same fulfillment queue.
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -16,6 +22,7 @@ const multer = require('multer');
 const db = require('../db');
 const config = require('../config');
 const paypal = require('../lib/paypal');
+const { onOrderPaid } = require('../lib/printful');
 const pricing = require('../lib/pricing');
 const bc = require('../lib/businessCards');
 const { requireLogin, requireRole, hasActiveSubscription, isAdminRole } = require('../middleware/auth');
@@ -72,9 +79,14 @@ async function shopPrefill(userId) {
 // --- Order form ---
 router.get('/', requireLogin, requireShopSubscriber, formLimiter, async (req, res) => {
   const { profile, designs } = await shopPrefill(req.user.id);
+  // Free-box offer is visible ONLY to annual-plan shops that have not
+  // redeemed it yet (owner ruling) — everyone else never sees it.
+  const freeBox = await bc.freeBoxStatus(req.user.id);
+  const freeTier = bc.getTier(bc.freeTierKey());
   res.render('merch/business-cards', {
     title: 'Business Cards for Your Shop — Tattoo Art Customs',
     tiers: tierOptions(),
+    freeBox: { available: freeBox.available, cards: freeTier ? freeTier.cards : 50 },
     checkoutEnabled: config.businessCards.checkoutEnabled,
     shopName: (profile && profile.business_name) || '',
     shopLocation: (profile && profile.location) || '',
@@ -91,9 +103,23 @@ router.post('/', requireLogin, requireShopSubscriber, formLimiter, artUpload.sin
     if (!config.businessCards.checkoutEnabled) {
       throw new Error('Business card checkout is not open yet.');
     }
-    const tierKey = String(req.body.tier || '');
+    // Free first box claim (annual-plan shops only, smallest set only,
+    // once ever). Eligibility is re-verified HERE, at order time —
+    // the checkbox on the form is never trusted on its own. A claim
+    // forces the free tier regardless of the quantity selected.
+    const wantsFree = req.body.claim_free_box === '1' || req.body.claim_free_box === 'on';
+    let tierKey = String(req.body.tier || '');
+    if (wantsFree) {
+      const status = await bc.freeBoxStatus(req.user.id);
+      if (!status.available) {
+        throw new Error(status.redeemed
+          ? 'Your free annual box has already been claimed — reorders are regular price.'
+          : 'The free first box is a perk of the annual Tattoo Shop plan.');
+      }
+      tierKey = bc.freeTierKey();
+    }
     const tier = bc.getTier(tierKey);
-    const price = bc.priceCentsFor(tierKey);
+    const price = wantsFree ? 0 : bc.priceCentsFor(tierKey);
     if (!tier || price == null) throw new Error('Choose a valid card quantity.');
 
     const fields = {
@@ -154,10 +180,16 @@ router.post('/', requireLogin, requireShopSubscriber, formLimiter, artUpload.sin
       console.error('business card back compose failed:', e.message);
     }
 
-    const fee = pricing.processingFeeCents(price);
+    const fee = wantsFree ? 0 : pricing.processingFeeCents(price);
     const orderId = await db.insert('orders', {
       buyer_id: req.user.id, design_id: designId, order_type: 'print',
-      amount_cents: price, fee_cents: fee, status: 'pending', payment_method: 'paypal',
+      amount_cents: price, fee_cents: fee,
+      // A free-box order is born 'paid' at $0 — no PayPal checkout —
+      // and drops into the same fulfillment queue via onOrderPaid
+      // below, exactly like a captured paid order.
+      status: wantsFree ? 'paid' : 'pending',
+      payment_method: wantsFree ? 'free_annual_perk' : 'paypal',
+      ...(wantsFree ? { amount_paid_cents: 0, paid_at: db.now() } : {}),
       created_at: db.now(),
     });
     const printOrderId = db.newId();
@@ -172,9 +204,22 @@ router.post('/', requireLogin, requireShopSubscriber, formLimiter, artUpload.sin
       ...fields, tier: tierKey, quantity: tier.cards,
       design_source: source, design_id: designId, art_file: artFile, back_file: backFile,
       cost_cents: tier.cost.totalCents, price_cents: price,
+      is_free_box: wantsFree ? 1 : 0,
       fulfillment_note: backFile ? '' : 'Back image failed to compose — front only; check with the shop before printing.',
       created_at: db.now(), updated_at: db.now(),
     });
+
+    if (wantsFree) {
+      // Straight to the fulfillment queue (Printful auto-submit when
+      // configured, admin print queue otherwise) — same entry point a
+      // captured PayPal order uses. Never throws.
+      const fresh = await db.get('SELECT * FROM orders WHERE id = ?', [orderId]);
+      const fulfil = await onOrderPaid(fresh);
+      req.session.flash = fulfil && fulfil.submitted
+        ? 'Your free box of 50 cards is claimed and sent to the printer — it will ship to the address you gave.'
+        : 'Your free box of 50 cards is claimed and in the print queue — we will get it printed and shipped to you.';
+      return res.redirect('/merch/business-cards/mine');
+    }
 
     try {
       const pp = await paypal.createCheckoutOrder({

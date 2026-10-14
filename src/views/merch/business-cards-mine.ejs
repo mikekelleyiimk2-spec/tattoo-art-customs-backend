@@ -17,7 +17,7 @@
     <% rows.forEach(function(r) { %>
     <tr>
       <td><%= new Date(r.created_at).toLocaleDateString() %></td>
-      <td><%= r.quantity %> — <%= r.shop_name %></td>
+      <td><%= r.quantity %> — <%= r.shop_name %><% if (r.is_free_box) { %><br><span class="badge"><%= t('bcards.free_badge') %></span><% } %></td>
       <td><%= fmtMoney(r.price_cents) %></td>
       <td><%= r.pay_status %></td>
       <td><%= r.fulfillment_status %><% if (r.tracking_number) { %><br><a href="<%= r.tracking_url || '#' %>" rel="noopener"><%= r.tracking_number %></a><% } %></td>

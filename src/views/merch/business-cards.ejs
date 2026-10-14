@@ -2,6 +2,13 @@
 <p><%= t('bcards.intro') %></p>
 <p class="muted"><%= t('bcards.price_note') %></p>
 
+<% if (freeBox && freeBox.available) { %>
+<div class="notice">
+  <h2><%= t('bcards.free_title') %></h2>
+  <p><%= t('bcards.free_note') %></p>
+</div>
+<% } %>
+
 <% if (!checkoutEnabled) { %>
 <p><span class="badge"><%= t('bcards.checkout_off') %></span></p>
 <% } %>
@@ -64,6 +71,16 @@
       <option value="<%= d.id %>"><%= d.title %></option>
       <% }); %>
     </select>
+  </div>
+  <% } %>
+
+  <% if (freeBox && freeBox.available) { %>
+  <div class="notice">
+    <label>
+      <input type="checkbox" name="claim_free_box" value="1">
+      <strong><%= t('bcards.free_claim') %></strong>
+    </label>
+    <p class="muted"><%= t('bcards.free_claim_note') %></p>
   </div>
   <% } %>
 

@@ -208,22 +208,31 @@ const config = {
   },
 
   // Business cards for tattoo-shop subscribers (owner order 2026-10-14).
-  // PRICING RULE (owner, 2026-10-14): "Figure out what it cost and add 5%"
-  // — selling price = real fulfillment cost x 1.05 per tier, computed by
-  // priceCentsFor() in src/lib/businessCards.js from the cost inputs below.
+  // PRICING — FINAL (owner, 2026-10-14, supersedes the morning's +5%):
+  // BOTH models combined — paid orders at real fulfillment cost x 1.25
+  // per tier, PLUS one FREE box for annual-plan shops: smallest set only
+  // (50 cards), once per shop, ever. Selling prices are computed by
+  // priceCentsFor() in src/lib/businessCards.js from the cost inputs
+  // below; the free box is the freeTierKey tier below.
   // COST EVIDENCE: Printful POST /orders/estimate-costs, live API quotes on
   // 2026-10-14 for product 724 "Set of Business Cards" (3.5"x2", double-
   // sided) shipped to a US (Louisiana) address. Cost = Printful's total
   // charge to us (product subtotal + shipping + the tax Printful charges
   // us). Shipping/tax vary by destination; these are US-standard figures.
   // Re-quote and update the inputs if Printful pricing changes — the
-  // selling price follows automatically at cost x 1.05.
+  // selling price follows automatically at cost x 1.25.
   // Checkout kill-switch: BUSINESS_CARDS_CHECKOUT=0 disables purchasing
-  // (browse-only). Default ON for shop subscribers (owner pricing ruling
-  // supersedes price approval — the formula IS the approval).
+  // AND free-box claims (browse-only). Default ON for shop subscribers
+  // (owner pricing ruling supersedes price approval — the formula IS
+  // the approval).
   businessCards: {
     checkoutEnabled: process.env.BUSINESS_CARDS_CHECKOUT !== '0',
-    marginRate: 0.05,
+    marginRate: 0.25,
+    // Free first box for annual tattoo_shop subscribers: this tier only
+    // (the 50-card set, Printful variant 18554), one per shop account,
+    // ever. Redemption is tracked on business_card_orders.is_free_box
+    // (migration 088); see freeBoxStatus() in src/lib/businessCards.js.
+    freeTierKey: '50',
     printfulProductId: 724,
     tiers: {
       // variantId 18554 = set of 50, 18555 = set of 100 (Printful catalog)

@@ -1,10 +1,13 @@
 // Business cards for tattoo-shop subscribers (owner order 2026-10-14).
 //
-// Pricing (owner rule 2026-10-14): selling price = real Printful
-// fulfillment cost x 1.05 per quantity tier. The cost inputs live in
+// Pricing — FINAL (owner, 2026-10-14): BOTH models combined — paid
+// orders at real Printful fulfillment cost x 1.25 per quantity tier,
+// PLUS one FREE box for annual-plan shops (smallest set only, 50
+// cards, once per shop ever). The cost inputs live in
 // config.businessCards.tiers (see config.js for the evidence trail —
 // live Printful estimate-costs quotes, 2026-10-14). This module is the
-// single place the math happens, so it stays auditable.
+// single place the pricing + free-box math happens, so it stays
+// auditable.
 //
 // Fulfillment: Printful product 724 "Set of Business Cards" (3.5"x2",
 // double-sided). The shop's chosen art is the card FRONT; the card BACK
@@ -15,6 +18,7 @@
 const fs = require('fs');
 const path = require('path');
 const config = require('../config');
+const db = require('../db');
 
 function tiers() {
   return config.businessCards.tiers;
@@ -35,6 +39,46 @@ function priceCentsFor(key) {
   const tier = getTier(key);
   if (!tier || !tier.cost || !tier.cost.totalCents) return null;
   return Math.round(tier.cost.totalCents * (1 + config.businessCards.marginRate));
+}
+
+// --- Free first box (owner ruling 2026-10-14) ---
+// Shops on the ANNUAL tattoo_shop plan get ONE free box of the
+// smallest set (freeTierKey = 50 cards), once per shop account, ever.
+// "Annual" is read from the plan itself: plans.interval = 'year' on
+// the tattoo_shop plan (the shop plan is sold annual-only; a monthly
+// shop plan, if one is ever added, has interval 'month' and does NOT
+// qualify). The subscription must be active at order time, using the
+// same active semantics as hasActiveSubscription (status 'active' and
+// the current period not ended; lifetime rows have a NULL end and
+// count as active). Redemption is the is_free_box flag on
+// business_card_orders (migration 088) — one row with the flag set
+// means the shop's free box is spent, forever.
+function freeTierKey() {
+  return String(config.businessCards.freeTierKey || '50');
+}
+
+async function annualShopSubscription(userId) {
+  return db.get(
+    `SELECT s.id FROM subscriptions s JOIN plans p ON p.id = s.plan_id
+     WHERE s.user_id = ? AND p.slug = 'tattoo_shop' AND p.interval = 'year'
+       AND s.status = 'active'
+       AND (s.current_period_end IS NULL OR s.current_period_end > ?)`,
+    [userId, Date.now()]).catch(() => null);
+}
+
+async function freeBoxRedeemed(userId) {
+  const row = await db.get(
+    'SELECT id FROM business_card_orders WHERE user_id = ? AND is_free_box = 1 LIMIT 1',
+    [userId]).catch(() => null);
+  return !!row;
+}
+
+// { available, annual, redeemed } — the offer is only ever SHOWN (and
+// only ever honored) when available is true.
+async function freeBoxStatus(userId) {
+  const annual = !!(await annualShopSubscription(userId));
+  const redeemed = annual ? await freeBoxRedeemed(userId) : false;
+  return { available: annual && !redeemed, annual, redeemed };
 }
 
 function xmlEscape(s) {
@@ -68,4 +112,7 @@ async function composeBackImage({ outDir, fileBase, shopName, lines }) {
   return abs;
 }
 
-module.exports = { tiers, tierKeys, getTier, priceCentsFor, composeBackImage };
+module.exports = {
+  tiers, tierKeys, getTier, priceCentsFor, composeBackImage,
+  freeTierKey, annualShopSubscription, freeBoxRedeemed, freeBoxStatus,
+};
