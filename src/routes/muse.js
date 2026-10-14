@@ -372,7 +372,13 @@ router.post('/upload-sideload', (req, res) => {
   sideloadUpload(req, res, (err) => {
     if (err) return res.status(400).json({ ok: false, error: err.message });
     if (!req.file) return res.status(400).json({ ok: false, error: 'no file' });
-    const slot = SIDELOAD_UPLOAD_APPS[req.body.app];
+    let slot = SIDELOAD_UPLOAD_APPS[req.body.app];
+    // Auto-update service fallback: any com.usefulappz.* package (the AI
+    // bars and future UsefulAppz apps) uploads its APK straight into the
+    // app-updates store the /api/apps/:package/apk route serves from.
+    if (!slot && /^com\.usefulappz\.[a-z0-9.]+$/.test(String(req.body.app || ''))) {
+      slot = { ext: '.apk', dest: `app-updates/${req.body.app}.apk` };
+    }
     if (!slot) {
       fs.unlinkSync(req.file.path);
       return res.status(400).json({ ok: false, error: 'unknown app key' });

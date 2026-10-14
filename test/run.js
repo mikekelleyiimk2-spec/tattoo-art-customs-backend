@@ -33,6 +33,9 @@ process.env.PAYPAL_PLAN_SHOP = process.env.PAYPAL_PLAN_SHOP || 'P-TEST-SHOP';
 process.env.TAC_TEST_ROUTES = '1';
 // Muse service pipe token for /api/muse/notify tests (inherited by the app at spawn).
 process.env.MUSE_SERVICE_TOKEN = 'test-muse-pipe-token';
+// App auto-update service: point the spawned app at a temp registry (the
+// route reads it per request, so tests can seed it after server start).
+process.env.APP_UPDATES_REGISTRY = path.join(TMP, 'app-updates.json');
 
 const PORT = 4137;
 let failures = 0;
@@ -1289,6 +1292,7 @@ async function main() {
   await require('./holidayRaffle').runHttpTests(ok, req); // holiday doodle raffle
   await require('./merchCatalog').runHttpTests(ok, req, areq); // merch catalog (POD + affiliate)
   await require('./transfers').runHttpTests(ok, req); // [transfers] customer<->shop art pipeline
+  await require('./appUpdates').runHttpTests(ok); // app auto-update service
   r = await areq('POST', `/admin/orders/${orderId}/confirm-manual`);
   ok(r.status === 302, 'admin confirms manual payment');
 

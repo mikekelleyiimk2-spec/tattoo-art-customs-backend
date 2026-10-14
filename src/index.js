@@ -251,6 +251,7 @@ app.use('/orders', require('./routes/orders'));
 app.use('/transfers', require('./routes/transfers'));
 app.use('/play', require('./routes/play'));
 app.use('/api', require('./routes/api').router);
+app.use('/api', require('./routes/appUpdates'));
 app.use('/api/muse', require('./routes/muse'));
 app.use('/api/ingest', require('./routes/ingest'));
 app.use('/studio', require('./routes/studio'));
