@@ -3485,6 +3485,16 @@ async function main() {
   ok(r.status === 200 && r.text.includes('a valid email'), 'contact validation flash shown for bad email');
   ok(!sdb.prepare("SELECT id FROM notifications WHERE kind = 'contact' AND body LIKE ?").get('%not-an-email%'), 'rejected contact creates no notification');
 
+  // Feedback routing (owner order 2026-10-14): the contact form's mail
+  // recipient is config.feedbackEmail — the ONE feedback inbox (mk2). The
+  // HTTP phase runs in a child server process, so the recipient is asserted
+  // at config level here; delivery to mk2 is proven end-to-end against the
+  // live site (see app-feedback.md routing entry, 2026-10-14).
+  ok(require('../src/config').feedbackEmail === 'mikekelleyii.mk2@gmail.com', 'config.feedbackEmail defaults to the mk2 feedback inbox');
+  r = await req('POST', '/contact', { follow: false, body: { name: 'Feedback Route Check', email: 'fb-route@test.local', topic: 'other', message: 'feedback routing assertion' } });
+  ok(r.status === 302 && r.location === '/contact', 'contact POST still accepted after feedback reroute');
+  ok(!!sdb.prepare("SELECT id FROM notifications WHERE kind = 'contact' AND body LIKE ?").get('%Feedback Route Check%'), 'rerouted contact still creates its notification row');
+
   // Design page: custom piece shows the custom price.
   r = await req('GET', `/design/${prow.id}`);
   ok(r.status === 200 && r.text.includes(pricing.money(pricing.withFeeCents(pricing.customFullCents()))), 'design page shows custom price for portfolio piece');

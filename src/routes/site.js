@@ -1011,11 +1011,10 @@ router.post('/contact', formLimiter, checkHoneypot, async (req, res) => {
   let sent = 0;
   try {
     const { sendMail } = require('../lib/mail');
-    let to = [config.adminEmail].filter(Boolean);
-    if (!to.length) {
-      const heads = await db.all("SELECT email FROM users WHERE role = 'head_admin' AND email IS NOT NULL");
-      to = heads.map((h) => h.email);
-    }
+    // Owner order 2026-10-14: ALL feedback/support mail goes to ONE inbox —
+    // config.feedbackEmail (mk2) — so feedback stops scattering across
+    // accounts. Admins still get the in-app notification below.
+    const to = [config.feedbackEmail].filter(Boolean);
     for (const addr of to) {
       try {
         await sendMail({ to: addr, subject: `[Contact: ${topic}] ${name}`, text: body });

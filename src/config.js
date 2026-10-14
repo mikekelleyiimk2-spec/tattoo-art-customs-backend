@@ -154,6 +154,11 @@ const config = {
   adminEmail: process.env.ADMIN_EMAIL || '',
   adminPassword: process.env.ADMIN_PASSWORD || '',
 
+  // Feedback inbox (owner order 2026-10-14): ALL feedback/support mail —
+  // website contact form today, any future feedback surface — goes to ONE
+  // inbox: mikekelleyii.mk2@gmail.com, where the daily feedback scan reads it.
+  feedbackEmail: process.env.FEEDBACK_EMAIL || 'mikekelleyii.mk2@gmail.com',
+
   // Google AdSense — empty publisher ID means ads stay off.
   adsense: {
     publisherId: process.env.ADSENSE_PUBLISHER_ID || '',
