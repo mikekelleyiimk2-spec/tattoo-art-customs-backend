@@ -10,13 +10,17 @@
 <h2>Location data</h2>
 <ul>
   <li>Odometer uses your device's location (GPS) <strong>only while a trip you started is running</strong>, to measure how far you drive. The floating bubble's foreground service runs only when you turn the bubble on or a trip is active — always started by you.</li>
-  <li>Location is processed <strong>on your device only</strong>. It is never transmitted to us or to anyone else, never sold, and never shared.</li>
-  <li>Trips are stored in the app's private on-device database: date, times, miles, platform, purpose, and the vehicle you chose. No route history and no addresses are kept after a trip ends — only the distance and the details you see in the trip list.</li>
+  <li>Trips are stored in the app's private on-device database: date, times, miles, platform, purpose, the vehicle you chose, the trip's GPS route points (so you can view the route later), and its start/end street address and any place names you have saved. All of it stays on your device. It is never transmitted to us, never sold, and never shared by us.</li>
+  <li><strong>Address lookup:</strong> when a trip ends, the app asks Android's built-in Geocoder service for the street address of the trip's start and end points, and stores that text with the trip. This is a system service provided by your device.</li>
+  <li><strong>Embedded map:</strong> a trip's detail screen can show its route on an embedded Google Maps view. Displaying that map uses the Google Maps SDK, which communicates with Google under Google's own privacy policy (for example, your IP address and the map area requested). The map loads only when you open a trip's details; if it can't load, the app falls back to a button that opens the route in the Maps app instead. Nothing about the map is sent to us.</li>
 </ul>
 
 <h2>Other data you enter</h2>
 <ul>
-  <li><strong>Gas entries</strong> (amount, gallons, odometer reading, notes) are stored on-device only.</li>
+  <li><strong>Gas and vehicle expenses</strong> (amount, gallons, odometer reading, parking, tolls, notes) are stored on-device only.</li>
+  <li><strong>Places, purposes, and work hours</strong> you save (names, addresses, schedules) are stored on-device only.</li>
+  <li><strong>Busy Tracker:</strong> if you turn it on, the app listens to gig-app notifications (DoorDash, Uber Eats, etc.) to notice order offers and deliveries, and reads which app is in the foreground via usage access. Notification content is processed on your device in the moment and is not stored; only per-app busy counts and timestamps are kept, and those are automatically deleted after 24 hours. Nothing from Busy Tracker ever leaves your device.</li>
+  <li><strong>Weekly digest:</strong> once a week the app posts a local summary notification (last week's business miles) computed entirely on your device. It is not sent anywhere.</li>
   <li><strong>Receipt photos</strong> you take are saved by the camera to your device's <code>Pictures/Odometer</code> folder in your media library. The app stores only a reference to the photo. Photos never leave your device unless you share them yourself.</li>
   <li><strong>Settings</strong> (mileage rate, vehicle names, platform choices) are stored on-device only.</li>
 </ul>
@@ -24,7 +28,8 @@
 <h2>What leaves your device</h2>
 <p>Nothing — except what you deliberately send:</p>
 <ul>
-  <li><strong>Tax export:</strong> when you tap "Export for taxes," the app builds a CSV of your trips and fill-ups and hands it to the Android share sheet. You pick where it goes (email, Drive, your accountant). We receive nothing.</li>
+  <li><strong>Tax export:</strong> when you tap "Export for taxes," the app builds a CSV or PDF report of your trips and expenses on the device and hands it to the Android share sheet. You pick where it goes (email, Drive, your accountant). We receive nothing.</li>
+  <li><strong>Embedded map:</strong> as described above, opening a trip's map view lets the Google Maps SDK talk to Google. That is the only third-party service the app uses, and only in that moment.</li>
   <li><strong>Purchases:</strong> if you buy the app or the Pro upgrade, Google Play processes the payment. We never see or store your card details.</li>
 </ul>
 
@@ -33,7 +38,10 @@
   <li><strong>Location (fine/coarse):</strong> measure trips you start.</li>
   <li><strong>Foreground service (location + special use):</strong> keep measuring while you work in other apps, and keep the floating bubble on screen.</li>
   <li><strong>Display over other apps:</strong> the floating mileage bubble.</li>
-  <li><strong>Notifications:</strong> the quiet "trip is tracking" status notification.</li>
+  <li><strong>Notifications:</strong> the quiet "trip is tracking" status notification, and the weekly digest if you keep it on.</li>
+  <li><strong>Notification access (optional):</strong> only if you enable Busy Tracker, so the app can notice gig-app order offers and deliveries. Processed on-device; see Busy Tracker above.</li>
+  <li><strong>Usage access (optional):</strong> only if you enable gig-app auto-detect, so the app knows which gig app you opened.</li>
+  <li><strong>Run at startup:</strong> only to re-arm the weekly digest notification after a reboot.</li>
   <li><strong>Camera:</strong> only when you tap "Take receipt photo."</li>
 </ul>
 
