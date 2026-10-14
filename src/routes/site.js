@@ -922,6 +922,13 @@ router.get('/privacy', (req, res) => res.render('site/privacy', {
   metaDescription: 'Tattoo Art Customs privacy policy.',
 }));
 
+// Per-app policy for the Odometer Android app (Google Play requires a
+// public privacy-policy URL for location foreground-service apps).
+router.get('/privacy/odometer', (req, res) => res.render('site/privacy-odometer', {
+  title: 'Odometer Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for Odometer — Mileage & Gas Tracker. Your location is used only to measure trips you start, and it never leaves your device.',
+}));
+
 router.get('/about', (req, res) => res.render('site/about', {
   title: 'About — Tattoo Art Customs',
   metaDescription: 'About Tattoo Art Customs marketplace.',
