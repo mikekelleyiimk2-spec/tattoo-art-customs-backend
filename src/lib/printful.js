@@ -78,8 +78,53 @@ function fileUrlFor(printOrder) {
   return `${base}/prints/file/${printOrder.id}?token=${printOrder.fulfill_token}`;
 }
 
+// Business cards (product 'business_cards'): Printful catalog product 724
+// "Set of Business Cards". A tier is one or more SETS (50/100 per set), so
+// the order carries multiple items; every item prints the same front (the
+// shop's art) + back (composed contact lines), both served via the
+// token-gated /prints/file/:id route (?side=back for the back).
+async function submitBusinessCardOrder(printOrder) {
+  const bco = await db.get('SELECT * FROM business_card_orders WHERE print_order_id = ?', [printOrder.id]);
+  if (!bco) throw new Error('business card order details missing');
+  const bc = require('./businessCards');
+  const tier = bc.getTier(bco.tier);
+  if (!tier) throw new Error(`unknown business card tier ${bco.tier}`);
+  if (!printOrder.fulfill_token) {
+    printOrder.fulfill_token = db.newId() + db.newId();
+    await db.update('print_orders', printOrder.id, { fulfill_token: printOrder.fulfill_token });
+  }
+  const front = fileUrlFor(printOrder);
+  const files = [{ url: front }];
+  if (bco.back_file) files.push({ url: `${front}&side=back` });
+  const payload = {
+    external_id: printOrder.id,
+    shipping: 'STANDARD',
+    recipient: {
+      name: printOrder.ship_name,
+      address1: printOrder.ship_address1,
+      address2: printOrder.ship_address2 || undefined,
+      city: printOrder.ship_city,
+      state_code: printOrder.ship_state,
+      country_code: printOrder.ship_country,
+      zip: printOrder.ship_zip,
+    },
+    items: tier.printfulItems.map((it) => ({
+      variant_id: it.variantId,
+      quantity: it.quantity,
+      files,
+    })),
+  };
+  const result = await api('/orders', 'POST', payload);
+  await db.update('print_orders', printOrder.id, {
+    printful_order_id: String(result.id),
+    status: 'submitted',
+  });
+  return result.id;
+}
+
 // Submit one paid print_orders row to Printful. Returns the Printful order id.
 async function submitPrintOrder(printOrder) {
+  if (printOrder.product === 'business_cards') return submitBusinessCardOrder(printOrder);
   const variantId = variantIdFor(printOrder.product, printOrder);
   if (!variantId) {
     const hint = printOrder.product === 'tee_classic'

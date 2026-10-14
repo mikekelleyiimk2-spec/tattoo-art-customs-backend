@@ -1,0 +1,29 @@
+<h1><%= t('bcards.mine_title') %></h1>
+<% if (!rows.length) { %>
+<p><%= t('bcards.mine_empty') %></p>
+<p><a class="btn" href="/merch/business-cards"><%= t('bcards.card_cta') %></a></p>
+<% } else { %>
+<table>
+  <thead>
+    <tr>
+      <th><%= t('bcards.col_date') %></th>
+      <th><%= t('bcards.col_cards') %></th>
+      <th><%= t('bcards.col_total') %></th>
+      <th><%= t('bcards.col_payment') %></th>
+      <th><%= t('bcards.col_fulfillment') %></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% rows.forEach(function(r) { %>
+    <tr>
+      <td><%= new Date(r.created_at).toLocaleDateString() %></td>
+      <td><%= r.quantity %> — <%= r.shop_name %></td>
+      <td><%= fmtMoney(r.price_cents) %></td>
+      <td><%= r.pay_status %></td>
+      <td><%= r.fulfillment_status %><% if (r.tracking_number) { %><br><a href="<%= r.tracking_url || '#' %>" rel="noopener"><%= r.tracking_number %></a><% } %></td>
+    </tr>
+    <% }); %>
+  </tbody>
+</table>
+<p><a class="btn" href="/merch/business-cards"><%= t('bcards.card_cta') %></a></p>
+<% } %>

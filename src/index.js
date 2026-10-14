@@ -247,6 +247,7 @@ app.use('/api/ingest', require('./routes/ingest'));
 app.use('/studio', require('./routes/studio'));
 app.use('/prints', require('./routes/prints'));
 app.use('/merch', require('./routes/merch'));
+app.use('/merch/business-cards', require('./routes/businessCards'));
 app.use('/contests', require('./routes/contests'));
 app.use('/', require('./routes/ads'));
 app.use('/messages', require('./routes/messages'));

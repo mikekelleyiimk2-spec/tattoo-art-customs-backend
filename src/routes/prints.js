@@ -30,6 +30,20 @@ router.get('/file/:id', async (req, res) => {
   } else if (po.combo_id) {
     const c = await db.get('SELECT output_path FROM combos WHERE id = ?', [po.combo_id]);
     if (c) rel = c.output_path;
+  } else if (po.product === 'business_cards') {
+    // Business cards: front = the shop's chosen art, back = the composed
+    // contact-lines card (Printful passes ?side=back for the second file).
+    const bco = await db.get('SELECT * FROM business_card_orders WHERE print_order_id = ?', [po.id]);
+    if (bco) {
+      if (req.query.side === 'back') {
+        rel = bco.back_file ? 'bcards/' + path.basename(String(bco.back_file)) : null;
+      } else if (bco.design_id) {
+        const d = await db.get('SELECT color_path FROM designs WHERE id = ?', [bco.design_id]);
+        rel = d ? d.color_path : null;
+      } else {
+        rel = bco.art_file ? 'bcards/' + path.basename(String(bco.art_file)) : null;
+      }
+    }
   } else if (po.doodle_file) {
     // Doodle-merch orders (tee/poster from /doodle-to-tattoo): the kid's
     // uploaded drawing prints as-is. Basename only — traversal guard.

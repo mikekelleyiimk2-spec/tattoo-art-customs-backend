@@ -1,0 +1,119 @@
+<h1><%= t('bcards.title') %></h1>
+<p><%= t('bcards.intro') %></p>
+<p class="muted"><%= t('bcards.price_note') %></p>
+
+<% if (!checkoutEnabled) { %>
+<p><span class="badge"><%= t('bcards.checkout_off') %></span></p>
+<% } %>
+
+<form method="post" action="/merch/business-cards" enctype="multipart/form-data">
+  <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+  <h2><%= t('bcards.details_h') %></h2>
+  <div>
+    <label for="bc-shop-name"><%= t('bcards.shop_name') %></label>
+    <input type="text" id="bc-shop-name" name="shop_name" required maxlength="120" value="<%= shopName %>">
+  </div>
+  <div class="two-col">
+    <div>
+      <label for="bc-contact-name"><%= t('bcards.contact_name') %></label>
+      <input type="text" id="bc-contact-name" name="contact_name" maxlength="120">
+    </div>
+    <div>
+      <label for="bc-phone"><%= t('bcards.phone') %></label>
+      <input type="text" id="bc-phone" name="phone" maxlength="60" autocomplete="tel">
+    </div>
+  </div>
+  <div class="two-col">
+    <div>
+      <label for="bc-email"><%= t('bcards.email') %></label>
+      <input type="text" id="bc-email" name="email_line" maxlength="120" autocomplete="email">
+    </div>
+    <div>
+      <label for="bc-website"><%= t('bcards.website') %></label>
+      <input type="text" id="bc-website" name="website_line" maxlength="120">
+    </div>
+  </div>
+  <div>
+    <label for="bc-address"><%= t('bcards.address') %></label>
+    <input type="text" id="bc-address" name="address_line" maxlength="160" value="<%= shopLocation %>">
+  </div>
+  <div>
+    <label for="bc-socials"><%= t('bcards.socials') %></label>
+    <input type="text" id="bc-socials" name="socials_line" maxlength="160">
+  </div>
+  <p class="muted"><%= t('bcards.back_note') %></p>
+
+  <h2><%= t('bcards.design_h') %></h2>
+  <div>
+    <label>
+      <input type="radio" name="design_source" value="upload" checked>
+      <%= t('bcards.use_upload') %>
+    </label>
+    <input type="file" name="art" accept="image/jpeg,image/png,image/webp">
+    <p class="muted"><%= t('bcards.upload_hint') %></p>
+  </div>
+  <% if (myDesigns && myDesigns.length) { %>
+  <div>
+    <label>
+      <input type="radio" name="design_source" value="design">
+      <%= t('bcards.use_design') %>
+    </label>
+    <select name="design_id">
+      <% myDesigns.forEach(function(d) { %>
+      <option value="<%= d.id %>"><%= d.title %></option>
+      <% }); %>
+    </select>
+  </div>
+  <% } %>
+
+  <h2><%= t('bcards.qty_h') %></h2>
+  <div>
+    <label for="bc-tier"><%= t('bcards.tier') %></label>
+    <select id="bc-tier" name="tier" required>
+      <% tiers.forEach(function(tr) { %>
+      <option value="<%= tr.key %>"<%= !tr.purchasable ? ' disabled' : '' %>><%= tr.cards %> — <%= tr.purchasable ? fmtMoney(withFee(tr.priceCents)) : t('bcards.unavailable') %></option>
+      <% }); %>
+    </select>
+    <p class="muted"><%= t('merch.includes_fee') %></p>
+  </div>
+
+  <h2><%= t('merch.ship_h') %></h2>
+  <div>
+    <label for="bc-ship-name"><%= t('merch.full_name') %></label>
+    <input type="text" id="bc-ship-name" name="ship_name" required maxlength="120" autocomplete="name">
+  </div>
+  <div>
+    <label for="bc-ship-address1"><%= t('merch.street') %></label>
+    <input type="text" id="bc-ship-address1" name="ship_address1" required maxlength="160" autocomplete="street-address">
+  </div>
+  <div>
+    <label for="bc-ship-address2"><%= t('merch.apt') %></label>
+    <input type="text" id="bc-ship-address2" name="ship_address2" maxlength="160">
+  </div>
+  <div class="two-col">
+    <div>
+      <label for="bc-ship-city"><%= t('merch.city') %></label>
+      <input type="text" id="bc-ship-city" name="ship_city" required maxlength="80" autocomplete="address-level2">
+    </div>
+    <div>
+      <label for="bc-ship-state"><%= t('merch.state') %></label>
+      <input type="text" id="bc-ship-state" name="ship_state" maxlength="80" autocomplete="address-level1">
+    </div>
+  </div>
+  <div class="two-col">
+    <div>
+      <label for="bc-ship-zip"><%= t('merch.zip') %></label>
+      <input type="text" id="bc-ship-zip" name="ship_zip" required maxlength="20" autocomplete="postal-code">
+    </div>
+    <div>
+      <label for="bc-ship-country"><%= t('merch.country') %></label>
+      <input type="text" id="bc-ship-country" name="ship_country" value="US" maxlength="60" autocomplete="country-name">
+    </div>
+  </div>
+
+  <% if (checkoutEnabled) { %>
+  <p><button class="btn" type="submit"><%= t('merch.continue_payment') %></button></p>
+  <% } %>
+</form>
+<p><a href="/merch/business-cards/mine"><%= t('bcards.mine_link') %></a></p>

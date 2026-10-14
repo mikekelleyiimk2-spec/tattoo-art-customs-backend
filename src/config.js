@@ -207,6 +207,54 @@ const config = {
     showFeaturedDiscountPct: 20,
   },
 
+  // Business cards for tattoo-shop subscribers (owner order 2026-10-14).
+  // PRICING RULE (owner, 2026-10-14): "Figure out what it cost and add 5%"
+  // — selling price = real fulfillment cost x 1.05 per tier, computed by
+  // priceCentsFor() in src/lib/businessCards.js from the cost inputs below.
+  // COST EVIDENCE: Printful POST /orders/estimate-costs, live API quotes on
+  // 2026-10-14 for product 724 "Set of Business Cards" (3.5"x2", double-
+  // sided) shipped to a US (Louisiana) address. Cost = Printful's total
+  // charge to us (product subtotal + shipping + the tax Printful charges
+  // us). Shipping/tax vary by destination; these are US-standard figures.
+  // Re-quote and update the inputs if Printful pricing changes — the
+  // selling price follows automatically at cost x 1.05.
+  // Checkout kill-switch: BUSINESS_CARDS_CHECKOUT=0 disables purchasing
+  // (browse-only). Default ON for shop subscribers (owner pricing ruling
+  // supersedes price approval — the formula IS the approval).
+  businessCards: {
+    checkoutEnabled: process.env.BUSINESS_CARDS_CHECKOUT !== '0',
+    marginRate: 0.05,
+    printfulProductId: 724,
+    tiers: {
+      // variantId 18554 = set of 50, 18555 = set of 100 (Printful catalog)
+      '50': {
+        cards: 50,
+        printfulItems: [{ variantId: 18554, quantity: 1 }],
+        cost: { subtotalCents: 1035, shippingCents: 659, taxCents: 186, totalCents: 1880 },
+      },
+      '100': {
+        cards: 100,
+        printfulItems: [{ variantId: 18555, quantity: 1 }],
+        cost: { subtotalCents: 1868, shippingCents: 659, taxCents: 277, totalCents: 2804 },
+      },
+      '250': {
+        cards: 250,
+        printfulItems: [{ variantId: 18555, quantity: 2 }, { variantId: 18554, quantity: 1 }],
+        cost: { subtotalCents: 4771, shippingCents: 1159, taxCents: 652, totalCents: 6582 },
+      },
+      '500': {
+        cards: 500,
+        printfulItems: [{ variantId: 18555, quantity: 5 }],
+        cost: { subtotalCents: 9340, shippingCents: 1659, taxCents: 1209, totalCents: 12208 },
+      },
+      '1000': {
+        cards: 1000,
+        printfulItems: [{ variantId: 18555, quantity: 10 }],
+        cost: { subtotalCents: 18680, shippingCents: 2909, taxCents: 2375, totalCents: 23964 },
+      },
+    },
+  },
+
   // Campaign caps — reusable mechanism for opening sales and future promos.
   // The first-custom 20% "Opening sale" auto-disables when EITHER cap is
   // reached, whichever comes first. "Sales" = orders reaching paid status

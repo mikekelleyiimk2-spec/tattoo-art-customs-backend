@@ -1,0 +1,52 @@
+<h1>Business card orders</h1>
+<p class="muted">Tattoo-shop subscriber orders. Fulfillment runs through Printful (product 724) when the API key is set; otherwise print from the files below and mark fulfilled. Front = shop art, back = composed contact lines.</p>
+<% if (!rows.length) { %>
+<p>No business card orders yet.</p>
+<% } else { %>
+<table>
+  <thead>
+    <tr>
+      <th>Date</th><th>Shop / buyer</th><th>Card lines</th><th>Qty</th>
+      <th>Cost / Price</th><th>Payment</th><th>Fulfillment</th><th>Files</th><th>Note / actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% rows.forEach(function(r) { %>
+    <tr>
+      <td><%= new Date(r.created_at).toLocaleString() %></td>
+      <td><strong><%= r.shop_name %></strong><br><span class="muted"><%= r.buyer_email %></span><br><span class="muted">Ship: <%= r.ship_name %>, <%= r.ship_city %>, <%= r.ship_state %> <%= r.ship_zip %></span></td>
+      <td>
+        <%= r.contact_name %><% if (r.contact_name) { %><br><% } %>
+        <%= r.phone %><% if (r.phone) { %><br><% } %>
+        <%= r.email_line %><% if (r.email_line) { %><br><% } %>
+        <%= r.address_line %><% if (r.address_line) { %><br><% } %>
+        <%= r.website_line %><% if (r.website_line) { %><br><% } %>
+        <%= r.socials_line %>
+      </td>
+      <td><%= r.quantity %></td>
+      <td><%= fmtMoney(r.cost_cents) %> / <%= fmtMoney(r.price_cents) %></td>
+      <td><%= r.pay_status %><% if (r.amount_paid_cents) { %> (<%= fmtMoney(r.amount_paid_cents) %>)<% } %></td>
+      <td><%= r.fulfillment_status %><% if (r.printful_order_id) { %><br><span class="muted">Printful #<%= r.printful_order_id %></span><% } %></td>
+      <td>
+        <a href="/prints/file/<%= r.print_order_id %>?token=<%= r.fulfill_token %>">Front</a>
+        <% if (r.back_file) { %> · <a href="/prints/file/<%= r.print_order_id %>?token=<%= r.fulfill_token %>&side=back">Back</a><% } %>
+        <br><span class="muted"><%= r.design_source === 'design' ? 'shop design #' + r.design_id : (r.art_file || '—') %></span>
+      </td>
+      <td>
+        <form method="post" action="/merch/business-cards/admin/<%= r.id %>/note">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <input type="text" name="fulfillment_note" value="<%= r.fulfillment_note || '' %>" maxlength="500" style="min-width:180px;">
+          <button class="btn btn-secondary" type="submit">Save note</button>
+        </form>
+        <% if (r.fulfillment_status !== 'fulfilled') { %>
+        <form method="post" action="/merch/business-cards/admin/<%= r.id %>/fulfill" style="margin-top:0.4rem;">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn" type="submit">Mark fulfilled</button>
+        </form>
+        <% } %>
+      </td>
+    </tr>
+    <% }); %>
+  </tbody>
+</table>
+<% } %>
