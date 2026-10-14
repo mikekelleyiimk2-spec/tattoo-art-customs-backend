@@ -68,12 +68,6 @@
    "img": "/img/by-request/eren-yeager.jpg"
   },
   {
-   "name": "Ichigo Kurosaki (Bleach)",
-   "slug": "ichigo-kurosaki",
-   "done": true,
-   "img": "/img/by-request/ichigo-kurosaki.jpg"
-  },
-  {
    "name": "Edward Elric (Fullmetal Alchemist)",
    "slug": "edward-elric",
    "done": true,
@@ -186,12 +180,6 @@
    "slug": "motoko-kusanagi",
    "done": true,
    "img": "/img/by-request/motoko-kusanagi.jpg"
-  },
-  {
-   "name": "Shinji Ikari (Neon Genesis Evangelion)",
-   "slug": "shinji-ikari",
-   "done": true,
-   "img": "/img/by-request/shinji-ikari.jpg"
   },
   {
    "name": "Asuka Langley (Evangelion)",
@@ -392,12 +380,6 @@
    "img": "/img/by-request/crash-bandicoot.jpg"
   },
   {
-   "name": "Spyro the Dragon",
-   "slug": "spyro-the-dragon",
-   "done": true,
-   "img": "/img/by-request/spyro-the-dragon.jpg"
-  },
-  {
    "name": "Sora (Kingdom Hearts)",
    "slug": "sora",
    "done": true,
@@ -504,12 +486,6 @@
    "slug": "ratchet-clank",
    "done": true,
    "img": "/img/by-request/ratchet-clank.jpg"
-  },
-  {
-   "name": "Sackboy (LittleBigPlanet)",
-   "slug": "sackboy",
-   "done": true,
-   "img": "/img/by-request/sackboy.jpg"
   },
   {
    "name": "Fox McCloud (Star Fox)",
@@ -660,30 +636,6 @@
    "slug": "ben-10",
    "done": true,
    "img": "/img/by-request/ben-10.jpg"
-  },
-  {
-   "name": "Danny Phantom",
-   "slug": "danny-phantom",
-   "done": true,
-   "img": "/img/by-request/danny-phantom.jpg"
-  },
-  {
-   "name": "Johnny Bravo",
-   "slug": "johnny-bravo",
-   "done": true,
-   "img": "/img/by-request/johnny-bravo.jpg"
-  },
-  {
-   "name": "Dexter (Dexter's Laboratory)",
-   "slug": "dexter",
-   "done": true,
-   "img": "/img/by-request/dexter.jpg"
-  },
-  {
-   "name": "Courage the Cowardly Dog",
-   "slug": "courage-the-cowardly-dog",
-   "done": true,
-   "img": "/img/by-request/courage-the-cowardly-dog.jpg"
   },
   {
    "name": "Ren & Stimpy",
