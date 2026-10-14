@@ -23,12 +23,13 @@ const HEALED_DIR = 'uploads/healed'; // relative to config.assetDir
 // in the merch store" + shop-supply gating rule). These links live ONLY in
 // shop-gated surfaces: the per-client check-in emails and the one-tap
 // response page — never on public pages.
-// Recovery Aftercare Lasso link still pending generation — placeholder kept
-// as a comment until the Lasso URL is swapped in.
+// Recovery Aftercare is TRACKED via Lasso as of 2026-10-14 — the link
+// below is the Lasso earning link (redirect-verified →
+// recoveryaftercare.com).
 const AFTERCARE_AFFILIATES = [
   { name: 'Base Labs aftercare', url: 'https://baselabs.is/?coupon=TAC20', note: 'code TAC20 auto-applied' },
   { name: 'Tattoo aftercare on Amazon', url: 'https://www.amazon.com/s?k=tattoo+aftercare&tag=tattooartcust-20', note: null },
-  // TODO: { name: 'Recovery Aftercare', url: '__RECOVERY_LASSO_LINK__', note: null },
+  { name: 'Recovery Aftercare', url: 'https://lasso.to/auGY590feE/', note: null },
 ];
 
 function aftercareAffiliateTextBlock() {

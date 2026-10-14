@@ -34,7 +34,9 @@
     "weeks_3": "Nada de sol directo en el tatuaje fresco. Una vez curado, el protector solar evita que los colores se apaguen.",
     "weeks_h": "Semanas 1–3",
     "p5_cta": "Shop DrTattooSkin",
-    "p5_desc": "Doctor-formulated staged aftercare — Ink Wash and Barrier Ointment for fresh ink, Recovery Milk and Itch Calm Gel for the peel, Daily Lotion and SPF 50 for healed tattoos. Fragrance-free, barrier-first."
+    "p5_desc": "Doctor-formulated staged aftercare — Ink Wash and Barrier Ointment for fresh ink, Recovery Milk and Itch Calm Gel for the peel, Daily Lotion and SPF 50 for healed tattoos. Fragrance-free, barrier-first.",
+    "p6_desc": "Aftercare profesional para tinta fresca — alivio del dolor y apoyo para una cicatrización limpia de tu nuevo tatuaje.",
+    "p6_cta": "Comprar en Recovery Aftercare"
   },
   "artist_page": {
     "default_bio": "Artista de diseños de tatuaje en Tattoo Art Customs.",
@@ -1152,7 +1154,11 @@
     "chime_badge": "💰 Referral Bonus",
     "chime_h": "Chime — Get $100",
     "chime_text": "I get my DoorDash money on Chime — fast, no fees. Join with my referral link and get $100.",
-    "chime_cta": "Claim $100 on Chime"
+    "chime_cta": "Claim $100 on Chime",
+    "leda_badge": "UP TO 15.8% BACK",
+    "leda_h": "Leda Art Supply",
+    "leda_text": "Premium sketchbooks artists swear by — 160 pages of smooth, archival fine-art paper that lays flat.",
+    "leda_cta": "Shop Leda Art Supply"
   },
   "li_sideload": {
     "sub": {

@@ -34,7 +34,9 @@
     "weeks_3": "새 타투에 직사광선을 쐬지 마세요. 아문 후에는 선크림으로 색 바램을 방지하세요.",
     "weeks_h": "1–3주차",
     "p5_cta": "Shop DrTattooSkin",
-    "p5_desc": "Doctor-formulated staged aftercare — Ink Wash and Barrier Ointment for fresh ink, Recovery Milk and Itch Calm Gel for the peel, Daily Lotion and SPF 50 for healed tattoos. Fragrance-free, barrier-first."
+    "p5_desc": "Doctor-formulated staged aftercare — Ink Wash and Barrier Ointment for fresh ink, Recovery Milk and Itch Calm Gel for the peel, Daily Lotion and SPF 50 for healed tattoos. Fragrance-free, barrier-first.",
+    "p6_desc": "새 잉크를 위한 전문 애프터케어 — 통증 완화와 치유 지원으로 새 타투가 깨끗하게 아물도록 돕습니다。",
+    "p6_cta": "Recovery Aftercare에서 구매"
   },
   "artist_page": {
     "default_bio": "Tattoo Art Customs의 타투 디자인 아티스트예요.",
@@ -1152,7 +1154,11 @@
     "chime_badge": "💰 Referral Bonus",
     "chime_h": "Chime — Get $100",
     "chime_text": "I get my DoorDash money on Chime — fast, no fees. Join with my referral link and get $100.",
-    "chime_cta": "Claim $100 on Chime"
+    "chime_cta": "Claim $100 on Chime",
+    "leda_badge": "UP TO 15.8% BACK",
+    "leda_h": "Leda Art Supply",
+    "leda_text": "Premium sketchbooks artists swear by — 160 pages of smooth, archival fine-art paper that lays flat.",
+    "leda_cta": "Shop Leda Art Supply"
   },
   "li_sideload": {
     "sub": {

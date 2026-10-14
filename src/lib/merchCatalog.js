@@ -139,16 +139,17 @@ const CATALOG = [
     ctaKey: 'merch.aff_cta',
   },
   // --- Recovery Aftercare (Lasso Affiliate+, live 2026-10-09) ---
-  // NOTE: URLs below are brand direct links as placeholders. Replace with
-  // Lasso "Get link" URLs from the Recovery Aftercare brand page in Lasso
-  // Marketplace once generated (up to 5.25%, 14-day cookie).
+  // TRACKED via Lasso as of 2026-10-14: all cards use the Lasso earning
+  // link https://lasso.to/auGY590feE/ (redirect-verified →
+  // recoveryaftercare.com; up to 5.25%, 14-day cookie). The old untracked
+  // recoveryaftercare.com direct URLs earned nothing.
   {
     id: 'recovery-salve',
     kind: 'affiliate',
     status: 'live',
     nameKey: 'merch.aff_recoverysalve_name',
     blurbKey: 'merch.aff_recoverysalve_blurb',
-    url: 'https://recoveryaftercare.com/collections/tattoo-salve',
+    url: 'https://lasso.to/auGY590feE/',
     ctaKey: 'merch.aff_cta',
   },
   {
@@ -157,7 +158,7 @@ const CATALOG = [
     status: 'live',
     nameKey: 'merch.aff_recoverylotion_name',
     blurbKey: 'merch.aff_recoverylotion_blurb',
-    url: 'https://recoveryaftercare.com/collections/tattoo-products/products/recovery-tattoo-lotion-enriched-moisturizing-formula-3-oz',
+    url: 'https://lasso.to/auGY590feE/',
     ctaKey: 'merch.aff_cta',
   },
   {
@@ -166,13 +167,32 @@ const CATALOG = [
     status: 'live',
     nameKey: 'merch.aff_recoverysoap_name',
     blurbKey: 'merch.aff_recoverysoap_blurb',
-    url: 'https://recoveryaftercare.com/collections/tattoo-products/products/aftercare-soap-4-oz',
+    url: 'https://lasso.to/auGY590feE/',
     ctaKey: 'merch.aff_cta',
   },
-  // --- Leda Art Supply REMOVED 2026-10-12 per owner directive ---
-  // The Lasso link https://lasso.to/hARs5ZDmxA/ resolved to our own site
-  // instead of Leda (misleading). Cards pulled until a working Leda link
-  // is generated in the Lasso Marketplace dashboard.
+  // --- Leda Art Supply (Lasso Affiliate+, live 2026-10-09) ---
+  // Cards were pulled 2026-10-12 because the old Lasso link resolved to
+  // our own site instead of Leda (misleading). RESTORED 2026-10-14 with
+  // the fresh earning link https://lasso.to/RfUlWaYEwK/ (redirect-
+  // verified → ledaartsupply.com). NEVER use the dead lasso.to/hARs5ZDmxA.
+  {
+    id: 'leda-sketchbook-large',
+    kind: 'affiliate',
+    status: 'live',
+    nameKey: 'merch.aff_ledalarge_name',
+    blurbKey: 'merch.aff_ledalarge_blurb',
+    url: 'https://lasso.to/RfUlWaYEwK/',
+    ctaKey: 'merch.aff_cta',
+  },
+  {
+    id: 'leda-sketchbook-medium',
+    kind: 'affiliate',
+    status: 'live',
+    nameKey: 'merch.aff_ledamedium_name',
+    blurbKey: 'merch.aff_ledamedium_blurb',
+    url: 'https://lasso.to/RfUlWaYEwK/',
+    ctaKey: 'merch.aff_cta',
+  },
   // --- DrTattooSkin (Social Snowball, live 2026-10-09) ---
   // 20% commission on every sale. Tracking link verified live.
   {
