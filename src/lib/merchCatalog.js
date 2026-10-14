@@ -170,6 +170,35 @@ const CATALOG = [
     url: 'https://lasso.to/auGY590feE/',
     ctaKey: 'merch.aff_cta',
   },
+  // Recovery line expansion 2026-10-14 (owner rule: real products from
+  // newly-live affiliates get real /merch cards, tracked link on every card).
+  {
+    id: 'recovery-dermshield-sheets',
+    kind: 'affiliate',
+    status: 'live',
+    nameKey: 'merch.aff_recoverydermsheets_name',
+    blurbKey: 'merch.aff_recoverydermsheets_blurb',
+    url: 'https://lasso.to/auGY590feE/',
+    ctaKey: 'merch.aff_cta',
+  },
+  {
+    id: 'recovery-dermshield-roll',
+    kind: 'affiliate',
+    status: 'live',
+    nameKey: 'merch.aff_recoverydermroll_name',
+    blurbKey: 'merch.aff_recoverydermroll_blurb',
+    url: 'https://lasso.to/auGY590feE/',
+    ctaKey: 'merch.aff_cta',
+  },
+  {
+    id: 'recovery-care-kit',
+    kind: 'affiliate',
+    status: 'live',
+    nameKey: 'merch.aff_recoverycarekit_name',
+    blurbKey: 'merch.aff_recoverycarekit_blurb',
+    url: 'https://lasso.to/auGY590feE/',
+    ctaKey: 'merch.aff_cta',
+  },
   // --- Leda Art Supply (Lasso Affiliate+, live 2026-10-09) ---
   // Cards were pulled 2026-10-12 because the old Lasso link resolved to
   // our own site instead of Leda (misleading). RESTORED 2026-10-14 with
@@ -190,6 +219,44 @@ const CATALOG = [
     status: 'live',
     nameKey: 'merch.aff_ledamedium_name',
     blurbKey: 'merch.aff_ledamedium_blurb',
+    url: 'https://lasso.to/RfUlWaYEwK/',
+    ctaKey: 'merch.aff_cta',
+  },
+  // Leda line expansion 2026-10-14 (same owner rule as Recovery above —
+  // sketchbooks, a drawing kit and watercolor pads across price points).
+  {
+    id: 'leda-zeus-sketchbook',
+    kind: 'affiliate',
+    status: 'live',
+    nameKey: 'merch.aff_ledazeus_name',
+    blurbKey: 'merch.aff_ledazeus_blurb',
+    url: 'https://lasso.to/RfUlWaYEwK/',
+    ctaKey: 'merch.aff_cta',
+  },
+  {
+    id: 'leda-drawing-set',
+    kind: 'affiliate',
+    status: 'live',
+    nameKey: 'merch.aff_ledaset_name',
+    blurbKey: 'merch.aff_ledaset_blurb',
+    url: 'https://lasso.to/RfUlWaYEwK/',
+    ctaKey: 'merch.aff_cta',
+  },
+  {
+    id: 'leda-watercolor-pad-cold',
+    kind: 'affiliate',
+    status: 'live',
+    nameKey: 'merch.aff_ledacoldpad_name',
+    blurbKey: 'merch.aff_ledacoldpad_blurb',
+    url: 'https://lasso.to/RfUlWaYEwK/',
+    ctaKey: 'merch.aff_cta',
+  },
+  {
+    id: 'leda-a3-watercolor-pad',
+    kind: 'affiliate',
+    status: 'live',
+    nameKey: 'merch.aff_ledaa3pad_name',
+    blurbKey: 'merch.aff_ledaa3pad_blurb',
     url: 'https://lasso.to/RfUlWaYEwK/',
     ctaKey: 'merch.aff_cta',
   },
