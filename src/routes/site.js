@@ -98,6 +98,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/terms`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/odometer`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/ai-bar`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/discounts`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/aftercare`, changefreq: 'monthly', priority: '0.6' },
     { loc: `${base}/merch`, changefreq: 'weekly', priority: '0.7' },
@@ -931,6 +932,13 @@ router.get('/privacy', (req, res) => res.render('site/privacy', {
 router.get('/privacy/odometer', (req, res) => res.render('site/privacy-odometer', {
   title: 'Odometer Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for Odometer — Mileage & Gas Tracker. Your location is used only to measure trips you start, and it never leaves your device.',
+}));
+
+// Per-app policy for the AI Button Android app (voice-loop app:
+// microphone + overlay permissions need a public policy URL for Play).
+router.get('/privacy/ai-bar', (req, res) => res.render('site/privacy-aibar', {
+  title: 'AI Button Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for AI Button. No accounts, no server, no ads, no analytics — your voice and prompts go only to the AI you choose.',
 }));
 
 router.get('/about', (req, res) => res.render('site/about', {
