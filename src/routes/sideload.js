@@ -143,7 +143,7 @@ function tacAndroidProRouter() {
     if (!order) return res.status(404).render('error', { title: 'Not found', message: 'Order not found.' });
     if (order.status === 'paid') return res.redirect(`/tac-android-pro/download/${order.id}`);
     try {
-      const capture = await paypal.captureOrder(order.paypal_order_id);
+      const capture = await paypal.captureCheckoutOrder(order.paypal_order_id);
       const expectedTotal = order.amount_cents + order.fee_cents;
       const captured = Math.round(parseFloat(capture.purchase_units[0].payments.captures[0].amount.value) * 100);
       if (captured !== expectedTotal) throw new Error('Amount mismatch');

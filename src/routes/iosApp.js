@@ -55,7 +55,7 @@ router.get('/approve/:orderId', requireLogin, async (req, res) => {
   if (!order) return res.status(404).render('error', { title: 'Not found', message: 'Order not found.' });
   if (order.status === 'paid') return res.redirect(`/ios-app/download/${order.id}`);
   try {
-    const capture = await paypal.captureOrder(order.paypal_order_id);
+    const capture = await paypal.captureCheckoutOrder(order.paypal_order_id);
     const expectedTotal = order.amount_cents + order.fee_cents;
     // Verify captured amount matches.
     const captured = Math.round(parseFloat(capture.purchase_units[0].payments.captures[0].amount.value) * 100);

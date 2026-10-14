@@ -1317,6 +1317,35 @@ async function main() {
   r = await req('GET', '/img/designs/w.jpg');
   ok(r.status === 404, 'private color file not reachable via img mount');
 
+  // --- Sideload capture paths (regression: paypal.captureOrder bug) ---
+  // The TAC Pro (/tac-android-pro/approve) and iOS app (/ios-app/approve)
+  // return routes must capture via lib/paypal's real export
+  // (captureCheckoutOrder). They previously called the nonexistent
+  // paypal.captureOrder(...), which threw on every real buyer return and
+  // left the order pending. Orders are inserted directly with a stubbed
+  // PayPal id; the suite's capture stub returns a COMPLETED capture of
+  // 0.00, so the orders carry 0/0 amounts to satisfy the routes'
+  // captured-vs-expected amount check.
+  {
+    const buyerRow = sdb.prepare("SELECT id FROM users WHERE email = 'buyer@test.local'").get();
+    const mkPending = (id, type, ppId) => sdb.prepare(`INSERT INTO orders
+      (id, buyer_id, design_id, order_type, amount_cents, fee_cents, status, payment_method, paypal_order_id, referral_code, created_at)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?)`).run(id, buyerRow.id, null, type, 0, 0, 'pending', 'paypal', ppId, '', Date.now());
+    mkPending('ord-pro-capture-1', 'tac_android_pro', 'pp-pro-stub-1');
+    r = await req('GET', '/tac-android-pro/approve/ord-pro-capture-1', { follow: false });
+    ok(r.status === 302 && (r.location || '').includes('/tac-android-pro/download/ord-pro-capture-1'),
+      'TAC Pro approve captures via captureCheckoutOrder and redirects to download');
+    const proPaid = sdb.prepare('SELECT status FROM orders WHERE id = ?').get('ord-pro-capture-1');
+    ok(proPaid && proPaid.status === 'paid', 'TAC Pro order marked paid on capture');
+
+    mkPending('ord-ios-capture-1', 'ios_app', 'pp-ios-stub-1');
+    r = await req('GET', '/ios-app/approve/ord-ios-capture-1', { follow: false });
+    ok(r.status === 302 && (r.location || '').includes('/ios-app/download/ord-ios-capture-1'),
+      'iOS app approve captures via captureCheckoutOrder and redirects to download');
+    const iosPaid = sdb.prepare('SELECT status FROM orders WHERE id = ?').get('ord-ios-capture-1');
+    ok(iosPaid && iosPaid.status === 'paid', 'iOS app order marked paid on capture');
+  }
+
   // --- Premade instant delivery (owner rule 2026-09-29) ---
   // On verified payment capture the buyer must INSTANTLY get the clean files:
   // a download token is auto-issued (shown on the order page + emailed in the
