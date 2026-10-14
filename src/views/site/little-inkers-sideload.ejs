@@ -1,11 +1,20 @@
 <h1>Little Inkers for <%= kind === 'ios' ? 'iPhone' : 'Android' %></h1>
 <p class="muted">The free coloring app for kids — 30+ pages, new packs every Monday. 100% free.</p>
 
+<% if (typeof downloadReady !== 'undefined' && downloadReady) { %>
+<div class="card">
+  <h2>Free download</h2>
+  <p>The Little Inkers app is ready — free for <%= kind === 'ios' ? 'iPhone' : 'Android' %>, no account needed.</p>
+  <p><a class="btn" href="<%= downloadUrl %>">Download the app (free)</a></p>
+  <% if (kind === 'android') { %><p class="muted">It's an APK file: tap it, then allow "install from your browser" if your phone asks. That's it!</p><% } %>
+</div>
+<% } else { %>
 <div class="card">
   <h2>Coming early November!</h2>
   <p>The Little Inkers app is almost here — free download for <%= kind === 'ios' ? 'iPhone' : 'Android' %> lands in early November.</p>
   <p class="muted">Check back soon — the download button will appear right here the moment it's ready.</p>
 </div>
+<% } %>
 
 <div class="card" style="margin-top:1rem;">
   <h2>Watch the app in action</h2>

@@ -63,12 +63,18 @@ function liSideloadRouter(kind) {
   const cfg = FREE_APPS[appKey];
 
   router.get('/', (req, res) => {
+    const rel = process.env[cfg.envVar] || cfg.defaultRel;
     res.render('site/little-inkers-sideload', {
       layout: 'layout-li',
       title: `Little Inkers for ${kind === 'ios' ? 'iPhone' : 'Android'} — Free Download`,
       metaDescription: 'Download the free Little Inkers coloring app for kids.',
       kind,
       appName: cfg.appName,
+      // Show the real download button only when the build file is
+      // actually in storage — otherwise the page keeps its honest
+      // "coming soon" card instead of promising a download that 404s.
+      downloadReady: Boolean(resolveStoredPath(rel)),
+      downloadUrl: `/little-inkers-${kind}/download`,
     });
   });
 
