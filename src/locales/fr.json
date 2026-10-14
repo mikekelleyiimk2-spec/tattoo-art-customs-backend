@@ -328,7 +328,9 @@
     "yt_title": "🎥 On est sur YouTube — abonne-toi",
     "get_play_free": "Télécharger sur Google Play — Gratuit",
     "get_play_pro": "Passer à Pro — sans pubs",
-    "get_ios_sideload": "iPhone : obtenez-la maintenant (sideload, 1,67 $)"
+    "get_ios_sideload": "iPhone : obtenez-la maintenant (sideload, 1,67 $)",
+    "get_android_sideload": "Télécharger l'app Android — gratuit",
+    "all_apps": "Voir toutes nos apps"
   },
   "landing": {
     "hero": {
@@ -1020,7 +1022,22 @@
     "lil_watch": "Watch on YouTube — Subscribe",
     "lil_commercial": "Watch our new animated commercial",
     "odometer_badge": "1,99 $ · Automatisation 1,99 $/mois",
-    "odometer_text": "Suivi automatique du kilométrage pour les chauffeurs et livreurs : les trajets s’enregistrent tout seuls et chaque kilomètre déductible est prêt pour vos impôts."
+    "odometer_text": "Suivi automatique du kilométrage pour les chauffeurs et livreurs : les trajets s’enregistrent tout seuls et chaque kilomètre déductible est prêt pour vos impôts.",
+    "get_android_free": "Télécharger l'app Android gratuite",
+    "get_android_pro": "Obtenir Pro pour Android — 1,99 $",
+    "li_android_btn": "App Android",
+    "li_ios_btn": "App iPhone",
+    "dl_now": "Télécharger — {price}",
+    "dl_free": "Télécharger gratuitement",
+    "play_soon": "Bientôt sur Google Play",
+    "more_title": "Plus d'apps Usefulappz",
+    "more_text": "Widgets et apps pour enfants du même studio. Un bouton de téléchargement apparaît sur chaque carte dès que l'app est prête à installer.",
+    "clip_text": "Historique du presse-papiers et extraits favoris, sur votre écran d'accueil.",
+    "count_text": "Comptes à rebours en direct pour vos grands jours, sur votre écran d'accueil.",
+    "lic_text": "Encore plus de pages à colorier pour enfants — art doux, pubs adaptées aux enfants.",
+    "sticker_text": "Un univers d'autocollants joyeux à collectionner, échanger et créer.",
+    "draw_text": "Des leçons de dessin pas à pas pour guider les petits artistes.",
+    "contests_text": "Les pages coloriées deviennent des concours familiaux amicaux."
   },
   "byrequest": {
     "title": "By-Request Characters",

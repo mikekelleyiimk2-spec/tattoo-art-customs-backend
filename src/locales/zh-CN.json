@@ -328,7 +328,9 @@
     "yt_title": "🎥 我们在YouTube——快订阅",
     "get_play_free": "在Google Play获取 — 免费",
     "get_play_pro": "获取Pro版 — 无广告",
-    "get_ios_sideload": "iPhone — 立即获取（侧载，$1.67）"
+    "get_ios_sideload": "iPhone — 立即获取（侧载，$1.67）",
+    "get_android_sideload": "获取 Android 应用 — 免费",
+    "all_apps": "查看我们的所有应用"
   },
   "landing": {
     "hero": {
@@ -1020,7 +1022,22 @@
     "lil_watch": "Watch on YouTube — Subscribe",
     "lil_commercial": "Watch our new animated commercial",
     "odometer_badge": "$1.99 · 自动化 $1.99/月",
-    "odometer_text": "为零工司机自动记录里程 — 行程自动保存，每一英里可抵扣里程在报税时随时可用。"
+    "odometer_text": "为零工司机自动记录里程 — 行程自动保存，每一英里可抵扣里程在报税时随时可用。",
+    "get_android_free": "免费获取 Android 应用",
+    "get_android_pro": "获取 Android 版 Pro — $1.99",
+    "li_android_btn": "Android 应用",
+    "li_ios_btn": "iPhone 应用",
+    "dl_now": "立即下载 — {price}",
+    "dl_free": "免费下载",
+    "play_soon": "即将登陆 Google Play",
+    "more_title": "更多 Usefulappz 应用",
+    "more_text": "同一工作室的小部件和儿童应用。每个应用准备就绪后，其卡片上会立即出现下载按钮。",
+    "clip_text": "剪贴板历史和收藏片段，就在主屏幕上。",
+    "count_text": "重要日子的实时倒计时，就在主屏幕上。",
+    "lic_text": "更多儿童涂色页 — 友好的图画，儿童安全的广告。",
+    "sticker_text": "快乐的贴纸世界，孩子们可以收集、交换和创作。",
+    "draw_text": "一步一步的绘画课程，引导小小艺术家。",
+    "contests_text": "完成的涂色页变成友好的家庭比赛。"
   },
   "byrequest": {
     "title": "By-Request Characters",

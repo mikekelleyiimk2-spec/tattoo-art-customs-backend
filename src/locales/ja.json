@@ -328,7 +328,9 @@
     "yt_title": "🎥 YouTubeでも配信中 — 登録しよう",
     "get_play_free": "Google Playで入手 — 無料",
     "get_play_pro": "Proを入手 — 広告なし",
-    "get_ios_sideload": "iPhone — 今すぐ入手（サイドロード、$1.67）"
+    "get_ios_sideload": "iPhone — 今すぐ入手（サイドロード、$1.67）",
+    "get_android_sideload": "Androidアプリを入手 — 無料",
+    "all_apps": "すべてのアプリを見る"
   },
   "landing": {
     "hero": {
@@ -1020,7 +1022,22 @@
     "lil_watch": "Watch on YouTube — Subscribe",
     "lil_commercial": "Watch our new animated commercial",
     "odometer_badge": "$1.99 · 自動化 $1.99/月",
-    "odometer_text": "ギグドライバー向けの自動走行距離記録 — トリップは自動で保存され、控除対象の距離は確定申告のときにすぐ使えます。"
+    "odometer_text": "ギグドライバー向けの自動走行距離記録 — トリップは自動で保存され、控除対象の距離は確定申告のときにすぐ使えます。",
+    "get_android_free": "無料のAndroidアプリを入手",
+    "get_android_pro": "Android版 Pro を入手 — $1.99",
+    "li_android_btn": "Androidアプリ",
+    "li_ios_btn": "iPhoneアプリ",
+    "dl_now": "今すぐダウンロード — {price}",
+    "dl_free": "無料でダウンロード",
+    "play_soon": "近日Google Playに登場",
+    "more_title": "その他のUsefulappzアプリ",
+    "more_text": "同じスタジオのウィジェットとキッズアプリ。各アプリの準備ができ次第、カードにダウンロードボタンが表示されます。",
+    "clip_text": "クリップボード履歴とお気に入りスニペットをホーム画面に。",
+    "count_text": "大切な日までのライブカウントダウンをホーム画面に。",
+    "lic_text": "子ども向けぬりえがもっとたくさん — やさしいアートと安全な広告。",
+    "sticker_text": "集めて、交換して、作れる楽しいステッカーの世界。",
+    "draw_text": "小さなアーティストを導くステップバイステップのお絵かきレッスン。",
+    "contests_text": "完成したぬりえが家族の楽しいコンテストになります。"
   },
   "byrequest": {
     "title": "By-Request Characters",

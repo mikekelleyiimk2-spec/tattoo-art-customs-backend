@@ -328,7 +328,9 @@
     "yt_title": "🎥 Estamos no YouTube — inscreva-se",
     "get_play_free": "Baixar no Google Play — Grátis",
     "get_play_pro": "Baixar o Pro — sem anúncios",
-    "get_ios_sideload": "iPhone — baixe agora (sideload, US$ 1,67)"
+    "get_ios_sideload": "iPhone — baixe agora (sideload, US$ 1,67)",
+    "get_android_sideload": "Baixe o app Android — grátis",
+    "all_apps": "Ver todos os nossos apps"
   },
   "landing": {
     "hero": {
@@ -1020,7 +1022,22 @@
     "lil_watch": "Watch on YouTube — Subscribe",
     "lil_commercial": "Watch our new animated commercial",
     "odometer_badge": "US$ 1,99 · Automação US$ 1,99/mês",
-    "odometer_text": "Registro automático de quilometragem para motoristas de aplicativo — as viagens se salvam sozinhas e cada quilômetro dedutível fica pronto para o imposto."
+    "odometer_text": "Registro automático de quilometragem para motoristas de aplicativo — as viagens se salvam sozinhas e cada quilômetro dedutível fica pronto para o imposto.",
+    "get_android_free": "Baixe o app Android grátis",
+    "get_android_pro": "Obtenha o Pro para Android — US$ 1,99",
+    "li_android_btn": "App Android",
+    "li_ios_btn": "App iPhone",
+    "dl_now": "Baixar agora — {price}",
+    "dl_free": "Baixar grátis",
+    "play_soon": "Em breve no Google Play",
+    "more_title": "Mais apps da Usefulappz",
+    "more_text": "Widgets e apps infantis do mesmo estúdio. Um botão de download aparece em cada card assim que o app está pronto para instalar.",
+    "clip_text": "Histórico da área de transferência e trechos favoritos, na sua tela inicial.",
+    "count_text": "Contagens regressivas ao vivo para os seus grandes dias, na tela inicial.",
+    "lic_text": "Ainda mais páginas para colorir para crianças — arte amigável e anúncios seguros.",
+    "sticker_text": "Um universo feliz de adesivos para colecionar, trocar e criar.",
+    "draw_text": "Aulas de desenho passo a passo que guiam os pequenos artistas.",
+    "contests_text": "As páginas coloridas viram concursos familiares amigáveis."
   },
   "byrequest": {
     "title": "By-Request Characters",

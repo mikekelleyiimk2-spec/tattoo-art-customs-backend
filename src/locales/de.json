@@ -328,7 +328,9 @@
     "yt_title": "🎥 Wir sind auf YouTube — abonnieren",
     "get_play_free": "Bei Google Play holen — Kostenlos",
     "get_play_pro": "Pro holen — keine Werbung",
-    "get_ios_sideload": "iPhone – jetzt holen (Sideload, 1,67 $)"
+    "get_ios_sideload": "iPhone – jetzt holen (Sideload, 1,67 $)",
+    "get_android_sideload": "Android-App holen — kostenlos",
+    "all_apps": "Alle unsere Apps ansehen"
   },
   "landing": {
     "hero": {
@@ -1020,7 +1022,22 @@
     "lil_watch": "Watch on YouTube — Subscribe",
     "lil_commercial": "Watch our new animated commercial",
     "odometer_badge": "1,99 $ · Automatisierung 1,99 $/Monat",
-    "odometer_text": "Automatische Kilometererfassung für Gig-Fahrer – Fahrten werden von selbst aufgezeichnet, und jeder absetzbare Kilometer ist zur Steuerzeit bereit."
+    "odometer_text": "Automatische Kilometererfassung für Gig-Fahrer – Fahrten werden von selbst aufgezeichnet, und jeder absetzbare Kilometer ist zur Steuerzeit bereit.",
+    "get_android_free": "Kostenlose Android-App holen",
+    "get_android_pro": "Pro für Android holen — 1,99 $",
+    "li_android_btn": "Android-App",
+    "li_ios_btn": "iPhone-App",
+    "dl_now": "Jetzt herunterladen — {price}",
+    "dl_free": "Kostenlos herunterladen",
+    "play_soon": "Bald bei Google Play",
+    "more_title": "Mehr Usefulappz-Apps",
+    "more_text": "Widgets und Kinder-Apps aus demselben Studio. Ein Download-Button erscheint auf jeder Karte, sobald die App bereit zur Installation ist.",
+    "clip_text": "Zwischenablage-Verlauf und Lieblings-Snippets direkt auf dem Startbildschirm.",
+    "count_text": "Live-Countdowns zu deinen großen Tagen, direkt auf dem Startbildschirm.",
+    "lic_text": "Noch mehr Ausmalbilder für Kinder — freundliche Motive, kindersichere Werbung.",
+    "sticker_text": "Eine fröhliche Sticker-Welt zum Sammeln, Tauschen und Gestalten.",
+    "draw_text": "Schritt-für-Schritt-Zeichenstunden für kleine Künstler.",
+    "contests_text": "Fertige Ausmalbilder werden zu freundlichen Familien-Wettbewerben."
   },
   "byrequest": {
     "title": "By-Request Characters",

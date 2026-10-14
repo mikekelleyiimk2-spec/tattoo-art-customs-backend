@@ -328,7 +328,9 @@
     "yt_title": "🎥 Vi finns på YouTube — prenumerera",
     "get_play_free": "Hämta på Google Play — Gratis",
     "get_play_pro": "Hämta Pro — utan annonser",
-    "get_ios_sideload": "iPhone – hämta nu (sideload, $1,67)"
+    "get_ios_sideload": "iPhone – hämta nu (sideload, $1,67)",
+    "get_android_sideload": "Hämta Android-appen — gratis",
+    "all_apps": "Se alla våra appar"
   },
   "landing": {
     "hero": {
@@ -1020,7 +1022,22 @@
     "lil_watch": "Watch on YouTube — Subscribe",
     "lil_commercial": "Watch our new animated commercial",
     "odometer_badge": "1,99 $ · Automatik 1,99 $/mån",
-    "odometer_text": "Automatisk mil-logging för gigförare — resor sparas av sig själva och varje avdragsgill mil är redo vid deklarationen."
+    "odometer_text": "Automatisk mil-logging för gigförare — resor sparas av sig själva och varje avdragsgill mil är redo vid deklarationen.",
+    "get_android_free": "Hämta den gratis Android-appen",
+    "get_android_pro": "Skaffa Pro för Android — 1,99 $",
+    "li_android_btn": "Android-app",
+    "li_ios_btn": "iPhone-app",
+    "dl_now": "Ladda ner nu — {price}",
+    "dl_free": "Ladda ner gratis",
+    "play_soon": "Kommer snart till Google Play",
+    "more_title": "Fler Usefulappz-appar",
+    "more_text": "Widgetar och barnappar från samma studio. En nedladdningsknapp visas på varje kort så snart appen är redo att installera.",
+    "clip_text": "Urklippshistorik och favoritsnuttar, direkt på hemskärmen.",
+    "count_text": "Live-nedräkningar till dina stora dagar, direkt på hemskärmen.",
+    "lic_text": "Ännu fler målarbilder för barn — vänlig konst, barnsäker reklam.",
+    "sticker_text": "Ett glatt klistermärkesuniversum att samla, byta och skapa med.",
+    "draw_text": "Steg-för-steg-ritteckningar som guidar små konstnärer.",
+    "contests_text": "Färdiga målarbilder blir vänliga familjetävlingar."
   },
   "byrequest": {
     "title": "By-Request Characters",

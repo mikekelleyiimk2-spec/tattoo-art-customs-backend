@@ -328,7 +328,9 @@
     "yt_title": "🎥 YouTube에 있어요 — 구독해 주세요",
     "get_play_free": "Google Play에서 받기 — 무료",
     "get_play_pro": "Pro 받기 — 광고 없음",
-    "get_ios_sideload": "iPhone — 지금 받기(사이드로드, $1.67)"
+    "get_ios_sideload": "iPhone — 지금 받기(사이드로드, $1.67)",
+    "get_android_sideload": "Android 앱 받기 — 무료",
+    "all_apps": "모든 앱 보기"
   },
   "landing": {
     "hero": {
@@ -1020,7 +1022,22 @@
     "lil_watch": "Watch on YouTube — Subscribe",
     "lil_commercial": "Watch our new animated commercial",
     "odometer_badge": "$1.99 · 자동화 $1.99/월",
-    "odometer_text": "긱 드라이버를 위한 자동 주행거리 기록 — 운행이 스스로 저장되고, 공제 가능한 거리는 세금 신고 때 바로 사용할 수 있습니다."
+    "odometer_text": "긱 드라이버를 위한 자동 주행거리 기록 — 운행이 스스로 저장되고, 공제 가능한 거리는 세금 신고 때 바로 사용할 수 있습니다.",
+    "get_android_free": "무료 Android 앱 받기",
+    "get_android_pro": "Android용 Pro 받기 — $1.99",
+    "li_android_btn": "Android 앱",
+    "li_ios_btn": "iPhone 앱",
+    "dl_now": "지금 다운로드 — {price}",
+    "dl_free": "무료로 다운로드",
+    "play_soon": "곧 Google Play에 출시",
+    "more_title": "더 많은 Usefulappz 앱",
+    "more_text": "같은 스튜디오의 위젯과 키즈 앱. 각 앱이 설치 준비를 마치면 카드에 다운로드 버튼이 나타납니다.",
+    "clip_text": "클립보드 기록과 즐겨찾는 스니펫을 홈 화면에서 바로.",
+    "count_text": "중요한 날까지의 실시간 카운트다운을 홈 화면에서 바로.",
+    "lic_text": "아이들을 위한 색칠 페이지가 더 많이 — 친근한 그림과 안전한 광고.",
+    "sticker_text": "모으고, 교환하고, 만들 수 있는 즐거운 스티커 세상.",
+    "draw_text": "어린이 아티스트를 안내하는 단계별 그리기 레슨.",
+    "contests_text": "완성한 색칠 페이지가 즐거운 가족 콘테스트가 됩니다."
   },
   "byrequest": {
     "title": "By-Request Characters",

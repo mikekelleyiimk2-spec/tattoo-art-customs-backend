@@ -328,7 +328,9 @@
     "yt_title": "🎥 We're on YouTube — subscribe",
     "get_play_free": "Get it on Google Play — Free",
     "get_play_pro": "Get Pro — no ads",
-    "get_ios_sideload": "iPhone — get it now ($1.67 sideload)"
+    "get_ios_sideload": "iPhone — get it now ($1.67 sideload)",
+    "get_android_sideload": "Get the Android app — free",
+    "all_apps": "See all our apps"
   },
   "landing": {
     "hero": {
@@ -1020,7 +1022,22 @@
     "lil_watch": "Watch on YouTube — Subscribe",
     "lil_commercial": "Watch our new animated commercial",
     "odometer_badge": "$1.99 · Automation $1.99/mo",
-    "odometer_text": "Automatic mileage tracking for gig drivers — trips log themselves, and every deductible mile is ready at tax time."
+    "odometer_text": "Automatic mileage tracking for gig drivers — trips log themselves, and every deductible mile is ready at tax time.",
+    "get_android_free": "Get the free Android app",
+    "get_android_pro": "Get Pro for Android — $1.99",
+    "li_android_btn": "Android app",
+    "li_ios_btn": "iPhone app",
+    "dl_now": "Download now — {price}",
+    "dl_free": "Download free",
+    "play_soon": "Coming soon to Google Play",
+    "more_title": "More Usefulappz Apps",
+    "more_text": "Widgets and kids' apps from the same studio. A download button appears on each card the moment that app is ready to install.",
+    "clip_text": "Clipboard history and favorite snippets, right on your home screen.",
+    "count_text": "Live countdowns to your big days, right on your home screen.",
+    "lic_text": "Even more coloring pages for kids — friendly art, kid-safe ads.",
+    "sticker_text": "A happy sticker universe kids can collect, trade, and create with.",
+    "draw_text": "Step-by-step drawing lessons that guide little artists.",
+    "contests_text": "Finished coloring pages become friendly family contests."
   },
   "byrequest": {
     "title": "By-Request Characters",

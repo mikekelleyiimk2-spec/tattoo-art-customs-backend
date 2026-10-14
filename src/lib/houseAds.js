@@ -19,19 +19,27 @@
 //
 // Copy lives in the locale catalogs under `houseads.*` (all 12 locales);
 // this file holds only structure: ids, links, audience/pool membership.
+const appDownloads = require('./appDownloads');
+
 const CREATIVES = [
   // --- Our products -------------------------------------------------------
   {
+    // Direct sideload download (owner order 2026-10-14: ads point at the
+    // installable-now sideload until the Play listing is live). filePkg
+    // gates the creative out entirely until the APK is actually published
+    // in the app-updates store — the ad never links to a dead download.
     id: 'odometer', kind: 'product', audiences: ['tattoo'], pools: ['any'],
-    href: '/apps#odometer', external: false,
+    href: '/api/apps/com.usefulappz.odometer/apk', external: false,
+    filePkg: 'com.usefulappz.odometer',
   },
   {
     id: 'aibutton', kind: 'product', audiences: ['tattoo'], pools: ['any'],
-    href: '/apps#aibutton', external: false,
+    href: '/api/apps/com.usefulappz.aibar/apk', external: false,
+    filePkg: 'com.usefulappz.aibar',
   },
   {
     id: 'tacpro', kind: 'product', audiences: ['tattoo'], pools: ['any'],
-    href: '/apps', external: false,
+    href: '/tac-android-pro', external: false,
   },
   {
     id: 'membership', kind: 'product', audiences: ['tattoo'], pools: ['any'],
@@ -99,6 +107,9 @@ function enabled() {
 function candidates({ audience = 'tattoo', pool = 'any' } = {}) {
   return CREATIVES.filter(
     (c) => c.audiences.includes(audience) && (pool === 'any' || c.pools.includes(pool))
+      // Download creatives (filePkg) render only while the sideload file
+      // is actually published — never advertise a dead download link.
+      && (!c.filePkg || appDownloads.available(c.filePkg))
   );
 }
 

@@ -328,7 +328,9 @@
     "yt_title": "🎥 Estamos en YouTube — suscríbete",
     "get_play_free": "Conseguir en Google Play — Gratis",
     "get_play_pro": "Conseguir Pro — sin anuncios",
-    "get_ios_sideload": "iPhone: consíguelo ahora (sideload, $1.67)"
+    "get_ios_sideload": "iPhone: consíguelo ahora (sideload, $1.67)",
+    "get_android_sideload": "Descarga la app de Android — gratis",
+    "all_apps": "Ver todas nuestras apps"
   },
   "landing": {
     "hero": {
@@ -1020,7 +1022,22 @@
     "lil_watch": "Watch on YouTube — Subscribe",
     "lil_commercial": "Watch our new animated commercial",
     "odometer_badge": "$1.99 · Automatización $1.99/mes",
-    "odometer_text": "Registro automático de kilometraje para conductores de apps: los viajes se guardan solos y cada kilómetro deducible está listo para tus impuestos."
+    "odometer_text": "Registro automático de kilometraje para conductores de apps: los viajes se guardan solos y cada kilómetro deducible está listo para tus impuestos.",
+    "get_android_free": "Descarga la app de Android gratis",
+    "get_android_pro": "Obtén Pro para Android — $1.99",
+    "li_android_btn": "App de Android",
+    "li_ios_btn": "App de iPhone",
+    "dl_now": "Descargar ahora — {price}",
+    "dl_free": "Descargar gratis",
+    "play_soon": "Pronto en Google Play",
+    "more_title": "Más apps de Usefulappz",
+    "more_text": "Widgets y apps para niños del mismo estudio. El botón de descarga aparece en cada tarjeta en cuanto la app está lista para instalar.",
+    "clip_text": "Historial del portapapeles y fragmentos favoritos, en tu pantalla de inicio.",
+    "count_text": "Cuentas regresivas en vivo para tus días importantes, en tu pantalla de inicio.",
+    "lic_text": "Aún más páginas para colorear para niños: arte amable y anuncios seguros.",
+    "sticker_text": "Un alegre universo de pegatinas para coleccionar, intercambiar y crear.",
+    "draw_text": "Lecciones de dibujo paso a paso que guían a los pequeños artistas.",
+    "contests_text": "Las páginas coloreadas se convierten en concursos familiares amistosos."
   },
   "byrequest": {
     "title": "By-Request Characters",

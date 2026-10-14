@@ -328,7 +328,9 @@
     "yt_title": "🎥 Siamo su YouTube — iscriviti",
     "get_play_free": "Scarica su Google Play — Gratis",
     "get_play_pro": "Passa a Pro — senza pubblicità",
-    "get_ios_sideload": "iPhone: scaricala ora (sideload, $1,67)"
+    "get_ios_sideload": "iPhone: scaricala ora (sideload, $1,67)",
+    "get_android_sideload": "Scarica l'app Android — gratis",
+    "all_apps": "Vedi tutte le nostre app"
   },
   "landing": {
     "hero": {
@@ -1020,7 +1022,22 @@
     "lil_watch": "Watch on YouTube — Subscribe",
     "lil_commercial": "Watch our new animated commercial",
     "odometer_badge": "1,99 $ · Automazione 1,99 $/mese",
-    "odometer_text": "Registrazione automatica dei chilometri per driver: i viaggi si salvano da soli e ogni chilometro deducibile è pronto per le tasse."
+    "odometer_text": "Registrazione automatica dei chilometri per driver: i viaggi si salvano da soli e ogni chilometro deducibile è pronto per le tasse.",
+    "get_android_free": "Scarica l'app Android gratuita",
+    "get_android_pro": "Ottieni Pro per Android — $1,99",
+    "li_android_btn": "App Android",
+    "li_ios_btn": "App iPhone",
+    "dl_now": "Scarica ora — {price}",
+    "dl_free": "Scarica gratis",
+    "play_soon": "Presto su Google Play",
+    "more_title": "Altre app Usefulappz",
+    "more_text": "Widget e app per bambini dallo stesso studio. Il pulsante di download compare su ogni scheda appena l'app è pronta da installare.",
+    "clip_text": "Cronologia degli appunti e frammenti preferiti, sulla schermata iniziale.",
+    "count_text": "Conti alla rovescia in tempo reale per i tuoi giorni speciali, sulla schermata iniziale.",
+    "lic_text": "Ancora più pagine da colorare per bambini: arte gentile, annunci sicuri.",
+    "sticker_text": "Un allegro universo di adesivi da collezionare, scambiare e creare.",
+    "draw_text": "Lezioni di disegno passo passo che guidano i piccoli artisti.",
+    "contests_text": "Le pagine colorate diventano gare familiari amichevoli."
   },
   "byrequest": {
     "title": "By-Request Characters",

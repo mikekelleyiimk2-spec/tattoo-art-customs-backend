@@ -952,6 +952,9 @@ router.get('/apps', (req, res) => res.render('site/apps', {
   playStoreUrl: res.locals.playStoreUrl || null,
   playStoreProUrl: res.locals.playStoreProUrl || null,
   appStoreUrl: res.locals.appStoreUrl || null,
+  // Sideload availability per package (owner order 2026-10-14: app cards
+  // carry a download CTA only while the sideload file is published).
+  dl: require('../lib/appDownloads').availabilityMap(),
 }));
 
 router.get('/tap-to-pay', (req, res) => res.render('site/tap-to-pay', {
