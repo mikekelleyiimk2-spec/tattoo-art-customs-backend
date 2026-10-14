@@ -7,17 +7,31 @@
 // with the APP_UPDATES_REGISTRY env var — an absolute path, used by tests)
 // keyed by package name. Each entry:
 //   { versionCode, versionName, notes, sha256, sizeBytes, publishedAt,
-//     apkFile: "<package>.apk" }
+//     apkFile?: "<package>.apk", gated?: true }
 // It is read on every request so a new release is just a registry edit plus
 // an APK upload (POST /api/muse/upload-sideload accepts any
 // com.usefulappz.* package and stores its APK under app-updates/).
-// APKs live at path.join(config.uploadDir, 'app-updates', entry.apkFile);
-// resolveStoredPath() resolves that location relative to the upload dir.
+//
+// APK filename: the upload route stores every auto-update APK at
+// <uploadDir>/app-updates/<package>.apk, so when an entry omits apkFile the
+// file name defaults to "<package>.apk" — the registry producers emit
+// apkUrl, not apkFile (live defect 2026-10-14: requiring apkFile 404'd
+// EVERY package, free included, while /update worked fine).
+// resolveStoredPath() resolves app-updates/<file> against uploadDir first,
+// which is exactly where the upload route writes (config.uploadDir).
+//
+// PAID GATE (owner ruling 2026-10-14): entries with "gated": true never
+// serve APK bytes without a valid purchase token (see lib/updateTokens):
+// header "x-update-token" or ?t=, HMAC-verified, then DB-checked against a
+// paid orders row with order_type === "sideload:" + package. Free entries
+// stay public; /update stays public for all (gated entries add gated:true).
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const config = require('../config');
+const db = require('../db');
 const { resolveStoredPath } = require('../lib/storage');
+const updateTokens = require('../lib/updateTokens');
 
 const router = express.Router();
 
@@ -65,13 +79,30 @@ router.get('/apps/:package/update', (req, res) => {
     sha256: entry.sha256,
     sizeBytes: entry.sizeBytes,
     publishedAt: entry.publishedAt,
+    ...(entry.gated ? { gated: true } : {}),
   });
 });
 
-router.get('/apps/:package/apk', (req, res) => {
+function purchaseTokenRequired(res) {
+  return res.status(401).json({ ok: false, error: 'purchase token required' });
+}
+
+router.get('/apps/:package/apk', async (req, res) => {
   const entry = entryFor(req.params.package);
   if (!entry) return unknownPackage(res);
-  const apkFile = String(entry.apkFile || '');
+  const pkg = req.params.package;
+  if (entry.gated) {
+    const token = req.get('x-update-token') || req.query.t;
+    const orderId = updateTokens.verify(token, pkg);
+    if (!orderId) return purchaseTokenRequired(res);
+    const order = await db.get('SELECT * FROM orders WHERE id = ?', [orderId]);
+    if (!order || order.status !== 'paid' || order.order_type !== `sideload:${pkg}`) {
+      return purchaseTokenRequired(res);
+    }
+  }
+  // Default to the exact filename the upload route writes
+  // (app-updates/<package>.apk) when the entry carries no apkFile.
+  const apkFile = String(entry.apkFile || `${pkg}.apk`);
   if (!APK_FILE_RE.test(apkFile) || apkFile === '.' || apkFile === '..'
       || path.basename(apkFile) !== apkFile) {
     return res.status(404).json({ ok: false, error: 'apk not found' });

@@ -61,5 +61,105 @@
     "sha256": "f918b67517072e8e7a8ff2f0aad039e674057bbb638ce2b555eb6788a4c65428",
     "sizeBytes": 13545018,
     "publishedAt": "2026-10-14T19:11:17Z"
+  },
+  "com.usefulappz.aibar": {
+    "versionCode": 12,
+    "versionName": "1.5.6",
+    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.aibar/apk",
+    "notes": "Auto-update is here: this build can now update itself, and the app version is shown on the main screen.",
+    "sha256": "43ef3ad4ba51c2afdb9f8379535260f541cd55d5459f1de45a83692a776f1192",
+    "sizeBytes": 458528,
+    "publishedAt": "2026-10-14T19:11:17Z",
+    "gated": true
+  },
+  "com.usefulappz.odometer": {
+    "versionCode": 6,
+    "versionName": "1.4.0",
+    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.odometer/apk",
+    "notes": "The MileIQ-gap release: PDF tax report, QuickBooks CSV, trip edit + manual add, classification inbox, per-platform efficiency, deadhead vs paid miles — plus self-updates from now on.",
+    "sha256": "5f5c457104890b31816646b7f73195a07a7f86841f01cd94c5ae1261932a5e15",
+    "sizeBytes": 1876823,
+    "publishedAt": "2026-10-14T19:11:17Z",
+    "gated": true
+  },
+  "com.usefulappz.musebar": {
+    "versionCode": 10,
+    "versionName": "2.5",
+    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.musebar/apk",
+    "notes": "Now with automatic updates — future versions install themselves.",
+    "sha256": "e3a380487418bff0224167af3c095739366cd6dd086780c33f94281de37fb1fa",
+    "sizeBytes": 67025,
+    "publishedAt": "2026-10-14T19:11:17Z",
+    "gated": true
+  },
+  "com.usefulappz.chatgptbar": {
+    "versionCode": 6,
+    "versionName": "1.5",
+    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.chatgptbar/apk",
+    "notes": "Now with automatic updates — future versions install themselves.",
+    "sha256": "f19c1a63fe31086bca976776575ada3f493b30c6b26ca259c64742586b746bb1",
+    "sizeBytes": 62862,
+    "publishedAt": "2026-10-14T19:11:17Z",
+    "gated": true
+  },
+  "com.usefulappz.claudebar": {
+    "versionCode": 6,
+    "versionName": "1.5",
+    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.claudebar/apk",
+    "notes": "Now with automatic updates — future versions install themselves.",
+    "sha256": "9afa1f3f70783be44590aa91acb498c5c9d72245722ea64bd32d696493575667",
+    "sizeBytes": 62860,
+    "publishedAt": "2026-10-14T19:11:17Z",
+    "gated": true
+  },
+  "com.usefulappz.copilotbar": {
+    "versionCode": 6,
+    "versionName": "1.5",
+    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.copilotbar/apk",
+    "notes": "Now with automatic updates — future versions install themselves.",
+    "sha256": "ac3d8c3a314f4f01d88f35e8cdcffeeff7c4742e79f23081c98037e17752e676",
+    "sizeBytes": 62861,
+    "publishedAt": "2026-10-14T19:11:17Z",
+    "gated": true
+  },
+  "com.usefulappz.deepseekbar": {
+    "versionCode": 6,
+    "versionName": "1.5",
+    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.deepseekbar/apk",
+    "notes": "Now with automatic updates — future versions install themselves.",
+    "sha256": "ca0eaf00018abc9185453e55d2abf291ce9a2ce646bc2b848dc583e3d301b9e1",
+    "sizeBytes": 62865,
+    "publishedAt": "2026-10-14T19:11:17Z",
+    "gated": true
+  },
+  "com.usefulappz.geminibar": {
+    "versionCode": 6,
+    "versionName": "1.5",
+    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.geminibar/apk",
+    "notes": "Now with automatic updates — future versions install themselves.",
+    "sha256": "2469fa3b25383a0d549e677c47cfe2613279830a6b2c1245bd5ae3d347f59cf1",
+    "sizeBytes": 62860,
+    "publishedAt": "2026-10-14T19:11:17Z",
+    "gated": true
+  },
+  "com.usefulappz.grokbar": {
+    "versionCode": 6,
+    "versionName": "1.5",
+    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.grokbar/apk",
+    "notes": "Now with automatic updates — future versions install themselves.",
+    "sha256": "eb705326377ced3e55a7b25c8f7e868642b5f553a733571aa15e2ac63b47e9fb",
+    "sizeBytes": 62853,
+    "publishedAt": "2026-10-14T19:11:17Z",
+    "gated": true
+  },
+  "com.usefulappz.perplexitybar": {
+    "versionCode": 6,
+    "versionName": "1.5",
+    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.perplexitybar/apk",
+    "notes": "Now with automatic updates — future versions install themselves.",
+    "sha256": "7e4ad6a9f8af047e6fa0d5bc1b06d5859259e0021b46b656c64ebe0f5a488a09",
+    "sizeBytes": 62871,
+    "publishedAt": "2026-10-14T19:11:17Z",
+    "gated": true
   }
 }

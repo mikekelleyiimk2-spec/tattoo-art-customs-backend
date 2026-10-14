@@ -282,6 +282,10 @@ app.use('/little-inkers-ios', liSideloadRouter('ios'));
 app.use('/little-inkers-android', liSideloadRouter('android'));
 app.use('/tac-android', tacAndroidFreeRouter());
 app.use('/tac-android-pro', tacAndroidProRouter());
+// Paid sideload purchase pages for the UsefulAppz apps (owner ruling
+// 2026-10-14): /buy-app/:slug for Odometer, AI Button + the 8 per-AI Buttons.
+const { buyAppRouter } = require('./routes/buyApp');
+app.use('/buy-app', buyAppRouter());
 app.use('/intake', require('./shop/routes-intake'));
 app.use('/waitlist', require('./shop/routes-waitlist'));
 app.use('/toolkit', require('./shop/routes-toolkit'));

@@ -1,0 +1,23 @@
+<h1>Get <%= appName %> for Android</h1>
+<p class="muted">Sideload the APK. No Play Store needed.</p>
+
+<div class="card">
+  <h2>$<%= (price / 100).toFixed(2) %> one-time</h2>
+  <p><%= appName %> for Android. Works on Android 8+.</p>
+  <h3>How it works</h3>
+  <ol>
+    <li>Buy here with PayPal ($<%= (price / 100).toFixed(2) %>).</li>
+    <li>Download the APK file.</li>
+    <li>Open it — allow installs from this source if asked — and tap Install.</li>
+    <li>Save your update code from the download page — the app uses it to download future updates automatically.</li>
+  </ol>
+  <p class="muted fineprint">This is separate from the Play Store version (coming soon).</p>
+  <% if (user) { %>
+  <form method="post" action="/buy-app/<%= slug %>/buy" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p><button class="btn" type="submit">Buy <%= appName %> for $<%= (price / 100).toFixed(2) %></button></p>
+  </form>
+  <% } else { %>
+  <p><a class="btn" href="/login?next=/buy-app/<%= slug %>">Log in to buy</a></p>
+  <% } %>
+</div>
