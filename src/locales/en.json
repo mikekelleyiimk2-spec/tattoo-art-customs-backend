@@ -1503,5 +1503,14 @@
     "tacpro_h": "Tattoo Art Customs Pro",
     "tacpro_p": "The full design gallery in your pocket — no ads, every update first.",
     "tacpro_cta": "Go Pro"
+  },
+  "testers": {
+    "title": "Become a Tester — Help Launch Our Apps",
+    "intro": "Every app below needs 12 testers opted in before Google Play lets it launch — most are just 4–6 short. Tap an app, hit Become a tester, and stay opted in for about two weeks. The whole list takes about two minutes.",
+    "done": "Tattoo Art Customs (free) — DONE! 12+ testers reached ✅ — thank you!",
+    "join_btn": "Become a tester",
+    "share": "Know someone with an Android phone? Share this page — every tester gets an app closer to launch.",
+    "note": "Free forever, Android only. Use the Google account that's on your phone. Already a tester on an app? No need to tap it again — just grab any you're missing.",
+    "apps_link": "🧪 Become a tester — help launch our apps"
   }
 }

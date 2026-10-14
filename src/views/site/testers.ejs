@@ -1,0 +1,18 @@
+<h1><%= t('testers.title') %></h1>
+<p><%= t('testers.intro') %></p>
+
+<div style="text-align:center;border:2px solid #2e7d32;background:#eef7ee;border-radius:8px;padding:1rem;margin:1.5rem 0;">
+  <p style="margin:0;"><strong><%= t('testers.done') %></strong></p>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin:1.5rem 0;">
+  <% testerApps.forEach(function (a) { %>
+  <div style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1.25rem;">
+    <p style="margin-top:0;"><strong><%= a.name %></strong></p>
+    <p style="margin-bottom:0;"><a class="btn" style="display:block;padding:1rem;font-size:1.05rem;" href="<%= a.url %>" target="_blank" rel="noopener"><%= t('testers.join_btn') %></a></p>
+  </div>
+  <% }) %>
+</div>
+
+<p class="muted"><%= t('testers.note') %></p>
+<p><%= t('testers.share') %></p>

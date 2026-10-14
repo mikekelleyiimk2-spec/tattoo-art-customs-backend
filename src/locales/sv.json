@@ -1503,5 +1503,14 @@
     "tacpro_h": "Tattoo Art Customs Pro",
     "tacpro_p": "Hela designgalleriet i fickan — inga annonser, uppdateringar först.",
     "tacpro_cta": "Bli Pro"
+  },
+  "testers": {
+    "title": "Bli testare — Hjälp våra appar att lanseras",
+    "intro": "Varje app nedan behöver 12 anmälda testare innan Google Play tillåter lansering — de flesta saknar bara 4–6. Tryck på en app, tryck på ”Bli testare” och förbli anmäld i ungefär två veckor. Hela listan tar ungefär två minuter.",
+    "done": "Tattoo Art Customs (gratis) — KLART! Över 12 testare nådda ✅ — tack!",
+    "join_btn": "Bli testare",
+    "share": "Känner du någon med en Android-telefon? Dela den här sidan — varje testare för en app närmare lansering.",
+    "note": "Gratis för alltid, endast Android. Använd Google-kontot på din telefon. Redan testare för en app? Du behöver inte trycka igen — ta bara dem du saknar.",
+    "apps_link": "🧪 Bli testare — hjälp våra appar att lanseras"
   }
 }

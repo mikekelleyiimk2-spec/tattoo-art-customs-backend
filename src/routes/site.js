@@ -94,6 +94,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/membership/shops`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/advertise`, changefreq: 'weekly', priority: '0.6' },
     { loc: `${base}/about`, changefreq: 'monthly', priority: '0.5' },
+    { loc: `${base}/testers`, changefreq: 'weekly', priority: '0.6' },
     { loc: `${base}/raffle`, changefreq: 'weekly', priority: '0.6' },
     { loc: `${base}/terms`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy`, changefreq: 'monthly', priority: '0.3' },
@@ -955,6 +956,32 @@ router.get('/apps', (req, res) => res.render('site/apps', {
   // Sideload availability per package (owner order 2026-10-14: app cards
   // carry a download CTA only while the sideload file is published).
   dl: require('../lib/appDownloads').availabilityMap(),
+}));
+
+router.get('/testers', (req, res) => res.render('site/testers', {
+  title: 'Become a Tester — Help Launch Our Apps | Usefulappz',
+  metaDescription: 'Help launch 16 Usefulappz apps on Google Play — tap an app, become a tester, done in about two minutes.',
+  // Closed-test join links (same verified console links as the tester
+  // invite email, 2026-10-14). TAC free is DONE (12+) — shown in the
+  // view banner, deliberately not in this list.
+  testerApps: [
+    { name: 'Tattoo Art Customs Pro', url: 'https://play.google.com/apps/testing/com.tattooartcustoms.app.pro' },
+    { name: 'Little Inkers', url: 'https://play.google.com/apps/testing/com.usefulappz.littleinkers' },
+    { name: 'Little Inkers Coloring', url: 'https://play.google.com/apps/testing/com.usefulappz.littleinkerscoloring' },
+    { name: 'Sticker World', url: 'https://play.google.com/apps/testing/com.usefulappz.stickerworld' },
+    { name: 'Draw With Me', url: 'https://play.google.com/apps/testing/com.usefulappz.drawwithme' },
+    { name: 'Coloring Contests', url: 'https://play.google.com/apps/testing/com.usefulappz.coloringcontests' },
+    { name: 'Clipboard Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.clipboardbar' },
+    { name: 'Countdown Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.countdownbar' },
+    { name: 'Muse Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.musebar' },
+    { name: 'ChatGPT Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.chatgptbar' },
+    { name: 'Claude Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.claudebar' },
+    { name: 'Gemini Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.geminibar' },
+    { name: 'Grok Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.grokbar' },
+    { name: 'Perplexity Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.perplexitybar' },
+    { name: 'Copilot Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.copilotbar' },
+    { name: 'DeepSeek Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.deepseekbar' },
+  ],
 }));
 
 router.get('/tap-to-pay', (req, res) => res.render('site/tap-to-pay', {

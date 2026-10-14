@@ -1503,5 +1503,14 @@
     "tacpro_h": "Tattoo Art Customs Pro",
     "tacpro_p": "Toute la galerie de designs dans votre poche — sans pub, les nouveautés en premier.",
     "tacpro_cta": "Passer Pro"
+  },
+  "testers": {
+    "title": "Devenez testeur — Aidez nos applications à sortir",
+    "intro": "Chaque application ci-dessous a besoin de 12 testeurs inscrits avant que Google Play autorise son lancement — il n'en manque que 4 à 6 pour la plupart. Touchez une application, appuyez sur « Devenir testeur » et restez inscrit environ deux semaines. Toute la liste prend environ deux minutes.",
+    "done": "Tattoo Art Customs (gratuit) — TERMINÉ ! 12 testeurs et plus atteints ✅ — merci !",
+    "join_btn": "Devenir testeur",
+    "share": "Vous connaissez quelqu'un avec un téléphone Android ? Partagez cette page — chaque testeur rapproche une application de son lancement.",
+    "note": "Gratuit pour toujours, Android uniquement. Utilisez le compte Google de votre téléphone. Déjà testeur d'une application ? Pas besoin d'y retoucher — prenez seulement celles qui vous manquent.",
+    "apps_link": "🧪 Devenez testeur — aidez nos applications à sortir"
   }
 }
