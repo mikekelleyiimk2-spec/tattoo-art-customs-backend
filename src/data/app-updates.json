@@ -1,12 +1,13 @@
 {
   "com.usefulappz.clipboardbar": {
-    "versionCode": 4,
-    "versionName": "1.0.2",
+    "versionCode": 5,
+    "versionName": "1.0.3",
     "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.clipboardbar/apk",
     "notes": "Now with automatic updates — future versions install themselves.",
-    "sha256": "316ac658e07769bc11f3a19bec3cad69769fbac40387e4a4a68eb750bd0fd0d7",
-    "sizeBytes": 50596,
-    "publishedAt": "2026-10-14T19:11:17Z"
+    "sha256": "611965ccd3d0fc44ad6a8f00491a0e357018a7cd5119b822fae30a85196bb375",
+    "sizeBytes": 58785,
+    "publishedAt": "2026-10-14T21:55:59Z",
+    "gated": true
   },
   "com.usefulappz.coloringcontests": {
     "versionCode": 4,
@@ -18,13 +19,14 @@
     "publishedAt": "2026-10-14T19:11:17Z"
   },
   "com.usefulappz.countdownbar": {
-    "versionCode": 4,
-    "versionName": "1.0.2",
+    "versionCode": 5,
+    "versionName": "1.0.3",
     "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.countdownbar/apk",
     "notes": "Now with automatic updates — future versions install themselves.",
-    "sha256": "651390569c3e120163aae5c73df88eceaf732d5f823b6c5fc0ab895c038c505d",
-    "sizeBytes": 54609,
-    "publishedAt": "2026-10-14T19:11:17Z"
+    "sha256": "23082fa5cde878d10c2a5e8fccbc6d0040c46b255b95ce3adc2fe67587d2d652",
+    "sizeBytes": 58705,
+    "publishedAt": "2026-10-14T21:55:59Z",
+    "gated": true
   },
   "com.usefulappz.drawwithme": {
     "versionCode": 4,

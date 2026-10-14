@@ -31,6 +31,8 @@ const APPS = {
   'gemini-button': { package: 'com.usefulappz.geminibar', name: 'Gemini Button', priceCents: 99 },
   'grok-button': { package: 'com.usefulappz.grokbar', name: 'Grok Button', priceCents: 99 },
   'perplexity-button': { package: 'com.usefulappz.perplexitybar', name: 'Perplexity Button', priceCents: 99 },
+  'clipboard-bar': { package: 'com.usefulappz.clipboardbar', name: 'Clipboard Bar', priceCents: 99 },
+  'countdown-bar': { package: 'com.usefulappz.countdownbar', name: 'Countdown Bar', priceCents: 99 },
 };
 
 function buyAppRouter() {
