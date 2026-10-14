@@ -69,7 +69,9 @@ const CREATIVES = [
     href: 'https://lasso.to/auGY590feE/', external: true,
   },
   {
-    id: 'amazonaftercare', kind: 'affiliate', audiences: ['tattoo'], pools: ['any', 'aftercare'],
+    // Promotes the /aftercare guide from OTHER pages — deliberately not in
+    // the 'aftercare' pool, or the slot on /aftercare would link to itself.
+    id: 'amazonaftercare', kind: 'affiliate', audiences: ['tattoo'], pools: ['any'],
     href: '/aftercare', external: false,
   },
   {
