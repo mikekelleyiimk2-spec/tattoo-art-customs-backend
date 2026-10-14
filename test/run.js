@@ -627,6 +627,40 @@ async function main() {
   r = await req('GET', '/gallery');
   ok(r.status === 200, 'gallery renders');
 
+  // House ads (lib/houseAds.js): our own creatives fill slots with no booked
+  // direct ad. Lib-level: rotation, audience/pool rules, kill switch.
+  {
+    const houseAds = require('../src/lib/houseAds');
+    ok(houseAds.enabled() === true, 'house ads enabled by default');
+    const anyPick = houseAds.pickForContext({ slot: 'leaderboard' });
+    ok(!!anyPick && typeof anyPick.href === 'string' && anyPick.href.length > 0, 'house ad pick returns a creative with a link');
+    const acPick = houseAds.pickForContext({ slot: 'aftercare_inline' });
+    ok(!!acPick && acPick.pools.includes('aftercare'), 'aftercare slot only picks aftercare-pool creatives');
+    const kidPicks = new Set();
+    for (let m = 0; m < 60; m++) {
+      const saved = Date.now;
+      Date.now = () => m * 60000;
+      const p = houseAds.pickForContext({ audience: 'kids', pool: 'any', slot: 'x' + m });
+      Date.now = saved;
+      if (p) kidPicks.add(p.id);
+    }
+    ok([...kidPicks].every((id) => ['leda', 'littleinkers'].includes(id)), 'kids audience only ever gets kid-safe creatives (leda/littleinkers)');
+    ok(!houseAds.CREATIVES.some((c) => /cnc/i.test(c.id) || /cnctattoo/i.test(c.href)), 'no CNC creative exists in house ads (shop-gated, never public)');
+    process.env.HOUSE_ADS = '0';
+    ok(houseAds.enabled() === false && houseAds.pickForContext({ slot: 'leaderboard' }) === null, 'HOUSE_ADS=0 kill switch disables house ads');
+    delete process.env.HOUSE_ADS;
+  }
+
+  // House ads render server-side in the layout leaderboard + homepage slot,
+  // with the Ad/Sponsored label; affiliate creatives carry the disclosure.
+  r = await req('GET', '/');
+  ok(r.status === 200 && r.text.includes('house-ad'), 'homepage renders a house ad slot');
+  ok(r.text.includes('house-ad-label'), 'house ad carries an Ad/Sponsored label');
+  r = await req('GET', '/aftercare');
+  ok(r.status === 200 && r.text.includes('house-ad'), 'aftercare page renders a house ad slot');
+  r = await req('GET', '/apps');
+  ok(r.status === 200 && r.text.includes('id="odometer"') && r.text.includes('id="aibutton"'), 'apps page lists Odometer + AI Button cards (house ad landing anchors)');
+
   r = await req('GET', '/account', { follow: false });
   ok(r.status === 302, 'account requires login');
 

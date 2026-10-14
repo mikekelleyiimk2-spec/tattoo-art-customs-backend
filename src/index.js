@@ -150,6 +150,15 @@ app.use(async (req, res, next) => {
   next();
 });
 
+// House ads (our own creatives) fill any slot with no booked direct ad —
+// see lib/houseAds.js and partials/house-ad.ejs. Kill switch: HOUSE_ADS=0.
+app.use((req, res, next) => {
+  const houseAds = require('./lib/houseAds');
+  res.locals.houseAdsOn = houseAds.enabled();
+  res.locals.pickHouseAd = (opts) => houseAds.pickForContext(opts || {});
+  next();
+});
+
 // Public static files (logos, css, etc.) — cache 7 days like gallery images.
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: '7d' }));
 

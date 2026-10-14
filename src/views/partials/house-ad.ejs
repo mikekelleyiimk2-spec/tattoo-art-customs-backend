@@ -1,0 +1,25 @@
+<%# House ad: one of OUR OWN creatives (products + affiliates), rendered
+    server-side with no client JS. Copy comes from the `houseads.*` locale
+    keys; structure/links/audience rules live in lib/houseAds.js.
+    Expects `creative` in scope (from res.locals.pickHouseAd), or `slot`
+    (string) with optional `audience` / `pool` overrides and it picks here.
+    Renders nothing when HOUSE_ADS=0 or no creative matches the context. %>
+<% let _ha = (typeof creative !== 'undefined' && creative) || null; %>
+<% if (!_ha && typeof pickHouseAd !== 'undefined' && pickHouseAd && typeof slot !== 'undefined') { %>
+<%   _ha = pickHouseAd({ slot: slot, audience: typeof audience !== 'undefined' ? audience : undefined, pool: typeof pool !== 'undefined' ? pool : undefined }); %>
+<% } %>
+<% if (_ha) { %>
+<div class="ad-slot house-ad" role="complementary" aria-label="Advertisement">
+  <span class="house-ad-label"><%= t(_ha.kind === 'affiliate' ? 'houseads.label_sponsored' : 'houseads.label_ad') %></span>
+  <div class="house-ad-body">
+    <div class="house-ad-text">
+      <strong class="house-ad-headline"><%= t('houseads.' + _ha.id + '_h') %></strong>
+      <span class="house-ad-pitch"><%= t('houseads.' + _ha.id + '_p') %></span>
+      <% if (_ha.kind === 'affiliate') { %>
+      <span class="house-ad-disclosure"><%= t('houseads.disclosure') %></span>
+      <% } %>
+    </div>
+    <a class="btn house-ad-cta" href="<%= _ha.href %>"<% if (_ha.external) { %> target="_blank" rel="sponsored noopener"<% } %>><%= t('houseads.' + _ha.id + '_cta') %></a>
+  </div>
+</div>
+<% } %>

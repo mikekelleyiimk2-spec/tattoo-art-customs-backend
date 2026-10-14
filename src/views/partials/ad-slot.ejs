@@ -1,12 +1,18 @@
-<%# Ad slot: shows the booked direct ad for this slot, else falls back to AdSense, else nothing.
+<%# Ad slot: shows the booked direct ad for this slot, else one of our own
+    house creatives (lib/houseAds.js, HOUSE_ADS=0 disables), else the
+    AdSense remnant unit, else nothing.
     Expects `slot` (string) and `activeAds` (map) in scope. %>
 <% const _ad = (typeof activeAds !== 'undefined' && activeAds && activeAds[slot]) || null; %>
+<% const _house = (!_ad && typeof pickHouseAd !== 'undefined' && pickHouseAd)
+  ? pickHouseAd({ slot: slot }) : null; %>
 <% if (_ad) { %>
 <div class="ad-slot ad-direct" role="complementary" aria-label="Advertisement">
   <a href="/ads/go/<%= _ad.id %>" target="_blank" rel="sponsored noopener">
     <img src="<%= _ad.image_path %>" alt="Advertisement: <%= _ad.title %>" loading="lazy">
   </a>
 </div>
+<% } else if (_house) { %>
+<%- include('house-ad', {creative: _house}) %>
 <% } else { %>
 <%- include('ad-unit') %>
 <% } %>
