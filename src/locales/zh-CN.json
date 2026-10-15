@@ -551,12 +551,12 @@
       "cta": "访问周边商店"
     },
     "appbuttons": {
-      "title": "每个应用，一键直达",
+      "title": "Tattoo Art Customs 应用，一点即达",
       "sub": "直达每个应用自己的页面 — 无需寻找：",
       "buy": "购买 · {price}",
       "free_dl": "免费下载",
       "see_apps": "查看应用页面",
-      "note": "Android 应用可直接从我们这里下载（或在 Google Play 上架处下载）。价格以美元计。"
+      "note": "Tattoo Art Customs 应用 — 可直接从我们这里下载（或在 Google Play 上架处下载）。价格以美元计。"
     }
   },
   "membership": {

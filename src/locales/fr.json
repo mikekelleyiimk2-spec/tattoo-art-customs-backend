@@ -551,12 +551,12 @@
       "cta": "Visiter la boutique merch"
     },
     "appbuttons": {
-      "title": "Chaque appli, en un toucher",
+      "title": "Les applis Tattoo Art Customs, en un toucher",
       "sub": "Directement sur la page de chaque appli — sans chercher :",
       "buy": "Acheter · {price}",
       "free_dl": "Téléchargement gratuit",
       "see_apps": "Voir la page des applis",
-      "note": "Les applis Android se téléchargent directement chez nous (ou sur Google Play quand elles y sont). Prix en USD."
+      "note": "Les applis Tattoo Art Customs — à télécharger directement chez nous (ou sur Google Play lorsqu'elles y sont). Prix en USD."
     }
   },
   "membership": {

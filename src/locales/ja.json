@@ -551,12 +551,12 @@
       "cta": "マーチストアに行く"
     },
     "appbuttons": {
-      "title": "すべてのアプリをワンタップで",
+      "title": "Tattoo Art Customs のアプリをワンタップで",
       "sub": "各アプリのページへ直接 — 探す必要なし：",
       "buy": "購入 · {price}",
       "free_dl": "無料ダウンロード",
       "see_apps": "アプリページを見る",
-      "note": "Androidアプリは当サイトから直接（または掲載されている場合はGoogle Playから）ダウンロードできます。価格はUSDです。"
+      "note": "Tattoo Art Customs のアプリ — 当サイトから直接ダウンロード（Google Play に掲載がある場合はそちらでも）。価格は米ドルです。"
     }
   },
   "membership": {
