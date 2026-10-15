@@ -1021,6 +1021,13 @@
     "intro_1": "Every heart on a design is a vote. This page ranks the whole gallery by those votes, most-loved first, and the order moves as people browse. Tap the heart on any design to vote for it — it is saved to your wishlist at the same time, so your favorites are waiting when you come back.",
     "intro_2": "The badges are earned, not assigned: the top spot carries Most Loved, and the Trending and Selling Fast badges come from hearts and real paid orders in the last seven days. Nothing on this page is hand-picked or paid placement. If a top design is close but not quite your story, open it and order a custom variation drawn your way."
   },
+  "buyApp": {
+    "guest_email_label": "Email for delivery",
+    "guest_email_note": "No account needed — after PayPal checkout, your download link is emailed to this address.",
+    "guest_or_login": "Have an account?",
+    "guest_login_link": "Log in",
+    "guest_login_tail": "to check out with your saved details and see this purchase in your order history."
+  },
   "apps": {
     "aibutton_badge": "$9.99",
     "aibutton_text": "One floating button for every AI — tap, talk, and hear the answer out loud, over any app.",

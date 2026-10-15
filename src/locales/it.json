@@ -1021,6 +1021,13 @@
     "intro_2": "I badge si guadagnano, non si assegnano: il primo posto porta «Il più amato», e i badge «Di tendenza» e «Vendita veloce» nascono dai cuori e dagli ordini pagati reali degli ultimi sette giorni. Niente in questa pagina è scelto a mano o piazzato a pagamento. Se un disegno in cima si avvicina ma non è del tutto la tua storia, aprilo e ordina una variante personalizzata disegnata a modo tuo.",
     "intro_h": "Classificati dalle persone che li guardano"
   },
+  "buyApp": {
+    "guest_email_label": "Email di consegna",
+    "guest_email_note": "Nessun account necessario: dopo il pagamento con PayPal, il link per il download verrà inviato a questo indirizzo.",
+    "guest_or_login": "Hai già un account?",
+    "guest_login_link": "Accedi",
+    "guest_login_tail": "per pagare con i tuoi dati salvati e vedere questo acquisto nella cronologia degli ordini."
+  },
   "apps": {
     "aibutton_badge": "9,99 $",
     "aibutton_text": "Un pulsante fluttuante per ogni IA: tocca, parla e ascolta la risposta ad alta voce, sopra qualsiasi app.",

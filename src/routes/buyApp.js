@@ -5,18 +5,24 @@
 //   GET  /buy-app/:slug/approve/:orderId — PayPal return: capture + mark paid
 //   GET  /buy-app/:slug/download/:orderId — download page + update token
 //
-// Follows the TAC Android Pro flow in routes/sideload.js exactly (login →
-// orders row → PayPal checkout → capture → paid → token download). The
-// download page issues the buyer's update token (lib/updateTokens): the
-// APK itself is served by the gated /api/apps/:package/apk?t=<token>, so
-// future updates download automatically once the app has the code.
+// Member flow follows the TAC Android Pro flow in routes/sideload.js
+// (login → orders row → PayPal checkout → capture → paid → token
+// download). GUEST flow (money-path fix 2026-10-15, mirroring the design
+// guest checkout in routes/orders.js): a logged-out buyer checks out with
+// just a delivery email — the order carries guest_email with the ''
+// buyer sentinel (migration 089), the PayPal return URL carries an HMAC
+// checkout token (lib/guestCheckout), and on capture the receipt +
+// download-page link is emailed to the guest. The download page issues
+// the buyer's update token (lib/updateTokens): the APK itself is served
+// by the gated /api/apps/:package/apk?t=<token>, so future updates
+// download automatically once the app has the code.
 const express = require('express');
 const db = require('../db');
 const config = require('../config');
 const pricing = require('../lib/pricing');
 const paypal = require('../lib/paypal');
 const updateTokens = require('../lib/updateTokens');
-const { requireLogin } = require('../middleware/auth');
+const guestCheckout = require('../lib/guestCheckout');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 
 // slug -> { package, name, priceCents }
@@ -61,21 +67,35 @@ function buyAppRouter() {
     });
   });
 
-  router.post('/:slug/buy', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
+  router.post('/:slug/buy', formLimiter, checkHoneypot, async (req, res) => {
     const app = req.buyApp;
     const slug = req.buySlug;
+    // Guest checkout: no account required. The buyer's checkout email is
+    // the delivery address (receipt + download-page link emailed there).
+    const guest = !req.user;
+    let guestEmail = null;
+    if (guest) {
+      guestEmail = guestCheckout.parseGuestEmail(req.body.guest_email);
+      if (!guestEmail) {
+        req.session.flash = 'Enter the email address your download should be delivered to.';
+        return res.redirect(`/buy-app/${slug}`);
+      }
+    }
     const price = app.priceCents;
     const fee = pricing.processingFeeCents(price);
     const orderId = await db.insert('orders', {
-      buyer_id: req.user.id, order_type: `sideload:${app.package}`,
+      buyer_id: guest ? '' : req.user.id, order_type: `sideload:${app.package}`,
       amount_cents: price, fee_cents: fee, status: 'pending', payment_method: 'paypal',
+      guest_email: guestEmail,
       created_at: db.now(),
     });
     try {
       const pp = await paypal.createCheckoutOrder({
         amountCents: price + fee,
         description: `${app.name} — Android App (Sideload)`,
-        returnUrl: `${config.baseUrl}/buy-app/${slug}/approve/${orderId}`,
+        returnUrl: guest
+          ? `${config.baseUrl}/buy-app/${slug}/approve/${orderId}?gt=${guestCheckout.guestToken(orderId, app.package)}`
+          : `${config.baseUrl}/buy-app/${slug}/approve/${orderId}`,
         cancelUrl: `${config.baseUrl}/buy-app/${slug}`,
       });
       await db.update('orders', orderId, { paypal_order_id: pp.id });
@@ -88,15 +108,59 @@ function buyAppRouter() {
     }
   });
 
-  router.get('/:slug/approve/:orderId', requireLogin, async (req, res) => {
+  // Shared gate for the approve + download routes: guest orders prove
+  // ownership with the HMAC checkout token (?gt=); member orders need the
+  // buyer's own login. Returns the order, or null after responding.
+  async function loadBuyOrder(req, res, { paidOnly }) {
+    const app = req.buyApp;
+    const order = await db.get(
+      `SELECT * FROM orders WHERE id = ? AND order_type = ?${paidOnly ? " AND status = 'paid'" : ''}`,
+      [req.params.orderId, `sideload:${app.package}`]
+    );
+    if (!order) {
+      res.status(paidOnly ? 403 : 404).render('error', {
+        title: paidOnly ? 'Not available' : 'Not found',
+        message: paidOnly ? 'This download is not available.' : 'Order not found.',
+      });
+      return null;
+    }
+    if (guestCheckout.isGuestOrder(order)) {
+      if (guestCheckout.verifyGuestToken(req.query.gt, app.package) !== String(order.id)) {
+        res.status(403).render('error', {
+          title: 'Invalid checkout link',
+          message: 'This guest checkout link is not valid. Your download link is also emailed to you when payment completes.',
+        });
+        return null;
+      }
+      return order;
+    }
+    if (!req.user) {
+      res.redirect(`/login?next=${encodeURIComponent(req.originalUrl)}`);
+      return null;
+    }
+    if (order.buyer_id !== req.user.id) {
+      res.status(paidOnly ? 403 : 404).render('error', {
+        title: paidOnly ? 'Not available' : 'Not found',
+        message: paidOnly ? 'This download is not available.' : 'Order not found.',
+      });
+      return null;
+    }
+    return order;
+  }
+
+  function downloadPath(req, order) {
+    const base = `/buy-app/${req.buySlug}/download/${order.id}`;
+    return guestCheckout.isGuestOrder(order)
+      ? `${base}?gt=${encodeURIComponent(guestCheckout.guestToken(order.id, req.buyApp.package))}`
+      : base;
+  }
+
+  router.get('/:slug/approve/:orderId', async (req, res) => {
     const app = req.buyApp;
     const slug = req.buySlug;
-    const order = await db.get(
-      'SELECT * FROM orders WHERE id = ? AND buyer_id = ? AND order_type = ?',
-      [req.params.orderId, req.user.id, `sideload:${app.package}`]
-    );
-    if (!order) return res.status(404).render('error', { title: 'Not found', message: 'Order not found.' });
-    if (order.status === 'paid') return res.redirect(`/buy-app/${slug}/download/${order.id}`);
+    const order = await loadBuyOrder(req, res, { paidOnly: false });
+    if (!order) return;
+    if (order.status === 'paid') return res.redirect(downloadPath(req, order));
     try {
       // lib/paypal's capture export is captureCheckoutOrder; captureOrder is
       // kept as a fallback alias name (the older sideload/ios flows use it).
@@ -106,8 +170,14 @@ function buyAppRouter() {
       const captured = Math.round(parseFloat(capture.purchase_units[0].payments.captures[0].amount.value) * 100);
       if (captured !== expectedTotal) throw new Error('Amount mismatch');
       await db.update('orders', order.id, { status: 'paid', paid_at: db.now() });
+      if (guestCheckout.isGuestOrder(order)) {
+        await guestCheckout.sendGuestAppReceipt({
+          order, appName: app.name,
+          downloadPageUrl: `${config.baseUrl}${downloadPath(req, order)}`,
+        });
+      }
       req.session.flash = 'Payment complete — your app download is ready.';
-      res.redirect(`/buy-app/${slug}/download/${order.id}`);
+      res.redirect(downloadPath(req, order));
     } catch (e) {
       console.error(`buy-app ${slug} PayPal capture failed:`, e.message);
       req.session.flash = 'Payment could not be completed — try again.';
@@ -115,13 +185,10 @@ function buyAppRouter() {
     }
   });
 
-  router.get('/:slug/download/:orderId', requireLogin, async (req, res) => {
+  router.get('/:slug/download/:orderId', async (req, res) => {
     const app = req.buyApp;
-    const order = await db.get(
-      'SELECT * FROM orders WHERE id = ? AND buyer_id = ? AND order_type = ? AND status = \'paid\'',
-      [req.params.orderId, req.user.id, `sideload:${app.package}`]
-    );
-    if (!order) return res.status(403).render('error', { title: 'Not available', message: 'This download is not available.' });
+    const order = await loadBuyOrder(req, res, { paidOnly: true });
+    if (!order) return;
     const token = updateTokens.issue(order.id, app.package);
     res.render('site/buy-app-download', {
       title: `Download ${app.name} — Tattoo Art Customs`,

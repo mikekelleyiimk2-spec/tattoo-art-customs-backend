@@ -1021,6 +1021,13 @@
     "intro_1": "Jedes Herz an einem Design ist eine Stimme. Diese Seite ordnet die gesamte Galerie nach diesen Stimmen, die beliebtesten zuerst, und die Reihenfolge bewegt sich mit dem Stöbern. Tippe auf das Herz an einem Design, um dafür zu stimmen — es wird gleichzeitig auf deiner Wunschliste gespeichert, sodass deine Favoriten bei deiner Rückkehr warten.",
     "intro_2": "Die Abzeichen werden verdient, nicht vergeben: Der erste Platz trägt „Meistgeliebt“, und die Abzeichen „Trend“ und „Verkauft sich schnell“ entstehen aus Herzen und echten bezahlten Bestellungen der letzten sieben Tage. Nichts auf dieser Seite ist handverlesen oder bezahlte Platzierung. Wenn ein Top-Design fast, aber nicht ganz deine Geschichte ist, öffne es und bestelle eine Custom-Variante nach deinen Wünschen."
   },
+  "buyApp": {
+    "guest_email_label": "E-Mail für die Lieferung",
+    "guest_email_note": "Kein Konto nötig — nach der PayPal-Zahlung wird Ihr Download-Link an diese Adresse gesendet.",
+    "guest_or_login": "Haben Sie ein Konto?",
+    "guest_login_link": "Anmelden",
+    "guest_login_tail": "um mit Ihren gespeicherten Daten zu zahlen und diesen Kauf in Ihrer Bestellhistorie zu sehen."
+  },
   "apps": {
     "aibutton_badge": "9,99 $",
     "aibutton_text": "Ein schwebender Button für jede KI – tippen, sprechen und die Antwort laut hören, über jeder App.",

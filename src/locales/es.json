@@ -1021,6 +1021,13 @@
     "intro_1": "Cada corazón en un diseño es un voto. Esta página ordena toda la galería por esos votos, los más queridos primero, y el orden se mueve según la gente navega. Toca el corazón de cualquier diseño para votar por él: se guarda en tu lista de deseos al mismo tiempo, para que tus favoritos te esperen cuando vuelvas.",
     "intro_2": "Las insignias se ganan, no se asignan: el primer puesto lleva «Más querido», y las insignias «En tendencia» y «Se vende rápido» salen de los corazones y los pedidos pagados reales de los últimos siete días. Nada en esta página es selección manual ni colocación pagada. Si un diseño destacado se acerca pero no es del todo tu historia, ábrelo y encarga una variante personalizada dibujada a tu manera."
   },
+  "buyApp": {
+    "guest_email_label": "Correo electrónico de entrega",
+    "guest_email_note": "No necesitas una cuenta: después de pagar con PayPal, tu enlace de descarga se enviará a esta dirección.",
+    "guest_or_login": "¿Ya tienes una cuenta?",
+    "guest_login_link": "Iniciar sesión",
+    "guest_login_tail": "para pagar con tus datos guardados y ver esta compra en tu historial de pedidos."
+  },
   "apps": {
     "aibutton_badge": "$9.99",
     "aibutton_text": "Un botón flotante para todas las IA: toca, habla y escucha la respuesta en voz alta, sobre cualquier app.",

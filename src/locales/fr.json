@@ -1021,6 +1021,13 @@
     "intro_1": "Chaque cœur sur un design est un vote. Cette page classe toute la galerie selon ces votes, les plus aimés d’abord, et l’ordre bouge au fil des visites. Touchez le cœur d’un design pour voter pour lui — il est en même temps enregistré dans votre liste de favoris, pour que vos préférés vous attendent à votre retour.",
     "intro_2": "Les badges se méritent, ils ne s’attribuent pas : la première place porte « Le plus aimé », et les badges « Tendance » et « Se vend vite » viennent des cœurs et des commandes payées réelles des sept derniers jours. Rien sur cette page n’est choisi à la main ni placé contre paiement. Si un design en tête est proche mais pas tout à fait votre histoire, ouvrez-le et commandez une variante personnalisée dessinée à votre façon."
   },
+  "buyApp": {
+    "guest_email_label": "E-mail de livraison",
+    "guest_email_note": "Aucun compte requis — après le paiement PayPal, votre lien de téléchargement est envoyé à cette adresse.",
+    "guest_or_login": "Vous avez un compte ?",
+    "guest_login_link": "Se connecter",
+    "guest_login_tail": "pour payer avec vos informations enregistrées et retrouver cet achat dans votre historique de commandes."
+  },
   "apps": {
     "aibutton_badge": "9,99 $",
     "aibutton_text": "Un bouton flottant pour toutes les IA : touchez, parlez et écoutez la réponse à voix haute, par-dessus n’importe quelle appli.",

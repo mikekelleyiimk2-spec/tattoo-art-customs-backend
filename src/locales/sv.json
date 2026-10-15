@@ -1021,6 +1021,13 @@
     "intro_2": "Märkena förtjänas, de delas inte ut: topplatsen bär «Mest älskad», och märkena «Trendande» och «Säljer snabbt» kommer från hjärtan och riktiga betalda beställningar under de senaste sju dagarna. Inget på den här sidan är handplockat eller betald placering. Om en toppdesign är nära men inte riktigt din historia, öppna den och beställ en anpassad variant ritad på ditt sätt.",
     "intro_h": "Rankade av människorna som bläddrar bland dem"
   },
+  "buyApp": {
+    "guest_email_label": "E-post för leverans",
+    "guest_email_note": "Inget konto behövs — efter PayPal-betalningen skickas din nedladdningslänk till den här adressen.",
+    "guest_or_login": "Har du ett konto?",
+    "guest_login_link": "Logga in",
+    "guest_login_tail": "för att betala med dina sparade uppgifter och se köpet i din orderhistorik."
+  },
   "apps": {
     "aibutton_badge": "9,99 $",
     "aibutton_text": "En flytande knapp för alla AI-tjänster — tryck, prata och hör svaret högt, ovanpå vilken app som helst.",
