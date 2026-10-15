@@ -38,12 +38,17 @@ async function fulfillPremadeOrder(order) {
   }
   const dl = await issueDownloadToken(order.id);
   const design = await db.get('SELECT title FROM designs WHERE id = ?', [order.design_id]);
-  const buyer = await db.get('SELECT email, display_name FROM users WHERE id = ?', [order.buyer_id]);
+  const buyer = order.buyer_id
+    ? await db.get('SELECT email, display_name FROM users WHERE id = ?', [order.buyer_id])
+    : null;
+  // Guest checkout (2026-10-15): no account — the receipt + download link go
+  // to the checkout email stored on the order.
+  const toEmail = (buyer && buyer.email) || order.guest_email || null;
   const title = design ? design.title : 'your design';
   const viewUrl = `${config.baseUrl}/orders/download/${dl.token}/view`;
   const orderUrl = `${config.baseUrl}/orders/${order.id}`;
-  if (buyer && buyer.email) {
-    const first = String(buyer.display_name || '').split(' ')[0] || 'there';
+  if (toEmail) {
+    const first = buyer ? (String(buyer.display_name || '').split(' ')[0] || 'there') : 'there';
     const lines = [
       `Hi ${first},`,
       ``,
@@ -56,11 +61,19 @@ async function fulfillPremadeOrder(order) {
       viewUrl,
     ];
     if (order.linework_only) lines.push(`(Linework-only purchase: the clean linework file is included.)`);
+    lines.push(``, `This is a private link just for you and it expires in 24 hours.`);
+    if (buyer) {
+      lines.push(
+        `You can generate a fresh link any time from your order page:`,
+        orderUrl,
+      );
+    } else {
+      lines.push(
+        `Keep this email — it is your receipt and your record of this purchase.`,
+        `If the link expires before you download, reply to this email and we will send a fresh one.`,
+      );
+    }
     lines.push(
-      ``,
-      `This is a private link just for you and it expires in 24 hours.`,
-      `You can generate a fresh link any time from your order page:`,
-      orderUrl,
       ``,
       `Please don't share these files — they're licensed to you only.`,
       `Single-use tattoo license: full terms at https://tattoo-art-customs.onrender.com/terms#license`,
@@ -68,7 +81,7 @@ async function fulfillPremadeOrder(order) {
     );
     try {
       await sendMail({
-        to: buyer.email,
+        to: toEmail,
         subject: `Your download is ready — ${title} (Tattoo Art Customs)`,
         text: lines.join('\n'),
       });

@@ -213,7 +213,20 @@
     "vg_chars_btn": "Request {name}",
     "kit_h": "补齐你的装备",
     "kit_sub": "新纹身需要正确护理才能更好愈合 — 我们推荐的产品：",
-    "kit_deals": "查看全部优惠与折扣"
+    "kit_deals": "查看全部优惠与折扣",
+    "guest_email_label": "Email for delivery",
+    "guest_email_note": "No account needed — after PayPal checkout, your private download link is emailed to this address.",
+    "guest_or_login": "Have an account?",
+    "guest_login_link": "Log in",
+    "guest_login_tail": "for member pricing, site credit, and your order history.",
+    "request_login_note": "Requesting this design is a custom order — log in or create a free account to submit the request.",
+    "trust_h": "What you get — no surprises",
+    "trust_seller": "Sold and delivered by Tattoo Art Customs, an online tattoo-design marketplace.",
+    "trust_get": "You get the full-resolution color file plus the clean linework file — the files a tattoo artist works from. (Linework-only purchases include the linework file.)",
+    "trust_delivery": "Instant delivery: the moment PayPal checkout completes, your private download link appears on screen and is emailed to you. Links last 24 hours.",
+    "trust_license": "Single-use tattoo license: you may tattoo this design once, on yourself. No reselling, sharing, or printing it on merchandise — copyright stays with the artist. Full license terms are in Terms §8.",
+    "trust_secure": "Secure checkout through PayPal — we never see or store your card details.",
+    "trust_final": "All sales are final: digital files cannot be returned, so there are no refunds (Terms §3)."
   },
   "footer": {
     "advertise": "广告",

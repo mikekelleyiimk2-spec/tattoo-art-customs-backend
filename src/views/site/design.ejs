@@ -113,8 +113,38 @@
     </details>
     <% } %>
     <% } else { %>
-    <p><a class="btn" href="/login?next=<%= encodeURIComponent('/design/' + design.id) %>"><%= t('design.login_to_buy') %></a></p>
+    <% if (design.request_only) { %>
+    <div class="card">
+      <p><strong><%= t('design.request_only_title') %></strong></p>
+      <p class="muted"><%= t('design.request_login_note') %></p>
+      <p><a class="btn" href="/login?next=<%= encodeURIComponent('/orders/custom?design=' + design.id) %>"><%= t('design.request_this_design') %></a></p>
+    </div>
+    <% } else { %>
+    <form method="post" action="/orders/buy/<%= design.id %>">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <% if (design.color_source === 'none') { %>
+      <p class="muted"><%= t('design.no_color') %></p>
+      <label><input type="radio" name="linework_only" value="1" checked>
+        <strong><%= t('design.linework_only', {price: fmtMoney(lineworkTotal)}) %></strong> <span class="muted"><%= t('design.incl_fee') %></span></label>
+      <% } else { %>
+      <label><input type="radio" name="linework_only" value="0" checked>
+        <strong><%= t('design.full_color', {price: fmtMoney(priceTotal)}) %></strong> <span class="muted"><%= t('design.incl_fee') %></span></label>
+      <label><input type="radio" name="linework_only" value="1">
+        <strong><%= t('design.linework_only', {price: fmtMoney(lineworkTotal)}) %></strong>
+        <span class="muted"><%= t('design.linework_off') %></span></label>
+      <% } %>
+      <% const _gfx = fxNote(priceTotal); if (_gfx) { %><p class="muted fineprint"><%= _gfx %></p><% } %>
+      <label><%= t('design.guest_email_label') %>
+        <input type="email" name="guest_email" required maxlength="160" placeholder="you@example.com">
+      </label>
+      <p class="muted fineprint"><%= t('design.guest_email_note') %></p>
+      <p><button class="btn" type="submit"><%= t('design.buy_now') %></button></p>
+      <p class="muted fineprint"><%= t('design.license_line') %> <a href="/terms#license">Terms</a></p>
+      <p class="muted fineprint"><%= t('design.guest_or_login') %> <a href="/login?next=<%= encodeURIComponent('/design/' + design.id) %>"><%= t('design.guest_login_link') %></a> <%= t('design.guest_login_tail') %></p>
+    </form>
     <% } %>
+    <% } %>
+    <%- include('../partials/design-trust') %>
     <% if (typeof owned !== 'undefined' && owned) { %>
     <p><a class="btn btn-secondary" href="/prints/order/design/<%= design.id %>"><%= t('design.order_print') %></a>
     <a class="btn btn-secondary" href="/merch/tee/<%= design.id %>"><%= t('design.get_tee') %></a></p>
@@ -131,7 +161,3 @@
     <% } %>
   </div>
 </div>
-
-<%- include('../partials/affiliate-kit') %>
-
-<%- include('../partials/ad-slot', {slot: 'design_page'}) %>

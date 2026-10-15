@@ -128,7 +128,7 @@ gtag('config', 'G-9N1QECNMWL');
 <div class="flash" role="alert"><%= flash %></div>
 <% } %>
 
-<%- include('partials/ad-slot', {slot: 'leaderboard'}) %>
+<% if (typeof noAds === 'undefined' || !noAds) { %><%- include('partials/ad-slot', {slot: 'leaderboard'}) %><% } %>
 
 <main id="main" class="container">
   <%- body %>

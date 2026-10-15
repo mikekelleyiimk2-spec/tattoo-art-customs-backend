@@ -20,6 +20,17 @@ const { onOrderPaid } = require('../lib/printful');
 const { fulfillPremadeOrder, sendCustomDepositReceipt } = require('../lib/fulfillment');
 const firstCustom = require('../lib/firstCustom');
 const halloweenFlash = require('../lib/halloweenFlash');
+const updateTokens = require('../lib/updateTokens');
+
+// Guest design checkout (2026-10-15): a logged-out buyer pays via PayPal and
+// gets the design by emailed download token — no account wall. The PayPal
+// return URL carries a stateless HMAC token (<orderId>.<sig>, the same
+// pattern as lib/updateTokens' gated app downloads) proving the returning
+// browser is the one that started this guest order.
+const GUEST_TOKEN_PURPOSE = 'guest-design-checkout';
+const guestApproveUrl = (orderId) =>
+  `${config.baseUrl}/orders/approve/${orderId}?gt=${updateTokens.issue(orderId, GUEST_TOKEN_PURPOSE)}`;
+const isGuestOrder = (order) => !!order && !order.buyer_id && !!order.guest_email;
 
 const router = express.Router();
 
@@ -31,9 +42,20 @@ function referralFromReq(req) {
 // Portfolio custom pieces are already-made art: they charge the current
 // custom-design price (sale-aware) and deliver instantly like premade
 // fulfillment — they NEVER go through the 48-hour made-to-order pipeline.
-router.post('/buy/:designId', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
+router.post('/buy/:designId', formLimiter, checkHoneypot, async (req, res) => {
   const design = await db.get("SELECT * FROM designs WHERE id = ? AND status = 'approved'", [req.params.designId]);
   if (!design) return res.status(404).render('error', { title: 'Not found', message: 'That design is not available.' });
+  // Guest checkout: no account required. The buyer's checkout email is the
+  // delivery address (download token is emailed there after payment).
+  const guest = !req.user;
+  let guestEmail = null;
+  if (guest) {
+    guestEmail = String(req.body.guest_email || '').trim().toLowerCase().slice(0, 160);
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(guestEmail)) {
+      req.session.flash = 'Enter the email address your download should be delivered to.';
+      return res.redirect(`/design/${design.id}`);
+    }
+  }
   // Member-exclusive designs are purchasable by active members only.
   const member = await isActiveMember(req.user);
   if (design.members_only && !member) {
@@ -89,15 +111,16 @@ router.post('/buy/:designId', requireLogin, formLimiter, checkHoneypot, async (r
   // computed on the base price only, so the business never absorbs the fee.
   const fee = pricing.processingFeeCents(price);
   const orderId = await db.insert('orders', {
-    buyer_id: req.user.id, design_id: design.id, order_type: 'premade',
+    buyer_id: guest ? '' : req.user.id, design_id: design.id, order_type: 'premade',
     amount_cents: price, fee_cents: fee, status: 'pending', payment_method: 'paypal',
     referral_code: refCode, referred_shop_id: await resolveShopReferral(refCode),
     linework_only: lineworkOnly ? 1 : 0,
     discount_applied: discountApplied,
+    guest_email: guestEmail,
     created_at: db.now(),
   });
   // Pay with site credit when requested and the balance covers it.
-  if (req.body.use_credit) {
+  if (!guest && req.body.use_credit) {
     try {
       const { payOrderWithCredit } = require('../lib/credits');
       const { order: paid } = await payOrderWithCredit({ userId: req.user.id, orderId });
@@ -111,7 +134,7 @@ router.post('/buy/:designId', requireLogin, formLimiter, checkHoneypot, async (r
     const pp = await paypal.createCheckoutOrder({
       amountCents: price + fee,
       description: `Tattoo Art Customs — "${design.title}"${lineworkOnly ? ' (linework only)' : ''}`,
-      returnUrl: `${config.baseUrl}/orders/approve/${orderId}`,
+      returnUrl: guest ? guestApproveUrl(orderId) : `${config.baseUrl}/orders/approve/${orderId}`,
       cancelUrl: `${config.baseUrl}/design/${design.id}`,
     });
     await db.update('orders', orderId, { paypal_order_id: pp.id });
@@ -119,6 +142,11 @@ router.post('/buy/:designId', requireLogin, formLimiter, checkHoneypot, async (r
     res.redirect(approve.href);
   } catch (e) {
     console.error('PayPal order create failed:', e.message);
+    if (guest) {
+      // The manual-payment page is an account page; guests just retry.
+      req.session.flash = 'PayPal checkout is unavailable right now — please try again in a moment.';
+      return res.redirect(`/design/${design.id}`);
+    }
     req.session.flash = 'PayPal checkout is unavailable right now — you can pay manually below.';
     res.redirect(`/orders/manual/${orderId}`);
   }
@@ -224,7 +252,7 @@ router.get('/custom', requireLogin, async (req, res) => {
      AND (u.commission_suspended_until IS NULL OR u.commission_suspended_until <= ?)
      ORDER BY u.display_name`, [nowMs]);
   res.render('orders/custom', {
-    title: 'Request a Custom Design — Tattoo Art Customs',
+    title: 'Request a Custom Design — Tattoo Art Customs', noAds: true,
     deposit, full, sale: quote.sale, artists,
     designBrief, designTitle,
     firstCustom: quote.discount === firstCustom.FIRST_CUSTOM_DISCOUNT_CODE,
@@ -371,7 +399,7 @@ router.post('/send-to-app/:designId', requireLogin, formLimiter, checkHoneypot, 
 router.get('/manual/:orderId', requireLogin, async (req, res) => {
   const order = await db.get('SELECT * FROM orders WHERE id = ? AND buyer_id = ?', [req.params.orderId, req.user.id]);
   if (!order) return res.status(404).render('error', { title: 'Not found', message: 'Order not found.' });
-  res.render('orders/manual', { title: 'Pay manually — Tattoo Art Customs', order });
+  res.render('orders/manual', { title: 'Pay manually — Tattoo Art Customs', order, noAds: true });
 });
 router.post('/manual/:orderId', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
   const order = await db.get('SELECT * FROM orders WHERE id = ? AND buyer_id = ?', [req.params.orderId, req.user.id]);
@@ -411,10 +439,37 @@ router.post('/manual/:orderId/paypal', requireLogin, formLimiter, checkHoneypot,
 });
 
 // --- PayPal return: capture ---
-router.get('/approve/:orderId', requireLogin, async (req, res) => {
-  const order = await db.get('SELECT * FROM orders WHERE id = ? AND buyer_id = ?', [req.params.orderId, req.user.id]);
-  if (!order) return res.redirect('/account');
-  if (order.status === 'paid') return res.redirect(`/orders/${order.id}`);
+// Member orders: login + buyer match (unchanged). Guest orders (buyer_id ''
+// + guest_email): the HMAC token in ?gt= (minted into the PayPal return URL
+// at checkout) is the proof — the same bearer pattern as the download token.
+router.get('/approve/:orderId', async (req, res) => {
+  const order = await db.get('SELECT * FROM orders WHERE id = ?', [req.params.orderId]);
+  const guestOrder = isGuestOrder(order);
+  if (!order) {
+    return req.user
+      ? res.redirect('/account')
+      : res.status(404).render('error', { title: 'Not found', message: 'Order not found.' });
+  }
+  if (guestOrder) {
+    if (updateTokens.verify(String(req.query.gt || ''), GUEST_TOKEN_PURPOSE) !== order.id) {
+      return res.status(403).render('error', {
+        title: 'Invalid checkout link',
+        message: 'This guest checkout link is not valid. Your download link is also emailed to you when payment completes.',
+      });
+    }
+  } else {
+    if (!req.user) {
+      return res.redirect(`/login?next=${encodeURIComponent(req.originalUrl)}`);
+    }
+    if (order.buyer_id !== req.user.id) return res.redirect('/account');
+  }
+  if (order.status === 'paid') {
+    if (guestOrder) {
+      const dl = await require('../lib/fulfillment').issueDownloadToken(order.id);
+      return res.redirect(`/orders/download/${dl.token}/view`);
+    }
+    return res.redirect(`/orders/${order.id}`);
+  }
   try {
     const capture = await paypal.captureCheckoutOrder(order.paypal_order_id);
     // The charged total (price/deposit + processing fee + rush fee). The
@@ -447,7 +502,7 @@ router.get('/approve/:orderId', requireLogin, async (req, res) => {
     const fulfil = await onOrderPaid(fresh);
     await routeCustomOrder(fresh);
     await onCustomPieceSold(fresh); // sold custom pieces delist + queue a replacement
-    await fulfillPremadeOrder(fresh); // premades deliver instantly: token + receipt email
+    const premadeDl = await fulfillPremadeOrder(fresh); // premades deliver instantly: token + receipt email
     try { await require('../lib/requestZipDelivery').fulfillRequestZipOrder(fresh); } // request orders: auto-deliver the matching ZIP (fail-closed on ambiguity)
     catch (e) { console.error('request-zip delivery failed:', e.message); }
     await require('../lib/littleInkers').fulfillSendToApp(fresh); // send-to-app: mint LIL- code
@@ -459,10 +514,15 @@ router.get('/approve/:orderId', requireLogin, async (req, res) => {
       : 'Payment received — your download is ready.';
     req.session.flash +=
       (fulfil.submitted ? ' Your print was sent to the printer automatically.' : '');
+    // Guests have no account order page — their confirmation IS the
+    // download page (the same link the receipt email carries).
+    if (guestOrder && premadeDl) {
+      return res.redirect(`/orders/download/${premadeDl.token}/view`);
+    }
     res.redirect(`/orders/${order.id}`);
   } catch (e) {
     req.session.flash = 'Payment capture failed: ' + e.message;
-    res.redirect('/account');
+    res.redirect(guestOrder ? `/design/${order.design_id || ''}` : '/account');
   }
 });
 
@@ -485,7 +545,7 @@ router.get('/:orderId', requireLogin, async (req, res) => {
     const rc = await db.get('SELECT code FROM redeem_codes WHERE order_id = ?', [order.id]);
     redeemCode = rc ? rc.code : null;
   }
-  res.render('orders/detail', { title: `Order ${order.id.slice(0, 8)} — Tattoo Art Customs`, order, design, downloads, transfers, depositTotal, fullTotal, redeemCode });
+  res.render('orders/detail', { title: `Order ${order.id.slice(0, 8)} — Tattoo Art Customs`, order, design, downloads, transfers, depositTotal, fullTotal, redeemCode, noAds: true });
 });
 
 // Cancel your own pending, unpaid order (e.g. an accidental duplicate).
@@ -584,7 +644,7 @@ router.get('/download/:token/view', async (req, res) => {
   const zipDl = await db.get('SELECT zip_file, zip_key FROM request_zip_deliveries WHERE order_id = ?', [dl.order_id]);
   const zipLabels = { 'request-only-31': 'Request-Only Designs (31 designs — linework + full color)', 'video-game': 'Video Game Characters (19 games — linework + full color)', 'by-request': 'By-Request Character Designs' };
   res.render('orders/download', {
-    title: 'Your download — Tattoo Art Customs', token: req.params.token,
+    title: 'Your download — Tattoo Art Customs', token: req.params.token, noAds: true,
     lineworkOnly: !!(order && order.linework_only),
     zipFile: zipDl ? zipDl.zip_file : null,
     zipLabel: zipDl ? (zipLabels[zipDl.zip_key] || 'Your design collection') : null,
