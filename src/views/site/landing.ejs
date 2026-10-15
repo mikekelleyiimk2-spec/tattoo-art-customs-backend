@@ -87,7 +87,133 @@
     <p class="price"><%= t('landing.offers.app.price', {price: fmtMoney(199)}) %></p>
     <p><a class="btn" href="#app"><%= t('landing.offers.app.btn') %></a></p>
   </div>
+  <div class="lp-offer">
+    <h3><%= t('landing.offers.utility.title') %></h3>
+    <p><%= t('landing.offers.utility.text') %></p>
+    <p class="price"><%= t('landing.offers.utility.price', {price: fmtMoney(99)}) %></p>
+    <p><a class="btn" href="/apps"><%= t('landing.offers.utility.btn') %></a></p>
+  </div>
+  <div class="lp-offer">
+    <h3><%= t('landing.offers.bizcards.title') %></h3>
+    <p><%= t('landing.offers.bizcards.text') %></p>
+    <p class="price"><%= t('landing.offers.bizcards.price', {price: fmtMoney(2350)}) %></p>
+    <p><a class="btn" href="/merch/business-cards"><%= t('landing.offers.bizcards.btn') %></a></p>
+  </div>
+  <div class="lp-offer">
+    <h3><%= t('landing.offers.kids.title') %></h3>
+    <p><%= t('landing.offers.kids.text') %></p>
+    <p><a class="btn" href="/poppy-and-ziggy"><%= t('landing.offers.kids.btn') %></a> <a class="btn btn-secondary" href="/apps#little-inkers"><%= t('landing.offers.kids.btn2') %></a></p>
+  </div>
+  <div class="lp-offer">
+    <h3><%= t('landing.offers.doodle.title') %></h3>
+    <p><%= t('landing.offers.doodle.text') %></p>
+    <p><a class="btn" href="/doodle-to-tattoo"><%= t('landing.offers.doodle.btn1') %></a> <a class="btn btn-secondary" href="/by-request"><%= t('landing.offers.doodle.btn2') %></a></p>
+  </div>
+  <div class="lp-offer">
+    <h3><%= t('landing.offers.watch.title') %></h3>
+    <p><%= t('landing.offers.watch.text') %></p>
+    <p><a class="btn" href="https://www.youtube.com/@rook9860?sub_confirmation=1" target="_blank" rel="noopener"><%= t('landing.offers.watch.btn1') %></a> <a class="btn btn-secondary" href="https://www.youtube.com/@tattooartcustoms-s8f?sub_confirmation=1" target="_blank" rel="noopener"><%= t('landing.offers.watch.btn2') %></a> <a class="btn btn-secondary" href="https://www.youtube.com/@littleinkersapp?sub_confirmation=1" target="_blank" rel="noopener"><%= t('landing.offers.watch.btn3') %></a></p>
+  </div>
 </div>
+
+<h2><%= t('landing.partners.title') %></h2>
+<p><%= t('landing.partners.text') %></p>
+<p class="lp-partner-links">
+  <a href="https://baselabs.is/?coupon=TAC20" target="_blank" rel="noopener nofollow sponsored"><%= t('discounts.baselabs_h') %> — TAC20</a> ·
+  <a href="https://club.co/s/R6gQCOlWghEC9" target="_blank" rel="noopener nofollow sponsored"><%= t('discounts.electrum_h') %> — TATART20</a> ·
+  <a href="https://www.drtattooskin.com/TATTOOARTCUSTOMS" target="_blank" rel="noopener nofollow sponsored"><%= t('discounts.drtattoo_h') %></a> ·
+  <a href="https://lasso.to/auGY590feE/" target="_blank" rel="noopener nofollow sponsored"><%= t('discounts.recovery_h') %></a> ·
+  <a href="https://lasso.to/RfUlWaYEwK/" target="_blank" rel="noopener nofollow sponsored"><%= t('discounts.leda_h') %></a> ·
+  <a href="https://www.amazon.com/s?k=tattoo+aftercare&tag=tattooartcust-20" target="_blank" rel="noopener nofollow sponsored"><%= t('discounts.amazon_h') %></a> ·
+  <a href="https://app.chime.com/link/qr?u=Mike-Kelley-17" target="_blank" rel="noopener nofollow sponsored"><%= t('discounts.chime_h') %></a>
+</p>
+<p><a class="btn" href="/discounts"><%= t('landing.partners.btn') %></a> <a class="btn btn-secondary" href="/aftercare"><%= t('landing.partners.aftercare_btn') %></a></p>
+<p class="fineprint"><%= t('discounts.disclosure') %></p>
+
+<h2><%= t('landing.forshops.title') %></h2>
+<p class="price"><%= t('landing.forshops.price', {price: fmtMoney(10398)}) %></p>
+<ul>
+  <li><%= t('landing.forshops.b1') %></li>
+  <li><%= t('landing.forshops.b2') %></li>
+  <li><%= t('landing.forshops.b3') %></li>
+  <li><%= t('landing.forshops.b4') %></li>
+  <li><%= t('landing.forshops.b5') %></li>
+  <li><%= t('landing.forshops.b6') %></li>
+  <li><%= t('landing.forshops.b7') %></li>
+</ul>
+<p><a class="btn" href="/shop"><%= t('landing.forshops.cta') %></a></p>
+
+<h2><%= t('landing.forcustomers.title') %></h2>
+<p class="price"><%= t('landing.forcustomers.price', {price: fmtMoney(567)}) %></p>
+<ul>
+  <li><%= t('landing.forcustomers.b1', {price: fmtMoney(7500), sale: fmtMoney(5000)}) %></li>
+  <li><%= t('landing.forcustomers.b2', {price: fmtMoney(15000)}) %></li>
+  <li><%= t('landing.forcustomers.b3') %></li>
+  <li><%= t('landing.forcustomers.b4') %></li>
+  <li><%= t('landing.forcustomers.b5') %></li>
+  <li><%= t('landing.forcustomers.b6') %></li>
+</ul>
+<p><a class="btn" href="/membership"><%= t('landing.forcustomers.cta') %></a> <a class="btn btn-secondary" href="/gallery"><%= t('landing.forcustomers.cta2') %></a></p>
+
+<h2><%= t('landing.fordesigners.title') %></h2>
+<p class="price"><%= t('landing.fordesigners.price', {price: fmtMoney(567)}) %></p>
+<ul>
+  <li><%= t('landing.fordesigners.b1') %></li>
+  <li><%= t('landing.fordesigners.b2') %></li>
+  <li><%= t('landing.fordesigners.b3') %></li>
+  <li><%= t('landing.fordesigners.b4') %></li>
+  <li><%= t('landing.fordesigners.b5') %></li>
+  <li><%= t('landing.fordesigners.b6') %></li>
+  <li><%= t('landing.fordesigners.b7') %></li>
+</ul>
+<p><a class="btn" href="/membership"><%= t('landing.fordesigners.cta') %></a></p>
+
+<h2><%= t('landing.merchx.title') %></h2>
+<p><%= t('landing.merchx.intro') %></p>
+<ul>
+  <li><%= t('landing.merchx.b1') %></li>
+  <li><%= t('landing.merchx.b2') %></li>
+  <li><%= t('landing.merchx.b3') %></li>
+  <li><%= t('landing.merchx.b4') %></li>
+</ul>
+<p><%= t('landing.merchx.money') %></p>
+<p><a class="btn" href="/merch"><%= t('landing.merchx.cta') %></a></p>
+<p class="fineprint"><%= t('discounts.disclosure') %></p>
+
+<h2><%= t('landing.appbuttons.title') %></h2>
+<p><%= t('landing.appbuttons.sub') %></p>
+<% const _apps = [
+  { name: 'Tattoo Art Customs', href: '/tac-android', kind: 'free' },
+  { name: 'Tattoo Art Customs Pro', href: '/tac-android-pro', kind: 'buy', cents: 199 },
+  { name: 'Tattoo Art Customs for iPhone', href: '/ios-app', kind: 'buy', cents: 167 },
+  { name: 'Odometer — Mileage Tracker', href: '/buy-app/odometer', kind: 'buy', cents: 199 },
+  { name: 'AI Button', href: '/buy-app/ai-button', kind: 'buy', cents: 999 },
+  { name: 'Muse Bar', href: '/buy-app/muse-button', kind: 'buy', cents: 99 },
+  { name: 'ChatGPT Bar', href: '/buy-app/chatgpt-button', kind: 'buy', cents: 99 },
+  { name: 'Claude Bar', href: '/buy-app/claude-button', kind: 'buy', cents: 99 },
+  { name: 'Copilot Bar', href: '/buy-app/copilot-button', kind: 'buy', cents: 99 },
+  { name: 'DeepSeek Bar', href: '/buy-app/deepseek-button', kind: 'buy', cents: 99 },
+  { name: 'Gemini Bar', href: '/buy-app/gemini-button', kind: 'buy', cents: 99 },
+  { name: 'Grok Bar', href: '/buy-app/grok-button', kind: 'buy', cents: 99 },
+  { name: 'Perplexity Bar', href: '/buy-app/perplexity-button', kind: 'buy', cents: 99 },
+  { name: 'Clipboard Bar', href: '/buy-app/clipboard-bar', kind: 'buy', cents: 99 },
+  { name: 'Countdown Bar', href: '/buy-app/countdown-bar', kind: 'buy', cents: 99 },
+  { name: 'Habit Dot', href: '/api/apps/com.usefulappz.habitdot/apk', kind: 'free' },
+  { name: 'Little Inkers Coloring', href: '/api/apps/com.usefulappz.littleinkerscoloring/apk', kind: 'free' },
+  { name: 'Little Inkers Sticker World', href: '/api/apps/com.usefulappz.stickerworld/apk', kind: 'free' },
+  { name: 'Little Inkers Draw With Me', href: '/api/apps/com.usefulappz.drawwithme/apk', kind: 'free' },
+  { name: 'Little Inkers Coloring Contests', href: '/api/apps/com.usefulappz.coloringcontests/apk', kind: 'free' },
+  { name: 'Little Inkers', href: '/apps#little-inkers', kind: 'see' },
+]; %>
+<div class="lp-offer-grid">
+  <% _apps.forEach(function(a) { %>
+  <div class="lp-offer">
+    <h3><%= a.name %></h3>
+    <p><% if (a.kind === 'buy') { %><a class="btn" href="<%= a.href %>"><%= t('landing.appbuttons.buy', {price: fmtMoney(a.cents)}) %></a><% } else if (a.kind === 'free') { %><a class="btn" href="<%= a.href %>"><%= t('landing.appbuttons.free_dl') %></a><% } else { %><a class="btn" href="<%= a.href %>"><%= t('landing.appbuttons.see_apps') %></a><% } %></p>
+  </div>
+  <% }); %>
+</div>
+<p class="muted"><%= t('landing.appbuttons.note') %></p>
 
 <%- include('../partials/house-ad', {slot: 'home_inline'}) %>
 

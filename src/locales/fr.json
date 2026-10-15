@@ -401,6 +401,37 @@
         "text": "Tout le marketplace dans votre poche — parcourez, achetez et gérez votre collection où que vous soyez.",
         "price": "{price} en une fois",
         "btn": "Télécharger l'appli"
+      },
+      "utility": {
+        "title": "Des applis pour conducteurs, créateurs et le quotidien",
+        "text": "Odometer enregistre automatiquement vos kilomètres pour vos impôts. AI Button met votre IA à un toucher. Plus huit barres IA, Clipboard Bar, Countdown Bar et Habit Dot, notre suivi d'habitudes gratuit.",
+        "price": "À partir de {price}, paiement unique",
+        "btn": "Voir toutes les applis"
+      },
+      "bizcards": {
+        "title": "Cartes de visite",
+        "text": "Des cartes imprimées avec le nom, les coordonnées et le logo de votre shop, livrées chez vous. Les shops en plan annuel reçoivent leur première boîte de 50 gratuitement.",
+        "price": "50 cartes pour {price}",
+        "btn": "Commander des cartes"
+      },
+      "kids": {
+        "title": "Little Inkers — rien que pour les enfants",
+        "text": "Notre gamme enfants : des applis de coloriage gratuites — Coloring, Sticker World, Draw With Me et Coloring Contests — plus Poppy & Ziggy, le spectacle hebdomadaire où les pages de coloriage prennent vie.",
+        "btn": "Le spectacle Poppy & Ziggy",
+        "btn2": "Applis enfants gratuites"
+      },
+      "doodle": {
+        "title": "Du dessin au merch et art sur commande",
+        "text": "Transformez le dessin de votre enfant en t-shirt ou en poster pour sa chambre. Ou commandez un personnage sur demande, dessiné pour vous par un vrai artiste.",
+        "btn1": "Transformer un dessin en merch",
+        "btn2": "Personnages sur commande"
+      },
+      "watch": {
+        "title": "Regarder et s'abonner",
+        "text": "Trois chaînes YouTube : Rook 98 pour l'art du tatouage, Tattoo Art Customs pour le shop et Little Inkers pour le coloriage des enfants.",
+        "btn1": "Rook 98",
+        "btn2": "Tattoo Art Customs",
+        "btn3": "Little Inkers"
       }
     },
     "showcase": {
@@ -466,6 +497,66 @@
       "title": "🫙 Tip Jar",
       "text": "Love what we do? Toss a tip in the jar — every bit keeps the art coming.",
       "btn": "Tip via Venmo"
+    },
+    "partners": {
+      "title": "Offres partenaires et aftercare",
+      "text": "Les soins aftercare, fournitures et matériel d'art que nous utilisons et recommandons vraiment — directement de nos partenaires, avec des remises pour nos lecteurs :",
+      "btn": "Voir toutes les offres",
+      "aftercare_btn": "Sélection aftercare"
+    },
+    "forshops": {
+      "title": "Pour les shops de tatouage",
+      "price": "Un seul plan : {price} par an. Tout ce qui suit est inclus.",
+      "b1": "Votre propre page de shop vérifiée — adresse, horaires et infos de réservation, là où les clients vous trouvent.",
+      "b2": "Des outils de réservation et un tableau de bord avec vos listes de clients, votre inventaire et vos dépenses.",
+      "b3": "Une galerie de travaux cicatrisés — montrez des tatouages terminés, pas seulement frais.",
+      "b4": "Gagnez 20 % sur chaque vente vérifiée que vous recommandez. Plus vous vendez, plus vous gagnez : 22 % dès 25+ ventes par mois, 25 % dès 50+.",
+      "b5": "Des cartes de visite au nom de votre shop — votre première boîte de 50 est gratuite avec le plan annuel.",
+      "b6": "Shop Perks : des offres de fournitures pro réservées aux shops abonnés.",
+      "b7": "Le paiement sans contact, pour que les clients paient directement au shop.",
+      "cta": "Voir les plans shop"
+    },
+    "forcustomers": {
+      "title": "Pour les clients",
+      "price": "L'abonnement est à {price}/mois. Pas d'abonnement ? Tout ce qui suit s'achète aussi à l'unité.",
+      "b1": "Designs prêts à l'emploi : {price} pièce ({sale} pendant la vente du samedi). Payez, téléchargez aussitôt, apportez-le à votre tatoueur.",
+      "b2": "Designs personnalisés : {price}. Donnez-nous votre idée — un vrai designer la dessine rien que pour vous, jamais revendue.",
+      "b3": "Les membres économisent 20 % sur les designs prêts et personnalisés, tous les jours.",
+      "b4": "Les membres entrent en avant-première dans la vente hebdomadaire du samedi.",
+      "b5": "Parrainez un ami qui s'abonne, et vous recevez un mois gratuit.",
+      "b6": "Des cartes cadeaux pour les amoureux du tatouage, des concours de design avec des prix en argent et un tirage gratuit.",
+      "cta": "Voir les abonnements",
+      "cta2": "Parcourir les designs"
+    },
+    "fordesigners": {
+      "title": "Pour les designers et artistes",
+      "price": "Plan designer : {price}/mois. Voici ce que vous obtenez :",
+      "b1": "Mettez vos designs dans la galerie et vendez-les jour et nuit.",
+      "b2": "Vous gagnez 60 % de chaque vente de vos designs.",
+      "b3": "Si aucun shop n'a recommandé l'acheteur, vous gagnez 70 % à la place.",
+      "b4": "Acceptez des commandes personnalisées et sur demande : le client commande, vous dessinez, vous touchez votre part.",
+      "b5": "Votre propre page d'artiste et votre bio, pour que les clients vous trouvent, vous et votre travail.",
+      "b6": "Ajoutez un plan shop, et chaque commission que vous gagnez prend +2 %.",
+      "b7": "Les paiements vont sur votre PayPal — configurez-le une fois dans votre tableau de bord.",
+      "cta": "Devenir designer"
+    },
+    "merchx": {
+      "title": "La boutique merch, expliquée",
+      "intro": "Une boutique, quatre sortes de choses :",
+      "b1": "Nos t-shirts et articles — des designs sur des vêtements, imprimés à la commande et livrés chez vous.",
+      "b2": "Des posters des designs que vous possédez — achetez un design une fois, accrochez-le pour toujours.",
+      "b3": "Des cartes de visite pour shops de tatouage — imprimées et expédiées. Les shops annuels reçoivent leur première boîte gratuite.",
+      "b4": "Les produits partenaires — aftercare et fournitures de marques que nous utilisons. Ces boutons vous mènent à la boutique du partenaire.",
+      "money": "Comment payer : nos propres produits se paient ici, au moment de la commande. Les produits partenaires se paient sur le site du partenaire — nous pouvons toucher une petite commission, jamais à vos frais.",
+      "cta": "Visiter la boutique merch"
+    },
+    "appbuttons": {
+      "title": "Chaque appli, en un toucher",
+      "sub": "Directement sur la page de chaque appli — sans chercher :",
+      "buy": "Acheter · {price}",
+      "free_dl": "Télécharger gratis",
+      "see_apps": "Voir la page des applis",
+      "note": "Les applis Android se téléchargent directement chez nous (ou sur Google Play quand elles y sont). Prix en USD."
     }
   },
   "membership": {

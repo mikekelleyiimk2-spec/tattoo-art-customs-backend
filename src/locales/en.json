@@ -401,6 +401,37 @@
         "text": "The full marketplace in your pocket — browse, buy, and manage your collection on the go.",
         "price": "{price} one-time",
         "btn": "Get the app"
+      },
+      "utility": {
+        "title": "Apps for drivers, creators & everyday",
+        "text": "Odometer auto-logs your miles for taxes. AI Button puts your AI one tap away. Plus eight AI bars, Clipboard Bar, Countdown Bar and Habit Dot, our free habit tracker.",
+        "price": "From {price} one-time",
+        "btn": "See all the apps"
+      },
+      "bizcards": {
+        "title": "Business cards",
+        "text": "Printed cards with your shop's name, contact info and logo, shipped to your door. Shops on an annual plan get their first box of 50 free.",
+        "price": "50 cards for {price}",
+        "btn": "Order business cards"
+      },
+      "kids": {
+        "title": "Little Inkers — just for kids",
+        "text": "Our kids' line: free coloring apps — Coloring, Sticker World, Draw With Me and Coloring Contests — plus Poppy & Ziggy, the weekly show where coloring pages come to life.",
+        "btn": "Poppy & Ziggy show",
+        "btn2": "Free kids' apps"
+      },
+      "doodle": {
+        "title": "Doodle-to-merch & by-request art",
+        "text": "Turn your kid's doodle into a t-shirt or a poster for their wall. Or request a by-request character, drawn for you by a real artist.",
+        "btn1": "Turn a doodle into merch",
+        "btn2": "By-request characters"
+      },
+      "watch": {
+        "title": "Watch & subscribe",
+        "text": "Three YouTube channels: Rook 98 for tattoo art, Tattoo Art Customs for the shop, and Little Inkers for kids' coloring fun.",
+        "btn1": "Rook 98",
+        "btn2": "Tattoo Art Customs",
+        "btn3": "Little Inkers"
       }
     },
     "showcase": {
@@ -466,6 +497,66 @@
       "title": "🫙 Tip Jar",
       "text": "Love what we do? Toss a tip in the jar — every bit keeps the art coming.",
       "btn": "Tip via Venmo"
+    },
+    "partners": {
+      "title": "Partner deals & aftercare",
+      "text": "The aftercare, supplies and art gear we actually use and recommend — straight from our partners, with discounts for our readers:",
+      "btn": "See all deals",
+      "aftercare_btn": "Aftercare picks"
+    },
+    "forshops": {
+      "title": "For tattoo shops",
+      "price": "One plan: {price} a year. Everything below is included.",
+      "b1": "Your own verified shop page — location, hours and booking info where customers can find you.",
+      "b2": "Booking tools and a dashboard with your client lists, inventory and expenses.",
+      "b3": "A healed-work gallery — show off finished tattoos, not just fresh ones.",
+      "b4": "Earn 20% on every verified sale you refer. Sell more, earn more: 22% at 25+ sales a month, 25% at 50+.",
+      "b5": "Business cards with your shop's name on them — your first box of 50 is free on the annual plan.",
+      "b6": "Shop Perks: pro supply deals only for subscribed shops.",
+      "b7": "Tap-to-pay, so clients can pay right at the shop.",
+      "cta": "See shop plans"
+    },
+    "forcustomers": {
+      "title": "For customers",
+      "price": "Membership is {price}/month. Don't want a membership? Everything below can be bought one-off, too.",
+      "b1": "Premade designs: {price} each ({sale} in the Saturday sale). Pay, download instantly, take it to your artist.",
+      "b2": "Custom designs: {price}. Tell us your idea — a real designer draws it just for you, and it's never resold.",
+      "b3": "Members save 20% on premade and custom designs, every day.",
+      "b4": "Members get early entry to the weekly Saturday sale.",
+      "b5": "Refer a friend who joins, and you get a free month.",
+      "b6": "Gift cards for the tattoo lover, design contests with cash prizes, and a free-entry raffle.",
+      "cta": "See membership plans",
+      "cta2": "Browse designs"
+    },
+    "fordesigners": {
+      "title": "For designers & artists",
+      "price": "Designer plan: {price}/month. Here's what you get:",
+      "b1": "Upload your designs to the gallery and sell them around the clock.",
+      "b2": "You earn 60% of every sale of your designs.",
+      "b3": "If no shop referred the buyer, you earn 70% instead.",
+      "b4": "Take custom and by-request jobs: the customer orders, you draw, you get your share.",
+      "b5": "Your own artist page and bio, so customers can find you and your work.",
+      "b6": "Hold a shop plan too, and every commission you earn gets +2%.",
+      "b7": "Payouts go to your PayPal — set it once in your dashboard.",
+      "cta": "Become a designer"
+    },
+    "merchx": {
+      "title": "The merch store, explained",
+      "intro": "One store, four kinds of things:",
+      "b1": "Our tees and gear — designs on shirts, printed when you order and shipped to you.",
+      "b2": "Posters of designs you own — buy a design once, hang it on your wall forever.",
+      "b3": "Business cards for tattoo shops — printed and shipped. Annual shops get their first box free.",
+      "b4": "Partner products — aftercare and supplies from brands we use. Those buttons take you to the partner's own store.",
+      "money": "How paying works: our own products are paid for here, at checkout. Partner products are paid for on the partner's site — we may earn a small commission, never at extra cost to you.",
+      "cta": "Visit the merch store"
+    },
+    "appbuttons": {
+      "title": "Every app, one tap",
+      "sub": "Straight to each app's own page — no hunting:",
+      "buy": "Buy · {price}",
+      "free_dl": "Download free",
+      "see_apps": "See the apps page",
+      "note": "Android apps download direct from us (or Google Play where listed). Prices in USD."
     }
   },
   "membership": {

@@ -401,6 +401,37 @@
         "text": "Hela marknadsplatsen i fickan — bläddra, köp och hantera din samling var du än är.",
         "price": "{price} engångsbelopp",
         "btn": "Hämta appen"
+      },
+      "utility": {
+        "title": "Appar för förare, skapare och vardagen",
+        "text": "Odometer loggar dina mil automatiskt för skatten. AI Button lägger din AI ett tryck bort. Plus åtta AI-rader, Clipboard Bar, Countdown Bar och Habit Dot, vår gratis vanespårare.",
+        "price": "Från {price}, engångsbetalning",
+        "btn": "Se alla appar"
+      },
+      "bizcards": {
+        "title": "Visitkort",
+        "text": "Tryckta kort med din shops namn, kontakt och logga, skickade hem till dig. Shoppar med årsplan får sin första box med 50 gratis.",
+        "price": "50 kort för {price}",
+        "btn": "Beställ visitkort"
+      },
+      "kids": {
+        "title": "Little Inkers — bara för barn",
+        "text": "Vår barnlinje: gratis målarappar — Coloring, Sticker World, Draw With Me och Coloring Contests — plus Poppy & Ziggy, den veckovisa showen där målarsidorna får liv.",
+        "btn": "Poppy & Ziggy-showen",
+        "btn2": "Gratis barnappar"
+      },
+      "doodle": {
+        "title": "Från klotter till merch och önskekonst",
+        "text": "Förvandla ditt barns teckning till en t-shirt eller en poster till väggen. Eller beställ en önskekaraktär, ritad åt dig av en riktig konstnär.",
+        "btn1": "Gör merch av en teckning",
+        "btn2": "Önskekaraktärer"
+      },
+      "watch": {
+        "title": "Titta och prenumerera",
+        "text": "Tre YouTube-kanaler: Rook 98 för tatueringskonst, Tattoo Art Customs för shoppen och Little Inkers för målarskoj för barn.",
+        "btn1": "Rook 98",
+        "btn2": "Tattoo Art Customs",
+        "btn3": "Little Inkers"
       }
     },
     "showcase": {
@@ -466,6 +497,66 @@
       "title": "🫙 Tip Jar",
       "text": "Love what we do? Toss a tip in the jar — every bit keeps the art coming.",
       "btn": "Tip via Venmo"
+    },
+    "partners": {
+      "title": "Partnererbjudanden och aftercare",
+      "text": "Den aftercare, de förbrukningsvaror och det konstmaterial vi faktiskt använder och rekommenderar — direkt från våra partners, med läsarrabatter:",
+      "btn": "Se alla erbjudanden",
+      "aftercare_btn": "Aftercare-tips"
+    },
+    "forshops": {
+      "title": "För tatueringsshoppar",
+      "price": "En plan: {price} per år. Allt nedan ingår.",
+      "b1": "Din egen verifierade shoppsida — plats, öppettider och bokningsinfo där kunderna hittar dig.",
+      "b2": "Bokningsverktyg och en instrumentpanel med kundlistor, inventarier och utgifter.",
+      "b3": "Ett galleri med läkta arbeten — visa färdiga tatueringar, inte bara färska.",
+      "b4": "Tjäna 20 % på varje verifierad försäljning du hänvisar. Sälj mer, tjäna mer: 22 % vid 25+ försäljningar i månaden, 25 % vid 50+.",
+      "b5": "Visitkort med din shopps namn — din första box med 50 är gratis på årsplanen.",
+      "b6": "Shop Perks: proffserbjudanden på förbrukning bara för prenumererande shoppar.",
+      "b7": "Blipp-betalning, så klienter kan betala direkt i shoppen.",
+      "cta": "Se shopplaner"
+    },
+    "forcustomers": {
+      "title": "För kunder",
+      "price": "Medlemskap är {price}/månad. Vill du inte ha medlemskap? Allt nedan går också att köpa styckvis.",
+      "b1": "Färdiga motiv: {price} styck ({sale} på lördagsrean). Betala, ladda ner direkt, ta med till din tatuerare.",
+      "b2": "Skräddarsydda motiv: {price}. Berätta din idé — en riktig designer ritar den bara för dig, och den säljs aldrig vidare.",
+      "b3": "Medlemmar sparar 20 % på färdiga och skräddarsydda motiv, varje dag.",
+      "b4": "Medlemmar får tidig tillgång till lördagsrean varje vecka.",
+      "b5": "Värva en vän som blir medlem, så får du en månad gratis.",
+      "b6": "Presentkort för tatueringsälskaren, designtävlingar med kontantpriser och ett gratis lotteri.",
+      "cta": "Se medlemsplaner",
+      "cta2": "Bläddra bland motiv"
+    },
+    "fordesigners": {
+      "title": "För designers och konstnärer",
+      "price": "Designerplan: {price}/månad. Det här får du:",
+      "b1": "Ladda upp dina motiv i galleriet och sälj dem dygnet runt.",
+      "b2": "Du tjänar 60 % av varje försäljning av dina motiv.",
+      "b3": "Om ingen shopp hänvisade köparen tjänar du 70 % i stället.",
+      "b4": "Ta skräddarsydda jobb och önskebeställningar: kunden beställer, du ritar, du får din andel.",
+      "b5": "Din egen artistsida och bio, så kunder hittar dig och ditt arbete.",
+      "b6": "Ha en shopp-plan också, så får varje provision du tjänar +2 %.",
+      "b7": "Utbetalningar går till din PayPal — ställ in en gång i panelen.",
+      "cta": "Bli designer"
+    },
+    "merchx": {
+      "title": "Merch-butiken, förklarad",
+      "intro": "En butik, fyra slags saker:",
+      "b1": "Våra tees och gear — motiv på tröjor, trycks när du beställer och skickas hem till dig.",
+      "b2": "Affischer av motiv du äger — köp ett motiv en gång, häng det för alltid.",
+      "b3": "Visitkort för tatueringsshoppar — trycks och skickas. Årssshoppar får första boxen gratis.",
+      "b4": "Partnerprodukter — aftercare och förbrukning från märken vi använder. De knapparna tar dig till partnerns egen butik.",
+      "money": "Så fungerar betalningen: våra egna produkter betalas här, i kassan. Partnerprodukter betalas på partnerns sajt — vi kan tjäna en liten provision, aldrig till extra kostnad för dig.",
+      "cta": "Besök merch-butiken"
+    },
+    "appbuttons": {
+      "title": "Varje app, ett tryck",
+      "sub": "Rakt till varje apps egen sida — utan att leta:",
+      "buy": "Köp · {price}",
+      "free_dl": "Ladda ner gratis",
+      "see_apps": "Se appsidan",
+      "note": "Android-appar laddas ner direkt från oss (eller via Google Play där de listas). Priser i USD."
     }
   },
   "membership": {
