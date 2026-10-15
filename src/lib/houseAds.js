@@ -59,6 +59,25 @@ const CREATIVES = [
     id: 'littleinkers', kind: 'product', audiences: ['tattoo', 'kids'], pools: ['any'],
     href: '/little-inkers-android', external: false,
   },
+  {
+    // The show's website episode page (growth order 2026-10-15). One-way
+    // cross-promo: adult surfaces may point AT the kids' show; the show's
+    // own surfaces never point back. Tattoo audience ONLY — the kids pool
+    // stays exactly leda/littleinkers (pinned by test; kid-facing surfaces
+    // carry no ad slot today anyway).
+    id: 'poppyziggy', kind: 'product', audiences: ['tattoo'], pools: ['any'],
+    href: '/poppy-and-ziggy', external: false,
+  },
+  {
+    // YouTube subscribe funnels (growth order 2026-10-15): sub_confirmation=1
+    // lands the clicker on the one-tap subscribe prompt.
+    id: 'tacchannel', kind: 'product', audiences: ['tattoo'], pools: ['any'],
+    href: 'https://www.youtube.com/@tattooartcustoms-s8f?sub_confirmation=1', external: true,
+  },
+  {
+    id: 'rook98', kind: 'product', audiences: ['tattoo'], pools: ['any'],
+    href: 'https://www.youtube.com/@rook9860?sub_confirmation=1', external: true,
+  },
   // --- Affiliates (tattoo surfaces only, except kid-safe Leda) ------------
   {
     id: 'baselabs', kind: 'affiliate', audiences: ['tattoo'], pools: ['any', 'aftercare'],

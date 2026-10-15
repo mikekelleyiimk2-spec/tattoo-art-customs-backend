@@ -110,6 +110,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/holiday-raffle`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/halloween-flash`, changefreq: 'daily', priority: '0.9' },
     { loc: `${base}/show-designs`, changefreq: 'daily', priority: '0.8', lastmod: new Date().toISOString().slice(0, 10) },
+    { loc: `${base}/poppy-and-ziggy`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/guides`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/guides/aftercare`, changefreq: 'monthly', priority: '0.7' },
     { loc: `${base}/guides/choosing-a-design`, changefreq: 'monthly', priority: '0.7' },
@@ -339,6 +340,18 @@ function byRequestList() {
     return JSON.parse(raw);
   } catch { return { updated: null, items: [] }; }
 }
+
+// Poppy & Ziggy show page (growth order 2026-10-15): the website home for
+// the kids' show — episode list, premiere dates, and the subscribe funnel
+// for @ZiggyPoppy-l3b. Kid-safe copy only; no tattoo affiliates on this page.
+router.get('/poppy-and-ziggy', async (req, res) => {
+  const base = config.baseUrl.replace(/\/$/, '');
+  res.render('site/poppy-ziggy', {
+    title: 'Poppy & Ziggy — the Kids\' Cartoon | Tattoo Art Customs',
+    metaDescription: 'Poppy & Ziggy color a page and it comes to life! New episode every Friday at 5 PM CT on YouTube, plus a fun Short every day. Subscribe free.',
+    canonical: `${base}/poppy-and-ziggy`,
+  });
+});
 
 router.get('/by-request', async (req, res) => {
   const q = (req.query.q || '').trim().toLowerCase();
