@@ -22,7 +22,15 @@
     <p><button class="btn" type="submit">Buy for $1.67</button></p>
   </form>
   <% } else { %>
-  <p><a class="btn" href="/login?next=/ios-app">Log in to buy</a></p>
+  <form method="post" action="/ios-app/buy" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <label><%= t('buyApp.guest_email_label') %>
+      <input type="email" name="guest_email" required maxlength="160" placeholder="you@example.com">
+    </label>
+    <p class="muted fineprint"><%= t('buyApp.guest_email_note') %></p>
+    <p><button class="btn" type="submit">Buy for $1.67</button></p>
+    <p class="muted fineprint"><%= t('buyApp.guest_or_login') %> <a href="/login?next=/ios-app"><%= t('buyApp.guest_login_link') %></a> <%= t('buyApp.guest_login_tail') %></p>
+  </form>
   <% } %>
 </div>
 

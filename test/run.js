@@ -1292,7 +1292,7 @@ async function main() {
   await require('./holidayRaffle').runHttpTests(ok, req); // holiday doodle raffle
   await require('./merchCatalog').runHttpTests(ok, req, areq); // merch catalog (POD + affiliate)
   await require('./guestCheckout').runHttpTests(ok, req, areq); // guest design checkout (no account wall)
-  await require('./guestAppCheckout').runHttpTests(ok, req, areq); // guest paid-app checkout (buy-app + TAC Pro, no account wall)
+  await require('./guestAppCheckout').runHttpTests(ok, req, areq); // guest paid-app checkout (buy-app + TAC Pro + ios-app, no account wall)
   await require('./transfers').runHttpTests(ok, req); // [transfers] customer<->shop art pipeline
   await require('./appUpdates').runHttpTests(ok); // app auto-update service
   r = await areq('POST', `/admin/orders/${orderId}/confirm-manual`);
