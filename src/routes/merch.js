@@ -180,7 +180,11 @@ router.post('/tee', requireLogin, formLimiter, checkHoneypot, async (req, res) =
 // Anyone can buy these (no design ownership needed); the print file is the
 // catalog asset, not an owned design. Degrades to /merch when the product
 // isn't live or Printful isn't configured.
-router.get('/catalog/:productId', requireLogin, formLimiter, async (req, res) => {
+// The product page is PUBLIC (2026-10-15, integration-sweep proposal #1):
+// anonymous shoppers browse it like the /merch index that links here.
+// Login stays on the checkout POST below — orders are account records
+// (orders.buyer_id / print_orders.user_id), so buying still needs one.
+router.get('/catalog/:productId', formLimiter, async (req, res) => {
   const product = catalog.getProduct(req.params.productId);
   if (!product || product.kind !== 'pod' || product.status !== 'live' || !printfulConfigured()) {
     req.session.flash = 'That item is not available yet — join the notify list below.';

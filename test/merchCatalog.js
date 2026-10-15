@@ -28,14 +28,30 @@ async function runHttpTests(ok, req, areq) {
   ok(r.text.includes('Music Genres Tee'), '/merch shows the music genres catalog product');
   ok(r.text.includes('Coming soon'), '/merch marks catalog products coming soon');
 
-  // Catalog order routes degrade safely: coming-soon product -> redirect.
-  // (Authenticated: requireLogin passes, product gate redirects to /merch.)
+  // Catalog product pages are PUBLIC (2026-10-15): anonymous shoppers can
+  // open what the /merch index advertises. Unavailable products (coming-soon
+  // or unknown, or Printful unconfigured in test) degrade to /merch — never
+  // to /login. Checkout (POST /merch/catalog) stays login-gated: orders are
+  // account records. NOTE: the shared req() jar is logged in by this point
+  // in the suite, so the anonymous checks use a cookieless raw fetch.
+  const anon = async (method, p, body) => {
+    const res = await fetch(`http://localhost:4137${p}`, {
+      method, redirect: 'manual',
+      headers: body ? { 'content-type': 'application/x-www-form-urlencoded' } : {},
+      body: body ? new URLSearchParams(body).toString() : undefined,
+    });
+    await res.text();
+    return { status: res.status, location: res.headers.get('location') || '' };
+  };
+  let a = await anon('GET', '/merch/catalog/tee-music-genres');
+  ok(a.status === 302 && a.location.includes('/merch') && !a.location.includes('/login'),
+    'anonymous: coming-soon catalog product redirects to /merch (not /login)');
+  a = await anon('GET', '/merch/catalog/nope-not-real');
+  ok(a.status === 302 && !a.location.includes('/login'), 'anonymous: unknown catalog product redirects without a login bounce');
   r = await client('GET', '/merch/catalog/tee-music-genres');
-  ok(r.status === 302 && (r.location || '').includes('/merch'), 'coming-soon catalog product redirects to /merch');
-  r = await client('GET', '/merch/catalog/nope-not-real');
-  ok(r.status === 302, 'unknown catalog product redirects');
-  // Note: the requireLogin gate on catalog routes mirrors /merch/tee/:designId;
-  // anon-redirect-to-login is covered by the shared auth tests, not repeated here.
+  ok(r.status === 302 && (r.location || '').includes('/merch'), 'authenticated: coming-soon catalog product redirects to /merch');
+  a = await anon('POST', '/merch/catalog', { product_id: 'tee-music-genres' });
+  ok(a.status === 302 && a.location.includes('/login'), 'anonymous: catalog checkout POST still requires login');
 }
 
 module.exports = { runDbTests, runHttpTests };
