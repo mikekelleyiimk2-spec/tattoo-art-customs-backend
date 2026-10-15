@@ -75,6 +75,13 @@ app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 app.use(express.json({ limit: '2mb' }));
 app.use(cookieParser());
 
+// Public static files (logos, css, js, images, videos) — served BEFORE the
+// session middleware so asset responses never carry a Set-Cookie header.
+// A session cookie on static responses defeats CDN edge caching
+// (Cloudflare marks them DYNAMIC); dynamic routes below still get full
+// session behavior. Cache 7 days like gallery images.
+app.use(express.static(path.join(__dirname, 'public'), { maxAge: '7d' }));
+
 // Defaults available even if the session store fails mid-request.
 app.use((req, res, next) => {
   res.locals.currentUser = null;
@@ -159,8 +166,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// Public static files (logos, css, etc.) — cache 7 days like gallery images.
-app.use(express.static(path.join(__dirname, 'public'), { maxAge: '7d' }));
+// (Public static files are mounted earlier, before the session middleware,
+// so asset responses carry no Set-Cookie — see above.)
 
 // PUBLIC gallery images: ONLY watermarked linework is ever served publicly.
 // Clean color + clean linework live under the upload dir but are NOT mounted

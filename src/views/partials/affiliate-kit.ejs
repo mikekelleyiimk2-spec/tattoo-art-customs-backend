@@ -11,7 +11,7 @@
   <div class="aftercare-products">
     <% _kit.forEach(function(a) { %>
     <div class="product-card">
-      <% if (a.image) { %><img src="<%= a.image %>" alt="<%= t(a.nameKey) %>" loading="lazy" style="max-width:100%;height:auto;display:block;"><% } %>
+      <% if (a.image) { %><img src="<%= a.image %>" alt="<%= t(a.nameKey) %>" loading="lazy" decoding="async" style="max-width:100%;height:auto;display:block;"><% } %>
       <h3><%= t(a.nameKey) %></h3>
       <p><%= t(a.blurbKey) %></p>
       <a class="btn" href="<%= a.url %>" target="_blank" rel="noopener nofollow sponsored"><%= t(a.ctaKey) %></a>

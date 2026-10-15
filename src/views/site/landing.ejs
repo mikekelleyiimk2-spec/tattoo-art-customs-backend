@@ -29,7 +29,7 @@
 </div>
 
 <div class="lp-hero">
-  <img src="/img/landing/hero.webp" alt="<%= t('landing.hero.img_alt') %>">
+  <img src="/img/landing/hero.webp" alt="<%= t('landing.hero.img_alt') %>" width="1200" height="514" fetchpriority="high" decoding="async">
   <div class="lp-hero-overlay">
     <h1><%= t('landing.hero.brand') %></h1>
     <p><%= t('landing.hero.sub') %></p>
@@ -202,15 +202,15 @@
 <h2><%= t('landing.showcase.title') %></h2>
 <div class="lp-showcase">
   <figure>
-    <img src="/img/landing/premade.webp" alt="<%= t('landing.showcase.premade.alt') %>" loading="lazy">
+    <img src="/img/landing/premade.webp" alt="<%= t('landing.showcase.premade.alt') %>" width="800" height="533" loading="lazy" decoding="async">
     <figcaption><strong><%= t('landing.showcase.premade.cap_title') %></strong> &mdash; <%= t('landing.showcase.premade.cap_text') %></figcaption>
   </figure>
   <figure>
-    <img src="/img/landing/custom.webp" alt="<%= t('landing.showcase.custom.alt') %>" loading="lazy">
+    <img src="/img/landing/custom.webp" alt="<%= t('landing.showcase.custom.alt') %>" width="800" height="533" loading="lazy" decoding="async">
     <figcaption><strong><%= t('landing.showcase.custom.cap_title') %></strong> &mdash; <%= t('landing.showcase.custom.cap_text') %></figcaption>
   </figure>
   <figure>
-    <img src="/img/landing/shop.webp" alt="<%= t('landing.showcase.shop.alt') %>" loading="lazy">
+    <img src="/img/landing/shop.webp" alt="<%= t('landing.showcase.shop.alt') %>" width="800" height="533" loading="lazy" decoding="async">
     <figcaption><strong><%= t('landing.showcase.shop.cap_title') %></strong> &mdash; <%= t('landing.showcase.shop.cap_text') %></figcaption>
   </figure>
 </div>
@@ -292,6 +292,6 @@
   <p style="margin-top:0.75rem;"><a class="btn btn-secondary" href="/tac-android"><%= t('home.get_android_sideload') %></a> <a href="/apps"><%= t('home.all_apps') %></a></p>
   <% } %>
   <div style="margin-top:1rem;text-align:center;">
-    <video controls playsinline preload="metadata" style="width:100%;max-width:320px;border-radius:8px;" src="/videos/promo-short.mp4"></video>
+    <video controls playsinline preload="metadata" poster="/img/landing/promo-poster.webp" style="width:100%;max-width:320px;border-radius:8px;" src="/videos/promo-short.mp4"></video>
   </div>
 </section>
