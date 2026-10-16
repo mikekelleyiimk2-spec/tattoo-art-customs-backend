@@ -23,10 +23,11 @@ const { isHeadAdmin } = require('../middleware/auth');
 const DESIGN_STYLES = [
   'blackwork', 'traditional', 'japanese', 'realism', 'fine-line', 'floral',
   'animals', 'geometric', 'lettering', 'tribal', 'chicano', 'dotwork',
+  'stipple',
   'watercolor', 'new-school', 'minimalist', 'pixelated', 'circuit-bloom',
   'ascii-skin', 'kintsugi', 'topographic', 'smoke-form', 'thermal',
   'blueprint', 'cross-stitch', 'stained-shard', 'bioluminescent',
-  'mycelium', 'aurora-veil', 'frost-fractal', 'other',
+  'mycelium', 'aurora-veil', 'frost-fractal', 'optical-illusion', 'other',
 ];
 
 const portfolioStorage = multer.diskStorage({

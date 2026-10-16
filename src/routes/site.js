@@ -10,6 +10,7 @@ const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { premadePriceCents, customFullCents, isSaleWindow, lineworkOnlyPriceCents, LINEWORK_ONLY_DISCOUNT, salePriceActive, withFeeCents, processingFeeCents, money, premadeQuoteForDesign, SHOW_FEATURED_DISCOUNT_CODE, showFeaturedDiscountRate, showFeaturedPremadeCents, showDiscountLive } = require('../lib/pricing');
 const { viewerFor, displayImgFile, canViewUnblurred } = require('../lib/contentPolicy');
 const { blurbFor: categoryBlurbFor, SITEMAP_CATEGORIES } = require('../lib/categoryContent');
+const { blurbForStyle, nameForStyle, SITEMAP_STYLES } = require('../lib/styleContent');
 
 const router = express.Router();
 
@@ -88,6 +89,12 @@ router.get('/sitemap.xml', async (req, res) => {
     // Curated category pages (each carries its own editorial intro copy).
     ...SITEMAP_CATEGORIES.map((c) => ({
       loc: `${base}/gallery?cat=${encodeURIComponent(c)}`,
+      changefreq: 'weekly', priority: '0.7', lastmod: new Date().toISOString().slice(0, 10),
+    })),
+    // Curated style pages (owner order 2026-10-16 — same treatment as the
+    // category pages: own editorial intro, title/meta, sitemap entry).
+    ...SITEMAP_STYLES.map((s) => ({
+      loc: `${base}/gallery?style=${encodeURIComponent(s)}`,
       changefreq: 'weekly', priority: '0.7', lastmod: new Date().toISOString().slice(0, 10),
     })),
     { loc: `${base}/membership`, changefreq: 'weekly', priority: '0.7' },
@@ -214,7 +221,11 @@ router.get('/gallery', async (req, res) => {
     designs = designs.filter((d) => d.categories.some((c) => c.toLowerCase() === cat));
     catCount = designs.length;
   }
-  if (styleQ) designs = designs.filter((d) => (d.style || '').toLowerCase() === styleQ);
+  let styleCount = null;
+  if (styleQ) {
+    designs = designs.filter((d) => (d.style || '').toLowerCase() === styleQ);
+    styleCount = designs.length;
+  }
   if (q) {
     designs = designs.filter((d) =>
       d.title.toLowerCase().includes(q) || d.description.toLowerCase().includes(q) ||
@@ -278,13 +289,29 @@ router.get('/gallery', async (req, res) => {
       galleryCanonical = `${base}/gallery?cat=${encodeURIComponent(canonName)}`;
     }
   }
+  // Style pages (owner order 2026-10-16): a style with curated copy gets
+  // the same page treatment as a category — intro block, style-specific
+  // title/meta/canonical. Unlike categories the intro renders even at zero
+  // designs: these collections are announced ahead of population, so the
+  // page introduces the style while the grid fills in.
+  let styleIntro = null;
+  if (styleQ) {
+    const sBlurb = blurbForStyle(styleQ);
+    if (sBlurb) {
+      const sName = nameForStyle(styleQ);
+      styleIntro = { name: sName, count: styleCount || 0, blurb: sBlurb };
+      galleryTitle = `${sName} Tattoo Designs — Buy Original ${sName} Tattoos | Tattoo Art Customs`;
+      galleryMeta = `${sBlurb.slice(0, 155)}…`;
+      galleryCanonical = `${base}/gallery?style=${encodeURIComponent(styleQ)}`;
+    }
+  }
   res.render('site/gallery', {
     title: galleryTitle,
     designs: thumbs, allCats, allStyles, q: req.query.q || '', cat: req.query.cat || '', style: req.query.style || '', sale: await salePriceActive(req.user),
     premadePrice: withFeeCents(premadePriceCents(new Date(), member)),
     sort: newestOnly ? 'newest' : '',
     newestUrl: galleryUrl('newest'), allUrl: galleryUrl(''),
-    catIntro,
+    catIntro, styleIntro,
     pagination: {
       page, totalPages, total: totalDesigns,
       prevUrl: page > 1 ? galleryPageUrl(page - 1) : null,

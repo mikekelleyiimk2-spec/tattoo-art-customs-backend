@@ -267,7 +267,9 @@
     "intro_1": "Every design in this gallery is original artwork created by an independent tattoo artist or design artist and offered here for sale. The gallery shows a clean linework preview of each piece — that keeps the finished art from being copied before it is bought. When you buy a design, you receive the full-color finished artwork and the linework stencil file, ready to take to your tattoo artist.",
     "intro_2": "Can't find the exact piece you pictured? Commission it instead. Custom designs are drawn to order: describe your idea, approve the direction, and the finished design is delivered within 48 hours. You can also turn a photo or a rough doodle into a finished tattoo design, or ask for changes to any gallery design — different flowers, a name added, colors swapped — when you order it as a custom variation.",
     "cat_fallback": "Browse {count} original {name} tattoo designs from the Tattoo Art Customs gallery. Every design is sold with the full-color artwork and a clean linework stencil, delivered digitally after purchase — print it, size it with your artist, and get it tattooed anywhere.",
-    "cat_note": "New {name} designs are added as artists upload them. Want one changed — different flowers, a name added, colors swapped? Order it as a custom variation from any design page."
+    "cat_note": "New {name} designs are added as artists upload them. Want one changed — different flowers, a name added, colors swapped? Order it as a custom variation from any design page.",
+    "style_fallback": "Browse {count} original {name} tattoo designs from the Tattoo Art Customs gallery. Every design is sold with the full-color artwork and a clean linework stencil, delivered digitally after purchase — print it, size it with your artist, and get it tattooed anywhere.",
+    "style_note": "New {name} designs are added as artists upload them. Want one changed — a different subject, a name added, colors swapped? Order it as a custom variation from any design page."
   },
   "giftcards": {
     "a_customer": "a customer",

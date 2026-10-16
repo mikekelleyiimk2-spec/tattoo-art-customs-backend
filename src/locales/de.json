@@ -267,7 +267,9 @@
     "intro_1": "Jedes Design in dieser Galerie ist ein Originalwerk eines unabhängigen Tätowierers oder Designkünstlers und wird hier zum Verkauf angeboten. Die Galerie zeigt eine saubere Linienvorschau jedes Motivs — so bleibt das fertige Werk vor dem Kauf vor Kopien geschützt. Beim Kauf erhältst du das fertige Farbwerk und die Linienvorlage (Stencil), bereit für deinen Tätowierer.",
     "intro_2": "Nicht genau das Motiv gefunden, das du dir vorgestellt hast? Bestelle es als Custom-Design. Wunschmotive werden auf Bestellung gezeichnet: Beschreibe deine Idee, gib die Richtung frei, und das fertige Design wird innerhalb von 48 Stunden geliefert. Du kannst auch ein Foto oder eine grobe Skizze in ein fertiges Tattoo-Design verwandeln lassen oder Änderungen an jedem Galerie-Design bestellen — andere Blumen, ein Name, andere Farben — als Custom-Variante.",
     "cat_fallback": "Durchsuche {count} originale {name} Tattoo-Designs aus der Tattoo Art Customs Galerie. Jedes Design wird mit dem fertigen Farbwerk und einer sauberen Linienvorlage verkauft und nach dem Kauf digital geliefert — ausdrucken, mit deinem Künstler die Größe festlegen und überall tätowieren lassen.",
-    "cat_note": "Neue {name} Designs kommen hinzu, sobald Künstler sie hochladen. Eines ändern lassen — andere Blumen, ein Name, andere Farben? Bestelle es als Custom-Variante auf jeder Designseite."
+    "cat_note": "Neue {name} Designs kommen hinzu, sobald Künstler sie hochladen. Eines ändern lassen — andere Blumen, ein Name, andere Farben? Bestelle es als Custom-Variante auf jeder Designseite.",
+    "style_fallback": "Durchstöbere {count} originale {name} Tattoo-Designs aus der Galerie von Tattoo Art Customs. Jedes Design wird mit der Farbvorlage und einer sauberen Linien-Schablone verkauft und nach dem Kauf digital geliefert — ausdrucken, mit deinem Tätowierer die Größe anpassen und überall stechen lassen.",
+    "style_note": "Neue {name} Designs kommen hinzu, sobald Künstler sie hochladen. Änderungswunsch — anderes Motiv, Name dazu, andere Farben? Bestelle es als individuelle Variante auf jeder Design-Seite."
   },
   "giftcards": {
     "a_customer": "ein Kunde",

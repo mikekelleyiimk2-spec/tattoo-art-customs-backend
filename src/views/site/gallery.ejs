@@ -63,6 +63,14 @@
 </section>
 <% } %>
 
+<% if (typeof styleIntro !== 'undefined' && styleIntro) { %>
+<section class="card cat-intro">
+  <h2><%= styleIntro.name %></h2>
+  <% if (styleIntro.blurb) { %><p><%= styleIntro.blurb %></p><% } else { %><p><%= t('gallery.style_fallback', {name: styleIntro.name, count: styleIntro.count}) %></p><% } %>
+  <p class="muted"><%= t('gallery.style_note', {name: styleIntro.name}) %></p>
+</section>
+<% } %>
+
 <% if (!designs.length) { %><p><%= t('gallery.no_match') %></p><% } %>
 <div class="grid">
   <% designs.forEach(function(d) { %>
