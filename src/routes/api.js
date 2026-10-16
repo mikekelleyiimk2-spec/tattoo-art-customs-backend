@@ -14,6 +14,29 @@ const { enforceSessionCap } = require('../lib/sessionLimits');
 
 const router = express.Router();
 
+// Verified merch + affiliate link set for app clients (merch/affiliate
+// completeness audit 2026-10-16): the same links the website carries on
+// /merch + /discounts, so any app surface can render the full set from one
+// payload. Keep in sync with src/lib/merchCatalog.js. CNC Tattoo is
+// shop-subscriber-gated and NEVER appears here or on any public surface.
+function appLinkSet(config) {
+  const base = config.baseUrl;
+  return {
+    merch: `${base}/merch`,
+    discounts: `${base}/discounts`,
+    aftercare: `${base}/aftercare`,
+    giftCards: `${base}/gift-cards/buy`,
+    affiliates: [
+      { id: 'baselabs', name: 'Base Labs', url: 'https://baselabs.is/?coupon=TAC20' },
+      { id: 'electrum', name: 'Electrum Supply', url: 'https://club.co/s/R6gQCOlWghEC9' },
+      { id: 'drtattooskin', name: 'DrTattooSkin', url: 'https://www.drtattooskin.com/TATTOOARTCUSTOMS' },
+      { id: 'recovery', name: 'Recovery Aftercare', url: 'https://lasso.to/auGY590feE/' },
+      { id: 'leda', name: 'Leda Art Supply', url: 'https://lasso.to/RfUlWaYEwK/' },
+      { id: 'amazon', name: 'Amazon', url: 'https://www.amazon.com/?tag=tattooartcust-20' },
+    ],
+  };
+}
+
 // Public app store links for app clients: the free app's "Go Pro" upsell
 // reads playStoreProUrl here (falls back to the website /apps page when empty).
 // Never a dead button — empty strings mean "not published yet".
@@ -27,6 +50,7 @@ router.get('/app-links', (req, res) => {
     proStoreUrl: config.playStoreProUrl || '',
     appStoreUrl: config.appStoreUrl || '',
     appsPage: `${config.baseUrl}/apps`,
+    links: appLinkSet(config),
   });
 });
 
@@ -101,6 +125,7 @@ router.get('/bootstrap', async (req, res) => {
       proStoreUrl: config.playStoreProUrl || '',
       appStoreUrl: config.appStoreUrl || '',
       appsPage: `${config.baseUrl}/apps`,
+      links: appLinkSet(config),
     };
     if (token) {
       const user = await db.get('SELECT id FROM users WHERE api_token = ?', [token]);
