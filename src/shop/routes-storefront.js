@@ -53,9 +53,13 @@ router.get('/:shopId', async (req, res) => {
   }
   const designs = await storefront.getShopDesigns(shop.id);
   const refCode = await storefront.getShopReferralCode(shop.id);
+  // Public pages show the shop's business name when one is set (same
+  // precedence as transfers.js: business_name first, account name fallback).
+  const profile = await db.get('SELECT business_name FROM shop_profiles WHERE user_id = ?', [shop.id]);
+  const publicShop = { ...shop, display_name: (profile && String(profile.business_name || '').trim()) || shop.display_name };
   res.render('shop/storefront', {
-    title: `${settings.headline || shop.display_name + ' — Shop Store'} — Tattoo Art Customs`,
-    shop, settings, designs, money, refCode,
+    title: `${settings.headline || publicShop.display_name + ' — Shop Store'} — Tattoo Art Customs`,
+    shop: publicShop, settings, designs, money, refCode,
   });
 });
 

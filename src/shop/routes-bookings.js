@@ -53,12 +53,16 @@ async function shopOwnsBooking(booking, user) {
 router.get('/shop/:shopId', async (req, res) => {
   const shop = await shopUser(req.params.shopId);
   if (!shop) return res.status(404).render('error', { title: 'Not found', message: 'Shop not found.' });
+  // Public pages show the shop's business name when one is set (same
+  // precedence as transfers.js: business_name first, account name fallback).
+  const profile = await db.get('SELECT business_name FROM shop_profiles WHERE user_id = ?', [shop.id]);
+  const publicShop = { ...shop, display_name: (profile && String(profile.business_name || '').trim()) || shop.display_name };
   const settings = await flow.getBookingSettings(shop.id);
   const staff = await db.all('SELECT * FROM shop_staff WHERE shop_user_id = ? AND active = 1 ORDER BY name', [shop.id]);
   const chairs = await db.all('SELECT * FROM shop_chairs WHERE shop_user_id = ? AND active = 1 ORDER BY name', [shop.id]);
   res.render('bookings/shop', {
-    title: `Book — ${shop.display_name} — Tattoo Art Customs`,
-    shop, settings, staff, chairs, money,
+    title: `Book — ${publicShop.display_name} — Tattoo Art Customs`,
+    shop: publicShop, settings, staff, chairs, money,
     designId: String(req.query.design_id || ''),
     depositFirst: Number(settings.deposit_before_booking) === 1,
     bookingActive: await shopActive(shop.id),
