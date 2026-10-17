@@ -382,14 +382,18 @@ router.get('/deposit-first/approve/:depositId', requireLogin, async (req, res) =
 router.get('/deposit-first/:shopId', async (req, res) => {
   const shop = await shopUser(req.params.shopId);
   if (!shop) return res.status(404).render('error', { title: 'Not found', message: 'Shop not found.' });
+  // Public pages show the shop's business name when one is set (same
+  // precedence as transfers.js: business_name first, account name fallback).
+  const profile = await db.get('SELECT business_name FROM shop_profiles WHERE user_id = ?', [shop.id]);
+  const publicShop = { ...shop, display_name: (profile && String(profile.business_name || '').trim()) || shop.display_name };
   const settings = await flow.getBookingSettings(shop.id);
   if (Number(settings.deposit_before_booking) !== 1) {
     return res.redirect(`/bookings/shop/${shop.id}`);
   }
   const fees = flow.depositFees(settings);
   res.render('bookings/deposit-first', {
-    title: `Deposit — ${shop.display_name} — Tattoo Art Customs`,
-    shop, settings, fees, lines: formatReceiptLines(fees), money,
+    title: `Deposit — ${publicShop.display_name} — Tattoo Art Customs`,
+    shop: publicShop, settings, fees, lines: formatReceiptLines(fees), money,
   });
 });
 
