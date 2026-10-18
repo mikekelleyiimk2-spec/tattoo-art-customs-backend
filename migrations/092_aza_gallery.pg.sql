@@ -1,0 +1,5 @@
+-- 092: Seed the Aza the Hope Bird design into the main gallery
+-- Owner order 2026-10-18: the owner-approved Aza pattern (color master v4 + v10 pure-trace stencil) goes up in the gallery
+-- Idempotent: ON CONFLICT (id) DO NOTHING, safe to re-run
+-- NOTE: no trailing-semicolon comments (migrate.js splits on semicolon lines)
+INSERT INTO designs (id, title, description, categories, color_path, linework_path, linework_wm_path, price_cents, artist_id, status, listing_scope, style, created_at, sale_count, show_featured, show_air_at) VALUES ('aza-the-hope-bird', 'Aza the Hope Bird', 'Aza the Hope Bird - the one-of-a-kind hybrid parrot, green and gold with teal flight feathers, perched in the southeastern river forest at sunset. Realism tattoo design, full color with matching clean linework included.', '["Animals & Wildlife > Parrot"]', 'designs/color-clean/aza-the-hope-bird.jpg', 'designs/linework-clean/aza-the-hope-bird.jpg', '/img/designs/aza-the-hope-bird-auto.jpg', 7500, NULL, 'approved', 'gallery', 'realism', 1792327086490, 0, 0, NULL) ON CONFLICT (id) DO NOTHING;
