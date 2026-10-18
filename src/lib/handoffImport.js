@@ -371,7 +371,10 @@ async function importHandoffZip(name, opts = {}) {
         };
         lwFile = moveOne(pair.linework, 'linework');
         if (pair.color) colorFile = moveOne(pair.color, 'color');
-      } catch {
+      } catch (e) {
+        // Log the real cause (ENOSPC on the persistent disk hid here in
+        // Oct 2026: the disk was 100% full and every pair failed silently).
+        console.error(`handoff import: could not store extracted files for "${pair.title}":`, e && e.code, e && e.message);
         report.failed.push({ title: pair.title, error: 'could not store the extracted files' });
         continue;
       }

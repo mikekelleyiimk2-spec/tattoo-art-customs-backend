@@ -531,6 +531,33 @@ router.get('/disk', async (req, res) => {
   }
 });
 
+// POST /api/muse/clear-thumb-cache — delete the regenerable design-thumb
+// cache (UPLOAD_DIR/cache/design-thumbs). Thumbs rebuild on first request
+// (designThumbs.js keys cache files by source size+mtime), so clearing is
+// always safe. Exists because the 1 GB persistent disk filled to 100% in
+// Oct 2026 and every handoff import failed ENOSPC while storing pairs.
+// Auth: Authorization: Bearer <MUSE_SERVICE_TOKEN>.
+router.post('/clear-thumb-cache', (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const dir = path.join(config.uploadDir, 'cache', 'design-thumbs');
+    const freeOf = () => { try { const s = fs.statfsSync(config.uploadDir); return s.bavail * s.bsize; } catch { return null; } };
+    const freeBefore = freeOf();
+    let removed = 0; let bytes = 0;
+    try {
+      for (const name of fs.readdirSync(dir)) {
+        const p = path.join(dir, name);
+        try { const st = fs.statSync(p); if (st.isFile()) { bytes += st.size; fs.unlinkSync(p); removed++; } } catch { /* vanished mid-walk */ }
+      }
+    } catch { /* cache dir absent — nothing to clear */ }
+    return res.json({ ok: true, removed, bytes, freeBefore, freeAfter: freeOf() });
+  } catch (e) {
+    console.error('[muse/clear-thumb-cache] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'clear failed' });
+  }
+});
+
 // ── Cosmos handoff ZIP receiver ─────────────────────────────────────
 // POST /api/muse/handoff-zips — receive ONE handoff ZIP (multipart form
 // field "file", .zip, max 512 MB), streamed to disk, never memory. The
@@ -641,6 +668,14 @@ router.post('/handoff-zips/:name/import', express.json(), async (req, res) => {
       categories: body.categories,
       description: body.description,
     });
+    if (report.imported.length === 0 && report.failed.length > 0) {
+      // Total failure (e.g. persistent disk full): keep the staged ZIP so
+      // the import can be retried after the blocker is fixed, instead of
+      // markImported deleting it and recording a false "imported" receipt.
+      const msg = `import stored no designs (${report.failed.length} pairs failed; first: ${report.failed[0].error})`;
+      handoff.markImportError(name, msg);
+      return res.status(422).json({ ok: false, error: msg, code: 'import_no_designs', name, report });
+    }
     handoff.markImported(name, report);
     return res.json({ ok: true, name, report });
   } catch (e) {
