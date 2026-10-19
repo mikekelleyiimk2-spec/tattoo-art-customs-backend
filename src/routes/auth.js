@@ -107,10 +107,15 @@ router.post('/forgot', authLimiter, checkHoneypot, async (req, res) => {
     const token = crypto.randomBytes(24).toString('hex');
     await db.update('users', user.id, { reset_token: token, reset_expires: Date.now() + 3600 * 1000 });
     const link = `${config.baseUrl}/reset/${token}`;
-    await sendMail({
-      to: user.email, subject: 'Reset your Tattoo Art Customs password',
-      text: `Reset your password here (valid 1 hour): ${link}`,
-    });
+    // Best effort — a mail failure must never 500 the reset request (the
+    // token is already saved; the generic response below must not leak
+    // whether the email exists or whether delivery worked).
+    try {
+      await sendMail({
+        to: user.email, subject: 'Reset your Tattoo Art Customs password',
+        text: `Reset your password here (valid 1 hour): ${link}`,
+      });
+    } catch (e) { console.error('password reset email failed:', e.message); }
   }
   req.session.flash = 'If that email is registered, a reset link is on its way.';
   res.redirect('/login');
