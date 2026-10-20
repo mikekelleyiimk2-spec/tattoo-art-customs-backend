@@ -108,6 +108,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/privacy/odometer`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/ai-bar`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/screenqr`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/habit-dot`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/discounts`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/aftercare`, changefreq: 'monthly', priority: '0.6' },
     { loc: `${base}/merch`, changefreq: 'weekly', priority: '0.7' },
@@ -987,6 +988,14 @@ router.get('/privacy/screenqr', (req, res) => res.render('site/privacy-screenqr'
 router.get('/privacy/ai-bar', (req, res) => res.render('site/privacy-aibar', {
   title: 'AI Button Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for AI Button. No accounts, no server, no ads, no analytics — your voice and prompts go only to the AI you choose.',
+}));
+
+// Per-app policy for the Habit Dot Android app (Google Play requires a
+// public privacy-policy URL; the app contains AdMob ads, so its policy
+// — unlike Odometer's — discloses Google's ad-related data collection).
+router.get('/privacy/habit-dot', (req, res) => res.render('site/privacy-habitdot', {
+  title: 'Habit Dot Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for Habit Dot. Your habits stay on your device; the free version shows Google AdMob ads, and Premium ($2.99 via Google Play Billing) removes them.',
 }));
 
 router.get('/about', (req, res) => res.render('site/about', {
