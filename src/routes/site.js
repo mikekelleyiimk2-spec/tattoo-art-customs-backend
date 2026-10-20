@@ -107,6 +107,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/privacy`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/odometer`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/ai-bar`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/screenqr`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/discounts`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/aftercare`, changefreq: 'monthly', priority: '0.6' },
     { loc: `${base}/merch`, changefreq: 'weekly', priority: '0.7' },
@@ -972,6 +973,13 @@ router.get('/privacy', (req, res) => res.render('site/privacy', {
 router.get('/privacy/odometer', (req, res) => res.render('site/privacy-odometer', {
   title: 'Odometer Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for Odometer — Mileage & Gas Tracker. Your location is used only to measure trips you start, and it never leaves your device.',
+}));
+
+// Per-app policy for the ScreenQR Android app (Google Play requires a
+// public privacy-policy URL for media-projection apps).
+router.get('/privacy/screenqr', (req, res) => res.render('site/privacy-screenqr', {
+  title: 'ScreenQR Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for ScreenQR. No internet permission, no accounts, no ads, no analytics — QR codes are decoded on your device and never leave it.',
 }));
 
 // Per-app policy for the AI Button Android app (voice-loop app:
