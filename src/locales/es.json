@@ -354,6 +354,11 @@
     "all_apps": "Ver todas nuestras apps"
   },
   "landing": {
+    "watch": {
+      "title": "📺 Para ver",
+      "text": "Nuestros anuncios y Shorts de diseños más recientes. Las reproducciones aquí cuentan como vistas de YouTube. ¡Gracias por verlos!",
+      "more_btn": "Ver más vídeos"
+    },
     "hero": {
       "brand": "Tattoo Art Customs™",
       "sub": "Diseños de tatuaje originales y arte personalizado hecho para ti: todo el proceso en un solo lugar.",
@@ -948,6 +953,7 @@
     "tap_to_pay": "Tap to Pay",
     "wishlist": "Favoritos",
     "top_loved": "Más amados",
+    "watch": "Ver vídeos",
     "by_request": "By Request",
     "doodle": "Doodle-to-Tattoo"
   },
@@ -1275,6 +1281,19 @@
     "per_entry": "por participación",
     "best_value": "MEJOR VALOR",
     "popular": "MÁS POPULAR"
+  },
+  "watch": {
+    "title": "Mira Tattoo Art Customs",
+    "intro": "Nuestros anuncios, Shorts de diseños y vídeos de los canales, todo en un solo lugar. Cada reproducción aquí cuenta como una vista de YouTube: ver esta página apoya los canales igual que verlos en YouTube.",
+    "commercials_title": "🎬 Nuestros anuncios",
+    "commercials_text": "La historia de Tattoo Art Customs en aproximadamente un minuto: diseños originales, arte personalizado dibujado en 48 horas y artistas que cobran en cada venta.",
+    "shorts_title": "⚡ Shorts de diseños",
+    "shorts_text": "Diseños originales nuevos, uno a uno. Cada diseño cuesta 75 $ y el comprador recibe la versión a todo color.",
+    "rook_title": "🎥 También en Rook 98",
+    "rook_text": "Nuestro segundo canal: los mismos anuncios, además de más Shorts de diseños y vídeos. Suscríbete también allí para no perderte ninguno.",
+    "subscribe_tac": "📺 Suscribirse — Tattoo Art Customs",
+    "subscribe_rook": "📺 Suscribirse — Rook 98",
+    "subscribe_note": "Suscribirse es gratis y es la mejor forma de apoyar los canales: cada suscriptor nos ayuda a llegar a más artistas, estudios y coleccionistas."
   },
   "show": {
     "badge": "¡Visto en Color With Us!",

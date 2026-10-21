@@ -354,6 +354,11 @@
     "all_apps": "Alle unsere Apps ansehen"
   },
   "landing": {
+    "watch": {
+      "title": "📺 Ansehen",
+      "text": "Unsere neuesten Werbespots und Design-Shorts. Aufrufe hier zählen als YouTube-Ansichten — danke fürs Zuschauen!",
+      "more_btn": "Mehr Videos ansehen"
+    },
     "hero": {
       "brand": "Tattoo Art Customs™",
       "sub": "Originelle Tattoo-Designs und Custom-Artworks nur für dich — die komplette Pipeline an einem Ort.",
@@ -948,6 +953,7 @@
     "tap_to_pay": "Tap to Pay",
     "wishlist": "Wunschliste",
     "top_loved": "Top-Lieblinge",
+    "watch": "Ansehen",
     "by_request": "By Request",
     "doodle": "Doodle-to-Tattoo"
   },
@@ -1275,6 +1281,19 @@
     "per_entry": "pro Teilnahme",
     "best_value": "BESTES ANGEBOT",
     "popular": "BELIEBTESTE"
+  },
+  "watch": {
+    "title": "Tattoo Art Customs ansehen",
+    "intro": "Unsere Werbespots, Design-Shorts und Kanalvideos — alles an einem Ort. Jeder Aufruf hier zählt als YouTube-Ansicht: Wer hier schaut, unterstützt die Kanäle genauso wie auf YouTube.",
+    "commercials_title": "🎬 Unsere Werbespots",
+    "commercials_text": "Die Geschichte von Tattoo Art Customs in etwa einer Minute — originale Designs, individuelle Kunstwerke in 48 Stunden und Künstler, die an jedem Verkauf verdienen.",
+    "shorts_title": "⚡ Design-Shorts",
+    "shorts_text": "Frische Originaldesigns, eins nach dem anderen. Jedes Design kostet 75 $, und der Käufer erhält die Vollfarb-Version.",
+    "rook_title": "🎥 Auch auf Rook 98",
+    "rook_text": "Unser zweiter Kanal — dieselben Werbespots plus weitere Design-Shorts und Uploads. Abonnieren Sie auch dort, damit Sie nichts verpassen.",
+    "subscribe_tac": "📺 Abonnieren — Tattoo Art Customs",
+    "subscribe_rook": "📺 Abonnieren — Rook 98",
+    "subscribe_note": "Abonnieren ist kostenlos und der beste Weg, die Kanäle zu unterstützen — jeder Abonnent hilft uns, mehr Künstler, Studios und Sammler zu erreichen."
   },
   "show": {
     "badge": "Gesehen in Color With Us!",

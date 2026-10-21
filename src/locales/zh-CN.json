@@ -354,6 +354,11 @@
     "all_apps": "查看我们的所有应用"
   },
   "landing": {
+    "watch": {
+      "title": "📺 观看",
+      "text": "我们最新的广告和设计 Shorts。在这里播放同样计为 YouTube 观看次数——感谢观看！",
+      "more_btn": "观看更多视频"
+    },
     "hero": {
       "brand": "Tattoo Art Customs™",
       "sub": "原创纹身设计与为您定制的艺术作品——全流程一站式搞定。",
@@ -948,6 +953,7 @@
     "tap_to_pay": "拍卡支付",
     "wishlist": "心愿单",
     "top_loved": "最受欢迎",
+    "watch": "看视频",
     "by_request": "By Request",
     "doodle": "Doodle-to-Tattoo"
   },
@@ -1275,6 +1281,19 @@
     "per_entry": "每次参与",
     "best_value": "最划算",
     "popular": "最受欢迎"
+  },
+  "watch": {
+    "title": "观看 Tattoo Art Customs",
+    "intro": "我们的广告、设计 Shorts 和频道视频——全部集中在这里。在此页面播放同样计为 YouTube 观看次数：在这里观看，就像在 YouTube 上观看一样支持我们的频道。",
+    "commercials_title": "🎬 我们的广告",
+    "commercials_text": "用大约一分钟讲述 Tattoo Art Customs 的故事——原创设计、48 小时内绘制的定制艺术作品，以及每笔销售都能获得报酬的艺术家。",
+    "shorts_title": "⚡ 设计 Shorts",
+    "shorts_text": "全新原创设计，一次一个。每个设计售价 75 美元，买家将获得全彩版本。",
+    "rook_title": "🎥 Rook 98 同步更新",
+    "rook_text": "我们的第二个频道——同样的广告，还有更多设计 Shorts 和视频。也请订阅那里，不要错过任何更新。",
+    "subscribe_tac": "📺 订阅 — Tattoo Art Customs",
+    "subscribe_rook": "📺 订阅 — Rook 98",
+    "subscribe_note": "订阅完全免费，也是支持频道最好的方式——每一位订阅者都能帮助我们触达更多艺术家、纹身店和收藏家。"
   },
   "show": {
     "badge": "《Color With Us!》节目同款",

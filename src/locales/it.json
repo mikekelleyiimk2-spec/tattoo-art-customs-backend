@@ -354,6 +354,11 @@
     "all_apps": "Vedi tutte le nostre app"
   },
   "landing": {
+    "watch": {
+      "title": "📺 Guarda",
+      "text": "I nostri spot e Shorts di design più recenti. Le riproduzioni qui contano come visualizzazioni YouTube — grazie per la visione!",
+      "more_btn": "Guarda altri video"
+    },
     "hero": {
       "brand": "Tattoo Art Customs™",
       "sub": "Design originali per tatuaggi e arte personalizzata creata per te — l'intera filiera in un unico posto.",
@@ -948,6 +953,7 @@
     "tap_to_pay": "Tap to Pay",
     "wishlist": "Preferiti",
     "top_loved": "Più amati",
+    "watch": "Guarda",
     "by_request": "By Request",
     "doodle": "Doodle-to-Tattoo"
   },
@@ -1275,6 +1281,19 @@
     "per_entry": "per partecipazione",
     "best_value": "MIGLIOR OFFERTA",
     "popular": "PIÙ POPOLARE"
+  },
+  "watch": {
+    "title": "Guarda Tattoo Art Customs",
+    "intro": "I nostri spot, gli Shorts dei design e i video del canale — tutto in un unico posto. Ogni riproduzione qui conta come visualizzazione YouTube: guardare su questa pagina sostiene i canali proprio come su YouTube.",
+    "commercials_title": "🎬 I nostri spot",
+    "commercials_text": "La storia di Tattoo Art Customs in circa un minuto — design originali, opere personalizzate disegnate in 48 ore e artisti pagati a ogni vendita.",
+    "shorts_title": "⚡ Shorts dei design",
+    "shorts_text": "Nuovi design originali, uno alla volta. Ogni design costa 75 $ e l'acquirente riceve la versione a colori completa.",
+    "rook_title": "🎥 Anche su Rook 98",
+    "rook_text": "Il nostro secondo canale — gli stessi spot, più altri Shorts e video. Iscriviti anche lì per non perderne nessuno.",
+    "subscribe_tac": "📺 Iscriviti — Tattoo Art Customs",
+    "subscribe_rook": "📺 Iscriviti — Rook 98",
+    "subscribe_note": "Iscriversi è gratuito ed è il modo migliore per sostenere i canali — ogni iscritto ci aiuta a raggiungere più artisti, studi e collezionisti."
   },
   "show": {
     "badge": "Visto in Color With Us!",

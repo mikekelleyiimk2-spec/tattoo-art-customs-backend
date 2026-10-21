@@ -354,6 +354,11 @@
     "all_apps": "모든 앱 보기"
   },
   "landing": {
+    "watch": {
+      "title": "📺 시청하기",
+      "text": "최신 광고와 디자인 Shorts입니다. 여기서 재생해도 YouTube 조회수로 집계됩니다. 시청해 주셔서 감사합니다!",
+      "more_btn": "영상 더 보기"
+    },
     "hero": {
       "brand": "Tattoo Art Customs™",
       "sub": "오리지널 타투 디자인과 당신만의 커스텀 아트 — 한 곳에서 끝까지.",
@@ -948,6 +953,7 @@
     "tap_to_pay": "탭 결제",
     "wishlist": "위시리스트",
     "top_loved": "인기 디자인",
+    "watch": "동영상",
     "by_request": "By Request",
     "doodle": "Doodle-to-Tattoo"
   },
@@ -1275,6 +1281,19 @@
     "per_entry": "1회당",
     "best_value": "최고 가성비",
     "popular": "가장 인기"
+  },
+  "watch": {
+    "title": "Tattoo Art Customs 시청하기",
+    "intro": "광고, 디자인 Shorts, 채널 영상을 한곳에 모았습니다. 이 페이지에서의 재생도 YouTube 조회수로 집계됩니다. 여기서 시청하는 것만으로도 YouTube에서 보는 것과 똑같이 채널을 응원할 수 있습니다.",
+    "commercials_title": "🎬 광고 영상",
+    "commercials_text": "Tattoo Art Customs의 이야기를 약 1분으로 소개합니다. 오리지널 디자인, 48시간 안에 그려지는 맞춤 아트워크, 그리고 판매될 때마다 수익을 얻는 아티스트들.",
+    "shorts_title": "⚡ 디자인 Shorts",
+    "shorts_text": "새로운 오리지널 디자인을 하나씩 소개합니다. 모든 디자인은 75달러이며, 구매자에게는 풀컬러 버전이 제공됩니다.",
+    "rook_title": "🎥 Rook 98 채널도 있어요",
+    "rook_text": "저희의 두 번째 채널입니다. 같은 광고와 함께 더 많은 디자인 Shorts와 영상이 올라갑니다. 놓치지 않도록 그곳도 구독해 주세요.",
+    "subscribe_tac": "📺 구독하기 — Tattoo Art Customs",
+    "subscribe_rook": "📺 구독하기 — Rook 98",
+    "subscribe_note": "구독은 무료이며 채널을 응원하는 가장 좋은 방법입니다. 구독자 한 분 한 분이 더 많은 아티스트와 숍, 컬렉터에게 다가가는 힘이 됩니다."
   },
   "show": {
     "badge": "「Color With Us!」에 소개됨",

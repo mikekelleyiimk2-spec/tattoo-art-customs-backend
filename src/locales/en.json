@@ -354,6 +354,11 @@
     "all_apps": "See all our apps"
   },
   "landing": {
+    "watch": {
+      "title": "📺 Watch",
+      "text": "Our newest commercials and design Shorts. Plays here count as YouTube views — thanks for watching!",
+      "more_btn": "Watch more videos"
+    },
     "hero": {
       "brand": "Tattoo Art Customs™",
       "sub": "Original tattoo designs and custom artwork made for you — the whole pipeline in one place.",
@@ -948,6 +953,7 @@
     "tap_to_pay": "Tap to Pay",
     "wishlist": "Wishlist",
     "top_loved": "Top Loved",
+    "watch": "Watch",
     "by_request": "By Request",
     "doodle": "Doodle-to-Tattoo"
   },
@@ -1330,6 +1336,19 @@
     "per_entry": "per entry",
     "best_value": "BEST VALUE",
     "popular": "MOST POPULAR"
+  },
+  "watch": {
+    "title": "Watch Tattoo Art Customs",
+    "intro": "Our commercials, design Shorts, and channel videos — all in one place. Every play here counts as a YouTube view, so watching on this page supports the channels just like watching on YouTube.",
+    "commercials_title": "🎬 Our commercials",
+    "commercials_text": "The Tattoo Art Customs story in about a minute — original designs, custom artwork drawn in 48 hours, and artists paid on every sale.",
+    "shorts_title": "⚡ Design Shorts",
+    "shorts_text": "Fresh original designs, one at a time. Every design is $75, and the buyer gets the full-color version.",
+    "rook_title": "🎥 Also on Rook 98",
+    "rook_text": "Our second channel — the same commercials, plus more design Shorts and uploads. Subscribe there too so you never miss one.",
+    "subscribe_tac": "📺 Subscribe — Tattoo Art Customs",
+    "subscribe_rook": "📺 Subscribe — Rook 98",
+    "subscribe_note": "Subscribing is free, and it's the best way to support the channels — every subscriber helps us reach more artists, shops, and collectors."
   },
   "show": {
     "badge": "As seen on Color With Us!",

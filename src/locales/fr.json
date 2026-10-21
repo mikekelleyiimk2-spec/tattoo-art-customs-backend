@@ -354,6 +354,11 @@
     "all_apps": "Voir toutes nos apps"
   },
   "landing": {
+    "watch": {
+      "title": "📺 À regarder",
+      "text": "Nos dernières publicités et nos Shorts de designs. Les lectures ici comptent comme des vues YouTube — merci de regarder !",
+      "more_btn": "Voir plus de vidéos"
+    },
     "hero": {
       "brand": "Tattoo Art Customs™",
       "sub": "Des designs de tatouage originaux et des créations sur mesure rien que pour vous — toute la chaîne au même endroit.",
@@ -948,6 +953,7 @@
     "tap_to_pay": "Tap to Pay",
     "wishlist": "Favoris",
     "top_loved": "Coups de cœur",
+    "watch": "Regarder",
     "by_request": "By Request",
     "doodle": "Doodle-to-Tattoo"
   },
@@ -1275,6 +1281,19 @@
     "per_entry": "par participation",
     "best_value": "MEILLEUR RAPPORT",
     "popular": "LE PLUS POPULAIRE"
+  },
+  "watch": {
+    "title": "Regarder Tattoo Art Customs",
+    "intro": "Nos publicités, nos Shorts de designs et les vidéos de nos chaînes — tout au même endroit. Chaque lecture ici compte comme une vue YouTube : regarder sur cette page soutient les chaînes autant que sur YouTube.",
+    "commercials_title": "🎬 Nos publicités",
+    "commercials_text": "L'histoire de Tattoo Art Customs en environ une minute — des designs originaux, des œuvres personnalisées dessinées en 48 heures et des artistes payés à chaque vente.",
+    "shorts_title": "⚡ Shorts de designs",
+    "shorts_text": "De nouveaux designs originaux, un par un. Chaque design coûte 75 $ et l'acheteur reçoit la version entièrement colorée.",
+    "rook_title": "🎥 Aussi sur Rook 98",
+    "rook_text": "Notre deuxième chaîne — les mêmes publicités, plus d'autres Shorts et vidéos. Abonnez-vous aussi là-bas pour ne rien manquer.",
+    "subscribe_tac": "📺 S'abonner — Tattoo Art Customs",
+    "subscribe_rook": "📺 S'abonner — Rook 98",
+    "subscribe_note": "S'abonner est gratuit, et c'est le meilleur moyen de soutenir les chaînes — chaque abonné nous aide à toucher plus d'artistes, de salons et de collectionneurs."
   },
   "show": {
     "badge": "Vu dans Color With Us !",

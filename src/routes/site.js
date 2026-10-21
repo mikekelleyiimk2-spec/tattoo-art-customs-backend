@@ -120,6 +120,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/halloween-flash`, changefreq: 'daily', priority: '0.9' },
     { loc: `${base}/show-designs`, changefreq: 'daily', priority: '0.8', lastmod: new Date().toISOString().slice(0, 10) },
     { loc: `${base}/poppy-and-ziggy`, changefreq: 'weekly', priority: '0.7' },
+    { loc: `${base}/watch`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/guides`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/guides/aftercare`, changefreq: 'monthly', priority: '0.7' },
     { loc: `${base}/guides/choosing-a-design`, changefreq: 'monthly', priority: '0.7' },
@@ -189,6 +190,7 @@ router.use((req, res, next) => {
 
 router.get('/', async (req, res) => {
   const base = config.baseUrl.replace(/\/$/, '');
+  const watchVideos = require('../lib/watchVideos');
   res.render('site/landing', {
     title: 'Tattoo Art Customs — Original Tattoo Designs, Custom Art & Verified Shops',
     metaDescription: 'Tattoo Art Customs: buy original premade tattoo designs, commission custom artwork, find verified tattoo shops, and shop tattoo merch.',
@@ -201,6 +203,11 @@ router.get('/', async (req, res) => {
     // same partner set as the design pages; catalog is the single source.
     kitPartners: ['baselabs-aftercare', 'drtattoo-aftercare-system']
       .map((id) => require('../lib/merchCatalog').getProduct(id)).filter(Boolean),
+    // Videos strip (owner order 2026-10-21): YouTube embeds of our own
+    // commercials so landing traffic turns into YouTube views.
+    watchFeature: watchVideos.LANDING_FEATURE,
+    watchShorts: watchVideos.LANDING_SHORTS,
+    tacChannelUrl: watchVideos.TAC_CHANNEL_URL,
   });
 });
 
@@ -379,6 +386,25 @@ router.get('/poppy-and-ziggy', async (req, res) => {
     title: 'Poppy & Ziggy — the Kids\' Cartoon | Tattoo Art Customs',
     metaDescription: 'Poppy & Ziggy color a page and it comes to life! New episode every Friday at 5 PM CT on YouTube, plus a fun Short every day. Subscribe free.',
     canonical: `${base}/poppy-and-ziggy`,
+  });
+});
+
+// Watch page (owner order 2026-10-21): our YouTube commercials and design
+// Shorts embedded on the website so web traffic turns into YouTube views
+// (embedded plays count). TAC/Rook (adult) channel content — TAC surfaces
+// only, never on Little Inkers kid-facing pages.
+router.get('/watch', (req, res) => {
+  const base = config.baseUrl.replace(/\/$/, '');
+  const watchVideos = require('../lib/watchVideos');
+  res.render('site/watch', {
+    title: 'Watch — Tattoo Art Customs on YouTube',
+    metaDescription: 'Watch Tattoo Art Customs commercials, design Shorts, and Rook 98 videos. Every play counts as a YouTube view — subscribe free.',
+    canonical: `${base}/watch`,
+    commercials: watchVideos.COMMERCIALS,
+    designShorts: watchVideos.DESIGN_SHORTS,
+    rookVideos: watchVideos.ROOK_VIDEOS,
+    tacChannelUrl: watchVideos.TAC_CHANNEL_URL,
+    rookChannelUrl: watchVideos.ROOK_CHANNEL_URL,
   });
 });
 

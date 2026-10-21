@@ -354,6 +354,11 @@
     "all_apps": "Se alla våra appar"
   },
   "landing": {
+    "watch": {
+      "title": "📺 Titta",
+      "text": "Våra nyaste reklamfilmer och designshorts. Uppspelningar här räknas som YouTube-visningar — tack för att du tittar!",
+      "more_btn": "Se fler videor"
+    },
     "hero": {
       "brand": "Tattoo Art Customs™",
       "sub": "Originella tatueringsdesigner och specialritad konst bara för dig — hela kedjan på ett ställe.",
@@ -948,6 +953,7 @@
     "tap_to_pay": "Tap to Pay",
     "wishlist": "Önskelista",
     "top_loved": "Mest gillade",
+    "watch": "Titta",
     "by_request": "By Request",
     "doodle": "Doodle-to-Tattoo"
   },
@@ -1275,6 +1281,19 @@
     "per_entry": "per deltagande",
     "best_value": "BÄSTA VÄRDE",
     "popular": "MEST POPULÄR"
+  },
+  "watch": {
+    "title": "Titta på Tattoo Art Customs",
+    "intro": "Våra reklamfilmer, designshorts och kanalvideor — allt på ett ställe. Varje uppspelning här räknas som en YouTube-visning, så att titta på den här sidan stöder kanalerna precis som på YouTube.",
+    "commercials_title": "🎬 Våra reklamfilmer",
+    "commercials_text": "Berättelsen om Tattoo Art Customs på ungefär en minut — originaldesign, anpassad konst ritad på 48 timmar och konstnärer som får betalt vid varje försäljning.",
+    "shorts_title": "⚡ Designshorts",
+    "shorts_text": "Nya originaldesigner, en i taget. Varje design kostar 75 $ och köparen får den fullständiga färgversionen.",
+    "rook_title": "🎥 Även på Rook 98",
+    "rook_text": "Vår andra kanal — samma reklamfilmer plus fler designshorts och uppladdningar. Prenumerera där också så att du inte missar någon.",
+    "subscribe_tac": "📺 Prenumerera — Tattoo Art Customs",
+    "subscribe_rook": "📺 Prenumerera — Rook 98",
+    "subscribe_note": "Det är gratis att prenumerera, och det är det bästa sättet att stödja kanalerna — varje prenumerant hjälper oss att nå fler konstnärer, studios och samlare."
   },
   "show": {
     "badge": "Sedda i Color With Us!",

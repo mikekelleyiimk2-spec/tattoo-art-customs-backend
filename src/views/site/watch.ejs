@@ -1,0 +1,69 @@
+<h1>📺 <%= t('watch.title') %></h1>
+<p class="muted"><%= t('watch.intro') %></p>
+
+<section class="card" style="text-align:center;padding:1.5rem;">
+  <p>
+    <a class="btn" href="<%= tacChannelUrl %>?sub_confirmation=1" target="_blank" rel="noopener"><%= t('watch.subscribe_tac') %></a>
+    <a class="btn btn-secondary" href="<%= rookChannelUrl %>?sub_confirmation=1" target="_blank" rel="noopener"><%= t('watch.subscribe_rook') %></a>
+  </p>
+  <p class="muted fineprint"><%= t('watch.subscribe_note') %></p>
+</section>
+
+<h2><%= t('watch.commercials_title') %></h2>
+<p class="muted"><%= t('watch.commercials_text') %></p>
+<div class="grid">
+  <% commercials.forEach(function (v) { %>
+  <article class="card" style="padding:1rem;">
+    <% if (v.vertical) { %>
+    <div style="max-width:320px;margin:0 auto;">
+      <div style="position:relative;padding-bottom:177.78%;height:0;overflow:hidden;border-radius:8px;">
+        <iframe style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" src="https://www.youtube-nocookie.com/embed/<%= v.id %>" title="<%= v.title %>" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+    </div>
+    <% } else { %>
+    <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;">
+      <iframe style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" src="https://www.youtube-nocookie.com/embed/<%= v.id %>" title="<%= v.title %>" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+    <% } %>
+    <p style="margin-top:0.75rem;"><strong><%= v.title %></strong></p>
+  </article>
+  <% }); %>
+</div>
+
+<h2><%= t('watch.shorts_title') %></h2>
+<p class="muted"><%= t('watch.shorts_text') %></p>
+<div class="grid">
+  <% designShorts.forEach(function (v) { %>
+  <article class="card" style="padding:1rem;">
+    <div style="max-width:320px;margin:0 auto;">
+      <div style="position:relative;padding-bottom:177.78%;height:0;overflow:hidden;border-radius:8px;">
+        <iframe style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" src="https://www.youtube-nocookie.com/embed/<%= v.id %>" title="<%= v.title %>" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+    </div>
+    <p style="margin-top:0.75rem;"><strong><%= v.title %></strong></p>
+  </article>
+  <% }); %>
+</div>
+
+<h2><%= t('watch.rook_title') %></h2>
+<p class="muted"><%= t('watch.rook_text') %></p>
+<div class="grid">
+  <% rookVideos.forEach(function (v) { %>
+  <article class="card" style="padding:1rem;">
+    <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;">
+      <iframe style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" src="https://www.youtube-nocookie.com/embed/<%= v.id %>" title="<%= v.title %>" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+    <p style="margin-top:0.75rem;"><strong><%= v.title %></strong></p>
+  </article>
+  <% }); %>
+</div>
+
+<section class="card" style="text-align:center;padding:1.5rem;margin-top:1rem;">
+  <p>
+    <a class="btn" href="<%= tacChannelUrl %>?sub_confirmation=1" target="_blank" rel="noopener"><%= t('watch.subscribe_tac') %></a>
+    <a class="btn btn-secondary" href="<%= rookChannelUrl %>?sub_confirmation=1" target="_blank" rel="noopener"><%= t('watch.subscribe_rook') %></a>
+  </p>
+  <p class="muted fineprint"><%= t('watch.subscribe_note') %></p>
+</section>
+
+<%- include('../partials/ad-slot', {slot: 'home_inline'}) %>

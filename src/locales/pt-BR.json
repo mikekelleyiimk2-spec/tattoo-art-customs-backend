@@ -354,6 +354,11 @@
     "all_apps": "Ver todos os nossos apps"
   },
   "landing": {
+    "watch": {
+      "title": "📺 Assista",
+      "text": "Nossos comerciais e Shorts de designs mais recentes. As reproduções aqui contam como visualizações no YouTube — obrigado por assistir!",
+      "more_btn": "Ver mais vídeos"
+    },
     "hero": {
       "brand": "Tattoo Art Customs™",
       "sub": "Designs de tatuagem originais e arte personalizada feita para você — o processo inteiro num só lugar.",
@@ -948,6 +953,7 @@
     "tap_to_pay": "Tap to Pay",
     "wishlist": "Lista de desejos",
     "top_loved": "Mais amados",
+    "watch": "Assistir",
     "by_request": "By Request",
     "doodle": "Doodle-to-Tattoo"
   },
@@ -1275,6 +1281,19 @@
     "per_entry": "por participação",
     "best_value": "MELHOR VALOR",
     "popular": "MAIS POPULAR"
+  },
+  "watch": {
+    "title": "Assista à Tattoo Art Customs",
+    "intro": "Nossos comerciais, Shorts de designs e vídeos dos canais — tudo em um só lugar. Cada reprodução aqui conta como visualização no YouTube: assistir nesta página apoia os canais igual a assistir no YouTube.",
+    "commercials_title": "🎬 Nossos comerciais",
+    "commercials_text": "A história da Tattoo Art Customs em cerca de um minuto — designs originais, arte personalizada desenhada em 48 horas e artistas pagos em cada venda.",
+    "shorts_title": "⚡ Shorts de designs",
+    "shorts_text": "Designs originais novos, um de cada vez. Cada design custa US$ 75, e o comprador recebe a versão colorida completa.",
+    "rook_title": "🎥 Também no Rook 98",
+    "rook_text": "Nosso segundo canal — os mesmos comerciais, além de mais Shorts de designs e vídeos. Inscreva-se lá também para não perder nenhum.",
+    "subscribe_tac": "📺 Inscrever-se — Tattoo Art Customs",
+    "subscribe_rook": "📺 Inscrever-se — Rook 98",
+    "subscribe_note": "Inscrever-se é grátis e é a melhor forma de apoiar os canais — cada inscrito nos ajuda a alcançar mais artistas, estúdios e colecionadores."
   },
   "show": {
     "badge": "Visto no Color With Us!",

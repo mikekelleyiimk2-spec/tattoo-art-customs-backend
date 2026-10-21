@@ -354,6 +354,11 @@
     "all_apps": "すべてのアプリを見る"
   },
   "landing": {
+    "watch": {
+      "title": "📺 動画",
+      "text": "最新のコマーシャルとデザインShortsです。ここでの再生もYouTubeの視聴としてカウントされます。ご視聴ありがとうございます！",
+      "more_btn": "もっと動画を見る"
+    },
     "hero": {
       "brand": "Tattoo Art Customs™",
       "sub": "オリジナルタトゥーデザインと、あなたのためのカスタムアートワーク — 全工程をワンストップで。",
@@ -948,6 +953,7 @@
     "tap_to_pay": "タップ決済",
     "wishlist": "ウィッシュリスト",
     "top_loved": "人気ランキング",
+    "watch": "動画",
     "by_request": "By Request",
     "doodle": "Doodle-to-Tattoo"
   },
@@ -1275,6 +1281,19 @@
     "per_entry": "1口あたり",
     "best_value": "一番お得",
     "popular": "人気No.1"
+  },
+  "watch": {
+    "title": "Tattoo Art Customs を観る",
+    "intro": "コマーシャル、デザインShorts、チャンネルの動画をすべてここにまとめました。このページでの再生はYouTubeの視聴としてカウントされます。ここで観ることは、YouTubeで観るのと同じようにチャンネルの応援になります。",
+    "commercials_title": "🎬 コマーシャル",
+    "commercials_text": "Tattoo Art Customsのストーリーを約1分で。オリジナルデザイン、48時間で描くカスタムアート、そして販売ごとに報酬を得るアーティストたち。",
+    "shorts_title": "⚡ デザインShorts",
+    "shorts_text": "新作オリジナルデザインを1つずつ紹介。すべてのデザインは75ドルで、購入者にはフルカラー版が届きます。",
+    "rook_title": "🎥 Rook 98 でも配信中",
+    "rook_text": "私たちの2つ目のチャンネルです。同じコマーシャルに加え、さらに多くのデザインShortsや動画を公開しています。見逃さないよう、そちらも登録してください。",
+    "subscribe_tac": "📺 登録する — Tattoo Art Customs",
+    "subscribe_rook": "📺 登録する — Rook 98",
+    "subscribe_note": "チャンネル登録は無料で、チャンネルを応援する一番の方法です。登録者が増えるほど、より多くのアーティスト、ショップ、コレクターに届けられます。"
   },
   "show": {
     "badge": "「Color With Us!」で紹介",
