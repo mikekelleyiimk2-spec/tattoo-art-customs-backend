@@ -45,6 +45,12 @@ app.use(layouts);
 app.set('trust proxy', 1);
 
 app.use(helmet({
+  // Helmet's default Referrer-Policy is no-referrer, which strips the
+  // Referer on iframe loads — YouTube's embedded player now refuses to
+  // start without one ("Video player configuration error", Error 153).
+  // strict-origin-when-cross-origin sends the origin only (no full URLs),
+  // which satisfies YouTube and keeps page URLs private (2026-10-21).
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
