@@ -161,3 +161,12 @@
     <% } %>
   </div>
 </div>
+<% /* Share row (cross-connection audit 2026-10-21): every design page can be
+     shared out to the socials. Intent/sharer URLs only — no affiliate
+     content, so the ad-free purchase path decision (2026-10-15) stands. */ %>
+<p class="share-row" style="margin-top:1rem">
+  <strong><%= t('design.share') %>:</strong>
+  <a href="https://www.facebook.com/sharer/sharer.php?u=<%= encodeURIComponent(canonical) %>" target="_blank" rel="noopener">Facebook</a> ·
+  <a href="https://x.com/intent/post?text=<%= encodeURIComponent(design.title + ' — Tattoo Art Customs ' + canonical) %>" target="_blank" rel="noopener">X</a> ·
+  <a href="https://www.threads.com/intent/post?text=<%= encodeURIComponent(design.title + ' — Tattoo Art Customs ' + canonical) %>" target="_blank" rel="noopener">Threads</a>
+</p>

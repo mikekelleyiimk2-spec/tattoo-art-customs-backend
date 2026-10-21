@@ -1021,6 +1021,7 @@ router.get('/testers', (req, res) => res.render('site/testers', {
   // invite email, 2026-10-14). TAC free is DONE (12+) — shown in the
   // view banner, deliberately not in this list.
   testerApps: [
+    { name: 'Tattoo Art Customs', url: 'https://play.google.com/apps/testing/com.tattooartcustoms.app' },
     { name: 'Tattoo Art Customs Pro', url: 'https://play.google.com/apps/testing/com.tattooartcustoms.app.pro' },
     { name: 'Little Inkers', url: 'https://play.google.com/apps/testing/com.usefulappz.littleinkers' },
     { name: 'Little Inkers Coloring', url: 'https://play.google.com/apps/testing/com.usefulappz.littleinkerscoloring' },
@@ -1037,6 +1038,10 @@ router.get('/testers', (req, res) => res.render('site/testers', {
     { name: 'Perplexity Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.perplexitybar' },
     { name: 'Copilot Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.copilotbar' },
     { name: 'DeepSeek Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.deepseekbar' },
+    { name: 'ScreenQR', url: 'https://play.google.com/apps/testing/com.usefulappz.screenqr' },
+    { name: 'Odometer', url: 'https://play.google.com/apps/testing/com.usefulappz.odometer' },
+    { name: 'AI Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.aibar' },
+    { name: 'Habit Dot', url: 'https://play.google.com/apps/testing/com.usefulappz.habitdot' },
   ],
 }));
 

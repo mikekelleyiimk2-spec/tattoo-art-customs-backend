@@ -226,7 +226,8 @@
     "trust_delivery": "Instant delivery: the moment PayPal checkout completes, your private download link appears on screen and is emailed to you. Links last 24 hours.",
     "trust_license": "Single-use tattoo license: you may tattoo this design once, on yourself. No reselling, sharing, or printing it on merchandise — copyright stays with the artist. Full license terms are in Terms §8.",
     "trust_secure": "Secure checkout through PayPal — we never see or store your card details.",
-    "trust_final": "All sales are final: digital files cannot be returned, so there are no refunds (Terms §3)."
+    "trust_final": "All sales are final: digital files cannot be returned, so there are no refunds (Terms §3).",
+    "share": "Dieses Design teilen"
   },
   "footer": {
     "advertise": "Werbung",
@@ -243,7 +244,12 @@
     "tagline": "Originale Tattoo-Designs. Custom-Arbeiten mit 48-Stunden-Lieferung.",
     "terms": "AGB",
     "youtube": "YouTube",
-    "lil_youtube": "Little Inkers on YouTube — Subscribe"
+    "lil_youtube": "Little Inkers on YouTube — Subscribe",
+    "facebook": "Facebook",
+    "instagram": "Instagram",
+    "threads": "Threads",
+    "x": "X",
+    "pinterest": "Pinterest"
   },
   "gallery": {
     "all_categories": "Alle Kategorien",
@@ -1467,7 +1473,20 @@
     "storefront_headline": "Headline",
     "storefront_settings_intro": "Your public design store. Sales through your store link earn you referral credit.",
     "storefront_settings_title": "Storefront settings",
-    "storefront_welcome": "Welcome text (shown under your headline)"
+    "storefront_welcome": "Welcome text (shown under your headline)",
+    "perks": {
+      "title": "Shop Perks",
+      "sub": "Professional supply deals available only to active tattoo shop subscribers. Buying through these links supports Tattoo Art Customs at no extra cost to you.",
+      "cnc_badge": "8-20% tiered",
+      "cnc_h": "CNC Tattoo",
+      "cnc_text": "Professional tattoo machines and equipment. Shop subscriber exclusive.",
+      "cnc_cta": "Shop CNC Tattoo",
+      "disclosure": "As an affiliate, Tattoo Art Customs earns a commission on qualifying purchases made through these links.",
+      "ez_badge": "SHOP-DEAL",
+      "ez_h": "EZ Tattoo Supply — Profi-Maschinen & Patronen",
+      "ez_text": "P2S Pro- und P3 Pro-Maschinen sowie Revolution- und V-Select-Patronen von EZ Tattoo Supply — professionelle Ausrüstung seit 2009. Bestellen Sie über unseren Shop-Link und wir erhalten 10 %, ohne Mehrkosten für Sie.",
+      "ez_cta": "Bei EZ Tattoo Supply einkaufen"
+    }
   },
   "bookings": {
     "share_kit": "Share kit",
