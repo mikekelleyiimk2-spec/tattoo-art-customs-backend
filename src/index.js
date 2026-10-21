@@ -64,7 +64,13 @@ app.use(helmet({
       scriptSrcAttr: null,
       frameSrc: ["'self'", 'https://www.paypal.com', 'https://www.sandbox.paypal.com',
         // AdSense renders creatives in iframes from these hosts.
-        'https://googleads.g.doubleclick.net', 'https://tpc.googlesyndication.com'],
+        'https://googleads.g.doubleclick.net', 'https://tpc.googlesyndication.com',
+        // YouTube embeds: the /watch page + homepage Watch strip embed the
+        // TAC/Rook commercials via youtube-nocookie iframes so site traffic
+        // earns YouTube views (owner order 2026-10-21). Without these the
+        // browser blocks every player ("This content is blocked") — found
+        // 2026-10-21 when the owner reported sad-page placeholders.
+        'https://www.youtube-nocookie.com', 'https://www.youtube.com'],
       imgSrc: ["'self'", 'data:', 'https:'],
       styleSrc: ["'self'", "'unsafe-inline'"],
       connectSrc: ["'self'", 'https://api-m.paypal.com', 'https://api-m.sandbox.paypal.com'],
