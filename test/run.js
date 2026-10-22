@@ -937,6 +937,65 @@ async function main() {
     ok(r.status === 403, 'ai-commands result post from a non-owning device is 403');
   }
 
+  // Muse service pipe: Lead AI lane for the AI Master Button. The owner
+  // posts from the button (device auth, same registered device as the HQ
+  // queue above), Aria reads the thread + replies (service auth), and the
+  // device thread shows both roles in order with reply_to links.
+  {
+    const cryptoL = require('crypto');
+    const PIPE_L = process.env.MUSE_SERVICE_TOKEN;
+    const lead = (method, path, body, token) => fetch(`http://localhost:${PORT}${path}`, {
+      method,
+      headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) },
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    });
+    // Fresh device so the lane tests own their thread.
+    const leadKey = 'test-device-key-lead-1';
+    const leadCode = cryptoL.createHash('sha256').update(leadKey, 'utf8').digest('hex').slice(0, 8).toUpperCase();
+    let r = await lead('POST', '/api/muse/ai-commands/register', { pairing_code: leadCode, device_id: 'lead-test-phone' }, PIPE_L);
+    ok(r.status === 200, 'lead lane: register device (service)');
+    r = await lead('POST', '/api/muse/lead-messages', { text: 'hello Aria' }, 'never-registered-key');
+    ok(r.status === 401, 'lead lane: owner post rejects an unregistered device key');
+    r = await lead('POST', '/api/muse/lead-messages', { text: '   ' }, leadKey);
+    ok(r.status === 400, 'lead lane: owner post rejects empty text');
+    r = await lead('POST', '/api/muse/lead-messages', { text: 'Aria, what is the gallery count?' }, leadKey);
+    let j = await r.json();
+    ok(r.status === 200 && j.ok && typeof j.id === 'string' && j.id.length > 0, 'lead lane: owner post returns an id');
+    const ownerMsgId = j.id;
+    const ownerRow = sdb.prepare('SELECT device_id, role, reply_to FROM lead_messages WHERE id = ?').get(ownerMsgId);
+    ok(!!ownerRow && ownerRow.device_id === 'lead-test-phone' && ownerRow.role === 'owner' && ownerRow.reply_to === null,
+      'lead lane: owner row stored with role owner and no reply_to');
+    r = await lead('GET', '/api/muse/lead-messages?device_id=lead-test-phone', undefined, PIPE_L);
+    j = await r.json();
+    const svcRow = (j.messages || []).find((m) => m.id === ownerMsgId);
+    ok(r.status === 200 && !!svcRow && svcRow.replied === false, 'lead lane: service list flags the owner message unreplied');
+    r = await lead('POST', `/api/muse/lead-messages/${ownerMsgId}/reply`, { text: 'The gallery holds 4,724 designs.' }, 'wrong-token');
+    ok(r.status === 401, 'lead lane: reply rejects wrong service token');
+    r = await lead('POST', '/api/muse/lead-messages/no-such-id/reply', { text: 'hi' }, PIPE_L);
+    ok(r.status === 404, 'lead lane: reply to a missing message is 404');
+    r = await lead('POST', `/api/muse/lead-messages/${ownerMsgId}/reply`, { text: 'The gallery holds 4,724 designs.' }, PIPE_L);
+    j = await r.json();
+    ok(r.status === 200 && j.ok && typeof j.id === 'string', 'lead lane: service reply returns an id');
+    const ariaMsgId = j.id;
+    const ariaRow = sdb.prepare('SELECT device_id, role, reply_to FROM lead_messages WHERE id = ?').get(ariaMsgId);
+    ok(!!ariaRow && ariaRow.role === 'aria' && ariaRow.reply_to === ownerMsgId && ariaRow.device_id === 'lead-test-phone',
+      'lead lane: aria row stored with reply_to pointing at the owner message');
+    r = await lead('POST', `/api/muse/lead-messages/${ariaMsgId}/reply`, { text: 'reply to a reply' }, PIPE_L);
+    ok(r.status === 400, 'lead lane: replying to an aria message is 400');
+    r = await lead('GET', '/api/muse/lead-messages?device_id=lead-test-phone', undefined, PIPE_L);
+    j = await r.json();
+    const svcRow2 = (j.messages || []).find((m) => m.id === ownerMsgId);
+    ok(!!svcRow2 && svcRow2.replied === true, 'lead lane: service list flags the owner message replied after the answer');
+    r = await lead('GET', '/api/muse/lead-messages', undefined, leadKey);
+    j = await r.json();
+    ok(r.status === 200 && j.ok && j.messages.length === 2
+      && j.messages[0].id === ownerMsgId && j.messages[0].role === 'owner'
+      && j.messages[1].id === ariaMsgId && j.messages[1].role === 'aria' && j.messages[1].reply_to === ownerMsgId,
+      'lead lane: device thread returns both roles ascending with the reply link');
+    r = await lead('GET', '/api/muse/lead-messages', undefined, 'some-other-key');
+    ok(r.status === 401, 'lead lane: device thread rejects a wrong device key');
+  }
+
   // Muse service pipe: POST /api/muse/owner-sweep runs the daily owner sweep
   // on the serving DB (read-only report + idempotent clearing).
   {

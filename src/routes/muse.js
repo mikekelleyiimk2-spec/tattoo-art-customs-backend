@@ -277,6 +277,103 @@ router.post('/ai-commands/:id/result', express.json(), async (req, res) => {
   }
 });
 
+// ── Lead AI lane (AI Master Button, owner order 2026-10-22) ────────
+// The button's core purpose is talking to the owner's Lead AI (Aria).
+// The owner posts a message from the panel (DEVICE auth, same device key
+// as the HQ queue); Aria reads the thread through this service pipe and
+// posts a reply; the button polls the thread and speaks her reply.
+// Owner messages are role 'owner' rows; Aria's replies are separate
+// role 'aria' rows with reply_to = the owner message id they answer.
+// Table: lead_messages (migration 096).
+
+// POST /api/muse/lead-messages — DEVICE auth. The owner speaks/types a
+// message to Aria from the button. body: { text }. Returns { ok, id }.
+router.post('/lead-messages', express.json(), async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  try {
+    const device = await deviceFromKey(req);
+    if (!device) return res.status(401).json({ ok: false, error: 'unauthorized' });
+    const text = String(req.body?.text || '').trim().slice(0, 4000);
+    if (!text) return res.status(400).json({ ok: false, error: 'text required' });
+    const id = crypto.randomUUID();
+    await db.insert('lead_messages', {
+      id, device_id: device.device_id, role: 'owner', text,
+      reply_to: null, created_at: db.now(),
+    });
+    return res.json({ ok: true, id });
+  } catch (e) {
+    console.error('[muse/lead-messages] post failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'post failed' });
+  }
+});
+
+// GET /api/muse/lead-messages — dual auth.
+// DEVICE: this device's thread, oldest first:
+//   [{ id, role, text, reply_to, created_at }] — the panel renders it as
+//   the conversation and watches for new role 'aria' rows.
+// SERVICE: recent messages across threads (newest first), optional
+//   ?device_id= filter and ?limit= (default 100, max 500). Owner rows
+//   carry replied: true/false — whether an aria row answers them — so
+//   Aria's side can see what still needs an answer at a glance.
+router.get('/lead-messages', async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  try {
+    if (authorized(req)) {
+      const limit = Math.min(parseInt(req.query.limit, 10) || 100, 500);
+      const rows = req.query.device_id
+        ? await db.all(
+          'SELECT * FROM lead_messages WHERE device_id = ? ORDER BY created_at DESC LIMIT ?',
+          [String(req.query.device_id), limit]
+        )
+        : await db.all('SELECT * FROM lead_messages ORDER BY created_at DESC LIMIT ?', [limit]);
+      const answered = new Set(
+        (await db.all('SELECT DISTINCT reply_to FROM lead_messages WHERE reply_to IS NOT NULL'))
+          .map((r) => r.reply_to)
+      );
+      const messages = rows.map((r) => (r.role === 'owner'
+        ? { ...r, replied: answered.has(r.id) }
+        : r));
+      return res.json({ ok: true, messages });
+    }
+    const device = await deviceFromKey(req);
+    if (!device) return res.status(401).json({ ok: false, error: 'unauthorized' });
+    const rows = await db.all(
+      'SELECT id, role, text, reply_to, created_at FROM lead_messages WHERE device_id = ? ORDER BY created_at ASC',
+      [device.device_id]
+    );
+    return res.json({ ok: true, messages: rows });
+  } catch (e) {
+    console.error('[muse/lead-messages] thread failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'thread failed' });
+  }
+});
+
+// POST /api/muse/lead-messages/:id/reply — SERVICE auth. Aria answers
+// one owner message. body: { text }. Stores a role 'aria' row with
+// reply_to = :id on the same device thread. Returns { ok, id }.
+router.post('/lead-messages/:id/reply', express.json(), async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const target = await db.get('SELECT * FROM lead_messages WHERE id = ?', [String(req.params.id || '')]);
+    if (!target) return res.status(404).json({ ok: false, error: 'no such message' });
+    if (target.role !== 'owner') {
+      return res.status(400).json({ ok: false, error: 'can only reply to an owner message' });
+    }
+    const text = String(req.body?.text || '').trim().slice(0, 8000);
+    if (!text) return res.status(400).json({ ok: false, error: 'text required' });
+    const id = crypto.randomUUID();
+    await db.insert('lead_messages', {
+      id, device_id: target.device_id, role: 'aria', text,
+      reply_to: target.id, created_at: db.now(),
+    });
+    return res.json({ ok: true, id });
+  } catch (e) {
+    console.error('[muse/lead-messages/reply] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'reply failed' });
+  }
+});
+
 // GET /api/muse/ios-sales?since=<order id>
 // Returns paid ios_app orders newer than `since` (newest first, max 50).
 // Powers the owner's "notify me on every iOS app sale" watcher.
