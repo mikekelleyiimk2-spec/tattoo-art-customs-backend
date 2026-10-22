@@ -103,6 +103,173 @@ router.post('/notify', messageLimiter, async (req, res) => {
   return res.json({ ok: true, notified });
 });
 
+// ── HQ command queue (AI Master Button, owner Door 0) ───────────────
+// Aria enqueues a spoken/typed command here (SERVICE auth, same token as
+// the rest of this pipe); the owner's AI Master Button polls with its
+// DEVICE key, executes the command on-device, and posts the result back.
+// Device auth: Authorization: Bearer <deviceKey>. The pairing code is
+// derived from the key itself — first 8 hex chars (uppercase) of
+// SHA-256(deviceKey) — and is registered ahead of time by a service call.
+// The first device call against an unbound registered code binds
+// key_hash = SHA-256(deviceKey); every later call must match it.
+// Tables: ai_commands + ai_devices (migration 095).
+function sha256hex(s) {
+  return crypto.createHash('sha256').update(String(s), 'utf8').digest('hex');
+}
+
+// Resolve the calling device from its bearer key, binding the key hash on
+// first use. Returns the ai_devices row, or null when the key is unknown
+// (unregistered pairing code) or does not match the bound hash.
+async function deviceFromKey(req) {
+  const m = /^Bearer (.+)$/.exec(req.headers.authorization || '');
+  if (!m) return null;
+  const keyHash = sha256hex(m[1]);
+  const code = keyHash.slice(0, 8).toUpperCase();
+  const device = await db.get('SELECT * FROM ai_devices WHERE pairing_code = ?', [code]);
+  if (!device) return null;
+  if (!device.key_hash) {
+    await db.updateWhere('ai_devices', { key_hash: keyHash }, 'device_id', device.device_id);
+    device.key_hash = keyHash;
+  } else {
+    const a = Buffer.from(device.key_hash, 'utf8');
+    const b = Buffer.from(keyHash, 'utf8');
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  }
+  return device;
+}
+
+// POST /api/muse/ai-commands/register — SERVICE auth.
+// body: { pairing_code, device_id }. Creates or refreshes the device
+// record and stamps registered_at. Re-registering a device under a new
+// pairing code clears the bound key hash so the new key binds on first
+// poll; a pairing code that moves to a new device id drops the stale row.
+router.post('/ai-commands/register', express.json(), async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const pairingCode = String(req.body?.pairing_code || '').trim().toUpperCase();
+    const deviceId = String(req.body?.device_id || '').trim();
+    if (!/^[0-9A-F]{8}$/.test(pairingCode)) {
+      return res.status(400).json({ ok: false, error: 'pairing_code must be 8 hex chars' });
+    }
+    if (!/^[A-Za-z0-9_-]{1,80}$/.test(deviceId)) {
+      return res.status(400).json({ ok: false, error: 'bad device_id' });
+    }
+    const now = db.now();
+    const byDevice = await db.get('SELECT * FROM ai_devices WHERE device_id = ?', [deviceId]);
+    const byCode = await db.get('SELECT * FROM ai_devices WHERE pairing_code = ?', [pairingCode]);
+    if (byCode && byCode.device_id !== deviceId) {
+      await db.query('DELETE FROM ai_devices WHERE device_id = ?', [byCode.device_id]);
+    }
+    if (byDevice) {
+      const patch = { pairing_code: pairingCode, registered_at: now };
+      if (byDevice.pairing_code !== pairingCode) patch.key_hash = null;
+      await db.updateWhere('ai_devices', patch, 'device_id', deviceId);
+    } else {
+      // Direct query, not db.insert: ai_devices has no `id` column
+      // (device_id is the pk) and db.insert always supplies one.
+      await db.query(
+        'INSERT INTO ai_devices (device_id, pairing_code, key_hash, created_at, registered_at) VALUES (?, ?, ?, ?, ?)',
+        [deviceId, pairingCode, null, now, now]
+      );
+    }
+    const device = await db.get(
+      'SELECT device_id, pairing_code, created_at, registered_at FROM ai_devices WHERE device_id = ?',
+      [deviceId]
+    );
+    return res.json({ ok: true, device });
+  } catch (e) {
+    console.error('[muse/ai-commands/register] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'register failed' });
+  }
+});
+
+// POST /api/muse/ai-commands — SERVICE auth. Enqueue one command.
+// body: { text, device_id }. Returns { ok, id }.
+router.post('/ai-commands', express.json(), async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const text = String(req.body?.text || '').trim().slice(0, 2000);
+    const deviceId = String(req.body?.device_id || '').trim();
+    if (!text) return res.status(400).json({ ok: false, error: 'text required' });
+    if (!/^[A-Za-z0-9_-]{1,80}$/.test(deviceId)) {
+      return res.status(400).json({ ok: false, error: 'bad device_id' });
+    }
+    const id = crypto.randomUUID();
+    await db.insert('ai_commands', {
+      id, device_id: deviceId, text, status: 'queued',
+      answer: null, created_at: db.now(), delivered_at: null, completed_at: null,
+    });
+    return res.json({ ok: true, id });
+  } catch (e) {
+    console.error('[muse/ai-commands] enqueue failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'enqueue failed' });
+  }
+});
+
+// GET /api/muse/ai-commands — dual auth.
+// SERVICE: list recent commands (newest first, full rows incl. answer);
+//   optional ?device_id= filter and ?limit= (default 100, max 500).
+// DEVICE: poll — returns this device's QUEUED commands as [{id, text}]
+//   (the app client contract) and marks each one delivered.
+router.get('/ai-commands', async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  try {
+    if (authorized(req)) {
+      const limit = Math.min(parseInt(req.query.limit, 10) || 100, 500);
+      const rows = req.query.device_id
+        ? await db.all(
+          'SELECT * FROM ai_commands WHERE device_id = ? ORDER BY created_at DESC LIMIT ?',
+          [String(req.query.device_id), limit]
+        )
+        : await db.all('SELECT * FROM ai_commands ORDER BY created_at DESC LIMIT ?', [limit]);
+      return res.json({ ok: true, commands: rows });
+    }
+    const device = await deviceFromKey(req);
+    if (!device) return res.status(401).json({ ok: false, error: 'unauthorized' });
+    const queued = await db.all(
+      "SELECT id, text FROM ai_commands WHERE device_id = ? AND status = 'queued' ORDER BY created_at ASC",
+      [device.device_id]
+    );
+    const now = db.now();
+    for (const c of queued) {
+      await db.update('ai_commands', c.id, { status: 'delivered', delivered_at: now });
+    }
+    return res.json({ ok: true, commands: queued });
+  } catch (e) {
+    console.error('[muse/ai-commands] list/poll failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'list failed' });
+  }
+});
+
+// POST /api/muse/ai-commands/:id/result — DEVICE auth (owning device
+// only). body: { status: 'done'|'failed', answer }. Sets the final state
+// + answer + completed_at. Re-posting a result for a finished command is
+// an idempotent no-op.
+router.post('/ai-commands/:id/result', express.json(), async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  try {
+    const device = await deviceFromKey(req);
+    if (!device) return res.status(401).json({ ok: false, error: 'unauthorized' });
+    const cmd = await db.get('SELECT * FROM ai_commands WHERE id = ?', [String(req.params.id || '')]);
+    if (!cmd) return res.status(404).json({ ok: false, error: 'no such command' });
+    if (cmd.device_id !== device.device_id) {
+      return res.status(403).json({ ok: false, error: 'not your command' });
+    }
+    if (cmd.status === 'done' || cmd.status === 'failed') {
+      return res.json({ ok: true, already: true });
+    }
+    const status = req.body?.status === 'failed' ? 'failed' : 'done';
+    const answer = String(req.body?.answer || '').slice(0, 8000);
+    await db.update('ai_commands', cmd.id, { status, answer, completed_at: db.now() });
+    return res.json({ ok: true });
+  } catch (e) {
+    console.error('[muse/ai-commands/result] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'result failed' });
+  }
+});
+
 // GET /api/muse/ios-sales?since=<order id>
 // Returns paid ios_app orders newer than `since` (newest first, max 50).
 // Powers the owner's "notify me on every iOS app sale" watcher.

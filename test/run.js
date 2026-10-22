@@ -880,6 +880,63 @@ async function main() {
       'money-stats returns totals with valid Bearer <redacted>');
   }
 
+  // Muse service pipe: HQ command queue for the AI Master Button (Door 0).
+  // Full loop: register a device (service) -> enqueue (service) -> device
+  // poll binds the device key + marks delivered -> device posts the result
+  // -> service list reads the answer back. Plus wrong-key, unregistered-code,
+  // and cross-device result rejections.
+  {
+    const cryptoT = require('crypto');
+    const PIPE = process.env.MUSE_SERVICE_TOKEN;
+    const hq = (method, path, body, token) => fetch(`http://localhost:${PORT}${path}`, {
+      method,
+      headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) },
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    });
+    const deviceKey = 'test-device-key-hq-1';
+    const keyHash = cryptoT.createHash('sha256').update(deviceKey, 'utf8').digest('hex');
+    const code = keyHash.slice(0, 8).toUpperCase();
+    let r = await hq('GET', '/api/muse/ai-commands', undefined, 'never-registered-key');
+    ok(r.status === 401, 'ai-commands poll rejects an unregistered device key');
+    r = await hq('POST', '/api/muse/ai-commands/register', { pairing_code: code, device_id: 'hq-test-phone' }, 'wrong-token');
+    ok(r.status === 401, 'ai-commands register rejects wrong service token');
+    r = await hq('POST', '/api/muse/ai-commands/register', { pairing_code: code, device_id: 'hq-test-phone' }, PIPE);
+    let j = await r.json();
+    ok(r.status === 200 && j.ok && j.device && j.device.device_id === 'hq-test-phone',
+      'ai-commands register creates the device record');
+    r = await hq('POST', '/api/muse/ai-commands', { text: 'run the loop', device_id: 'hq-test-phone' }, PIPE);
+    j = await r.json();
+    ok(r.status === 200 && j.ok && typeof j.id === 'string' && j.id.length > 0,
+      'ai-commands enqueue returns an id');
+    const cmdId = j.id;
+    r = await hq('GET', '/api/muse/ai-commands', undefined, deviceKey);
+    j = await r.json();
+    ok(r.status === 200 && j.ok && j.commands.length === 1 && j.commands[0].id === cmdId && j.commands[0].text === 'run the loop',
+      'ai-commands device poll returns the queued command');
+    const devRow = sdb.prepare('SELECT key_hash FROM ai_devices WHERE device_id = ?').get('hq-test-phone');
+    ok(!!devRow && devRow.key_hash === keyHash, 'ai-commands first poll binds the device key hash');
+    const cmdRow1 = sdb.prepare('SELECT status, delivered_at FROM ai_commands WHERE id = ?').get(cmdId);
+    ok(!!cmdRow1 && cmdRow1.status === 'delivered' && !!cmdRow1.delivered_at,
+      'ai-commands poll marks the command delivered');
+    r = await hq('GET', '/api/muse/ai-commands', undefined, 'some-other-key');
+    ok(r.status === 401, 'ai-commands poll rejects a wrong device key');
+    r = await hq('POST', `/api/muse/ai-commands/${cmdId}/result`, { status: 'done', answer: 'Hello, from ChatGPT' }, deviceKey);
+    j = await r.json();
+    ok(r.status === 200 && j.ok, 'ai-commands result post accepted from the owning device');
+    r = await hq('GET', '/api/muse/ai-commands?device_id=hq-test-phone', undefined, PIPE);
+    j = await r.json();
+    const doneCmd = (j.commands || []).find((c) => c.id === cmdId);
+    ok(r.status === 200 && !!doneCmd && doneCmd.status === 'done' && doneCmd.answer === 'Hello, from ChatGPT' && !!doneCmd.completed_at,
+      'ai-commands service list shows the posted answer');
+    const key2 = 'test-device-key-hq-2';
+    const code2 = cryptoT.createHash('sha256').update(key2, 'utf8').digest('hex').slice(0, 8).toUpperCase();
+    await hq('POST', '/api/muse/ai-commands/register', { pairing_code: code2, device_id: 'hq-test-phone-2' }, PIPE);
+    r = await hq('POST', '/api/muse/ai-commands', { text: 'second command', device_id: 'hq-test-phone' }, PIPE);
+    const j2 = await r.json();
+    r = await hq('POST', `/api/muse/ai-commands/${j2.id}/result`, { status: 'done', answer: 'intruder' }, key2);
+    ok(r.status === 403, 'ai-commands result post from a non-owning device is 403');
+  }
+
   // Muse service pipe: POST /api/muse/owner-sweep runs the daily owner sweep
   // on the serving DB (read-only report + idempotent clearing).
   {
