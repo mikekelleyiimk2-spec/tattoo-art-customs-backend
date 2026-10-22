@@ -785,8 +785,14 @@ async function main() {
   r = await req('POST', `/orders/buy/${did}`, { follow: false });
   ok(r.status === 302 && r.location.includes('/orders/manual/'), 'buy falls back to manual payment when PayPal is off');
   const orderId = r.location.split('/orders/manual/')[1];
+  r = await req('POST', `/orders/manual/${orderId}`, { body: { method: 'paypal', note: 'test' }, follow: false });
+  ok(r.status === 302 && r.location === '/account', 'manual payment recorded (PayPal)');
+  // Money map (2026-10-21): Cash App is the owner's PERSONAL account and
+  // never takes business money — a cashapp claim must not be recorded.
   r = await req('POST', `/orders/manual/${orderId}`, { body: { method: 'cashapp', note: 'test' }, follow: false });
-  ok(r.status === 302, 'manual payment recorded');
+  ok(r.status === 302 && r.location === `/orders/manual/${orderId}`
+    && sdb.prepare('SELECT payment_method FROM orders WHERE id = ?').get(orderId).payment_method === 'paypal',
+    'manual payment rejects CashApp (personal) and keeps the PayPal record');
 
   // exact-amount PayPal on the manual page: with PayPal unconfigured it must
   // fail safe (no crash, no charge) and send the buyer back to the manual page.
@@ -795,6 +801,7 @@ async function main() {
   r = await req('GET', `/orders/manual/${orderId}`);
   ok(r.status === 200 && !r.text.includes('WA9DS6J8ERSHW'), 'manual page no longer embeds the hosted subscription button');
   ok(r.text.includes('Pay with PayPal') && r.text.includes(`/orders/manual/${orderId}/paypal`), 'manual page offers the exact-total PayPal button');
+  ok(!r.text.includes('CashApp') && !r.text.includes('Venmo'), 'manual page offers no CashApp/Venmo rail (money map: business manual payment is PayPal only)');
 
   // app quick-buy: linked account creates a pending order, no payment moves.
   // Regression test (2026-09-29): quick-buy once passed referral_code: null,
@@ -2337,14 +2344,20 @@ async function main() {
     ok(r.status === 302 && sdb.prepare('SELECT shipped_at FROM site_gift_cards WHERE id = ?').get(mailPend.id).shipped_at > 0,
       'admin ship marks the mail card shipped');
 
-    // Manual-payment path: pending card confirmed by admin on verified CashApp/Venmo.
+    // Manual-payment path: pending card confirmed by admin on verified PayPal
+    // payment. Money map (2026-10-21): manual = Business PayPal only; Cash App
+    // and Venmo are the owner's personal accounts and never take business money.
     r = await greq('POST', '/gift-cards/buy', { body: { amount_cents: '2500', delivery: 'email', recipient_email: 'manual@test.local' }, follow: false });
     const manPend = sdb.prepare("SELECT id FROM site_gift_cards WHERE purchaser_user_id = ? AND recipient_email = 'manual@test.local'").get(giftBuyerId).id;
     r = await greq('POST', `/gift-cards/manual/${manPend}`, { body: { method: 'cashapp', note: 'paid, cashapp ref TEST123' }, follow: false });
+    ok(r.status === 302 && (r.location || '').includes(`/gift-cards/manual/${manPend}`)
+      && !sdb.prepare('SELECT payment_method FROM site_gift_cards WHERE id = ?').get(manPend).payment_method,
+      'gift manual-pay rejects CashApp (personal account)');
+    r = await greq('POST', `/gift-cards/manual/${manPend}`, { body: { method: 'paypal', note: 'paid via PayPal link, ref TEST123' }, follow: false });
     ok(r.status === 302 && (r.location || '').includes('/gift-cards/mine'), 'gift manual-pay step records the payment claim');
     r = await areq('POST', `/admin/site-gift-cards/${manPend}/confirm`, { body: { website: '' }, follow: false });
     const manAct = sdb.prepare('SELECT status, code, payment_method FROM site_gift_cards WHERE id = ?').get(manPend);
-    ok(r.status === 302 && manAct.status === 'active' && !!manAct.code && manAct.payment_method === 'cashapp',
+    ok(r.status === 302 && manAct.status === 'active' && !!manAct.code && manAct.payment_method === 'paypal',
       'admin confirm activates the manual-payment card with a code');
 
     // Mine page lists the buyer's cards.

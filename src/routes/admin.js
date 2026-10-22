@@ -179,10 +179,17 @@ router.get('/orders', async (req, res) => {
   res.render('admin/orders', { title: 'Orders — Admin', orders });
 });
 
-// Confirm a manual (CashApp/Venmo) payment.
+// Confirm a manual payment (PayPal only since 2026-10-22; legacy
+// cashapp/venmo rows from before the money-map fix may still appear).
 router.post('/orders/:id/confirm-manual', formLimiter, checkHoneypot, async (req, res) => {
   const order = await db.get('SELECT * FROM orders WHERE id = ?', [req.params.id]);
-  if (!order || order.status !== 'pending' || order.payment_method === 'paypal') {
+  // Since the 2026-10-22 money-map fix, manual claims ARE PayPal payments
+  // (sent via the public Business PayPal link, recorded by the buyer), so a
+  // 'paypal' payment_method no longer excludes an order here — this endpoint
+  // is the only confirmation path for link payments. Captured PayPal REST
+  // orders are already status 'paid', so the pending check below still
+  // prevents any double-confirm.
+  if (!order || order.status !== 'pending') {
     req.session.flash = 'Only pending manual-payment orders can be confirmed.';
     return res.redirect('/admin/orders');
   }
@@ -412,7 +419,7 @@ router.get('/site-gift-cards', async (req, res) => {
   });
 });
 
-// Confirm a manual (CashApp/Venmo) payment: activates the card — the
+// Confirm a manual (PayPal) payment: activates the card — the
 // unguessable code is issued and emailed only now that payment is verified.
 router.post('/site-gift-cards/:id/confirm', formLimiter, checkHoneypot, async (req, res) => {
   const { activateSiteGiftCardManual } = require('../lib/siteGiftCards');

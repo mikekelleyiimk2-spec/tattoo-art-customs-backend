@@ -179,8 +179,10 @@ async function activateSiteGiftCard({ pendingId, purchaserUserId, paypalOrderId 
   return finalizeSiteGiftCardActivation(card);
 }
 
-// Admin path: the buyer paid manually (CashApp/Venmo) and an admin verified
-// the payment. Activates the card without a PayPal capture.
+// Admin path: the buyer paid manually (PayPal payment link — the only manual
+// rail since 2026-10-22; Cash App/Venmo are personal and never take business
+// money) and an admin verified the payment. Activates the card without a
+// PayPal capture.
 async function activateSiteGiftCardManual(cardId) {
   const card = await db.get('SELECT * FROM site_gift_cards WHERE id = ?', [cardId]);
   if (!card) throw new Error('Gift card not found.');

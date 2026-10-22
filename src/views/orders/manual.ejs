@@ -18,8 +18,7 @@
 <p class="muted"><%= t('orders.socials_note') %></p>
 <form method="post" action="<%= mp %>/<%= order.id %>" class="form">
   <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-  <label for="method"><%= t('orders.method') %></label>
-  <select id="method" name="method"><option value="cashapp">CashApp</option><option value="venmo">Venmo</option><option value="paypal">PayPal</option></select>
+  <input type="hidden" name="method" value="paypal">
   <label for="note"><%= t('orders.note_label') %></label>
   <input type="text" id="note" name="note" maxlength="300">
   <% if (vatNote) { %><p class="muted fineprint"><%= vatNote %></p><% } %>

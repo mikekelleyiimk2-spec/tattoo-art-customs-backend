@@ -2,8 +2,9 @@
 //
 // Buy flow: amount picker ($25/$50/$75/$100/$150) -> pending row -> PayPal
 // checkout -> /capture/:pendingId activates the card (code issued + emailed
-// only after payment clears). When PayPal is unavailable the buyer is sent
-// to a manual-payment page; an admin confirms the manual payment, which
+// only after payment clears). When PayPal checkout is unavailable the buyer
+// is sent to a manual-payment page (Business PayPal link only — money map,
+// owner law 2026-10-21); an admin confirms the manual payment, which
 // activates the card. Redeeming converts the card to site credit spendable
 // on premades, customs, and memberships.
 const express = require('express');
@@ -46,8 +47,8 @@ router.post('/buy', requireLogin, formLimiter, checkHoneypot, async (req, res) =
       const order = await startSiteGiftCardCheckout({ pendingId: id, purchaserUserId: req.user.id });
       return res.redirect(order.approveUrl);
     } catch (e) {
-      // PayPal unavailable — fall back to manual payment (CashApp/Venmo),
-      // same pattern as the orders buy flow.
+      // PayPal checkout unavailable — fall back to manual payment via the
+      // Business PayPal payment link, same pattern as the orders buy flow.
       console.error('gift card PayPal checkout failed:', e.message);
       req.session.flash = 'PayPal checkout is unavailable right now — you can pay for the gift card manually below.';
       return res.redirect(`/gift-cards/manual/${id}`);
@@ -76,7 +77,7 @@ router.get('/capture/:pendingId', requireLogin, async (req, res) => {
   }
 });
 
-// --- Manual payment fallback (CashApp/Venmo), admin-confirmed ---
+// --- Manual payment fallback (Business PayPal link only), admin-confirmed ---
 router.get('/manual/:pendingId', requireLogin, async (req, res) => {
   const card = await db.get('SELECT * FROM site_gift_cards WHERE id = ? AND purchaser_user_id = ?',
     [req.params.pendingId, req.user.id]);
@@ -90,7 +91,14 @@ router.post('/manual/:pendingId', requireLogin, formLimiter, checkHoneypot, asyn
   const card = await db.get('SELECT * FROM site_gift_cards WHERE id = ? AND purchaser_user_id = ?',
     [req.params.pendingId, req.user.id]);
   if (!card || card.status !== 'pending') return res.redirect('/gift-cards/buy');
-  const method = ['cashapp', 'venmo', 'paypal'].includes(req.body.method) ? req.body.method : 'manual';
+  // Money map (owner law, 2026-10-21): manual gift-card payment is PayPal
+  // only (Business PayPal mk4). Cash App / Venmo are personal accounts and
+  // never receive business money, so they are not accepted here.
+  if (req.body.method !== 'paypal') {
+    req.session.flash = 'Manual gift card payments are PayPal only — please pay through the PayPal payment link on this page, then record it here.';
+    return res.redirect(`/gift-cards/manual/${card.id}`);
+  }
+  const method = 'paypal';
   const note = String(req.body.note || '').trim().slice(0, 300);
   await db.update('site_gift_cards', card.id, { payment_method: method, manual_note: note || null });
   req.session.flash = 'Recorded. An admin will confirm your manual payment, then the gift card code will be emailed.';

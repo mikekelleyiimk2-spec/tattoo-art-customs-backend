@@ -1,5 +1,5 @@
 // Orders: premade checkout, custom design requests (deposit + 48h delivery),
-// manual payment recording (CashApp/Venmo -> pending for admin), PayPal
+// manual payment recording (PayPal only -> pending for admin), PayPal
 // capture callbacks, and secure time-limited buyer downloads.
 const express = require('express');
 const path = require('path');
@@ -395,7 +395,11 @@ router.post('/send-to-app/:designId', requireLogin, formLimiter, checkHoneypot, 
   res.redirect(`/orders/${orderId}`);
 });
 
-// --- Manual payment (CashApp/Venmo): record as pending for admin ---
+// --- Manual payment (PayPal only): record as pending for admin ---
+// Money map (owner law, 2026-10-21): business manual payment goes ONLY to
+// Business PayPal (mk4) — via the exact-total checkout above or the public
+// PayPal payment link. Cash App / Venmo are the owner's PERSONAL accounts
+// and never receive business money, so they are not accepted here.
 router.get('/manual/:orderId', requireLogin, async (req, res) => {
   const order = await db.get('SELECT * FROM orders WHERE id = ? AND buyer_id = ?', [req.params.orderId, req.user.id]);
   if (!order) return res.status(404).render('error', { title: 'Not found', message: 'Order not found.' });
@@ -404,7 +408,11 @@ router.get('/manual/:orderId', requireLogin, async (req, res) => {
 router.post('/manual/:orderId', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
   const order = await db.get('SELECT * FROM orders WHERE id = ? AND buyer_id = ?', [req.params.orderId, req.user.id]);
   if (!order || order.status !== 'pending') return res.redirect('/account');
-  const method = ['cashapp', 'venmo', 'paypal'].includes(req.body.method) ? req.body.method : 'manual';
+  if (req.body.method !== 'paypal') {
+    req.session.flash = 'Manual payments are PayPal only — please pay with PayPal below, or record a payment you already sent through our PayPal payment link.';
+    return res.redirect(`/orders/manual/${order.id}`);
+  }
+  const method = 'paypal';
   const note = String(req.body.note || '').trim().slice(0, 300);
   const brief = (order.custom_brief || '') + `\n[manual note: ${note}]`;
   await db.update('orders', order.id, { payment_method: method, custom_brief: brief });
@@ -433,7 +441,7 @@ router.post('/manual/:orderId/paypal', requireLogin, formLimiter, checkHoneypot,
     return res.redirect(approve.href);
   } catch (e) {
     console.error('PayPal order create failed (manual page):', e.message);
-    req.session.flash = 'PayPal checkout is unavailable right now — please use CashApp or Venmo below, or try again later.';
+    req.session.flash = 'PayPal checkout is unavailable right now — please try again in a few minutes.';
     return res.redirect(`/orders/manual/${order.id}`);
   }
 });
