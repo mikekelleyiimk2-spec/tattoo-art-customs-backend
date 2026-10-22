@@ -65,13 +65,13 @@
     "publishedAt": "2026-10-14T19:11:17Z"
   },
   "com.usefulappz.aibar": {
-    "versionCode": 24,
+    "versionCode": 25,
     "versionName": "1.7.5",
     "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.aibar/apk",
-    "notes": "OneMind pipeline update — team commands and Copilot phone bridge.",
-    "sha256": "b33e646f106b28d1cac1f663c83a2c0eee2b04224be6c40f9b634fbc0811c38d",
+    "notes": "OneMind pipeline update — team commands and Copilot phone bridge. Fixes the updater asking for a code.",
+    "sha256": "abd031725cdad7245f4c25ade39d675117d271669c0aa7609649fa62518b761f",
     "sizeBytes": 524235,
-    "publishedAt": "2026-10-22T18:17:09Z"
+    "publishedAt": "2026-10-22T18:45:11Z"
   },
   "com.usefulappz.odometer": {
     "versionCode": 6,
