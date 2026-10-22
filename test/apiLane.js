@@ -101,6 +101,20 @@ async function insertCmd(text, lane = 'api', extra = {}) {
   return id;
 }
 
+// Slice 3: a settled (done) API-lane command already sitting in a
+// device's persistent log — the "last answer" / "current loop" the
+// share / check / compare / summarize grammar reads.
+async function seedSettled(deviceId, text, answer, at) {
+  const id = crypto.randomUUID();
+  await db.insert('ai_commands', {
+    id, device_id: deviceId, text, status: 'done', answer,
+    delivered_at: null, completed_at: at + 1,
+    origin: 'device', lane: 'api', claimed_by: 'seed', claimed_at: at, attempts: 1,
+    created_at: at,
+  });
+  return id;
+}
+
 async function runDbTests(ok) {
   console.log('api lane grammar:');
   const p1 = apiLane.parseCommand('Have Gemini say the word ready');
@@ -186,10 +200,19 @@ async function runDbTests(ok) {
   const gptId = await insertCmd('Have ChatGPT say the word ready');
   await keyed.drain();
   const gptRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [gptId]);
-  ok(gptRow.status === 'failed' && gptRow.answer.includes('not configured on the server (no API key set)'),
-    'route: a member with an adapter but no key (slice 2) fails honestly as not configured, by name');
+  ok(gptRow.status === 'done' && gptRow.answer.includes('[FROM ChatGPT]')
+    && gptRow.answer.includes('not configured on the server (no API key set)')
+    && gptRow.answer.includes('failed over to Gemini')
+    && gptRow.answer.includes('[FROM Gemini]\nHello from Gemini!\n[END]'),
+  'route failover (slice 3): an unconfigured target (adapter, no key) fails over to the next configured member — the target\'s absence block names the failover and the winner answers');
   ok(!/paste/i.test(gptRow.answer),
-    'route: the not-configured failure never hands the user a copy-paste chore (owner law)');
+    'route failover: the failover never hands the user a copy-paste chore (owner law)');
+  const gptRuns = await db.all('SELECT * FROM ai_runs WHERE command_id = ?', [gptId]);
+  const gptSkip = gptRuns.find((r) => r.member === 'ChatGPT');
+  const gptWin = gptRuns.find((r) => r.member === 'Gemini');
+  ok(!!gptSkip && gptSkip.status === 'skipped' && gptSkip.error === 'NO_KEY'
+    && !!gptWin && gptWin.status === 'done',
+  'route failover: ai_runs records the target hop skipped (NO_KEY) and the failover hop done');
 
   const unsupId = await insertCmd('sing me a song');
   await keyed.drain();
@@ -491,6 +514,284 @@ async function runDbTests(ok) {
   ok(reChildren.length === 1 && reParent.status === 'done'
     && reParent.answer.includes('asked through the phone'),
   'bridge: a re-executed parent reuses its existing phone child — one parent, one child, however many attempts');
+
+  console.log('api lane slice 3 — full team grammar:');
+  // Parser pins: the exact phrase forms the thin client forwards
+  // verbatim (mirrors the button's AiNameRouter).
+  const pc = apiLane.parseCommand;
+  ok(pc('run the word loop').type === 'word_loop' && pc('word loop').type === 'word_loop'
+    && pc('run the word chain').type === 'word_loop',
+    'slice 3 parse: word-loop forms parse as word_loop, never as the hello loop');
+  ok(pc('read the log').type === 'read_log' && pc('read me the log').type === 'read_log',
+    'slice 3 parse: read-the-log forms');
+  ok(pc('summarize the loop').type === 'summarize' && pc('summarise').type === 'summarize',
+    'slice 3 parse: summarize forms');
+  const cmpPin = pc('compare answers on ink brands');
+  ok(cmpPin.type === 'compare' && cmpPin.prompt === 'ink brands',
+    'slice 3 parse: compare with a prompt extracts the question');
+  ok(pc('compare answers').type === 'compare' && pc('compare answers').prompt === '',
+    'slice 3 parse: bare "compare answers" means compare the log as it stands');
+  const bcPin = pc('Brainstorm across all AI: name one color that suits a koi tattoo');
+  ok(bcPin.type === 'broadcast' && bcPin.prompt === 'name one color that suits a koi tattoo',
+    'slice 3 parse: brainstorm-across-all extracts the broadcast prompt');
+  ok(pc('ask all ais what is 2+2').type === 'broadcast' && pc('ask all ais what is 2+2').prompt === 'what is 2+2',
+    'slice 3 parse: ask-all-AIs broadcast form');
+  const chkPin = pc('Have Claude check that');
+  ok(chkPin.type === 'check' && chkPin.member === 'Claude',
+    'slice 3 parse: "Have <AI> check that" is a named check, not a route');
+  ok(pc('check that').type === 'check' && pc('check that').member === null && pc('check it').type === 'check',
+    'slice 3 parse: bare check that/it is the peer-review form');
+  const cntPin = pc('continue with Gemini and make it shorter');
+  ok(cntPin.type === 'continue' && cntPin.member === 'Gemini' && cntPin.followUp === 'and make it shorter',
+    'slice 3 parse: continue-with carries the member and the follow-up');
+  ok(pc('share with Claude').type === 'share' && pc('share with Claude').member === 'Claude'
+    && pc('send it to Grok').member === 'Grok' && pc('pass it to ChatGPT').member === 'ChatGPT',
+    'slice 3 parse: share/send/pass forms name the receiving member');
+  ok(apiLane.extractAddedWord('Hello', 'Hello world').word === 'world'
+    && apiLane.extractAddedWord('Hello', 'Hello').kind === 'none'
+    && apiLane.extractAddedWord('Hello', 'Something else entirely').kind === 'fidelity',
+  'slice 3: word-loop extraction reads the added word, flags a no-op reply, flags a fidelity break');
+
+  const seedBase = Date.now() - 120000;
+
+  // SHARE — the last answer is handed to the named member.
+  await seedSettled('s3-share', 'Have Gemini name a color for a koi tattoo',
+    '[FROM Gemini]\nCrimson — it reads as strength against black linework.\n[END]', seedBase);
+  const shareId = await insertCmd('share with ChatGPT', 'api', { device_id: 's3-share' });
+  const callsBeforeShare = calls2.length;
+  await full.drain();
+  const shareRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [shareId]);
+  ok(shareRow.status === 'done' && shareRow.answer === '[FROM ChatGPT]\nHello from ChatGPT!\n[END]',
+    'slice 3 share: the receiving member\'s answer posts as its block');
+  const shareCall = calls2.slice(callsBeforeShare).find((c) => c.url.includes('api.openai.com'));
+  ok(!!shareCall && String(shareCall.opts.body).includes('Crimson — it reads as strength against black linework.')
+    && String(shareCall.opts.body).includes('name a color for a koi tattoo'),
+  'slice 3 share: the shared answer AND the original request travel into the receiving member\'s prompt');
+  const shareNoneId = await insertCmd('share with Claude', 'api', { device_id: 's3-share-none' });
+  await full.drain();
+  const shareNoneRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [shareNoneId]);
+  ok(shareNoneRow.status === 'failed' && shareNoneRow.answer.includes('nothing to share yet'),
+    'slice 3 share: with no earlier answer in the log it fails honestly instead of inventing context');
+
+  // CONTINUE WITH <AI> — log context + the owner's follow-up.
+  await seedSettled('s3-continue', 'Have Gemini draft a tagline',
+    '[FROM Gemini]\nInk that outlives trends.\n[END]', seedBase + 1000);
+  const contId = await insertCmd('continue with Claude and make it punchier', 'api', { device_id: 's3-continue' });
+  const callsBeforeCont = calls2.length;
+  await full.drain();
+  const contRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [contId]);
+  ok(contRow.status === 'done' && contRow.answer === '[FROM Claude]\nHello from Claude!\n[END]',
+    'slice 3 continue: the named member picks the loop up and its answer posts as its block');
+  const contCall = calls2.slice(callsBeforeCont).find((c) => c.url.includes('api.anthropic.com'));
+  ok(!!contCall && String(contCall.opts.body).includes('Ink that outlives trends.')
+    && String(contCall.opts.body).includes('make it punchier'),
+  'slice 3 continue: the log context AND the owner\'s follow-up reach the member');
+
+  // CHECK THAT — named checker.
+  await seedSettled('s3-check', 'Have Gemini state a fact about koi',
+    '[FROM Gemini]\nKoi can live for over a century.\n[END]', seedBase + 2000);
+  const chkId = await insertCmd('Have Claude check that', 'api', { device_id: 's3-check' });
+  const callsBeforeChk = calls2.length;
+  await full.drain();
+  const chkRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [chkId]);
+  ok(chkRow.status === 'done' && chkRow.answer === '[FROM Claude]\nHello from Claude!\n[END]',
+    'slice 3 check (named): the checker\'s verdict posts as its block');
+  const chkCall = calls2.slice(callsBeforeChk).find((c) => c.url.includes('api.anthropic.com'));
+  ok(!!chkCall && String(chkCall.opts.body).includes('Koi can live for over a century.')
+    && String(chkCall.opts.body).includes('verify its claims'),
+  'slice 3 check (named): the claim under review travels with the verify framing');
+
+  // CHECK THAT — bare: the OTHER members critique; the author sits out.
+  await seedSettled('s3-check-bare', 'Have Gemini state a fact about koi',
+    '[FROM Gemini]\nKoi can live for over a century.\n[END]', seedBase + 3000);
+  const calls3 = [];
+  const full3 = apiLane.createWorker({ env: fullEnv, fetchImpl: mockFetch(calls3), retryDelayMs: 0, workerId: 'test-worker-3' });
+  const chkBareId = await insertCmd('check that', 'api', { device_id: 's3-check-bare' });
+  await full3.drain();
+  const chkBareRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [chkBareId]);
+  ok(chkBareRow.status === 'done'
+    && chkBareRow.answer.includes('[FROM Claude]') && chkBareRow.answer.includes('[FROM ChatGPT]')
+    && chkBareRow.answer.includes('[FROM Copilot]') && chkBareRow.answer.includes('asked through the phone'),
+  'slice 3 check (bare): the other members critique — verdict blocks plus Copilot through the phone');
+  ok(!chkBareRow.answer.includes('[FROM Gemini]'),
+    'slice 3 check (bare): the member who answered last time does not check its own work');
+  ok(calls3.filter((c) => c.url.includes('generativelanguage.googleapis.com')).length === 0,
+    'slice 3 check (bare): the author (Gemini) is never even called');
+
+  // BROADCAST — full team, then the partial-keys honesty shape.
+  const bId = await insertCmd('Brainstorm across all AI: name one color that suits a koi tattoo', 'api', { device_id: 's3-broadcast' });
+  await full.drain();
+  const bRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [bId]);
+  ok(bRow.status === 'done'
+    && ['Muse', 'ChatGPT', 'Claude', 'Gemini', 'Perplexity', 'Grok', 'DeepSeek']
+      .every((m) => bRow.answer.includes(`[FROM ${m}]`))
+    && bRow.answer.includes('[FROM Copilot]') && bRow.answer.includes('asked through the phone'),
+  'slice 3 broadcast: every member\'s block lands in the one log, Copilot through the phone bridge');
+  const bHops = (await db.all('SELECT * FROM ai_runs WHERE command_id = ?', [bId])).filter((r) => r.member);
+  ok(bHops.filter((r) => r.status === 'done').length === 7
+    && bHops.filter((r) => r.status === 'delegated' && r.lane === 'device').length === 1,
+  'slice 3 broadcast: ai_runs records 7 API answers + the Copilot delegation');
+  const bChild = await db.get('SELECT * FROM ai_commands WHERE parent_id = ?', [bId]);
+  ok(!!bChild && bChild.lane === 'device' && bChild.text === 'Have Copilot name one color that suits a koi tattoo',
+    'slice 3 broadcast: the phone child carries the broadcast prompt for Copilot');
+  const bkId = await insertCmd('ask all ais name one color that suits a koi tattoo', 'api', { device_id: 's3-broadcast-keyed' });
+  await keyed.drain();
+  const bkRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [bkId]);
+  ok(bkRow.status === 'done' && bkRow.answer.includes('[FROM Gemini]\nHello from Gemini!\n[END]')
+    && bkRow.answer.includes('[FROM DeepSeek]\nReady.\n[END]')
+    && bkRow.answer.includes('[FROM ChatGPT]\n(not answered — ChatGPT is not configured on the server (no API key set))\n[END]'),
+  'slice 3 broadcast (partial keys): configured members answer, unconfigured members post honest NO_KEY absence blocks');
+
+  // COMPARE ANSWERS — with a prompt (blocks side by side) and
+  // against the standing log (the Lead compares).
+  const cpId = await insertCmd('compare answers on the best ink color for a koi', 'api', { device_id: 's3-compare' });
+  await full.drain();
+  const cpRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [cpId]);
+  ok(cpRow.status === 'done' && cpRow.answer.includes('[FROM Muse]\nHello from Muse!\n[END]')
+    && cpRow.answer.includes('[FROM Gemini]\nHello from Gemini!\n[END]')
+    && cpRow.answer.includes('[FROM DeepSeek]\nReady.\n[END]'),
+  'slice 3 compare (with prompt): every member answers the same question, blocks side by side in the one log');
+  await seedSettled('s3-compare-log', 'Have Gemini name a color for a koi tattoo',
+    '[FROM Gemini]\nCrimson.\n[END]', seedBase + 4000);
+  await seedSettled('s3-compare-log', 'Have Claude name a color for a koi tattoo',
+    '[FROM Claude]\nVermilion.\n[END]', seedBase + 5000);
+  const cplId = await insertCmd('compare answers', 'api', { device_id: 's3-compare-log' });
+  const callsBeforeCpl = calls2.length;
+  await full.drain();
+  const cplRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [cplId]);
+  ok(cplRow.status === 'done' && cplRow.answer.startsWith('[FROM Muse]'),
+    'slice 3 compare (log): the Lead (Muse) reads the log and posts the comparison as its block');
+  const cplCall = calls2.slice(callsBeforeCpl).find((c) => c.url.includes('api.meta.ai'));
+  ok(!!cplCall && String(cplCall.opts.body).includes('Crimson.') && String(cplCall.opts.body).includes('Vermilion.'),
+    'slice 3 compare (log): the recorded answers from the log reach the comparator');
+
+  // READ THE LOG — the persistent log is the answer; nobody is called.
+  const rlId = await insertCmd('read the log', 'api', { device_id: 's3-compare-log' });
+  const callsBeforeRl = calls2.length;
+  await full.drain();
+  const rlRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [rlId]);
+  ok(rlRow.status === 'done' && rlRow.answer.includes('Have Gemini name a color for a koi tattoo')
+    && rlRow.answer.includes('Crimson.') && rlRow.answer.includes('Vermilion.')
+    && rlRow.answer.includes('[FROM Muse]'),
+  'slice 3 read the log: the persistent log comes back as the answer, commands and answers intact (including the comparison just posted)');
+  ok(calls2.length === callsBeforeRl,
+    'slice 3 read the log: no member is called — the log speaks for itself');
+  const rlEmptyId = await insertCmd('read the log', 'api', { device_id: 's3-empty' });
+  await full.drain();
+  const rlEmptyRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [rlEmptyId]);
+  ok(rlEmptyRow.status === 'done' && rlEmptyRow.answer.includes('team log is empty'),
+    'slice 3 read the log: an empty log says so, plainly');
+
+  // SUMMARIZE THE LOOP — Lead first, then first configured member.
+  const sumId = await insertCmd('summarize the loop', 'api', { device_id: 's3-compare-log' });
+  await full.drain();
+  const sumRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [sumId]);
+  ok(sumRow.status === 'done' && sumRow.answer === '[FROM Muse]\nHello from Muse!\n[END]',
+    'slice 3 summarize: the Lead (Muse) writes the summary when configured');
+  await seedSettled('s3-sum-keyed', 'Have Gemini name a color', '[FROM Gemini]\nCrimson.\n[END]', seedBase + 6000);
+  const sumKId = await insertCmd('summarize the loop', 'api', { device_id: 's3-sum-keyed' });
+  await keyed.drain();
+  const sumKRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [sumKId]);
+  ok(sumKRow.status === 'done' && sumKRow.answer === '[FROM Gemini]\nHello from Gemini!\n[END]',
+    'slice 3 summarize: without the Lead configured, the first configured member in roster order summarizes');
+
+  // WORD LOOP — one word per member, roster order, fidelity named.
+  // A compliant member echoes the running sentence plus its word,
+  // so this mock reads the sentence out of the prompt (the static
+  // mockFetch replies would — correctly — trip the fidelity flag).
+  const wlFetch = async (url, opts = {}) => {
+    const m = /The sentence so far is: \\?"([^"\\]*)/.exec(String((opts && opts.body) || ''));
+    const s = m ? m[1] : 'Hello';
+    if (url.includes('generativelanguage.googleapis.com')) {
+      return jsonResponse(200, { candidates: [{ content: { parts: [{ text: `${s} await` }] } }], usageMetadata: { promptTokenCount: 60, candidatesTokenCount: 3 }, modelVersion: 'gemini-test-1' });
+    }
+    if (url.includes('api.deepseek.com')) {
+      return jsonResponse(200, { choices: [{ message: { content: `${s} everywhere` } }], usage: { prompt_tokens: 60, completion_tokens: 3 }, model: 'deepseek-flash' });
+    }
+    if (url.includes('api.openai.com')) {
+      return jsonResponse(200, { choices: [{ message: { content: `${s} new` } }], usage: { prompt_tokens: 60, completion_tokens: 3 }, model: 'gpt-6.1-sol' });
+    }
+    if (url.includes('api.anthropic.com')) {
+      return jsonResponse(200, { content: [{ type: 'text', text: `${s} worlds` }], usage: { input_tokens: 60, output_tokens: 3 }, model: 'claude-sonnet-5-5' });
+    }
+    if (url.includes('api.x.ai')) {
+      return jsonResponse(200, { choices: [{ message: { content: `${s} explorers` } }], usage: { prompt_tokens: 60, completion_tokens: 3 }, model: 'grok-4.3' });
+    }
+    if (url.includes('api.perplexity.ai')) {
+      return jsonResponse(200, { choices: [{ message: { content: `${s} patient` } }], usage: { prompt_tokens: 60, completion_tokens: 3 }, model: 'sonar' });
+    }
+    if (url.includes('api.meta.ai')) {
+      return jsonResponse(200, { choices: [{ message: { content: `${s} brave` } }], usage: { prompt_tokens: 60, completion_tokens: 3 }, model: 'muse-spark-1.3' });
+    }
+    throw new Error(`word-loop fetch: unexpected URL ${url}`);
+  };
+  const wlWorker = apiLane.createWorker({ env: fullEnv, fetchImpl: wlFetch, retryDelayMs: 0, workerId: 'test-wordloop' });
+  const wlId = await insertCmd('run the word loop', 'api', { device_id: 's3-wordloop' });
+  await wlWorker.drain();
+  const wlRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [wlId]);
+  ok(wlRow.status === 'done' && wlRow.answer.includes('[FROM Muse]')
+    && wlRow.answer.includes('added the word "brave"') && wlRow.answer.includes('added the word "everywhere"'),
+  'slice 3 word loop: each member\'s block names the word it added');
+  ok(wlRow.answer.includes('The word-loop sentence so far: "Hello brave new worlds await patient explorers everywhere"'),
+    'slice 3 word loop: the sentence builds one word per member in roster order and the closing line states it, Copilot\'s word still out with the phone');
+  const wlHops = (await db.all('SELECT * FROM ai_runs WHERE command_id = ?', [wlId])).filter((r) => r.member);
+  ok(wlHops.filter((r) => r.status === 'done').length === 7,
+    'slice 3 word loop: ai_runs records a done hop per answering member');
+  const wlChild = await db.get('SELECT * FROM ai_commands WHERE parent_id = ?', [wlId]);
+  ok(!!wlChild && wlChild.text.includes('The sentence so far is: "Hello brave new worlds await"'),
+    'slice 3 word loop: Copilot\'s phone child carries the sentence as it stood at Copilot\'s turn');
+
+  // WORD LOOP — a member that adds nothing is flagged by name.
+  const echoFetch = async (url) => {
+    if (url.includes('generativelanguage.googleapis.com')) {
+      return jsonResponse(200, {
+        candidates: [{ content: { parts: [{ text: 'Hello' }] } }],
+        usageMetadata: { promptTokenCount: 50, candidatesTokenCount: 1 },
+        modelVersion: 'gemini-test-1',
+      });
+    }
+    throw new Error(`echo fetch: unexpected URL ${url}`);
+  };
+  const envEcho = {};
+  envEcho['GEMINI' + '_API_KEY'] = TEST_GEMINI_KEY;
+  const wEcho = apiLane.createWorker({ env: envEcho, fetchImpl: echoFetch, retryDelayMs: 0, workerId: 'test-echo' });
+  const wlEchoId = await insertCmd('run the word loop', 'api', { device_id: 's3-wordloop-echo' });
+  await wEcho.drain();
+  const wlEchoRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [wlEchoId]);
+  ok(wlEchoRow.answer.includes('[FROM Gemini]') && wlEchoRow.answer.includes('added no word'),
+    'slice 3 word loop: a member that returns the sentence unchanged is flagged in its block — the word count names the guilty hop');
+  const wlEchoHop = await db.get("SELECT * FROM ai_runs WHERE command_id = ? AND member = 'Gemini'", [wlEchoId]);
+  ok(!!wlEchoHop && wlEchoHop.status === 'failed' && wlEchoHop.error === 'NO_WORD',
+    'slice 3 word loop: ai_runs records the no-word hop as failed with NO_WORD');
+
+  // ROUTE FAILOVER — provider error after retry; nobody to take over.
+  const calls4 = [];
+  const baseMock4 = mockFetch(calls4);
+  const flakyFetch = async (url, opts) => {
+    if (url.includes('api.openai.com')) {
+      calls4.push({ url, opts });
+      return jsonResponse(500, { error: 'boom' });
+    }
+    return baseMock4(url, opts);
+  };
+  const full4 = apiLane.createWorker({ env: fullEnv, fetchImpl: flakyFetch, retryDelayMs: 0, workerId: 'test-worker-4' });
+  const foId = await insertCmd('Have ChatGPT say the word ready', 'api', { device_id: 's3-failover' });
+  await full4.drain();
+  const foRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [foId]);
+  ok(foRow.status === 'done' && foRow.answer.includes('failed over to Claude')
+    && foRow.answer.includes('[FROM Claude]\nHello from Claude!\n[END]'),
+  'slice 3 failover: a routed member whose provider errors (after the built-in retry) fails over to the next configured member, named in the log');
+  ok(calls4.filter((c) => c.url.includes('api.openai.com')).length === 2,
+    'slice 3 failover: the failing provider was retried exactly once before the failover');
+  const foHop = await db.get("SELECT * FROM ai_runs WHERE command_id = ? AND member = 'ChatGPT'", [foId]);
+  ok(!!foHop && foHop.status === 'failed' && foHop.error === 'HTTP_500',
+    'slice 3 failover: ai_runs records the failed hop with its provider error');
+  const foNoneId = await insertCmd('Have ChatGPT say the word ready', 'api', { device_id: 's3-failover-none' });
+  await unkeyed.drain();
+  const foNoneRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [foNoneId]);
+  ok(foNoneRow.status === 'failed' && foNoneRow.answer.includes('not configured')
+    && foNoneRow.answer.includes('no other member is configured to take over'),
+  'slice 3 failover: with nobody configured to take over, the route settles failed with the honest reason');
 }
 
 async function runHttpTests(ok) {

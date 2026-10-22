@@ -23,9 +23,11 @@
 //
 // Scope: grammar ROUTE + HELLO LOOP (slice 1); member adapters
 // Gemini + DeepSeek (slice 1) and ChatGPT, Claude, Grok, Perplexity,
-// Muse (slice 2). Members without an adapter yet or without a
-// configured key are named in the result with the reason — never
-// silently skipped. Copilot has no API at all (design §3.8), so it
+// Muse (slice 2); the full team grammar — SHARE, CONTINUE WITH,
+// CHECK THAT, BROADCAST, COMPARE ANSWERS, READ THE LOG, SUMMARIZE
+// THE LOOP, WORD LOOP — plus ROUTE failover (slice 3). Members
+// without an adapter yet or without a configured key are named in
+// the result with the reason — never silently skipped. Copilot has no API at all (design §3.8), so it
 // joins through the phone-lane bridge below (owner order
 // 2026-10-22): a linked device-lane child command the phone
 // executes, whose posted answer is folded back into the parent
@@ -104,15 +106,195 @@ function resolveMember(name) {
   return ALIASES[key] || null;
 }
 
-// Grammar (slice 1): ROUTE ("Have <AI> <task>", also Ask/Tell) and the
-// HELLO LOOP ("hello loop" / "run the loop"). Anything else is reported
-// unsupported — honestly, in the result — until later slices land.
+// Grammar (slices 1+3): the settled team grammar from
+// ~/workspace/app/ai-bar/CROSS-AI-COMMANDS.md. The v1.7.7 thin
+// client forwards Share / Check / Broadcast / Compare / WordLoop /
+// ReadLog / Summarize commands VERBATIM, so this parser mirrors the
+// button's AiNameRouter.parseCommand token for token: tokens are
+// letter/digit words (lowercased) carrying end offsets into the
+// original text, so extracted prompts keep the owner's casing.
+// Check order matches the button (word loop before hello loop,
+// check/broadcast before route) so the same words mean the same
+// thing on both sides of the wire.
+function tokenize(text) {
+  const tokens = [];
+  const re = /[A-Za-z0-9]+/g;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    tokens.push({ word: m[0].toLowerCase(), end: m.index + m[0].length });
+  }
+  return tokens;
+}
+function wordAt(tokens, pos, word) {
+  return pos >= 0 && pos < tokens.length && tokens[pos].word === word;
+}
+function phraseAt(tokens, pos, phrase) {
+  if (pos < 0 || pos + phrase.length > tokens.length) return false;
+  for (let i = 0; i < phrase.length; i++) {
+    if (tokens[pos + i].word !== phrase[i]) return false;
+  }
+  return true;
+}
+// Longest alias starting exactly at pos → { member, words } | null.
+function matchAliasAt(tokens, pos) {
+  let best = null;
+  for (const name of Object.keys(ALIASES)) {
+    const words = name.split(' ');
+    if (pos + words.length > tokens.length) continue;
+    if (best && words.length <= best.words) continue;
+    let match = true;
+    for (let w = 0; w < words.length; w++) {
+      if (tokens[pos + w].word !== words[w]) { match = false; break; }
+    }
+    if (match) best = { member: ALIASES[name], words: words.length };
+  }
+  return best;
+}
+function findAlias(tokens, from) {
+  for (let pos = Math.max(0, from); pos < tokens.length; pos++) {
+    const hit = matchAliasAt(tokens, pos);
+    if (hit) return { member: hit.member, words: hit.words, start: pos };
+  }
+  return null;
+}
+// The original text after the first `endPos` tokens, leading
+// punctuation stripped (the button strips a leading ", " the same
+// way after a member name).
+function restAfter(text, tokens, endPos) {
+  if (endPos <= 0) return text.trim();
+  if (endPos > tokens.length) return '';
+  return text.slice(tokens[endPos - 1].end).replace(/^[^A-Za-z0-9]+/, '').trim();
+}
+function textBefore(text, tokens, startPos) {
+  if (startPos <= 0) return '';
+  return text.slice(0, tokens[startPos - 1].end).replace(/[\s:;,—-]+$/, '').trim();
+}
+function skipWords(tokens, pos, words) {
+  let p = pos;
+  while (p < tokens.length && words.includes(tokens[p].word)) p++;
+  return p;
+}
+
+const WORD_LOOP_PHRASES = [
+  ['run', 'the', 'word', 'loop'], ['ran', 'the', 'word', 'loop'],
+  ['running', 'the', 'word', 'loop'], ['start', 'the', 'word', 'loop'],
+  ['do', 'the', 'word', 'loop'], ['run', 'word', 'loop'],
+  ['ran', 'word', 'loop'], ['word', 'loop'],
+  ['run', 'the', 'word', 'chain'], ['ran', 'the', 'word', 'chain'],
+  ['run', 'word', 'chain'], ['word', 'chain'],
+];
+const HELLO_LOOP_PHRASES = [
+  ['hello', 'loop'], ['run', 'the', 'loop'], ['run', 'the', 'hello', 'loop'],
+  ['run', 'loop'], ['start', 'the', 'loop'], ['do', 'the', 'loop'],
+  ['do', 'the', 'hello', 'loop'], ['ran', 'the', 'loop'],
+  ['ran', 'the', 'hello', 'loop'], ['ran', 'loop'],
+  ['running', 'the', 'loop'], ['running', 'the', 'hello', 'loop'],
+  ['start', 'loop'], ['the', 'loop'], ['loop'],
+];
+const BROADCAST_PHRASES = [
+  ['brainstorm', 'across', 'all', 'ai'], ['brainstorm', 'across', 'all', 'ais'],
+  ['brainstorm', 'across', 'all', 'the', 'ais'], ['ask', 'all', 'ais'],
+  ['ask', 'all', 'ai'], ['ask', 'all', 'the', 'ais'], ['ask', 'all', 'the', 'ai'],
+  ['ask', 'every', 'ai'], ['brainstorm', 'with', 'all', 'ai'],
+  ['brainstorm', 'with', 'all', 'ais'], ['brainstorm', 'with', 'all'],
+  ['brainstorm', 'all', 'ai'], ['brainstorm', 'all'],
+];
+
 const ROUTE_VERB = /^(?:please\s+)?(?:have|ask|tell)\s+/i;
 function parseCommand(rawText) {
   const text = String(rawText || '').trim();
-  if (/\bhello loop\b/i.test(text) || /\brun the loop\b/i.test(text)) {
-    return { type: 'hello_loop' };
+  if (!text) return { type: 'unsupported' };
+  const tokens = tokenize(text);
+  if (!tokens.length) return { type: 'unsupported' };
+  const first = tokens[0].word;
+
+  // WORD LOOP — checked before the hello loop, as on the button.
+  for (const p of WORD_LOOP_PHRASES) if (phraseAt(tokens, 0, p)) return { type: 'word_loop' };
+
+  // HELLO LOOP.
+  for (const p of HELLO_LOOP_PHRASES) if (phraseAt(tokens, 0, p)) return { type: 'hello_loop' };
+
+  // READ THE LOG.
+  if (phraseAt(tokens, 0, ['read', 'the', 'log'])
+      || phraseAt(tokens, 0, ['read', 'the', 'command', 'log'])
+      || phraseAt(tokens, 0, ['read', 'me', 'the', 'log'])
+      || phraseAt(tokens, 0, ['read', 'log'])) {
+    return { type: 'read_log' };
   }
+
+  // SUMMARIZE THE LOOP.
+  if ((first === 'summarize' || first === 'summarise')
+      && (tokens.length === 1
+        || ['the', 'loop', 'log', 'answers', 'all', 'that', 'it'].includes(tokens[1].word))) {
+    return { type: 'summarize' };
+  }
+
+  // COMPARE ANSWERS (optional prompt; no prompt = compare the log).
+  if (first === 'compare'
+      && (tokens.length === 1
+        || ['answers', 'answer', 'the', 'all'].includes(tokens[1].word))) {
+    let consumed = skipWords(tokens, 1, ['answers', 'answer', 'the', 'all']);
+    consumed = skipWords(tokens, consumed, ['on', 'about', 'for']);
+    return { type: 'compare', prompt: restAfter(text, tokens, consumed) };
+  }
+
+  // BROADCAST — the verb form, then the button's phrase forms
+  // searched anywhere in the text ("ask all AIs: ..." / "... — ask
+  // all AIs"). The prompt is what follows the phrase, or what
+  // precedes it when nothing follows.
+  if (first === 'broadcast') {
+    return { type: 'broadcast', prompt: restAfter(text, tokens, 1) };
+  }
+  for (const phrase of BROADCAST_PHRASES) {
+    for (let pos = 0; pos + phrase.length <= tokens.length; pos++) {
+      if (!phraseAt(tokens, pos, phrase)) continue;
+      let prompt = restAfter(text, tokens, pos + phrase.length);
+      if (!prompt) prompt = textBefore(text, tokens, pos);
+      return { type: 'broadcast', prompt };
+    }
+  }
+
+  // CHECK THAT — "Have <AI> check ...", "<AI> check ...", or the
+  // bare "check that/this/it" (the OTHER members critique).
+  if (first === 'have' || first === 'get' || first === 'ask') {
+    const hit = findAlias(tokens, 1);
+    if (hit) {
+      const after = skipWords(tokens, hit.start + hit.words, ['to']);
+      if (wordAt(tokens, after, 'check')) return { type: 'check', member: hit.member };
+    }
+  }
+  {
+    const lead = matchAliasAt(tokens, 0);
+    if (lead && wordAt(tokens, lead.words, 'check')) return { type: 'check', member: lead.member };
+  }
+  if (phraseAt(tokens, 0, ['check', 'that']) || phraseAt(tokens, 0, ['check', 'this'])
+      || phraseAt(tokens, 0, ['check', 'it'])) {
+    return { type: 'check', member: null };
+  }
+
+  // CONTINUE WITH <AI> (optionally followed by the follow-up).
+  if (phraseAt(tokens, 0, ['continue', 'with']) || phraseAt(tokens, 0, ['carry', 'on', 'with'])) {
+    const from = phraseAt(tokens, 0, ['continue', 'with']) ? 2 : 3;
+    const hit = findAlias(tokens, from);
+    if (hit) {
+      return {
+        type: 'continue', member: hit.member,
+        followUp: restAfter(text, tokens, hit.start + hit.words),
+      };
+    }
+  }
+
+  // SHARE / SEND TO / PASS IT TO <AI>.
+  for (let pos = 0; pos <= 1 && pos < tokens.length; pos++) {
+    if (pos === 1 && tokens[0].word !== 'please') break;
+    if (!['share', 'send', 'pass'].includes(tokens[pos].word)) continue;
+    let p = skipWords(tokens, pos + 1, ['this', 'it']);
+    p = skipWords(tokens, p, ['with', 'to']);
+    const hit = findAlias(tokens, p);
+    if (hit) return { type: 'share', member: hit.member };
+  }
+
+  // ROUTE (slices 1-2): "Have/Ask/Tell <AI> <task>".
   const vm = ROUTE_VERB.exec(text);
   if (vm) {
     const rest = text.slice(vm[0].length);
@@ -476,6 +658,183 @@ async function recordHop(cmd, run, member, model, status, errorCode, out, lane) 
   });
 }
 
+// ── Session context (slice 3) ─────────────────────────────────────
+// The "current loop" and "the last answer" the grammar refers to
+// live in the persistent command log: the settled API-lane commands
+// recorded for the SAME device as the running command (the panel's
+// log and the HQ log are per-device records). Context handed to a
+// member is capped at the shared team log cap the button enforces
+// (CrossAiProtocol MAX_LOG_CHARS, 16,000 chars) — newest entries
+// win the budget, and the cut is stated, never silent.
+const LOG_CONTEXT_CAP = 16000;
+const SESSION_COMMAND_LIMIT = 8;
+const SHARED_ANSWER_CAP = 6000;
+
+async function recentSettledCommands(cmd, limit = SESSION_COMMAND_LIMIT) {
+  return db.all(
+    "SELECT * FROM ai_commands WHERE device_id = ? AND lane = 'api' AND id != ?"
+      + " AND status IN ('done', 'failed') ORDER BY created_at DESC LIMIT ?",
+    [cmd.device_id, cmd.id, limit]
+  );
+}
+
+// Settled rows (newest first, as fetched) → chronological log
+// entries, "Owner: <command>" followed by the recorded answer.
+function sessionEntries(rowsNewestFirst) {
+  return rowsNewestFirst.slice().reverse().map((r) =>
+    `Owner: ${r.text}\n${String(r.answer || '').trim()}`);
+}
+
+// Join chronological entries under the cap; when older entries are
+// dropped the text says so.
+function buildLogText(entries, cap = LOG_CONTEXT_CAP) {
+  const kept = [];
+  let total = 0;
+  let omitted = 0;
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const cost = entries[i].length + (kept.length ? 2 : 0);
+    if (kept.length > 0 && total + cost > cap) { omitted = i + 1; break; }
+    kept.unshift(entries[i]);
+    total += cost;
+  }
+  if (!kept.length && entries.length) {
+    kept.push(entries[entries.length - 1]);
+    omitted = entries.length - 1;
+  }
+  let text = kept.join('\n\n');
+  if (text.length > cap) text = `${text.slice(0, cap)}\n…(trimmed to the log cap)`;
+  if (omitted > 0) {
+    text = `(${omitted} earlier ${omitted === 1 ? 'entry' : 'entries'} omitted — the shared team log is capped)\n\n${text}`;
+  }
+  return text;
+}
+
+async function lastExchange(cmd) {
+  const rows = await recentSettledCommands(cmd, 1);
+  return rows[0] || null;
+}
+
+// Which members actually ANSWERED in a recorded answer — real
+// [FROM X] blocks. Absence blocks ("(not answered — ...)") and a
+// Copilot block still waiting on the phone are not authorship; a
+// via-phone Copilot answer is.
+const FROM_BLOCK_RE = /\[FROM ([^\]]+)\]\n([\s\S]*?)\n\[END\]/g;
+function answerAuthors(answer) {
+  const authors = new Set();
+  const re = new RegExp(FROM_BLOCK_RE.source, 'g');
+  let m;
+  while ((m = re.exec(String(answer || ''))) !== null) {
+    const body = m[2].trim();
+    if (body.startsWith('(not answered')) continue;
+    if (body.startsWith('(asked through the phone')) continue;
+    authors.add(m[1]);
+  }
+  return authors;
+}
+
+// One configured-member call with the lane's bookkeeping. Copilot
+// is NOT handled here — it goes through the phone bridge
+// (delegateCopilot). Returns { ok, configured, text | reasonText }.
+async function askMember(cmd, ctx, run, member, args) {
+  const st = memberState(member, ctx.adapters);
+  if (st.state !== 'ready') {
+    const reason = absenceReason(member, st.state);
+    await recordHop(cmd, run, member, null, 'skipped', reason.code, null);
+    return { ok: false, configured: false, code: reason.code, reasonText: reason.text };
+  }
+  try {
+    const out = await callMember(ctx, st.adapter, args);
+    await recordHop(cmd, run, member, out.model, 'done', null, out);
+    return { ok: true, configured: true, text: out.text };
+  } catch (e) {
+    await recordHop(cmd, run, member, null, 'failed', e.code || 'ERROR', null);
+    return { ok: false, configured: true, code: e.code || 'ERROR', reasonText: e.message };
+  }
+}
+
+// Single-target settlement shared by SHARE / CONTINUE / named
+// CHECK: the target's block, via the phone bridge for Copilot, an
+// honest absence block (status failed) when it cannot answer. A
+// route FAILS OVER instead (see executeRoute) — a share names its
+// recipient, so a silent substitute would lie about who got it.
+async function answerFromMember(cmd, ctx, run, member, user, copilotText) {
+  if (member === 'Copilot') {
+    const { child, state } = await delegateCopilot(cmd, run, copilotText);
+    return { status: state === 'failed' ? 'failed' : 'done', answer: copilotChildBlock(child) };
+  }
+  const res = await askMember(cmd, ctx, run, member, { system: PRIMER, user, maxTokens: 800 });
+  if (!res.ok) return { status: 'failed', answer: absenceBlock(member, res.reasonText) };
+  return { status: 'done', answer: envelope(member, res.text) };
+}
+
+// Ask a set of members the same job, sequentially in roster order
+// (broadcast is sequential by design), collecting envelope blocks.
+// Copilot joins through the phone bridge. userFor(member) builds
+// the prompt for API members; copilotText is the child instruction
+// the phone executes.
+async function askAll(cmd, ctx, run, members, { userFor, copilotText, maxTokens = 800 }) {
+  const blocks = [];
+  const tally = { answered: 0, configuredFailed: 0, notConfigured: 0, phonePending: 0, phoneFailed: 0 };
+  for (const member of members) {
+    if (member === 'Copilot') {
+      const { child, state } = await delegateCopilot(cmd, run, copilotText);
+      blocks.push(copilotChildBlock(child));
+      if (state === 'answered') tally.answered++;
+      else if (state === 'failed') tally.phoneFailed++;
+      else tally.phonePending++;
+      continue;
+    }
+    const res = await askMember(cmd, ctx, run, member, { system: PRIMER, user: userFor(member), maxTokens });
+    if (res.ok) {
+      blocks.push(envelope(member, res.text));
+      tally.answered++;
+    } else {
+      blocks.push(absenceBlock(member, res.reasonText));
+      if (res.configured) tally.configuredFailed++;
+      else tally.notConfigured++;
+    }
+  }
+  return { blocks, tally };
+}
+
+// Settlement shared by the multi-member commands, mirroring the
+// hello loop: done when someone answered; done-with-a-note when
+// only the phone hop is still out; failed with the reasons named
+// when nobody could answer.
+function settleMulti(blocks, tally, subject) {
+  const answer = blocks.join('\n\n');
+  if (tally.answered > 0) return { status: 'done', answer };
+  const bits = [];
+  if (tally.configuredFailed) {
+    bits.push(`${tally.configuredFailed} configured ${tally.configuredFailed === 1 ? 'member' : 'members'} tried and failed — the reasons are in their blocks above`);
+  }
+  if (tally.phoneFailed) {
+    bits.push('Copilot was asked through the phone but could not answer there');
+  }
+  if (tally.notConfigured) {
+    bits.push(`${tally.notConfigured} ${tally.notConfigured === 1 ? 'member is' : 'members are'} not configured on the API lane yet`);
+  }
+  const detail = bits.length ? ` — ${bits.join('; ')}` : '';
+  if (tally.phonePending) {
+    return {
+      status: 'done',
+      answer: `${answer}\n\nNo member answered over the API for ${subject}${detail}. Copilot was asked through the phone; its reply lands in the log when the phone picks it up.`,
+    };
+  }
+  return { status: 'failed', answer: `${answer}\n\nNo member of the team could answer ${subject}${detail}.` };
+}
+
+// Who writes a summary / comparison of the log: the Lead first
+// (Muse heads the roster — PRIMER names Muse the Lead AI), then
+// roster order. Copilot never does it synchronously (phone bridge).
+function pickSummarizer(ctx) {
+  for (const member of ROSTER) {
+    if (member === 'Copilot') continue;
+    if (memberState(member, ctx.adapters).state === 'ready') return member;
+  }
+  return null;
+}
+
 // ── Copilot phone-lane bridge (owner order 2026-10-22) ────────────
 // Copilot has no API (design §3.8), so it joins the team through a
 // pipeline that already exists: the button's device lane. When an
@@ -633,20 +992,39 @@ async function executeRoute(cmd, parsed, ctx, run) {
       answer: copilotChildBlock(child),
     };
   }
-  const st = memberState(parsed.member, ctx.adapters);
-  if (st.state !== 'ready') {
-    const reason = absenceReason(parsed.member, st.state);
-    await recordHop(cmd, run, parsed.member, null, 'skipped', reason.code, null);
-    return { status: 'failed', answer: absenceBlock(parsed.member, reason.text) };
+  // FAILOVER (framework gap review, owner 2026-10-21; slice 3):
+  // when the routed member cannot answer — not configured, or its
+  // provider errored after the built-in retry — the request moves
+  // to the next CONFIGURED member in roster order (wrapping once,
+  // Copilot excluded: it answers through the phone, never as a
+  // silent substitute). The log names the failover honestly; when
+  // nobody else is configured, the command settles failed with the
+  // reason. A direct answer stays exactly one block, as before.
+  const target = parsed.member;
+  const args = { system: PRIMER, user: parsed.task, maxTokens: 800 };
+  const first = await askMember(cmd, ctx, run, target, args);
+  if (first.ok) return { status: 'done', answer: envelope(target, first.text) };
+  const failures = [{ member: target, reasonText: first.reasonText }];
+  let winner = null;
+  let anyCandidateReady = false;
+  const idx = ROSTER.indexOf(target);
+  for (let k = 1; k < ROSTER.length && !winner; k++) {
+    const candidate = ROSTER[(idx + k) % ROSTER.length];
+    if (candidate === 'Copilot') continue;
+    if (memberState(candidate, ctx.adapters).state !== 'ready') continue;
+    anyCandidateReady = true;
+    const res = await askMember(cmd, ctx, run, candidate, args);
+    if (res.ok) winner = { member: candidate, text: res.text };
+    else failures.push({ member: candidate, reasonText: res.reasonText });
   }
-  try {
-    const out = await callMember(ctx, st.adapter, { system: PRIMER, user: parsed.task, maxTokens: 800 });
-    await recordHop(cmd, run, parsed.member, out.model, 'done', null, out);
-    return { status: 'done', answer: envelope(parsed.member, out.text) };
-  } catch (e) {
-    await recordHop(cmd, run, parsed.member, null, 'failed', e.code || 'ERROR', null);
-    return { status: 'failed', answer: absenceBlock(parsed.member, e.message) };
-  }
+  const blocks = failures.map((f, i) => {
+    let reason = f.reasonText;
+    if (i === 0 && winner) reason += ` — failed over to ${winner.member}`;
+    if (i === 0 && !winner && !anyCandidateReady) reason += ' — and no other member is configured to take over';
+    return absenceBlock(f.member, reason);
+  });
+  if (winner) blocks.push(envelope(winner.member, winner.text));
+  return { status: winner ? 'done' : 'failed', answer: blocks.join('\n\n') };
 }
 
 async function executeHelloLoop(cmd, ctx, run) {
@@ -749,14 +1127,283 @@ async function executeHelloLoop(cmd, ctx, run) {
   return { status: 'done', answer };
 }
 
+// SHARE / CONTINUE WITH <AI>: the last settled exchange on this
+// device is handed to the named member with the owner's framing —
+// the shared request, the answer in the log, and (for CONTINUE) the
+// follow-up. The receiver's response posts as its block. Naming a
+// recipient is the point, so there is no failover here: an
+// unreachable recipient settles failed with its honest block.
+async function executeShare(cmd, parsed, ctx, run) {
+  const last = await lastExchange(cmd);
+  if (!last) {
+    const verb = parsed.type === 'continue' ? 'continue' : 'share';
+    return {
+      status: 'failed',
+      answer: `There is nothing to ${verb} yet — no earlier answer in this device's team log. Ask the team something first.`,
+    };
+  }
+  const sharedAnswer = String(last.answer || '').trim().slice(0, SHARED_ANSWER_CAP);
+  const followUp = (parsed.followUp || '').trim();
+  const framing = parsed.type === 'continue'
+    ? (followUp
+      ? `The owner says: continue this work — ${followUp}`
+      : 'The owner says: continue this work from where it stopped — take it further.')
+    : 'The owner shared this with you — build on it, react to it, or take it further, as it calls for.';
+  const user = [
+    `Earlier team work from the log on this device. The request was: "${last.text}"`,
+    '',
+    'The answer in the log:',
+    sharedAnswer,
+    '',
+    framing,
+  ].join('\n');
+  return answerFromMember(cmd, ctx, run, parsed.member, user, `Have Copilot ${user}`.slice(0, 1900));
+}
+
+// CHECK THAT: peer review of the last answer in the log. Named
+// ("Have Claude check that") → that member critiques it. Bare
+// ("check that") → the OTHER configured members critique it —
+// everyone except whoever actually answered last time (absence
+// blocks don't count as authorship). Copilot checks through the
+// phone bridge.
+async function executeCheck(cmd, parsed, ctx, run) {
+  const last = await lastExchange(cmd);
+  if (!last) {
+    return {
+      status: 'failed',
+      answer: 'There is nothing to check yet — no earlier answer in this device\'s team log. Ask the team something first.',
+    };
+  }
+  const claim = String(last.answer || '').trim().slice(0, SHARED_ANSWER_CAP);
+  const user = [
+    'Check the answer below from the team log: verify its claims, flag anything wrong or unsupported, and say plainly whether it holds up. Be specific and concise.',
+    '',
+    `The request it answered was: "${last.text}"`,
+    '',
+    'The answer:',
+    claim,
+  ].join('\n');
+  if (parsed.member) {
+    return answerFromMember(cmd, ctx, run, parsed.member, user, `Have Copilot ${user}`.slice(0, 1900));
+  }
+  const authors = answerAuthors(last.answer);
+  const checkers = ROSTER.filter((m) => !authors.has(m));
+  if (!checkers.length) {
+    return {
+      status: 'failed',
+      answer: 'Every member had a hand in the last answer, so there is nobody left to check it — name a checker instead: "Have <AI> check that".',
+    };
+  }
+  const { blocks, tally } = await askAll(cmd, ctx, run, checkers, {
+    userFor: () => user,
+    copilotText: `Have Copilot ${user}`.slice(0, 1900),
+  });
+  return settleMulti(blocks, tally, 'the check');
+}
+
+// BROADCAST: the same prompt to every member; each block lands in
+// the one log (Copilot through the phone bridge).
+async function executeBroadcast(cmd, parsed, ctx, run) {
+  const prompt = (parsed.prompt || '').trim();
+  if (!prompt) {
+    return {
+      status: 'failed',
+      answer: 'That broadcast named nothing to ask — say it as "Brainstorm across all AI: <your question>" or "Ask all AIs <your question>".',
+    };
+  }
+  const { blocks, tally } = await askAll(cmd, ctx, run, ROSTER, {
+    userFor: () => prompt,
+    copilotText: `Have Copilot ${prompt}`.slice(0, 1900),
+  });
+  return settleMulti(blocks, tally, 'the broadcast');
+}
+
+// COMPARE ANSWERS: with a prompt, the same question goes to every
+// member and the blocks stand side by side — the comparison IS the
+// blocks, no forced verdict. Without a prompt, a configured
+// member (the Lead first) reads the recent log and compares the
+// answers already in it: where they agree, where they differ.
+async function executeCompare(cmd, parsed, ctx, run) {
+  const prompt = (parsed.prompt || '').trim();
+  if (prompt) {
+    const { blocks, tally } = await askAll(cmd, ctx, run, ROSTER, {
+      userFor: () => prompt,
+      copilotText: `Have Copilot ${prompt}`.slice(0, 1900),
+    });
+    return settleMulti(blocks, tally, 'the comparison');
+  }
+  const rows = await recentSettledCommands(cmd);
+  if (!rows.length) {
+    return {
+      status: 'failed',
+      answer: 'There is nothing to compare yet — no earlier answers in this device\'s team log. Ask the team something first, or name the question: "Compare answers on <question>".',
+    };
+  }
+  const comparator = pickSummarizer(ctx);
+  if (!comparator) {
+    return {
+      status: 'failed',
+      answer: 'No member is configured on the server to compare the log yet — the Lead (Muse) is not configured, and no other member is either.',
+    };
+  }
+  const logText = buildLogText(sessionEntries(rows), SHARED_ANSWER_CAP);
+  const res = await askMember(cmd, ctx, run, comparator, {
+    system: PRIMER,
+    maxTokens: 800,
+    user: `Here is the team's recent log on this device:\n\n${logText}\n\nCompare the answers in it: where do the members agree, where do they differ, and which answer looks strongest? Be specific and concise.`,
+  });
+  if (!res.ok) return { status: 'failed', answer: absenceBlock(comparator, res.reasonText) };
+  return { status: 'done', answer: envelope(comparator, res.text) };
+}
+
+// READ THE LOG: the persistent command log IS the answer — the
+// settled commands on this device, oldest first, each with its
+// recorded answer. No member is called; nothing is summarized or
+// reworded. The 16k shared-log cap applies (newest entries win).
+async function executeReadLog(cmd, ctx, run) {
+  const rows = await recentSettledCommands(cmd, 10);
+  if (!rows.length) {
+    return {
+      status: 'done',
+      answer: 'The team log is empty — no commands have completed on this device yet.',
+    };
+  }
+  return { status: 'done', answer: buildLogText(sessionEntries(rows), ANSWER_CAP - 200) };
+}
+
+// SUMMARIZE THE LOOP: the current log goes to a configured member
+// (the Lead first) and its summary posts as that member's block.
+async function executeSummarize(cmd, ctx, run) {
+  const rows = await recentSettledCommands(cmd);
+  if (!rows.length) {
+    return {
+      status: 'failed',
+      answer: 'There is nothing to summarize yet — the team log on this device is empty. Run a command or two first.',
+    };
+  }
+  const summarizer = pickSummarizer(ctx);
+  if (!summarizer) {
+    return {
+      status: 'failed',
+      answer: 'No member is configured on the server to write the summary yet — the Lead (Muse) is not configured, and no other member is either.',
+    };
+  }
+  const logText = buildLogText(sessionEntries(rows), SHARED_ANSWER_CAP);
+  const res = await askMember(cmd, ctx, run, summarizer, {
+    system: PRIMER,
+    maxTokens: 800,
+    user: `Here is the team's recent log on this device:\n\n${logText}\n\nSummarize the loop: what was asked, what the team answered, where members agreed or differed, and anything still open. Concise, plain language.`,
+  });
+  if (!res.ok) return { status: 'failed', answer: absenceBlock(summarizer, res.reasonText) };
+  return { status: 'done', answer: envelope(summarizer, res.text) };
+}
+
+// WORD LOOP (Loop 2, owner design): the sentence starts as "Hello"
+// and passes member to member in roster order; each member adds
+// EXACTLY ONE word and returns the full sentence, never altering
+// earlier words. Each hop's block names the word it added and the
+// sentence so far, so the final word count names any hop that
+// failed to add (the owner's fidelity check). Copilot takes its
+// turn through the phone bridge — the sentence it receives is the
+// one standing at its turn; its word folds into this record when
+// the phone posts it, and the members after it continue from the
+// sentence as it stands (stated in the closing line).
+const WORD_LOOP_START = 'Hello';
+function cleanAddedWord(raw) {
+  return String(raw || '').trim().replace(/^[^A-Za-z0-9'-]+/, '').replace(/[^A-Za-z0-9'-]+$/, '');
+}
+function extractAddedWord(sentence, reply) {
+  const norm = String(reply || '').replace(/\s+/g, ' ').trim().replace(/^["“”]+|["“”]+$/g, '');
+  if (!norm) return { kind: 'none' };
+  if (norm.toLowerCase().startsWith(sentence.toLowerCase())) {
+    const extra = norm.slice(sentence.length).trim();
+    if (!extra) return { kind: 'none' };
+    const w = cleanAddedWord(extra.split(/\s+/)[0]);
+    return w ? { kind: 'word', word: w } : { kind: 'none' };
+  }
+  const words = norm.split(/\s+/);
+  if (words.length === 1) {
+    const w = cleanAddedWord(words[0]);
+    return w ? { kind: 'word', word: w } : { kind: 'none' };
+  }
+  return { kind: 'fidelity', snippet: norm.slice(0, 120) };
+}
+
+async function executeWordLoop(cmd, ctx, run) {
+  let sentence = WORD_LOOP_START;
+  const blocks = [];
+  const tally = { answered: 0, configuredFailed: 0, notConfigured: 0, phonePending: 0, phoneFailed: 0 };
+  let wordsAdded = 0;
+  for (const member of ROSTER) {
+    if (member === 'Copilot') {
+      const childText = `Have Copilot continue a word loop. The sentence so far is: "${sentence}". Add exactly ONE word to continue it and reply with ONLY the full sentence — the sentence above plus your one new word at the end. Do not change any earlier word.`;
+      const { child, state } = await delegateCopilot(cmd, run, childText);
+      blocks.push(copilotChildBlock(child));
+      if (state === 'answered') tally.answered++;
+      else if (state === 'failed') tally.phoneFailed++;
+      else tally.phonePending++;
+      continue;
+    }
+    const st = memberState(member, ctx.adapters);
+    if (st.state !== 'ready') {
+      const reason = absenceReason(member, st.state);
+      blocks.push(absenceBlock(member, reason.text));
+      tally.notConfigured++;
+      await recordHop(cmd, run, member, null, 'skipped', reason.code, null);
+      continue;
+    }
+    const user = `We are building one sentence together as a team, one word per member. The sentence so far is: "${sentence}". Add exactly ONE word to continue it. Reply with ONLY the full sentence — the sentence above plus your one new word at the end. Do not change, reorder, or drop any earlier word.`;
+    try {
+      const out = await callMember(ctx, st.adapter, { system: PRIMER, user, maxTokens: 60 });
+      const ex = extractAddedWord(sentence, out.text);
+      if (ex.kind === 'word') {
+        sentence = `${sentence} ${ex.word}`;
+        wordsAdded++;
+        tally.answered++;
+        blocks.push(envelope(member, `added the word "${ex.word}" — the sentence is now: "${sentence}"`));
+        await recordHop(cmd, run, member, out.model, 'done', null, out);
+      } else if (ex.kind === 'none') {
+        tally.configuredFailed++;
+        blocks.push(envelope(member, '(added no word — it returned the sentence unchanged)'));
+        await recordHop(cmd, run, member, null, 'failed', 'NO_WORD', null);
+      } else {
+        tally.configuredFailed++;
+        blocks.push(envelope(member, `(did not continue the sentence — it replied: "${ex.snippet}")`));
+        await recordHop(cmd, run, member, null, 'failed', 'FIDELITY', null);
+      }
+    } catch (e) {
+      blocks.push(absenceBlock(member, e.message));
+      tally.configuredFailed++;
+      await recordHop(cmd, run, member, null, 'failed', e.code || 'ERROR', null);
+    }
+  }
+  if (wordsAdded > 0) {
+    const tail = tally.phonePending
+      ? `The word-loop sentence so far: "${sentence}" — Copilot was asked through the phone; its word joins this record when the phone posts it.`
+      : `The word-loop sentence: "${sentence}"`;
+    return { status: 'done', answer: `${blocks.join('\n\n')}\n\n${tail}` };
+  }
+  return settleMulti(blocks, tally, 'the word loop');
+}
+
 async function executeCommand(cmd, ctx, run) {
   const parsed = parseCommand(cmd.text);
-  if (parsed.type === 'route') return executeRoute(cmd, parsed, ctx, run);
-  if (parsed.type === 'hello_loop') return executeHelloLoop(cmd, ctx, run);
-  return {
-    status: 'failed',
-    answer: `The API lane cannot run that command yet: "${cmd.text}". The lane runs "Have <AI> ..." requests and the hello loop; the rest of the team grammar lands in later slices.`,
-  };
+  switch (parsed.type) {
+    case 'route': return executeRoute(cmd, parsed, ctx, run);
+    case 'hello_loop': return executeHelloLoop(cmd, ctx, run);
+    case 'share':
+    case 'continue': return executeShare(cmd, parsed, ctx, run);
+    case 'check': return executeCheck(cmd, parsed, ctx, run);
+    case 'broadcast': return executeBroadcast(cmd, parsed, ctx, run);
+    case 'compare': return executeCompare(cmd, parsed, ctx, run);
+    case 'read_log': return executeReadLog(cmd, ctx, run);
+    case 'summarize': return executeSummarize(cmd, ctx, run);
+    case 'word_loop': return executeWordLoop(cmd, ctx, run);
+    default: return {
+      status: 'failed',
+      answer: `The API lane cannot run that command yet: "${cmd.text}". The lane runs "Have <AI> ..." requests (with failover to the next configured member), the hello loop, the word loop, "Share with <AI>", "Continue with <AI>", "Check that", "Brainstorm across all AI: ...", "Compare answers", "Read the log", and "Summarize the loop".`,
+    };
+  }
 }
 
 // ── Worker ──────────────────────────────────────────────────────────
@@ -893,6 +1540,8 @@ module.exports = {
   ROSTER, ALIASES, PRICES, PRIMER, MemberError,
   resolveMember, parseCommand, envelope, absenceBlock, costMicroUsd,
   buildAdapters, memberState, absenceReason,
+  recentSettledCommands, sessionEntries, buildLogText, answerAuthors,
+  askMember, extractAddedWord, WORD_LOOP_START, LOG_CONTEXT_CAP,
   COPILOT_PENDING_TEXT, copilotPendingBlock, copilotChildBlock,
   findCopilotChild, ensureCopilotChild, delegateCopilot, finalizeCopilotHop,
   createWorker, laneEnabled, start, stop,
