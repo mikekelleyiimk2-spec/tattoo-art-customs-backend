@@ -275,12 +275,36 @@ router.post('/ai-commands/:id/result', express.json(), async (req, res) => {
     if (cmd.device_id !== device.device_id) {
       return res.status(403).json({ ok: false, error: 'not your command' });
     }
-    if (cmd.status === 'done' || cmd.status === 'failed') {
-      return res.json({ ok: true, already: true });
+    const already = cmd.status === 'done' || cmd.status === 'failed';
+    if (!already) {
+      const status = req.body?.status === 'failed' ? 'failed' : 'done';
+      const answer = String(req.body?.answer || '').slice(0, 8000);
+      await db.update('ai_commands', cmd.id, { status, answer, completed_at: db.now() });
     }
-    const status = req.body?.status === 'failed' ? 'failed' : 'done';
-    const answer = String(req.body?.answer || '').slice(0, 8000);
-    await db.update('ai_commands', cmd.id, { status, answer, completed_at: db.now() });
+    // Copilot phone-lane bridge (owner order 2026-10-22): a
+    // device-lane child carries parent_id when an API-lane command
+    // delegated its Copilot hop to the phone (Copilot has no API).
+    // When the child posts, fold its answer into the parent's
+    // record so the loop shows Copilot's real reply, labeled via
+    // phone. Runs on re-posts too (the fold is idempotent), but
+    // only writes the parent once the parent itself is final — a
+    // parent still executing folds the result in when the worker
+    // writes it (finalizeCopilotHop, src/worker/apiLane.js).
+    if (cmd.parent_id) {
+      try {
+        const parent = await db.get('SELECT * FROM ai_commands WHERE id = ?', [cmd.parent_id]);
+        if (parent && (parent.status === 'done' || parent.status === 'failed')) {
+          const apiLane = require('../worker/apiLane');
+          const fin = await apiLane.finalizeCopilotHop(parent.id, parent.answer || '');
+          if (fin.changed) {
+            await db.update('ai_commands', parent.id, { answer: fin.answer });
+          }
+        }
+      } catch (e) {
+        console.error('[muse/ai-commands/result] copilot link failed:', e.message);
+      }
+    }
+    if (already) return res.json({ ok: true, already: true });
     return res.json({ ok: true });
   } catch (e) {
     console.error('[muse/ai-commands/result] failed:', e.message);

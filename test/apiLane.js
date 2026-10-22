@@ -20,6 +20,11 @@ const TEST_XAI_KEY = 'test-xai-key-not-real';
 const TEST_PERPLEXITY_KEY = 'test-perplexity-key-not-real';
 const TEST_META_KEY = 'test-meta-key-not-real';
 
+// Copilot phone-lane bridge fixtures: created in the DB phase (the
+// HTTP phase has no live db handle), consumed over HTTP.
+let httpFixtureParentId = null;
+let httpFixtureChildId = null;
+
 function jsonResponse(status, payload) {
   return {
     ok: status >= 200 && status < 300,
@@ -163,14 +168,20 @@ async function runDbTests(ok) {
   'hello loop: real hops land as envelope blocks');
   ok(loopRow.answer.indexOf('[FROM Gemini]') < loopRow.answer.indexOf('[FROM DeepSeek]'),
     'hello loop: hops report in roster order');
-  ok(loopRow.answer.includes('[FROM Copilot]') && loopRow.answer.includes('has no API'),
-    'hello loop: Copilot is named as having no API — never faked, never skipped silently');
+  ok(loopRow.answer.includes('[FROM Copilot]') && loopRow.answer.includes('asked through the phone')
+    && loopRow.answer.includes('Copilot has no API'),
+  'hello loop: Copilot is asked through the phone (it has no API) — its block says so, never a fake answer');
   const loopRuns = await db.all('SELECT * FROM ai_runs WHERE command_id = ?', [loopId]);
   const loopHops = loopRuns.filter((r) => r.member);
   ok(loopRuns.length === 9 && loopHops.length === 8
     && loopHops.filter((r) => r.status === 'done').length === 2
-    && loopHops.filter((r) => r.status === 'skipped').length === 6,
-  'hello loop: ai_runs records all 8 hops (2 done, 6 skipped with reasons)');
+    && loopHops.filter((r) => r.status === 'skipped').length === 5
+    && loopHops.filter((r) => r.status === 'delegated' && r.lane === 'device').length === 1,
+  'hello loop: ai_runs records all 8 hops (2 done, 5 skipped with reasons, Copilot delegated on the device lane)');
+  const keyedLoopChild = await db.get('SELECT * FROM ai_commands WHERE parent_id = ?', [loopId]);
+  ok(!!keyedLoopChild && keyedLoopChild.lane === 'device' && keyedLoopChild.status === 'queued'
+    && keyedLoopChild.text.startsWith('Have Copilot'),
+  'hello loop: a linked device-lane child carries the Copilot greeting for the phone');
 
   const gptId = await insertCmd('Have ChatGPT say the word ready');
   await keyed.drain();
@@ -271,11 +282,18 @@ async function runDbTests(ok) {
   const copId = await insertCmd('Have Copilot say the word ready');
   await full.drain();
   const copRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [copId]);
-  ok(copRow.status === 'failed' && copRow.answer.includes('has no API'),
-    'route: Copilot still fails honestly as NO_API even with every key set — no substitute product is ever called under its name');
+  ok(copRow.status === 'done'
+    && copRow.answer === '[FROM Copilot]\n(asked through the phone — Copilot has no API, so it answers through the app on the phone; its reply lands in the log when the phone picks it up)\n[END]',
+  'route: Copilot is delegated to the phone — the parent completes with the honest asked-through-the-phone block, never a NO_API dead-end, never a fake answer, never a substitute product under its name');
+  ok(!/paste/i.test(copRow.answer),
+    'route: the Copilot delegation never hands the user a copy-paste chore (owner law)');
+  const copChild = await db.get('SELECT * FROM ai_commands WHERE parent_id = ?', [copId]);
+  ok(!!copChild && copChild.lane === 'device' && copChild.status === 'queued'
+    && copChild.text === 'Have Copilot say the word ready' && copChild.device_id === 'api-lane-test',
+  'route: exactly one linked device-lane child spawns, carrying the command text for the phone executor');
   const copHop = await db.get("SELECT * FROM ai_runs WHERE command_id = ? AND member = 'Copilot'", [copId]);
-  ok(!!copHop && copHop.status === 'skipped' && copHop.error === 'NO_API',
-    'route: ai_runs records the Copilot hop as skipped with error NO_API');
+  ok(!!copHop && copHop.status === 'delegated' && copHop.lane === 'device',
+    'route: ai_runs records the Copilot hop as delegated on the device lane');
 
   const fullLoopId = await insertCmd('run the hello loop');
   await full.drain();
@@ -292,8 +310,11 @@ async function runDbTests(ok) {
   const fullLoopRuns = await db.all('SELECT * FROM ai_runs WHERE command_id = ?', [fullLoopId]);
   const fullLoopHops = fullLoopRuns.filter((r) => r.member);
   ok(fullLoopRuns.length === 9 && fullLoopHops.filter((r) => r.status === 'done').length === 7
-    && fullLoopHops.filter((r) => r.status === 'skipped').length === 1,
-  'hello loop (slice 2): ai_runs records 7 done hops + Copilot skipped (NO_API)');
+    && fullLoopHops.filter((r) => r.status === 'delegated' && r.lane === 'device').length === 1
+    && fullLoopHops.filter((r) => r.status === 'skipped').length === 0,
+  'hello loop (slice 2): ai_runs records 7 done hops + Copilot delegated to the phone lane');
+  ok(fullLoopRow.answer.includes('[FROM Copilot]') && fullLoopRow.answer.includes('asked through the phone'),
+    'hello loop (slice 2): the Copilot block says it was asked through the phone');
 
   console.log('api lane hello-loop summary accuracy (configured member errors):');
   const errFetch = async (url) => {
@@ -308,12 +329,14 @@ async function runDbTests(ok) {
   const id503 = await insertCmd('run the hello loop');
   await w503.drain();
   const row503 = await db.get('SELECT * FROM ai_commands WHERE id = ?', [id503]);
-  ok(row503.status === 'failed' && row503.answer.includes('No member of the team could answer'),
-    'summary: a loop with zero answers still fails and says so');
+  ok(row503.status === 'done' && row503.answer.includes('No member answered over the API this round'),
+    'summary: a loop where every API member fails still completes when Copilot is out with the phone, and says so');
   ok(row503.answer.includes('1 configured member tried and failed'),
     'summary: a configured member that errored (HTTP 503) is counted as configured-but-failed');
-  ok(row503.answer.includes('7 members are not configured'),
-    'summary: the unconfigured members are counted separately and accurately');
+  ok(row503.answer.includes('6 members are not configured'),
+    'summary: the unconfigured members are counted separately and accurately (Copilot is not counted among them anymore)');
+  ok(row503.answer.includes('Copilot was asked through the phone'),
+    'summary: the pending phone hop is named in the summary');
   ok(!row503.answer.includes('nobody is configured'),
     'summary: never claims "nobody is configured" when a configured member errored (slice-1 wart)');
   const hop503 = await db.get("SELECT * FROM ai_runs WHERE command_id = ? AND member = 'Gemini'", [id503]);
@@ -335,8 +358,9 @@ async function runDbTests(ok) {
   const nkLoopId = await insertCmd('run the hello loop');
   await unkeyed.drain();
   const nkLoopRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [nkLoopId]);
-  ok(nkLoopRow.status === 'failed' && nkLoopRow.answer.includes('No member of the team could answer'),
-    'missing keys: a hello loop with nobody configured fails and says so');
+  ok(nkLoopRow.status === 'done' && nkLoopRow.answer.includes('asked through the phone')
+    && nkLoopRow.answer.includes('7 members are not configured'),
+  'missing keys: a hello loop with nobody configured completes honestly — every API member named not-configured, Copilot asked through the phone');
 
   console.log('api lane claim lifecycle + watchdog:');
   const devId = await insertCmd('Have Gemini say the word ready', 'device');
@@ -363,6 +387,110 @@ async function runDbTests(ok) {
     'watchdog: a command out of attempts fails with the reason in plain words');
   const devRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [devId]);
   ok(devRow.status === 'queued', 'lifecycle: the device-lane row was left untouched throughout');
+
+  console.log('copilot phone-lane bridge (child spawn, linkage, honest failure):');
+  const bridge = apiLane.createWorker({ env: {}, fetchImpl: mockFetch([]), retryDelayMs: 0, workerId: 'test-bridge' });
+
+  // Linkage: the phone answers the child; the parent record learns.
+  const brId = await insertCmd('Have Copilot say the word ready');
+  await bridge.drain();
+  const brRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [brId]);
+  const brChild = await db.get('SELECT * FROM ai_commands WHERE parent_id = ?', [brId]);
+  ok(brRow.status === 'done' && !!brChild && brChild.status === 'queued',
+    'bridge: a Copilot route leaves the parent done with its child queued for the phone');
+  await db.update('ai_commands', brChild.id, {
+    status: 'done', answer: 'Ready — straight from the phone.', completed_at: Date.now(),
+  });
+  const fin1 = await apiLane.finalizeCopilotHop(brId, brRow.answer);
+  ok(fin1.changed && fin1.answer.includes('[FROM Copilot]')
+    && fin1.answer.includes('via phone') && fin1.answer.includes('Ready — straight from the phone.')
+    && !fin1.answer.includes('asked through the phone'),
+  'bridge: finalize swaps the pending block for the real phone answer under a via-phone label');
+  await db.update('ai_commands', brId, { answer: fin1.answer });
+  const brHop = await db.get("SELECT * FROM ai_runs WHERE command_id = ? AND member = 'Copilot'", [brId]);
+  ok(!!brHop && brHop.status === 'done' && brHop.lane === 'device',
+    'bridge: the delegated ai_runs hop settles to done on the device lane');
+  const fin2 = await apiLane.finalizeCopilotHop(brId, fin1.answer);
+  ok(!fin2.changed && fin2.answer === fin1.answer,
+    'bridge: finalize is idempotent — a second fold changes nothing');
+
+  // Honest failure: the phone reports the pane failure; that is
+  // what the parent record shows.
+  const bfId = await insertCmd('Have Copilot write a haiku');
+  await bridge.drain();
+  const bfChild = await db.get('SELECT * FROM ai_commands WHERE parent_id = ?', [bfId]);
+  await db.update('ai_commands', bfChild.id, {
+    status: 'failed', answer: 'composer not found (sign-in wall)', completed_at: Date.now(),
+  });
+  const bfParent = await db.get('SELECT * FROM ai_commands WHERE id = ?', [bfId]);
+  const finF = await apiLane.finalizeCopilotHop(bfId, bfParent.answer);
+  ok(finF.changed && finF.answer.includes('via phone — Copilot could not answer on the phone: composer not found (sign-in wall)'),
+    'bridge: an on-phone failure lands in the parent record as the outcome — named, never papered over');
+  const bfHop = await db.get("SELECT * FROM ai_runs WHERE command_id = ? AND member = 'Copilot'", [bfId]);
+  ok(!!bfHop && bfHop.status === 'failed' && bfHop.error === 'PHONE_FAILED' && bfHop.lane === 'device',
+    'bridge: ai_runs settles the failed phone hop as failed with PHONE_FAILED');
+
+  // Loop linkage: completing the full-team loop's child upgrades
+  // only the Copilot block; the API blocks stand untouched.
+  const ftChild = await db.get('SELECT * FROM ai_commands WHERE parent_id = ?', [fullLoopId]);
+  ok(!!ftChild && ftChild.text.includes('say hello'),
+    'bridge: the loop child carries the greeting instruction for Copilot');
+  await db.update('ai_commands', ftChild.id, {
+    status: 'done', answer: 'Hello team — Copilot here.', completed_at: Date.now(),
+  });
+  const finL = await apiLane.finalizeCopilotHop(fullLoopId, fullLoopRow.answer);
+  ok(finL.changed && finL.answer.includes('Hello team — Copilot here.')
+    && finL.answer.includes('[FROM Gemini]\nHello from Gemini!\n[END]')
+    && finL.answer.split('[FROM Copilot]').length === 2,
+  'bridge: the loop record gains Copilot\'s real reply in place of the pending block — one Copilot block, API blocks untouched');
+
+  // Fixtures for the HTTP result-route linkage test below: a
+  // finished API parent holding the pending block, its delivered
+  // device child, and the delegated hop row — exactly what the
+  // worker leaves behind. The HTTP phase posts the child's result
+  // with the device key and reads the parent back over HTTP.
+  httpFixtureParentId = crypto.randomUUID();
+  httpFixtureChildId = crypto.randomUUID();
+  await db.insert('ai_commands', {
+    id: httpFixtureParentId, device_id: 'api-lane-http', text: 'Have Copilot say the word ready',
+    status: 'done', answer: apiLane.copilotPendingBlock(), delivered_at: null, completed_at: Date.now(),
+    origin: 'hq', lane: 'api', claimed_by: 'fixture', claimed_at: Date.now(), attempts: 1, parent_id: null,
+  });
+  await db.insert('ai_commands', {
+    id: httpFixtureChildId, device_id: 'api-lane-http', text: 'Have Copilot say the word ready',
+    status: 'delivered', answer: null, delivered_at: Date.now(), completed_at: null,
+    origin: 'hq', lane: 'device', claimed_by: null, claimed_at: null, attempts: 0,
+    parent_id: httpFixtureParentId,
+  });
+  await db.insert('ai_runs', {
+    command_id: httpFixtureParentId, member: 'Copilot', model: null, status: 'delegated',
+    error: null, lane: 'device', prompt_tokens: null, completion_tokens: null, cost_microusd: null,
+    started_at: Date.now(), finished_at: Date.now(),
+  });
+
+  // Re-execution idempotency: a parent interrupted mid-delegation
+  // (stuck 'running', child already spawned) re-runs through the
+  // watchdog and still ends up with exactly ONE child.
+  const reParentId = crypto.randomUUID();
+  await db.insert('ai_commands', {
+    id: reParentId, device_id: 'api-lane-test', text: 'Have Copilot say the word ready',
+    status: 'running', answer: null, delivered_at: null, completed_at: null,
+    origin: 'hq', lane: 'api', claimed_by: 'dead-worker', claimed_at: Date.now() - 10 * 60 * 1000, attempts: 1,
+    parent_id: null,
+  });
+  await db.insert('ai_commands', {
+    device_id: 'api-lane-test', text: 'Have Copilot say the word ready',
+    status: 'queued', answer: null, delivered_at: null, completed_at: null,
+    origin: 'hq', lane: 'device', claimed_by: null, claimed_at: null, attempts: 0,
+    parent_id: reParentId,
+  });
+  await bridge.watchdog();
+  await bridge.drain();
+  const reChildren = await db.all('SELECT * FROM ai_commands WHERE parent_id = ?', [reParentId]);
+  const reParent = await db.get('SELECT * FROM ai_commands WHERE id = ?', [reParentId]);
+  ok(reChildren.length === 1 && reParent.status === 'done'
+    && reParent.answer.includes('asked through the phone'),
+  'bridge: a re-executed parent reuses its existing phone child — one parent, one child, however many attempts');
 }
 
 async function runHttpTests(ok) {
@@ -400,6 +528,23 @@ async function runHttpTests(ok) {
   const apiRow = (j.commands || []).find((c) => c.id === apiCmdId);
   ok(!!apiRow && apiRow.lane === 'api' && apiRow.status === 'queued',
     'api lane http: the API-lane command stays queued for the backend worker (worker is off under the test harness)');
+
+  console.log('copilot phone-lane bridge (HTTP result linkage):');
+  r = await call('POST', `/api/muse/ai-commands/${httpFixtureChildId}/result`,
+    { status: 'done', answer: 'Ready — posted by the phone.' }, deviceKey);
+  j = await r.json();
+  ok(r.status === 200 && j.ok === true,
+    'bridge http: the phone posts its Copilot child result with the device key');
+  r = await call('GET', '/api/muse/ai-commands?device_id=api-lane-http', undefined, PIPE);
+  j = await r.json();
+  const fxParent = (j.commands || []).find((c) => c.id === httpFixtureParentId);
+  ok(!!fxParent && fxParent.answer.includes('[FROM Copilot]')
+    && fxParent.answer.includes('via phone') && fxParent.answer.includes('Ready — posted by the phone.')
+    && !fxParent.answer.includes('asked through the phone'),
+  'bridge http: the parent record now shows Copilot\'s real reply labeled via phone — the pending wording is gone');
+  const fxChild = (j.commands || []).find((c) => c.id === httpFixtureChildId);
+  ok(!!fxChild && fxChild.status === 'done',
+    'bridge http: the child itself reads done with its posted answer');
 }
 
 module.exports = { runDbTests, runHttpTests };

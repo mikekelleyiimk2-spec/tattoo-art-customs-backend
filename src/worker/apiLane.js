@@ -23,9 +23,13 @@
 //
 // Scope: grammar ROUTE + HELLO LOOP (slice 1); member adapters
 // Gemini + DeepSeek (slice 1) and ChatGPT, Claude, Grok, Perplexity,
-// Muse (slice 2). Members without an adapter yet, without a
-// configured key, or without any API at all (Copilot, design §3.8)
-// are named in the result with the reason — never silently skipped.
+// Muse (slice 2). Members without an adapter yet or without a
+// configured key are named in the result with the reason — never
+// silently skipped. Copilot has no API at all (design §3.8), so it
+// joins through the phone-lane bridge below (owner order
+// 2026-10-22): a linked device-lane child command the phone
+// executes, whose posted answer is folded back into the parent
+// record labeled "via phone". NO_API is never the final word.
 //
 // Lifecycle: queued -> claimed -> running -> done | failed. Claiming
 // is a race-safe conditional UPDATE (only one claimant wins). A claim
@@ -54,8 +58,10 @@ const ALIASES = {
   grok: 'Grok', xai: 'Grok',
   deepseek: 'DeepSeek',
 };
-// Members with NO consumer API (design §3.8): nothing can call them
-// automatically, so the lane says so instead of faking a route.
+// Members with NO consumer API (design §3.8): no server-side call
+// can reach them. Copilot is bridged through the phone lane (see
+// the bridge section below); memberState still reports no_api for
+// it, and the execution paths preempt that with the bridge.
 const NO_API_MEMBERS = new Set(['Copilot']);
 
 // Estimated prices, USD per 1M tokens (design 2026-10-22 §4 shipped
@@ -454,13 +460,14 @@ async function callMember(ctx, adapter, args) {
   throw lastErr;
 }
 
-async function recordHop(cmd, run, member, model, status, errorCode, out) {
-  await db.insert('ai_runs', {
+async function recordHop(cmd, run, member, model, status, errorCode, out, lane) {
+  return db.insert('ai_runs', {
     command_id: cmd.id,
     member,
     model: model || null,
     status,
     error: errorCode || null,
+    lane: lane || 'api',
     prompt_tokens: out ? out.promptTokens : null,
     completion_tokens: out ? out.completionTokens : null,
     cost_microusd: out ? costMicroUsd(member, out.promptTokens, out.completionTokens) : null,
@@ -469,9 +476,163 @@ async function recordHop(cmd, run, member, model, status, errorCode, out) {
   });
 }
 
+// ── Copilot phone-lane bridge (owner order 2026-10-22) ────────────
+// Copilot has no API (design §3.8), so it joins the team through a
+// pipeline that already exists: the button's device lane. When an
+// API-lane command needs Copilot, the worker spawns a linked
+// device-lane CHILD command (parent_id = the API command's id,
+// migration 099) carrying a plain "Have Copilot ..." instruction
+// the phone's executor already knows how to run. The parent's
+// Copilot block says honestly that Copilot was asked through the
+// phone; when the phone posts the child's result,
+// finalizeCopilotHop swaps the real answer into the parent's
+// record labeled "via phone". A child that fails on the phone
+// shows that failure as the outcome — honest either way, and no
+// answer is ever faked.
+const COPILOT_PENDING_TEXT = 'asked through the phone — Copilot has no API, so it answers through the app on the phone; its reply lands in the log when the phone picks it up';
+const COPILOT_VIA_PHONE_LABEL = 'via phone — answered through the Copilot app on the phone';
+
+function copilotPendingBlock() {
+  return envelope('Copilot', `(${COPILOT_PENDING_TEXT})`);
+}
+
+// The parent's Copilot block, rendered from the child's state:
+// done = the real reply under a via-phone label; failed = the
+// on-phone failure, named; anything else = still out with the
+// phone, stated plainly.
+function copilotChildBlock(child) {
+  if (child && child.status === 'done') {
+    const text = String(child.answer || '').trim();
+    return envelope('Copilot', `(${COPILOT_VIA_PHONE_LABEL})\n${text || '(the phone posted an empty answer)'}`);
+  }
+  if (child && child.status === 'failed') {
+    const why = String(child.answer || '').trim() || 'no answer was posted';
+    return envelope('Copilot', `(via phone — Copilot could not answer on the phone: ${why})`);
+  }
+  return copilotPendingBlock();
+}
+
+async function findCopilotChild(parentId) {
+  return db.get(
+    'SELECT * FROM ai_commands WHERE parent_id = ? ORDER BY created_at ASC LIMIT 1',
+    [parentId]
+  );
+}
+
+// Create the phone child for a parent command, or return the one
+// an earlier execution already spawned — a command id delegates at
+// most one child, however many times it is (re-)executed.
+async function ensureCopilotChild(parentCmd, childText) {
+  const existing = await findCopilotChild(parentCmd.id);
+  if (existing) return existing;
+  const id = crypto.randomUUID();
+  await db.insert('ai_commands', {
+    id,
+    device_id: parentCmd.device_id,
+    text: String(childText || '').slice(0, 2000),
+    status: 'queued',
+    answer: null,
+    created_at: db.now(),
+    delivered_at: null,
+    completed_at: null,
+    origin: parentCmd.origin || 'hq',
+    lane: 'device',
+    claimed_by: null,
+    claimed_at: null,
+    attempts: 0,
+    parent_id: parentCmd.id,
+  });
+  return db.get('SELECT * FROM ai_commands WHERE id = ?', [id]);
+}
+
+// Spawn (or reuse) the phone child for this command's Copilot hop
+// and record the hop in ai_runs on the device lane. Returns
+// { child, state } with state 'pending' | 'answered' | 'failed',
+// mirroring the child's state at this moment.
+async function delegateCopilot(cmd, run, childText) {
+  const child = await ensureCopilotChild(cmd, childText);
+  let state = 'pending';
+  if (child.status === 'done') state = 'answered';
+  else if (child.status === 'failed') state = 'failed';
+  if (state === 'answered') {
+    await recordHop(cmd, run, 'Copilot', null, 'done', null, null, 'device');
+  } else if (state === 'failed') {
+    await recordHop(cmd, run, 'Copilot', null, 'failed', 'PHONE_FAILED', null, 'device');
+  } else {
+    await recordHop(cmd, run, 'Copilot', null, 'delegated', null, null, 'device');
+  }
+  return { child, state };
+}
+
+const COPILOT_BLOCK_RE = /\[FROM Copilot\]\n[\s\S]*?\n\[END\]/;
+
+// Fold a finished phone child's outcome into the parent command's
+// answer text (replacing the pending Copilot block, or appending
+// the block when the text has none) and settle the delegated
+// ai_runs hop. Idempotent: once the child is final, re-running
+// changes nothing. Called by the worker just before it writes the
+// parent's result (a fast phone may have answered mid-execution)
+// and by the device result route when a child posts after the
+// parent already completed. Returns { answer, changed, child }.
+async function finalizeCopilotHop(parentId, answerText) {
+  const child = await findCopilotChild(parentId);
+  const base = String(answerText || '');
+  if (!child || (child.status !== 'done' && child.status !== 'failed')) {
+    return { answer: base, changed: false, child: child || null };
+  }
+  const block = copilotChildBlock(child);
+  let next;
+  if (COPILOT_BLOCK_RE.test(base)) {
+    next = base.replace(COPILOT_BLOCK_RE, block);
+  } else if (base) {
+    next = `${base}\n\n${block}`;
+  } else {
+    next = block;
+  }
+  next = next.slice(0, ANSWER_CAP);
+  const hopStatus = child.status === 'done' ? 'done' : 'failed';
+  const hopError = child.status === 'done' ? null : 'PHONE_FAILED';
+  const delegated = await db.get(
+    "SELECT id FROM ai_runs WHERE command_id = ? AND member = 'Copilot' AND lane = 'device' AND status = 'delegated' ORDER BY started_at ASC LIMIT 1",
+    [parentId]
+  );
+  if (delegated) {
+    await db.update('ai_runs', delegated.id, {
+      status: hopStatus, error: hopError, finished_at: db.now(),
+    });
+  } else {
+    const settled = await db.get(
+      "SELECT id FROM ai_runs WHERE command_id = ? AND member = 'Copilot' AND lane = 'device' LIMIT 1",
+      [parentId]
+    );
+    if (!settled) {
+      await db.insert('ai_runs', {
+        command_id: parentId, member: 'Copilot', model: null,
+        status: hopStatus, error: hopError, lane: 'device',
+        prompt_tokens: null, completion_tokens: null, cost_microusd: null,
+        started_at: child.created_at || db.now(), finished_at: db.now(),
+      });
+    }
+  }
+  return { answer: next, changed: next !== base, child };
+}
+
 // ── Execution ───────────────────────────────────────────────────────
 
 async function executeRoute(cmd, parsed, ctx, run) {
+  if (parsed.member === 'Copilot') {
+    // No API (design §3.8): Copilot is asked through the phone
+    // (owner order 2026-10-22). The child carries this command's
+    // own text — the phone's executor parses "Have Copilot ..."
+    // exactly like a command the owner queued himself. A child
+    // already final (a re-run after the phone answered) speaks
+    // for itself in the block.
+    const { child, state } = await delegateCopilot(cmd, run, cmd.text);
+    return {
+      status: state === 'failed' ? 'failed' : 'done',
+      answer: copilotChildBlock(child),
+    };
+  }
   const st = memberState(parsed.member, ctx.adapters);
   if (st.state !== 'ready') {
     const reason = absenceReason(parsed.member, st.state);
@@ -493,9 +654,35 @@ async function executeHelloLoop(cmd, ctx, run) {
   const logBlocks = []; // successful hops only — what later hops read
   let answered = 0;
   let configuredFailed = 0; // had an adapter + key, but the call errored
-  let notConfigured = 0; // skipped: no adapter yet, no key, or no API
+  let notConfigured = 0; // skipped: no adapter yet, or no key
+  let phonePending = 0; // Copilot: asked through the phone, reply lands later
+  let phoneFailed = 0; // Copilot: the phone leg already reported a failure
   for (let i = 0; i < ROSTER.length; i++) {
     const member = ROSTER[i];
+    if (member === 'Copilot') {
+      // Phone-lane member (owner order 2026-10-22): spawn the
+      // linked device child with this hop's greeting as a plain
+      // instruction the phone types into Copilot. The block in
+      // this round's answer says Copilot was asked through the
+      // phone; the real reply is folded into this record when the
+      // phone posts it (finalizeCopilotHop).
+      let next = null;
+      for (let j = i + 1; j < ROSTER.length; j++) {
+        if (memberState(ROSTER[j], ctx.adapters).state === 'ready') { next = ROSTER[j]; break; }
+      }
+      const greeting = next
+        ? `say hello to the team and greet ${next} by name — ${next} answers right after you. One or two sentences.`
+        : 'say hello to the team and wrap up the greetings. One or two sentences.';
+      const logSoFar = logBlocks.length ? `\n\nTeam log so far:\n${logBlocks.join('\n\n')}` : '';
+      const { child, state } = await delegateCopilot(cmd, run,
+        `Have Copilot ${greeting}${logSoFar}`.slice(0, 1900));
+      const block = copilotChildBlock(child);
+      blocks.push(block);
+      if (state === 'answered') { logBlocks.push(block); answered++; }
+      else if (state === 'failed') { phoneFailed++; }
+      else { phonePending++; }
+      continue;
+    }
     const st = memberState(member, ctx.adapters);
     if (st.state !== 'ready') {
       const reason = absenceReason(member, st.state);
@@ -533,17 +720,30 @@ async function executeHelloLoop(cmd, ctx, run) {
   if (!answered) {
     // The summary must say WHY nobody answered, accurately: a member
     // that IS configured but errored (e.g. provider HTTP 503) is not
-    // "not configured", and the counts keep the two apart.
+    // "not configured", and the counts keep the two apart. A
+    // Copilot hop still out with the phone is neither: the command
+    // completes and says the reply lands when the phone picks it
+    // up — the loop record is upgraded in place when it does.
     const bits = [];
     if (configuredFailed) {
       bits.push(`${configuredFailed} configured ${configuredFailed === 1 ? 'member' : 'members'} tried and failed — the reasons are in their blocks above`);
     }
+    if (phoneFailed) {
+      bits.push('Copilot was asked through the phone but could not answer there');
+    }
     if (notConfigured) {
       bits.push(`${notConfigured} ${notConfigured === 1 ? 'member is' : 'members are'} not configured on the API lane yet`);
     }
+    const detail = bits.length ? ` — ${bits.join('; ')}` : '';
+    if (phonePending) {
+      return {
+        status: 'done',
+        answer: `${answer}\n\nNo member answered over the API this round${detail}. Copilot was asked through the phone; its reply lands in the log when the phone picks it up.`,
+      };
+    }
     return {
       status: 'failed',
-      answer: `${answer}\n\nNo member of the team could answer — ${bits.join('; ')}.`,
+      answer: `${answer}\n\nNo member of the team could answer${detail}.`,
     };
   }
   return { status: 'done', answer };
@@ -624,6 +824,12 @@ function createWorker(opts = {}) {
     });
     try {
       const result = await executeCommand(cmd, ctx, run);
+      // A Copilot phone child may have posted its result while
+      // this command executed (or before a re-run): fold the real
+      // answer into the record before it is written, so a pending
+      // block never overwrites a reply that already landed.
+      const fin = await finalizeCopilotHop(cmd.id, result.answer);
+      result.answer = fin.answer;
       await db.update('ai_commands', cmd.id, {
         status: result.status,
         answer: String(result.answer || '').slice(0, ANSWER_CAP),
@@ -687,6 +893,8 @@ module.exports = {
   ROSTER, ALIASES, PRICES, PRIMER, MemberError,
   resolveMember, parseCommand, envelope, absenceBlock, costMicroUsd,
   buildAdapters, memberState, absenceReason,
+  COPILOT_PENDING_TEXT, copilotPendingBlock, copilotChildBlock,
+  findCopilotChild, ensureCopilotChild, delegateCopilot, finalizeCopilotHop,
   createWorker, laneEnabled, start, stop,
   POLL_MS, WATCHDOG_MS, MAX_ATTEMPTS,
 };
