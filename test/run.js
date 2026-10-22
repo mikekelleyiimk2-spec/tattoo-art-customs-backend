@@ -996,6 +996,66 @@ async function main() {
     ok(r.status === 401, 'lead lane: device thread rejects a wrong device key');
   }
 
+  // Muse service pipe: AI Memory Store (migration 097). Versioned
+  // entries: create -> current shows v1; correct -> v2 current with
+  // supersedes_id at v1, v1 survives in history; digest renders the
+  // current value only; scope/kind filters hold.
+  {
+    const PIPE_M = process.env.MUSE_SERVICE_TOKEN;
+    const mem = (method, path, body, token) => fetch(`http://localhost:${PORT}${path}`, {
+      method,
+      headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) },
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    });
+    let r = await mem('POST', '/api/muse/memory', { scope: 'test-mem', kind: 'order', key: 'k1', value: 'v1 text' }, 'wrong-token');
+    ok(r.status === 401, 'memory store rejects wrong service token');
+    r = await mem('GET', '/api/muse/memory?scope=test-mem');
+    ok(r.status === 401, 'memory list rejects missing service token');
+    r = await mem('POST', '/api/muse/memory', { scope: 'test-mem', kind: 'bogus', key: 'k1', value: 'x' }, PIPE_M);
+    ok(r.status === 400, 'memory store rejects an unknown kind');
+    r = await mem('POST', '/api/muse/memory', { scope: 'test-mem', kind: 'order', key: 'button-rule', value: 'first wording', source: 'test' }, PIPE_M);
+    let j = await r.json();
+    ok(r.status === 200 && j.ok && j.entry && j.entry.version === 1 && j.entry.supersedes_id === null
+      && j.entry.scope === 'test-mem' && j.entry.key === 'button-rule',
+      'memory create returns v1 with no supersedes');
+    const v1Id = j.entry.id;
+    r = await mem('GET', '/api/muse/memory?scope=test-mem&kind=order', undefined, PIPE_M);
+    j = await r.json();
+    const cur1 = (j.entries || []).filter((e) => e.key === 'button-rule');
+    ok(r.status === 200 && cur1.length === 1 && cur1[0].id === v1Id && cur1[0].value === 'first wording',
+      'memory current list shows v1');
+    r = await mem('POST', '/api/muse/memory', { scope: 'test-mem', kind: 'order', key: 'button-rule', value: 'corrected wording', source: 'test' }, PIPE_M);
+    j = await r.json();
+    ok(r.status === 200 && j.ok && j.entry && j.entry.version === 2 && j.entry.supersedes_id === v1Id,
+      'memory correction returns v2 superseding v1');
+    const v2Id = j.entry.id;
+    r = await mem('GET', '/api/muse/memory?scope=test-mem', undefined, PIPE_M);
+    j = await r.json();
+    const cur2 = (j.entries || []).filter((e) => e.key === 'button-rule');
+    ok(cur2.length === 1 && cur2[0].id === v2Id && cur2[0].value === 'corrected wording',
+      'memory current list shows only v2 after the correction');
+    const rowCount = sdb.prepare('SELECT COUNT(*) AS c FROM memory_entries WHERE scope = ? AND key = ?').get('test-mem', 'button-rule').c;
+    ok(rowCount === 2, 'memory history rows are never overwritten (both versions stored)');
+    r = await mem('GET', '/api/muse/memory/history?scope=test-mem&key=button-rule', undefined, PIPE_M);
+    j = await r.json();
+    ok(r.status === 200 && j.entries.length === 2 && j.entries[0].version === 1 && j.entries[1].version === 2
+      && j.entries[1].supersedes_id === v1Id,
+      'memory history returns the full version chain oldest first');
+    r = await mem('GET', '/api/muse/memory/digest', undefined, PIPE_M);
+    const digest = await r.text();
+    ok(r.status === 200 && digest.includes('corrected wording') && !digest.includes('first wording'),
+      'memory digest renders the current value only');
+    r = await mem('POST', '/api/muse/memory', { scope: 'test-mem-b', kind: 'order', key: 'button-rule', value: 'other scope wording' }, PIPE_M);
+    ok(r.status === 200, 'memory create in a second scope');
+    r = await mem('GET', '/api/muse/memory?scope=test-mem', undefined, PIPE_M);
+    j = await r.json();
+    ok((j.entries || []).every((e) => e.scope === 'test-mem')
+      && !(j.entries || []).some((e) => e.value === 'other scope wording'),
+      'memory scope filter excludes other scopes');
+    r = await mem('GET', '/api/muse/memory/history?scope=test-mem', undefined, PIPE_M);
+    ok(r.status === 400, 'memory history requires scope and key');
+  }
+
   // Muse service pipe: POST /api/muse/owner-sweep runs the daily owner sweep
   // on the serving DB (read-only report + idempotent clearing).
   {

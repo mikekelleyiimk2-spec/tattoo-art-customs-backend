@@ -374,6 +374,138 @@ router.post('/lead-messages/:id/reply', express.json(), async (req, res) => {
   }
 });
 
+// ── AI Memory Store (owner order 2026-10-22) ─────────────────────
+// AIs retain nothing between calls, so memory lives OUTSIDE the AI:
+// this is the durable store that gets retrieved and injected into
+// every call, and rechecked against reality. One row per version —
+// a correction inserts version+1 with supersedes_id pointing at the
+// prior current row; history is never overwritten or deleted. An
+// entry is CURRENT when no other row supersedes it.
+// Table: memory_entries (migration 097). SERVICE auth only in this
+// slice — no device-token writes.
+const MEMORY_KINDS = ['order', 'fact', 'preference', 'event'];
+const MEMORY_NOT_SUPERSEDED = 'NOT EXISTS (SELECT 1 FROM memory_entries nxt WHERE nxt.supersedes_id = cur.id)';
+
+async function currentMemoryEntry(scope, key) {
+  return db.get(
+    `SELECT cur.* FROM memory_entries cur
+      WHERE cur.scope = ? AND cur.key = ? AND ${MEMORY_NOT_SUPERSEDED}
+      ORDER BY cur.version DESC LIMIT 1`,
+    [scope, key]
+  );
+}
+
+// POST /api/muse/memory — SERVICE auth. Store one memory entry.
+// body: { scope, kind, key, value, source }. When a current entry
+// already exists for (scope, key), the new row becomes version+1 and
+// supersedes it. Returns { ok, entry } with the stored row.
+router.post('/memory', express.json(), async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const scope = String(req.body?.scope || '').trim();
+    const kind = String(req.body?.kind || '').trim();
+    const key = String(req.body?.key || '').trim().slice(0, 200);
+    const value = String(req.body?.value || '').trim().slice(0, 8000);
+    const source = String(req.body?.source || '').trim().slice(0, 200) || null;
+    if (!/^[A-Za-z0-9_-]{1,80}$/.test(scope)) {
+      return res.status(400).json({ ok: false, error: 'bad scope' });
+    }
+    if (!MEMORY_KINDS.includes(kind)) {
+      return res.status(400).json({ ok: false, error: 'kind must be one of: ' + MEMORY_KINDS.join(', ') });
+    }
+    if (!key) return res.status(400).json({ ok: false, error: 'key required' });
+    if (!value) return res.status(400).json({ ok: false, error: 'value required' });
+    const prior = await currentMemoryEntry(scope, key);
+    const id = crypto.randomUUID();
+    await db.insert('memory_entries', {
+      id, scope, kind, key, value,
+      version: prior ? prior.version + 1 : 1,
+      supersedes_id: prior ? prior.id : null,
+      source, created_at: db.now(),
+    });
+    const entry = await db.get('SELECT * FROM memory_entries WHERE id = ?', [id]);
+    return res.json({ ok: true, entry });
+  } catch (e) {
+    console.error('[muse/memory] store failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'store failed' });
+  }
+});
+
+// GET /api/muse/memory/digest — SERVICE auth. Plain-text rendering of
+// every current entry, grouped by scope then kind. Feeds the Gmail
+// digest and the in-app Memory page: the human-readable memory.
+router.get('/memory/digest', async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const rows = await db.all(
+      `SELECT cur.* FROM memory_entries cur WHERE ${MEMORY_NOT_SUPERSEDED}
+        ORDER BY cur.scope ASC, cur.kind ASC, cur.key ASC`
+    );
+    const lines = [`# AI Memory Digest — ${new Date().toISOString()}`, ''];
+    let lastScope = null;
+    let lastKind = null;
+    for (const r of rows) {
+      if (r.scope !== lastScope) { lines.push(`## scope: ${r.scope}`, ''); lastScope = r.scope; lastKind = null; }
+      if (r.kind !== lastKind) { lines.push(`### ${r.kind}`, ''); lastKind = r.kind; }
+      lines.push(`- ${r.key}: ${r.value} (v${r.version})`);
+    }
+    if (!rows.length) lines.push('(no memory entries yet)');
+    lines.push('');
+    return res.type('text/plain').send(lines.join('\n'));
+  } catch (e) {
+    console.error('[muse/memory/digest] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'digest failed' });
+  }
+});
+
+// GET /api/muse/memory/history?scope=&key= — SERVICE auth. The full
+// version chain for one (scope, key), oldest first — how a correction
+// is audited and rechecked.
+router.get('/memory/history', async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const scope = String(req.query.scope || '').trim();
+    const key = String(req.query.key || '').trim();
+    if (!scope || !key) {
+      return res.status(400).json({ ok: false, error: 'scope and key required' });
+    }
+    const rows = await db.all(
+      'SELECT * FROM memory_entries WHERE scope = ? AND key = ? ORDER BY version ASC',
+      [scope, key]
+    );
+    return res.json({ ok: true, entries: rows });
+  } catch (e) {
+    console.error('[muse/memory/history] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'history failed' });
+  }
+});
+
+// GET /api/muse/memory?scope=&kind= — SERVICE auth. Current entries
+// only (a row nobody supersedes), optionally filtered by scope
+// and/or kind, ordered for stable injection into a call.
+router.get('/memory', async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const clauses = [MEMORY_NOT_SUPERSEDED];
+    const params = [];
+    if (req.query.scope) { clauses.push('cur.scope = ?'); params.push(String(req.query.scope)); }
+    if (req.query.kind) { clauses.push('cur.kind = ?'); params.push(String(req.query.kind)); }
+    const rows = await db.all(
+      `SELECT cur.* FROM memory_entries cur WHERE ${clauses.join(' AND ')}
+        ORDER BY cur.scope ASC, cur.kind ASC, cur.key ASC`,
+      params
+    );
+    return res.json({ ok: true, entries: rows });
+  } catch (e) {
+    console.error('[muse/memory] list failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'list failed' });
+  }
+});
+
 // GET /api/muse/ios-sales?since=<order id>
 // Returns paid ios_app orders newer than `since` (newest first, max 50).
 // Powers the owner's "notify me on every iOS app sale" watcher.
