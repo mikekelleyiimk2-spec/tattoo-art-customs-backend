@@ -14,6 +14,11 @@ const apiLane = require('../src/worker/apiLane');
 const BASE = 'http://localhost:4137';
 const TEST_GEMINI_KEY = 'test-gemini-key-not-real';
 const TEST_DEEPSEEK_KEY = 'test-deepseek-key-not-real';
+const TEST_OPENAI_KEY = 'test-openai-key-not-real';
+const TEST_ANTHROPIC_KEY = 'test-anthropic-key-not-real';
+const TEST_XAI_KEY = 'test-xai-key-not-real';
+const TEST_PERPLEXITY_KEY = 'test-perplexity-key-not-real';
+const TEST_META_KEY = 'test-meta-key-not-real';
 
 function jsonResponse(status, payload) {
   return {
@@ -39,6 +44,41 @@ function mockFetch(calls) {
         choices: [{ message: { content: 'Ready.' } }],
         usage: { prompt_tokens: 100, completion_tokens: 5 },
         model: 'deepseek-flash',
+      });
+    }
+    if (url.includes('api.openai.com')) {
+      return jsonResponse(200, {
+        choices: [{ message: { content: 'Hello from ChatGPT!' } }],
+        usage: { prompt_tokens: 200, completion_tokens: 40 },
+        model: 'gpt-6.1-sol',
+      });
+    }
+    if (url.includes('api.anthropic.com')) {
+      return jsonResponse(200, {
+        content: [{ type: 'text', text: 'Hello from Claude!' }],
+        usage: { input_tokens: 180, output_tokens: 25 },
+        model: 'claude-sonnet-5-5',
+      });
+    }
+    if (url.includes('api.x.ai')) {
+      return jsonResponse(200, {
+        choices: [{ message: { content: 'Hello from Grok!' } }],
+        usage: { prompt_tokens: 150, completion_tokens: 20 },
+        model: 'grok-4.3',
+      });
+    }
+    if (url.includes('api.perplexity.ai')) {
+      return jsonResponse(200, {
+        choices: [{ message: { content: 'Hello from Perplexity!' } }],
+        usage: { prompt_tokens: 100, completion_tokens: 5 },
+        model: 'sonar',
+      });
+    }
+    if (url.includes('api.meta.ai')) {
+      return jsonResponse(200, {
+        choices: [{ message: { content: 'Hello from Muse!' } }],
+        usage: { prompt_tokens: 160, completion_tokens: 30 },
+        model: 'muse-spark-1.3',
       });
     }
     throw new Error(`mock fetch: unexpected URL ${url}`);
@@ -70,6 +110,10 @@ async function runDbTests(ok) {
   ok(apiLane.resolveMember('gpt') === 'ChatGPT' && apiLane.resolveMember('xai') === 'Grok',
     'parse: member aliases resolve');
   ok(apiLane.costMicroUsd('DeepSeek', 100, 5) === 18, 'cost: DeepSeek 100 in / 5 out = 18 micro-USD at design rates');
+  ok(apiLane.costMicroUsd('ChatGPT', 200, 40) === 800, 'cost: ChatGPT 200 in / 40 out = 800 micro-USD at design rates');
+  ok(apiLane.costMicroUsd('Claude', 180, 25) === 610, 'cost: Claude 180 in / 25 out = 610 micro-USD at design rates');
+  ok(apiLane.costMicroUsd('Perplexity', 100, 5) === 5105,
+    'cost: Perplexity 100 in / 5 out = 105 token micro-USD + the 5000 micro-USD per-request fee');
 
   console.log('api lane worker (both adapters configured, mocked HTTP):');
   const calls = [];
@@ -131,14 +175,150 @@ async function runDbTests(ok) {
   const gptId = await insertCmd('Have ChatGPT say the word ready');
   await keyed.drain();
   const gptRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [gptId]);
-  ok(gptRow.status === 'failed' && gptRow.answer.includes('not on the API lane yet'),
-    'route: a member with no adapter yet fails honestly, by name');
+  ok(gptRow.status === 'failed' && gptRow.answer.includes('not configured on the server (no API key set)'),
+    'route: a member with an adapter but no key (slice 2) fails honestly as not configured, by name');
+  ok(!/paste/i.test(gptRow.answer),
+    'route: the not-configured failure never hands the user a copy-paste chore (owner law)');
 
   const unsupId = await insertCmd('sing me a song');
   await keyed.drain();
   const unsupRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [unsupId]);
   ok(unsupRow.status === 'failed' && unsupRow.answer.includes('cannot run that command yet'),
     'grammar: an unsupported command fails honestly instead of sitting queued');
+
+  console.log('api lane worker (slice 2 — every API member configured, mocked HTTP):');
+  const calls2 = [];
+  const fullEnv = {};
+  fullEnv['OPENAI' + '_API_KEY'] = TEST_OPENAI_KEY;
+  fullEnv['ANTHROPIC' + '_API_KEY'] = TEST_ANTHROPIC_KEY;
+  fullEnv['XAI' + '_API_KEY'] = TEST_XAI_KEY;
+  fullEnv['PERPLEXITY' + '_API_KEY'] = TEST_PERPLEXITY_KEY;
+  fullEnv['META_MODEL' + '_API_KEY'] = TEST_META_KEY;
+  fullEnv['GEMINI' + '_API_KEY'] = TEST_GEMINI_KEY;
+  fullEnv['DEEPSEEK' + '_API_KEY'] = TEST_DEEPSEEK_KEY;
+  const full = apiLane.createWorker({
+    env: fullEnv, fetchImpl: mockFetch(calls2), retryDelayMs: 0, workerId: 'test-worker-2',
+  });
+
+  const oaiId = await insertCmd('Have ChatGPT say the word ready');
+  await full.drain();
+  const oaiRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [oaiId]);
+  ok(oaiRow.status === 'done' && oaiRow.answer === '[FROM ChatGPT]\nHello from ChatGPT!\n[END]',
+    'route: ChatGPT answer posted back as a [FROM ChatGPT] envelope');
+  const oaiCall = calls2.find((c) => c.url.includes('api.openai.com'));
+  ok(!!oaiCall && oaiCall.url.includes('/v1/chat/completions')
+    && oaiCall.opts.headers.authorization === `Bearer ${TEST_OPENAI_KEY}`
+    && !oaiCall.url.includes(TEST_OPENAI_KEY)
+    && JSON.parse(oaiCall.opts.body).model === 'gpt-6.1-sol',
+  'route: ChatGPT key travels as a Bearer header only; default model is gpt-6.1-sol (design §3.1)');
+  const oaiHop = await db.get("SELECT * FROM ai_runs WHERE command_id = ? AND member = 'ChatGPT'", [oaiId]);
+  ok(!!oaiHop && oaiHop.status === 'done' && oaiHop.prompt_tokens === 200
+    && oaiHop.completion_tokens === 40 && oaiHop.cost_microusd === 800,
+  'route: ai_runs records the ChatGPT hop with measured tokens and estimated cost');
+
+  const clId = await insertCmd('Have Claude say the word ready');
+  await full.drain();
+  const clRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [clId]);
+  ok(clRow.status === 'done' && clRow.answer === '[FROM Claude]\nHello from Claude!\n[END]',
+    'route: Claude answer (Messages format) posted back as a [FROM Claude] envelope');
+  const clCall = calls2.find((c) => c.url.includes('api.anthropic.com'));
+  const clBody = clCall ? JSON.parse(clCall.opts.body) : {};
+  ok(!!clCall && clCall.url.includes('/v1/messages')
+    && clCall.opts.headers['x-api-key'] === TEST_ANTHROPIC_KEY
+    && clCall.opts.headers['anthropic-version'] === '2023-06-01'
+    && !clCall.url.includes(TEST_ANTHROPIC_KEY)
+    && clBody.model === 'claude-sonnet-5-5' && typeof clBody.system === 'string'
+    && Array.isArray(clBody.messages) && clBody.messages[0].role === 'user',
+  'route: Claude key travels as the x-api-key header only; Messages shape (system field + messages) with the design default model');
+  const clHop = await db.get("SELECT * FROM ai_runs WHERE command_id = ? AND member = 'Claude'", [clId]);
+  ok(!!clHop && clHop.status === 'done' && clHop.prompt_tokens === 180
+    && clHop.completion_tokens === 25 && clHop.cost_microusd === 610,
+  'route: ai_runs records the Claude hop (input/output tokens mapped) with estimated cost');
+
+  const grId = await insertCmd('Have Grok say the word ready');
+  await full.drain();
+  const grRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [grId]);
+  ok(grRow.status === 'done' && grRow.answer === '[FROM Grok]\nHello from Grok!\n[END]',
+    'route: Grok answer posted back as a [FROM Grok] envelope');
+  const grCall = calls2.find((c) => c.url.includes('api.x.ai'));
+  ok(!!grCall && grCall.opts.headers.authorization === `Bearer ${TEST_XAI_KEY}`
+    && !grCall.url.includes(TEST_XAI_KEY) && JSON.parse(grCall.opts.body).model === 'grok-4.3',
+  'route: Grok key travels as a Bearer header only; default model is grok-4.3 (design §4)');
+
+  const pxId = await insertCmd('Have Perplexity say the word ready');
+  await full.drain();
+  const pxRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [pxId]);
+  ok(pxRow.status === 'done' && pxRow.answer === '[FROM Perplexity]\nHello from Perplexity!\n[END]',
+    'route: Perplexity answer posted back as a [FROM Perplexity] envelope');
+  const pxCall = calls2.find((c) => c.url.includes('api.perplexity.ai'));
+  ok(!!pxCall && pxCall.opts.headers.authorization === `Bearer ${TEST_PERPLEXITY_KEY}`
+    && !pxCall.url.includes(TEST_PERPLEXITY_KEY) && JSON.parse(pxCall.opts.body).model === 'sonar',
+  'route: Perplexity key travels as a Bearer header only; default model is sonar');
+  const pxHop = await db.get("SELECT * FROM ai_runs WHERE command_id = ? AND member = 'Perplexity'", [pxId]);
+  ok(!!pxHop && pxHop.status === 'done' && pxHop.cost_microusd === 5105,
+    'route: ai_runs records the Perplexity hop cost including the per-request fee');
+
+  const muId = await insertCmd('Have Muse say the word ready');
+  await full.drain();
+  const muRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [muId]);
+  ok(muRow.status === 'done' && muRow.answer === '[FROM Muse]\nHello from Muse!\n[END]',
+    'route: Muse answer (Meta Model API) posted back as a [FROM Muse] envelope');
+  const muCall = calls2.find((c) => c.url.includes('api.meta.ai'));
+  ok(!!muCall && muCall.opts.headers.authorization === `Bearer ${TEST_META_KEY}`
+    && !muCall.url.includes(TEST_META_KEY) && JSON.parse(muCall.opts.body).model === 'muse-spark-1.3',
+  'route: Muse key travels as a Bearer header only; default model is muse-spark-1.3 (standard tier, never contributor)');
+
+  const copId = await insertCmd('Have Copilot say the word ready');
+  await full.drain();
+  const copRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [copId]);
+  ok(copRow.status === 'failed' && copRow.answer.includes('has no API'),
+    'route: Copilot still fails honestly as NO_API even with every key set — no substitute product is ever called under its name');
+  const copHop = await db.get("SELECT * FROM ai_runs WHERE command_id = ? AND member = 'Copilot'", [copId]);
+  ok(!!copHop && copHop.status === 'skipped' && copHop.error === 'NO_API',
+    'route: ai_runs records the Copilot hop as skipped with error NO_API');
+
+  const fullLoopId = await insertCmd('run the hello loop');
+  await full.drain();
+  const fullLoopRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [fullLoopId]);
+  ok(fullLoopRow.status === 'done', 'hello loop (slice 2): completes with the full API team configured');
+  ok(['[FROM Muse]\nHello from Muse!\n[END]', '[FROM ChatGPT]\nHello from ChatGPT!\n[END]',
+    '[FROM Claude]\nHello from Claude!\n[END]', '[FROM Gemini]\nHello from Gemini!\n[END]',
+    '[FROM Perplexity]\nHello from Perplexity!\n[END]', '[FROM Grok]\nHello from Grok!\n[END]',
+    '[FROM DeepSeek]\nReady.\n[END]'].every((b) => fullLoopRow.answer.includes(b)),
+  'hello loop (slice 2): all seven reachable members land real envelope blocks');
+  ok(fullLoopRow.answer.indexOf('[FROM Muse]') < fullLoopRow.answer.indexOf('[FROM ChatGPT]')
+    && fullLoopRow.answer.indexOf('[FROM Grok]') < fullLoopRow.answer.indexOf('[FROM DeepSeek]'),
+  'hello loop (slice 2): hops still report in roster order');
+  const fullLoopRuns = await db.all('SELECT * FROM ai_runs WHERE command_id = ?', [fullLoopId]);
+  const fullLoopHops = fullLoopRuns.filter((r) => r.member);
+  ok(fullLoopRuns.length === 9 && fullLoopHops.filter((r) => r.status === 'done').length === 7
+    && fullLoopHops.filter((r) => r.status === 'skipped').length === 1,
+  'hello loop (slice 2): ai_runs records 7 done hops + Copilot skipped (NO_API)');
+
+  console.log('api lane hello-loop summary accuracy (configured member errors):');
+  const errFetch = async (url) => {
+    if (url.includes('generativelanguage.googleapis.com')) {
+      return jsonResponse(503, { error: { code: 503, message: 'This model is currently experiencing high demand.' } });
+    }
+    throw new Error(`err fetch: unexpected URL ${url}`);
+  };
+  const env503 = {};
+  env503['GEMINI' + '_API_KEY'] = TEST_GEMINI_KEY;
+  const w503 = apiLane.createWorker({ env: env503, fetchImpl: errFetch, retryDelayMs: 0 });
+  const id503 = await insertCmd('run the hello loop');
+  await w503.drain();
+  const row503 = await db.get('SELECT * FROM ai_commands WHERE id = ?', [id503]);
+  ok(row503.status === 'failed' && row503.answer.includes('No member of the team could answer'),
+    'summary: a loop with zero answers still fails and says so');
+  ok(row503.answer.includes('1 configured member tried and failed'),
+    'summary: a configured member that errored (HTTP 503) is counted as configured-but-failed');
+  ok(row503.answer.includes('7 members are not configured'),
+    'summary: the unconfigured members are counted separately and accurately');
+  ok(!row503.answer.includes('nobody is configured'),
+    'summary: never claims "nobody is configured" when a configured member errored (slice-1 wart)');
+  const hop503 = await db.get("SELECT * FROM ai_runs WHERE command_id = ? AND member = 'Gemini'", [id503]);
+  ok(!!hop503 && hop503.status === 'failed' && hop503.error === 'HTTP_503',
+    'summary: ai_runs records the errored hop as failed with error HTTP_503');
 
   console.log('api lane worker (no keys configured — honest failure):');
   const unkeyed = apiLane.createWorker({ env: {}, fetchImpl: mockFetch([]), retryDelayMs: 0 });

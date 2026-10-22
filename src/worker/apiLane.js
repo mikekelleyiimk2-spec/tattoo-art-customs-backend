@@ -10,8 +10,10 @@
 //
 // Owner law baked in (2026-10-22):
 //   - Customers NEVER touch API keys. Keys are server env vars only
-//     (GEMINI_API_KEY, DEEPSEEK_API_KEY). There is no key UI, no key
-//     field, nothing customer-facing about keys anywhere in the lane.
+//     (GEMINI_API_KEY, DEEPSEEK_API_KEY, OPENAI_API_KEY,
+//     ANTHROPIC_API_KEY, XAI_API_KEY, PERPLEXITY_API_KEY,
+//     META_MODEL_API_KEY). There is no key UI, no key field, nothing
+//     customer-facing about keys anywhere in the lane.
 //   - No copy-paste chore, and the Easier Test: the user speaks or
 //     types in the button ONCE and the command goes where he told it,
 //     automatically — fewer steps than opening the app himself. A
@@ -19,10 +21,11 @@
 //     (named, with the reason) — never a fake answer, never a manual
 //     carrying step handed back to the user.
 //
-// Slice 1 scope: grammar ROUTE + HELLO LOOP; adapters Gemini +
-// DeepSeek. Members without an adapter yet, without a configured key,
-// or without any API at all (Copilot, design §3.8) are named in the
-// result with the reason — never silently skipped.
+// Scope: grammar ROUTE + HELLO LOOP (slice 1); member adapters
+// Gemini + DeepSeek (slice 1) and ChatGPT, Claude, Grok, Perplexity,
+// Muse (slice 2). Members without an adapter yet, without a
+// configured key, or without any API at all (Copilot, design §3.8)
+// are named in the result with the reason — never silently skipped.
 //
 // Lifecycle: queued -> claimed -> running -> done | failed. Claiming
 // is a race-safe conditional UPDATE (only one claimant wins). A claim
@@ -56,10 +59,19 @@ const ALIASES = {
 const NO_API_MEMBERS = new Set(['Copilot']);
 
 // Estimated prices, USD per 1M tokens (design 2026-10-22 §4 shipped
-// defaults: Gemini 3.8 Flash paid rate, DeepSeek Flash off-peak).
-// ai_runs stores these estimates next to the MEASURED token counts.
+// defaults: Gemini 3.8 Flash paid rate, DeepSeek Flash off-peak,
+// ChatGPT gpt-6.1-sol, Claude Sonnet 5.5, Grok 4.3, Perplexity sonar,
+// Muse Spark 1.3). Perplexity also charges a per-request fee (design
+// §3.6: $5 per 1,000 requests at low search context = 5000 micro-USD
+// per call), carried as perRequestMicroUsd. ai_runs stores these
+// estimates next to the MEASURED token counts.
 const PRICES = {
+  Muse: { inPerM: 1.25, outPerM: 4.25 },
+  ChatGPT: { inPerM: 2.00, outPerM: 10.00 },
+  Claude: { inPerM: 2.00, outPerM: 10.00 },
   Gemini: { inPerM: 0.75, outPerM: 3.75 },
+  Perplexity: { inPerM: 1.00, outPerM: 1.00, perRequestMicroUsd: 5000 },
+  Grok: { inPerM: 1.25, outPerM: 2.50 },
   DeepSeek: { inPerM: 0.15, outPerM: 0.60 },
 };
 
@@ -122,7 +134,7 @@ function costMicroUsd(member, promptTokens, completionTokens) {
   const p = PRICES[member];
   if (!p) return null;
   const usd = ((promptTokens || 0) * p.inPerM + (completionTokens || 0) * p.outPerM) / 1e6;
-  return Math.round(usd * 1e6);
+  return Math.round(usd * 1e6) + (p.perRequestMicroUsd || 0);
 }
 
 // Provider error text is stored on ai_runs and echoed in results, so it
@@ -247,9 +259,161 @@ function deepseekAdapter(env, fetchImpl) {
   };
 }
 
+// Slice 2: ChatGPT, Grok, Perplexity, and Muse all speak the OpenAI
+// chat-completions shape (design §3), so they share one factory —
+// same Member interface, same error vocabulary, same header-only key
+// handling as DeepSeek above. Only the member's name, endpoint, env
+// names, and default model differ.
+function chatCompletionsAdapter(cfg, env, fetchImpl) {
+  const key = env[cfg.keyEnv] || '';
+  const model = env[cfg.modelEnv] || cfg.defaultModel;
+  const base = (env[cfg.baseEnv] || cfg.defaultBase).replace(/\/$/, '');
+  const member = cfg.member;
+  return {
+    member,
+    model,
+    configured: !!key,
+    async call({ system, user, maxTokens }) {
+      if (!key) throw new MemberError('NO_KEY', `${member} is not configured on the server (no API key set)`);
+      let res;
+      try {
+        res = await fetchWithTimeout(fetchImpl, `${base}/chat/completions`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
+          body: JSON.stringify({
+            model,
+            messages: [
+              { role: 'system', content: system },
+              { role: 'user', content: user },
+            ],
+            max_tokens: maxTokens,
+          }),
+        }, HTTP_TIMEOUT_MS);
+      } catch (e) {
+        throw new MemberError('NETWORK', `${member} call failed: ${cleanErrorText(e.message, key)}`);
+      }
+      const raw = await res.text().catch(() => '');
+      if (res.status === 401 || res.status === 403) {
+        throw new MemberError('BAD_KEY', `${member} rejected the server API key (HTTP ${res.status})`);
+      }
+      if (res.status === 402) {
+        throw new MemberError('NO_BALANCE', `${member} reports no prepaid balance on the server account (HTTP 402)`);
+      }
+      if (!res.ok) {
+        throw new MemberError(`HTTP_${res.status}`, `${member} returned HTTP ${res.status}: ${cleanErrorText(raw, key)}`);
+      }
+      let data;
+      try { data = JSON.parse(raw); } catch { throw new MemberError('BAD_RESPONSE', `${member} returned a response that was not JSON`); }
+      const choice = data && data.choices && data.choices[0];
+      const text = choice && choice.message ? String(choice.message.content || '').trim() : '';
+      if (!text) throw new MemberError('EMPTY', `${member} returned an empty answer`);
+      return {
+        text,
+        model: data.model || model,
+        promptTokens: data.usage ? (data.usage.prompt_tokens ?? null) : null,
+        completionTokens: data.usage ? (data.usage.completion_tokens ?? null) : null,
+      };
+    },
+  };
+}
+
+// ChatGPT — OpenAI (design §3.1), default model gpt-6.1-sol.
+function chatgptAdapter(env, fetchImpl) {
+  return chatCompletionsAdapter({
+    member: 'ChatGPT', keyEnv: 'OPENAI_API_KEY', modelEnv: 'OPENAI_MODEL',
+    defaultModel: 'gpt-6.1-sol', baseEnv: 'OPENAI_BASE_URL', defaultBase: 'https://api.openai.com/v1',
+  }, env, fetchImpl);
+}
+
+// Grok — xAI (design §3.4), OpenAI-compatible, default model grok-4.3.
+function grokAdapter(env, fetchImpl) {
+  return chatCompletionsAdapter({
+    member: 'Grok', keyEnv: 'XAI_API_KEY', modelEnv: 'XAI_MODEL',
+    defaultModel: 'grok-4.3', baseEnv: 'XAI_BASE_URL', defaultBase: 'https://api.x.ai/v1',
+  }, env, fetchImpl);
+}
+
+// Perplexity — Sonar API (design §3.6), OpenAI-shaped chat
+// completions, default model sonar (low search context).
+function perplexityAdapter(env, fetchImpl) {
+  return chatCompletionsAdapter({
+    member: 'Perplexity', keyEnv: 'PERPLEXITY_API_KEY', modelEnv: 'PERPLEXITY_MODEL',
+    defaultModel: 'sonar', baseEnv: 'PERPLEXITY_BASE_URL', defaultBase: 'https://api.perplexity.ai',
+  }, env, fetchImpl);
+}
+
+// Muse — Meta Model API (design §3.7), chat completions shape,
+// default model muse-spark-1.3 (standard tier only — the contributor
+// tier trains on prompts and is never called, per the design).
+function museAdapter(env, fetchImpl) {
+  return chatCompletionsAdapter({
+    member: 'Muse', keyEnv: 'META_MODEL_API_KEY', modelEnv: 'MUSE_MODEL',
+    defaultModel: 'muse-spark-1.3', baseEnv: 'META_MODEL_BASE_URL', defaultBase: 'https://api.meta.ai/v1',
+  }, env, fetchImpl);
+}
+
+// Claude — Anthropic Messages format (design §3.3): the one member
+// that does NOT speak chat completions. Key travels as the x-api-key
+// header; the system prompt is a top-level field; the answer is the
+// text blocks of the content array; usage is input/output tokens.
+function claudeAdapter(env, fetchImpl) {
+  const key = env.ANTHROPIC_API_KEY || '';
+  const model = env.ANTHROPIC_MODEL || 'claude-sonnet-5-5';
+  const base = (env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com').replace(/\/$/, '');
+  return {
+    member: 'Claude',
+    model,
+    configured: !!key,
+    async call({ system, user, maxTokens }) {
+      if (!key) throw new MemberError('NO_KEY', 'Claude is not configured on the server (no API key set)');
+      let res;
+      try {
+        res = await fetchWithTimeout(fetchImpl, `${base}/v1/messages`, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            'x-api-key': key,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model,
+            max_tokens: maxTokens,
+            system,
+            messages: [{ role: 'user', content: user }],
+          }),
+        }, HTTP_TIMEOUT_MS);
+      } catch (e) {
+        throw new MemberError('NETWORK', `Claude call failed: ${cleanErrorText(e.message, key)}`);
+      }
+      const raw = await res.text().catch(() => '');
+      if (res.status === 401 || res.status === 403) {
+        throw new MemberError('BAD_KEY', `Claude rejected the server API key (HTTP ${res.status})`);
+      }
+      if (res.status === 402) {
+        throw new MemberError('NO_BALANCE', 'Claude reports no prepaid balance on the server account (HTTP 402)');
+      }
+      if (!res.ok) {
+        throw new MemberError(`HTTP_${res.status}`, `Claude returned HTTP ${res.status}: ${cleanErrorText(raw, key)}`);
+      }
+      let data;
+      try { data = JSON.parse(raw); } catch { throw new MemberError('BAD_RESPONSE', 'Claude returned a response that was not JSON'); }
+      const blocks = (data && Array.isArray(data.content)) ? data.content : [];
+      const text = blocks.filter((b) => b && b.type === 'text').map((b) => b.text || '').join('').trim();
+      if (!text) throw new MemberError('EMPTY', 'Claude returned an empty answer');
+      return {
+        text,
+        model: data.model || model,
+        promptTokens: data.usage ? (data.usage.input_tokens ?? null) : null,
+        completionTokens: data.usage ? (data.usage.output_tokens ?? null) : null,
+      };
+    },
+  };
+}
+
 function buildAdapters(env, fetchImpl) {
   const map = new Map();
-  for (const make of [geminiAdapter, deepseekAdapter]) {
+  for (const make of [museAdapter, chatgptAdapter, claudeAdapter, geminiAdapter,
+    perplexityAdapter, grokAdapter, deepseekAdapter]) {
     const a = make(env, fetchImpl);
     map.set(a.member, a);
   }
@@ -328,12 +492,15 @@ async function executeHelloLoop(cmd, ctx, run) {
   const blocks = [];
   const logBlocks = []; // successful hops only — what later hops read
   let answered = 0;
+  let configuredFailed = 0; // had an adapter + key, but the call errored
+  let notConfigured = 0; // skipped: no adapter yet, no key, or no API
   for (let i = 0; i < ROSTER.length; i++) {
     const member = ROSTER[i];
     const st = memberState(member, ctx.adapters);
     if (st.state !== 'ready') {
       const reason = absenceReason(member, st.state);
       blocks.push(absenceBlock(member, reason.text));
+      notConfigured++;
       await recordHop(cmd, run, member, null, 'skipped', reason.code, null);
       continue;
     }
@@ -358,14 +525,25 @@ async function executeHelloLoop(cmd, ctx, run) {
       await recordHop(cmd, run, member, out.model, 'done', null, out);
     } catch (e) {
       blocks.push(absenceBlock(member, e.message));
+      configuredFailed++;
       await recordHop(cmd, run, member, null, 'failed', e.code || 'ERROR', null);
     }
   }
   const answer = blocks.join('\n\n');
   if (!answered) {
+    // The summary must say WHY nobody answered, accurately: a member
+    // that IS configured but errored (e.g. provider HTTP 503) is not
+    // "not configured", and the counts keep the two apart.
+    const bits = [];
+    if (configuredFailed) {
+      bits.push(`${configuredFailed} configured ${configuredFailed === 1 ? 'member' : 'members'} tried and failed — the reasons are in their blocks above`);
+    }
+    if (notConfigured) {
+      bits.push(`${notConfigured} ${notConfigured === 1 ? 'member is' : 'members are'} not configured on the API lane yet`);
+    }
     return {
       status: 'failed',
-      answer: `${answer}\n\nNo member of the team could answer — nobody is configured on the API lane yet.`,
+      answer: `${answer}\n\nNo member of the team could answer — ${bits.join('; ')}.`,
     };
   }
   return { status: 'done', answer };
@@ -377,7 +555,7 @@ async function executeCommand(cmd, ctx, run) {
   if (parsed.type === 'hello_loop') return executeHelloLoop(cmd, ctx, run);
   return {
     status: 'failed',
-    answer: `The API lane cannot run that command yet: "${cmd.text}". Slice 1 runs "Have <AI> ..." requests and the hello loop; the rest of the team grammar lands in later slices.`,
+    answer: `The API lane cannot run that command yet: "${cmd.text}". The lane runs "Have <AI> ..." requests and the hello loop; the rest of the team grammar lands in later slices.`,
   };
 }
 

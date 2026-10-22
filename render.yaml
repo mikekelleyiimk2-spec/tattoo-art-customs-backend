@@ -79,14 +79,25 @@ services:
         sync: false
       - key: WISE_PROFILE_ID
         sync: false
-      # AI Master Button API lane (slice 1): server-side provider keys
-      # ONLY — customers never see or enter keys. Values are set in the
-      # Render dashboard when the owner creates each provider account.
+      # AI Master Button API lane (slices 1-2): server-side provider
+      # keys ONLY — customers never see or enter keys. Values are set
+      # in the Render dashboard when the owner creates each provider
+      # account.
       - key: API_LANE_ENABLED
         value: "true"
       - key: GEMINI_API_KEY
         sync: false
       - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: XAI_API_KEY
+        sync: false
+      - key: PERPLEXITY_API_KEY
+        sync: false
+      - key: META_MODEL_API_KEY
         sync: false
 
 databases:
