@@ -371,13 +371,21 @@ async function runDbTests(ok) {
   const nkId = await insertCmd('Have Gemini say the word ready');
   await unkeyed.drain();
   const nkRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [nkId]);
-  ok(nkRow.status === 'failed' && nkRow.answer.includes('not configured'),
-    'missing key: the run fails honestly with a "not configured" result — never a fake answer');
+  ok(nkRow.status === 'done' && nkRow.answer.includes('not configured')
+    && nkRow.answer.includes('asked through the phone'),
+  'missing key (slice 3.5): with no API member able to answer, the member is asked through the phone instead — the block names the unconfigured API path AND the phone ask, never a fake answer');
   ok(!/paste/i.test(nkRow.answer),
     'missing key: the failure never hands the user a copy-paste chore (owner law)');
-  const nkHop = await db.get("SELECT * FROM ai_runs WHERE command_id = ? AND member = 'Gemini'", [nkId]);
+  const nkHop = await db.get("SELECT * FROM ai_runs WHERE command_id = ? AND member = 'Gemini' AND lane = 'api'", [nkId]);
   ok(!!nkHop && nkHop.status === 'skipped' && nkHop.error === 'NO_KEY',
-    'missing key: ai_runs records the hop as skipped with error NO_KEY');
+    'missing key: ai_runs records the API hop as skipped with error NO_KEY');
+  const nkDeviceHop = await db.get("SELECT * FROM ai_runs WHERE command_id = ? AND member = 'Gemini' AND lane = 'device'", [nkId]);
+  ok(!!nkDeviceHop && nkDeviceHop.status === 'delegated',
+    'missing key (slice 3.5): ai_runs also records the device-lane delegation hop — both paths in the ledger');
+  const nkChild = await db.get('SELECT * FROM ai_commands WHERE parent_id = ?', [nkId]);
+  ok(!!nkChild && nkChild.lane === 'device' && nkChild.status === 'queued'
+    && nkChild.text === 'Have Gemini say the word ready',
+  'missing key (slice 3.5): exactly one linked device-lane child carries the command text for the phone executor');
   const nkLoopId = await insertCmd('run the hello loop');
   await unkeyed.drain();
   const nkLoopRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [nkLoopId]);
@@ -789,9 +797,107 @@ async function runDbTests(ok) {
   const foNoneId = await insertCmd('Have ChatGPT say the word ready', 'api', { device_id: 's3-failover-none' });
   await unkeyed.drain();
   const foNoneRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [foNoneId]);
-  ok(foNoneRow.status === 'failed' && foNoneRow.answer.includes('not configured')
-    && foNoneRow.answer.includes('no other member is configured to take over'),
-  'slice 3 failover: with nobody configured to take over, the route settles failed with the honest reason');
+  ok(foNoneRow.status === 'done' && foNoneRow.answer.includes('[FROM ChatGPT]')
+    && foNoneRow.answer.includes('not configured') && foNoneRow.answer.includes('asked through the phone'),
+  'slice 3.5 fallback: a NO_KEY member with no configured failover taker is asked through the phone — its block names the unconfigured API path and the phone ask');
+  const foNoneChild = await db.get('SELECT * FROM ai_commands WHERE parent_id = ?', [foNoneId]);
+  ok(!!foNoneChild && foNoneChild.lane === 'device' && foNoneChild.status === 'queued'
+    && foNoneChild.text === 'Have ChatGPT say the word ready',
+  'slice 3.5 fallback: a linked device-lane child spawns for the NO_KEY member, carrying the command text');
+  const foNoneApiHop = await db.get("SELECT * FROM ai_runs WHERE command_id = ? AND member = 'ChatGPT' AND lane = 'api'", [foNoneId]);
+  const foNoneDevHop = await db.get("SELECT * FROM ai_runs WHERE command_id = ? AND member = 'ChatGPT' AND lane = 'device'", [foNoneId]);
+  ok(!!foNoneApiHop && foNoneApiHop.status === 'skipped' && foNoneApiHop.error === 'NO_KEY'
+    && !!foNoneDevHop && foNoneDevHop.status === 'delegated',
+  'slice 3.5 fallback: ai_runs records BOTH hops — the API attempt (skipped, NO_KEY) and the device delegation');
+
+  console.log('api lane slice 3.5 — phone-lane fallback for every member:');
+  // The phone answers the fallback child: the reply folds into
+  // the parent's log in place, labeled via phone.
+  await db.update('ai_commands', foNoneChild.id, {
+    status: 'done', answer: 'Ready — from the ChatGPT pane on the phone.', completed_at: Date.now(),
+  });
+  const finG = await apiLane.finalizeMemberHop(foNoneId, 'ChatGPT', foNoneRow.answer);
+  ok(finG.changed && finG.answer.includes('[FROM ChatGPT]')
+    && finG.answer.includes('via phone — answered through the ChatGPT app on the phone')
+    && finG.answer.includes('Ready — from the ChatGPT pane on the phone.')
+    && !finG.answer.includes('asked through the phone'),
+  'slice 3.5 fallback: when the phone posts, the real reply folds into the parent record labeled via phone, replacing the pending block');
+  const finGHop = await db.get("SELECT * FROM ai_runs WHERE command_id = ? AND member = 'ChatGPT' AND lane = 'device'", [foNoneId]);
+  ok(!!finGHop && finGHop.status === 'done',
+    'slice 3.5 fallback: the delegated ai_runs hop settles to done when the phone answers');
+
+  // The phone cannot answer the fallback child: the fold-in shows
+  // the double failure honestly.
+  const fbFailId = await insertCmd('Have Grok say the word ready', 'api', { device_id: 's3-fallback-fail' });
+  await unkeyed.drain();
+  const fbFailRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [fbFailId]);
+  const fbFailChild = await db.get('SELECT * FROM ai_commands WHERE parent_id = ?', [fbFailId]);
+  ok(fbFailRow.status === 'done' && !!fbFailChild && fbFailChild.text === 'Have Grok say the word ready',
+    'slice 3.5 fallback: the Grok route also spawns its phone child when no API member can take it');
+  await db.update('ai_commands', fbFailChild.id, {
+    status: 'failed', answer: 'pane not found (sign-in wall)', completed_at: Date.now(),
+  });
+  const finGF = await apiLane.finalizeMemberHop(fbFailId, 'Grok', fbFailRow.answer);
+  ok(finGF.changed && finGF.answer.includes('(not answered —')
+    && finGF.answer.includes('could not answer either: pane not found (sign-in wall)'),
+  'slice 3.5 fallback: a phone failure folds in as the honest outcome — the member was unanswered on the phone path too');
+  const finGFHop = await db.get("SELECT * FROM ai_runs WHERE command_id = ? AND member = 'Grok' AND lane = 'device'", [fbFailId]);
+  ok(!!finGFHop && finGFHop.status === 'failed' && finGFHop.error === 'PHONE_FAILED',
+    'slice 3.5 fallback: ai_runs settles the failed phone hop with PHONE_FAILED');
+
+  // A child that ALREADY failed before a (re-)execution: the
+  // parent settles failed with the double-failure reason in one go.
+  const pfParentId = crypto.randomUUID();
+  await db.insert('ai_commands', {
+    id: pfParentId, device_id: 's3-fallback-prefailed', text: 'Have Grok say the word ready',
+    status: 'queued', answer: null, delivered_at: null, completed_at: null,
+    origin: 'device', lane: 'api', claimed_by: null, claimed_at: null, attempts: 0,
+  });
+  await db.insert('ai_commands', {
+    device_id: 's3-fallback-prefailed', text: 'Have Grok say the word ready',
+    status: 'failed', answer: 'composer not found (sign-in wall)', delivered_at: null,
+    completed_at: Date.now(), origin: 'device', lane: 'device', claimed_by: null,
+    claimed_at: null, attempts: 0, parent_id: pfParentId,
+  });
+  await unkeyed.drain();
+  const pfRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [pfParentId]);
+  ok(pfRow.status === 'failed' && pfRow.answer.includes('not configured on the server (no API key set)')
+    && pfRow.answer.includes('the phone was tried too and could not answer: composer not found (sign-in wall)'),
+  'slice 3.5 fallback: unanswered on BOTH paths settles failed with the double-failure reason — API reason and phone reason in one block');
+
+  // A configured member that answers over its API spawns NO child.
+  const ncId = await insertCmd('Have ChatGPT say the word ready', 'api', { device_id: 's3-nochild' });
+  await full.drain();
+  const ncRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [ncId]);
+  const ncChildren = await db.all('SELECT * FROM ai_commands WHERE parent_id = ?', [ncId]);
+  ok(ncRow.status === 'done' && ncRow.answer === '[FROM ChatGPT]\nHello from ChatGPT!\n[END]'
+    && ncChildren.length === 0,
+  'slice 3.5 fallback: a configured member answering over its API spawns no phone child');
+  // Neither does a route the API failover answered (slice 3).
+  const ncFoId = await insertCmd('Have ChatGPT say the word ready', 'api', { device_id: 's3-nochild-fo' });
+  await keyed.drain();
+  const ncFoRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [ncFoId]);
+  const ncFoChildren = await db.all('SELECT * FROM ai_commands WHERE parent_id = ?', [ncFoId]);
+  ok(ncFoRow.status === 'done' && ncFoRow.answer.includes('[FROM Gemini]') && ncFoChildren.length === 0,
+    'slice 3.5 fallback: a route answered by API failover spawns no phone child either — the phone path stays sheathed while an API path works');
+
+  // Provider error (not just NO_KEY) also falls back: Gemini is
+  // configured but its provider returns 503 after the retry, and
+  // nobody else is configured (the w503 worker from the summary
+  // section above — Gemini key only, 503 fetch).
+  const fb503Id = await insertCmd('Have Gemini say the word ready', 'api', { device_id: 's3-fallback-503' });
+  await w503.drain();
+  const fb503Row = await db.get('SELECT * FROM ai_commands WHERE id = ?', [fb503Id]);
+  ok(fb503Row.status === 'done' && fb503Row.answer.includes('[FROM Gemini]')
+    && fb503Row.answer.includes('asked through the phone'),
+  'slice 3.5 fallback: a configured member whose provider errors (HTTP 503 after retry) is asked through the phone when no other API member can take it');
+  const fb503ApiHop = await db.get("SELECT * FROM ai_runs WHERE command_id = ? AND member = 'Gemini' AND lane = 'api'", [fb503Id]);
+  const fb503DevHop = await db.get("SELECT * FROM ai_runs WHERE command_id = ? AND member = 'Gemini' AND lane = 'device'", [fb503Id]);
+  const fb503Child = await db.get('SELECT * FROM ai_commands WHERE parent_id = ?', [fb503Id]);
+  ok(!!fb503ApiHop && fb503ApiHop.status === 'failed' && fb503ApiHop.error === 'HTTP_503'
+    && !!fb503DevHop && fb503DevHop.status === 'delegated'
+    && !!fb503Child && fb503Child.text === 'Have Gemini say the word ready',
+  'slice 3.5 fallback: ai_runs shows the failed API hop (HTTP_503) AND the device delegation; the child carries the command');
 }
 
 async function runHttpTests(ok) {

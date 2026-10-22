@@ -345,27 +345,31 @@ router.post('/ai-commands/:id/result', express.json(), async (req, res) => {
       const answer = String(req.body?.answer || '').slice(0, 8000);
       await db.update('ai_commands', cmd.id, { status, answer, completed_at: db.now() });
     }
-    // Copilot phone-lane bridge (owner order 2026-10-22): a
-    // device-lane child carries parent_id when an API-lane command
-    // delegated its Copilot hop to the phone (Copilot has no API).
-    // When the child posts, fold its answer into the parent's
-    // record so the loop shows Copilot's real reply, labeled via
-    // phone. Runs on re-posts too (the fold is idempotent), but
-    // only writes the parent once the parent itself is final — a
-    // parent still executing folds the result in when the worker
-    // writes it (finalizeCopilotHop, src/worker/apiLane.js).
+    // Phone-lane link (owner orders 2026-10-22): a device-lane
+    // child carries parent_id when an API-lane command delegated a
+    // hop to the phone — Copilot's bridge (it has no API) or any
+    // member's slice-3.5 fallback (its API path was unconfigured
+    // or errored). When the child posts, fold its answer into the
+    // parent's record so the log shows the member's real reply,
+    // labeled via phone. The member is read from the child's
+    // instruction text. Runs on re-posts too (the fold is
+    // idempotent), but only writes the parent once the parent
+    // itself is final — a parent still executing folds the result
+    // in when the worker writes it (finalizeMemberHops,
+    // src/worker/apiLane.js).
     if (cmd.parent_id) {
       try {
         const parent = await db.get('SELECT * FROM ai_commands WHERE id = ?', [cmd.parent_id]);
         if (parent && (parent.status === 'done' || parent.status === 'failed')) {
           const apiLane = require('../worker/apiLane');
-          const fin = await apiLane.finalizeCopilotHop(parent.id, parent.answer || '');
+          const member = apiLane.memberFromChildText(cmd.text) || 'Copilot';
+          const fin = await apiLane.finalizeMemberHop(parent.id, member, parent.answer || '');
           if (fin.changed) {
             await db.update('ai_commands', parent.id, { answer: fin.answer });
           }
         }
       } catch (e) {
-        console.error('[muse/ai-commands/result] copilot link failed:', e.message);
+        console.error('[muse/ai-commands/result] phone-lane link failed:', e.message);
       }
     }
     if (already) return res.json({ ok: true, already: true });
