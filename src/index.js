@@ -362,6 +362,7 @@ async function shutdown(signal) {
   try { require('./lib/scheduler').stopScheduler(); } catch (e) {
     console.error('scheduler stop failed:', e.message);
   }
+  try { require('./worker/apiLane').stop(); } catch (e) { /* never block shutdown */ }
   if (server) {
     server.close(); // stop accepting new connections
     drainIdleSockets(); // drop idle keep-alives right away when nothing is busy
@@ -413,6 +414,16 @@ async function start() {
   }, 3600 * 1000).unref();
   // Weekly automated commission payouts (Mondays ~9am CT).
   require('./lib/scheduler').startScheduler();
+  // AI Master Button API lane (slice 1): in-process worker that claims
+  // lane='api' ai_commands and executes them over the members' official
+  // APIs. Same service, same deploy — no new Render service or bill.
+  // Disabled under the test harness and via API_LANE_ENABLED=false.
+  try {
+    const apiLane = require('./worker/apiLane');
+    if (apiLane.laneEnabled()) apiLane.start();
+  } catch (e) {
+    console.error('api-lane worker failed to start:', e.message);
+  }
   server = app.listen(config.port, () => {
     console.log(`Tattoo Art Customs listening on port ${config.port} (${db.getMode()})`);
     // Upload-disk self-report: proves in the deploy logs whether UPLOAD_DIR

@@ -550,6 +550,7 @@ async function main() {
   await require('./doodleMerch').runDbTests(ok);
   await require('./holidayRaffle').runDbTests(ok);
   await require('./merchCatalog').runDbTests(ok);
+  await require('./apiLane').runDbTests(ok); // AI Master Button API lane (worker, adapters, grammar)
 
   // Mail retry (unit-level, no live SMTP): a transient failure is retried
   // with backoff and eventually delivered; a permanent failure exhausts all
@@ -1471,6 +1472,7 @@ async function main() {
   await require('./guestAppCheckout').runHttpTests(ok, req, areq); // guest paid-app checkout (buy-app + TAC Pro + ios-app, no account wall)
   await require('./transfers').runHttpTests(ok, req); // [transfers] customer<->shop art pipeline
   await require('./appUpdates').runHttpTests(ok); // app auto-update service
+  await require('./apiLane').runHttpTests(ok); // AI Master Button API lane enqueue contract
   r = await areq('POST', `/admin/orders/${orderId}/confirm-manual`);
   ok(r.status === 302, 'admin confirms manual payment');
 

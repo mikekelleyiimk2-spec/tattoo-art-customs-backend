@@ -192,7 +192,12 @@ router.post('/ai-commands/register', express.json(), async (req, res) => {
 });
 
 // POST /api/muse/ai-commands — SERVICE auth. Enqueue one command.
-// body: { text, device_id }. Returns { ok, id }.
+// body: { text, device_id, lane?, origin? }. lane 'api' routes the
+// command to the backend API-lane worker (migration 098), which
+// executes it over the members' official APIs and posts the answer
+// back onto the row — the phone is not involved. lane 'device' (the
+// default) keeps today's behavior: the phone polls and executes.
+// origin is 'hq' (this chat) or 'device'. Returns { ok, id, lane, origin }.
 router.post('/ai-commands', express.json(), async (req, res) => {
   if (!serviceToken()) return res.status(404).json({ ok: false });
   if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
@@ -203,12 +208,15 @@ router.post('/ai-commands', express.json(), async (req, res) => {
     if (!/^[A-Za-z0-9_-]{1,80}$/.test(deviceId)) {
       return res.status(400).json({ ok: false, error: 'bad device_id' });
     }
+    const lane = req.body?.lane === 'api' ? 'api' : 'device';
+    const origin = req.body?.origin === 'device' ? 'device' : 'hq';
     const id = crypto.randomUUID();
     await db.insert('ai_commands', {
       id, device_id: deviceId, text, status: 'queued',
       answer: null, created_at: db.now(), delivered_at: null, completed_at: null,
+      origin, lane, claimed_by: null, claimed_at: null, attempts: 0,
     });
-    return res.json({ ok: true, id });
+    return res.json({ ok: true, id, lane, origin });
   } catch (e) {
     console.error('[muse/ai-commands] enqueue failed:', e.message);
     return res.status(500).json({ ok: false, error: 'enqueue failed' });
@@ -235,8 +243,11 @@ router.get('/ai-commands', async (req, res) => {
     }
     const device = await deviceFromKey(req);
     if (!device) return res.status(401).json({ ok: false, error: 'unauthorized' });
+    // Device poll returns ONLY device-lane commands: API-lane rows are
+    // claimed and executed by the backend worker, and the phone must
+    // never claim (and mark delivered) a command it will not run.
     const queued = await db.all(
-      "SELECT id, text FROM ai_commands WHERE device_id = ? AND status = 'queued' ORDER BY created_at ASC",
+      "SELECT id, text FROM ai_commands WHERE device_id = ? AND status = 'queued' AND lane = 'device' ORDER BY created_at ASC",
       [device.device_id]
     );
     const now = db.now();

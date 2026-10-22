@@ -79,6 +79,15 @@ services:
         sync: false
       - key: WISE_PROFILE_ID
         sync: false
+      # AI Master Button API lane (slice 1): server-side provider keys
+      # ONLY — customers never see or enter keys. Values are set in the
+      # Render dashboard when the owner creates each provider account.
+      - key: API_LANE_ENABLED
+        value: "true"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DEEPSEEK_API_KEY
+        sync: false
 
 databases:
   - name: tattoo-art-customs-db
