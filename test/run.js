@@ -945,6 +945,57 @@ async function main() {
     ok(r.status === 403, 'ai-commands result post from a non-owning device is 403');
   }
 
+  // Muse service pipe: OneMind thin-client lane (v1.7.7 cutover). The
+  // phone panel enqueues the owner's words with DEVICE auth onto the
+  // API lane (POST /ai-commands/client) and follows the command by id
+  // (GET /ai-commands/:id). The row lands under the CALLING device's
+  // id with lane 'api' + origin 'device'; another device can neither
+  // read it nor enqueue as it; the service token alone is not a
+  // device credential.
+  {
+    const cryptoC = require('crypto');
+    const PIPE_C = process.env.MUSE_SERVICE_TOKEN;
+    const cl = (method, path, body, token) => fetch(`http://localhost:${PORT}${path}`, {
+      method,
+      headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) },
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    });
+    const clientKey = 'test-device-key-client-1';
+    const clientCode = cryptoC.createHash('sha256').update(clientKey, 'utf8').digest('hex').slice(0, 8).toUpperCase();
+    let r = await cl('POST', '/api/muse/ai-commands/client', { text: 'hello loop' }, clientKey);
+    ok(r.status === 401, 'ai-commands client enqueue rejects an unregistered device key');
+    r = await cl('POST', '/api/muse/ai-commands/register', { pairing_code: clientCode, device_id: 'client-test-phone' }, PIPE_C);
+    ok(r.status === 200, 'ai-commands client device registers');
+    r = await cl('POST', '/api/muse/ai-commands/client', { text: 'hello loop' }, PIPE_C);
+    ok(r.status === 401, 'ai-commands client enqueue rejects the service token as a device key');
+    r = await cl('POST', '/api/muse/ai-commands/client', { text: '   ' }, clientKey);
+    ok(r.status === 400, 'ai-commands client enqueue rejects empty text');
+    r = await cl('POST', '/api/muse/ai-commands/client', { text: 'hello loop', device_id: 'someone-else' }, clientKey);
+    let j = await r.json();
+    ok(r.status === 200 && j.ok && typeof j.id === 'string' && j.lane === 'api' && j.origin === 'device',
+      'ai-commands client enqueue returns an api-lane id');
+    const clientCmdId = j.id;
+    const crow = sdb.prepare('SELECT device_id, lane, origin, status FROM ai_commands WHERE id = ?').get(clientCmdId);
+    ok(!!crow && crow.device_id === 'client-test-phone' && crow.lane === 'api' && crow.origin === 'device' && crow.status === 'queued',
+      'ai-commands client row is api-lane under the calling device (body device_id ignored)');
+    r = await cl('GET', `/api/muse/ai-commands/${clientCmdId}`, undefined, clientKey);
+    j = await r.json();
+    ok(r.status === 200 && j.ok && j.command && j.command.id === clientCmdId && j.command.status === 'queued' && j.command.text === 'hello loop',
+      'ai-commands read-by-id returns the owning device its command');
+    r = await cl('GET', `/api/muse/ai-commands/${clientCmdId}`, undefined, 'test-device-key-hq-2');
+    ok(r.status === 403, 'ai-commands read-by-id from a non-owning device is 403');
+    r = await cl('GET', '/api/muse/ai-commands/no-such-id', undefined, clientKey);
+    ok(r.status === 404, 'ai-commands read-by-id of a missing command is 404');
+    r = await cl('GET', `/api/muse/ai-commands/${clientCmdId}`, undefined, PIPE_C);
+    j = await r.json();
+    ok(r.status === 200 && j.ok && j.command && j.command.id === clientCmdId,
+      'ai-commands read-by-id accepts the service token');
+    r = await cl('GET', '/api/muse/ai-commands', undefined, clientKey);
+    j = await r.json();
+    ok(r.status === 200 && j.ok && !(j.commands || []).some((c) => c.id === clientCmdId),
+      'ai-commands device poll never offers api-lane commands for on-device execution');
+  }
+
   // Muse service pipe: Lead AI lane for the AI Master Button. The owner
   // posts from the button (device auth, same registered device as the HQ
   // queue above), Aria reads the thread + replies (service auth), and the

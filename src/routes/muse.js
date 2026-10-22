@@ -223,6 +223,70 @@ router.post('/ai-commands', express.json(), async (req, res) => {
   }
 });
 
+// POST /api/muse/ai-commands/client — DEVICE auth (OneMind thin
+// client, v1.7.7 cutover). The phone panel sends the owner's words
+// here; the command is enqueued on the API lane (lane 'api',
+// origin 'device') under the CALLING device's id — taken from the
+// resolved device record, never from the request body — and the
+// backend worker executes it over the members' official APIs. The
+// panel then polls GET /ai-commands/:id for the settled log. This
+// is the same device identity as the HQ queue poll below: no new
+// auth scheme, no keys on the device. body: { text }.
+// Returns { ok, id, lane, origin }.
+router.post('/ai-commands/client', express.json(), async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  try {
+    const device = await deviceFromKey(req);
+    if (!device) return res.status(401).json({ ok: false, error: 'unauthorized' });
+    const text = String(req.body?.text || '').trim().slice(0, 2000);
+    if (!text) return res.status(400).json({ ok: false, error: 'text required' });
+    const id = crypto.randomUUID();
+    await db.insert('ai_commands', {
+      id, device_id: device.device_id, text, status: 'queued',
+      answer: null, created_at: db.now(), delivered_at: null, completed_at: null,
+      origin: 'device', lane: 'api', claimed_by: null, claimed_at: null, attempts: 0,
+    });
+    return res.json({ ok: true, id, lane: 'api', origin: 'device' });
+  } catch (e) {
+    console.error('[muse/ai-commands/client] enqueue failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'enqueue failed' });
+  }
+});
+
+// GET /api/muse/ai-commands/:id — dual auth. SERVICE: any command.
+// DEVICE: only its own commands (403 otherwise). Returns the fields
+// the thin client renders: the command's status and, once settled,
+// the [FROM <AI>] ... [END] log in `answer`. A device poll of the
+// list endpoint above never touches API-lane rows, so this read is
+// how the panel follows its own command to completion.
+router.get('/ai-commands/:id', async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  try {
+    const id = String(req.params.id || '');
+    const cmd = await db.get('SELECT * FROM ai_commands WHERE id = ?', [id]);
+    if (!cmd) return res.status(404).json({ ok: false, error: 'no such command' });
+    if (!authorized(req)) {
+      const device = await deviceFromKey(req);
+      if (!device) return res.status(401).json({ ok: false, error: 'unauthorized' });
+      if (cmd.device_id !== device.device_id) {
+        return res.status(403).json({ ok: false, error: 'not your command' });
+      }
+    }
+    return res.json({
+      ok: true,
+      command: {
+        id: cmd.id, device_id: cmd.device_id, text: cmd.text,
+        status: cmd.status, answer: cmd.answer,
+        lane: cmd.lane, origin: cmd.origin,
+        created_at: cmd.created_at, completed_at: cmd.completed_at,
+      },
+    });
+  } catch (e) {
+    console.error('[muse/ai-commands] read failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'read failed' });
+  }
+});
+
 // GET /api/muse/ai-commands — dual auth.
 // SERVICE: list recent commands (newest first, full rows incl. answer);
 //   optional ?device_id= filter and ?limit= (default 100, max 500).
