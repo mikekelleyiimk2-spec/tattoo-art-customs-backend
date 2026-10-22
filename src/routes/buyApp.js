@@ -28,7 +28,7 @@ const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 // slug -> { package, name, priceCents }
 const APPS = {
   'odometer': { package: 'com.usefulappz.odometer', name: 'Odometer — Mileage Tracker', priceCents: 199 },
-  'ai-button': { package: 'com.usefulappz.aibar', name: 'AI Button', priceCents: 999 },
+  'ai-button': { package: 'com.usefulappz.aibar', name: 'OneMind', priceCents: 999 },
   'muse-button': { package: 'com.usefulappz.musebar', name: 'Muse Button', priceCents: 99 },
   'chatgpt-button': { package: 'com.usefulappz.chatgptbar', name: 'ChatGPT Button', priceCents: 99 },
   'claude-button': { package: 'com.usefulappz.claudebar', name: 'Claude Button', priceCents: 99 },

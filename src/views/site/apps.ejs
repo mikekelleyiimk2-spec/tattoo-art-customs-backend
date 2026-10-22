@@ -69,7 +69,7 @@
   </div>
   <div id="aibutton" style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1.5rem;">
     <p style="font-size:2rem;">🎙️</p>
-    <p><strong>AI Button</strong></p>
+    <p><strong>OneMind</strong></p>
     <p class="muted"><%= t('apps.aibutton_text') %></p>
     <p><span class="badge"><%= t('apps.aibutton_badge') %></span></p>
     <% if (dl && dl['com.usefulappz.aibar']) { %><p><a class="btn" href="/api/apps/com.usefulappz.aibar/apk"><%= t('apps.dl_now', {price: '$9.99'}) %></a></p><% } %>
@@ -145,6 +145,12 @@
     <p><strong>Countdown Bar</strong></p>
     <p class="muted fineprint"><%= t('apps.count_text') %></p>
     <% if (dl && dl['com.usefulappz.countdownbar']) { %><p><a class="btn" href="/buy-app/countdown-bar"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge"><%= t('apps.play_soon') %> — $0.99</span></p><% } %>
+  </div>
+  <div style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1rem;">
+    <p style="font-size:1.75rem;">📷</p>
+    <p><strong>ScreenQR</strong></p>
+    <p class="muted fineprint"><%= t('apps.screenqr_text') %></p>
+    <% if (dl && dl['com.usefulappz.screenqr']) { %><p><a class="btn" href="/api/apps/com.usefulappz.screenqr/apk"><%= t('apps.dl_free') %></a></p><% } else { %><p><span class="badge"><%= t('apps.play_soon') %> — <%= t('apps.free_label') %></span></p><% } %>
   </div>
   <div style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1rem;">
     <p style="font-size:1.75rem;">🖍️</p>

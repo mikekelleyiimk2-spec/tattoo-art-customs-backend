@@ -31,6 +31,7 @@ const APPS = {
   'com.usefulappz.deepseekbar': { price: '$0.99' },
   'com.usefulappz.clipboardbar': { price: '$0.99' },
   'com.usefulappz.countdownbar': { price: '$0.99' },
+  'com.usefulappz.screenqr': { price: null },
   'com.usefulappz.littleinkerscoloring': { price: null },
   'com.usefulappz.stickerworld': { price: null },
   'com.usefulappz.drawwithme': { price: null },

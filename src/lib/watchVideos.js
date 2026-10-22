@@ -24,7 +24,7 @@ const COMMERCIALS = [
   { id: 'YuHDG8Kmd58', title: 'Color It Before You Ink It — Tattoo Art Customs x Little Inkers', vertical: false },
   { id: 'tMjOMH980ec', title: 'Every Style. One Shop. — 50+ Tattoo Styles, 12 Categories | Tattoo Art Customs', vertical: false },
   { id: 'loGD7VxS9_0', title: 'One Design. Halfway Around the World. 🌍 Custom Tattoos, Anywhere #Shorts', vertical: true },
-  { id: 'Y1_kyEZellM', title: 'Your Next Tattoo Is Already Drawn 🎨 900+ Designs, Customs in 48 Hours #Shorts', vertical: true },
+  { id: 'Y1_kyEZellM', title: 'Your Next Tattoo Is Already Drawn 🎨 4,700+ Designs, Customs in 48 Hours #Shorts', vertical: true },
   { id: 'k58RUFJ0jhc', title: 'Artists: Your Art, Your Prices, Weekly PayPal Payouts 💸 Join Tattoo Art Customs #Shorts', vertical: true },
   { id: 'yiU67irWyvY', title: 'Color It BEFORE You Ink It 🎨➡️🖋️ Little Inkers × Tattoo Art Customs #Shorts', vertical: true },
   { id: 'wLwViSpWdDg', title: 'TESTERS WANTED 📱 Get Our New Apps FREE Before They Launch #Shorts', vertical: true },

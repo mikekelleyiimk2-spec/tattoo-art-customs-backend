@@ -1012,8 +1012,8 @@ router.get('/privacy/screenqr', (req, res) => res.render('site/privacy-screenqr'
 // Per-app policy for the AI Button Android app (voice-loop app:
 // microphone + overlay permissions need a public policy URL for Play).
 router.get('/privacy/ai-bar', (req, res) => res.render('site/privacy-aibar', {
-  title: 'AI Button Privacy Policy — Usefulappz',
-  metaDescription: 'Privacy policy for AI Button. No accounts, no server, no ads, no analytics — your voice and prompts go only to the AI you choose.',
+  title: 'OneMind Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for OneMind. No accounts, no server, no ads, no analytics — your voice and prompts go only to the AI you choose.',
 }));
 
 // Per-app policy for the Habit Dot Android app (Google Play requires a
