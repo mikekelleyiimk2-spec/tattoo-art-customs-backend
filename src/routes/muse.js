@@ -124,7 +124,14 @@ async function deviceFromKey(req) {
   const m = /^Bearer (.+)$/.exec(req.headers.authorization || '');
   if (!m) return null;
   const keyHash = sha256hex(m[1]);
-  const code = keyHash.slice(0, 8).toUpperCase();
+  // Pairing-code derivation MUST match the app (HqPairing.java): the app
+  // hashes the RAW key bytes; the bearer it sends is the key's hex text.
+  // Hashing the hex text instead gives a different code and pairing fails,
+  // so decode the hex back to raw bytes before hashing for the code.
+  let code = keyHash.slice(0, 8).toUpperCase();
+  if (/^[0-9a-fA-F]{64}$/.test(m[1])) {
+    code = crypto.createHash('sha256').update(Buffer.from(m[1], 'hex')).digest('hex').slice(0, 8).toUpperCase();
+  }
   const device = await db.get('SELECT * FROM ai_devices WHERE pairing_code = ?', [code]);
   if (!device) return null;
   if (!device.key_hash) {
