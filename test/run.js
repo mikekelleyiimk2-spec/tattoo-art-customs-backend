@@ -1523,6 +1523,7 @@ async function main() {
   await require('./shoptools-phase8').runHttpTests(ok, req); // client profiles CRM + review requests
   await require('./favorites').runHttpTests(ok, req); // [wishlist] feature
   await require('./toploved').runHttpTests(ok, req); // [toploved] leaderboard
+  await require('./lillikes').runHttpTests(ok, req); // [lilhearts] Little Inkers hearts
   await require('./doodleMerch').runHttpTests(ok, req); // doodle-to-merchandise
   await require('./holidayRaffle').runHttpTests(ok, req); // holiday doodle raffle
   await require('./merchCatalog').runHttpTests(ok, req, areq); // merch catalog (POD + affiliate)

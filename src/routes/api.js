@@ -648,4 +648,81 @@ router.get('/little-inkers/bundles', async (req, res) => {
   }
 });
 
+// --- Little Inkers hearts (2026-10-23) ---
+// Kid-safe like counts for coloring pages, in their own lil_likes /
+// lil_like_counts tables (migration 101) — fully separate from
+// design_likes and merch_likes so the LI numbers can never mix with
+// tattoo-side numbers. No auth and no accounts exist on the LI side:
+// the voter is an anonymous per-install UUID the app mints and keeps in
+// local storage. The ping carries a page key and that random number —
+// never artwork, never personal data (owner ruling 2026-10-23: the
+// likes ping is the ONE content-free outbound call the kids app may
+// make). lil_like_counts is recomputed from lil_likes after every
+// change so the tally can never drift.
+//
+// page_key is a surface-prefixed slug so the three LI page namespaces
+// can never collide:
+//   app:<slug>                 flagship launch pages (app:penguin)
+//   bundle:<YYYY-Www>:<slug>   weekly bundle pages (bundle:2026-W42:fox)
+//   coloring:<slug>            Coloring app local catalog (future use)
+const LIL_PAGE_KEY_RE = /^(?:app|coloring):[a-z0-9][a-z0-9_-]{0,95}$|^bundle:\d{4}-W\d{2}:[a-z0-9][a-z0-9_-]{0,95}$/;
+
+function lilPageKey(raw) {
+  const key = String(raw || '').slice(0, 160);
+  return LIL_PAGE_KEY_RE.test(key) ? key : null;
+}
+
+function lilVoterKey(req) {
+  const raw = String((req.body && (req.body.voter || req.body.voter_key)) || '').slice(0, 64);
+  if (!/^[A-Za-z0-9-]{8,64}$/.test(raw)) return null;
+  return raw;
+}
+
+async function refreshLilLikeCount(pageKey) {
+  const row = await db.get('SELECT COUNT(*) AS n FROM lil_likes WHERE page_key = ?', [pageKey]);
+  const n = Number((row && row.n) || 0);
+  await db.query(
+    `INSERT INTO lil_like_counts (page_key, like_count) VALUES (?, ?)
+     ON CONFLICT(page_key) DO UPDATE SET like_count = excluded.like_count`,
+    [pageKey, n]);
+  return n;
+}
+
+// POST /api/little-inkers/likes/:pageKey { voter } — cast a heart.
+// DELETE same path — take it back. Both idempotent per (page, voter).
+router.post('/little-inkers/likes/:pageKey', express.json(), formLimiter, async (req, res) => {
+  const pageKey = lilPageKey(req.params.pageKey);
+  if (!pageKey) return res.status(400).json({ ok: false, error: 'bad page_key' });
+  const voterKey = lilVoterKey(req);
+  if (!voterKey) return res.status(400).json({ ok: false, error: 'voter required' });
+  await db.query(
+    'INSERT INTO lil_likes (page_key, voter_key, created_at) VALUES (?, ?, ?) ON CONFLICT(page_key, voter_key) DO NOTHING',
+    [pageKey, voterKey, db.now()]);
+  const likeCount = await refreshLilLikeCount(pageKey);
+  return res.json({ ok: true, liked: true, page_key: pageKey, like_count: likeCount });
+});
+
+router.delete('/little-inkers/likes/:pageKey', express.json(), formLimiter, async (req, res) => {
+  const pageKey = lilPageKey(req.params.pageKey);
+  if (!pageKey) return res.status(400).json({ ok: false, error: 'bad page_key' });
+  const voterKey = lilVoterKey(req);
+  if (!voterKey) return res.status(400).json({ ok: false, error: 'voter required' });
+  await db.query('DELETE FROM lil_likes WHERE page_key = ? AND voter_key = ?', [pageKey, voterKey]);
+  const likeCount = await refreshLilLikeCount(pageKey);
+  return res.json({ ok: true, liked: false, page_key: pageKey, like_count: likeCount });
+});
+
+// GET /api/little-inkers/top-loved[?limit=] — LI counts only, most
+// loved first. Pages with zero hearts are omitted.
+router.get('/little-inkers/top-loved', async (req, res) => {
+  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 50));
+  const rows = await db.all(
+    'SELECT page_key, like_count FROM lil_like_counts WHERE like_count > 0 ORDER BY like_count DESC, page_key ASC LIMIT ?',
+    [limit]);
+  return res.json({
+    ok: true,
+    pages: rows.map((r) => ({ page_key: r.page_key, like_count: Number(r.like_count || 0) })),
+  });
+});
+
 module.exports = { router, userFromToken };
