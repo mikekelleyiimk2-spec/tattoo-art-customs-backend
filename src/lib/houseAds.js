@@ -96,6 +96,12 @@ const CREATIVES = [
     href: 'https://lasso.to/auGY590feE/', external: true,
   },
   {
+    // Monsters Ink (live 2026-10-23): UK pro supplies; pitch copy carries
+    // the no-USA-shipping note in every locale until US shipping returns.
+    id: 'monstersink', kind: 'affiliate', audiences: ['tattoo'], pools: ['any'],
+    href: 'https://monstersink.com/michael', external: true,
+  },
+  {
     // Promotes the /aftercare guide from OTHER pages — deliberately not in
     // the 'aftercare' pool, or the slot on /aftercare would link to itself.
     id: 'amazonaftercare', kind: 'affiliate', audiences: ['tattoo'], pools: ['any'],

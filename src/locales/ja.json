@@ -36,7 +36,9 @@
     "p5_cta": "Shop DrTattooSkin",
     "p5_desc": "Doctor-formulated staged aftercare — Ink Wash and Barrier Ointment for fresh ink, Recovery Milk and Itch Calm Gel for the peel, Daily Lotion and SPF 50 for healed tattoos. Fragrance-free, barrier-first.",
     "p6_desc": "新しいインクのためのプロ仕様アフターケア — 痛みの緩和と治癒サポートで、新しいタトゥーをきれいに治癒させます。",
-    "p6_cta": "Recovery Aftercareで購入"
+    "p6_cta": "Recovery Aftercareで購入",
+    "p7_desc": "英国発、スタジオグレードの用品とアフターケア — アーティストがステーションに揃えるマシン、インク、ヒーリング必需品。ご注意：Monsters Inkは現在、アメリカ合衆国への発送を行っていません — 米国向け発送は近日中に再開予定です。その他の国への注文は通常通り発送されます。",
+    "p7_cta": "Monsters Inkで購入"
   },
   "artist_page": {
     "default_bio": "Tattoo Art Customsのタトゥーデザインアーティストです。",
@@ -860,6 +862,9 @@
     "pf_gummybear_blurb": "Mike's Cartoon Gummy Bear Shop design on a glossy 11oz mug, printed on demand.",
     "aff_drtattoo_name": "DrTattooSkin Aftercare System",
     "aff_drtattoo_blurb": "Doctor-formulated staged aftercare — wash, barrier ointment, recovery milk, itch gel, daily lotion & SPF 50. Fragrance-free.",
+    "aff_monstersink_name": "Monsters Ink Tattoo Supplies",
+    "aff_monstersink_blurb": "英国発のプロ向けタトゥー用品 — マシン、インク、ニードル、スタジオ必需品。チェックアウト時にコード tattoo.art を使用してください。 注意：Monsters Inkは現在、アメリカ合衆国への発送を行っていません — 米国向け発送は近日中に再開予定です。その他の国への注文は通常通り発送されます。",
+    "aff_monstersink_cta": "Monsters Inkで購入",
     "pf_tee_realism_wolf_name": "Realism Wolf Tシャツ",
     "pf_tee_realism_wolf_blurb": "プレミアムなブラックのBella + Canvas TシャツにMike's photorealistic wolf portrait。",
     "pf_tee_realism_wolf_lw_name": "Realism Wolf Linework Tシャツ",
@@ -1354,7 +1359,12 @@
     "leda_badge": "UP TO 15.8% BACK",
     "leda_h": "Leda Art Supply",
     "leda_text": "Premium sketchbooks artists swear by — 160 pages of smooth, archival fine-art paper that lays flat.",
-    "leda_cta": "Shop Leda Art Supply"
+    "leda_cta": "Shop Leda Art Supply",
+    "monstersink_badge": "PRO SUPPLIES",
+    "monstersink_h": "Monsters Ink Tattoo Supplies",
+    "monstersink_text": "英国発のプロ向けタトゥー用品 — マシン、インク、ニードル、スタジオ必需品。ヨーロッパ中のアーティストが仕入れるサプライヤーです。当店のリンクから購入し、コード tattoo.art をご利用ください。",
+    "monstersink_note": "⚠ ご注意：Monsters Inkは現在、アメリカ合衆国への発送を行っていません — 米国向け発送は近日中に再開予定です。その他の国への注文は通常通り発送されます。",
+    "monstersink_cta": "Monsters Inkで購入"
   },
   "li_sideload": {
     "sub": {
@@ -1505,7 +1515,11 @@
       "ez_badge": "ショップ限定",
       "ez_h": "EZ Tattoo Supply — プロ用マシン＆カートリッジ",
       "ez_text": "EZ Tattoo Supply の P2S Pro・P3 Pro マシンと Revolution・V-Select カートリッジ — 2009年からのプロ向け機材。当店リンクから注文すると、追加費用なしで当店に10%が入ります。",
-      "ez_cta": "EZ Tattoo Supply で購入"
+      "ez_cta": "EZ Tattoo Supply で購入",
+      "monstersink_badge": "PRO SUPPLIES",
+      "monstersink_h": "Monsters Ink",
+      "monstersink_text": "英国発のプロ仕様タトゥー用品 — 稼働中のスタジオ向けのマシン、インク、ニードル、家具。ご注意：Monsters Inkは現在、アメリカ合衆国への発送を行っていません — 米国向け発送は近日中に再開予定です。その他の国への注文は通常通り発送されます。",
+      "monstersink_cta": "Monsters Inkで購入"
     }
   },
   "bookings": {
@@ -1647,6 +1661,9 @@
     "baselabs_h": "Base Labs アフターケア",
     "baselabs_p": "新しいタトゥーにおすすめのアフターケア — コード TAC20 でお得に。",
     "baselabs_cta": "買って節約",
+    "monstersink_h": "Monsters Ink Tattoo Supplies",
+    "monstersink_p": "マシン、インク、ニードル＆スタジオ必需品 — パートナーリンクからステーションを揃えよう。 注意：Monsters Inkは現在、アメリカ合衆国への発送を行っていません — 米国向け発送は近日中に再開予定です。その他の国への注文は通常通り発送されます。",
+    "monstersink_cta": "買って節約",
     "bcards_h": "タトゥースタジオ向け名刺",
     "bcards_p": "お店の名前・連絡先・ロゴ入りの名刺 — 年間プランのお店には50枚入り1箱を無料プレゼント。",
     "bcards_cta": "スタジオ向け",

@@ -36,7 +36,9 @@
     "p5_cta": "Shop DrTattooSkin",
     "p5_desc": "Doctor-formulated staged aftercare — Ink Wash and Barrier Ointment for fresh ink, Recovery Milk and Itch Calm Gel for the peel, Daily Lotion and SPF 50 for healed tattoos. Fragrance-free, barrier-first.",
     "p6_desc": "การดูแลหลังสักระดับมืออาชีพสำหรับหมึกใหม่ — บรรเทาอาการปวดและสนับสนุนการรักษาให้รอยสักใหม่อมแผลสะอาด",
-    "p6_cta": "ซื้อที่ Recovery Aftercare"
+    "p6_cta": "ซื้อที่ Recovery Aftercare",
+    "p7_desc": "อุปกรณ์และผลิตภัณฑ์ดูแลหลังสักระดับสตูดิโอจากสหราชอาณาจักร — เครื่องสัก หมึก และของจำเป็นสำหรับการฟื้นฟูที่ศิลปินเตรียมไว้ประจำสถานี โปรดทราบ: Monsters Ink ขณะนี้ยังไม่จัดส่งไปยังสหรัฐอเมริกา — การจัดส่งไปสหรัฐฯ จะกลับมาในเร็ว ๆ นี้ คำสั่งซื้อจากประเทศอื่น ๆ จัดส่งตามปกติ",
+    "p7_cta": "ช้อปที่ Monsters Ink"
   },
   "artist_page": {
     "default_bio": "ดีไซน์อาร์ติสต์ของ Tattoo Art Customs",
@@ -860,6 +862,9 @@
     "pf_gummybear_blurb": "Mike's Cartoon Gummy Bear Shop design on a glossy 11oz mug, printed on demand.",
     "aff_drtattoo_name": "DrTattooSkin Aftercare System",
     "aff_drtattoo_blurb": "Doctor-formulated staged aftercare — wash, barrier ointment, recovery milk, itch gel, daily lotion & SPF 50. Fragrance-free.",
+    "aff_monstersink_name": "Monsters Ink Tattoo Supplies",
+    "aff_monstersink_blurb": "อุปกรณ์สักระดับมืออาชีพจากสหราชอาณาจักร — เครื่องสัก หมึก เข็ม และของใช้จำเป็นในสตูดิโอสำหรับศิลปินและสตูดิโอ ใช้โค้ด tattoo.art ตอนชำระเงิน หมายเหตุ: Monsters Ink ขณะนี้ยังไม่จัดส่งไปยังสหรัฐอเมริกา — การจัดส่งไปสหรัฐฯ จะกลับมาในเร็ว ๆ นี้ คำสั่งซื้อจากประเทศอื่น ๆ จัดส่งตามปกติ",
+    "aff_monstersink_cta": "ช้อปที่ Monsters Ink",
     "pf_tee_realism_wolf_name": "เสื้อยืด Realism Wolf",
     "pf_tee_realism_wolf_blurb": "Mike's photorealistic wolf portrait บนเสื้อยืด Bella + Canvas สีดำระดับพรีเมียม",
     "pf_tee_realism_wolf_lw_name": "เสื้อยืด Realism Wolf Linework",
@@ -1354,7 +1359,12 @@
     "leda_badge": "UP TO 15.8% BACK",
     "leda_h": "Leda Art Supply",
     "leda_text": "Premium sketchbooks artists swear by — 160 pages of smooth, archival fine-art paper that lays flat.",
-    "leda_cta": "Shop Leda Art Supply"
+    "leda_cta": "Shop Leda Art Supply",
+    "monstersink_badge": "PRO SUPPLIES",
+    "monstersink_h": "Monsters Ink Tattoo Supplies",
+    "monstersink_text": "อุปกรณ์สักระดับมืออาชีพจากสหราชอาณาจักร — เครื่องสัก หมึก เข็ม และของใช้จำเป็นในสตูดิโอ จากซัพพลายเออร์ที่ศิลปินทั่วยุโรปเลือกใช้ ช้อปผ่านลิงก์ของเราและใช้โค้ด tattoo.art",
+    "monstersink_note": "⚠ โปรดทราบ: Monsters Ink ขณะนี้ยังไม่จัดส่งไปยังสหรัฐอเมริกา — การจัดส่งไปสหรัฐฯ จะกลับมาในเร็ว ๆ นี้ คำสั่งซื้อจากประเทศอื่น ๆ จัดส่งตามปกติ",
+    "monstersink_cta": "ช้อปที่ Monsters Ink"
   },
   "li_sideload": {
     "sub": {
@@ -1505,7 +1515,11 @@
       "ez_badge": "ดีลสำหรับร้าน",
       "ez_h": "EZ Tattoo Supply — เครื่องและเข็มระดับโปร",
       "ez_text": "เครื่อง P2S Pro และ P3 Pro พร้อมเข็ม Revolution และ V-Select จาก EZ Tattoo Supply — อุปกรณ์มืออาชีพตั้งแต่ปี 2009 สั่งผ่านลิงก์ร้านของเรา เราจะได้รับ 10% โดยไม่มีค่าใช้จ่ายเพิ่มสำหรับคุณ",
-      "ez_cta": "ช้อปที่ EZ Tattoo Supply"
+      "ez_cta": "ช้อปที่ EZ Tattoo Supply",
+      "monstersink_badge": "PRO SUPPLIES",
+      "monstersink_h": "Monsters Ink",
+      "monstersink_text": "อุปกรณ์สักระดับมืออาชีพจากสหราชอาณาจักร — เครื่องสัก หมึก เข็ม และเฟอร์นิเจอร์สำหรับสตูดิโอที่เปิดให้บริการ โปรดทราบ: Monsters Ink ขณะนี้ยังไม่จัดส่งไปยังสหรัฐอเมริกา — การจัดส่งไปสหรัฐฯ จะกลับมาในเร็ว ๆ นี้ คำสั่งซื้อจากประเทศอื่น ๆ จัดส่งตามปกติ",
+      "monstersink_cta": "ช้อปที่ Monsters Ink"
     }
   },
   "bookings": {
@@ -1647,6 +1661,9 @@
     "baselabs_h": "Base Labs Aftercare",
     "baselabs_p": "ผลิตภัณฑ์ดูแลรอยสักใหม่ที่เราแนะนำ — ประหยัดด้วยโค้ด TAC20",
     "baselabs_cta": "ช้อปและประหยัด",
+    "monstersink_h": "Monsters Ink Tattoo Supplies",
+    "monstersink_p": "เครื่องสัก หมึก เข็ม และของใช้จำเป็นในสตูดิโอ — เติมเต็มสถานีของคุณผ่านลิงก์พาร์ทเนอร์ของเรา หมายเหตุ: Monsters Ink ขณะนี้ยังไม่จัดส่งไปยังสหรัฐอเมริกา — การจัดส่งไปสหรัฐฯ จะกลับมาในเร็ว ๆ นี้ คำสั่งซื้อจากประเทศอื่น ๆ จัดส่งตามปกติ",
+    "monstersink_cta": "ช้อปและประหยัด",
     "bcards_h": "นามบัตรสำหรับร้านสัก",
     "bcards_p": "นามบัตรพร้อมชื่อ เบอร์ติดต่อ และโลโก้ร้านของคุณ — ร้านแพลนรายปีรับฟรี 1 กล่อง 50 ใบ",
     "bcards_cta": "สำหรับร้านสัก",

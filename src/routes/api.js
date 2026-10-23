@@ -33,6 +33,7 @@ function appLinkSet(config) {
       { id: 'recovery', name: 'Recovery Aftercare', url: 'https://lasso.to/auGY590feE/' },
       { id: 'leda', name: 'Leda Art Supply', url: 'https://lasso.to/RfUlWaYEwK/' },
       { id: 'amazon', name: 'Amazon', url: 'https://www.amazon.com/?tag=tattooartcust-20' },
+      { id: 'monstersink', name: 'Monsters Ink', url: 'https://monstersink.com/michael' },
     ],
   };
 }

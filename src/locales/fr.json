@@ -36,7 +36,9 @@
     "p5_cta": "Shop DrTattooSkin",
     "p5_desc": "Doctor-formulated staged aftercare — Ink Wash and Barrier Ointment for fresh ink, Recovery Milk and Itch Calm Gel for the peel, Daily Lotion and SPF 50 for healed tattoos. Fragrance-free, barrier-first.",
     "p6_desc": "Des soins professionnels pour l'encre fraîche — soulagement de la douleur et soutien de cicatrisation pour un nouveau tatouage qui guérit proprement.",
-    "p6_cta": "Acheter chez Recovery Aftercare"
+    "p6_cta": "Acheter chez Recovery Aftercare",
+    "p7_desc": "Fournitures et soins après-tatouage de qualité studio, du Royaume-Uni — les machines, encres et essentiels de cicatrisation dont les artistes équipent leur poste. À noter : Monsters Ink ne livre actuellement pas aux États-Unis — la livraison vers les États-Unis reprendra bientôt. Les commandes des autres pays sont expédiées normalement.",
+    "p7_cta": "Acheter chez Monsters Ink"
   },
   "artist_page": {
     "default_bio": "Artiste de designs de tatouage sur Tattoo Art Customs.",
@@ -860,6 +862,9 @@
     "pf_gummybear_blurb": "Mike's Cartoon Gummy Bear Shop design on a glossy 11oz mug, printed on demand.",
     "aff_drtattoo_name": "DrTattooSkin Aftercare System",
     "aff_drtattoo_blurb": "Doctor-formulated staged aftercare — wash, barrier ointment, recovery milk, itch gel, daily lotion & SPF 50. Fragrance-free.",
+    "aff_monstersink_name": "Monsters Ink Tattoo Supplies",
+    "aff_monstersink_blurb": "Fournitures de tatouage professionnelles du Royaume-Uni — machines, encres, aiguilles et essentiels de studio pour artistes et studios. Utilisez le code tattoo.art à la caisse. Remarque : Monsters Ink ne livre actuellement pas aux États-Unis — la livraison vers les États-Unis reprendra bientôt. Les commandes des autres pays sont expédiées normalement.",
+    "aff_monstersink_cta": "Acheter chez Monsters Ink",
     "pf_tee_realism_wolf_name": "T-shirt Realism Wolf",
     "pf_tee_realism_wolf_blurb": "Mike's photorealistic wolf portrait sur un t-shirt Bella + Canvas noir premium.",
     "pf_tee_realism_wolf_lw_name": "T-shirt Realism Wolf Linework",
@@ -1354,7 +1359,12 @@
     "leda_badge": "UP TO 15.8% BACK",
     "leda_h": "Leda Art Supply",
     "leda_text": "Premium sketchbooks artists swear by — 160 pages of smooth, archival fine-art paper that lays flat.",
-    "leda_cta": "Shop Leda Art Supply"
+    "leda_cta": "Shop Leda Art Supply",
+    "monstersink_badge": "PRO SUPPLIES",
+    "monstersink_h": "Monsters Ink Tattoo Supplies",
+    "monstersink_text": "Fournitures de tatouage professionnelles du Royaume-Uni — machines, encres, aiguilles et essentiels de studio, d'un fournisseur chez qui les artistes de toute l'Europe s'approvisionnent. Achetez via notre lien et utilisez le code tattoo.art.",
+    "monstersink_note": "⚠ À noter : Monsters Ink ne livre actuellement pas aux États-Unis — la livraison vers les États-Unis reprendra bientôt. Les commandes des autres pays sont expédiées normalement.",
+    "monstersink_cta": "Acheter chez Monsters Ink"
   },
   "li_sideload": {
     "sub": {
@@ -1505,7 +1515,11 @@
       "ez_badge": "OFFRE SHOP",
       "ez_h": "EZ Tattoo Supply — Machines et cartouches pro",
       "ez_text": "Machines P2S Pro et P3 Pro, cartouches Revolution et V-Select d'EZ Tattoo Supply — du matériel professionnel depuis 2009. Commandez via notre lien shop et nous touchons 10 %, sans coût supplémentaire pour vous.",
-      "ez_cta": "Acheter chez EZ Tattoo Supply"
+      "ez_cta": "Acheter chez EZ Tattoo Supply",
+      "monstersink_badge": "PRO SUPPLIES",
+      "monstersink_h": "Monsters Ink",
+      "monstersink_text": "Fournitures de tatouage de qualité professionnelle du Royaume-Uni — machines, encres, aiguilles et mobilier pour studios en activité. À noter : Monsters Ink ne livre actuellement pas aux États-Unis — la livraison vers les États-Unis reprendra bientôt. Les commandes des autres pays sont expédiées normalement.",
+      "monstersink_cta": "Acheter chez Monsters Ink"
     }
   },
   "bookings": {
@@ -1647,6 +1661,9 @@
     "baselabs_h": "Base Labs Aftercare",
     "baselabs_p": "Les soins après-tatouage que nous recommandons — économisez avec le code TAC20.",
     "baselabs_cta": "Acheter et économiser",
+    "monstersink_h": "Monsters Ink Tattoo Supplies",
+    "monstersink_p": "Machines, encres, aiguilles et essentiels de studio — équipez votre poste via notre lien partenaire. Remarque : Monsters Ink ne livre actuellement pas aux États-Unis — la livraison vers les États-Unis reprendra bientôt. Les commandes des autres pays sont expédiées normalement.",
+    "monstersink_cta": "Acheter et économiser",
     "bcards_h": "Cartes de visite pour salons de tatouage",
     "bcards_p": "Des cartes au nom, contact et logo de votre salon — les salons en plan annuel reçoivent une boîte de 50 gratuite.",
     "bcards_cta": "Pour les salons",

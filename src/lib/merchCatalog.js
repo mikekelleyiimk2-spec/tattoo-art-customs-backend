@@ -271,6 +271,19 @@ const CATALOG = [
     url: 'https://www.drtattooskin.com/TATTOOARTCUSTOMS',
     ctaKey: 'merch.aff_cta',
   },
+  // --- Monsters Ink (live 2026-10-23, owner order: publish worldwide) ---
+  // UK pro tattoo supplies; up to 10% commission, code tattoo.art. Brand is
+  // NOT currently shipping to the USA (returns ~Oct 27-30) — the blurb copy
+  // carries that note in every locale; keep it until US shipping returns.
+  {
+    id: 'monstersink-supplies',
+    kind: 'affiliate',
+    status: 'live',
+    nameKey: 'merch.aff_monstersink_name',
+    blurbKey: 'merch.aff_monstersink_blurb',
+    url: 'https://monstersink.com/michael',
+    ctaKey: 'merch.aff_monstersink_cta',
+  },
   {
     id: 'tee-music-genres',
     kind: 'pod',

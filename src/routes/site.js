@@ -201,7 +201,7 @@ router.get('/', async (req, res) => {
     appStoreUrl: config.appStoreUrl,
     // "Complete the kit" affiliate cross-sell (partials/affiliate-kit) —
     // same partner set as the design pages; catalog is the single source.
-    kitPartners: ['baselabs-aftercare', 'drtattoo-aftercare-system']
+    kitPartners: ['baselabs-aftercare', 'drtattoo-aftercare-system', 'monstersink-supplies']
       .map((id) => require('../lib/merchCatalog').getProduct(id)).filter(Boolean),
     // Videos strip (owner order 2026-10-21): YouTube embeds of our own
     // commercials so landing traffic turns into YouTube views.

@@ -36,7 +36,9 @@
     "p5_cta": "Shop DrTattooSkin",
     "p5_desc": "Doctor-formulated staged aftercare — Ink Wash and Barrier Ointment for fresh ink, Recovery Milk and Itch Calm Gel for the peel, Daily Lotion and SPF 50 for healed tattoos. Fragrance-free, barrier-first.",
     "p6_desc": "Professionell aftercare för färsk bläck — smärtlindring och läkningsstöd för en ren läkning av din nya tatuering.",
-    "p6_cta": "Handla hos Recovery Aftercare"
+    "p6_cta": "Handla hos Recovery Aftercare",
+    "p7_desc": "Utrustning och eftervård i studioklass från Storbritannien — maskiner, bläck och läkningsessentials som artister fyller sina stationer med. Obs: Monsters Ink skickar för närvarande inte till USA — frakten till USA återkommer inom kort. Beställningar från andra länder skickas som vanligt.",
+    "p7_cta": "Handla hos Monsters Ink"
   },
   "artist_page": {
     "default_bio": "Tatueringsdesignartist på Tattoo Art Customs.",
@@ -860,6 +862,9 @@
     "pf_gummybear_blurb": "Mike's Cartoon Gummy Bear Shop design on a glossy 11oz mug, printed on demand.",
     "aff_drtattoo_name": "DrTattooSkin Aftercare System",
     "aff_drtattoo_blurb": "Doctor-formulated staged aftercare — wash, barrier ointment, recovery milk, itch gel, daily lotion & SPF 50. Fragrance-free.",
+    "aff_monstersink_name": "Monsters Ink Tattoo Supplies",
+    "aff_monstersink_blurb": "Professionella tatueringsprodukter från Storbritannien — maskiner, bläck, nålar och studioessentials för artister och studios. Använd koden tattoo.art i kassan. Obs: Monsters Ink skickar för närvarande inte till USA — frakten till USA återkommer inom kort. Beställningar från andra länder skickas som vanligt.",
+    "aff_monstersink_cta": "Handla hos Monsters Ink",
     "pf_tee_realism_wolf_name": "Realism Wolf t-shirt",
     "pf_tee_realism_wolf_blurb": "Mike's photorealistic wolf portrait på en premium svart Bella + Canvas t-shirt.",
     "pf_tee_realism_wolf_lw_name": "Realism Wolf Linework t-shirt",
@@ -1354,7 +1359,12 @@
     "leda_badge": "UP TO 15.8% BACK",
     "leda_h": "Leda Art Supply",
     "leda_text": "Premium sketchbooks artists swear by — 160 pages of smooth, archival fine-art paper that lays flat.",
-    "leda_cta": "Shop Leda Art Supply"
+    "leda_cta": "Shop Leda Art Supply",
+    "monstersink_badge": "PRO SUPPLIES",
+    "monstersink_h": "Monsters Ink Tattoo Supplies",
+    "monstersink_text": "Professionella tatueringsprodukter från Storbritannien — maskiner, bläck, nålar och studioessentials från en leverantör som artister i hela Europa handlar hos. Handla via vår länk och använd koden tattoo.art.",
+    "monstersink_note": "⚠ Obs: Monsters Ink skickar för närvarande inte till USA — frakten till USA återkommer inom kort. Beställningar från andra länder skickas som vanligt.",
+    "monstersink_cta": "Handla hos Monsters Ink"
   },
   "li_sideload": {
     "sub": {
@@ -1505,7 +1515,11 @@
       "ez_badge": "SHOP-ERBJUDANDE",
       "ez_h": "EZ Tattoo Supply — Promaskiner & patroner",
       "ez_text": "P2S Pro- och P3 Pro-maskiner plus Revolution- och V-Select-patroner från EZ Tattoo Supply — professionell utrustning sedan 2009. Beställ via vår shop-länk så tjänar vi 10 % utan extra kostnad för dig.",
-      "ez_cta": "Handla hos EZ Tattoo Supply"
+      "ez_cta": "Handla hos EZ Tattoo Supply",
+      "monstersink_badge": "PRO SUPPLIES",
+      "monstersink_h": "Monsters Ink",
+      "monstersink_text": "Tatueringsprodukter i proffsklass från Storbritannien — maskiner, bläck, nålar och möbler för aktiva studios. Obs: Monsters Ink skickar för närvarande inte till USA — frakten till USA återkommer inom kort. Beställningar från andra länder skickas som vanligt.",
+      "monstersink_cta": "Handla hos Monsters Ink"
     }
   },
   "bookings": {
@@ -1647,6 +1661,9 @@
     "baselabs_h": "Base Labs Aftercare",
     "baselabs_p": "Eftervården vi rekommenderar för ny tatuering — spara med koden TAC20.",
     "baselabs_cta": "Shoppa & spara",
+    "monstersink_h": "Monsters Ink Tattoo Supplies",
+    "monstersink_p": "Maskiner, bläck, nålar och studioessentials — fyll din station via vår partnerlänk. Obs: Monsters Ink skickar för närvarande inte till USA — frakten till USA återkommer inom kort. Beställningar från andra länder skickas som vanligt.",
+    "monstersink_cta": "Shoppa & spara",
     "bcards_h": "Visitkort för tatueringsstudios",
     "bcards_p": "Kort med din studios namn, kontakt och logga — studios med årsplan får en gratis låda med 50 kort.",
     "bcards_cta": "För studios",

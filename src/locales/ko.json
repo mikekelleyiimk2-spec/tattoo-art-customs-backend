@@ -36,7 +36,9 @@
     "p5_cta": "Shop DrTattooSkin",
     "p5_desc": "Doctor-formulated staged aftercare — Ink Wash and Barrier Ointment for fresh ink, Recovery Milk and Itch Calm Gel for the peel, Daily Lotion and SPF 50 for healed tattoos. Fragrance-free, barrier-first.",
     "p6_desc": "새 잉크를 위한 전문 애프터케어 — 통증 완화와 치유 지원으로 새 타투가 깨끗하게 아물도록 돕습니다。",
-    "p6_cta": "Recovery Aftercare에서 구매"
+    "p6_cta": "Recovery Aftercare에서 구매",
+    "p7_desc": "영국의 스튜디오급 용품과 애프터케어 — 아티스트들이 작업 공간에 갖춰두는 머신, 잉크, 힐링 필수품. 참고: Monsters Ink는 현재 미국으로 배송하지 않습니다 — 미국 배송은 곧 재개됩니다. 다른 국가의 주문은 정상적으로 배송됩니다.",
+    "p7_cta": "Monsters Ink에서 쇼핑하기"
   },
   "artist_page": {
     "default_bio": "Tattoo Art Customs의 타투 디자인 아티스트예요.",
@@ -860,6 +862,9 @@
     "pf_gummybear_blurb": "Mike's Cartoon Gummy Bear Shop design on a glossy 11oz mug, printed on demand.",
     "aff_drtattoo_name": "DrTattooSkin Aftercare System",
     "aff_drtattoo_blurb": "Doctor-formulated staged aftercare — wash, barrier ointment, recovery milk, itch gel, daily lotion & SPF 50. Fragrance-free.",
+    "aff_monstersink_name": "Monsters Ink Tattoo Supplies",
+    "aff_monstersink_blurb": "영국의 전문 타투 용품 — 머신, 잉크, 니들, 아티스트와 스튜디오를 위한 필수 아이템. 결제 시 코드 tattoo.art를 사용하세요. 참고: Monsters Ink는 현재 미국으로 배송하지 않습니다 — 미국 배송은 곧 재개됩니다. 다른 국가의 주문은 정상적으로 배송됩니다.",
+    "aff_monstersink_cta": "Monsters Ink에서 쇼핑하기",
     "pf_tee_realism_wolf_name": "Realism Wolf 티셔츠",
     "pf_tee_realism_wolf_blurb": "프리미엄 블랙 Bella + Canvas 티셔츠에 Mike's photorealistic wolf portrait.",
     "pf_tee_realism_wolf_lw_name": "Realism Wolf Linework 티셔츠",
@@ -1354,7 +1359,12 @@
     "leda_badge": "UP TO 15.8% BACK",
     "leda_h": "Leda Art Supply",
     "leda_text": "Premium sketchbooks artists swear by — 160 pages of smooth, archival fine-art paper that lays flat.",
-    "leda_cta": "Shop Leda Art Supply"
+    "leda_cta": "Shop Leda Art Supply",
+    "monstersink_badge": "PRO SUPPLIES",
+    "monstersink_h": "Monsters Ink Tattoo Supplies",
+    "monstersink_text": "영국의 전문 타투 용품 — 머신, 잉크, 니들, 스튜디오 필수품을 유럽 전역의 아티스트들이 찾는 공급업체에서 만나세요. 저희 링크로 구매하고 코드 tattoo.art를 사용하세요.",
+    "monstersink_note": "⚠ 안내: Monsters Ink는 현재 미국으로 배송하지 않습니다 — 미국 배송은 곧 재개됩니다. 다른 국가의 주문은 정상적으로 배송됩니다.",
+    "monstersink_cta": "Monsters Ink에서 쇼핑하기"
   },
   "li_sideload": {
     "sub": {
@@ -1505,7 +1515,11 @@
       "ez_badge": "샵 전용 혜택",
       "ez_h": "EZ Tattoo Supply — 프로 머신 & 카트리지",
       "ez_text": "EZ Tattoo Supply의 P2S Pro 및 P3 Pro 머신과 Revolution 및 V-Select 카트리지 — 2009년부터 이어온 전문가용 장비. 저희 샵 링크로 주문하시면 추가 비용 없이 저희가 10%를 받습니다.",
-      "ez_cta": "EZ Tattoo Supply에서 구매"
+      "ez_cta": "EZ Tattoo Supply에서 구매",
+      "monstersink_badge": "PRO SUPPLIES",
+      "monstersink_h": "Monsters Ink",
+      "monstersink_text": "영국의 전문가급 타투 용품 — 운영 중인 스튜디오를 위한 머신, 잉크, 니들, 가구. 참고: Monsters Ink는 현재 미국으로 배송하지 않습니다 — 미국 배송은 곧 재개됩니다. 다른 국가의 주문은 정상적으로 배송됩니다.",
+      "monstersink_cta": "Monsters Ink에서 쇼핑하기"
     }
   },
   "bookings": {
@@ -1647,6 +1661,9 @@
     "baselabs_h": "Base Labs 애프터케어",
     "baselabs_p": "새 타투에 추천하는 애프터케어 — 코드 TAC20으로 할인받으세요.",
     "baselabs_cta": "쇼핑하고 할인받기",
+    "monstersink_h": "Monsters Ink Tattoo Supplies",
+    "monstersink_p": "머신, 잉크, 니들 및 스튜디오 필수품 — 파트너 링크로 작업 공간을 채우세요. 참고: Monsters Ink는 현재 미국으로 배송하지 않습니다 — 미국 배송은 곧 재개됩니다. 다른 국가의 주문은 정상적으로 배송됩니다.",
+    "monstersink_cta": "쇼핑하고 할인받기",
     "bcards_h": "타투 스튜디오용 명함",
     "bcards_p": "샵 이름, 연락처, 로고가 들어간 명함 — 연간 플랜 샵에게는 50장 한 박스를 무료로 드립니다.",
     "bcards_cta": "샵 운영자용",

@@ -30,6 +30,7 @@ const AFTERCARE_AFFILIATES = [
   { name: 'Base Labs aftercare', url: 'https://baselabs.is/?coupon=TAC20', note: 'code TAC20 auto-applied' },
   { name: 'Tattoo aftercare on Amazon', url: 'https://www.amazon.com/s?k=tattoo+aftercare&tag=tattooartcust-20', note: null },
   { name: 'Recovery Aftercare', url: 'https://lasso.to/auGY590feE/', note: null },
+  { name: 'Monsters Ink tattoo supplies', url: 'https://monstersink.com/michael', note: 'code tattoo.art \u2014 please note: Monsters Ink does not currently ship to the USA; US shipping returns shortly' },
 ];
 
 function aftercareAffiliateTextBlock() {

@@ -45,6 +45,15 @@
     <p><%= t('discounts.amazon_text') %></p>
     <a class="btn" href="https://www.amazon.com/s?k=tattoo+aftercare&tag=tattooartcust-20" target="_blank" rel="noopener nofollow sponsored"><%= t('discounts.amazon_cta') %></a>
   </div>
+
+  <div class="product-card discount-card">
+    <div class="discount-badge"><%= t('discounts.monstersink_badge') %></div>
+    <h3><%= t('discounts.monstersink_h') %></h3>
+    <p><%= t('discounts.monstersink_text') %></p>
+    <p class="discount-code"><%= t('discounts.code_label') %>: <strong>tattoo.art</strong></p>
+    <p class="discount-note"><%= t('discounts.monstersink_note') %></p>
+    <a class="btn" href="https://monstersink.com/michael" target="_blank" rel="noopener nofollow sponsored"><%= t('discounts.monstersink_cta') %></a>
+  </div>
 </div>
 
 <p class="fineprint"><%= t('discounts.disclosure') %></p>
@@ -54,5 +63,6 @@
 .discount-card { position: relative; }
 .discount-badge { display: inline-block; background: var(--accent); color: #fff; font-size: .8rem; font-weight: bold; padding: .25rem .6rem; border-radius: 20px; margin-bottom: .5rem; }
 .discount-code { font-size: 1.1rem; }
+.discount-note { font-weight: bold; }
 .discount-code strong { background: var(--surface); border: 1px dashed var(--border); padding: .2rem .5rem; border-radius: 6px; letter-spacing: 1px; }
 </style>
