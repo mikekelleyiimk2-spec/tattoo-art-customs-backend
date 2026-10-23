@@ -1112,7 +1112,9 @@
     "remove": "Remover da lista de desejos",
     "saved": "Designs salvos",
     "signin_like": "Entre para que sua curtida conte",
-    "signin": "Entrar"
+    "signin": "Entrar",
+    "saved_merch": "Merch salvo",
+    "merch_tag": "Merch"
   },
   "transfer": {
     "send_title": "Send art to your shop",

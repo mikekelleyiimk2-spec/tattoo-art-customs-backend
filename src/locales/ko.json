@@ -1112,7 +1112,9 @@
     "remove": "위시리스트에서 삭제",
     "saved": "저장된 디자인",
     "signin_like": "좋아요를 반영하려면 로그인하세요",
-    "signin": "로그인"
+    "signin": "로그인",
+    "saved_merch": "저장한 굿즈",
+    "merch_tag": "굿즈"
   },
   "transfer": {
     "send_title": "Send art to your shop",

@@ -1112,7 +1112,9 @@
     "remove": "Quitar de favoritos",
     "saved": "Diseños guardados",
     "signin_like": "Inicia sesión para que tu me gusta cuente",
-    "signin": "Iniciar sesión"
+    "signin": "Iniciar sesión",
+    "saved_merch": "Merch guardado",
+    "merch_tag": "Merch"
   },
   "transfer": {
     "send_title": "Send art to your shop",

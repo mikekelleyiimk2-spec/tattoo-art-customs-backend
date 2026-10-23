@@ -1112,7 +1112,9 @@
     "remove": "ลบออกจากรายการโปรด",
     "saved": "ดีไซน์ที่บันทึกไว้",
     "signin_like": "เข้าสู่ระบบเพื่อให้ไลก์ของคุณถูกนับ",
-    "signin": "เข้าสู่ระบบ"
+    "signin": "เข้าสู่ระบบ",
+    "saved_merch": "สินค้าที่บันทึกไว้",
+    "merch_tag": "สินค้า"
   },
   "transfer": {
     "send_title": "Send art to your shop",

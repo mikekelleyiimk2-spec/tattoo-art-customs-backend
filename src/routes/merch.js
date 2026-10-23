@@ -45,6 +45,12 @@ router.get('/', async (req, res) => {
     }
   }
   const poster = require('../lib/print').PRODUCTS.poster_18x24;
+  // [merchhearts] Public ♥ counts for product cards (merch_like_counts
+  // rollup; products with no votes yet are simply absent -> 0 in the view).
+  const likeCounts = {};
+  for (const row of await db.all('SELECT merch_id, like_count FROM merch_like_counts').catch(() => [])) {
+    likeCounts[row.merch_id] = Number(row.like_count || 0);
+  }
   res.render('merch/index', {
     title: "Mike's Custom Tees",
     configured,
@@ -61,6 +67,7 @@ router.get('/', async (req, res) => {
     affiliates: catalog.affiliateProducts(),
     podProducts: catalog.podProducts(),
     sheinProducts: catalog.sheinProducts(),
+    likeCounts,
     printfulOk: configured,
     metaDescription: "Mike's Custom Tees — your purchased Tattoo Art Customs designs on premium Bella + Canvas tees and bold 18×24\" posters, printed on demand.",
   });
@@ -202,9 +209,12 @@ router.get('/catalog/:productId', formLimiter, async (req, res) => {
     }
     return pricing.teePriceCents(size);
   };
+  // [merchhearts] Public ♥ count for this product's heart button.
+  const likeRow = await db.get('SELECT like_count FROM merch_like_counts WHERE merch_id = ?', [product.id]).catch(() => null);
   res.render('merch/catalog-order', {
     title: `Mike's Custom Tees — ${product.id}`,
     product,
+    likeCount: Number((likeRow && likeRow.like_count) || 0),
     sizes,
     singleVariant: !product.sizes,
     colors: pricing.TEE_COLORS,

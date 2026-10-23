@@ -1112,7 +1112,9 @@
     "remove": "Remove from wishlist",
     "saved": "Saved designs",
     "signin_like": "Sign in to count your like",
-    "signin": "Sign in"
+    "signin": "Sign in",
+    "saved_merch": "Saved merch",
+    "merch_tag": "Merch"
   },
   "transfer": {
     "send_title": "Send art to your shop",

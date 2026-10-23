@@ -1112,7 +1112,9 @@
     "remove": "ウィッシュリストから削除",
     "saved": "保存済みのデザイン",
     "signin_like": "いいねを反映させるにはサインインしてください",
-    "signin": "サインイン"
+    "signin": "サインイン",
+    "saved_merch": "保存したグッズ",
+    "merch_tag": "グッズ"
   },
   "transfer": {
     "send_title": "Send art to your shop",

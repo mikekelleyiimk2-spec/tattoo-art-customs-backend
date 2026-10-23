@@ -1112,7 +1112,9 @@
     "remove": "Rimuovi dai preferiti",
     "saved": "Design salvati",
     "signin_like": "Accedi per far valere il tuo like",
-    "signin": "Accedi"
+    "signin": "Accedi",
+    "saved_merch": "Merch salvato",
+    "merch_tag": "Merch"
   },
   "transfer": {
     "send_title": "Send art to your shop",

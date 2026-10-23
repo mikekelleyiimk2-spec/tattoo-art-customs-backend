@@ -1112,7 +1112,9 @@
     "remove": "Убрать из избранного",
     "saved": "Сохранённые дизайны",
     "signin_like": "Войдите, чтобы ваш лайк засчитывался",
-    "signin": "Войти"
+    "signin": "Войти",
+    "saved_merch": "Сохранённый мерч",
+    "merch_tag": "Мерч"
   },
   "transfer": {
     "send_title": "Send art to your shop",

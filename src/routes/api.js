@@ -420,10 +420,26 @@ router.post('/push/expo-token', express.json(), async (req, res) => {
 // Wishlist (favorites) for the gallery — [wishlist] feature.
 // Guests keep favorites in localStorage only; logged-in users get server
 // persistence via the session (req.user). Writes 401 for guests.
-async function favoriteIdsFor(userId) {
+// [merchhearts] Favorites are typed (migration 100): 'design' rows point at
+// gallery designs, 'merch' rows at merchCatalog products. The id column is
+// shared (design ids and catalog slugs never collide). Responses keep the
+// legacy `ids` array and add typed `items` alongside it.
+const merchCatalog = require('../lib/merchCatalog');
+
+async function favoriteItemsFor(userId) {
   const rows = await db.all(
-    'SELECT design_id FROM user_favorites WHERE user_id = ? ORDER BY created_at DESC', [userId]);
-  return rows.map((r) => r.design_id);
+    'SELECT design_id, item_type FROM user_favorites WHERE user_id = ? ORDER BY created_at DESC', [userId]);
+  return rows.map((r) => ({ id: r.design_id, type: r.item_type === 'merch' ? 'merch' : 'design' }));
+}
+
+async function favoriteIdsFor(userId) {
+  return (await favoriteItemsFor(userId)).map((i) => i.id);
+}
+
+// Item type for a favorites/likes call: body.type or ?type=, default design.
+function favoriteItemType(req, explicit) {
+  const raw = String(explicit || (req.body && req.body.type) || req.query.type || '').toLowerCase();
+  return raw === 'merch' ? 'merch' : 'design';
 }
 
 async function validFavoriteDesign(designId) {
@@ -432,41 +448,77 @@ async function validFavoriteDesign(designId) {
   return db.get("SELECT id FROM designs WHERE id = ? AND status = 'approved'", [id]);
 }
 
+// Validate a typed favorite/like target. Designs must be approved gallery
+// rows; merch ids must exist in the static catalog (any status — hearts on
+// coming-soon cards are how demand shows before Printful lights up).
+async function validFavoriteItem(rawId, type) {
+  const id = String(rawId || '').slice(0, 128);
+  if (!id) return null;
+  if (type === 'merch') {
+    const p = merchCatalog.getProduct(id);
+    return p ? { id: p.id, type: 'merch' } : null;
+  }
+  const design = await validFavoriteDesign(id);
+  return design ? { id: design.id, type: 'design' } : null;
+}
+
+async function favoritesResponse(req, res) {
+  const items = await favoriteItemsFor(req.user.id);
+  return res.json({ ok: true, ids: items.map((i) => i.id), items });
+}
+
 router.get('/favorites', async (req, res) => {
   if (!req.user) return res.status(401).json({ ok: false, error: 'login required' });
-  return res.json({ ok: true, ids: await favoriteIdsFor(req.user.id) });
+  return favoritesResponse(req, res);
 });
 
 // Merge guest localStorage favorites into the server set (dedupe).
+// Accepts legacy `ids` (strings, all designs) and typed `items`
+// ([{id, type}]); entries may also be {id, type} objects inside `ids`.
 router.post('/favorites/merge', express.json(), async (req, res) => {
   if (!req.user) return res.status(401).json({ ok: false, error: 'login required' });
-  const ids = Array.isArray(req.body && req.body.ids) ? req.body.ids : [];
-  const now = db.now();
-  for (const raw of ids.slice(0, 500)) {
-    const design = await validFavoriteDesign(raw);
-    if (!design) continue;
-    await db.query(
-      'INSERT INTO user_favorites (user_id, design_id, created_at) VALUES (?, ?, ?) ON CONFLICT(user_id, design_id) DO NOTHING',
-      [req.user.id, design.id, now]);
+  const entries = [];
+  const rawIds = Array.isArray(req.body && req.body.ids) ? req.body.ids : [];
+  const rawItems = Array.isArray(req.body && req.body.items) ? req.body.items : [];
+  for (const raw of rawIds) {
+    if (raw && typeof raw === 'object') entries.push({ id: raw.id, type: favoriteItemType(req, raw.type) });
+    else entries.push({ id: raw, type: 'design' });
   }
-  return res.json({ ok: true, ids: await favoriteIdsFor(req.user.id) });
+  for (const raw of rawItems) {
+    if (raw && typeof raw === 'object') entries.push({ id: raw.id, type: favoriteItemType(req, raw.type) });
+  }
+  const now = db.now();
+  for (const entry of entries.slice(0, 500)) {
+    const item = await validFavoriteItem(entry.id, entry.type);
+    if (!item) continue;
+    await db.query(
+      'INSERT INTO user_favorites (user_id, design_id, item_type, created_at) VALUES (?, ?, ?, ?) ON CONFLICT(user_id, design_id) DO NOTHING',
+      [req.user.id, item.id, item.type, now]);
+  }
+  return favoritesResponse(req, res);
 });
 
 router.post('/favorites/:designId', express.json(), async (req, res) => {
   if (!req.user) return res.status(401).json({ ok: false, error: 'login required' });
-  const design = await validFavoriteDesign(req.params.designId);
-  if (!design) return res.status(404).json({ ok: false, error: 'not available' });
+  const item = await validFavoriteItem(req.params.designId, favoriteItemType(req));
+  if (!item) return res.status(404).json({ ok: false, error: 'not available' });
   await db.query(
-    'INSERT INTO user_favorites (user_id, design_id, created_at) VALUES (?, ?, ?) ON CONFLICT(user_id, design_id) DO NOTHING',
-    [req.user.id, design.id, db.now()]);
-  return res.json({ ok: true, favorited: true, id: design.id });
+    'INSERT INTO user_favorites (user_id, design_id, item_type, created_at) VALUES (?, ?, ?, ?) ON CONFLICT(user_id, design_id) DO NOTHING',
+    [req.user.id, item.id, item.type, db.now()]);
+  return res.json({ ok: true, favorited: true, id: item.id, type: item.type });
 });
 
-router.delete('/favorites/:designId', async (req, res) => {
+router.delete('/favorites/:designId', express.json(), async (req, res) => {
   if (!req.user) return res.status(401).json({ ok: false, error: 'login required' });
   const id = String(req.params.designId || '').slice(0, 128);
-  await db.query('DELETE FROM user_favorites WHERE user_id = ? AND design_id = ?',
-    [req.user.id, id]);
+  const typeGiven = String((req.body && req.body.type) || req.query.type || '').toLowerCase();
+  if (typeGiven === 'merch' || typeGiven === 'design') {
+    await db.query('DELETE FROM user_favorites WHERE user_id = ? AND design_id = ? AND item_type = ?',
+      [req.user.id, id, typeGiven]);
+  } else {
+    await db.query('DELETE FROM user_favorites WHERE user_id = ? AND design_id = ?',
+      [req.user.id, id]);
+  }
   return res.json({ ok: true, favorited: false, id });
 });
 
@@ -492,22 +544,49 @@ async function refreshLikeCount(designId) {
   return n;
 }
 
+// [merchhearts] Product likes mirror design likes in the parallel
+// merch_likes / merch_like_counts tables (migration 100), same voter-key
+// mechanics. The web client only pings likes for signed-in users (owner
+// rule 2026-10-11: guest saves stay local and cast no public vote).
+async function refreshMerchLikeCount(merchId) {
+  const row = await db.get('SELECT COUNT(*) AS n FROM merch_likes WHERE merch_id = ?', [merchId]);
+  const n = Number((row && row.n) || 0);
+  await db.query(
+    `INSERT INTO merch_like_counts (merch_id, like_count) VALUES (?, ?)
+     ON CONFLICT(merch_id) DO UPDATE SET like_count = excluded.like_count`,
+    [merchId, n]);
+  return n;
+}
+
 router.post('/likes/:designId', express.json(), formLimiter, async (req, res) => {
-  const design = await validFavoriteDesign(req.params.designId);
-  if (!design) return res.status(404).json({ ok: false, error: 'not available' });
+  const type = favoriteItemType(req);
+  const item = await validFavoriteItem(req.params.designId, type);
+  if (!item) return res.status(404).json({ ok: false, error: 'not available' });
   const voterKey = likeVoterKey(req);
   if (!voterKey) return res.status(400).json({ ok: false, error: 'voter_key required' });
+  if (item.type === 'merch') {
+    await db.query(
+      'INSERT INTO merch_likes (merch_id, voter_key, created_at) VALUES (?, ?, ?) ON CONFLICT(merch_id, voter_key) DO NOTHING',
+      [item.id, voterKey, db.now()]);
+    const likeCount = await refreshMerchLikeCount(item.id);
+    return res.json({ ok: true, liked: true, id: item.id, type: 'merch', like_count: likeCount });
+  }
   await db.query(
     'INSERT INTO design_likes (design_id, voter_key, created_at) VALUES (?, ?, ?) ON CONFLICT(design_id, voter_key) DO NOTHING',
-    [design.id, voterKey, db.now()]);
-  const likeCount = await refreshLikeCount(design.id);
-  return res.json({ ok: true, liked: true, id: design.id, like_count: likeCount });
+    [item.id, voterKey, db.now()]);
+  const likeCount = await refreshLikeCount(item.id);
+  return res.json({ ok: true, liked: true, id: item.id, like_count: likeCount });
 });
 
 router.delete('/likes/:designId', express.json(), formLimiter, async (req, res) => {
   const voterKey = likeVoterKey(req);
   if (!voterKey) return res.status(400).json({ ok: false, error: 'voter_key required' });
   const id = String(req.params.designId || '').slice(0, 128);
+  if (favoriteItemType(req) === 'merch') {
+    await db.query('DELETE FROM merch_likes WHERE merch_id = ? AND voter_key = ?', [id, voterKey]);
+    const likeCount = await refreshMerchLikeCount(id);
+    return res.json({ ok: true, liked: false, id, type: 'merch', like_count: likeCount });
+  }
   await db.query('DELETE FROM design_likes WHERE design_id = ? AND voter_key = ?', [id, voterKey]);
   const likeCount = await refreshLikeCount(id);
   return res.json({ ok: true, liked: false, id, like_count: likeCount });

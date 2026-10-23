@@ -101,6 +101,78 @@ async function runHttpTests(ok, req) {
   // Nav carries the wishlist link with count badge.
   ok(r.text.includes('/wishlist') && r.text.includes('data-fav-count'), 'nav has wishlist link + count badge');
 
+  // --- [merchhearts] typed merch favorites + product likes ---
+  const jdel = (creq, p, obj) => creq('DELETE', p, {
+    body: JSON.stringify(obj || {}), headers: { 'content-type': 'application/json' },
+  });
+  const mw = 'pf-tee-realism-wolf'; // live POD product in merchCatalog
+
+  r = await jpost(guest, '/api/favorites/' + mw, { type: 'merch' });
+  ok(r.status === 401, 'guest POST merch favorite -> 401');
+
+  r = await jpost(user, '/api/favorites/' + mw, { type: 'merch' });
+  ok(r.status === 200 && r.json && r.json.favorited === true && r.json.type === 'merch',
+    'POST merch favorite adds (typed)');
+
+  r = await user('GET', '/api/favorites');
+  ok(r.json.ids.includes(mw) && r.json.items.some((i) => i.id === mw && i.type === 'merch'),
+    'favorites list carries the merch item with type merch');
+  ok(r.json.items.some((i) => i.id === d2 && i.type === 'design'),
+    'design favorites still report type design');
+
+  const favRow = wdb.prepare('SELECT item_type FROM user_favorites WHERE design_id = ?').get(mw);
+  ok(favRow && favRow.item_type === 'merch', 'user_favorites row stores item_type merch');
+
+  r = await jpost(user, '/api/favorites/no-such-product', { type: 'merch' });
+  ok(r.status === 404, 'favoriting a missing merch product -> 404');
+
+  r = await jpost(user, '/api/favorites/' + mw);
+  ok(r.status === 404, 'merch id without type=merch is not a design -> 404');
+
+  r = await jpost(user, '/api/favorites/merge', {
+    items: [{ id: 'amazon-saniderm', type: 'merch' }, { id: 'bogus-merch', type: 'merch' }, { id: mw, type: 'merch' }],
+  });
+  ok(r.status === 200 && r.json.ids.includes('amazon-saniderm') && !r.json.ids.includes('bogus-merch'),
+    'typed merge adds merch, skips invalid, dedupes');
+
+  r = await jdel(user, '/api/favorites/' + mw, { type: 'merch' });
+  ok(r.status === 200 && r.json.favorited === false, 'DELETE merch favorite removes');
+  r = await user('GET', '/api/favorites');
+  ok(!r.json.ids.includes(mw) && r.json.ids.includes(d2) && r.json.ids.includes('amazon-saniderm'),
+    'merch delete leaves design + other merch favorites intact');
+
+  // Product likes: signed-in vote moves the public count, dedupes, unlikes.
+  const koi = 'pf-tee-koi-fish';
+  r = await jpost(user, '/api/likes/' + koi, { type: 'merch' });
+  ok(r.status === 200 && r.json && r.json.liked === true && r.json.type === 'merch' && r.json.like_count === 1,
+    'signed-in merch like -> count 1');
+  r = await jpost(user, '/api/likes/' + koi, { type: 'merch' });
+  ok(r.status === 200 && r.json.like_count === 1, 'repeat merch like dedupes');
+  r = await jdel(user, '/api/likes/' + koi, { type: 'merch' });
+  ok(r.status === 200 && r.json.liked === false && r.json.like_count === 0, 'merch unlike decrements to 0');
+  const mcRow = wdb.prepare('SELECT like_count FROM merch_like_counts WHERE merch_id = ?').get(koi);
+  ok(mcRow && Number(mcRow.like_count) === 0, 'merch_like_counts rollup matches');
+
+  r = await jpost(user, '/api/likes/no-such-product', { type: 'merch' });
+  ok(r.status === 404, 'liking a missing merch product -> 404');
+
+  // Design likes through the shared handler are unchanged (default type).
+  r = await jpost(user, '/api/likes/' + d2, {});
+  ok(r.status === 200 && r.json.liked === true && r.json.like_count === 1 && !('type' in r.json),
+    'design like keeps its original response shape');
+  r = await jdel(user, '/api/likes/' + d2, {});
+  ok(r.status === 200 && r.json.like_count === 0, 'design unlike still works');
+
+  // Merch page renders product hearts for guests; wishlist embeds the
+  // merch display data so hearted products can render next to designs.
+  r = await guest('GET', '/merch');
+  ok(r.status === 200 && r.text.includes('data-fav-id="' + mw + '"') && r.text.includes('data-fav-type="merch"'),
+    'merch cards carry merch heart buttons');
+  ok(r.text.includes('data-like-count="' + mw + '"'), 'merch cards carry public like counts');
+  r = await user('GET', '/wishlist');
+  ok(r.status === 200 && r.text.includes('TAC_MERCH_ITEMS') && r.text.includes('amazon-saniderm'),
+    'wishlist embeds merch display data');
+
   wdb.close();
 }
 

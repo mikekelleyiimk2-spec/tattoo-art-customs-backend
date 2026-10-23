@@ -1112,7 +1112,9 @@
     "remove": "从心愿单移除",
     "saved": "已保存的设计",
     "signin_like": "登录以让你的点赞生效",
-    "signin": "登录"
+    "signin": "登录",
+    "saved_merch": "已保存的周边",
+    "merch_tag": "周边"
   },
   "transfer": {
     "send_title": "Send art to your shop",

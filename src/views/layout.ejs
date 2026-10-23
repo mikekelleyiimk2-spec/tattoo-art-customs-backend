@@ -262,7 +262,7 @@ document.addEventListener('submit', function (ev) {
 <script>
 // [wishlist] globals for /js/favorites.js (guests + logged-in alike).
 window.TAC_LOGGED_IN = <%= currentUser ? 'true' : 'false' %>;
-window.TAC_FAV_STRINGS = <%- JSON.stringify({ add: t('fav.add'), remove: t('fav.remove'), buy: t('fav.buy'), saved: t('fav.saved'), signin_like: t('fav.signin_like'), signin: t('fav.signin') }) %>;
+window.TAC_FAV_STRINGS = <%- JSON.stringify({ add: t('fav.add'), remove: t('fav.remove'), buy: t('fav.buy'), saved: t('fav.saved'), signin_like: t('fav.signin_like'), signin: t('fav.signin'), saved_merch: t('fav.saved_merch'), merch_tag: t('fav.merch_tag') }) %>;
 </script>
 <script src="/js/favorites.js" defer></script>
 <% if (typeof paypalClientId !== 'undefined' && paypalClientId) { %>

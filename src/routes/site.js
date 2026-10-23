@@ -741,16 +741,16 @@ router.post('/doodle-to-tattoo', requireLogin, formLimiter, checkHoneypot, uploa
 // guests render client-side from localStorage + /api/designs.
 router.get('/wishlist', async (req, res) => {
   const member = await isActiveMember(req.user);
+  const { fmtMoney, translate } = require('../i18n');
+  const locale = res.locals.locale || 'en';
   let serverDesigns = null;
   if (req.user) {
     const favRows = await db.all(
-      'SELECT design_id FROM user_favorites WHERE user_id = ? ORDER BY created_at DESC',
-      [req.user.id]);
+      'SELECT design_id FROM user_favorites WHERE user_id = ? AND item_type = ? ORDER BY created_at DESC',
+      [req.user.id, 'design']);
     const favSet = new Set(favRows.map((r) => r.design_id));
     const designs = (await approvedDesigns(member)).filter((d) => favSet.has(d.id));
     const viewer = await viewerFor(req.user);
-    const { fmtMoney } = require('../i18n');
-    const locale = res.locals.locale || 'en';
     const priceStr = fmtMoney(locale, withFeeCents(premadePriceCents(new Date(), member)));
     serverDesigns = designs.map((d) => ({
       id: d.id,
@@ -760,9 +760,29 @@ router.get('/wishlist', async (req, res) => {
       price: priceStr,
     }));
   }
+  // [merchhearts] Display data for every catalog product, so the wishlist
+  // can render hearted merch next to designs (server-side for logged-in
+  // users, client-side from localStorage for guests). POD items link to
+  // their order page; affiliate/Shein items link out to the partner.
+  const merchItems = require('../lib/merchCatalog').CATALOG.map((p) => {
+    let price = '';
+    if (p.kind === 'pod' && p.priceCents != null) {
+      const cents = typeof p.priceCents === 'object' ? (p.priceCents.M || Object.values(p.priceCents)[0]) : p.priceCents;
+      if (cents) price = fmtMoney(locale, withFeeCents(cents));
+    }
+    return {
+      id: p.id,
+      title: translate(locale, p.nameKey),
+      thumb: p.image || '',
+      price,
+      url: p.kind === 'pod' ? `/merch/catalog/${p.id}` : (p.url || '/merch'),
+      external: p.kind !== 'pod',
+    };
+  });
   res.render('site/wishlist', {
     title: 'My Wishlist — Saved Tattoo Designs | Tattoo Art Customs',
     serverDesigns,
+    merchItems,
     metaDescription: 'Your saved tattoo designs at Tattoo Art Customs — every piece you hearted, in one place. Come back anytime and buy the ones you love.',
     canonical: `${config.baseUrl.replace(/\/$/, '')}/wishlist`,
   });

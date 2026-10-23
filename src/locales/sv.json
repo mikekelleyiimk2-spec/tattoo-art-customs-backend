@@ -1112,7 +1112,9 @@
     "remove": "Ta bort från önskelistan",
     "saved": "Sparade designer",
     "signin_like": "Logga in för att din gilla-markering ska räknas",
-    "signin": "Logga in"
+    "signin": "Logga in",
+    "saved_merch": "Sparad merch",
+    "merch_tag": "Merch"
   },
   "transfer": {
     "send_title": "Send art to your shop",
