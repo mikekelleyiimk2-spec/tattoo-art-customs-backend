@@ -1514,6 +1514,7 @@
     "storefront_welcome": "Welcome text (shown under your headline)",
     "perks": {
       "title": "Shop Perks",
+      "link": "샵 혜택",
       "sub": "Professional supply deals available only to active tattoo shop subscribers. Buying through these links supports Tattoo Art Customs at no extra cost to you.",
       "cnc_badge": "8-20% tiered",
       "cnc_h": "CNC Tattoo",
