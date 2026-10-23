@@ -356,6 +356,12 @@
     "all_apps": "See all our apps"
   },
   "landing": {
+    "hearts": {
+      "lead": "You pick what we make.",
+      "text": "Browse the gallery and heart the designs you'd actually wear — the most-hearted become real merch.",
+      "cta_gallery": "Browse the gallery",
+      "cta_toploved": "See the Top Loved"
+    },
     "watch": {
       "title": "📺 Watch",
       "text": "Our newest commercials and design Shorts. Plays here count as YouTube views — thanks for watching!",

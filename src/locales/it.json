@@ -356,6 +356,12 @@
     "all_apps": "Vedi tutte le nostre app"
   },
   "landing": {
+    "hearts": {
+      "lead": "Decidi tu cosa creiamo.",
+      "text": "Sfoglia la galleria e metti un cuore ai design che indosseresti davvero — quelli con più cuori diventeranno merchandising reale.",
+      "cta_gallery": "Sfoglia la galleria",
+      "cta_toploved": "Vedi i Top Loved"
+    },
     "watch": {
       "title": "📺 Guarda",
       "text": "I nostri spot e Shorts di design più recenti. Le riproduzioni qui contano come visualizzazioni YouTube — grazie per la visione!",

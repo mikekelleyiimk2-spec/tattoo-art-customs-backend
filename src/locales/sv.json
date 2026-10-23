@@ -356,6 +356,12 @@
     "all_apps": "Se alla våra appar"
   },
   "landing": {
+    "hearts": {
+      "lead": "Du bestämmer vad vi gör.",
+      "text": "Bläddra i galleriet och hjärtmarkera de designer du faktiskt skulle bära — de med flest hjärtan blir riktig merch.",
+      "cta_gallery": "Bläddra i galleriet",
+      "cta_toploved": "Se Top Loved"
+    },
     "watch": {
       "title": "📺 Titta",
       "text": "Våra nyaste reklamfilmer och designshorts. Uppspelningar här räknas som YouTube-visningar — tack för att du tittar!",

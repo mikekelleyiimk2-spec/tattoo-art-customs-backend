@@ -356,6 +356,12 @@
     "all_apps": "Ver todos os nossos apps"
   },
   "landing": {
+    "hearts": {
+      "lead": "Você decide o que a gente faz.",
+      "text": "Navegue pela galeria e dê um coração nos designs que você realmente usaria — os que receberem mais corações viram produtos de verdade.",
+      "cta_gallery": "Ver a galeria",
+      "cta_toploved": "Ver os Top Loved"
+    },
     "watch": {
       "title": "📺 Assista",
       "text": "Nossos comerciais e Shorts de designs mais recentes. As reproduções aqui contam como visualizações no YouTube — obrigado por assistir!",

@@ -356,6 +356,12 @@
     "all_apps": "Alle unsere Apps ansehen"
   },
   "landing": {
+    "hearts": {
+      "lead": "Du entscheidest, was wir machen.",
+      "text": "Stöbere in der Galerie und markiere die Designs mit einem Herz, die du wirklich tragen würdest — die Designs mit den meisten Herzen werden zu echtem Merch.",
+      "cta_gallery": "Galerie ansehen",
+      "cta_toploved": "Top Loved ansehen"
+    },
     "watch": {
       "title": "📺 Ansehen",
       "text": "Unsere neuesten Werbespots und Design-Shorts. Aufrufe hier zählen als YouTube-Ansichten — danke fürs Zuschauen!",
