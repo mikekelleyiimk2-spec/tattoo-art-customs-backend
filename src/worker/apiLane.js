@@ -27,7 +27,15 @@
 // CHECK THAT, BROADCAST, COMPARE ANSWERS, READ THE LOG, SUMMARIZE
 // THE LOOP, WORD LOOP — plus ROUTE failover (slice 3); and the
 // phone-lane fallback for every member when no API member can
-// answer a route (slice 3.5, owner redundancy order). Members
+// answer a route (slice 3.5, owner redundancy order); and the
+// LESSER TABLE (2026-10-23, owner order): five secondary providers
+// — Groq, OpenRouter, Cloudflare, NVIDIA, Mistral — seated under
+// their OWN names as understudy members, reachable by direct ask
+// ("Have Groq ...") only. They are NOT in ROSTER: the hello loop,
+// broadcast, word loop, summarizer pick, and primary ROUTE
+// failover keep their exact slice 1–3.5 behavior, and a lesser
+// seat never substitutes for a primary (labeling law, below).
+// Members
 // without an adapter yet or without a configured key are named in
 // the result with the reason — never silently skipped. Copilot has no API at all (design §3.8), so it
 // joins through the phone-lane bridge below (owner order
@@ -61,7 +69,28 @@ const ALIASES = {
   perplexity: 'Perplexity', sonar: 'Perplexity',
   grok: 'Grok', xai: 'Grok',
   deepseek: 'DeepSeek',
+  // Lesser table (secondary providers, seated 2026-10-23). NOTE:
+  // "groq" (GroqCloud) and "grok" (xAI) are DIFFERENT members —
+  // the tokenizer matches whole words, so the two never collide.
+  groq: 'Groq',
+  openrouter: 'OpenRouter', 'open router': 'OpenRouter',
+  cloudflare: 'Cloudflare', 'workers ai': 'Cloudflare',
+  nvidia: 'NVIDIA', nim: 'NVIDIA',
+  mistral: 'Mistral',
 };
+// The lesser table: secondary providers seated as understudy
+// members under their own names (owner order 2026-10-23, from the
+// secondary-AI research of 2026-10-22). LABELING LAW: a lesser
+// seat answers ONLY as itself — its blocks carry its own name,
+// its primer names it as an understudy, and it is never dressed
+// up as, swapped in for, or failed over to/from a primary. A
+// direct ask to a lesser seat settles with that seat's answer or
+// that seat's honest absence block — exactly like a named SHARE
+// target, there is no substitute. Lesser seats are deliberately
+// absent from ROSTER, so no multi-member command and no primary
+// failover path can reach them.
+const LESSER_ROSTER = ['Groq', 'OpenRouter', 'Cloudflare', 'NVIDIA', 'Mistral'];
+const LESSER_MEMBERS = new Set(LESSER_ROSTER);
 // Members with NO consumer API (design §3.8): no server-side call
 // can reach them. Copilot is bridged through the phone lane (see
 // the bridge section below); memberState still reports no_api for
@@ -83,6 +112,14 @@ const PRICES = {
   Perplexity: { inPerM: 1.00, outPerM: 1.00, perRequestMicroUsd: 5000 },
   Grok: { inPerM: 1.25, outPerM: 2.50 },
   DeepSeek: { inPerM: 0.15, outPerM: 0.60 },
+  // Lesser table: the seats run on free tiers today (hard stop at
+  // zero), so these are the providers' published PAY rates from
+  // the 2026-10-22 research, carried only so ai_runs estimates
+  // stay comparable if a seat ever moves to paid usage.
+  // OpenRouter :free models and Cloudflare's neuron-metered free
+  // allocation have no per-token rate — no entry, cost stays null.
+  Groq: { inPerM: 0.15, outPerM: 0.60 },
+  Mistral: { inPerM: 0.15, outPerM: 0.60 },
 };
 
 const PRIMER = [
@@ -600,10 +637,98 @@ function claudeAdapter(env, fetchImpl) {
   };
 }
 
+// ── Lesser table adapters (2026-10-23) ──────────────────────────
+// All five secondary providers speak the OpenAI chat-completions
+// shape (secondary-AI research 2026-10-22), so they ride the same
+// chatCompletionsAdapter factory as the slice-2 primaries — same
+// Member interface, same error vocabulary, same header-only key
+// handling. Each is configured by its own env key; a missing key
+// settles as honest NO_KEY through memberState/askMember, exactly
+// like an unconfigured primary. Default models are the research
+// file's free-tier picks, each overridable by its *_MODEL env.
+
+// Groq (GroqCloud) — OpenAI-compatible at api.groq.com/openai/v1.
+// Default free model: gpt-oss-120b (the Llama self-serve SKUs
+// moved to Enterprise-only in Aug 2026, per the research).
+function groqCloudAdapter(env, fetchImpl) {
+  return chatCompletionsAdapter({
+    member: 'Groq', keyEnv: 'GROQ_API_KEY', modelEnv: 'GROQ_MODEL',
+    defaultModel: 'openai/gpt-oss-120b', baseEnv: 'GROQ_BASE_URL', defaultBase: 'https://api.groq.com/openai/v1',
+  }, env, fetchImpl);
+}
+
+// OpenRouter — one key, 300+ models at openrouter.ai/api/v1.
+// Default: a :free variant (the free roster rotates; :free models
+// hard-stop at the daily cap and can never charge).
+function openrouterAdapter(env, fetchImpl) {
+  return chatCompletionsAdapter({
+    member: 'OpenRouter', keyEnv: 'OPENROUTER_API_KEY', modelEnv: 'OPENROUTER_MODEL',
+    defaultModel: 'openai/gpt-oss-120b:free', baseEnv: 'OPENROUTER_BASE_URL', defaultBase: 'https://openrouter.ai/api/v1',
+  }, env, fetchImpl);
+}
+
+// Cloudflare Workers AI — OpenAI-compatible endpoint is per-account:
+// /client/v4/accounts/<ACCOUNT_ID>/ai/v1. Configured therefore
+// requires BOTH CLOUDFLARE_API_KEY and CLOUDFLARE_ACCOUNT_ID; with
+// no account id the key is blanked in the effective env so the
+// seat reports honest NO_KEY instead of calling a malformed URL.
+function cloudflareAdapter(env, fetchImpl) {
+  const accountId = env.CLOUDFLARE_ACCOUNT_ID || '';
+  const effEnv = { ...env };
+  if (!accountId) {
+    effEnv.CLOUDFLARE_API_KEY = '';
+  } else if (!env.CLOUDFLARE_BASE_URL) {
+    effEnv.CLOUDFLARE_BASE_URL = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/v1`;
+  }
+  return chatCompletionsAdapter({
+    member: 'Cloudflare', keyEnv: 'CLOUDFLARE_API_KEY', modelEnv: 'CLOUDFLARE_MODEL',
+    defaultModel: '@cf/meta/llama-3.3-70b-instruct-fp8-fast', baseEnv: 'CLOUDFLARE_BASE_URL',
+    defaultBase: 'https://api.cloudflare.com/client/v4/accounts//ai/v1',
+  }, effEnv, fetchImpl);
+}
+
+// NVIDIA NIM (build.nvidia.com API catalog) — OpenAI-compatible
+// at integrate.api.nvidia.com/v1, nvapi- keys. Default: the
+// DeepSeek V4 Flash endpoint the research seats here.
+function nvidiaAdapter(env, fetchImpl) {
+  return chatCompletionsAdapter({
+    member: 'NVIDIA', keyEnv: 'NVIDIA_API_KEY', modelEnv: 'NVIDIA_MODEL',
+    defaultModel: 'deepseek-ai/deepseek-v4-flash', baseEnv: 'NVIDIA_BASE_URL', defaultBase: 'https://integrate.api.nvidia.com/v1',
+  }, env, fetchImpl);
+}
+
+// Mistral (La Plateforme) — OpenAI-compatible in practice at
+// api.mistral.ai/v1. Default: Mistral Small (the Experiment free
+// tier covers the catalog; Small is the volume pick).
+function mistralAdapter(env, fetchImpl) {
+  return chatCompletionsAdapter({
+    member: 'Mistral', keyEnv: 'MISTRAL_API_KEY', modelEnv: 'MISTRAL_MODEL',
+    defaultModel: 'mistral-small-latest', baseEnv: 'MISTRAL_BASE_URL', defaultBase: 'https://api.mistral.ai/v1',
+  }, env, fetchImpl);
+}
+
+// The system prompt a lesser seat answers under: it names the
+// seat as itself — an understudy member of the lesser table — so
+// even the model's own self-description can never dress it up as
+// a primary (labeling law). The [FROM <name>] envelope is stamped
+// by the framework regardless of what the model claims.
+function lesserPrimer(member) {
+  return [
+    `You are ${member}, a member of the AI team's lesser table — a secondary`,
+    'provider seated as an understudy alongside the primary team (Muse, ChatGPT,',
+    'Claude, Gemini, Copilot, Perplexity, Grok, DeepSeek). You answer as',
+    `${member}, under your own name — never claim to be another member, and never`,
+    "claim another member's words as your own. Answer the owner's request",
+    'directly, in plain language, and keep it concise unless the request asks',
+    'for depth. If you cannot do something, say so plainly in one line.',
+  ].join('\n');
+}
+
 function buildAdapters(env, fetchImpl) {
   const map = new Map();
   for (const make of [museAdapter, chatgptAdapter, claudeAdapter, geminiAdapter,
-    perplexityAdapter, grokAdapter, deepseekAdapter]) {
+    perplexityAdapter, grokAdapter, deepseekAdapter,
+    groqCloudAdapter, openrouterAdapter, cloudflareAdapter, nvidiaAdapter, mistralAdapter]) {
     const a = make(env, fetchImpl);
     map.set(a.member, a);
   }
@@ -1081,6 +1206,21 @@ async function finalizeMemberHops(parentId, answerText) {
 // ── Execution ───────────────────────────────────────────────────────
 
 async function executeRoute(cmd, parsed, ctx, run) {
+  if (LESSER_MEMBERS.has(parsed.member)) {
+    // LESSER TABLE direct ask (2026-10-23): the named lesser seat
+    // answers itself, under its own name and its understudy
+    // primer, or settles failed with its honest absence block.
+    // There is NO failover and NO phone fallback here — a lesser
+    // seat is not a primary, no primary may silently take its
+    // place (labeling law), and the lesser providers have no
+    // phone panes. Primary failover below is untouched.
+    const member = parsed.member;
+    const res = await askMember(cmd, ctx, run, member, {
+      system: lesserPrimer(member), user: parsed.task, maxTokens: 800,
+    });
+    if (!res.ok) return { status: 'failed', answer: absenceBlock(member, res.reasonText) };
+    return { status: 'done', answer: envelope(member, res.text) };
+  }
   if (parsed.member === 'Copilot') {
     // No API (design §3.8): Copilot is asked through the phone
     // (owner order 2026-10-22). The child carries this command's
@@ -1655,9 +1795,9 @@ function stop() {
 }
 
 module.exports = {
-  ROSTER, ALIASES, PRICES, PRIMER, MemberError,
+  ROSTER, LESSER_ROSTER, LESSER_MEMBERS, ALIASES, PRICES, PRIMER, MemberError,
   resolveMember, parseCommand, envelope, absenceBlock, costMicroUsd,
-  buildAdapters, memberState, absenceReason,
+  buildAdapters, memberState, absenceReason, lesserPrimer,
   recentSettledCommands, sessionEntries, buildLogText, answerAuthors,
   askMember, extractAddedWord, WORD_LOOP_START, LOG_CONTEXT_CAP,
   COPILOT_PENDING_TEXT, copilotPendingBlock, copilotChildBlock,

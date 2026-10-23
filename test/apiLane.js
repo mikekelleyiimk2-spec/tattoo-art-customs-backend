@@ -19,6 +19,12 @@ const TEST_ANTHROPIC_KEY = 'test-anthropic-key-not-real';
 const TEST_XAI_KEY = 'test-xai-key-not-real';
 const TEST_PERPLEXITY_KEY = 'test-perplexity-key-not-real';
 const TEST_META_KEY = 'test-meta-key-not-real';
+const TEST_GROQ_KEY = 'test-groq-key-not-real';
+const TEST_OPENROUTER_KEY = 'test-openrouter-key-not-real';
+const TEST_CLOUDFLARE_KEY = 'test-cloudflare-key-not-real';
+const TEST_CLOUDFLARE_ACCOUNT = 'test-cloudflare-account-id';
+const TEST_NVIDIA_KEY = 'test-nvidia-key-not-real';
+const TEST_MISTRAL_KEY = 'test-mistral-key-not-real';
 
 // Copilot phone-lane bridge fixtures: created in the DB phase (the
 // HTTP phase has no live db handle), consumed over HTTP.
@@ -84,6 +90,41 @@ function mockFetch(calls) {
         choices: [{ message: { content: 'Hello from Muse!' } }],
         usage: { prompt_tokens: 160, completion_tokens: 30 },
         model: 'muse-spark-1.3',
+      });
+    }
+    if (url.includes('api.groq.com')) {
+      return jsonResponse(200, {
+        choices: [{ message: { content: 'Hello from Groq!' } }],
+        usage: { prompt_tokens: 90, completion_tokens: 12 },
+        model: 'openai/gpt-oss-120b',
+      });
+    }
+    if (url.includes('openrouter.ai')) {
+      return jsonResponse(200, {
+        choices: [{ message: { content: 'Hello from OpenRouter!' } }],
+        usage: { prompt_tokens: 80, completion_tokens: 10 },
+        model: 'openai/gpt-oss-120b:free',
+      });
+    }
+    if (url.includes('api.cloudflare.com')) {
+      return jsonResponse(200, {
+        choices: [{ message: { content: 'Hello from Cloudflare!' } }],
+        usage: { prompt_tokens: 70, completion_tokens: 9 },
+        model: '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
+      });
+    }
+    if (url.includes('integrate.api.nvidia.com')) {
+      return jsonResponse(200, {
+        choices: [{ message: { content: 'Hello from NVIDIA!' } }],
+        usage: { prompt_tokens: 85, completion_tokens: 11 },
+        model: 'deepseek-ai/deepseek-v4-flash',
+      });
+    }
+    if (url.includes('api.mistral.ai')) {
+      return jsonResponse(200, {
+        choices: [{ message: { content: 'Hello from Mistral!' } }],
+        usage: { prompt_tokens: 95, completion_tokens: 14 },
+        model: 'mistral-small-latest',
       });
     }
     throw new Error(`mock fetch: unexpected URL ${url}`);
@@ -898,6 +939,158 @@ async function runDbTests(ok) {
     && !!fb503DevHop && fb503DevHop.status === 'delegated'
     && !!fb503Child && fb503Child.text === 'Have Gemini say the word ready',
   'slice 3.5 fallback: ai_runs shows the failed API hop (HTTP_503) AND the device delegation; the child carries the command');
+
+  console.log('api lane lesser table (secondary providers — own names, no substitution):');
+  ok(apiLane.ROSTER.length === 8 && !apiLane.ROSTER.includes('Groq')
+    && !apiLane.ROSTER.includes('Mistral'),
+  'lesser table: the primary roster is unchanged — no lesser seat sits in ROSTER, so loops, broadcasts, and primary failover behave exactly as before');
+  ok(apiLane.LESSER_ROSTER.join(',') === 'Groq,OpenRouter,Cloudflare,NVIDIA,Mistral',
+    'lesser table: the five secondary providers are rostered under their own names');
+  const pgq = apiLane.parseCommand('Have Groq say the word ready');
+  ok(pgq.type === 'route' && pgq.member === 'Groq' && pgq.task === 'say the word ready',
+    'lesser table parse: "Have Groq ..." routes to Groq (GroqCloud) with the task intact');
+  ok(apiLane.resolveMember('grok') === 'Grok' && apiLane.resolveMember('groq') === 'Groq'
+    && apiLane.resolveMember('openrouter') === 'OpenRouter' && apiLane.resolveMember('nim') === 'NVIDIA',
+  'lesser table parse: Grok (xAI) and Groq (GroqCloud) are different members and never collide; lesser aliases resolve');
+
+  const callsL = [];
+  const lesserEnv = {};
+  lesserEnv['GROQ' + '_API_KEY'] = TEST_GROQ_KEY;
+  lesserEnv['OPENROUTER' + '_API_KEY'] = TEST_OPENROUTER_KEY;
+  lesserEnv['CLOUDFLARE' + '_API_KEY'] = TEST_CLOUDFLARE_KEY;
+  lesserEnv['CLOUDFLARE' + '_ACCOUNT_ID'] = TEST_CLOUDFLARE_ACCOUNT;
+  lesserEnv['NVIDIA' + '_API_KEY'] = TEST_NVIDIA_KEY;
+  lesserEnv['MISTRAL' + '_API_KEY'] = TEST_MISTRAL_KEY;
+  const lesser = apiLane.createWorker({
+    env: lesserEnv, fetchImpl: mockFetch(callsL), retryDelayMs: 0, workerId: 'test-lesser',
+  });
+
+  const lqId = await insertCmd('Have Groq say the word ready', 'api', { device_id: 'lesser-table' });
+  await lesser.drain();
+  const lqRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [lqId]);
+  ok(lqRow.status === 'done' && lqRow.answer === '[FROM Groq]\nHello from Groq!\n[END]',
+    'lesser table: Groq answer posted back as a [FROM Groq] envelope');
+  ok(!lqRow.answer.includes('[FROM Grok]') && !lqRow.answer.includes('[FROM Gemini]')
+    && !lqRow.answer.includes('[FROM ChatGPT]'),
+  'labeling law: a Groq answer block carries Groq\'s own name — it is never dressed up as Grok or any primary');
+  const lqCall = callsL.find((c) => c.url.includes('api.groq.com'));
+  ok(!!lqCall && lqCall.url.includes('/openai/v1/chat/completions')
+    && lqCall.opts.headers.authorization === `Bearer ${TEST_GROQ_KEY}`
+    && !lqCall.url.includes(TEST_GROQ_KEY)
+    && JSON.parse(lqCall.opts.body).model === 'openai/gpt-oss-120b'
+    && String(lqCall.opts.body).includes('You are Groq') && String(lqCall.opts.body).includes('lesser table'),
+  'lesser table: Groq key travels as a Bearer header only; the free default model is gpt-oss-120b; the system prompt names Groq an understudy under its own name');
+  const lqHop = await db.get("SELECT * FROM ai_runs WHERE command_id = ? AND member = 'Groq'", [lqId]);
+  ok(!!lqHop && lqHop.status === 'done' && lqHop.prompt_tokens === 90
+    && lqHop.completion_tokens === 12 && lqHop.cost_microusd === 21,
+  'lesser table: ai_runs records the Groq hop with measured tokens and estimated cost');
+
+  const lorId = await insertCmd('Have OpenRouter say the word ready', 'api', { device_id: 'lesser-table' });
+  await lesser.drain();
+  const lorRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [lorId]);
+  ok(lorRow.status === 'done' && lorRow.answer === '[FROM OpenRouter]\nHello from OpenRouter!\n[END]',
+    'lesser table: OpenRouter answer posted back as a [FROM OpenRouter] envelope');
+  const lorCall = callsL.find((c) => c.url.includes('openrouter.ai'));
+  ok(!!lorCall && lorCall.url.includes('/api/v1/chat/completions')
+    && lorCall.opts.headers.authorization === `Bearer ${TEST_OPENROUTER_KEY}`
+    && !lorCall.url.includes(TEST_OPENROUTER_KEY)
+    && JSON.parse(lorCall.opts.body).model === 'openai/gpt-oss-120b:free',
+  'lesser table: OpenRouter key travels as a Bearer header only; the default model is a :free variant (hard stop, never charges)');
+
+  const lcfId = await insertCmd('Have Cloudflare say the word ready', 'api', { device_id: 'lesser-table' });
+  await lesser.drain();
+  const lcfRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [lcfId]);
+  ok(lcfRow.status === 'done' && lcfRow.answer === '[FROM Cloudflare]\nHello from Cloudflare!\n[END]',
+    'lesser table: Cloudflare answer posted back as a [FROM Cloudflare] envelope');
+  const lcfCall = callsL.find((c) => c.url.includes('api.cloudflare.com'));
+  ok(!!lcfCall && lcfCall.url.includes(`/client/v4/accounts/${TEST_CLOUDFLARE_ACCOUNT}/ai/v1/chat/completions`)
+    && lcfCall.opts.headers.authorization === `Bearer ${TEST_CLOUDFLARE_KEY}`
+    && !lcfCall.url.includes(TEST_CLOUDFLARE_KEY)
+    && JSON.parse(lcfCall.opts.body).model === '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
+  'lesser table: Cloudflare is called on its per-account OpenAI-compatible endpoint, key as a Bearer header only');
+
+  const lnvId = await insertCmd('Have NVIDIA say the word ready', 'api', { device_id: 'lesser-table' });
+  await lesser.drain();
+  const lnvRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [lnvId]);
+  ok(lnvRow.status === 'done' && lnvRow.answer === '[FROM NVIDIA]\nHello from NVIDIA!\n[END]',
+    'lesser table: NVIDIA answer posted back as a [FROM NVIDIA] envelope');
+  const lnvCall = callsL.find((c) => c.url.includes('integrate.api.nvidia.com'));
+  ok(!!lnvCall && lnvCall.url.includes('/v1/chat/completions')
+    && lnvCall.opts.headers.authorization === `Bearer ${TEST_NVIDIA_KEY}`
+    && !lnvCall.url.includes(TEST_NVIDIA_KEY)
+    && JSON.parse(lnvCall.opts.body).model === 'deepseek-ai/deepseek-v4-flash',
+  'lesser table: NVIDIA key travels as a Bearer header only; the default NIM model is DeepSeek V4 Flash');
+
+  const lmiId = await insertCmd('Have Mistral say the word ready', 'api', { device_id: 'lesser-table' });
+  await lesser.drain();
+  const lmiRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [lmiId]);
+  ok(lmiRow.status === 'done' && lmiRow.answer === '[FROM Mistral]\nHello from Mistral!\n[END]',
+    'lesser table: Mistral answer posted back as a [FROM Mistral] envelope');
+  const lmiCall = callsL.find((c) => c.url.includes('api.mistral.ai'));
+  ok(!!lmiCall && lmiCall.url.includes('/v1/chat/completions')
+    && lmiCall.opts.headers.authorization === `Bearer ${TEST_MISTRAL_KEY}`
+    && !lmiCall.url.includes(TEST_MISTRAL_KEY)
+    && JSON.parse(lmiCall.opts.body).model === 'mistral-small-latest',
+  'lesser table: Mistral key travels as a Bearer header only; the default model is mistral-small-latest');
+
+  console.log('api lane lesser table (NO_KEY honesty — no substitution, no failover, no phone child):');
+  const callsG = [];
+  const gemOnlyEnv = {};
+  gemOnlyEnv['GEMINI' + '_API_KEY'] = TEST_GEMINI_KEY;
+  const gemOnly = apiLane.createWorker({
+    env: gemOnlyEnv, fetchImpl: mockFetch(callsG), retryDelayMs: 0, workerId: 'test-lesser-nokey',
+  });
+  const nkLId = await insertCmd('Have Mistral say the word ready', 'api', { device_id: 'lesser-nokey' });
+  await gemOnly.drain();
+  const nkLRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [nkLId]);
+  ok(nkLRow.status === 'failed'
+    && nkLRow.answer === '[FROM Mistral]\n(not answered — Mistral is not configured on the server (no API key set))\n[END]',
+  'lesser table NO_KEY: an unconfigured lesser seat settles failed with its own honest absence block, exactly like an unconfigured primary');
+  ok(!nkLRow.answer.includes('[FROM Gemini]') && !nkLRow.answer.includes('failed over'),
+  'labeling law: a configured primary (Gemini) NEVER substitutes for an unconfigured lesser seat — no failover into or out of the lesser table');
+  const nkLHop = await db.get("SELECT * FROM ai_runs WHERE command_id = ? AND member = 'Mistral'", [nkLId]);
+  ok(!!nkLHop && nkLHop.status === 'skipped' && nkLHop.error === 'NO_KEY',
+    'lesser table NO_KEY: ai_runs records the lesser hop as skipped with error NO_KEY');
+  const nkLChildren = await db.all('SELECT * FROM ai_commands WHERE parent_id = ?', [nkLId]);
+  ok(nkLChildren.length === 0,
+    'lesser table NO_KEY: no phone child spawns — the lesser providers have no phone panes to fall back to');
+
+  const callsCf = [];
+  const cfNoAcctEnv = {};
+  cfNoAcctEnv['CLOUDFLARE' + '_API_KEY'] = TEST_CLOUDFLARE_KEY;
+  const cfNoAcct = apiLane.createWorker({
+    env: cfNoAcctEnv, fetchImpl: mockFetch(callsCf), retryDelayMs: 0, workerId: 'test-lesser-cf',
+  });
+  const cfNaId = await insertCmd('Have Cloudflare say the word ready', 'api', { device_id: 'lesser-cf-noacct' });
+  await cfNoAcct.drain();
+  const cfNaRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [cfNaId]);
+  ok(cfNaRow.status === 'failed' && cfNaRow.answer.includes('[FROM Cloudflare]')
+    && cfNaRow.answer.includes('not configured on the server') && callsCf.length === 0,
+  'lesser table: Cloudflare with a key but no account ID is honestly not configured — no call is ever made to a malformed per-account URL');
+
+  console.log('api lane lesser table (provider error path):');
+  const callsE = [];
+  const errLesserFetch = async (url, opts = {}) => {
+    callsE.push({ url, opts });
+    if (url.includes('api.groq.com')) return jsonResponse(500, { error: 'boom' });
+    throw new Error(`lesser error fetch: unexpected URL ${url}`);
+  };
+  const errEnv = {};
+  errEnv['GROQ' + '_API_KEY'] = TEST_GROQ_KEY;
+  const errLesser = apiLane.createWorker({
+    env: errEnv, fetchImpl: errLesserFetch, retryDelayMs: 0, workerId: 'test-lesser-err',
+  });
+  const leId = await insertCmd('Have Groq say the word ready', 'api', { device_id: 'lesser-error' });
+  await errLesser.drain();
+  const leRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [leId]);
+  ok(leRow.status === 'failed' && leRow.answer.includes('[FROM Groq]')
+    && leRow.answer.includes('Groq returned HTTP 500'),
+  'lesser table error: a provider 500 settles the direct ask failed with Groq\'s own absence block naming the error');
+  ok(callsE.filter((c) => c.url.includes('api.groq.com')).length === 2,
+    'lesser table error: the transient-failure retry fires exactly once before settling, same as the primaries');
+  const leHop = await db.get("SELECT * FROM ai_runs WHERE command_id = ? AND member = 'Groq'", [leId]);
+  ok(!!leHop && leHop.status === 'failed' && leHop.error === 'HTTP_500',
+    'lesser table error: ai_runs records the failed Groq hop with error HTTP_500');
 }
 
 async function runHttpTests(ok) {
