@@ -202,7 +202,7 @@ router.post('/ai-commands', express.json(), async (req, res) => {
   if (!serviceToken()) return res.status(404).json({ ok: false });
   if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
   try {
-    const text = String(req.body?.text || '').trim().slice(0, 2000);
+    const text = String(req.body?.text || '').trim().slice(0, 8000);
     const deviceId = String(req.body?.device_id || '').trim();
     if (!text) return res.status(400).json({ ok: false, error: 'text required' });
     if (!/^[A-Za-z0-9_-]{1,80}$/.test(deviceId)) {
@@ -238,7 +238,7 @@ router.post('/ai-commands/client', express.json(), async (req, res) => {
   try {
     const device = await deviceFromKey(req);
     if (!device) return res.status(401).json({ ok: false, error: 'unauthorized' });
-    const text = String(req.body?.text || '').trim().slice(0, 2000);
+    const text = String(req.body?.text || '').trim().slice(0, 8000);
     if (!text) return res.status(400).json({ ok: false, error: 'text required' });
     const id = crypto.randomUUID();
     await db.insert('ai_commands', {
