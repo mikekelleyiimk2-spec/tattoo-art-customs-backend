@@ -1060,36 +1060,51 @@ router.get('/apps', (req, res) => res.render('site/apps', {
   dl: require('../lib/appDownloads').availabilityMap(),
 }));
 
-router.get('/testers', (req, res) => res.render('site/testers', {
-  title: 'Become a Tester — Help Launch Our Apps | Usefulappz',
-  metaDescription: 'Help launch 16 Usefulappz apps on Google Play — tap an app, become a tester, done in about two minutes.',
-  // Closed-test join links (same verified console links as the tester
-  // invite email, 2026-10-14). TAC free is DONE (12+) — shown in the
-  // view banner, deliberately not in this list.
-  testerApps: [
-    { name: 'Tattoo Art Customs', url: 'https://play.google.com/apps/testing/com.tattooartcustoms.app' },
-    { name: 'Tattoo Art Customs Pro', url: 'https://play.google.com/apps/testing/com.tattooartcustoms.app.pro' },
-    { name: 'Little Inkers', url: 'https://play.google.com/apps/testing/com.usefulappz.littleinkers' },
-    { name: 'Little Inkers Coloring', url: 'https://play.google.com/apps/testing/com.usefulappz.littleinkerscoloring' },
-    { name: 'Sticker World', url: 'https://play.google.com/apps/testing/com.usefulappz.stickerworld' },
-    { name: 'Draw With Me', url: 'https://play.google.com/apps/testing/com.usefulappz.drawwithme' },
-    { name: 'Coloring Contests', url: 'https://play.google.com/apps/testing/com.usefulappz.coloringcontests' },
-    { name: 'Clipboard Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.clipboardbar' },
-    { name: 'Countdown Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.countdownbar' },
-    { name: 'Muse Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.musebar' },
-    { name: 'ChatGPT Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.chatgptbar' },
-    { name: 'Claude Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.claudebar' },
-    { name: 'Gemini Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.geminibar' },
-    { name: 'Grok Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.grokbar' },
-    { name: 'Perplexity Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.perplexitybar' },
-    { name: 'Copilot Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.copilotbar' },
-    { name: 'DeepSeek Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.deepseekbar' },
-    { name: 'ScreenQR', url: 'https://play.google.com/apps/testing/com.usefulappz.screenqr' },
-    { name: 'Odometer', url: 'https://play.google.com/apps/testing/com.usefulappz.odometer' },
-    { name: 'AI Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.aibar' },
-    { name: 'Habit Dot', url: 'https://play.google.com/apps/testing/com.usefulappz.habitdot' },
-  ],
-}));
+// Tester pool front door. The app list carries ONLY opt-in links that are
+// verified live in Play Console records — apps whose track is not live yet
+// get no link at all (the pool signup below is how people get tapped the
+// moment those tracks open). Link states last verified against the tester
+// roster's console reads (2026-10-22) plus ScreenQR's live track.
+const TESTER_APPS_OPEN = [
+  { name: 'Tattoo Art Customs', url: 'https://play.google.com/apps/testing/com.tattooartcustoms.app' },
+  { name: 'Tattoo Art Customs Pro', url: 'https://play.google.com/apps/testing/com.tattooartcustoms.app.pro' },
+  { name: 'Little Inkers', url: 'https://play.google.com/apps/testing/com.usefulappz.littleinkers' },
+  { name: 'Little Inkers Coloring', url: 'https://play.google.com/apps/testing/com.usefulappz.littleinkerscoloring' },
+  { name: 'Sticker World', url: 'https://play.google.com/apps/testing/com.usefulappz.stickerworld' },
+  { name: 'Draw With Me', url: 'https://play.google.com/apps/testing/com.usefulappz.drawwithme' },
+  { name: 'Coloring Contests', url: 'https://play.google.com/apps/testing/com.usefulappz.coloringcontests' },
+  { name: 'Clipboard Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.clipboardbar' },
+  { name: 'Countdown Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.countdownbar' },
+  { name: 'Muse Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.musebar' },
+  { name: 'ChatGPT Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.chatgptbar' },
+  { name: 'Claude Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.claudebar' },
+  { name: 'Gemini Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.geminibar' },
+  { name: 'Grok Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.grokbar' },
+  { name: 'Perplexity Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.perplexitybar' },
+  { name: 'Copilot Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.copilotbar' },
+  { name: 'DeepSeek Bar', url: 'https://play.google.com/apps/testing/com.usefulappz.deepseekbar' },
+  { name: 'ScreenQR', url: 'https://play.google.com/apps/testing/com.usefulappz.screenqr' },
+];
+// On the console, tracks not live yet — no opt-in link exists to give.
+const TESTER_APPS_SOON = ['AI Bar (OneMind)', 'Odometer — Mileage Tracker', 'Habit Dot'];
+// Builds in flight — not on the console yet.
+const TESTER_APPS_WORKS = ['World Weather', 'The Library', 'Loophole Ciphers', 'Ghost Box'];
+
+router.get('/testers', async (req, res) => {
+  let poolCount = 0;
+  try {
+    const row = await db.get('SELECT COUNT(*) AS n FROM tester_signups');
+    poolCount = (row && row.n) || 0;
+  } catch (e) { /* table lands with migration 102; page renders regardless */ }
+  res.render('site/testers', {
+    title: 'Become a Tester — Help Launch Our Apps | Usefulappz',
+    metaDescription: 'Join the Useful Appz tester pool: get our apps before anyone else, help a tiny studio launch, and get tapped the moment a new test opens.',
+    testerApps: TESTER_APPS_OPEN,
+    testerAppsSoon: TESTER_APPS_SOON,
+    testerAppsWorks: TESTER_APPS_WORKS,
+    poolCount,
+  });
+});
 
 router.get('/tap-to-pay', (req, res) => res.render('site/tap-to-pay', {
   title: 'Tap-to-Pay for Tattoo Shops — Tattoo Art Customs',
@@ -1283,6 +1298,43 @@ router.post('/newsletter', formLimiter, checkHoneypot, async (req, res) => {
   } catch (e) { console.error('newsletter insert failed:', e.message); }
   req.session.flash = res.locals.t('newsletter.success');
   res.redirect(back);
+});
+
+// Tester pool signup (the /testers page form). One row per email — a repeat
+// signup just refreshes the person's name and picks. Joining the pool is
+// NOT a Google Play opt-in: Google counts only the tap on an app's own
+// Play page, and the page copy says so plainly.
+router.post('/testers', formLimiter, checkHoneypot, async (req, res) => {
+  const email = String(req.body.email || '').trim().toLowerCase().slice(0, 120);
+  const name = String(req.body.name || '').trim().slice(0, 80);
+  if (!EMAIL_RE.test(email)) {
+    req.session.flash = res.locals.t('testers.flash_invalid');
+    return res.redirect('/testers#join');
+  }
+  const picked = (Array.isArray(req.body.interests) ? req.body.interests : [req.body.interests])
+    .filter((v) => ['tattoo', 'coloring', 'tools', 'everything'].includes(v));
+  const interests = (!picked.length || picked.includes('everything'))
+    ? 'everything' : [...new Set(picked)].join(',');
+  const creditOk = req.body.credit_ok ? 1 : 0;
+  try {
+    const existing = await db.get('SELECT id FROM tester_signups WHERE email = ?', [email]);
+    if (existing) {
+      await db.update('tester_signups', existing.id, {
+        name: name || null, interests, credit_ok: creditOk,
+      });
+      req.session.flash = res.locals.t('testers.flash_already');
+    } else {
+      await db.insert('tester_signups', {
+        email, name: name || null, interests, credit_ok: creditOk,
+        source: 'testers-page', invited_at: null,
+      });
+      req.session.flash = res.locals.t('testers.flash_success');
+    }
+  } catch (e) {
+    console.error('tester signup failed:', e.message);
+    req.session.flash = res.locals.t('testers.flash_invalid');
+  }
+  res.redirect('/testers#join');
 });
 
 // Public opening-raffle page: prizes, entry progress, winners once drawn.

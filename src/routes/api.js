@@ -337,6 +337,17 @@ router.get('/founding-status', async (req, res) => {
   });
 });
 
+// Tester pool size for the /testers page and admin checks. Returns ONLY
+// the count — no emails or names ever leave through here.
+router.get('/testers/count', async (req, res) => {
+  try {
+    const row = await db.get('SELECT COUNT(*) AS n FROM tester_signups');
+    res.json({ ok: true, count: (row && row.n) || 0 });
+  } catch (e) {
+    res.json({ ok: true, count: 0 });
+  }
+});
+
 // Owner's raffle share link for promo posts. The referral code is public by
 // design (it ships inside every promo post), so this returns only the share
 // URL — no user id, no email, nothing else.

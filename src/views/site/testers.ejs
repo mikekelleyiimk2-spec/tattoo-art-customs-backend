@@ -1,15 +1,64 @@
 <h1><%= t('testers.title') %></h1>
-<p><%= t('testers.intro') %></p>
+<p><%= t('testers.pool_pitch') %></p>
+<p><%= t('testers.pool_how') %></p>
+<% if (poolCount > 0) { %>
+<p><strong><%= t('testers.pool_count', {count: poolCount}) %></strong></p>
+<% } %>
 
-<div style="text-align:center;border:2px solid #2e7d32;background:#eef7ee;border-radius:8px;padding:1rem;margin:1.5rem 0;">
-  <p style="margin:0;"><strong><%= t('testers.done') %></strong></p>
+<div id="join" style="border:2px solid #2e7d32;background:#eef7ee;border-radius:8px;padding:1.25rem;margin:1.5rem 0;">
+  <h2 style="margin-top:0;"><%= t('testers.form_title') %></h2>
+  <form method="post" action="/testers">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p>
+      <label for="ts-name"><strong><%= t('testers.name_label') %></strong></label><br>
+      <input id="ts-name" type="text" name="name" maxlength="80" style="width:100%;max-width:420px;padding:.6rem;">
+    </p>
+    <p>
+      <label for="ts-email"><strong><%= t('testers.email_label') %></strong></label><br>
+      <input id="ts-email" type="email" name="email" required maxlength="120" style="width:100%;max-width:420px;padding:.6rem;">
+    </p>
+    <fieldset style="border:1px solid var(--line,#ddd);border-radius:8px;max-width:460px;">
+      <legend><strong><%= t('testers.interests_label') %></strong></legend>
+      <label style="display:block;padding:.25rem 0;"><input type="checkbox" name="interests" value="tattoo"> <%= t('testers.int_tattoo') %></label>
+      <label style="display:block;padding:.25rem 0;"><input type="checkbox" name="interests" value="coloring"> <%= t('testers.int_coloring') %></label>
+      <label style="display:block;padding:.25rem 0;"><input type="checkbox" name="interests" value="tools"> <%= t('testers.int_tools') %></label>
+      <label style="display:block;padding:.25rem 0;"><input type="checkbox" name="interests" value="everything"> <%= t('testers.int_everything') %></label>
+    </fieldset>
+    <p>
+      <label><input type="checkbox" name="credit_ok" value="1"> <%= t('testers.credit_label') %></label>
+    </p>
+    <p><button class="btn" type="submit" style="padding:.9rem 1.4rem;font-size:1.05rem;"><%= t('testers.pool_btn') %></button></p>
+  </form>
+  <p class="muted" style="margin-bottom:0;"><%= t('testers.form_note') %></p>
 </div>
 
+<h2><%= t('testers.open_h') %></h2>
+<p><%= t('testers.intro') %></p>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin:1.5rem 0;">
   <% testerApps.forEach(function (a) { %>
   <div style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1.25rem;">
     <p style="margin-top:0;"><strong><%= a.name %></strong></p>
     <p style="margin-bottom:0;"><a class="btn" style="display:block;padding:1rem;font-size:1.05rem;" href="<%= a.url %>" target="_blank" rel="noopener"><%= t('testers.join_btn') %></a></p>
+  </div>
+  <% }) %>
+</div>
+
+<h2><%= t('testers.soon_h') %></h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin:1.5rem 0;">
+  <% testerAppsSoon.forEach(function (name) { %>
+  <div style="text-align:center;border:1px dashed var(--line,#bbb);border-radius:8px;padding:1.25rem;">
+    <p style="margin-top:0;"><strong><%= name %></strong></p>
+    <p class="muted" style="margin-bottom:0;"><%= t('testers.link_coming') %></p>
+  </div>
+  <% }) %>
+</div>
+
+<h2><%= t('testers.works_h') %></h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin:1.5rem 0;">
+  <% testerAppsWorks.forEach(function (name) { %>
+  <div style="text-align:center;border:1px dashed var(--line,#bbb);border-radius:8px;padding:1.25rem;">
+    <p style="margin-top:0;"><strong><%= name %></strong></p>
+    <p class="muted" style="margin-bottom:0;"><%= t('testers.link_coming') %></p>
   </div>
   <% }) %>
 </div>
