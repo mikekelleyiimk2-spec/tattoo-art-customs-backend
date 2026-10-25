@@ -54,7 +54,14 @@ const db = require('../db');
 const POLL_MS = 3000;
 const WATCHDOG_MS = 5 * 60 * 1000;
 const MAX_ATTEMPTS = 3;
-const HTTP_TIMEOUT_MS = 60000;
+// Per-call provider timeout. 120s: a non-streaming generateContent call
+// returns nothing until generation finishes, and a long briefing prompt
+// under provider load can run past 60s — at 60s our own AbortController
+// killed Gemini's answer to the owner's 2026-10-25 table briefing twice
+// ("This operation was aborted", runs of ~60s + 1s retry delay + ~60s).
+// Budget check: worst case one member hop = 2 attempts x 120s + 1s
+// retry delay = 241s, still inside the 5-minute claim watchdog above.
+const HTTP_TIMEOUT_MS = 120000;
 const ANSWER_CAP = 8000; // matches the device result-post cap in routes/muse.js
 
 // Team roster, in the order loops run and report (the button's
