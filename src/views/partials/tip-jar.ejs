@@ -1,0 +1,10 @@
+<%# Tip jar band (Business PayPal mk4) — one shared component so every main
+    surface carries the jar, per the penny-sweeper rule (wanting audit
+    2026-10-25: the jar previously rendered on the homepage only).
+    Copy: landing.tipjar.* (present in all 12 locales). Self-contained
+    inline styles — the .lp-cta-band class exists only in landing.ejs. %>
+<div style="text-align:center;padding:2rem 1rem;border-radius:12px;border:1px solid #7cc7f5;background:linear-gradient(135deg, #E8F7FF, #D3EEFF);margin:1.5rem 0;">
+  <h2><%= t('landing.tipjar.title') %></h2>
+  <p><%= t('landing.tipjar.text') %></p>
+  <p><a class="btn" href="https://www.paypal.com/ncp/payment/WA9DS6J8ERSHW" target="_blank" rel="noopener"><%= t('landing.tipjar.btn') %></a></p>
+</div>

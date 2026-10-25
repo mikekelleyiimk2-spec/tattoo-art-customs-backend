@@ -1,14 +1,6 @@
 <h1>📺 <%= t('watch.title') %></h1>
 <p class="muted"><%= t('watch.intro') %></p>
 
-<section class="card" style="text-align:center;padding:1.5rem;">
-  <p>
-    <a class="btn" href="<%= tacChannelUrl %>?sub_confirmation=1" target="_blank" rel="noopener"><%= t('watch.subscribe_tac') %></a>
-    <a class="btn btn-secondary" href="<%= rookChannelUrl %>?sub_confirmation=1" target="_blank" rel="noopener"><%= t('watch.subscribe_rook') %></a>
-  </p>
-  <p class="muted fineprint"><%= t('watch.subscribe_note') %></p>
-</section>
-
 <h2><%= t('watch.commercials_title') %></h2>
 <p class="muted"><%= t('watch.commercials_text') %></p>
 <div class="grid">
@@ -29,6 +21,17 @@
   </article>
   <% }); %>
 </div>
+
+<%# Eyes before fingers (wanting audit 2026-10-25): the subscribe ask runs
+    AFTER the first row of videos — visitors watch something before the
+    page asks for the finger. A second subscribe block stays at the foot. %>
+<section class="card" style="text-align:center;padding:1.5rem;">
+  <p>
+    <a class="btn" href="<%= tacChannelUrl %>?sub_confirmation=1" target="_blank" rel="noopener"><%= t('watch.subscribe_tac') %></a>
+    <a class="btn btn-secondary" href="<%= rookChannelUrl %>?sub_confirmation=1" target="_blank" rel="noopener"><%= t('watch.subscribe_rook') %></a>
+  </p>
+  <p class="muted fineprint"><%= t('watch.subscribe_note') %></p>
+</section>
 
 <h2><%= t('watch.shorts_title') %></h2>
 <p class="muted"><%= t('watch.shorts_text') %></p>
@@ -67,3 +70,5 @@
 </section>
 
 <%- include('../partials/ad-slot', {slot: 'home_inline'}) %>
+
+<%- include('../partials/tip-jar') %>

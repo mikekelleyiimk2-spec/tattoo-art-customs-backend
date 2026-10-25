@@ -198,6 +198,10 @@ router.get('/', async (req, res) => {
   const base = config.baseUrl.replace(/\/$/, '');
   const watchVideos = require('../lib/watchVideos');
   res.render('site/landing', {
+    // Payoff before the house ad (wanting audit 2026-10-25): the layout's
+    // leaderboard slot is suppressed on the homepage only; landing.ejs
+    // renders the same slot itself, after the hero.
+    noAds: true,
     title: 'Tattoo Art Customs — Original Tattoo Designs, Custom Art & Verified Shops',
     metaDescription: 'Tattoo Art Customs: buy original premade tattoo designs, commission custom artwork, find verified tattoo shops, and shop tattoo merch.',
     canonical: `${base}/`,
@@ -1211,6 +1215,12 @@ router.post('/contact', formLimiter, checkHoneypot, async (req, res) => {
 
 // Aftercare guide with affiliate product picks (owner-approved 2026-09-30).
 // Tag is the owner's Amazon Associates tracking ID.
+// /perks was a dead 404 (wanting audit 2026-10-25): the only perks page in
+// the codebase is the shop-subscriber perks at /shop/perks (gated affiliate
+// deals — CNC/EZ stay behind that gate; this redirect exposes nothing, it
+// just gives the plausible short URL its real destination).
+router.get('/perks', (req, res) => res.redirect(302, '/shop/perks'));
+
 // Discount campaign landing page (owner-ordered 2026-10-09): all live affiliate
 // discount codes in one place — Electrum TATART20, Base Labs TAC20, Recovery
 // Aftercare, Amazon picks.
