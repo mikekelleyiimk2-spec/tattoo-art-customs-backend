@@ -26,14 +26,14 @@
         <% } %>
       </div>
     <% } else { %>
-      <p class="muted"><%= t('apps.play_soon') %></p>
+      <p class="muted"><%= t('apps.tac_direct_note') %></p>
     <% } %>
     <p><a class="btn" href="/tac-android"><%= t('apps.get_android_free') %></a></p>
     <p><a class="btn btn-secondary" href="/tac-android-pro"><%= t('apps.get_android_pro') %></a></p>
     <% if (appStoreUrl) { %>
       <p><a class="btn" href="<%= appStoreUrl %>">Download on the App Store</a></p>
     <% } else { %>
-      <p><a class="btn" href="/ios-app">Get the iPhone app ($1.67)</a></p>
+      <p><a class="btn" href="/ios-app">Get the iPhone app — sideload edition ($1.67)</a></p>
     <% } %>
   </div>
   <div id="little-inkers" style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1.5rem;">

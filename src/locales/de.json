@@ -264,7 +264,7 @@
     "search_ph": "Wolf, Mandala, Rose…",
     "sort_all": "Alle Designs",
     "sort_newest": "Neueste Designs",
-    "sub": "Durchsuche 2.500+ originale Tattoo-Designs nach Stil und Kategorie. Angezeigt werden nur Linienvorschauen — die Farbversion erhalten Käufer nach dem Kauf.",
+    "sub": "Durchsuche 4.700+ originale Tattoo-Designs nach Stil und Kategorie. Angezeigt werden nur Linienvorschauen — die Farbversion erhalten Käufer nach dem Kauf.",
     "title": "Tattoo-Design-Galerie — originale Designs kaufen",
     "style": "Stil",
     "all_styles": "Alle Stile",
@@ -321,9 +321,9 @@
   },
   "home": {
     "app_text_live": "Die Tattoo Art Customs App ist live — stöbere in der Galerie, bestelle Custom-Designs und verwalte deine Sammlung unterwegs.",
-    "app_text_soon": "Die mobile Tattoo Art Customs App kommt bald — Galerie, Custom-Bestellungen und deine Sammlung in deiner Tasche. Hinterlasse deine E-Mail, wir melden uns zum Launch.",
+    "app_text_soon": "Die mobile Tattoo Art Customs App ist da — Galerie, Custom-Bestellungen und deine Sammlung in deiner Tasche. Lade sie gleich hier direkt herunter (kostenlos oder Pro für Android, Sideload-Edition fürs iPhone). Du willst den Google-Play- oder App-Store-Eintrag, sobald er live geht? Hinterlasse deine E-Mail, wir melden uns zuerst:",
     "app_title_live": "📱 Unsere App ist jetzt da",
-    "app_title_soon": "📱 Unsere App kommt bald",
+    "app_title_soon": "📱 Hol dir die Tattoo Art Customs App",
     "artists_designer": "Design-Artists — {price}/Monat, um deine Kunst hochzuladen, eine Bio zu schreiben und 60 % Provision pro Verkauf zu verdienen.",
     "artists_shop": "Tattoo-Studios — {price}/Jahr, verdiene 20 % auf jeden verifizierten Verkauf, den du vermittelst.",
     "artists_title": "Artists & Studios: Macht mit und verdient",
@@ -379,7 +379,7 @@
       "title": "Alles, was wir machen",
       "premade": {
         "title": "Fertige Designs",
-        "text": "Hunderte originelle Designs — kaufen und direkt zum Tätowierer mitnehmen. Vollfarbe + saubere Linework inklusive.",
+        "text": "4.700+ originelle Designs — kaufen und direkt zum Tätowierer mitnehmen. Vollfarbe + saubere Linework inklusive.",
         "price": "{price} ({sale} Samstags-Sale)",
         "btn": "Galerie entdecken"
       },
@@ -1190,6 +1190,7 @@
     "dl_now": "Jetzt herunterladen — {price}",
     "dl_free": "Kostenlos herunterladen",
     "play_soon": "Bald bei Google Play",
+    "tac_direct_note": "Kommt auch zu Google Play — schon jetzt als direkter Download bei uns:",
     "more_title": "Mehr Usefulappz-Apps",
     "more_text": "Widgets und Kinder-Apps aus demselben Studio. Ein Download-Button erscheint auf jeder Karte, sobald die App bereit zur Installation ist.",
     "clip_text": "Zwischenablage-Verlauf und Lieblings-Snippets direkt auf dem Startbildschirm.",

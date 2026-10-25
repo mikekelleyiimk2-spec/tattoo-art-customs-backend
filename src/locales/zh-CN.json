@@ -264,7 +264,7 @@
     "search_ph": "wolf, mandala, rose…",
     "sort_all": "所有设计",
     "sort_newest": "最新上架",
-    "sub": "按风格和类别搜索 2,500 多款原创纹身设计。仅显示线条预览——全彩成品在购买后交付给买家。",
+    "sub": "按风格和类别搜索 4,700 多款原创纹身设计。仅显示线条预览——全彩成品在购买后交付给买家。",
     "title": "纹身设计画廊——购买原创设计",
     "style": "Style",
     "all_styles": "All styles",
@@ -321,9 +321,9 @@
   },
   "home": {
     "app_text_live": "Tattoo Art Customs应用已上线——随时随地浏览画廊、订购定制设计、管理您的收藏。",
-    "app_text_soon": "Tattoo Art Customs手机应用即将上线——画廊、定制订单和您的收藏，尽在掌中。留下邮箱，发布时第一时间通知您。",
+    "app_text_soon": "Tattoo Art Customs 移动应用已经发布——图库、定制订单和你的收藏，全都装进口袋。立即在此直接下载（Android 免费版或 Pro 版，iPhone 为侧载版）。想在 Google Play 或 App Store 上架的第一时间收到通知？留下你的邮箱，我们会第一时间告诉你：",
     "app_title_live": "📱 我们的应用已上线",
-    "app_title_soon": "📱 我们的应用即将上线",
+    "app_title_soon": "📱 获取 Tattoo Art Customs 应用",
     "artists_designer": "设计师——{price}/月上传作品、撰写简介，每笔销售赚取60%佣金。",
     "artists_shop": "纹身店——{price}/年，每笔经核实的推荐销售赚取20%。",
     "artists_title": "艺术家与店铺：加入并赚钱",
@@ -379,7 +379,7 @@
       "title": "我们的一切",
       "premade": {
         "title": "预制设计",
-        "text": "数百件原创设计，购买后可直接带给您的纹身师。含全彩 + 干净线稿。",
+        "text": "4,700 多件原创设计，购买后可直接带给您的纹身师。含全彩 + 干净线稿。",
         "price": "{price}（周六特卖{sale}）",
         "btn": "浏览画廊"
       },
@@ -1190,6 +1190,7 @@
     "dl_now": "立即下载 — {price}",
     "dl_free": "免费下载",
     "play_soon": "即将登陆 Google Play",
+    "tac_direct_note": "也即将登陆 Google Play——现在即可从我们这里直接下载：",
     "more_title": "更多 Usefulappz 应用",
     "more_text": "同一工作室的小部件和儿童应用。每个应用准备就绪后，其卡片上会立即出现下载按钮。",
     "clip_text": "剪贴板历史和收藏片段，就在主屏幕上。",

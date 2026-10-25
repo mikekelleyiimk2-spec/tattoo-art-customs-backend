@@ -264,7 +264,7 @@
     "search_ph": "lobo, mandala, rosa…",
     "sort_all": "Todos os designs",
     "sort_newest": "Novidades",
-    "sub": "Pesquise mais de 2.500 designs de tatuagem originais por estilo e categoria. Mostramos apenas pré-visualizações em linhas — a cor completa é entregue aos compradores após a compra.",
+    "sub": "Pesquise mais de 4.700 designs de tatuagem originais por estilo e categoria. Mostramos apenas pré-visualizações em linhas — a cor completa é entregue aos compradores após a compra.",
     "title": "Galeria de designs de tatuagem — compre designs originais",
     "style": "Estilo",
     "all_styles": "Todos os estilos",
@@ -321,9 +321,9 @@
   },
   "home": {
     "app_text_live": "O app Tattoo Art Customs está no ar — navegue pela galeria, peça customs e gerencie sua coleção de onde estiver.",
-    "app_text_soon": "O app mobile da Tattoo Art Customs está chegando — galeria, pedidos custom e sua coleção no bolso. Deixe seu e-mail e avisaremos no lançamento.",
+    "app_text_soon": "O app móvel Tattoo Art Customs chegou — galeria, pedidos custom e sua coleção no bolso. Baixe agora mesmo por aqui (grátis ou Pro no Android, edição sideload no iPhone). Quer o link da Google Play ou da App Store assim que estiver no ar? Deixe seu email e avisaremos você primeiro:",
     "app_title_live": "📱 Nosso app já está no ar",
-    "app_title_soon": "📱 Nosso app está chegando",
+    "app_title_soon": "📱 Baixe o app Tattoo Art Customs",
     "artists_designer": "Design artists — {price}/mês para subir sua arte, escrever uma bio e ganhar 60% de comissão por venda.",
     "artists_shop": "Estúdios de tatuagem — {price}/ano, ganhe 20% em cada venda verificada que você indicar.",
     "artists_title": "Artistas e estúdios: entrem e ganhem",
@@ -379,7 +379,7 @@
       "title": "Tudo o que fazemos",
       "premade": {
         "title": "Designs prontos",
-        "text": "Centenas de designs originais, prontos para comprar e levar ao seu tatuador. Cor cheia + traço limpo inclusos.",
+        "text": "Mais de 4.700 designs originais, prontos para comprar e levar ao seu tatuador. Cor cheia + traço limpo inclusos.",
         "price": "{price} ({sale} na promo de sábado)",
         "btn": "Ver a galeria"
       },
@@ -1190,6 +1190,7 @@
     "dl_now": "Baixar agora — {price}",
     "dl_free": "Baixar grátis",
     "play_soon": "Em breve no Google Play",
+    "tac_direct_note": "Também chegará à Google Play — já disponível para download direto conosco:",
     "more_title": "Mais apps da Usefulappz",
     "more_text": "Widgets e apps infantis do mesmo estúdio. Um botão de download aparece em cada card assim que o app está pronto para instalar.",
     "clip_text": "Histórico da área de transferência e trechos favoritos, na sua tela inicial.",

@@ -264,7 +264,7 @@
     "search_ph": "varg, mandala, ros…",
     "sort_all": "Alla design",
     "sort_newest": "Nyheter",
-    "sub": "Sök bland 2 500+ originaltatueringsdesigner efter stil och kategori. Endast linjeförhandsvisningar visas — full färg levereras till köpare efter köpet.",
+    "sub": "Sök bland 4 700+ originaltatueringsdesigner efter stil och kategori. Endast linjeförhandsvisningar visas — full färg levereras till köpare efter köpet.",
     "title": "Tatueringsdesigngalleri — köp originella designer",
     "style": "Stil",
     "all_styles": "Alla stilar",
@@ -321,9 +321,9 @@
   },
   "home": {
     "app_text_live": "Tattoo Art Customs-appen är live — bläddra i galleriet, beställ customdesigner och hantera din samling på språng.",
-    "app_text_soon": "Tattoo Art Customs-mobilappen är på väg — galleriet, custombeställningar och din samling i fickan. Lämna din mejl så hör vi av oss vid lanseringen.",
+    "app_text_soon": "Tattoo Art Customs mobilapp är här — galleriet, specialbeställningar och din samling i fickan. Ladda ner den direkt här (gratis eller Pro för Android, sideload-utgåva för iPhone). Vill du ha Google Play- eller App Store-länken så snart den öppnar? Lämna din e-post så hör vi av oss först:",
     "app_title_live": "📱 Vår app är här nu",
-    "app_title_soon": "📱 Vår app kommer snart",
+    "app_title_soon": "📱 Hämta Tattoo Art Customs-appen",
     "artists_designer": "Designartister — {price}/månad för att ladda upp din konst, skriva en bio och tjäna 60 % provision per försäljning.",
     "artists_shop": "Tatueringsstudios — {price}/år, tjäna 20 % på varje verifierad försäljning du förmedlar.",
     "artists_title": "Artister & studios: gå med och tjäna",
@@ -379,7 +379,7 @@
       "title": "Allt vi gör",
       "premade": {
         "title": "Färdiga designer",
-        "text": "Hundratals originella designer, redo att köpa och ta med till din tatuerare. Fullfärg + rent linjearbete ingår.",
+        "text": "Över 4 700 originella designer, redo att köpa och ta med till din tatuerare. Fullfärg + rent linjearbete ingår.",
         "price": "{price} ({sale} lördagsrea)",
         "btn": "Bläddra i galleriet"
       },
@@ -1190,6 +1190,7 @@
     "dl_now": "Ladda ner nu — {price}",
     "dl_free": "Ladda ner gratis",
     "play_soon": "Kommer snart till Google Play",
+    "tac_direct_note": "Kommer även till Google Play — finns redan nu som direktnedladdning hos oss:",
     "more_title": "Fler Usefulappz-appar",
     "more_text": "Widgetar och barnappar från samma studio. En nedladdningsknapp visas på varje kort så snart appen är redo att installera.",
     "clip_text": "Urklippshistorik och favoritsnuttar, direkt på hemskärmen.",

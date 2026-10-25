@@ -264,7 +264,7 @@
     "search_ph": "lupo, mandala, rosa…",
     "sort_all": "Tutti i design",
     "sort_newest": "Ultimi arrivi",
-    "sub": "Cerca oltre 2.500 disegni di tatuaggi originali per stile e categoria. Vengono mostrate solo anteprime in linea: il colore completo viene consegnato agli acquirenti dopo l’acquisto.",
+    "sub": "Cerca oltre 4.700 disegni di tatuaggi originali per stile e categoria. Vengono mostrate solo anteprime in linea: il colore completo viene consegnato agli acquirenti dopo l’acquisto.",
     "title": "Galleria design per tatuaggi — compra design originali",
     "style": "Stile",
     "all_styles": "Tutti gli stili",
@@ -321,9 +321,9 @@
   },
   "home": {
     "app_text_live": "L'app Tattoo Art Customs è live — sfoglia la galleria, ordina custom design e gestisci la tua collezione ovunque.",
-    "app_text_soon": "L'app mobile Tattoo Art Customs sta arrivando — galleria, ordini custom e la tua collezione in tasca. Lascia la tua email e ti avviseremo al lancio.",
+    "app_text_soon": "L'app mobile Tattoo Art Customs è arrivata — galleria, ordini su misura e la tua collezione in tasca. Scaricala subito qui (gratuita o Pro su Android, edizione sideload su iPhone). Vuoi il link Google Play o App Store appena sarà attivo? Lascia la tua email e ti avviseremo per primo:",
     "app_title_live": "📱 La nostra app è arrivata",
-    "app_title_soon": "📱 La nostra app sta arrivando",
+    "app_title_soon": "📱 Scarica l'app Tattoo Art Customs",
     "artists_designer": "Design artist — {price}/mese per caricare la tua arte, scrivere una bio e guadagnare il 60% di commissione a vendita.",
     "artists_shop": "Tattoo shop — {price}/anno, guadagna il 20% su ogni vendita verificata che porti.",
     "artists_title": "Artisti & shop: unitevi e guadagnate",
@@ -379,7 +379,7 @@
       "title": "Tutto quello che facciamo",
       "premade": {
         "title": "Design pronti",
-        "text": "Centinaia di design originali, pronti da acquistare e portare al tuo tatuatore. Colore pieno + linework pulito inclusi.",
+        "text": "Oltre 4.700 design originali, pronti da acquistare e portare al tuo tatuatore. Colore pieno + linework pulito inclusi.",
         "price": "{price} ({sale} saldi del sabato)",
         "btn": "Sfoglia la galleria"
       },
@@ -1190,6 +1190,7 @@
     "dl_now": "Scarica ora — {price}",
     "dl_free": "Scarica gratis",
     "play_soon": "Presto su Google Play",
+    "tac_direct_note": "In arrivo anche su Google Play — già disponibile come download diretto da noi:",
     "more_title": "Altre app Usefulappz",
     "more_text": "Widget e app per bambini dallo stesso studio. Il pulsante di download compare su ogni scheda appena l'app è pronta da installare.",
     "clip_text": "Cronologia degli appunti e frammenti preferiti, sulla schermata iniziale.",

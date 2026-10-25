@@ -264,7 +264,7 @@
     "search_ph": "wolf, mandala, rose…",
     "sort_all": "All designs",
     "sort_newest": "Newest arrivals",
-    "sub": "Search 2,500+ original tattoo designs by style and category. Showing linework previews only — full color is delivered to buyers after purchase.",
+    "sub": "Search 4,700+ original tattoo designs by style and category. Showing linework previews only — full color is delivered to buyers after purchase.",
     "title": "Tattoo design gallery — buy original designs",
     "style": "Style",
     "all_styles": "All styles",
@@ -321,9 +321,9 @@
   },
   "home": {
     "app_text_live": "The Tattoo Art Customs app is live — browse the gallery, order custom designs, and manage your collection on the go.",
-    "app_text_soon": "The Tattoo Art Customs mobile app is on its way — the gallery, custom orders, and your collection, in your pocket. Drop your email and we'll tell you the moment it launches.",
+    "app_text_soon": "The Tattoo Art Customs app is out — the gallery, custom orders, and your collection, in your pocket. Get it right now as a direct download below (free or Pro on Android, sideload edition on iPhone). Want the Google Play or App Store listing the moment it opens? Drop your email and we'll tell you first:",
     "app_title_live": "📱 Our app is now available",
-    "app_title_soon": "📱 Our app is coming soon",
+    "app_title_soon": "📱 Get the Tattoo Art Customs app",
     "artists_designer": "Design artists — {price}/month to upload your art, write a bio, and earn 60% commission per sale.",
     "artists_shop": "Tattoo shops — {price}/year, earn 20% on every verified sale you refer.",
     "artists_title": "Artists & shops: join and earn",
@@ -379,7 +379,7 @@
       "title": "Everything we do",
       "premade": {
         "title": "Premade designs",
-        "text": "Hundreds of original designs, ready to buy and take to your artist. Full color + clean linework included.",
+        "text": "4,700+ original designs, ready to buy and take to your artist. Full color + clean linework included.",
         "price": "{price} ({sale} Saturday sale)",
         "btn": "Browse the gallery"
       },
@@ -1190,6 +1190,7 @@
     "dl_now": "Download now — {price}",
     "dl_free": "Download free",
     "play_soon": "Coming soon to Google Play",
+    "tac_direct_note": "Also coming to Google Play — available right now as a direct download from us:",
     "more_title": "More Usefulappz Apps",
     "more_text": "Widgets and kids' apps from the same studio. A download button appears on each card the moment that app is ready to install.",
     "clip_text": "Clipboard history and favorite snippets, right on your home screen.",

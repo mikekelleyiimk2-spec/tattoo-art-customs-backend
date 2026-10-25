@@ -264,7 +264,7 @@
     "search_ph": "loup, mandala, rose…",
     "sort_all": "Tous les designs",
     "sort_newest": "Nouveautés",
-    "sub": "Recherchez plus de 2 500 tatouages originaux par style et catégorie. Seuls les aperçus en lignes sont affichés — la couleur complète est livrée aux acheteurs après l’achat.",
+    "sub": "Recherchez plus de 4 700 tatouages originaux par style et catégorie. Seuls les aperçus en lignes sont affichés — la couleur complète est livrée aux acheteurs après l’achat.",
     "title": "Galerie de designs de tatouage — achète des designs originaux",
     "style": "Style",
     "all_styles": "Tous les styles",
@@ -321,9 +321,9 @@
   },
   "home": {
     "app_text_live": "L'app Tattoo Art Customs est live — parcours la galerie, commande des customs et gère ta collection où que tu sois.",
-    "app_text_soon": "L'app mobile Tattoo Art Customs arrive — la galerie, les commandes custom et ta collection dans ta poche. Laisse ton e-mail et on te préviendra au lancement.",
+    "app_text_soon": "L'app mobile Tattoo Art Customs est là — la galerie, les commandes custom et ta collection dans ta poche. Télécharge-la dès maintenant ici (gratuite ou Pro sur Android, édition sideload sur iPhone). Tu veux le lien Google Play ou App Store dès l'ouverture ? Laisse ton e-mail et on te préviendra en premier :",
     "app_title_live": "📱 Notre app est arrivée",
-    "app_title_soon": "📱 Notre app arrive bientôt",
+    "app_title_soon": "📱 Téléchargez l'app Tattoo Art Customs",
     "artists_designer": "Design artists — {price}/mois pour uploader ton art, écrire une bio et gagner 60 % de commission par vente.",
     "artists_shop": "Tattoo shops — {price}/an, gagne 20 % sur chaque vente vérifiée que tu apportes.",
     "artists_title": "Artistes & shops : rejoignez et gagnez",
@@ -379,7 +379,7 @@
       "title": "Tout ce que nous faisons",
       "premade": {
         "title": "Designs prêts à l'emploi",
-        "text": "Des centaines de designs originaux, prêts à acheter et à apporter à votre tatoueur. Couleur + tracés nets inclus.",
+        "text": "Plus de 4 700 designs originaux, prêts à acheter et à apporter à votre tatoueur. Couleur + tracés nets inclus.",
         "price": "{price} ({sale} promo du samedi)",
         "btn": "Voir la galerie"
       },
@@ -1190,6 +1190,7 @@
     "dl_now": "Télécharger — {price}",
     "dl_free": "Télécharger gratuitement",
     "play_soon": "Bientôt sur Google Play",
+    "tac_direct_note": "Bientôt aussi sur Google Play — déjà disponible en téléchargement direct chez nous :",
     "more_title": "Plus d'apps Usefulappz",
     "more_text": "Widgets et apps pour enfants du même studio. Un bouton de téléchargement apparaît sur chaque carte dès que l'app est prête à installer.",
     "clip_text": "Historique du presse-papiers et extraits favoris, sur votre écran d'accueil.",

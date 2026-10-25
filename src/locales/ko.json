@@ -264,7 +264,7 @@
     "search_ph": "wolf, mandala, rose…",
     "sort_all": "모든 디자인",
     "sort_newest": "최신 등록",
-    "sub": "스타일과 카테고리로 2,500개 이상의 오리지널 타투 디자인을 검색하세요. 라인 미리보기만 표시되며, 풀컬러는 구매 후 구매자에게 전달됩니다.",
+    "sub": "스타일과 카테고리로 4,700개 이상의 오리지널 타투 디자인을 검색하세요. 라인 미리보기만 표시되며, 풀컬러는 구매 후 구매자에게 전달됩니다.",
     "title": "타투 디자인 갤러리 — 오리지널 디자인 구매",
     "style": "스타일",
     "all_styles": "모든 스타일",
@@ -321,9 +321,9 @@
   },
   "home": {
     "app_text_live": "Tattoo Art Customs 앱이 나왔어요 — 갤러리, 커스텀 주문, 컬렉션을 어디서든 관리하세요.",
-    "app_text_soon": "Tattoo Art Customs 모바일 앱이 곧 나와요 — 갤러리, 커스텀 주문, 컬렉션이 주머니 안에. 이메일을 남기시면 출시 때 가장 먼저 알려드릴게요.",
+    "app_text_soon": "Tattoo Art Customs 모바일 앱이 출시되었습니다 — 갤러리, 맞춤 주문, 내 컬렉션을 주머니 속에. 지금 바로 여기서 직접 다운로드하세요(Android 무료 또는 Pro, iPhone은 사이드로드 에디션). Google Play나 App Store 등록이 열리는 순간 가장 먼저 알고 싶다면 이메일을 남겨주세요:",
     "app_title_live": "📱 앱이 출시됐어요",
-    "app_title_soon": "📱 앱이 곧 나와요",
+    "app_title_soon": "📱 Tattoo Art Customs 앱 받기",
     "artists_designer": "디자이너 — {price}/월로 작품을 업로드하고 소개를 작성하면 판매마다 60% 커미션.",
     "artists_shop": "타투 샵 — {price}/년으로 검증된 추천 판매마다 20%.",
     "artists_title": "아티스트와 샵: 가입하고 수익 올리기",
@@ -379,7 +379,7 @@
       "title": "우리의 모든 것",
       "premade": {
         "title": "프리 디자인",
-        "text": "수백 개의 오리지널 디자인 — 구매 후 아티스트에게 바로 가져가세요. 풀컬러 + 클린 라인워크 포함.",
+        "text": "4,700개 이상의 오리지널 디자인 — 구매 후 아티스트에게 바로 가져가세요. 풀컬러 + 클린 라인워크 포함.",
         "price": "{price} (토요일 세일 {sale})",
         "btn": "갤러리 보기"
       },
@@ -1190,6 +1190,7 @@
     "dl_now": "지금 다운로드 — {price}",
     "dl_free": "무료로 다운로드",
     "play_soon": "곧 Google Play에 출시",
+    "tac_direct_note": "Google Play에도 출시 예정 — 지금 바로 여기서 직접 다운로드할 수 있습니다:",
     "more_title": "더 많은 Usefulappz 앱",
     "more_text": "같은 스튜디오의 위젯과 키즈 앱. 각 앱이 설치 준비를 마치면 카드에 다운로드 버튼이 나타납니다.",
     "clip_text": "클립보드 기록과 즐겨찾는 스니펫을 홈 화면에서 바로.",
