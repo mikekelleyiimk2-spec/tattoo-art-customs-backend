@@ -63,6 +63,15 @@ const MAX_ATTEMPTS = 3;
 // retry delay = 241s, still inside the 5-minute claim watchdog above.
 const HTTP_TIMEOUT_MS = 120000;
 const ANSWER_CAP = 8000; // matches the device result-post cap in routes/muse.js
+// Per-answer generation cap for member asks. 4096, not the slice-1-era
+// 800: long answers are this system's NORMAL load (owner PLUMB BIG
+// sizing law, 2026-10-25) — an 800-token cap (~600 words) truncates
+// ordinary team answers mid-thought, and the 2026-10-25 table briefing
+// showed the pattern (Gemini's answer came back cut). The cap is a
+// ceiling, not a target: a short answer still bills short. Purpose-
+// built short turns keep their own small caps (hello loop 150,
+// word loop 60, check-that 150).
+const ANSWER_TOKENS = 4096;
 
 // Team roster, in the order loops run and report (the button's
 // AiAssistants.ALL order — Muse first).
@@ -364,6 +373,37 @@ function absenceBlock(member, reasonText) {
   return envelope(member, `(not answered — ${reasonText})`);
 }
 
+// Observability (2026-10-25): adapters report the provider's own stop
+// reason (out.finishReason) and whether it means the answer was cut
+// short (out.truncated — Gemini MAX_TOKENS, chat-completions length,
+// Anthropic max_tokens). A truncated answer is still the member's
+// answer, but its block must SAY it is partial — a fragment filed as
+// a finished answer is how the 2026-10-25 briefing misled the log.
+// The answer text itself is never altered; the label is appended.
+function partialNote(out) {
+  if (!out || !out.truncated) return null;
+  return `(partial answer — provider stopped: ${out.finishReason || 'unknown'})`;
+}
+function blockText(out) {
+  const note = partialNote(out);
+  return note ? `${out.text}\n${note}` : out.text;
+}
+// The faithful per-hop extract retained on ai_runs (migration 103):
+// everything needed to prove after the fact what the provider sent
+// on this hop — its stop reason, whether it truncated, the full
+// extracted text, and the measured token counts.
+function hopDetail(out) {
+  if (!out) return null;
+  return JSON.stringify({
+    finishReason: out.finishReason ?? null,
+    truncated: !!out.truncated,
+    text: out.text ?? null,
+    promptTokens: out.promptTokens ?? null,
+    completionTokens: out.completionTokens ?? null,
+    model: out.model ?? null,
+  });
+}
+
 function costMicroUsd(member, promptTokens, completionTokens) {
   const p = PRICES[member];
   if (!p) return null;
@@ -390,7 +430,12 @@ function fetchWithTimeout(fetchImpl, url, options, timeoutMs) {
 
 // ── Adapters ────────────────────────────────────────────────────────
 // One Member interface: { member, model, configured, call({system,
-// user, maxTokens}) -> { text, model, promptTokens, completionTokens } }.
+// user, maxTokens}) -> { text, model, promptTokens, completionTokens,
+// finishReason, truncated } }. finishReason is the provider's own
+// stop reason, verbatim; truncated says whether that reason means
+// the provider cut the answer short. An EMPTY error carries the
+// same fields on err.hopOut so the hop is retained in ai_runs even
+// when there is no answer text to file.
 // Keys are read from the env object at build time and used ONLY as
 // request headers — never in URLs, never logged, never stored.
 
@@ -428,15 +473,25 @@ function geminiAdapter(env, fetchImpl) {
       }
       let data;
       try { data = JSON.parse(raw); } catch { throw new MemberError('BAD_RESPONSE', 'Gemini returned a response that was not JSON'); }
-      const parts = (data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) || [];
+      const candidate = (data && data.candidates && data.candidates[0]) || {};
+      const parts = (candidate.content && candidate.content.parts) || [];
       const text = parts.map((p) => p.text || '').join('').trim();
-      if (!text) throw new MemberError('EMPTY', 'Gemini returned an empty answer');
-      return {
+      const finishReason = candidate.finishReason || null;
+      const out = {
         text,
         model: data.modelVersion || model,
         promptTokens: data.usageMetadata ? (data.usageMetadata.promptTokenCount ?? null) : null,
         completionTokens: data.usageMetadata ? (data.usageMetadata.candidatesTokenCount ?? null) : null,
+        finishReason,
+        truncated: finishReason === 'MAX_TOKENS',
       };
+      if (!text) {
+        const err = new MemberError('EMPTY',
+          `Gemini returned an empty answer${finishReason ? ` (provider stopped: ${finishReason})` : ''}`);
+        err.hopOut = out;
+        throw err;
+      }
+      return out;
     },
   };
 }
@@ -482,13 +537,22 @@ function deepseekAdapter(env, fetchImpl) {
       try { data = JSON.parse(raw); } catch { throw new MemberError('BAD_RESPONSE', 'DeepSeek returned a response that was not JSON'); }
       const choice = data && data.choices && data.choices[0];
       const text = choice && choice.message ? String(choice.message.content || '').trim() : '';
-      if (!text) throw new MemberError('EMPTY', 'DeepSeek returned an empty answer');
-      return {
+      const finishReason = choice ? (choice.finish_reason ?? null) : null;
+      const out = {
         text,
         model: data.model || model,
         promptTokens: data.usage ? (data.usage.prompt_tokens ?? null) : null,
         completionTokens: data.usage ? (data.usage.completion_tokens ?? null) : null,
+        finishReason,
+        truncated: finishReason === 'length',
       };
+      if (!text) {
+        const err = new MemberError('EMPTY',
+          `DeepSeek returned an empty answer${finishReason ? ` (provider stopped: ${finishReason})` : ''}`);
+        err.hopOut = out;
+        throw err;
+      }
+      return out;
     },
   };
 }
@@ -540,13 +604,22 @@ function chatCompletionsAdapter(cfg, env, fetchImpl) {
       try { data = JSON.parse(raw); } catch { throw new MemberError('BAD_RESPONSE', `${member} returned a response that was not JSON`); }
       const choice = data && data.choices && data.choices[0];
       const text = choice && choice.message ? String(choice.message.content || '').trim() : '';
-      if (!text) throw new MemberError('EMPTY', `${member} returned an empty answer`);
-      return {
+      const finishReason = choice ? (choice.finish_reason ?? null) : null;
+      const out = {
         text,
         model: data.model || model,
         promptTokens: data.usage ? (data.usage.prompt_tokens ?? null) : null,
         completionTokens: data.usage ? (data.usage.completion_tokens ?? null) : null,
+        finishReason,
+        truncated: finishReason === 'length',
       };
+      if (!text) {
+        const err = new MemberError('EMPTY',
+          `${member} returned an empty answer${finishReason ? ` (provider stopped: ${finishReason})` : ''}`);
+        err.hopOut = out;
+        throw err;
+      }
+      return out;
     },
   };
 }
@@ -633,13 +706,22 @@ function claudeAdapter(env, fetchImpl) {
       try { data = JSON.parse(raw); } catch { throw new MemberError('BAD_RESPONSE', 'Claude returned a response that was not JSON'); }
       const blocks = (data && Array.isArray(data.content)) ? data.content : [];
       const text = blocks.filter((b) => b && b.type === 'text').map((b) => b.text || '').join('').trim();
-      if (!text) throw new MemberError('EMPTY', 'Claude returned an empty answer');
-      return {
+      const finishReason = (data && data.stop_reason) || null;
+      const out = {
         text,
         model: data.model || model,
         promptTokens: data.usage ? (data.usage.input_tokens ?? null) : null,
         completionTokens: data.usage ? (data.usage.output_tokens ?? null) : null,
+        finishReason,
+        truncated: finishReason === 'max_tokens',
       };
+      if (!text) {
+        const err = new MemberError('EMPTY',
+          `Claude returned an empty answer${finishReason ? ` (provider stopped: ${finishReason})` : ''}`);
+        err.hopOut = out;
+        throw err;
+      }
+      return out;
     },
   };
 }
@@ -787,6 +869,12 @@ async function recordHop(cmd, run, member, model, status, errorCode, out, lane) 
     prompt_tokens: out ? out.promptTokens : null,
     completion_tokens: out ? out.completionTokens : null,
     cost_microusd: out ? costMicroUsd(member, out.promptTokens, out.completionTokens) : null,
+    // Observability (migration 103): the provider's stop reason and
+    // the faithful hop extract ride along whenever the provider was
+    // actually reached (out present), including EMPTY failures whose
+    // error carries err.hopOut.
+    finish_reason: out ? (out.finishReason ?? null) : null,
+    provider_detail: hopDetail(out),
     started_at: run.startedAt,
     finished_at: db.now(),
   });
@@ -879,9 +967,15 @@ async function askMember(cmd, ctx, run, member, args) {
   try {
     const out = await callMember(ctx, st.adapter, args);
     await recordHop(cmd, run, member, out.model, 'done', null, out);
-    return { ok: true, configured: true, text: out.text };
+    // text is the BLOCK text: the member's answer verbatim, plus the
+    // honest partial label when the provider cut it short.
+    return {
+      ok: true, configured: true, text: blockText(out),
+      finishReason: out.finishReason ?? null, partial: !!out.truncated,
+    };
   } catch (e) {
-    await recordHop(cmd, run, member, null, 'failed', e.code || 'ERROR', null);
+    const hopOut = e.hopOut || null;
+    await recordHop(cmd, run, member, hopOut ? hopOut.model : null, 'failed', e.code || 'ERROR', hopOut);
     return { ok: false, configured: true, code: e.code || 'ERROR', reasonText: e.message };
   }
 }
@@ -896,7 +990,7 @@ async function answerFromMember(cmd, ctx, run, member, user, copilotText) {
     const { child, state } = await delegateCopilot(cmd, run, copilotText);
     return { status: state === 'failed' ? 'failed' : 'done', answer: copilotChildBlock(child) };
   }
-  const res = await askMember(cmd, ctx, run, member, { system: PRIMER, user, maxTokens: 800 });
+  const res = await askMember(cmd, ctx, run, member, { system: PRIMER, user, maxTokens: ANSWER_TOKENS });
   if (!res.ok) return { status: 'failed', answer: absenceBlock(member, res.reasonText) };
   return { status: 'done', answer: envelope(member, res.text) };
 }
@@ -906,7 +1000,7 @@ async function answerFromMember(cmd, ctx, run, member, user, copilotText) {
 // Copilot joins through the phone bridge. userFor(member) builds
 // the prompt for API members; copilotText is the child instruction
 // the phone executes.
-async function askAll(cmd, ctx, run, members, { userFor, copilotText, maxTokens = 800 }) {
+async function askAll(cmd, ctx, run, members, { userFor, copilotText, maxTokens = ANSWER_TOKENS }) {
   const blocks = [];
   const tally = { answered: 0, configuredFailed: 0, notConfigured: 0, phonePending: 0, phoneFailed: 0 };
   for (const member of members) {
@@ -1223,7 +1317,7 @@ async function executeRoute(cmd, parsed, ctx, run) {
     // phone panes. Primary failover below is untouched.
     const member = parsed.member;
     const res = await askMember(cmd, ctx, run, member, {
-      system: lesserPrimer(member), user: parsed.task, maxTokens: 800,
+      system: lesserPrimer(member), user: parsed.task, maxTokens: ANSWER_TOKENS,
     });
     if (!res.ok) return { status: 'failed', answer: absenceBlock(member, res.reasonText) };
     return { status: 'done', answer: envelope(member, res.text) };
@@ -1249,7 +1343,7 @@ async function executeRoute(cmd, parsed, ctx, run) {
   // silent substitute). The log names the failover honestly. A
   // direct answer stays exactly one block, as before.
   const target = parsed.member;
-  const args = { system: PRIMER, user: parsed.task, maxTokens: 800 };
+  const args = { system: PRIMER, user: parsed.task, maxTokens: ANSWER_TOKENS };
   const first = await askMember(cmd, ctx, run, target, args);
   if (first.ok) return { status: 'done', answer: envelope(target, first.text) };
   const failures = [{ member: target, reasonText: first.reasonText }];
@@ -1347,7 +1441,7 @@ async function executeHelloLoop(cmd, ctx, run) {
     ].join('');
     try {
       const out = await callMember(ctx, st.adapter, { system: PRIMER, user, maxTokens: 150 });
-      const block = envelope(member, out.text);
+      const block = envelope(member, blockText(out));
       blocks.push(block);
       logBlocks.push(block);
       answered++;
@@ -1513,7 +1607,7 @@ async function executeCompare(cmd, parsed, ctx, run) {
   const logText = buildLogText(sessionEntries(rows), SHARED_ANSWER_CAP);
   const res = await askMember(cmd, ctx, run, comparator, {
     system: PRIMER,
-    maxTokens: 800,
+    maxTokens: ANSWER_TOKENS,
     user: `Here is the team's recent log on this device:\n\n${logText}\n\nCompare the answers in it: where do the members agree, where do they differ, and which answer looks strongest? Be specific and concise.`,
   });
   if (!res.ok) return { status: 'failed', answer: absenceBlock(comparator, res.reasonText) };
@@ -1555,7 +1649,7 @@ async function executeSummarize(cmd, ctx, run) {
   const logText = buildLogText(sessionEntries(rows), SHARED_ANSWER_CAP);
   const res = await askMember(cmd, ctx, run, summarizer, {
     system: PRIMER,
-    maxTokens: 800,
+    maxTokens: ANSWER_TOKENS,
     user: `Here is the team's recent log on this device:\n\n${logText}\n\nSummarize the loop: what was asked, what the team answered, where members agreed or differed, and anything still open. Concise, plain language.`,
   });
   if (!res.ok) return { status: 'failed', answer: absenceBlock(summarizer, res.reasonText) };

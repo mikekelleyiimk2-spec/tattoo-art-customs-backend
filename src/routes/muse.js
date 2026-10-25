@@ -287,6 +287,40 @@ router.get('/ai-commands/:id', async (req, res) => {
   }
 });
 
+// GET /api/muse/ai-commands/:id/runs — SERVICE auth only (operator
+// observability; no device access). The command's ai_runs rows in
+// execution order: the root run plus one row per member hop, each
+// hop carrying its status, measured token counts, the provider's
+// finish_reason, and provider_detail — the faithful hop extract
+// (finish reason, truncation flag, full extracted text, token
+// counts) retained by the worker since migration 103. This is the
+// read that makes a lane incident provable from the record: before
+// it existed, a truncated answer filed as complete (2026-10-25
+// briefing) could not be diagnosed after the fact.
+router.get('/ai-commands/:id/runs', async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const id = String(req.params.id || '');
+    const cmd = await db.get('SELECT id FROM ai_commands WHERE id = ?', [id]);
+    if (!cmd) return res.status(404).json({ ok: false, error: 'no such command' });
+    const rows = await db.all(
+      'SELECT * FROM ai_runs WHERE command_id = ? ORDER BY started_at ASC, created_at ASC', [id]
+    );
+    const runs = rows.map((r) => {
+      let detail = null;
+      if (r.provider_detail) {
+        try { detail = JSON.parse(r.provider_detail); } catch { detail = r.provider_detail; }
+      }
+      return { ...r, provider_detail: detail };
+    });
+    return res.json({ ok: true, command_id: id, runs });
+  } catch (e) {
+    console.error('[muse/ai-commands] runs read failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'runs read failed' });
+  }
+});
+
 // GET /api/muse/ai-commands — dual auth.
 // SERVICE: list recent commands (newest first, full rows incl. answer);
 //   optional ?device_id= filter and ?limit= (default 100, max 500).

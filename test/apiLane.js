@@ -45,7 +45,7 @@ function mockFetch(calls) {
     calls.push({ url, opts });
     if (url.includes('generativelanguage.googleapis.com')) {
       return jsonResponse(200, {
-        candidates: [{ content: { parts: [{ text: 'Hello from Gemini!' }] } }],
+        candidates: [{ content: { parts: [{ text: 'Hello from Gemini!' }] }, finishReason: 'STOP' }],
         usageMetadata: { promptTokenCount: 120, candidatesTokenCount: 30 },
         modelVersion: 'gemini-test-1',
       });
@@ -209,6 +209,14 @@ async function runDbTests(ok) {
   const gemRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [gemId]);
   ok(gemRow.status === 'done' && gemRow.answer === '[FROM Gemini]\nHello from Gemini!\n[END]',
     'route: Gemini answer posted back as a [FROM Gemini] envelope');
+  const gemHop = await db.get(
+    "SELECT * FROM ai_runs WHERE command_id = ? AND member = 'Gemini' AND lane = 'api'", [gemId]);
+  const gemDetail = gemHop && gemHop.provider_detail ? JSON.parse(gemHop.provider_detail) : null;
+  ok(!!gemHop && gemHop.finish_reason === 'STOP' && !!gemDetail
+    && gemDetail.finishReason === 'STOP' && gemDetail.truncated === false
+    && gemDetail.text === 'Hello from Gemini!'
+    && gemDetail.promptTokens === 120 && gemDetail.completionTokens === 30,
+  'observability: a complete (STOP) hop retains finish_reason + the faithful provider extract on ai_runs, and its block stays a plain answer — no partial label');
   const gemCall = calls.find((c) => c.url.includes('generativelanguage.googleapis.com'));
   ok(!!gemCall && gemCall.opts.headers['x-goog-api-key'] === TEST_GEMINI_KEY
     && !gemCall.url.includes(TEST_GEMINI_KEY),
@@ -1091,6 +1099,40 @@ async function runDbTests(ok) {
   const leHop = await db.get("SELECT * FROM ai_runs WHERE command_id = ? AND member = 'Groq'", [leId]);
   ok(!!leHop && leHop.status === 'failed' && leHop.error === 'HTTP_500',
     'lesser table error: ai_runs records the failed Groq hop with error HTTP_500');
+
+  console.log('api lane observability (a truncated answer is flagged, never filed as complete):');
+  const truncFetch = async (url, opts = {}) => {
+    if (url.includes('generativelanguage.googleapis.com')) {
+      return jsonResponse(200, {
+        candidates: [{
+          content: { parts: [{ text: 'This answer was cut off mid-' }] },
+          finishReason: 'MAX_TOKENS',
+        }],
+        usageMetadata: { promptTokenCount: 50, candidatesTokenCount: 4096 },
+        modelVersion: 'gemini-test-1',
+      });
+    }
+    throw new Error(`observability fetch: unexpected URL ${url}`);
+  };
+  const truncEnv = {};
+  truncEnv['GEMINI' + '_API_KEY'] = TEST_GEMINI_KEY;
+  const truncW = apiLane.createWorker({
+    env: truncEnv, fetchImpl: truncFetch, retryDelayMs: 0, workerId: 'test-observability',
+  });
+  const trId = await insertCmd('Have Gemini write a very long essay', 'api', { device_id: 'observability' });
+  await truncW.drain();
+  const trRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [trId]);
+  ok(trRow.status === 'done'
+    && trRow.answer === '[FROM Gemini]\nThis answer was cut off mid-\n(partial answer — provider stopped: MAX_TOKENS)\n[END]',
+  'observability: a MAX_TOKENS fragment carries the honest partial label in the settled record — the answer text itself is untouched, never presented as complete');
+  const trHop = await db.get(
+    "SELECT * FROM ai_runs WHERE command_id = ? AND member = 'Gemini' AND lane = 'api'", [trId]);
+  const trDetail = trHop && trHop.provider_detail ? JSON.parse(trHop.provider_detail) : null;
+  ok(!!trHop && trHop.status === 'done' && trHop.finish_reason === 'MAX_TOKENS'
+    && !!trDetail && trDetail.truncated === true
+    && trDetail.text === 'This answer was cut off mid-'
+    && trDetail.promptTokens === 50 && trDetail.completionTokens === 4096,
+  'observability: the truncated hop retains finish_reason + the faithful provider extract (text, token counts, truncation flag) — the next incident is provable from the record');
 }
 
 async function runHttpTests(ok) {
@@ -1128,6 +1170,19 @@ async function runHttpTests(ok) {
   const apiRow = (j.commands || []).find((c) => c.id === apiCmdId);
   ok(!!apiRow && apiRow.lane === 'api' && apiRow.status === 'queued',
     'api lane http: the API-lane command stays queued for the backend worker (worker is off under the test harness)');
+
+  console.log('api lane hop detail (HTTP observability read):');
+  r = await call('GET', `/api/muse/ai-commands/${httpFixtureParentId}/runs`, undefined, PIPE);
+  j = await r.json();
+  ok(r.status === 200 && j.ok === true && j.command_id === httpFixtureParentId
+    && Array.isArray(j.runs) && j.runs.length >= 1
+    && j.runs.every((x) => x.command_id === httpFixtureParentId)
+    && j.runs.some((x) => x.member === 'Copilot'),
+  'observability http: the service token reads a command\'s ai_runs hop detail (root run + member hops, in order)');
+  r = await call('GET', `/api/muse/ai-commands/${httpFixtureParentId}/runs`);
+  ok(r.status === 401, 'observability http: hop detail is service-only — no token, no rows');
+  r = await call('GET', '/api/muse/ai-commands/no-such-command/runs', undefined, PIPE);
+  ok(r.status === 404, 'observability http: an unknown command id 404s');
 
   console.log('copilot phone-lane bridge (HTTP result linkage):');
   r = await call('POST', `/api/muse/ai-commands/${httpFixtureChildId}/result`,
