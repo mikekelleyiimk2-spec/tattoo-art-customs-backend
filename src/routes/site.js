@@ -109,6 +109,12 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/privacy/ai-bar`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/screenqr`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/habit-dot`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/world-weather`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/loophole-ciphers`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/ghost-box`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/tester-hub`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/library`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/kids-wing`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/discounts`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/aftercare`, changefreq: 'monthly', priority: '0.6' },
     { loc: `${base}/merch`, changefreq: 'weekly', priority: '0.7' },
@@ -1042,6 +1048,49 @@ router.get('/privacy/ai-bar', (req, res) => res.render('site/privacy-aibar', {
 router.get('/privacy/habit-dot', (req, res) => res.render('site/privacy-habitdot', {
   title: 'Habit Dot Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for Habit Dot. Your habits stay on your device; the free version shows Google AdMob ads, and Premium ($2.99 via Google Play Billing) removes them.',
+}));
+
+// Per-app policy for the World Weather Android app (Google Play requires
+// a public privacy-policy URL; the app uses device location only on tap
+// and sends the requested place to public weather/geocoding services).
+router.get('/privacy/world-weather', (req, res) => res.render('site/privacy-worldweather', {
+  title: 'World Weather Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for World Weather. No account, nothing stored by us — location is used only when you tap, and forecasts come straight from public weather services.',
+}));
+
+// Per-app policy for the Loophole Ciphers Android app (zero permissions,
+// no internet permission; Play still requires a public policy URL).
+router.get('/privacy/loophole-ciphers', (req, res) => res.render('site/privacy-ciphers', {
+  title: 'Loophole Ciphers Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for Loophole Ciphers. Zero permissions and no internet — every cipher is solved on your device and nothing is collected.',
+}));
+
+// Per-app policy for the Ghost Box Android app (zero permissions — no
+// microphone, no internet; all sound is generated on the device).
+router.get('/privacy/ghost-box', (req, res) => res.render('site/privacy-ghostbox', {
+  title: 'Ghost Box Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for Ghost Box — Spirit Radio. No microphone, no internet permission, nothing recorded or collected — an entertainment novelty that runs entirely on your device.',
+}));
+
+// Per-app policy for the Tester Hub Android app (zero permissions, no
+// network calls; the tester checklist is stored on-device only).
+router.get('/privacy/tester-hub', (req, res) => res.render('site/privacy-testerhub', {
+  title: 'Tester Hub Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for Tester Hub. Zero permissions, no network calls, no data collected — your testing checklist never leaves your phone.',
+}));
+
+// Per-app policy for The Library Android app (no permissions, books
+// bundled and read fully offline; outside links open in the browser).
+router.get('/privacy/library', (req, res) => res.render('site/privacy-library', {
+  title: 'The Library Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for The Library. No permissions and no data collected — 28 public-domain classics bundled in the app and read fully offline.',
+}));
+
+// Per-app policy for the Kids' Wing Android app (child-directed, zero
+// permissions, no internet permission; collects nothing from anyone).
+router.get('/privacy/kids-wing', (req, res) => res.render('site/privacy-kidswing', {
+  title: "Kids' Wing Privacy Policy — Usefulappz",
+  metaDescription: "Privacy policy for Kids' Wing. No internet permission, no ads, no purchases, nothing collected from children or anyone — stories and coloring that work entirely offline.",
 }));
 
 router.get('/about', (req, res) => res.render('site/about', {
