@@ -551,6 +551,7 @@ async function main() {
   await require('./holidayRaffle').runDbTests(ok);
   await require('./merchCatalog').runDbTests(ok);
   await require('./apiLane').runDbTests(ok); // AI Master Button API lane (worker, adapters, grammar)
+  await require('./moneyWatch').runDbTests(ok); // Money Watch watcher (baseline, exactly-once, kinds, CT windows)
 
   // Mail retry (unit-level, no live SMTP): a transient failure is retried
   // with backoff and eventually delivered; a permanent failure exhausts all
@@ -1536,6 +1537,7 @@ async function main() {
   await require('./shoptools-phase8').runHttpTests(ok, req); // client profiles CRM + review requests
   await require('./favorites').runHttpTests(ok, req); // [wishlist] feature
   await require('./toploved').runHttpTests(ok, req); // [toploved] leaderboard
+  await require('./shoplanding').runHttpTests(ok, req); // public /shop landing (Batch #1 item 15)
   await require('./lillikes').runHttpTests(ok, req); // [lilhearts] Little Inkers hearts
   await require('./doodleMerch').runHttpTests(ok, req); // doodle-to-merchandise
   await require('./holidayRaffle').runHttpTests(ok, req); // holiday doodle raffle
@@ -1549,6 +1551,7 @@ async function main() {
   await require('./emailKeeper').runHttpTests(ok, req); // email keeper live status (whitelist + service-token ingest)
   await require('./codex').runHttpTests(ok, req); // codex for OneMind (registry projection — public fields only)
   await require('./servicePlug').runHttpTests(ok, req); // AI API Service Plug (write-only vault + play operation)
+  await require('./moneyWatch').runHttpTests(ok, req); // Money Watch endpoint (public envelope + token-guarded full view/run)
   r = await areq('POST', `/admin/orders/${orderId}/confirm-manual`);
   ok(r.status === 302, 'admin confirms manual payment');
 

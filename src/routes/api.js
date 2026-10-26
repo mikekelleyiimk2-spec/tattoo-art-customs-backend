@@ -14,6 +14,7 @@ const { authLimiter, formLimiter, messageLimiter, checkHoneypot } = require('../
 const { enforceSessionCap } = require('../lib/sessionLimits');
 const rolodex = require('../lib/rolodex');
 const emailKeeper = require('../lib/emailKeeper');
+const moneyWatch = require('../lib/moneyWatch');
 const codex = require('../lib/codex');
 const servicePlug = require('../lib/servicePlug');
 
@@ -181,6 +182,73 @@ router.post('/email-keeper/ingest', messageLimiter, express.json(), async (req, 
   if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
   await emailKeeper.saveStatus(result.payload);
   return res.json({ ok: true, stored: result.payload.accounts.length });
+});
+
+// ---- Money Watch (Slice 1, 2026-10-26) ----
+// The landing detector for money arriving (design:
+// ~/workspace/your_files/money-watch-design-2026-10-26.md). The
+// watcher lives in src/lib/moneyWatch.js and reads the Tier-1 sources
+// the estate can actually read today — the backend's own sales records
+// (orders) and the Penny Ledger (migration 105). Doors that aren't
+// wired yet (Plaid bank feeds, mk4 PayPal — its plug is approved but
+// not built, Play payouts) are NAMED as unwired in the state, never
+// faked. READ-ONLY: nothing here can move money; the split shown per
+// landing is plan math (design §7A), and executing it is Phase 4,
+// which does not exist.
+//
+//   GET  /api/money-watch           public, read-only: headline ("Watching."
+//                                   until the first real landing), doors,
+//                                   revenue window totals, recent landings.
+//                                   The public projection carries no
+//                                   account numbers, no balances, no PII —
+//                                   Penny Ledger Gmail accounts are mapped
+//                                   to role labels at detection time.
+//   GET  /api/money-watch?full=1   Muse service-token only: the owner's
+//                                   private view — adds the personal-side
+//                                   section (design §8 item 3: private
+//                                   view only) and watcher internals.
+//   POST /api/money-watch/run       Muse service-token only: one watcher
+//                                   pass (the VM trigger's call). A landing
+//                                   fires exactly once — seen-IDs are
+//                                   watermarked per source in the state.
+//
+// Service-token auth is the keeper-ingest mechanism above (timing-safe
+// Bearer vs MUSE_SERVICE_TOKEN; 404 when unset, 401 on a bad token;
+// the token is never logged).
+function watchServiceToken() {
+  return process.env.MUSE_SERVICE_TOKEN || '';
+}
+
+function watchAuthorized(req) {
+  const expected = watchServiceToken();
+  if (!expected) return false;
+  const m = /^Bearer (.+)$/.exec(req.headers.authorization || '');
+  if (!m) return false;
+  const a = Buffer.from(m[1], 'utf8');
+  const b = Buffer.from(expected, 'utf8');
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+router.get('/money-watch', async (req, res) => {
+  const state = await moneyWatch.getState();
+  if (req.query.full === '1') {
+    if (!watchServiceToken()) return res.status(404).json({ ok: false });
+    if (!watchAuthorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+    return res.json({ ok: true, view: 'full', ...moneyWatch.fullView(state) });
+  }
+  return res.json({ ok: true, view: 'public', ...moneyWatch.publicView(state) });
+});
+
+router.post('/money-watch/run', messageLimiter, express.json(), async (req, res) => {
+  if (!watchServiceToken()) return res.status(404).json({ ok: false });
+  if (!watchAuthorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const result = await moneyWatch.runWatcher();
+    return res.json({ ok: true, ...result });
+  } catch (e) {
+    console.error('[money-watch] watcher run failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'watcher run failed' });
+  }
 });
 
 // ---- AI API Service Plug (Slice 1, 2026-10-26) ----
@@ -1027,8 +1095,8 @@ async function refreshLikeCount(designId) {
 
 // [merchhearts] Product likes mirror design likes in the parallel
 // merch_likes / merch_like_counts tables (migration 100), same voter-key
-// mechanics. The web client only pings likes for signed-in users (owner
-// rule 2026-10-11: guest saves stay local and cast no public vote).
+// mechanics. Guest votes count publicly since Approval Batch #1 item 25
+// (2026-10-26), which superseded the 2026-10-11 signed-in-only rule.
 async function refreshMerchLikeCount(merchId) {
   const row = await db.get('SELECT COUNT(*) AS n FROM merch_likes WHERE merch_id = ?', [merchId]);
   const n = Number((row && row.n) || 0);
@@ -1060,7 +1128,14 @@ router.post('/likes/:designId', express.json(), formLimiter, async (req, res) =>
 });
 
 router.delete('/likes/:designId', express.json(), formLimiter, async (req, res) => {
-  const voterKey = likeVoterKey(req);
+  let voterKey = likeVoterKey(req);
+  // Guest->user vote migration (Approval Batch #1 item 25, 2026-10-26):
+  // a signed-in user may retire THIS browser's guest key so its votes
+  // re-key to the user instead of double-counting. Possession of the
+  // guest UUID is the credential — the same trust the guest path itself
+  // runs on — and it can only ever delete 'guest:' rows, never user rows.
+  const retire = String((req.body && req.body.retire_voter_key) || '').slice(0, 64);
+  if (req.user && /^[A-Za-z0-9-]{8,64}$/.test(retire)) voterKey = 'guest:' + retire;
   if (!voterKey) return res.status(400).json({ ok: false, error: 'voter_key required' });
   const id = String(req.params.designId || '').slice(0, 128);
   if (favoriteItemType(req) === 'merch') {
