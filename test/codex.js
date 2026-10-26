@@ -97,6 +97,41 @@ async function runHttpTests(ok, req) {
   ok(!/BEGIN [A-Z ]*PRIVATE KEY/.test(all.text), 'no key material in the raw response');
   ok(!/plug-pricing-draft/.test(all.text), 'the internal draft doc path is not projected');
   ok(!/custody debt/i.test(all.text), 'internal notes (custody debt) are not projected');
+
+  // /onemind — the product's own page (website split follow-up,
+  // 2026-10-26). Its seat board renders from this same book, so the
+  // page must tell the identical truth: exactly one configured seat
+  // (Gemini), every other seat labeled as unconfigured / phone-lane /
+  // named-not-built, the settled $9.99/mo price, and honest
+  // closed-testing status.
+  console.log('onemind page (seat board renders the codex truth):');
+  const page = await req('GET', '/onemind');
+  ok(page.status === 200, '/onemind serves 200');
+  ok(/All Your AIs, One Team/.test(page.text), '/onemind carries the OneMind name line');
+  ok(page.text.includes('$9.99/mo'), '/onemind states the settled OneMind Team price $9.99/mo');
+  ok(/closed testing/i.test(page.text), '/onemind honestly says the app is in closed testing');
+  ok(page.text.includes('href="/testers"'), '/onemind download door points at the tester path');
+  const configuredCount = (page.text.match(/Seated — configured/g) || []).length;
+  ok(configuredCount === 1, '/onemind marks exactly ONE seat configured (Gemini) — none faked live');
+  ok(page.text.includes('Gemini'), '/onemind seat board names Gemini');
+  ok(page.text.includes('Not configured yet'), '/onemind labels unconfigured seats as not configured');
+  ok(page.text.includes('Phone lane — chair unclaimed'), '/onemind labels Copilot as phone lane, chair unclaimed');
+  ok(page.text.includes('Named — not built yet'), '/onemind labels the named worker seats as not built');
+  ok(/Building/.test(page.text) && /AI-to-AI room/.test(page.text), '/onemind shows the AI-to-AI room as building');
+  ok(page.text.includes('paypal.com/ncp/payment/WA9DS6J8ERSHW'), '/onemind carries the mk4 tip jar');
+  ok(/SPONSORED/.test(page.text) && /This spot is open/.test(page.text), '/onemind sponsor slot is labeled and pending-fill (no affiliate fits yet)');
+  ok(!/little-inkers|poppy-and-ziggy/.test(page.text), '/onemind carries no links into kid-walled surfaces');
+
+  const worlds = await req('GET', '/worlds');
+  ok(worlds.status === 200 && worlds.text.includes('href="/onemind"'), '/worlds OneMind card points at /onemind');
+
+  const priv = await req('GET', '/privacy/onemind');
+  ok(priv.status === 200 && priv.text.includes('OneMind') && priv.text.includes('com.usefulappz.aibar'),
+    '/privacy/onemind serves the OneMind privacy policy');
+
+  const sm = await req('GET', '/sitemap.xml');
+  ok(sm.status === 200 && sm.text.includes('/onemind') && sm.text.includes('/privacy/onemind'),
+    'sitemap lists /onemind and /privacy/onemind');
 }
 
 module.exports = { runHttpTests };

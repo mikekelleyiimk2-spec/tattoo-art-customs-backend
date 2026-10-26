@@ -107,6 +107,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/privacy`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/odometer`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/ai-bar`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/onemind`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/screenqr`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/habit-dot`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/world-weather`, changefreq: 'monthly', priority: '0.3' },
@@ -134,6 +135,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/poppy-and-ziggy`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/worlds`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/cannadash`, changefreq: 'weekly', priority: '0.6' },
+    { loc: `${base}/onemind`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/watch`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/guides`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/guides/aftercare`, changefreq: 'monthly', priority: '0.7' },
@@ -452,6 +454,42 @@ router.get('/cannadash', (req, res) => {
     title: 'CannaDash — Cannabis Delivery, Run by Licensed Retailers | Useful Appz',
     metaDescription: 'CannaDash is the delivery platform licensed retailers plug into: ordering, dispatch, chain-of-custody and proof-of-delivery software. Two apps — CannaDash for customers, CannaDash Driver for drivers. 21+. Not live yet.',
     canonical: `${base}/cannadash`,
+  });
+});
+
+// OneMind — its OWN page (website split follow-up, 2026-10-26): the
+// flagship existed only as a card on /apps. Grown-up world, standard
+// layout. The seat board is read LIVE from the Codex (src/lib/codex —
+// the same projection /api/codex serves) on every request: no seat is
+// ever dressed up beyond what the book says. Today that is one
+// configured seat (Gemini), the rest honestly labeled.
+function onemindSeatChip(state) {
+  const s = String(state || '');
+  if (/phone lane/i.test(s)) return 'Phone lane — chair unclaimed';
+  if (/not built/i.test(s)) return 'Named — not built yet';
+  if (/seated/i.test(s) && !/unconfigured/i.test(s)) return 'Seated — configured';
+  return 'Not configured yet';
+}
+
+router.get('/onemind', (req, res) => {
+  const base = config.baseUrl.replace(/\/$/, '');
+  const book = require('../lib/codex').publicBook();
+  const seats = (book.seats || []).map((s) => ({
+    name: s.name,
+    state: s.state,
+    chip: onemindSeatChip(s.state),
+    configured: onemindSeatChip(s.state) === 'Seated — configured',
+    lastVerified: (s.liveness && s.liveness.last_verified) || null,
+  }));
+  const ai2ai = (book.plugs || []).find((p) => /AI-to-AI Messenger/i.test(p.name || ''));
+  res.render('site/onemind', {
+    title: 'OneMind — All Your AIs, One Team | Useful Appz',
+    metaDescription: 'OneMind puts your AIs at one table: speak or type once and the team works together. Live seat board from the Codex, OneMind Team $9.99/mo, in closed testing now.',
+    canonical: `${base}/onemind`,
+    seats,
+    codexUpdated: book.updated || null,
+    ai2aiState: ai2ai ? String(ai2ai.state || '') : '',
+    ai2aiBuilding: ai2ai ? /^building/i.test(String(ai2ai.state || '')) : false,
   });
 });
 
@@ -1104,6 +1142,15 @@ router.get('/privacy/screenqr', (req, res) => res.render('site/privacy-screenqr'
 // Per-app policy for the AI Button Android app (voice-loop app:
 // microphone + overlay permissions need a public policy URL for Play).
 router.get('/privacy/ai-bar', (req, res) => res.render('site/privacy-aibar', {
+  title: 'OneMind Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for OneMind. No accounts, no server, no ads, no analytics — your voice and prompts go only to the AI you choose.',
+}));
+
+// The same OneMind policy at its product-name URL (2026-10-26): the app
+// is OneMind (package com.usefulappz.aibar — the /privacy/ai-bar URL
+// above predates the rename and stays live for existing listings).
+// One policy, one source — this route renders the same view.
+router.get('/privacy/onemind', (req, res) => res.render('site/privacy-aibar', {
   title: 'OneMind Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for OneMind. No accounts, no server, no ads, no analytics — your voice and prompts go only to the AI you choose.',
 }));

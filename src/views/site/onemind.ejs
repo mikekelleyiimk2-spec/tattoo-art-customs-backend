@@ -1,0 +1,58 @@
+<div style="text-align:center;">
+  <p style="font-size:3rem;margin:.5rem 0;">🧠</p>
+  <h1>OneMind</h1>
+  <p class="muted" style="max-width:44rem;margin:0 auto;"><strong>All Your AIs, One Team.</strong> Speak or type once — your AIs sit at one table and work together, instead of you juggling a dozen apps and copy-pasting between them.</p>
+</div>
+
+<section class="card" style="padding:1.5rem;margin:1.5rem 0;">
+  <h2>What OneMind is</h2>
+  <p>Every AI you use lives in its own app, its own window, its own conversation that knows nothing about the others. OneMind ends that: <strong>one conversation, one button, every AI at the table.</strong> You say what you need once — by voice or by typing — and the team takes it from there: the seats talk to each other, build on each other's work, and bring you one answer instead of five partial ones.</p>
+  <p><strong>You never touch an API key.</strong> The table is wired on our side — the doors, the seats, and the plumbing are the studio's job, kept alive and checked on a schedule. Your whole job is the ask.</p>
+</section>
+
+<section class="card" style="padding:1.5rem;margin:1.5rem 0;">
+  <h2>The table — who's seated, honestly</h2>
+  <p>This board is read <strong>live from the Codex</strong> — the written registry of the table, the same book the OneMind app reads<% if (codexUpdated) { %> (book updated <%= codexUpdated %>)<% } %>. A seat is only marked configured when it actually is. Today the table is a workbench with <strong>one configured seat</strong>; the rest are exactly as labeled — no seat is ever dressed up as live before it is.</p>
+  <div class="grid">
+    <% seats.forEach(function (s) { %>
+    <article class="card" style="padding:1rem;">
+      <h3 style="margin-top:0;"><%= s.name %></h3>
+      <% if (s.configured) { %>
+      <p><span class="badge" style="background:#14532d;color:#eafff2;"><%= s.chip %></span></p>
+      <% } else { %>
+      <p><span class="badge"><%= s.chip %></span></p>
+      <% } %>
+      <p class="muted fineprint">Codex state: <%= s.state %><% if (s.lastVerified) { %> · last verified <%= s.lastVerified %><% } %></p>
+    </article>
+    <% }); %>
+  </div>
+  <p class="muted">The live board — every seat, plug, and price — lives in the app, and the registry itself is public: <a href="/api/codex">the Codex for OneMind</a>.</p>
+</section>
+
+<section class="card" style="padding:1.5rem;margin:1.5rem 0;">
+  <h2>The AI-to-AI room</h2>
+  <% if (ai2aiBuilding) { %>
+  <p><span class="badge">Building</span></p>
+  <p>OneMind's AI-to-AI room — where the seats talk to <em>each other</em>, not just to you — is <strong>under construction</strong>. The room is already visible inside the app; the live Messenger lane behind it is still being built. When it lights up, it will say so here first — the Codex state below is the live one.</p>
+  <p class="muted fineprint">Codex state: <%= ai2aiState %></p>
+  <% } else if (ai2aiState) { %>
+  <p class="muted fineprint">Codex state: <%= ai2aiState %></p>
+  <% } %>
+</section>
+
+<section class="card" style="padding:1.5rem;margin:1.5rem 0;">
+  <h2>Price &amp; how to get it</h2>
+  <p><strong>OneMind Team — $9.99/mo.</strong> That's the settled price for the full table: every seat, the AI-to-AI room, and everything that plugs into it.</p>
+  <p><span class="badge">Closed testing</span></p>
+  <p>OneMind is <strong>in closed testing on Google Play right now</strong> — it isn't on the public store yet, and we won't pretend otherwise. The Team subscription opens with the public launch. Want in early? Testers get the app through the studio's tester program:</p>
+  <p><a class="btn" href="/testers">Join the closed test</a> <a class="btn btn-secondary" href="/apps">See OneMind on the apps page</a></p>
+</section>
+
+<div class="ad-slot ad-house" role="complementary" aria-label="Sponsor" style="text-align:center;padding:1rem;border:1px dashed #9db8a4;border-radius:12px;margin:1.5rem 0;">
+  <p class="fineprint" style="margin:.2rem 0;">SPONSORED</p>
+  <p style="margin:.2rem 0;"><strong>This spot is open.</strong> Sponsors keep the fleet moving — reach us through the <a href="/advertise">advertise page</a>.</p>
+</div>
+
+<%- include('../partials/tip-jar') %>
+
+<p style="text-align:center;" class="muted">OneMind is a <strong>Useful Appz</strong> world. See all of them on <a href="/worlds">Our Worlds</a>, or browse the studio's apps on <a href="/apps">the apps page</a>. · <a href="/privacy/onemind">OneMind privacy policy</a></p>
