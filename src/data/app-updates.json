@@ -173,12 +173,12 @@
     "publishedAt": "2026-10-26T19:26:00Z"
   },
   "com.usefulappz.folder": {
-    "versionCode": 2,
-    "versionName": "1.0.1",
+    "versionCode": 3,
+    "versionName": "1.1.0",
     "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.folder/apk",
-    "notes": "UsefulAppz Folder \u2014 keeps every Useful Appz app on your phone, current: it reports the phone's installed list back so updates reach you.",
-    "sha256": "33204b327fc019ff9882a6c8867e547bf1a69715e8e25f6b72f7588908f96c08",
+    "notes": "UsefulAppz Folder with the full ad stack (AdMob banner + interstitials) \u2014 keeps every Useful Appz app on your phone, current: it reports the phone's installed list back so updates reach you.",
+    "sha256": "c5b49402b7814c94b3c506a174fa48e933bc98f1e98fc2fda7ace23c84c17eff",
     "sizeBytes": 9124622,
-    "publishedAt": "2026-10-26T19:26:00Z"
+    "publishedAt": "2026-10-26T19:48:00Z"
   }
 }
