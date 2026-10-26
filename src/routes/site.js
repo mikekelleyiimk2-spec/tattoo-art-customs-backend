@@ -497,6 +497,7 @@ router.get('/onemind', (req, res) => {
     codexUpdated: book.updated || null,
     ai2aiState: ai2ai ? String(ai2ai.state || '') : '',
     ai2aiBuilding: ai2ai ? /^building/i.test(String(ai2ai.state || '')) : false,
+    ai2aiLive: ai2ai ? /^live/i.test(String(ai2ai.state || '')) : false,
   });
 });
 

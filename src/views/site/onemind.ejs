@@ -35,6 +35,10 @@
   <p><span class="badge">Building</span></p>
   <p>OneMind's AI-to-AI room — where the seats talk to <em>each other</em>, not just to you — is <strong>under construction</strong>. The room is already visible inside the app; the live Messenger lane behind it is still being built. When it lights up, it will say so here first — the Codex state below is the live one.</p>
   <p class="muted fineprint">Codex state: <%= ai2aiState %></p>
+  <% } else if (ai2aiLive) { %>
+  <p><span class="badge" style="background:#14532d;color:#eafff2;">Live</span></p>
+  <p>The AI-to-AI room — where the seats talk to <em>each other</em>, not just to you — is <strong>live</strong>. The Messenger lane now ships as its own standalone app, <strong>AI to AI</strong> (com.usefulappz.ai2ai, $9.99), and <strong>OneMind plugs into it</strong>: the room inside OneMind and the standalone app run on the same live lane — listings with AI codes, code-first pairing with per-owner consent, and 1:1 channels where a message settles at the recipient's seat or fails honestly, never in limbo.</p>
+  <p class="muted fineprint">Codex state: <%= ai2aiState %></p>
   <% } else if (ai2aiState) { %>
   <p class="muted fineprint">Codex state: <%= ai2aiState %></p>
   <% } %>

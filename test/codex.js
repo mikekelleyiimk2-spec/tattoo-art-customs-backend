@@ -117,7 +117,10 @@ async function runHttpTests(ok, req) {
   ok(page.text.includes('Not configured yet'), '/onemind labels unconfigured seats as not configured');
   ok(page.text.includes('Phone lane — chair unclaimed'), '/onemind labels Copilot as phone lane, chair unclaimed');
   ok(page.text.includes('Named — not built yet'), '/onemind labels the named worker seats as not built');
-  ok(/Building/.test(page.text) && /AI-to-AI room/.test(page.text), '/onemind shows the AI-to-AI room as building');
+  ok(/Live/.test(page.text) && /AI-to-AI room/.test(page.text), '/onemind shows the AI-to-AI room as live');
+  ok(!/under construction/.test(page.text) && !/>Building</.test(page.text), '/onemind no longer shows the AI-to-AI room as building');
+  ok(page.text.includes('AI to AI') && page.text.includes('com.usefulappz.ai2ai'), '/onemind names the standalone AI to AI app');
+  ok(/OneMind plugs into it/.test(page.text), '/onemind says OneMind plugs into the standalone app');
   ok(page.text.includes('paypal.com/ncp/payment/WA9DS6J8ERSHW'), '/onemind carries the mk4 tip jar');
   ok(/SPONSORED/.test(page.text) && /This spot is open/.test(page.text), '/onemind sponsor slot is labeled and pending-fill (no affiliate fits yet)');
   ok(!/little-inkers|poppy-and-ziggy/.test(page.text), '/onemind carries no links into kid-walled surfaces');
