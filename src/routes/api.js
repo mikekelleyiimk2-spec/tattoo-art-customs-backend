@@ -15,6 +15,7 @@ const { enforceSessionCap } = require('../lib/sessionLimits');
 const rolodex = require('../lib/rolodex');
 const emailKeeper = require('../lib/emailKeeper');
 const codex = require('../lib/codex');
+const servicePlug = require('../lib/servicePlug');
 
 const router = express.Router();
 
@@ -180,6 +181,70 @@ router.post('/email-keeper/ingest', messageLimiter, express.json(), async (req, 
   if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
   await emailKeeper.saveStatus(result.payload);
   return res.json({ ok: true, stored: result.payload.accounts.length });
+});
+
+// ---- AI API Service Plug (Slice 1, 2026-10-26) ----
+// Unit #1 productized: our own Play Console doorway as the reference
+// implementation (project: ~/workspace/app/service-plug/). Two routes,
+// both behind the Muse service-token guard — the EXACT mechanism of
+// the keeper ingest above (timing-safe Bearer vs MUSE_SERVICE_TOKEN;
+// 404 when unset, 401 on a bad token; the token is never logged).
+//
+//   POST /api/service-plug/vault/register   WRITE-ONLY vault registrar:
+//        metadata only (door, platform account, credential class,
+//        storage reference, sha256 fingerprint). Credential material
+//        is rejected outright in src/lib/servicePlug.js — and there
+//        is deliberately NO read/export route for the vault, ever.
+//   POST /api/service-plug/play/tracks      the agent operation:
+//        { package } -> the playbook's proof read performed server-
+//        side with the vault-referenced credential. Agents request
+//        OPERATIONS, never keys; the credential appears in no
+//        request, response, or log line.
+//
+// There are intentionally no GET routes under /api/service-plug.
+function plugServiceToken() {
+  return process.env.MUSE_SERVICE_TOKEN || '';
+}
+
+function plugAuthorized(req) {
+  const expected = plugServiceToken();
+  if (!expected) return false;
+  const m = /^Bearer (.+)$/.exec(req.headers.authorization || '');
+  if (!m) return false;
+  const a = Buffer.from(m[1], 'utf8');
+  const b = Buffer.from(expected, 'utf8');
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+router.post('/service-plug/vault/register', messageLimiter, express.json(), async (req, res) => {
+  if (!plugServiceToken()) return res.status(404).json({ ok: false });
+  if (!plugAuthorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  const result = servicePlug.sanitizeRegister(req.body);
+  if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
+  try {
+    const ack = await servicePlug.registerRecord(result.record);
+    return res.json({ ok: true, registered: ack.registered, fingerprint_sha256: ack.fingerprint_sha256 });
+  } catch (e) {
+    console.error('[service-plug] vault register failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'register failed' });
+  }
+});
+
+router.post('/service-plug/play/tracks', messageLimiter, express.json(), async (req, res) => {
+  if (!plugServiceToken()) return res.status(404).json({ ok: false });
+  if (!plugAuthorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  const pkg = req.body && req.body.package;
+  if (typeof pkg !== 'string' || !pkg) {
+    return res.status(400).json({ ok: false, error: 'package required' });
+  }
+  const result = await servicePlug.playTracks(pkg);
+  if (!result.ok && result.error_class === 'bad_package') {
+    return res.status(400).json({ ok: false, error: 'bad package name' });
+  }
+  // Operation outcomes ride 200 with the ok flag + error_class — the
+  // claim -> run -> post discipline: a completed operation with its
+  // result, or an honest failure with its class. Never a limbo.
+  return res.json(result);
 });
 
 function publicUser(user, isSubscriber, eligibleFor6Month) {
@@ -585,6 +650,171 @@ router.post('/testers/apps', formLimiter, express.json(), async (req, res) => {
   } catch (e) {
     console.error('[testers/apps] add failed:', e.message);
     return res.status(500).json({ ok: false, error: 'add failed' });
+  }
+});
+
+// ---- Tester Hub slice 4: the Profile Plug (owner strike 2026-10-26) ----
+// A developer's links live in their own Rolodex (developer edition)
+// and plug into their Hub developer profile + app cards — the Hub
+// surface is named the "Profile Plug". Settled price: first link
+// FREE per profile; every further link $0.99 flat (with the penny
+// split: ~15c Google / 1c referrer / 1c prize pot / 1c buyer credit
+// / ~81c house) or a 15% ride. Logic: src/lib/profilePlug.js.
+// Management is service-token only in this slice (same guard as the
+// pool roster above); the self-serve UI rides the next Hub app build.
+const profilePlug = require('../lib/profilePlug');
+
+function plugAdminGuard(req, res) {
+  if (!poolServiceToken()) { res.status(404).json({ ok: false }); return false; }
+  if (!poolAuthorized(req)) { res.status(401).json({ ok: false, error: 'unauthorized' }); return false; }
+  return true;
+}
+
+// Public: developer profiles with their apps and their LIVE plugged
+// links (disclosure-locked), plus the public prize-pot total. No
+// Gmails — profiles are public, addresses are not.
+router.get('/testers/profiles', async (req, res) => {
+  try {
+    const profiles = await profilePlug.publicProfiles();
+    return res.json({ ok: true, pot_cents: await profilePlug.potTotal(), profiles });
+  } catch (e) {
+    console.error('[testers/profiles] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'profiles failed' });
+  }
+});
+
+// Owner-side book (service token): every profile, every link in
+// every state with clicks + entitlement, and the penny balances.
+// The click counts the developer sees are these same numbers.
+router.get('/testers/profiles/admin', async (req, res) => {
+  if (!plugAdminGuard(req, res)) return;
+  try {
+    const gmail = req.query && req.query.gmail;
+    if (gmail) {
+      const detail = await profilePlug.adminProfileDetail(gmail);
+      if (!detail) return res.status(404).json({ ok: false, error: 'no such developer profile' });
+      return res.json({ ok: true, pot_cents: await profilePlug.potTotal(), ...detail });
+    }
+    const all = await profilePlug.adminAllProfiles();
+    return res.json({ ok: true, ...all });
+  } catch (e) {
+    console.error('[testers/profiles/admin] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'admin read failed' });
+  }
+});
+
+// Create/refresh a developer profile (service token):
+// { gmail, display_name, blurb?, referrer_gmail?, rolodex_app_owned? }.
+// Referrer attribution is set once, at the door.
+router.post('/testers/profiles', formLimiter, express.json(), async (req, res) => {
+  if (!plugAdminGuard(req, res)) return;
+  try {
+    const b = req.body || {};
+    const r = await profilePlug.createProfile({
+      gmail: b.gmail, display_name: b.display_name, blurb: b.blurb,
+      referrer_gmail: b.referrer_gmail, rolodex_app_owned: b.rolodex_app_owned,
+    });
+    if (!r.ok) return res.status(400).json({ ok: false, error: r.error });
+    return res.json({ ok: true, created: r.created, profile: r.profile });
+  } catch (e) {
+    console.error('[testers/profiles create] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'profile create failed' });
+  }
+});
+
+// Retire a profile (service token): { gmail } — off every surface.
+router.post('/testers/profiles/close', formLimiter, express.json(), async (req, res) => {
+  if (!plugAdminGuard(req, res)) return;
+  try {
+    const r = await profilePlug.closeProfile({ gmail: req.body && req.body.gmail });
+    if (!r.ok) return res.status(r.notFound ? 404 : 400).json({ ok: false, error: r.error });
+    return res.json({ ok: true, closed: true, profile: r.profile });
+  } catch (e) {
+    console.error('[testers/profiles close] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'profile close failed' });
+  }
+});
+
+// Add a link to a developer's Rolodex (service token). Starts
+// 'pending', entitlement 'none' — renders nowhere until the
+// allow-check passes and an entitlement is granted.
+router.post('/testers/profiles/links', formLimiter, express.json(), async (req, res) => {
+  if (!plugAdminGuard(req, res)) return;
+  try {
+    const b = req.body || {};
+    const r = await profilePlug.addLink({
+      developer_gmail: b.developer_gmail, name: b.name, network: b.network,
+      link: b.link, code: b.code, rate: b.rate, cookie: b.cookie,
+      payout: b.payout, disclosure: b.disclosure, subid: b.subid,
+    });
+    if (!r.ok) return res.status(400).json({ ok: false, error: r.error });
+    return res.json({ ok: true, entry: r.entry });
+  } catch (e) {
+    console.error('[testers/profiles links] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'link add failed' });
+  }
+});
+
+// Record the per-network allow-check (service token):
+// { entry_id, ok, note? }. No plug goes live before its check.
+router.post('/testers/profiles/links/check', formLimiter, express.json(), async (req, res) => {
+  if (!plugAdminGuard(req, res)) return;
+  try {
+    const b = req.body || {};
+    const r = await profilePlug.recordAllowCheck({ entry_id: b.entry_id, ok: !!b.ok, note: b.note });
+    if (!r.ok) return res.status(r.notFound ? 404 : 400).json({ ok: false, error: r.error });
+    return res.json({ ok: true, entry: r.entry });
+  } catch (e) {
+    console.error('[testers/profiles check] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'allow-check failed' });
+  }
+});
+
+// Grant an entitlement (service token): { entry_id, method } —
+// method 'free' (a profile's first link only), 'flat' (simulated
+// verified $0.99 purchase — fires the penny split; the Play IAP rail
+// lands with the app train), 'ride' (15% agreement), or 'credit'
+// (consumes $0.99 of accumulated plug credit; no new split — the
+// split happened when the credit was earned).
+router.post('/testers/profiles/links/grant', formLimiter, express.json(), async (req, res) => {
+  if (!plugAdminGuard(req, res)) return;
+  try {
+    const b = req.body || {};
+    const r = await profilePlug.grantEntitlement({ entry_id: b.entry_id, method: b.method });
+    if (!r.ok) return res.status(r.notFound ? 404 : 400).json({ ok: false, error: r.error });
+    return res.json(r);
+  } catch (e) {
+    console.error('[testers/profiles grant] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'grant failed' });
+  }
+});
+
+// Pause / resume / close a link (service token): { entry_id, status }.
+router.post('/testers/profiles/links/status', formLimiter, express.json(), async (req, res) => {
+  if (!plugAdminGuard(req, res)) return;
+  try {
+    const b = req.body || {};
+    const r = await profilePlug.setLinkStatus({ entry_id: b.entry_id, status: b.status });
+    if (!r.ok) return res.status(r.notFound ? 404 : 400).json({ ok: false, error: r.error });
+    return res.json({ ok: true, entry: r.entry });
+  } catch (e) {
+    console.error('[testers/profiles status] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'status change failed' });
+  }
+});
+
+// The redirect: a plugged link's one door. Counts the click (the
+// same counter the profile owner reads), then 302s to the link.
+// Ungated links 404 — the redirect never vouches for a link the
+// gate hasn't passed.
+router.get('/testers/go/:id', async (req, res) => {
+  try {
+    const target = await profilePlug.resolveGo(req.params.id);
+    if (!target) return res.status(404).json({ ok: false, error: 'no such plugged link' });
+    return res.redirect(302, target);
+  } catch (e) {
+    console.error('[testers/go] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'redirect failed' });
   }
 });
 

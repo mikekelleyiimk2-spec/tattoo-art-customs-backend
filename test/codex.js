@@ -51,6 +51,8 @@ async function runHttpTests(ok, req) {
   const plugNames = (b.plugs || []).map((e) => e.name);
   ok(plugNames.includes('Affiliate Rolodex plug') && plugNames.includes('Tester Hub pool')
     && plugNames.includes('Email Keeper'), 'rolodex, tester pool, and keeper plugs are written in');
+  const profilePlug = (b.plugs || []).find((e) => e.name === 'Profile Plug');
+  ok(!!profilePlug && /live/.test(profilePlug.state), 'the Profile Plug is written in as a live plug (slice 4)');
   const gemini = (b.seats || []).find((e) => e.name === 'Gemini');
   ok(!!gemini && /seated/.test(gemini.state), 'Gemini is recorded as the seated API-lane seat');
   const deepseek = (b.seats || []).find((e) => e.name === 'DeepSeek');

@@ -168,7 +168,25 @@ async function listApps() {
   await ensureFleetSeed();
   const rows = await db.all(
     "SELECT * FROM tester_hub_apps WHERE status = 'active' ORDER BY created_at ASC");
-  return rows.map(publicApp);
+  const apps = rows.map(publicApp);
+  // Profile Plug (slice 4): each app's card also carries its
+  // developer's LIVE plugged links (rendered whole — redirect URL +
+  // code + disclosure — per the plug contract). The plug buys
+  // presence on the developer's own cards ONLY: this attachment
+  // changes no order (rows stay created_at ASC), no pool count,
+  // and no app without a profiled developer gains or loses anything
+  // (plug_links is simply []). Lazy require: profilePlug loads this
+  // module at init for the Gmail helpers, so the reverse edge is
+  // resolved at call time, never at load time.
+  const { renderableLinksFor } = require('./profilePlug');
+  const linksByDev = new Map();
+  for (let i = 0; i < rows.length; i++) {
+    const dev = rows[i].developer_gmail;
+    if (!dev) { apps[i].plug_links = []; continue; }
+    if (!linksByDev.has(dev)) linksByDev.set(dev, await renderableLinksFor(dev));
+    apps[i].plug_links = linksByDev.get(dev);
+  }
+  return apps;
 }
 
 // A developer adds an app to the Hub. Idempotent per package: a
