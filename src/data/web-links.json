@@ -319,8 +319,8 @@
       "world": "cannadash",
       "kid_safe": false,
       "visibility": "public",
-      "state": "building",
-      "verified": "route built in the website-split pass (2026-10-26); 404 live at check \u2014 lands with the split deploy",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26) \u2014 split commit 1384447 deployed; corrected from building the same day",
       "placed": [],
       "note": "21+ world. Never linked from any kid surface."
     },
@@ -331,8 +331,8 @@
       "world": "studio",
       "kid_safe": false,
       "visibility": "public",
-      "state": "building",
-      "verified": "route built in the website-split pass (2026-10-26); 404 live at check \u2014 lands with the split deploy",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26) \u2014 split commit 1384447 deployed; corrected from building the same day",
       "placed": []
     },
     {
