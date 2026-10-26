@@ -13,6 +13,7 @@ const { designThumbUrl } = require('../lib/designThumbs');
 const { authLimiter, formLimiter, messageLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { enforceSessionCap } = require('../lib/sessionLimits');
 const rolodex = require('../lib/rolodex');
+const linkFamilies = require('../lib/links');
 const emailKeeper = require('../lib/emailKeeper');
 const folderScan = require('../lib/folderScan');
 const moneyWatch = require('../lib/moneyWatch');
@@ -116,6 +117,36 @@ router.get('/rolodex', (req, res) => {
     count: programs.length,
     programs,
   });
+});
+
+// ---- Link Rolodexes — per-family registries (2026-10-26) ----
+// The Affiliate Rolodex above stays its own product and is NOT blended
+// into these. Every other link family is its own rolodex (src/lib/links.js,
+// data in src/data/<family>-links.json), independently pullable:
+//   GET /api/social-links       the Social Link Rolodex
+//   GET /api/web-links          our own pages
+//   GET /api/channel-links      YouTube channels
+//   GET /api/storefront-links   marketplace storefronts
+//   GET /api/play-links         Play testing + store links
+//   GET /api/money-links        money links (business PayPal only)
+//   GET /api/links              the Master index — families as sections
+// Every family supports ?kid_safe=1 (kid_safe entries only, so a kid
+// surface can pull a family without ever seeing a tattoo/21+ link).
+// visibility:"internal" entries are never served — there is no all mode.
+for (const [key, fam] of Object.entries(linkFamilies.FAMILIES)) {
+  router.get(fam.endpoint.replace('/api', ''), (req, res) => {
+    const kidSafe = req.query.kid_safe === '1' || req.query.kid_safe === 'true';
+    res.json(linkFamilies.familyPayload(key, { kidSafe }));
+  });
+}
+
+router.get('/links', (req, res) => {
+  let total = null;
+  try {
+    const raw = require('../data/rolodex.json');
+    total = Array.isArray(raw.programs) ? raw.programs.length : null;
+  } catch (e) { /* index still serves; affiliate count just reads null */ }
+  res.json(linkFamilies.indexPayload({ total, live: rolodex.livePrograms().length }));
 });
 
 // ---- The Codex for OneMind (2026-10-26) ----

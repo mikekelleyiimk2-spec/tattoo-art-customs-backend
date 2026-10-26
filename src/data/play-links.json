@@ -1,0 +1,336 @@
+{
+  "family": "app_links",
+  "rolodex": "App & Store Links (Master Rolodex section)",
+  "version": 1,
+  "updated": "2026-10-26",
+  "entries": [
+    {
+      "name": "Tattoo Art Customs (free) \u2014 Play testing opt-in",
+      "url": "https://play.google.com/apps/testing/com.tattooartcustoms.app",
+      "kind": "play-testing",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "/testers page",
+        "tester invite email"
+      ]
+    },
+    {
+      "name": "Tattoo Art Customs Pro \u2014 Play testing opt-in",
+      "url": "https://play.google.com/apps/testing/com.tattooartcustoms.app.pro",
+      "kind": "play-testing",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "/testers page",
+        "tester invite email"
+      ]
+    },
+    {
+      "name": "OneMind \u2014 Play testing opt-in",
+      "url": "https://play.google.com/apps/testing/com.usefulappz.aibar",
+      "kind": "play-testing",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "/testers page",
+        "tester invite email"
+      ]
+    },
+    {
+      "name": "Muse Bar \u2014 Play testing opt-in",
+      "url": "https://play.google.com/apps/testing/com.usefulappz.musebar",
+      "kind": "play-testing",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "/testers page",
+        "tester invite email"
+      ]
+    },
+    {
+      "name": "ChatGPT Bar \u2014 Play testing opt-in",
+      "url": "https://play.google.com/apps/testing/com.usefulappz.chatgptbar",
+      "kind": "play-testing",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "/testers page",
+        "tester invite email"
+      ]
+    },
+    {
+      "name": "Claude Bar \u2014 Play testing opt-in",
+      "url": "https://play.google.com/apps/testing/com.usefulappz.claudebar",
+      "kind": "play-testing",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "/testers page",
+        "tester invite email"
+      ]
+    },
+    {
+      "name": "Gemini Bar \u2014 Play testing opt-in",
+      "url": "https://play.google.com/apps/testing/com.usefulappz.geminibar",
+      "kind": "play-testing",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "/testers page",
+        "tester invite email"
+      ]
+    },
+    {
+      "name": "Grok Bar \u2014 Play testing opt-in",
+      "url": "https://play.google.com/apps/testing/com.usefulappz.grokbar",
+      "kind": "play-testing",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "/testers page",
+        "tester invite email"
+      ]
+    },
+    {
+      "name": "Perplexity Bar \u2014 Play testing opt-in",
+      "url": "https://play.google.com/apps/testing/com.usefulappz.perplexitybar",
+      "kind": "play-testing",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "/testers page",
+        "tester invite email"
+      ]
+    },
+    {
+      "name": "Copilot Bar \u2014 Play testing opt-in",
+      "url": "https://play.google.com/apps/testing/com.usefulappz.copilotbar",
+      "kind": "play-testing",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "/testers page",
+        "tester invite email"
+      ]
+    },
+    {
+      "name": "DeepSeek Bar \u2014 Play testing opt-in",
+      "url": "https://play.google.com/apps/testing/com.usefulappz.deepseekbar",
+      "kind": "play-testing",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "/testers page",
+        "tester invite email"
+      ]
+    },
+    {
+      "name": "Clipboard Bar \u2014 Play testing opt-in",
+      "url": "https://play.google.com/apps/testing/com.usefulappz.clipboardbar",
+      "kind": "play-testing",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "/testers page",
+        "tester invite email"
+      ]
+    },
+    {
+      "name": "Countdown Bar \u2014 Play testing opt-in",
+      "url": "https://play.google.com/apps/testing/com.usefulappz.countdownbar",
+      "kind": "play-testing",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "/testers page",
+        "tester invite email"
+      ]
+    },
+    {
+      "name": "ScreenQR \u2014 Play testing opt-in",
+      "url": "https://play.google.com/apps/testing/com.usefulappz.screenqr",
+      "kind": "play-testing",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "/testers page",
+        "tester invite email"
+      ]
+    },
+    {
+      "name": "Habit Dot \u2014 Play testing opt-in",
+      "url": "https://play.google.com/apps/testing/com.usefulappz.habitdot",
+      "kind": "play-testing",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "/testers page",
+        "tester invite email"
+      ]
+    },
+    {
+      "name": "Odometer \u2014 Play testing opt-in",
+      "url": "https://play.google.com/apps/testing/com.usefulappz.odometer",
+      "kind": "play-testing",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "/testers page",
+        "tester invite email"
+      ]
+    },
+    {
+      "name": "Little Inkers \u2014 Play testing opt-in",
+      "url": "https://play.google.com/apps/testing/com.usefulappz.littleinkers",
+      "kind": "play-testing",
+      "world": "little-inkers",
+      "kid_safe": true,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "/testers page",
+        "tester invite email"
+      ]
+    },
+    {
+      "name": "Little Inkers Coloring \u2014 Play testing opt-in",
+      "url": "https://play.google.com/apps/testing/com.usefulappz.littleinkerscoloring",
+      "kind": "play-testing",
+      "world": "little-inkers",
+      "kid_safe": true,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "/testers page",
+        "tester invite email"
+      ]
+    },
+    {
+      "name": "Sticker World \u2014 Play testing opt-in",
+      "url": "https://play.google.com/apps/testing/com.usefulappz.stickerworld",
+      "kind": "play-testing",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "/testers page",
+        "tester invite email"
+      ]
+    },
+    {
+      "name": "Draw With Me \u2014 Play testing opt-in",
+      "url": "https://play.google.com/apps/testing/com.usefulappz.drawwithme",
+      "kind": "play-testing",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "/testers page",
+        "tester invite email"
+      ]
+    },
+    {
+      "name": "Coloring Contests \u2014 Play testing opt-in",
+      "url": "https://play.google.com/apps/testing/com.usefulappz.coloringcontests",
+      "kind": "play-testing",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "/testers page",
+        "tester invite email"
+      ]
+    },
+    {
+      "name": "Google Play \u2014 developer page (usefulappz)",
+      "url": "https://play.google.com/store/apps/dev?id=6685646182078249991",
+      "kind": "play-developer",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": []
+    },
+    {
+      "name": "Apple App Store",
+      "url": null,
+      "kind": "app-store",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "none",
+      "verified": "No listings exist \u2014 contractor route pending (no signed host agreement yet)",
+      "placed": []
+    },
+    {
+      "name": "Play Console (INTERNAL)",
+      "url": "https://play.google.com/console",
+      "kind": "console",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "internal",
+      "state": "live",
+      "verified": "owner/developer console of record",
+      "placed": [],
+      "note": "Internal only \u2014 never served by the public endpoint."
+    }
+  ]
+}

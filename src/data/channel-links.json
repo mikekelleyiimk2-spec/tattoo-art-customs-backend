@@ -1,0 +1,62 @@
+{
+  "family": "channels",
+  "rolodex": "Channel Links (Master Rolodex section)",
+  "version": 1,
+  "updated": "2026-10-26",
+  "entries": [
+    {
+      "name": "YouTube \u2014 Rook 98",
+      "url": "https://www.youtube.com/@rook9860",
+      "kind": "youtube",
+      "world": "tattoo-art-customs",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "Video descriptions",
+        "site /watch"
+      ]
+    },
+    {
+      "name": "YouTube \u2014 Tattoo Art Customs",
+      "url": "https://www.youtube.com/@tattooartcustoms-s8f",
+      "kind": "youtube",
+      "world": "tattoo-art-customs",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "Video descriptions"
+      ]
+    },
+    {
+      "name": "YouTube \u2014 Little Inkers (Color With Us)",
+      "url": "https://www.youtube.com/@littleinkersapp",
+      "kind": "youtube",
+      "world": "little-inkers",
+      "kid_safe": true,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "Little Inkers app Parent Zone",
+        "video descriptions (kids' channel only)"
+      ]
+    },
+    {
+      "name": "YouTube \u2014 Poppy & Ziggy",
+      "url": "https://www.youtube.com/@ZiggyPoppy-l3b",
+      "kind": "youtube",
+      "world": "poppy-and-ziggy",
+      "kid_safe": true,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "/poppy-and-ziggy page"
+      ]
+    }
+  ]
+}

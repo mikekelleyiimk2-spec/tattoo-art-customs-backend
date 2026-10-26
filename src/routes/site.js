@@ -117,6 +117,8 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/privacy/kids-wing`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/email-keeper`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/rolodex`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/social-rolodex`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/master-rolodex`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/robosweeper`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/money-watch`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/discounts`, changefreq: 'weekly', priority: '0.7' },
@@ -1171,6 +1173,22 @@ router.get('/privacy/email-keeper', (req, res) => res.render('site/privacy-email
 router.get('/privacy/rolodex', (req, res) => res.render('site/privacy-rolodex', {
   title: 'Affiliate Rolodex Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for Affiliate Rolodex. Every affiliate link in one place, always shown with its disclosure — no personal data collected, no ads, nothing sold.',
+}));
+
+// Per-app policy for the Social Link Rolodex Android app (the Link
+// Rolodex line, 2026-10-26: stores the developer's social profile links
+// server-side and displays them; collects no personal data, paid/no ads).
+router.get('/privacy/social-rolodex', (req, res) => res.render('site/privacy-socialrolodex', {
+  title: 'Social Link Rolodex Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for Social Link Rolodex. Every social account in one place — no personal data collected, no ads, nothing sold.',
+}));
+
+// Per-app policy for the Master Rolodex Android app (All My Links: every
+// link family in one rolodex, affiliate entries always shown whole with
+// their disclosure; collects no personal data, paid/no ads).
+router.get('/privacy/master-rolodex', (req, res) => res.render('site/privacy-masterrolodex', {
+  title: 'Master Rolodex Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for Master Rolodex — All My Links. Every link family in one rolodex — no personal data collected, no ads, nothing sold.',
 }));
 
 // Per-app policy for the RoboSweeper Android app (displays the sweep

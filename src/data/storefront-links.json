@@ -1,0 +1,132 @@
+{
+  "family": "storefronts",
+  "rolodex": "Storefront Links (Master Rolodex section)",
+  "version": 1,
+  "updated": "2026-10-26",
+  "entries": [
+    {
+      "name": "Zazzle \u2014 MikesCustomTees store",
+      "url": "https://www.zazzle.com/store/mikescustomtees",
+      "kind": "zazzle-store",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "site /merch"
+      ]
+    },
+    {
+      "name": "Zazzle \u2014 CannaDash Crew Tee",
+      "url": "https://www.zazzle.com/cannadash_crew_logo_delivery_van_leaf_badge_t_shirt-256617229974067425",
+      "kind": "zazzle-product",
+      "world": "cannadash",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "record-verified (delivery record 2026-10-26); HTTP bot-blocked at check",
+      "placed": []
+    },
+    {
+      "name": "Zazzle \u2014 CannaDash Crew Hoodie",
+      "url": "https://www.zazzle.com/cannadash_crew_logo_delivery_van_leaf_badge_hoodie-256818442077446211",
+      "kind": "zazzle-product",
+      "world": "cannadash",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "record-verified (delivery record 2026-10-26); HTTP bot-blocked at check",
+      "placed": []
+    },
+    {
+      "name": "Zazzle \u2014 CannaDash Mug",
+      "url": "https://www.zazzle.com/cannadash_crew_logo_delivery_van_leaf_badge_coffee_mug-256171359188638020",
+      "kind": "zazzle-product",
+      "world": "cannadash",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "record-verified (delivery record 2026-10-26); HTTP bot-blocked at check",
+      "placed": []
+    },
+    {
+      "name": "Zazzle \u2014 CannaDash Sticker",
+      "url": "https://www.zazzle.com/cannadash_crew_logo_delivery_van_leaf_badge_sticker-256187563019073143",
+      "kind": "zazzle-product",
+      "world": "cannadash",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "record-verified (delivery record 2026-10-26); HTTP bot-blocked at check",
+      "placed": []
+    },
+    {
+      "name": "Redbubble \u2014 mikescustomtees shop",
+      "url": "https://www.redbubble.com/people/mikescustomtees/shop",
+      "kind": "redbubble-shop",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": []
+    },
+    {
+      "name": "Redbubble \u2014 CannaDash design (work 185061653)",
+      "url": "https://www.redbubble.com/shop/ap/185061653",
+      "kind": "redbubble-work",
+      "world": "cannadash",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "record-verified (browser lane 2026-10-26, Mature flag ON, 65 products); curl returned 404 (bot handling)",
+      "placed": []
+    },
+    {
+      "name": "Etsy \u2014 TattooArtCustomsShop",
+      "url": "https://www.etsy.com/shop/TattooArtCustomsShop",
+      "kind": "etsy-shop",
+      "world": "tattoo-art-customs",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "held",
+      "verified": "record-verified (delivery record 2026-10-26); HTTP bot-blocked at check",
+      "placed": [],
+      "note": "Shop name secured; payments step held to Oct 27 by owner order. Tattoo line only \u2014 CannaDash design prohibited on Etsy."
+    },
+    {
+      "name": "TeePublic \u2014 store",
+      "url": null,
+      "kind": "teepublic-store",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "drafts-only",
+      "verified": "UNVERIFIED \u2014 store exists with 2 drafts, 0 published; canonical store URL not present in any record",
+      "placed": []
+    },
+    {
+      "name": "eBay \u2014 seller account",
+      "url": null,
+      "kind": "ebay-store",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "staged",
+      "verified": "UNVERIFIED \u2014 seller account exists, 5 listings staged, 0 live; no store URL in records",
+      "placed": []
+    },
+    {
+      "name": "Society6 \u2014 account",
+      "url": null,
+      "kind": "society6-store",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "unverified",
+      "verified": "UNVERIFIED \u2014 account state unverified since 2026-10-19; login pending via secure card",
+      "placed": []
+    }
+  ]
+}

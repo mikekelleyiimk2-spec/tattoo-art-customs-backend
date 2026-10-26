@@ -1,0 +1,23 @@
+{
+  "family": "money",
+  "rolodex": "Money Links (Master Rolodex section)",
+  "version": 1,
+  "updated": "2026-10-26",
+  "entries": [
+    {
+      "name": "Business PayPal \u2014 payment / tip jar link (mk4)",
+      "url": "https://www.paypal.com/ncp/payment/WA9DS6J8ERSHW",
+      "kind": "paypal-payment",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "site tip jars (/, /gallery, /watch, /testers, /merch, /apps, /discounts, /aftercare)",
+        "free-app tip jars"
+      ],
+      "note": "Business PayPal (mk4) ONLY. Personal-account payment links are never entered in this registry's public families."
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+{
+  "family": "socials",
+  "rolodex": "Social Link Rolodex",
+  "version": 1,
+  "updated": "2026-10-26",
+  "entries": [
+    {
+      "name": "Instagram \u2014 @mikeyii.mk2_ (main)",
+      "url": "https://www.instagram.com/mikeyii.mk2_/",
+      "kind": "instagram",
+      "world": "tattoo-art-customs",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "YouTube Rook 98 channel links",
+        "Facebook Page bio",
+        "Threads bio"
+      ]
+    },
+    {
+      "name": "Instagram \u2014 @littleinkersapp",
+      "url": "https://www.instagram.com/littleinkersapp/",
+      "kind": "instagram",
+      "world": "little-inkers",
+      "kid_safe": true,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "Little Inkers app Parent Zone",
+        "Little Inkers Facebook Page"
+      ],
+      "note": "Kids' account \u2014 kid surfaces pull this entry only from the socials family."
+    },
+    {
+      "name": "Threads \u2014 @mikeyii.mk_",
+      "url": "https://www.threads.com/@mikeyii.mk_",
+      "kind": "threads",
+      "world": "tattoo-art-customs",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "Instagram bio cross-link",
+        "Facebook Page bio"
+      ]
+    },
+    {
+      "name": "Facebook \u2014 personal profile (Mike Kelley)",
+      "url": "https://www.facebook.com/100000853562870",
+      "kind": "facebook-profile",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "Tester-plea post (2026-10-13)"
+      ]
+    },
+    {
+      "name": "Facebook Page \u2014 Tattoo Art Customs",
+      "url": "https://www.facebook.com/profile.php?id=61594937190186",
+      "kind": "facebook-page",
+      "world": "tattoo-art-customs",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "Rook 98 channel links",
+        "site cross-links"
+      ]
+    },
+    {
+      "name": "Facebook Page \u2014 Little Inkers",
+      "url": "https://www.facebook.com/61595376471791/",
+      "kind": "facebook-page",
+      "world": "little-inkers",
+      "kid_safe": true,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [],
+      "note": "App page, kid-safe bio."
+    },
+    {
+      "name": "Facebook Page \u2014 Rook098",
+      "url": "https://www.facebook.com/61554377251490",
+      "kind": "facebook-page",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": []
+    },
+    {
+      "name": "X \u2014 @tattooartcustom",
+      "url": "https://x.com/tattooartcustom",
+      "kind": "x",
+      "world": "tattoo-art-customs",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [
+        "Rook 98 channel links",
+        "Facebook Page bio"
+      ]
+    },
+    {
+      "name": "TikTok \u2014 @usefulappz",
+      "url": "https://www.tiktok.com/@usefulappz",
+      "kind": "tiktok",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [],
+      "note": "Account live; bio/link unverified (no connector \u2014 social-queue record)."
+    },
+    {
+      "name": "Pinterest \u2014 @tattooartcustoms",
+      "url": "https://www.pinterest.com/tattooartcustoms",
+      "kind": "pinterest",
+      "world": "tattoo-art-customs",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "live-checked 200 (2026-10-26)",
+      "placed": [],
+      "note": "No connector; bio/website unverified (social-queue record)."
+    }
+  ]
+}
