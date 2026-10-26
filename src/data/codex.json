@@ -84,41 +84,41 @@
   {
    "kind": "door",
    "liveness": {
-    "how_checked": "Connector register verification (access register pass)",
-    "last_verified": "2026-10-25"
+    "how_checked": "Playbook #3 proof read 2026-10-26: instagram-cli posts --limit 1 returned the account's own posts (UP)",
+    "last_verified": "2026-10-26"
    },
    "name": "Instagram — @mikeyii.mk2_",
-   "notes": "Tattoo Art Customs Instagram. Social posts verified landing through Oct 26 by the promo jobs.",
+   "notes": "Tattoo Art Customs Instagram. Social posts verified landing through Oct 26 by the promo jobs. Playbook #3 (~/workspace/app/service-plug/playbook-social.md, 2026-10-26) documents this door's class, scope, proof read, and repairs.",
    "state": "connected"
   },
   {
    "kind": "door",
    "liveness": {
-    "how_checked": "Connector register verification (access register pass)",
-    "last_verified": "2026-10-25"
+    "how_checked": "Playbook #3 proof read 2026-10-26: instagram-cli posts --limit 1 returned the account's own posts (UP)",
+    "last_verified": "2026-10-26"
    },
    "name": "Instagram — @littleinkersapp",
-   "notes": "Little Inkers Instagram — kid-safe surfaces only, never tattoo affiliates.",
+   "notes": "Little Inkers Instagram — kid-safe surfaces only, never tattoo affiliates. Playbook #3 (~/workspace/app/service-plug/playbook-social.md, 2026-10-26) documents this door's class, scope, proof read, and repairs. Its DM surface is a separate door (Instagram Messages — @littleinkersapp): grant never made, see that entry.",
    "state": "connected"
   },
   {
    "kind": "door",
    "liveness": {
-    "how_checked": "Connector register verification (access register pass)",
-    "last_verified": "2026-10-25"
+    "how_checked": "Playbook #3 proof read 2026-10-26: threads-cli profile returned @mikeyii.mk_ (21 followers) (UP)",
+    "last_verified": "2026-10-26"
    },
    "name": "Threads",
-   "notes": "Threads account 17841426131703535. Promo posts verified landing through Oct 26 (one 429 daily-write-limit hit Oct 26 01:34 — a rate limit, not a dead door).",
+   "notes": "Threads account 17841426131703535. Promo posts verified landing through Oct 26 (one 429 daily-write-limit hit Oct 26 01:34 — a rate limit, not a dead door). Playbook #3 (~/workspace/app/service-plug/playbook-social.md, 2026-10-26) documents this door's class, scope, proof read, and repairs.",
    "state": "connected"
   },
   {
    "kind": "door",
    "liveness": {
-    "how_checked": "Connector register verification (access register pass)",
-    "last_verified": "2026-10-25"
+    "how_checked": "Playbook #3 proof read 2026-10-26: facebook-cli me + feed newsfeed --limit 1 returned identity and feed (UP)",
+    "last_verified": "2026-10-26"
    },
    "name": "Facebook",
-   "notes": "Facebook account 100000853562870 — profile, Pages, and Marketplace lanes.",
+   "notes": "Facebook account 100000853562870 — profile, Pages, and Marketplace lanes. Playbook #3 (~/workspace/app/service-plug/playbook-social.md, 2026-10-26) documents this door's class, scope, proof read, and repairs. Every Facebook write takes a fresh approval, every time — no standing authorization covers it.",
    "state": "connected"
   },
   {
@@ -210,6 +210,66 @@
    "name": "Google Contacts",
    "notes": "Register-verified connected.",
    "state": "connected"
+  },
+  {
+   "kind": "door",
+   "liveness": {
+    "how_checked": "Playbook #3 proof read 2026-10-26: hatch_messenger_cli check returned success with keys present (UP)",
+    "last_verified": "2026-10-26"
+   },
+   "name": "Messenger",
+   "notes": "The owner's personal Messenger account via the messenger_read connector (hatch_messenger_cli) — reads (threads, messages, search, contacts, call logs) and sends. Sends are estate-law gated: explicit request, verified one-to-one recipient, exact-text preview + the owner's explicit confirmation; a commitment-shaped message needs fresh confirmation at send time; background work never sends one. Playbook #3 (~/workspace/app/service-plug/playbook-social.md, 2026-10-26) documents this door's class, scope, proof read, and repairs.",
+   "state": "connected — connector-grant door (Playbook #3)"
+  },
+  {
+   "kind": "door",
+   "liveness": {
+    "how_checked": "Playbook #3 proof read 2026-10-26: instagram-messages-cli accounts shows @mikeyii.mk2_ connected: true (UP)",
+    "last_verified": "2026-10-26"
+   },
+   "name": "Instagram Messages — @mikeyii.mk2_",
+   "notes": "TAC's DM surface — a SEPARATE connection from Instagram content (its own grant): inbox/thread reads and sends via instagram-messages-cli. Playbook #3 (~/workspace/app/service-plug/playbook-social.md, 2026-10-26) documents this door's class, scope, proof read, and repairs.",
+   "state": "connected — connector-grant door (Playbook #3)"
+  },
+  {
+   "kind": "door",
+   "liveness": {
+    "how_checked": "Playbook #3 proof read 2026-10-26: instagram-messages-cli accounts shows @littleinkersapp connected: false",
+    "last_verified": "2026-10-26"
+   },
+   "name": "Instagram Messages — @littleinkersapp",
+   "notes": "GRANT GAP on record: the Little Inkers DM connection was never made — the content door is up (see Instagram — @littleinkersapp) but no lane can read LI direct messages, and none pretends to. Staged owner step for Batch #2: link Instagram Messages for @littleinkersapp via the connector's Connect URL; Aria re-proves on landing. Playbook #3 (~/workspace/app/service-plug/playbook-social.md, 2026-10-26) documents this door's class, scope, proof read, and repairs.",
+   "state": "not granted — staged owner step (Playbook #3 §5)"
+  },
+  {
+   "kind": "door",
+   "liveness": {
+    "how_checked": "Playbook #3 proof read 2026-10-26: threads-messages-cli inbox --first 1 answered with no errors (UP)",
+    "last_verified": "2026-10-26"
+   },
+   "name": "Threads Messages",
+   "notes": "Threads DM surface — a SEPARATE connection from Threads content (its own grant): inbox/thread reads and sends via threads-messages-cli for @mikeyii.mk_ (account 17841426131703535). Playbook #3 (~/workspace/app/service-plug/playbook-social.md, 2026-10-26) documents this door's class, scope, proof read, and repairs.",
+   "state": "connected — connector-grant door (Playbook #3)"
+  },
+  {
+   "kind": "door",
+   "liveness": {
+    "how_checked": "No proof read exists (no connector); last verified 2026-10-14 by the Secure Vault recovery + posts landing the same day",
+    "last_verified": "2026-10-26"
+   },
+   "name": "X — @tattooartcustom",
+   "notes": "Browser/vault class per the access register: saved login on file, sessions lapse, re-check by browser when needed. Access recovered Oct 14, 2026 (Secure Vault reset; sign-in verified; first posts landed). Plug law 5 applies: no durable credential class exists to seat, so the honest offer for this room is the watch class, never session replay. Documented in Playbook #3 §1/§2 at its real class.",
+   "state": "browser/vault class — no connector; NOT a plug door (law 5)"
+  },
+  {
+   "kind": "door",
+   "liveness": {
+    "how_checked": "No proof read exists (no connector, and Aria's login is dead — reset maxed Oct 14); state from the people-wiring map, 2026-10-25",
+    "last_verified": "2026-10-26"
+   },
+   "name": "TikTok — @usefulappz",
+   "notes": "TikTok Shop Creator Pilot rides this account (graduation ~Nov 14). A saved login is on file, but Aria's own TikTok login has been dead since Oct 14, 2026 (reset maxed) — in-app work is owner-hands or nothing until that changes. Plug law 5 applies: no durable credential class, no plug door; watch class is the honest offer. Documented in Playbook #3 §1/§2 at its real class.",
+   "state": "browser/vault class — no connector; Aria-side login DOWN since 2026-10-14; owner-hands only"
   }
  ],
  "law": "The Codex is the written registry of the table — the Directory + every tie, seat, price, and result. A plug, price, or tie that isn't in the codex isn't real. Every entry carries its liveness: how it was checked and when it was last actually verified. A date in this file means somebody ran the check that day — never a guess, never a hope.",
@@ -251,7 +311,7 @@
     "last_verified": "2026-10-26"
    },
    "name": "AI API Service Plug",
-   "notes": "Standard tier (Messenger spec Addenda 6+7); Root AI API is a separate product, not built. Unit #1 = our own Play doorway: Playbook #1 (~/workspace/app/service-plug/playbook-google-play.md) written from the Oct 25 sitting — the API-access page does not exist in the current Console UI; the grant went through Users and permissions; the financial scope was deliberately NOT granted. The vault holds metadata + sha256 fingerprints only; secret bytes never move, and there is no read/export endpoint by design. Agents request operations (POST /api/service-plug/play/tracks) and never keys. Platforms without a durable credential class are not plug-compatible — the plug answers no, never session replay. Charge hooks exist (tool/window/door/plumbing); all figures SETTLED owner-approved Oct 26 (Batch #1 — see the prices section). The design doc’s three slice-2 calls were DECIDED in the same batch: placement = STANDALONE toolbox product; Playbook #2 = the social/API doors (Meta/Instagram class); custody paper REQUIRED before any outside key (a slice-2 gate deliverable). Acceptance run landed 2026-10-26: vault registration + live dogfood tracks read both succeeded (see the Play doorway door entry's notes for the track record). PLAYBOOK #2 — PAYPAL BUILT 2026-10-26 (Batch #1 item 6): ~/workspace/app/service-plug/playbook-paypal.md + the read lane in the backend (src/lib/paypalPlug.js feeding Money Watch's mk4 door). The door is built and AWAITING CREDENTIAL REGISTRATION — the staged owner grant step is the playbook's §2; no PayPal credential is held yet, and outside keys still wait on the custody paper gate.",
+   "notes": "Standard tier (Messenger spec Addenda 6+7); Root AI API is a separate product, not built. Unit #1 = our own Play doorway: Playbook #1 (~/workspace/app/service-plug/playbook-google-play.md) written from the Oct 25 sitting — the API-access page does not exist in the current Console UI; the grant went through Users and permissions; the financial scope was deliberately NOT granted. The vault holds metadata + sha256 fingerprints only; secret bytes never move, and there is no read/export endpoint by design. Agents request operations (POST /api/service-plug/play/tracks) and never keys. Platforms without a durable credential class are not plug-compatible — the plug answers no, never session replay. Charge hooks exist (tool/window/door/plumbing); all figures SETTLED owner-approved Oct 26 (Batch #1 — see the prices section). The design doc’s three slice-2 calls were DECIDED in the same batch: placement = STANDALONE toolbox product; Playbook #2 = the social/API doors (Meta/Instagram class); custody paper REQUIRED before any outside key (a slice-2 gate deliverable). Acceptance run landed 2026-10-26: vault registration + live dogfood tracks read both succeeded (see the Play doorway door entry's notes for the track record). PLAYBOOK #2 — PAYPAL BUILT 2026-10-26 (Batch #1 item 6): ~/workspace/app/service-plug/playbook-paypal.md + the read lane in the backend (src/lib/paypalPlug.js feeding Money Watch's mk4 door). The door is built and AWAITING CREDENTIAL REGISTRATION — the staged owner grant step is the playbook's §2; no PayPal credential is held yet, and outside keys still wait on the custody paper gate. PLAYBOOK #3 — SOCIAL BUILT 2026-10-26: ~/workspace/app/service-plug/playbook-social.md — the Meta connector class (Instagram, Threads, Facebook, Messenger + the two DM companions) documented at its real door class: the grant lives in the connector's Accounts Center link, the lane holds no credential, and the plug's work is the watch + operation discipline; X and TikTok documented in the same playbook at browser/vault class — law 5's honest no, not plug doors. All §4 proof reads ran live 2026-10-26 (Meta doors UP; Instagram Messages for @littleinkersapp grant_missing — staged owner step rides Batch #2).",
    "state": "live — slice 1 (house instance: the Play doorway productized — write-only vault, door liveness checker, agent operation endpoint)"
   },
   {
