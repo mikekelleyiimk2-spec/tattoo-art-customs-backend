@@ -173,13 +173,13 @@
     "publishedAt": "2026-10-26T20:10:00Z"
   },
   "com.usefulappz.folder": {
-    "versionCode": 3,
-    "versionName": "1.1.0",
+    "versionCode": 4,
+    "versionName": "1.2.0",
     "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.folder/apk",
-    "notes": "UsefulAppz Folder with the full ad stack (AdMob banner + interstitials) \u2014 keeps every Useful Appz app on your phone, current: it reports the phone's installed list back so updates reach you.",
-    "sha256": "c5b49402b7814c94b3c506a174fa48e933bc98f1e98fc2fda7ace23c84c17eff",
-    "sizeBytes": 9124622,
-    "publishedAt": "2026-10-26T19:48:00Z"
+    "notes": "UsefulAppz Folder vc4: the list now files in the folder's own order \u2014 8 groups A\u2013Z, apps A\u2013Z inside, all 47 apps \u2014 and the last two spots are filled: Poppy & Ziggy the game sits in Kids & Family, and the AI to AI door at the top of AI Team opens OneMind's AI-to-AI room. Full ad stack unchanged (AdMob banner + interstitials at natural breaks + house slot); the scan still phones home so updates reach you.",
+    "sha256": "a015a07ed942f7e33b29b84732252e5da73493ebbd4fe1b8a75bb180a0b0038d",
+    "sizeBytes": 9128718,
+    "publishedAt": "2026-10-26T21:52:00Z"
   },
   "com.usefulappz.poppyziggy": {
     "versionCode": 1,
