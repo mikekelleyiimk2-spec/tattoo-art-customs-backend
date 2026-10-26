@@ -647,9 +647,9 @@
       "cookie": "Varies",
       "payout": null,
       "disclosure": "Affiliate link — we may earn a commission at no extra cost to you.",
-      "kid_safe": true,
+      "kid_safe": false,
       "surfaces_placed": [],
-      "notes": "Publisher APPROVED 2026-10-08, Publisher ID 3118446 (tattoo.art.customs@gmail.com) — the account to keep; positioned as the KIDS' brand (Little Inkers) per owner directive 2026-10-09. A duplicate second account (3119571, mikekelleyii.mk2@gmail.com) was created 2026-10-09 and a closure request was sent the same day — never use 3119571. Programs riding Awin: Blick (live), Libro.fm (pending), Green Kid Crafts (pending), Yoto (parked)."
+      "notes": "Publisher APPROVED 2026-10-08, Publisher ID 3118446 (tattoo.art.customs@gmail.com) — the account to keep; positioned as the KIDS' brand (Little Inkers) per owner directive 2026-10-09. A duplicate second account (3119571, mikekelleyii.mk2@gmail.com) was created 2026-10-09 and a closure request was sent the same day — never use 3119571. Programs riding Awin: Blick (live), Libro.fm (pending), Green Kid Crafts (pending), Yoto (parked). [Rolodex flag fix Oct 26: kid_safe set false — Awin is a network account, not a placeable program; kid-safe placements are the individual programs (Leda, Blick). Account positioning unchanged.]"
     },
     {
       "name": "FlexOffers",
