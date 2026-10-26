@@ -115,6 +115,10 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/privacy/tester-hub`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/library`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/kids-wing`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/email-keeper`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/rolodex`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/robosweeper`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/money-watch`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/discounts`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/aftercare`, changefreq: 'monthly', priority: '0.6' },
     { loc: `${base}/merch`, changefreq: 'weekly', priority: '0.7' },
@@ -1112,6 +1116,38 @@ router.get('/privacy/library', (req, res) => res.render('site/privacy-library', 
 router.get('/privacy/kids-wing', (req, res) => res.render('site/privacy-kidswing', {
   title: "Kids' Wing Privacy Policy — Usefulappz",
   metaDescription: "Privacy policy for Kids' Wing. No internet permission, no ads, no purchases, nothing collected from children or anyone — stories and coloring that work entirely offline.",
+}));
+
+// Per-app policy for the Email Keeper Android app (a status board for
+// the developer's own mailboxes; the checks run server-side read-only,
+// the app only displays up/down + last-check and collects nothing).
+router.get('/privacy/email-keeper', (req, res) => res.render('site/privacy-emailkeeper', {
+  title: 'Email Keeper Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for Email Keeper. A mailbox status board computed by read-only server checks — the app collects no data from you, shows no ads, and sells nothing.',
+}));
+
+// Per-app policy for the Affiliate Rolodex Android app (stores the
+// developer's affiliate program links/codes server-side and displays
+// them with their disclosures; collects no personal data).
+router.get('/privacy/rolodex', (req, res) => res.render('site/privacy-rolodex', {
+  title: 'Affiliate Rolodex Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for Affiliate Rolodex. Every affiliate link in one place, always shown with its disclosure — no personal data collected, no ads, nothing sold.',
+}));
+
+// Per-app policy for the RoboSweeper Android app (displays the sweep
+// report for the developer's own properties, fetched from our server;
+// the root check runs on-device, displays only, and never blocks).
+router.get('/privacy/robosweeper', (req, res) => res.render('site/privacy-robosweeper', {
+  title: 'RoboSweeper Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for RoboSweeper. The sweep report covers our own sites and placements, not you — no personal data collected, no ads, nothing sold.',
+}));
+
+// Per-app policy for the Money Watch Android app (displays the watch
+// state for the developer's own business revenue; no bank connection,
+// no credentials, moves no money, collects no personal data).
+router.get('/privacy/money-watch', (req, res) => res.render('site/privacy-moneywatch', {
+  title: 'Money Watch Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for Money Watch. It displays the moment money lands for our own business — it never connects to your bank, holds no credentials, and moves no money.',
 }));
 
 router.get('/about', (req, res) => res.render('site/about', {
