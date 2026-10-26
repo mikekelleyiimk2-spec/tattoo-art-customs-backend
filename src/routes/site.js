@@ -1146,7 +1146,7 @@ const TESTER_APPS_WORKS = ['World Weather', 'The Library', 'Loophole Ciphers', '
 router.get('/testers', async (req, res) => {
   let poolCount = 0;
   try {
-    const row = await db.get('SELECT COUNT(*) AS n FROM tester_signups');
+    const row = await db.get("SELECT COUNT(*) AS n FROM tester_signups WHERE status = 'active'");
     poolCount = (row && row.n) || 0;
   } catch (e) { /* table lands with migration 102; page renders regardless */ }
   res.render('site/testers', {
@@ -1379,7 +1379,7 @@ router.post('/testers', formLimiter, checkHoneypot, async (req, res) => {
     const existing = await db.get('SELECT id FROM tester_signups WHERE email = ?', [email]);
     if (existing) {
       await db.update('tester_signups', existing.id, {
-        name: name || null, interests, credit_ok: creditOk,
+        name: name || null, interests, credit_ok: creditOk, status: 'active',
       });
       req.session.flash = res.locals.t('testers.flash_already');
     } else {

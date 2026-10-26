@@ -5014,6 +5014,7 @@ async function main() {
   // is the same live-read serviceToken() check as /api/muse/notify.
 
   await require('./sessionLimits').runHttpTests(ok);
+  await require('./testerHub').runHttpTests(ok, req); // tester pool machine (signup/leave/roster/feed)
 
   sdb.close();
   server.kill();
