@@ -4,31 +4,31 @@
   {
    "kind": "door",
    "liveness": {
-    "how_checked": "Service Plug door checker (door-check.py): Playbook #1 proof read — Play Developer API tracks read on com.tattooartcustoms.app via the estate key; the 2026-10-26 run returned production, beta, alpha, internal",
+    "how_checked": "Service Plug door checker (door-check.py): Playbook #1 proof read \u2014 Play Developer API tracks read on com.tattooartcustoms.app via the estate key; the 2026-10-26 run returned production, beta, alpha, internal",
     "last_verified": "2026-10-26"
    },
    "name": "Google Play Developer API doorway",
-   "notes": "Service account play-api-doorway@usefulappz-api-doorway.iam.gserviceaccount.com, granted in Play Console Users and permissions Oct 25 (active, never expires; non-financial permission set — no view financial data, no manage orders/subscriptions, no reply to reviews, no admin-all). Developer account usefulappz (Account ID 6685646182078249991). Liveness was proven on the estate's EXISTING key (the upload lane seated Oct 4) — that lane never died; what died Oct 25 was the browser console door. KEY-CUSTODY DEBT: the new account's own key #1 (c256b3b55cd8) never reached our filesystem and is orphaned in GCP; the estate key is the working lane. Custody fix rides the next console sitting: delete orphan key #1, create key #2, transfer via the user-files route, prove it, and only then retire nothing — dual path stays. SLICE 1 (2026-10-26): this doorway is productized as the AI API Service Plug's reference implementation (~/workspace/app/service-plug/; playbook-google-play.md written from this sitting's record). The estate key is registered in the plug's write-only vault by path + sha256 fingerprint 59d4225785817b8fb5ef03358f3c22258de9f2bf2e5a5db98cee2982a304aa38 — metadata only; the secret bytes never moved, and play_upload.py / play-upload-requests.py are untouched (dual path). Agents request operations through POST /api/service-plug/play/tracks (service-token) and never see a key. The custody debt above is unchanged: completion rides the next console sitting. DOGFOOD (2026-10-26): the estate key was registered into the plug's vault from the VM (fingerprint verified against the local file at registration), and the project CLI (plug-client.py) called the live POST /api/service-plug/play/tracks and printed TAC Free's tracks from the plug's server-side executor: production, beta, alpha (1.1.0 vc13, completed), internal (v11 vc11 draft; 8 (1.0.0) vc8 completed). The agent held only the service token; no key material crossed any request or response.",
-   "state": "live — served by AI API Service Plug slice 1 (reference implementation); estate key is the operating lane"
+   "notes": "Service account play-api-doorway@usefulappz-api-doorway.iam.gserviceaccount.com, granted in Play Console Users and permissions Oct 25 (active, never expires; non-financial permission set \u2014 no view financial data, no manage orders/subscriptions, no reply to reviews, no admin-all). Developer account usefulappz (Account ID 6685646182078249991). Liveness was proven on the estate's EXISTING key (the upload lane seated Oct 4) \u2014 that lane never died; what died Oct 25 was the browser console door. KEY-CUSTODY DEBT: the new account's own key #1 (c256b3b55cd8) never reached our filesystem and is orphaned in GCP; the estate key is the working lane. Custody fix rides the next console sitting: delete orphan key #1, create key #2, transfer via the user-files route, prove it, and only then retire nothing \u2014 dual path stays. SLICE 1 (2026-10-26): this doorway is productized as the AI API Service Plug's reference implementation (~/workspace/app/service-plug/; playbook-google-play.md written from this sitting's record). The estate key is registered in the plug's write-only vault by path + sha256 fingerprint 59d4225785817b8fb5ef03358f3c22258de9f2bf2e5a5db98cee2982a304aa38 \u2014 metadata only; the secret bytes never moved, and play_upload.py / play-upload-requests.py are untouched (dual path). Agents request operations through POST /api/service-plug/play/tracks (service-token) and never see a key. The custody debt above is unchanged: completion rides the next console sitting. DOGFOOD (2026-10-26): the estate key was registered into the plug's vault from the VM (fingerprint verified against the local file at registration), and the project CLI (plug-client.py) called the live POST /api/service-plug/play/tracks and printed TAC Free's tracks from the plug's server-side executor: production, beta, alpha (1.1.0 vc13, completed), internal (v11 vc11 draft; 8 (1.0.0) vc8 completed). The agent held only the service token; no key material crossed any request or response.",
+   "state": "live \u2014 served by AI API Service Plug slice 1 (reference implementation); estate key is the operating lane"
   },
   {
    "kind": "door",
    "liveness": {
-    "how_checked": "Build verified 2026-10-26: backend suite PayPal lane (env-absent honesty, mocked-transport classification + exactly-once, failed-read parking) + live GET /api/money-watch showing the door in its built state. NO real read has ever been run against PayPal — no credential is registered; scheduled real reads (Playbook #2 §4 proof read: balances) begin the day the staged grant step seats the credential.",
+    "how_checked": "Build verified 2026-10-26: backend suite PayPal lane (env-absent honesty, mocked-transport classification + exactly-once, failed-read parking) + live GET /api/money-watch showing the door in its built state. NO real read has ever been run against PayPal \u2014 no credential is registered; scheduled real reads (Playbook #2 \u00a74 proof read: balances) begin the day the staged grant step seats the credential.",
     "last_verified": "2026-10-26"
    },
-   "name": "PayPal REST API — mk4 business door",
-   "notes": "The estate's Business PayPal (mk4, mikekelleyii.mk4@gmail.com) as a Service Plug door — Playbook #2 (~/workspace/app/service-plug/playbook-paypal.md), built under Approval Batch #1 item 6 as the door that enables Money Watch slice 2. READ-ONLY operation set: OAuth2 client-credentials → balances + transaction history (PayPal reporting APIs, api-m.paypal.com). No payment, payout, refund, or write call exists in the lane; a money-movement playbook would need its own custody paper first (custody draft §1). Custody per the custody paper's rules: the door's OWN REST app credential (separate from the website checkout lane's credential — per-door isolation), seated server-side in Render env only (PAYPAL_WATCH_CLIENT_ID / PAYPAL_WATCH_CLIENT_SECRET), registered in the plug vault by sha256 fingerprint + env path at seating time; the secret value never appears in the repo, the registry, or this book. The owner grant step is staged pre-filled in the playbook §2 (create the Live REST app under mk4 with Transaction Search enabled → hand client id + secret over via Secure Vault, never chat). Until it lands, Money Watch honestly shows this door as built/awaiting registration and cannot see into PayPal.",
-   "state": "built — awaiting credential registration (Playbook #2 shipped 2026-10-26; no credential held yet)"
+   "name": "PayPal REST API \u2014 mk4 business door",
+   "notes": "The estate's Business PayPal (mk4, mikekelleyii.mk4@gmail.com) as a Service Plug door \u2014 Playbook #2 (~/workspace/app/service-plug/playbook-paypal.md), built under Approval Batch #1 item 6 as the door that enables Money Watch slice 2. READ-ONLY operation set: OAuth2 client-credentials \u2192 balances + transaction history (PayPal reporting APIs, api-m.paypal.com). No payment, payout, refund, or write call exists in the lane; a money-movement playbook would need its own custody paper first (custody draft \u00a71). Custody per the custody paper's rules: the door's OWN REST app credential (separate from the website checkout lane's credential \u2014 per-door isolation), seated server-side in Render env only (PAYPAL_WATCH_CLIENT_ID / PAYPAL_WATCH_CLIENT_SECRET), registered in the plug vault by sha256 fingerprint + env path at seating time; the secret value never appears in the repo, the registry, or this book. The owner grant step is staged pre-filled in the playbook \u00a72 (create the Live REST app under mk4 with Transaction Search enabled \u2192 hand client id + secret over via Secure Vault, never chat). Until it lands, Money Watch honestly shows this door as built/awaiting registration and cannot see into PayPal.",
+   "state": "built \u2014 awaiting credential registration (Playbook #2 shipped 2026-10-26; no credential held yet)"
   },
   {
    "kind": "door",
    "liveness": {
-    "how_checked": "Email Keeper real read test (one lightweight Gmail read via the connector — a read, never a sign-in attempt)",
+    "how_checked": "Email Keeper real read test (one lightweight Gmail read via the connector \u2014 a read, never a sign-in attempt)",
     "last_verified": "2026-10-26"
    },
-   "name": "Gmail — mk2 (mikekelleyii.mk2@gmail.com)",
-   "notes": "The hub mailbox: recovery-email target for the whole chain, transactional lane, Play Console account holder. EXPOSED per the lockout-proofing registry: passkey / authenticator / backup codes all unknown until the proofing sitting — if mk2 locks, the chain loses its email route, so it gets proofed FIRST.",
+   "name": "Gmail \u2014 mk2 (mikekelleyii.mk2@gmail.com)",
+   "notes": "The hub mailbox: recovery-email target for the whole chain, transactional lane, Play Console account holder. EXPOSED per the lockout-proofing registry: passkey / authenticator / backup codes all unknown until the proofing sitting \u2014 if mk2 locks, the chain loses its email route, so it gets proofed FIRST.",
    "state": "up"
   },
   {
@@ -37,7 +37,7 @@
     "how_checked": "Email Keeper real read test",
     "last_verified": "2026-10-26"
    },
-   "name": "Gmail — mk (mikekelleyii.mk@gmail.com)",
+   "name": "Gmail \u2014 mk (mikekelleyii.mk@gmail.com)",
    "notes": "EXPOSED per the lockout-proofing registry: no durable non-SMS verification route confirmed; recovery chain target is mk2 (setting itself unconfirmed until the proofing sitting).",
    "state": "up"
   },
@@ -47,8 +47,8 @@
     "how_checked": "Email Keeper real read test",
     "last_verified": "2026-10-26"
    },
-   "name": "Gmail — mk4 (mikekelleyii.mk4@gmail.com)",
-   "notes": "The BUSINESS PayPal mailbox — where business money lands. EXPOSED per the lockout-proofing registry: no durable non-SMS route confirmed; recovery chain target is mk2 (unconfirmed until the sitting).",
+   "name": "Gmail \u2014 mk4 (mikekelleyii.mk4@gmail.com)",
+   "notes": "The BUSINESS PayPal mailbox \u2014 where business money lands. EXPOSED per the lockout-proofing registry: no durable non-SMS route confirmed; recovery chain target is mk2 (unconfirmed until the sitting).",
    "state": "up"
   },
   {
@@ -57,7 +57,7 @@
     "how_checked": "Email Keeper real read test",
     "last_verified": "2026-10-26"
    },
-   "name": "Gmail — mk5 (mikekelleyii.mk5@gmail.com)",
+   "name": "Gmail \u2014 mk5 (mikekelleyii.mk5@gmail.com)",
    "notes": "EXPOSED per the lockout-proofing registry: no durable non-SMS route confirmed; recovery chain target is mk2 (unconfirmed until the sitting).",
    "state": "up"
   },
@@ -67,18 +67,18 @@
     "how_checked": "Email Keeper real read test",
     "last_verified": "2026-10-26"
    },
-   "name": "Gmail — littleinkersstudio (littleinkersstudio@gmail.com)",
-   "notes": "Little Inkers mailbox. A Google 'Verify it's you' tap on the owner's phone is separately owed for the Sunday-factory upload lane — that is a browser/YouTube door matter, not this connector read, which is up. EXPOSED per the lockout-proofing registry: no durable non-SMS route confirmed.",
+   "name": "Gmail \u2014 littleinkersstudio (littleinkersstudio@gmail.com)",
+   "notes": "Little Inkers mailbox. A Google 'Verify it's you' tap on the owner's phone is separately owed for the Sunday-factory upload lane \u2014 that is a browser/YouTube door matter, not this connector read, which is up. EXPOSED per the lockout-proofing registry: no durable non-SMS route confirmed.",
    "state": "up"
   },
   {
    "kind": "door",
    "liveness": {
-    "how_checked": "Email Keeper real read test — fails with reauthorization_required",
+    "how_checked": "Email Keeper real read test \u2014 fails with reauthorization_required",
     "last_verified": "2026-10-26"
    },
-   "name": "Gmail — TAC (tattoo.art.customs@gmail.com)",
-   "notes": "DOWN — this is damage, not a status. Locked Oct 25 after accumulated sign-in attempts (ours included) burned the shared phone number's trust with Google. Standing order: TOTAL REST — no attempts by anyone; when a full quiet period has run, ONE recovery via the email route into mk2 (never SMS, never g.co), then full lockout-proofing in the same sitting. EXPOSED. Six affiliate verdicts (DragonHawk, T&T, Bookroo, KiwiCo, Fat Brain, Green Kid Crafts) and the Libro.fm approval are believed to sit in this inbox, unverifiable until it reopens.",
+   "name": "Gmail \u2014 TAC (tattoo.art.customs@gmail.com)",
+   "notes": "DOWN \u2014 this is damage, not a status. Locked Oct 25 after accumulated sign-in attempts (ours included) burned the shared phone number's trust with Google. Standing order: TOTAL REST \u2014 no attempts by anyone; when a full quiet period has run, ONE recovery via the email route into mk2 (never SMS, never g.co), then full lockout-proofing in the same sitting. EXPOSED. Six affiliate verdicts (DragonHawk, T&T, Bookroo, KiwiCo, Fat Brain, Green Kid Crafts) and the Libro.fm approval are believed to sit in this inbox, unverifiable until it reopens.",
    "state": "down"
   },
   {
@@ -87,7 +87,7 @@
     "how_checked": "Playbook #3 proof read 2026-10-26: instagram-cli posts --limit 1 returned the account's own posts (UP)",
     "last_verified": "2026-10-26"
    },
-   "name": "Instagram — @mikeyii.mk2_",
+   "name": "Instagram \u2014 @mikeyii.mk2_",
    "notes": "Tattoo Art Customs Instagram. Social posts verified landing through Oct 26 by the promo jobs. Playbook #3 (~/workspace/app/service-plug/playbook-social.md, 2026-10-26) documents this door's class, scope, proof read, and repairs.",
    "state": "connected"
   },
@@ -97,8 +97,8 @@
     "how_checked": "Playbook #3 proof read 2026-10-26: instagram-cli posts --limit 1 returned the account's own posts (UP)",
     "last_verified": "2026-10-26"
    },
-   "name": "Instagram — @littleinkersapp",
-   "notes": "Little Inkers Instagram — kid-safe surfaces only, never tattoo affiliates. Playbook #3 (~/workspace/app/service-plug/playbook-social.md, 2026-10-26) documents this door's class, scope, proof read, and repairs. Its DM surface is a separate door (Instagram Messages — @littleinkersapp): grant never made, see that entry.",
+   "name": "Instagram \u2014 @littleinkersapp",
+   "notes": "Little Inkers Instagram \u2014 kid-safe surfaces only, never tattoo affiliates. Playbook #3 (~/workspace/app/service-plug/playbook-social.md, 2026-10-26) documents this door's class, scope, proof read, and repairs. Its DM surface is a separate door (Instagram Messages \u2014 @littleinkersapp): grant never made, see that entry.",
    "state": "connected"
   },
   {
@@ -108,7 +108,7 @@
     "last_verified": "2026-10-26"
    },
    "name": "Threads",
-   "notes": "Threads account 17841426131703535. Promo posts verified landing through Oct 26 (one 429 daily-write-limit hit Oct 26 01:34 — a rate limit, not a dead door). Playbook #3 (~/workspace/app/service-plug/playbook-social.md, 2026-10-26) documents this door's class, scope, proof read, and repairs.",
+   "notes": "Threads account 17841426131703535. Promo posts verified landing through Oct 26 (one 429 daily-write-limit hit Oct 26 01:34 \u2014 a rate limit, not a dead door). Playbook #3 (~/workspace/app/service-plug/playbook-social.md, 2026-10-26) documents this door's class, scope, proof read, and repairs.",
    "state": "connected"
   },
   {
@@ -118,7 +118,7 @@
     "last_verified": "2026-10-26"
    },
    "name": "Facebook",
-   "notes": "Facebook account 100000853562870 — profile, Pages, and Marketplace lanes. Playbook #3 (~/workspace/app/service-plug/playbook-social.md, 2026-10-26) documents this door's class, scope, proof read, and repairs. Every Facebook write takes a fresh approval, every time — no standing authorization covers it.",
+   "notes": "Facebook account 100000853562870 \u2014 profile, Pages, and Marketplace lanes. Playbook #3 (~/workspace/app/service-plug/playbook-social.md, 2026-10-26) documents this door's class, scope, proof read, and repairs. Every Facebook write takes a fresh approval, every time \u2014 no standing authorization covers it.",
    "state": "connected"
   },
   {
@@ -138,7 +138,7 @@
     "last_verified": "2026-10-26"
    },
    "name": "GitHub",
-   "notes": "The backend repo lane — every website deploy rides this door, and it carried commits on Oct 26.",
+   "notes": "The backend repo lane \u2014 every website deploy rides this door, and it carried commits on Oct 26.",
    "state": "connected"
   },
   {
@@ -218,8 +218,8 @@
     "last_verified": "2026-10-26"
    },
    "name": "Messenger",
-   "notes": "The owner's personal Messenger account via the messenger_read connector (hatch_messenger_cli) — reads (threads, messages, search, contacts, call logs) and sends. Sends are estate-law gated: explicit request, verified one-to-one recipient, exact-text preview + the owner's explicit confirmation; a commitment-shaped message needs fresh confirmation at send time; background work never sends one. Playbook #3 (~/workspace/app/service-plug/playbook-social.md, 2026-10-26) documents this door's class, scope, proof read, and repairs.",
-   "state": "connected — connector-grant door (Playbook #3)"
+   "notes": "The owner's personal Messenger account via the messenger_read connector (hatch_messenger_cli) \u2014 reads (threads, messages, search, contacts, call logs) and sends. Sends are estate-law gated: explicit request, verified one-to-one recipient, exact-text preview + the owner's explicit confirmation; a commitment-shaped message needs fresh confirmation at send time; background work never sends one. Playbook #3 (~/workspace/app/service-plug/playbook-social.md, 2026-10-26) documents this door's class, scope, proof read, and repairs.",
+   "state": "connected \u2014 connector-grant door (Playbook #3)"
   },
   {
    "kind": "door",
@@ -227,9 +227,9 @@
     "how_checked": "Playbook #3 proof read 2026-10-26: instagram-messages-cli accounts shows @mikeyii.mk2_ connected: true (UP)",
     "last_verified": "2026-10-26"
    },
-   "name": "Instagram Messages — @mikeyii.mk2_",
-   "notes": "TAC's DM surface — a SEPARATE connection from Instagram content (its own grant): inbox/thread reads and sends via instagram-messages-cli. Playbook #3 (~/workspace/app/service-plug/playbook-social.md, 2026-10-26) documents this door's class, scope, proof read, and repairs.",
-   "state": "connected — connector-grant door (Playbook #3)"
+   "name": "Instagram Messages \u2014 @mikeyii.mk2_",
+   "notes": "TAC's DM surface \u2014 a SEPARATE connection from Instagram content (its own grant): inbox/thread reads and sends via instagram-messages-cli. Playbook #3 (~/workspace/app/service-plug/playbook-social.md, 2026-10-26) documents this door's class, scope, proof read, and repairs.",
+   "state": "connected \u2014 connector-grant door (Playbook #3)"
   },
   {
    "kind": "door",
@@ -237,9 +237,9 @@
     "how_checked": "Playbook #3 proof read 2026-10-26: instagram-messages-cli accounts shows @littleinkersapp connected: false",
     "last_verified": "2026-10-26"
    },
-   "name": "Instagram Messages — @littleinkersapp",
-   "notes": "GRANT GAP on record: the Little Inkers DM connection was never made — the content door is up (see Instagram — @littleinkersapp) but no lane can read LI direct messages, and none pretends to. Staged owner step for Batch #2: link Instagram Messages for @littleinkersapp via the connector's Connect URL; Aria re-proves on landing. Playbook #3 (~/workspace/app/service-plug/playbook-social.md, 2026-10-26) documents this door's class, scope, proof read, and repairs.",
-   "state": "not granted — staged owner step (Playbook #3 §5)"
+   "name": "Instagram Messages \u2014 @littleinkersapp",
+   "notes": "GRANT GAP on record: the Little Inkers DM connection was never made \u2014 the content door is up (see Instagram \u2014 @littleinkersapp) but no lane can read LI direct messages, and none pretends to. Staged owner step for Batch #2: link Instagram Messages for @littleinkersapp via the connector's Connect URL; Aria re-proves on landing. Playbook #3 (~/workspace/app/service-plug/playbook-social.md, 2026-10-26) documents this door's class, scope, proof read, and repairs.",
+   "state": "not granted \u2014 staged owner step (Playbook #3 \u00a75)"
   },
   {
    "kind": "door",
@@ -248,8 +248,8 @@
     "last_verified": "2026-10-26"
    },
    "name": "Threads Messages",
-   "notes": "Threads DM surface — a SEPARATE connection from Threads content (its own grant): inbox/thread reads and sends via threads-messages-cli for @mikeyii.mk_ (account 17841426131703535). Playbook #3 (~/workspace/app/service-plug/playbook-social.md, 2026-10-26) documents this door's class, scope, proof read, and repairs.",
-   "state": "connected — connector-grant door (Playbook #3)"
+   "notes": "Threads DM surface \u2014 a SEPARATE connection from Threads content (its own grant): inbox/thread reads and sends via threads-messages-cli for @mikeyii.mk_ (account 17841426131703535). Playbook #3 (~/workspace/app/service-plug/playbook-social.md, 2026-10-26) documents this door's class, scope, proof read, and repairs.",
+   "state": "connected \u2014 connector-grant door (Playbook #3)"
   },
   {
    "kind": "door",
@@ -257,51 +257,51 @@
     "how_checked": "No proof read exists (no connector); last verified 2026-10-14 by the Secure Vault recovery + posts landing the same day",
     "last_verified": "2026-10-26"
    },
-   "name": "X — @tattooartcustom",
-   "notes": "Browser/vault class per the access register: saved login on file, sessions lapse, re-check by browser when needed. Access recovered Oct 14, 2026 (Secure Vault reset; sign-in verified; first posts landed). Plug law 5 applies: no durable credential class exists to seat, so the honest offer for this room is the watch class, never session replay. Documented in Playbook #3 §1/§2 at its real class.",
-   "state": "browser/vault class — no connector; NOT a plug door (law 5)"
+   "name": "X \u2014 @tattooartcustom",
+   "notes": "Browser/vault class per the access register: saved login on file, sessions lapse, re-check by browser when needed. Access recovered Oct 14, 2026 (Secure Vault reset; sign-in verified; first posts landed). Plug law 5 applies: no durable credential class exists to seat, so the honest offer for this room is the watch class, never session replay. Documented in Playbook #3 \u00a71/\u00a72 at its real class.",
+   "state": "browser/vault class \u2014 no connector; NOT a plug door (law 5)"
   },
   {
    "kind": "door",
    "liveness": {
-    "how_checked": "No proof read exists (no connector, and Aria's login is dead — reset maxed Oct 14); state from the people-wiring map, 2026-10-25",
+    "how_checked": "No proof read exists (no connector, and Aria's login is dead \u2014 reset maxed Oct 14); state from the people-wiring map, 2026-10-25",
     "last_verified": "2026-10-26"
    },
-   "name": "TikTok — @usefulappz",
-   "notes": "TikTok Shop Creator Pilot rides this account (graduation ~Nov 14). A saved login is on file, but Aria's own TikTok login has been dead since Oct 14, 2026 (reset maxed) — in-app work is owner-hands or nothing until that changes. Plug law 5 applies: no durable credential class, no plug door; watch class is the honest offer. Documented in Playbook #3 §1/§2 at its real class.",
-   "state": "browser/vault class — no connector; Aria-side login DOWN since 2026-10-14; owner-hands only"
+   "name": "TikTok \u2014 @usefulappz",
+   "notes": "TikTok Shop Creator Pilot rides this account (graduation ~Nov 14). A saved login is on file, but Aria's own TikTok login has been dead since Oct 14, 2026 (reset maxed) \u2014 in-app work is owner-hands or nothing until that changes. Plug law 5 applies: no durable credential class, no plug door; watch class is the honest offer. Documented in Playbook #3 \u00a71/\u00a72 at its real class.",
+   "state": "browser/vault class \u2014 no connector; Aria-side login DOWN since 2026-10-14; owner-hands only"
   }
  ],
- "law": "The Codex is the written registry of the table — the Directory + every tie, seat, price, and result. A plug, price, or tie that isn't in the codex isn't real. Every entry carries its liveness: how it was checked and when it was last actually verified. A date in this file means somebody ran the check that day — never a guess, never a hope.",
+ "law": "The Codex is the written registry of the table \u2014 the Directory + every tie, seat, price, and result. A plug, price, or tie that isn't in the codex isn't real. Every entry carries its liveness: how it was checked and when it was last actually verified. A date in this file means somebody ran the check that day \u2014 never a guess, never a hope.",
  "plugs": [
   {
    "kind": "plug",
    "liveness": {
-    "how_checked": "Live GET https://tattoo-art-customs.onrender.com/api/rolodex — count 15, programs served with link + code + disclosure",
+    "how_checked": "Live GET https://tattoo-art-customs.onrender.com/api/rolodex \u2014 count 15, programs served with link + code + disclosure",
     "last_verified": "2026-10-26"
    },
    "name": "Affiliate Rolodex plug",
-   "notes": "GET /api/rolodex serves the 15 live programs from the one rolodex (46 programs total in the book); /api/app-links derives from it — a link lands once in the canonical rolodex (~/workspace/app/affiliate-rolodex/rolodex.json) and lights up everywhere. Disclosure lock enforced server-side: no link ever leaves without its code + disclosure. Printful went live Oct 26 — the first link to land in the rolodex and light up on every surface at once. Android app built (com.usefulappz.rolodex vc1); console creation rides the next sitting. The Rolodex is also a developer product (owner, Oct 26): every developer's links in one place, auto-plugged — ours is unit #1.",
+   "notes": "GET /api/rolodex serves the 15 live programs from the one rolodex (46 programs total in the book); /api/app-links derives from it \u2014 a link lands once in the canonical rolodex (~/workspace/app/affiliate-rolodex/rolodex.json) and lights up everywhere. Disclosure lock enforced server-side: no link ever leaves without its code + disclosure. Printful went live Oct 26 \u2014 the first link to land in the rolodex and light up on every surface at once. Android app built (com.usefulappz.rolodex vc1); console creation rides the next sitting. The Rolodex is also a developer product (owner, Oct 26): every developer's links in one place, auto-plugged \u2014 ours is unit #1.",
    "state": "live"
   },
   {
    "kind": "plug",
    "liveness": {
-    "how_checked": "Live GET https://tattoo-art-customs.onrender.com/api/testers/count — {ok:true, count:0}; backend migration 104 deployed",
+    "how_checked": "Live GET https://tattoo-art-customs.onrender.com/api/testers/count \u2014 {ok:true, count:0}; backend migration 104 deployed",
     "last_verified": "2026-10-26"
    },
    "name": "Tester Hub pool",
-   "notes": "The tester-problem fixer (owner ruling Oct 26): NOT test-for-test trading — one pool; developers + beta customers sign up, sign-up IS the opt-in; the Hub holds the pool's Gmail accounts and populates a developer's tester list the moment an app is added — 12+ already opted in, in one go. Pool count is honestly 0 today: the machine is live and verified (signup/leave/roster/feed test cycle passed), and sign-ups are now the work. Hub app vc2 built with the pool machine; slice 3 (notification-first feed, discovery copy, invite hooks) in flight.",
+   "notes": "The tester-problem fixer (owner ruling Oct 26): NOT test-for-test trading \u2014 one pool; developers + beta customers sign up, sign-up IS the opt-in; the Hub holds the pool's Gmail accounts and populates a developer's tester list the moment an app is added \u2014 12+ already opted in, in one go. Pool count is honestly 0 today: the machine is live and verified (signup/leave/roster/feed test cycle passed), and sign-ups are now the work. Hub app vc2 built with the pool machine; slice 3 (notification-first feed, discovery copy, invite hooks) in flight.",
    "state": "live"
   },
   {
    "kind": "plug",
    "liveness": {
-    "how_checked": "Live GET https://tattoo-art-customs.onrender.com/api/email-keeper — six mailboxes served, states matching the keeper's status.json (5 up, TAC down)",
+    "how_checked": "Live GET https://tattoo-art-customs.onrender.com/api/email-keeper \u2014 six mailboxes served, states matching the keeper's status.json (5 up, TAC down)",
     "last_verified": "2026-10-26"
    },
    "name": "Email Keeper",
-   "notes": "Connection Doctor's first working piece, email-first: read-tests all six mailboxes every 4 hours, board + token-guarded ingest, reports only on a transition. HARD LAW: the keeper never attempts a sign-in, password, or re-authorization on any account, ever — it reads only. Carries the lockout-proofing registry: all six accounts EXPOSED until the staged proofing sitting lands durable non-SMS routes.",
+   "notes": "Connection Doctor's first working piece, email-first: read-tests all six mailboxes every 4 hours, board + token-guarded ingest, reports only on a transition. HARD LAW: the keeper never attempts a sign-in, password, or re-authorization on any account, ever \u2014 it reads only. Carries the lockout-proofing registry: all six accounts EXPOSED until the staged proofing sitting lands durable non-SMS routes.",
    "state": "live"
   },
   {
@@ -311,23 +311,23 @@
     "last_verified": "2026-10-26"
    },
    "name": "AI API Service Plug",
-   "notes": "Standard tier (Messenger spec Addenda 6+7); Root AI API is a separate product — its slice 1 was built 2026-10-26 (see the Root AI API plug entry). Unit #1 = our own Play doorway: Playbook #1 (~/workspace/app/service-plug/playbook-google-play.md) written from the Oct 25 sitting — the API-access page does not exist in the current Console UI; the grant went through Users and permissions; the financial scope was deliberately NOT granted. The vault holds metadata + sha256 fingerprints only; secret bytes never move, and there is no read/export endpoint by design. Agents request operations (POST /api/service-plug/play/tracks) and never keys. Platforms without a durable credential class are not plug-compatible — the plug answers no, never session replay. Charge hooks exist (tool/window/door/plumbing); all figures SETTLED owner-approved Oct 26 (Batch #1 — see the prices section). The design doc’s three slice-2 calls were DECIDED in the same batch: placement = STANDALONE toolbox product; Playbook #2 = the social/API doors (Meta/Instagram class); custody paper REQUIRED before any outside key (a slice-2 gate deliverable). Acceptance run landed 2026-10-26: vault registration + live dogfood tracks read both succeeded (see the Play doorway door entry's notes for the track record). PLAYBOOK #2 — PAYPAL BUILT 2026-10-26 (Batch #1 item 6): ~/workspace/app/service-plug/playbook-paypal.md + the read lane in the backend (src/lib/paypalPlug.js feeding Money Watch's mk4 door). The door is built and AWAITING CREDENTIAL REGISTRATION — the staged owner grant step is the playbook's §2; no PayPal credential is held yet, and outside keys still wait on the custody paper gate. PLAYBOOK #3 — SOCIAL BUILT 2026-10-26: ~/workspace/app/service-plug/playbook-social.md — the Meta connector class (Instagram, Threads, Facebook, Messenger + the two DM companions) documented at its real door class: the grant lives in the connector's Accounts Center link, the lane holds no credential, and the plug's work is the watch + operation discipline; X and TikTok documented in the same playbook at browser/vault class — law 5's honest no, not plug doors. All §4 proof reads ran live 2026-10-26 (Meta doors UP; Instagram Messages for @littleinkersapp grant_missing — staged owner step rides Batch #2). ROOT TIER LIVE 2026-10-26: the Root AI API slice 1 (estate-internal root lane over all 27 doors) is built and live-verified — see its own plug entry. Outside keys still wait on the custody paper gate.",
-   "state": "live — slice 1 (house instance: the Play doorway productized — write-only vault, door liveness checker, agent operation endpoint)"
+   "notes": "Standard tier (Messenger spec Addenda 6+7); Root AI API is a separate product \u2014 its slice 1 was built 2026-10-26 (see the Root AI API plug entry). Unit #1 = our own Play doorway: Playbook #1 (~/workspace/app/service-plug/playbook-google-play.md) written from the Oct 25 sitting \u2014 the API-access page does not exist in the current Console UI; the grant went through Users and permissions; the financial scope was deliberately NOT granted. The vault holds metadata + sha256 fingerprints only; secret bytes never move, and there is no read/export endpoint by design. Agents request operations (POST /api/service-plug/play/tracks) and never keys. Platforms without a durable credential class are not plug-compatible \u2014 the plug answers no, never session replay. Charge hooks exist (tool/window/door/plumbing); all figures SETTLED owner-approved Oct 26 (Batch #1 \u2014 see the prices section). The design doc\u2019s three slice-2 calls were DECIDED in the same batch: placement = STANDALONE toolbox product; Playbook #2 = the social/API doors (Meta/Instagram class); custody paper REQUIRED before any outside key (a slice-2 gate deliverable). Acceptance run landed 2026-10-26: vault registration + live dogfood tracks read both succeeded (see the Play doorway door entry's notes for the track record). PLAYBOOK #2 \u2014 PAYPAL BUILT 2026-10-26 (Batch #1 item 6): ~/workspace/app/service-plug/playbook-paypal.md + the read lane in the backend (src/lib/paypalPlug.js feeding Money Watch's mk4 door). The door is built and AWAITING CREDENTIAL REGISTRATION \u2014 the staged owner grant step is the playbook's \u00a72; no PayPal credential is held yet, and outside keys still wait on the custody paper gate. PLAYBOOK #3 \u2014 SOCIAL BUILT 2026-10-26: ~/workspace/app/service-plug/playbook-social.md \u2014 the Meta connector class (Instagram, Threads, Facebook, Messenger + the two DM companions) documented at its real door class: the grant lives in the connector's Accounts Center link, the lane holds no credential, and the plug's work is the watch + operation discipline; X and TikTok documented in the same playbook at browser/vault class \u2014 law 5's honest no, not plug doors. All \u00a74 proof reads ran live 2026-10-26 (Meta doors UP; Instagram Messages for @littleinkersapp grant_missing \u2014 staged owner step rides Batch #2). ROOT TIER LIVE 2026-10-26: the Root AI API slice 1 (estate-internal root lane over all 27 doors) is built and live-verified \u2014 see its own plug entry. Outside keys still wait on the custody paper gate.",
+   "state": "live \u2014 slice 1 (house instance: the Play doorway productized \u2014 write-only vault, door liveness checker, agent operation endpoint)"
   },
   {
    "kind": "plug",
    "liveness": {
-    "how_checked": "Slice-1 acceptance 2026-10-26: backend suite rootApi tests (39 assertions — fingerprint-only registration, raw-material hard-400 rejection with a planted canary, proof-read proxying across the Play / Gmail / PayPal / connector door classes, operation-log writes, POST-only enforcement) inside a full-suite ALL TESTS PASSED run, plus live verification of the token-guarded GET /api/root-api/state and live proof reads (Play tracks; Gmail doors from the Keeper's recorded state) against the deployed backend",
+    "how_checked": "Slice-1 acceptance 2026-10-26: backend suite rootApi tests (39 assertions \u2014 fingerprint-only registration, raw-material hard-400 rejection with a planted canary, proof-read proxying across the Play / Gmail / PayPal / connector door classes, operation-log writes, POST-only enforcement) inside a full-suite ALL TESTS PASSED run, plus live verification of the token-guarded GET /api/root-api/state and live proof reads (Play tracks; Gmail doors from the Keeper's recorded state) against the deployed backend",
     "last_verified": "2026-10-26"
    },
    "name": "Root AI API",
-   "notes": "The root tier of the AI API Service Plug (project ~/workspace/app/root-api/; backend src/lib/rootApi.js + the /api/root-api routes in src/routes/api.js). ONE operations surface over ALL 27 Codex doors: list doors with state (the Codex registry merged with root-lane registrations), register/update a door entry, register/rotate/revoke a door's credential seat by sha256 FINGERPRINT ONLY through the standard plug's write-only vault (the registrar's hard-400 material rejection is inherited, not re-implemented), run a door's documented proof read where a backend lane exists (Play tracks read; PayPal balances once seated — until then the honest awaiting_credential_registration; Gmail doors from the Email Keeper's recorded read-test state; connector-class doors answer no_backend_lane with their documented proof text), and the OPERATION LOG (Root Checker posture: actor, door, operation, result, timestamp — no payloads, no secrets) served on the token-guarded GET /api/root-api/state, the lane's only GET. Writes are POST-only. ESTATE-INTERNAL ONLY: no customer onboarding exists and NO outside key is accepted, requested, or held — the custody-paper gate (Approval Batch #1) is absolute, and the paper's seven owner decisions ride Batch #2. This is the lane Aria herself operates through; the standard Service Plug serves one door at a time for customers later. Prices SETTLED (Batch #1 item 3): tool $149 one-time · setup $199 · watch $19/door/mo · bundle $39/mo.",
-   "state": "live — slice 1 (estate-internal root lane over all 27 Codex doors: door registry, fingerprint-only credential seats via the write-only vault, proof-read proxying, operation log; NO outside keys — custody gate)"
+   "notes": "The root tier of the AI API Service Plug (project ~/workspace/app/root-api/; backend src/lib/rootApi.js + the /api/root-api routes in src/routes/api.js). ONE operations surface over ALL 27 Codex doors: list doors with state (the Codex registry merged with root-lane registrations), register/update a door entry, register/rotate/revoke a door's credential seat by sha256 FINGERPRINT ONLY through the standard plug's write-only vault (the registrar's hard-400 material rejection is inherited, not re-implemented), run a door's documented proof read where a backend lane exists (Play tracks read; PayPal balances once seated \u2014 until then the honest awaiting_credential_registration; Gmail doors from the Email Keeper's recorded read-test state; connector-class doors answer no_backend_lane with their documented proof text), and the OPERATION LOG (Root Checker posture: actor, door, operation, result, timestamp \u2014 no payloads, no secrets) served on the token-guarded GET /api/root-api/state, the lane's only GET. Writes are POST-only. ESTATE-INTERNAL ONLY: no customer onboarding exists and NO outside key is accepted, requested, or held \u2014 the custody-paper gate (Approval Batch #1) is absolute, and the paper's seven owner decisions ride Batch #2. This is the lane Aria herself operates through; the standard Service Plug serves one door at a time for customers later. Prices SETTLED (Batch #1 item 3): tool $149 one-time \u00b7 setup $199 \u00b7 watch $19/door/mo \u00b7 bundle $39/mo.",
+   "state": "live \u2014 slice 1 (estate-internal root lane over all 27 Codex doors: door registry, fingerprint-only credential seats via the write-only vault, proof-read proxying, operation log; NO outside keys \u2014 custody gate)"
   },
   {
    "kind": "plug",
    "liveness": {
-    "how_checked": "Contract enforced in production code (src/lib/rolodex.js) and asserted by the backend test suite — live-only projection + disclosure lock",
+    "how_checked": "Contract enforced in production code (src/lib/rolodex.js) and asserted by the backend test suite \u2014 live-only projection + disclosure lock",
     "last_verified": "2026-10-26"
    },
    "name": "Universal Affiliate Plug contract",
@@ -342,37 +342,37 @@
    },
    "name": "Profile Plug",
    "notes": "Tester Hub slice 4 (migration 105, src/lib/profilePlug.js). A developer profile (keyed to their intake Gmail) holds their own Rolodex in the house entry shape; links render on their profile + app cards only when status=live AND an entitlement is active AND the per-network allow-check passed. Price SETTLED Oct 26 07:07: first link FREE per profile; further links $0.99 flat (penny split: ~15c Google / 1c referrer / 1c prize pot / 1c buyer credit / ~81c house, append-only penny_ledger) or a 15% ride. Redirect /api/testers/go/:id counts clicks both sides can read. Plugging never changes feed order or pool counts. This slice: service-token admin management; Play IAP rail + self-serve Hub profile UI are recorded follow-ups. Public: GET /api/testers/profiles (no Gmails; pot total published).",
-   "state": "live — backend (slice 4)"
+   "state": "live \u2014 backend (slice 4)"
   },
   {
    "kind": "plug",
    "liveness": {
-    "how_checked": "First house sweep run 2026-10-26 (node sweep.js in ~/workspace/app/robosweeper): live GET /api/rolodex + live page fetches — 19 surfaces, 74 drains open, 12 missing, 2 gathered-not-placed (Printful, ShopMy), 0 violations; findings in runs/2026-10-26.json, showpiece index.html",
+    "how_checked": "First house sweep run 2026-10-26 (node sweep.js in ~/workspace/app/robosweeper): live GET /api/rolodex + live page fetches \u2014 19 surfaces, 74 drains open, 12 missing, 2 gathered-not-placed (Printful, ShopMy), 0 violations; findings in runs/2026-10-26.json, showpiece index.html",
     "last_verified": "2026-10-26"
    },
    "name": "RoboSweeper",
-   "notes": "Penny Toolbox #2 of 3 (owner order Oct 26 07:13; design ~/workspace/your_files/penny-toolbox-robosweeper-roboscraper-design-2026-10-26.md). The Drain Adder (penny-sweeper checklist audit, design-aware — paid = zero ads and kid-surface absence read as correct, never as gaps) + the Collector (manual-feed v1: recorded payout terms only; every balance reads 'not reported' until a real figure is fed in; ripe-pot alerts fire only on a recorded balance meeting a recorded threshold). Slice 1 is audit-only on the house estate (unit #1) — no page or app was changed by the sweep. Slice 2 = install mode on the house + AdMob serving behind the placeholders + outside estates. Registered the same day it was built, per the write-in rule.",
-   "state": "live — slice 1 (house audit + Collector)"
+   "notes": "Penny Toolbox #2 of 3 (owner order Oct 26 07:13; design ~/workspace/your_files/penny-toolbox-robosweeper-roboscraper-design-2026-10-26.md). The Drain Adder (penny-sweeper checklist audit, design-aware \u2014 paid = zero ads and kid-surface absence read as correct, never as gaps) + the Collector (manual-feed v1: recorded payout terms only; every balance reads 'not reported' until a real figure is fed in; ripe-pot alerts fire only on a recorded balance meeting a recorded threshold). Slice 1 is audit-only on the house estate (unit #1) \u2014 no page or app was changed by the sweep. Slice 2 = install mode on the house + AdMob serving behind the placeholders + outside estates. Registered the same day it was built, per the write-in rule.",
+   "state": "live \u2014 slice 1 (house audit + Collector)"
   },
   {
    "kind": "plug",
    "liveness": {
-    "how_checked": "First house hunt run 2026-10-26 (node scrape.js in ~/workspace/app/roboscraper): canonical Rolodex + live GET /api/rolodex cross-check (15 served, zero mismatch), live page fetches + local surface reads grading 54 claimed placements (33 verified rendering, 2 placed-but-dead — the design-page 'Complete the kit' block, 19 unverified with reasons), tracker cross-check (14 live programs, 0 approved-never-on), research parse (25 distinct programs: 8 gathered, 15 not-yet-gathered candidates, 2 closed); findings in runs/2026-10-26.json + gap-report-2026-10-26.md",
+    "how_checked": "First house hunt run 2026-10-26 (node scrape.js in ~/workspace/app/roboscraper): canonical Rolodex + live GET /api/rolodex cross-check (15 served, zero mismatch), live page fetches + local surface reads grading 54 claimed placements (33 verified rendering, 2 placed-but-dead \u2014 the design-page 'Complete the kit' block, 19 unverified with reasons), tracker cross-check (14 live programs, 0 approved-never-on), research parse (25 distinct programs: 8 gathered, 15 not-yet-gathered candidates, 2 closed); findings in runs/2026-10-26.json + gap-report-2026-10-26.md",
     "last_verified": "2026-10-26"
    },
    "name": "RoboScraper",
-   "notes": "Penny Toolbox #3 of 3 (owner order Oct 26 07:13; design ~/workspace/your_files/penny-toolbox-robosweeper-roboscraper-design-2026-10-26.md). The overlooked-penny hunter: the Gap Finder (gathered-not-placed, placed-but-dead, approved-never-on — re-derived from the Rolodex, the tracker, and live fetches every run, never hardcoded) + the Program Finder (candidates from the Oct 25 affiliate-56 research, every term labeled CLAIMED or VERIFIED — a directory claim is never presented as a verified term). Slice 1 is read-only and house-only: no signups, no applications, nothing edited; candidates are reported in Rolodex pending-entry shape but were NOT written into the canonical Rolodex this slice. First run found the design-page kit block dead (Base Labs + DrTattooSkin placements) — damage on record here and in the gap report, fix staged machine-side. Slice 2 = overlooked-money sweeps on the owner's own accounts (waits on the Service Plug custody posture; read-only; lockout law in full) + candidate landing + stale-terms hunt. Registered the same day it was built, per the write-in rule.",
-   "state": "live — slice 1 (Gap Finder + Program Finder, house)"
+   "notes": "Penny Toolbox #3 of 3 (owner order Oct 26 07:13; design ~/workspace/your_files/penny-toolbox-robosweeper-roboscraper-design-2026-10-26.md). The overlooked-penny hunter: the Gap Finder (gathered-not-placed, placed-but-dead, approved-never-on \u2014 re-derived from the Rolodex, the tracker, and live fetches every run, never hardcoded) + the Program Finder (candidates from the Oct 25 affiliate-56 research, every term labeled CLAIMED or VERIFIED \u2014 a directory claim is never presented as a verified term). Slice 1 is read-only and house-only: no signups, no applications, nothing edited; candidates are reported in Rolodex pending-entry shape but were NOT written into the canonical Rolodex this slice. First run found the design-page kit block dead (Base Labs + DrTattooSkin placements) \u2014 damage on record here and in the gap report, fix staged machine-side. Slice 2 = overlooked-money sweeps on the owner's own accounts (waits on the Service Plug custody posture; read-only; lockout law in full) + candidate landing + stale-terms hunt. Registered the same day it was built, per the write-in rule.",
+   "state": "live \u2014 slice 1 (Gap Finder + Program Finder, house)"
   },
   {
    "kind": "plug",
    "liveness": {
-    "how_checked": "Live GET https://tattoo-art-customs.onrender.com/api/money-watch — 200 with headline 'Watching.', 2 wired + 5 named-unwired doors, all windows $0.00; first watcher pass 2026-10-26T13:35:53Z ran as the baseline (history absorbed, 0 landings fired); POST /api/money-watch/run + ?full=1 verified behind the Muse service token; backend suite ALL TESTS PASSED incl. 37 new Money Watch assertions",
+    "how_checked": "Live GET https://tattoo-art-customs.onrender.com/api/money-watch \u2014 200 with headline 'Watching.', 2 wired + 5 named-unwired doors, all windows $0.00; first watcher pass 2026-10-26T13:35:53Z ran as the baseline (history absorbed, 0 landings fired); POST /api/money-watch/run + ?full=1 verified behind the Muse service token; backend suite ALL TESTS PASSED incl. 37 new Money Watch assertions",
     "last_verified": "2026-10-26"
    },
    "name": "Money Watch",
-   "notes": "The landing detector (owner order Oct 26 07:59; design ~/workspace/your_files/money-watch-design-2026-10-26.md; price SETTLED $4.99 one-time — Approval Batch #1 item 1 under THE X RULE, recorded in prices). Watches money ARRIVE and reports it in the owner's sentence ('You made $XXX in XX time'); window totals (last hour / today / this week / this month, America/Chicago) sum revenue-kind landings only. Slice 1 wires the Tier-1 sources readable today: website-backend sales records (orders) + the Penny Ledger (migration 105) — event-based on source IDs with per-source watermarks in site_kv, so a landing fires exactly once and the first pass baselines history (incl. test rows) without firing. Kinds stay honest (revenue / transfer / refund / unknown); Penny Ledger Gmail accounts map to role labels at detection — no raw Gmail enters the state. Named unwired, never faked: Plaid Varo + Chime (personal = private view only), mk4 PayPal (plug BUILT 2026-10-26 as Service Plug Playbook #2, Batch #1 item 6 — the lane runs when the door's credential is seated in the server env; until then the door shows 'built — awaiting credential registration' and landings begin at registration, with the first wired pass as the door's baseline), Play payouts, Collector balances (Tier 2). The unit #1 split plan (10% of revenue to Varo overhead, rest down the mk4/Varo lanes, personal never mixed) rides each revenue landing as READ-ONLY plan math — Money Watch moves nothing; executing the split is Phase 4 (licensed rail + custody paper) and does not exist. App built: com.usefulappz.moneywatch vc1/1.0.0 (live-endpoint WebView + labeled bundled snapshot, Root Checker in, zero third-party ads; AAB 119,913 B sha256 1e9aaf84…, sideload APK 124,133 B sha256 1ac10c7d…; project ~/workspace/app/moneywatch). VM trigger money-watch-check.py mirrors state; PROPOSED cadence every 15 min — NOT scheduled (schedule changes ride the parent). Slice 2 = Collector-fed landings + Play payout reconciliation + PayPal plug + FCM notifications. Zero landings at registration — the board honestly reads 'Watching.'; the first real landing is slice 1's acceptance test.",
-   "state": "live — slice 1 (house watch: backend sales + Penny Ledger); PayPal door built (Playbook #2), awaiting credential registration"
+   "notes": "The landing detector (owner order Oct 26 07:59; design ~/workspace/your_files/money-watch-design-2026-10-26.md; price SETTLED $4.99 one-time \u2014 Approval Batch #1 item 1 under THE X RULE, recorded in prices). Watches money ARRIVE and reports it in the owner's sentence ('You made $XXX in XX time'); window totals (last hour / today / this week / this month, America/Chicago) sum revenue-kind landings only. Slice 1 wires the Tier-1 sources readable today: website-backend sales records (orders) + the Penny Ledger (migration 105) \u2014 event-based on source IDs with per-source watermarks in site_kv, so a landing fires exactly once and the first pass baselines history (incl. test rows) without firing. Kinds stay honest (revenue / transfer / refund / unknown); Penny Ledger Gmail accounts map to role labels at detection \u2014 no raw Gmail enters the state. Named unwired, never faked: Plaid Varo + Chime (personal = private view only), mk4 PayPal (plug BUILT 2026-10-26 as Service Plug Playbook #2, Batch #1 item 6 \u2014 the lane runs when the door's credential is seated in the server env; until then the door shows 'built \u2014 awaiting credential registration' and landings begin at registration, with the first wired pass as the door's baseline), Play payouts, Collector balances (Tier 2). The unit #1 split plan (10% of revenue to Varo overhead, rest down the mk4/Varo lanes, personal never mixed) rides each revenue landing as READ-ONLY plan math \u2014 Money Watch moves nothing; executing the split is Phase 4 (licensed rail + custody paper) and does not exist. App built: com.usefulappz.moneywatch vc1/1.0.0 (live-endpoint WebView + labeled bundled snapshot, Root Checker in, zero third-party ads; AAB 119,913 B sha256 1e9aaf84\u2026, sideload APK 124,133 B sha256 1ac10c7d\u2026; project ~/workspace/app/moneywatch). VM trigger money-watch-check.py mirrors state; PROPOSED cadence every 15 min \u2014 NOT scheduled (schedule changes ride the parent). Slice 2 = Collector-fed landings + Play payout reconciliation + PayPal plug + FCM notifications. Zero landings at registration \u2014 the board honestly reads 'Watching.'; the first real landing is slice 1's acceptance test.",
+   "state": "live \u2014 slice 1 (house watch: backend sales + Penny Ledger); PayPal door built (Playbook #2), awaiting credential registration"
   }
  ],
  "prices": {
@@ -385,8 +385,8 @@
      "last_verified": "2026-10-26"
     },
     "name": "AI API Service Plug (standard tier)",
-    "notes": "Settled figures (owner-approved Oct 26, Batch #1 items 2 + 4): tool $49 one-time, guided setup $99 / self-serve $0, door watch $9/door/mo, bundle $19/mo, standalone flow toll 10% of metered flow value. Full record: the pricing doc (plug-pricing-draft-2026-10-26.md) §1.",
-    "state": "SETTLED — owner-approved 2026-10-26 (Batch #1): tool $49 one-time · setup $99 DFY / $0 self-serve · door watch $9/door/mo · bundle $19/mo · standalone flow toll 10%"
+    "notes": "Settled figures (owner-approved Oct 26, Batch #1 items 2 + 4): tool $49 one-time, guided setup $99 / self-serve $0, door watch $9/door/mo, bundle $19/mo, standalone flow toll 10% of metered flow value. Full record: the pricing doc (plug-pricing-draft-2026-10-26.md) \u00a71.",
+    "state": "SETTLED \u2014 owner-approved 2026-10-26 (Batch #1): tool $49 one-time \u00b7 setup $99 DFY / $0 self-serve \u00b7 door watch $9/door/mo \u00b7 bundle $19/mo \u00b7 standalone flow toll 10%"
    },
    {
     "kind": "price",
@@ -395,8 +395,8 @@
      "last_verified": "2026-10-26"
     },
     "name": "Root AI API (root tier)",
-    "notes": "Settled figures (owner-approved Oct 26, Batch #1 item 3): tool $149 one-time, setup $199, watch $19/door/mo, bundle $39/mo. Play policy allows non-malicious root code with inform + consent (verified Oct 25) — root tier is a legitimate shelf, sold to people who already run root.",
-    "state": "SETTLED — owner-approved 2026-10-26 (Batch #1): tool $149 · setup $199 · watch $19/door/mo · bundle $39/mo"
+    "notes": "Settled figures (owner-approved Oct 26, Batch #1 item 3): tool $149 one-time, setup $199, watch $19/door/mo, bundle $39/mo. Play policy allows non-malicious root code with inform + consent (verified Oct 25) \u2014 root tier is a legitimate shelf, sold to people who already run root.",
+    "state": "SETTLED \u2014 owner-approved 2026-10-26 (Batch #1): tool $149 \u00b7 setup $199 \u00b7 watch $19/door/mo \u00b7 bundle $39/mo"
    },
    {
     "kind": "price",
@@ -405,8 +405,8 @@
      "last_verified": "2026-10-26"
     },
     "name": "Affiliate Rolodex + Tester Hub Profile Plug",
-    "notes": "SETTLED numbers (owner strike Oct 26 07:07): (1) Rolodex app $4.99 one-time on Google Play (Google keeps 15%, net ~$4.24); (2) per link $0.99 one-time via Play IAP, first link FREE; (3) or the link rides at 15% of its Hub-attributed earnings (band 10-20%, zero floor) — flat or ride per link, never both; (4) PENNY SPLIT on every paid $0.99 link: ~15c Google / 1c referrer / 1c Tester Hub prize pot / 1c buyer back as plug credit (auto-applies at $0.99) / ~81c house; (5) referrer pennies pay out at a $5 balance; (6) the Hub surface is named Profile Plug. One product, one price: the Rolodex price IS the profile-plug price — no separate plug fee. Full model: ~/workspace/your_files/tester-hub-profile-plug-model-2026-10-26.md (numbers settled). The rest of the pricing draft (Service Plug, Root AI API, Connection Doctor/Keeper) was struck owner-approved Oct 26 (Batch #1) — every figure in the pricing doc is now SETTLED. Our house rolodex rides free per Codex law (3).",
-    "state": "SETTLED — owner strike 2026-10-26: app $4.99 one-time · links $0.99 each · ride 15% (band 10-20%) · referrer payout at $5 · first link FREE · Hub surface named Profile Plug"
+    "notes": "SETTLED numbers (owner strike Oct 26 07:07): (1) Rolodex app $4.99 one-time on Google Play (Google keeps 15%, net ~$4.24); (2) per link $0.99 one-time via Play IAP, first link FREE; (3) or the link rides at 15% of its Hub-attributed earnings (band 10-20%, zero floor) \u2014 flat or ride per link, never both; (4) PENNY SPLIT on every paid $0.99 link: ~15c Google / 1c referrer / 1c Tester Hub prize pot / 1c buyer back as plug credit (auto-applies at $0.99) / ~81c house; (5) referrer pennies pay out at a $5 balance; (6) the Hub surface is named Profile Plug. One product, one price: the Rolodex price IS the profile-plug price \u2014 no separate plug fee. Full model: ~/workspace/your_files/tester-hub-profile-plug-model-2026-10-26.md (numbers settled). The rest of the pricing draft (Service Plug, Root AI API, Connection Doctor/Keeper) was struck owner-approved Oct 26 (Batch #1) \u2014 every figure in the pricing doc is now SETTLED. Our house rolodex rides free per Codex law (3).",
+    "state": "SETTLED \u2014 owner strike 2026-10-26: app $4.99 one-time \u00b7 links $0.99 each \u00b7 ride 15% (band 10-20%) \u00b7 referrer payout at $5 \u00b7 first link FREE \u00b7 Hub surface named Profile Plug"
    },
    {
     "kind": "price",
@@ -416,7 +416,7 @@
     },
     "name": "Connection Doctor / Email Keeper watch",
     "notes": "Settled figures (owner-approved Oct 26, Batch #1 item 5): tool $29 one-time, watch $7/mo per estate (up to 10 connections), lockout-proofing sitting $79 one-time. Our own estate rides free per Codex law (3).",
-    "state": "SETTLED — owner-approved 2026-10-26 (Batch #1): tool $29 one-time · watch $7/mo per estate · lockout-proofing sitting $79"
+    "state": "SETTLED \u2014 owner-approved 2026-10-26 (Batch #1): tool $29 one-time \u00b7 watch $7/mo per estate \u00b7 lockout-proofing sitting $79"
    },
    {
     "kind": "price",
@@ -426,17 +426,17 @@
     },
     "name": "Table seats (outside AIs in the bundle)",
     "notes": "No invented numbers: an outside AI's seat is priced at the maker's own subscription, carried in the bundle, plus the toll on flow. That IS the price; the draft doc adds nothing to it.",
-    "state": "law settled — no draft figures"
+    "state": "law settled \u2014 no draft figures"
    },
    {
     "kind": "price",
     "liveness": {
-     "how_checked": "Owner strikes in chat: $4.99 parity for the robots (Oct 26 07:20 — 'Same 4.99') and the contained Toolbox bundle $13.99 (Oct 26 07:22)",
+     "how_checked": "Owner strikes in chat: $4.99 parity for the robots (Oct 26 07:20 \u2014 'Same 4.99') and the contained Toolbox bundle $13.99 (Oct 26 07:22)",
      "last_verified": "2026-10-26"
     },
-    "name": "Penny Toolbox (RoboSweeper · RoboScraper · contained Toolbox)",
-    "notes": "The three Penny Toolbox singles sell separately at $4.99 each (Rolodex struck Oct 26 07:07; RoboSweeper + RoboScraper at parity — settled in substance Oct 26 07:17, struck 07:20) AND together as one contained app — The Penny Toolbox, $13.99 (nearly the $14.97 combined; the buyer who sees they work together pays for the linking, not a discount). One charge per thing still holds: the per-link plugs inside the Rolodex keep their settled shape ($0.99 / 15% ride / first link free / the Penny Split) identically in both packages.",
-    "state": "SETTLED — owner strikes 2026-10-26"
+    "name": "Penny Toolbox (RoboSweeper \u00b7 RoboScraper \u00b7 contained Toolbox)",
+    "notes": "The three Penny Toolbox singles sell separately at $4.99 each (Rolodex struck Oct 26 07:07; RoboSweeper + RoboScraper at parity \u2014 settled in substance Oct 26 07:17, struck 07:20) AND together as one contained app \u2014 The Penny Toolbox, $13.99 (nearly the $14.97 combined; the buyer who sees they work together pays for the linking, not a discount). One charge per thing still holds: the per-link plugs inside the Rolodex keep their settled shape ($0.99 / 15% ride / first link free / the Penny Split) identically in both packages.",
+    "state": "SETTLED \u2014 owner strikes 2026-10-26"
    },
    {
     "kind": "price",
@@ -445,12 +445,32 @@
      "last_verified": "2026-10-26"
     },
     "name": "Money Watch",
-    "notes": "Settled (owner-approved Oct 26, Batch #1 item 1): app $4.99 one-time — the owner’s \"X\" assessed under THE X RULE (Aria prices at worth; a money tool costs less than it makes; Penny Toolbox parity). The watch for outside developers rides the Plug’s settled door-watch — no separate watch figure, no second charge on the door. Design: ~/workspace/your_files/money-watch-design-2026-10-26.md (§8 carries the decided calls, incl. the PayPal plug approved to build and personal-side pots YES in the owner’s private view only).",
-    "state": "SETTLED — owner-approved 2026-10-26 (Batch #1): $4.99 one-time · outside-developer watch rides the door-watch"
+    "notes": "Settled (owner-approved Oct 26, Batch #1 item 1): app $4.99 one-time \u2014 the owner\u2019s \"X\" assessed under THE X RULE (Aria prices at worth; a money tool costs less than it makes; Penny Toolbox parity). The watch for outside developers rides the Plug\u2019s settled door-watch \u2014 no separate watch figure, no second charge on the door. Design: ~/workspace/your_files/money-watch-design-2026-10-26.md (\u00a78 carries the decided calls, incl. the PayPal plug approved to build and personal-side pots YES in the owner\u2019s private view only).",
+    "state": "SETTLED \u2014 owner-approved 2026-10-26 (Batch #1): $4.99 one-time \u00b7 outside-developer watch rides the door-watch"
+   },
+   {
+    "kind": "price",
+    "liveness": {
+     "how_checked": "Owner approval in chat, Oct 26 10:33 CDT (\"Your prices work just add prices and missing ads\") \u2014 approving the revenue-coverage audit assessments; assessed under THE X RULE",
+     "last_verified": "2026-10-26"
+    },
+    "name": "OneMind (Team subscription)",
+    "notes": "Settled (owner-approved Oct 26, 10:33 CDT): OneMind moves from the stale $9.99 one-time listing model to the Team subscription \u2014 $9.99/mo. Per-call costs recur (~$0.01/loop at paid rates), so a one-time price structurally under-recovers the moment outside seats light up; the subscription sits far under the value of a whole AI team working for you. Source: revenue coverage audit 2026-10-26 (~/workspace/your_files/revenue-coverage-audit-2026-10-26.md). Listing copy updated to the subscription model Oct 26. Remaining console step: create the subscription product in Play Console at the next sitting.",
+    "state": "SETTLED \u2014 owner-approved 2026-10-26: Team subscription $9.99/mo (replaces the stale $9.99 one-time listing model)"
+   },
+   {
+    "kind": "price",
+    "liveness": {
+     "how_checked": "Owner approval in chat, Oct 26 10:33 CDT (\"Your prices work just add prices and missing ads\") \u2014 approving the revenue-coverage audit assessments; assessed under THE X RULE",
+     "last_verified": "2026-10-26"
+    },
+    "name": "Everything Edition (paid aggregate)",
+    "notes": "Settled (owner-approved Oct 26, 10:33 CDT): $4.99/mo \u2014 the paid aggregate (Library + publication + all sections; unbuilt). The free apps are the doors and this is the room they point to; priced under one section bought alone. Settled now so the build carries its price from day one. Source: revenue coverage audit 2026-10-26 (~/workspace/your_files/revenue-coverage-audit-2026-10-26.md).",
+    "state": "SETTLED \u2014 owner-approved 2026-10-26: $4.99/mo (settled ahead of build)"
    }
   ],
-  "law": "THE PRICE OF THE PLUG (Codex law, owner-confirmed Oct 25): (1) an outside app/AI plugs in for its own subscription price, carried in the bundle — no second, invented plug fee, ever; (2) our cut is the toll on the flow across the plug, never a charge on the door (door + flow both charged = double-gating = empty room); (3) his own fleet plugs in for zero — house into house; (4) a maker with no subscription pays in people — plugging in ties his users to the table. CHARGE FOR ALL OF IT (owner, Oct 25): every layer is chargeable — the tool, the window (the guided opening), the door (keeping it propped — the watch), the plumbing (the toll on the flow).",
-  "status": "ALL SETTLED — Rolodex/Profile Plug struck 2026-10-26 07:07; Service Plug, Root AI API, Connection Doctor/Keeper, standalone flow toll, and Money Watch owner-approved 2026-10-26 (Approval Batch #1). No DRAFT figures remain."
+  "law": "THE PRICE OF THE PLUG (Codex law, owner-confirmed Oct 25): (1) an outside app/AI plugs in for its own subscription price, carried in the bundle \u2014 no second, invented plug fee, ever; (2) our cut is the toll on the flow across the plug, never a charge on the door (door + flow both charged = double-gating = empty room); (3) his own fleet plugs in for zero \u2014 house into house; (4) a maker with no subscription pays in people \u2014 plugging in ties his users to the table. CHARGE FOR ALL OF IT (owner, Oct 25): every layer is chargeable \u2014 the tool, the window (the guided opening), the door (keeping it propped \u2014 the watch), the plumbing (the toll on the flow).",
+  "status": "ALL SETTLED \u2014 Rolodex/Profile Plug struck 2026-10-26 07:07; Service Plug, Root AI API, Connection Doctor/Keeper, standalone flow toll, and Money Watch owner-approved 2026-10-26 (Approval Batch #1). No DRAFT figures remain."
  },
  "seats": [
   {
@@ -460,13 +480,13 @@
     "last_verified": "2026-10-25"
    },
    "name": "Gemini",
-   "notes": "The one lit seat at the OneMind table. The Oct 25 pipe saga (2,000-char cap, 60s clock, 130-char capture) was fixed and proven around this seat — pipes are honest now; the table itself is one lit seat and a workbench, not yet a team of eight.",
-   "state": "seated — only configured API-lane seat"
+   "notes": "The one lit seat at the OneMind table. The Oct 25 pipe saga (2,000-char cap, 60s clock, 130-char capture) was fixed and proven around this seat \u2014 pipes are honest now; the table itself is one lit seat and a workbench, not yet a team of eight.",
+   "state": "seated \u2014 only configured API-lane seat"
   },
   {
    "kind": "seat",
    "liveness": {
-    "how_checked": "Render env + local secrets searched — no DeepSeek key exists anywhere",
+    "how_checked": "Render env + local secrets searched \u2014 no DeepSeek key exists anywhere",
     "last_verified": "2026-10-25"
    },
    "name": "DeepSeek",
@@ -520,8 +540,8 @@
     "last_verified": "2026-10-25"
    },
    "name": "Copilot",
-   "notes": "Joins through the phone lane via its in-app pane (bridge live since Oct 22). The chair sat unclaimed all Oct 25 — a reply can still fold into the open records. No API seat: Copilot is FLAT NO_API by design.",
-   "state": "unconfigured — phone lane, chair unclaimed"
+   "notes": "Joins through the phone lane via its in-app pane (bridge live since Oct 22). The chair sat unclaimed all Oct 25 \u2014 a reply can still fold into the open records. No API seat: Copilot is FLAT NO_API by design.",
+   "state": "unconfigured \u2014 phone lane, chair unclaimed"
   },
   {
    "kind": "seat",
@@ -541,7 +561,7 @@
    },
    "name": "Compute Seat (Deterministic Code Sandbox & Logic Engine)",
    "notes": "One of the five missing seats the table itself named. In the Codex so the name is real; the build is not.",
-   "state": "named — not built"
+   "state": "named \u2014 not built"
   },
   {
    "kind": "seat",
@@ -551,7 +571,7 @@
    },
    "name": "Visual/Audio Worker (Local-First Vectorization & Asset Pipeline)",
    "notes": "Named, not built.",
-   "state": "named — not built"
+   "state": "named \u2014 not built"
   },
   {
    "kind": "seat",
@@ -561,7 +581,7 @@
    },
    "name": "Semantic Cache (Token Arbitrage Layer)",
    "notes": "Named, not built.",
-   "state": "named — not built"
+   "state": "named \u2014 not built"
   },
   {
    "kind": "seat",
@@ -571,7 +591,7 @@
    },
    "name": "Affiliate Sentinel (Link Monitor)",
    "notes": "Named, not built. The Rolodex (live Oct 26) is the shelf this seat would watch.",
-   "state": "named — not built"
+   "state": "named \u2014 not built"
   },
   {
    "kind": "seat",
@@ -581,7 +601,7 @@
    },
    "name": "Legal/Provenance Gate (Sign-off)",
    "notes": "Named, not built.",
-   "state": "named — not built"
+   "state": "named \u2014 not built"
   }
  ],
  "updated": "2026-10-26",
