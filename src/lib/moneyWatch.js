@@ -25,14 +25,23 @@
 //     holds — paid/refunded orders (the sales record) — and the Penny
 //     Ledger (migration 105, append-only; new rows past the watermark
 //     are events).
+//   WIRED-WHEN-CONFIGURED (Playbook #2, 2026-10-26): Business PayPal
+//     mk4 — the Service Plug's PayPal playbook shipped the read lane
+//     (src/lib/paypalPlug.js: OAuth2 client-credentials, balances +
+//     transaction history, READ-ONLY). The lane runs only when the
+//     door's own credential is seated in the server env
+//     (PAYPAL_WATCH_CLIENT_ID / PAYPAL_WATCH_CLIENT_SECRET); until
+//     then the door's state is "built" — plug built, awaiting
+//     credential registration — and the watch says so instead of
+//     pretending to see into PayPal. The first wired pass is the
+//     door's own baseline (history absorbed, nothing fires), exactly
+//     like the estate baseline below.
 //   NAMED-UNWIRED: Plaid bank feeds (Varo business + Chime personal —
-//     no Plaid read is plugged into this watcher yet), Business PayPal
-//     mk4 (its Service Plug playbook is APPROVED TO BUILD, §8 item 2 —
-//     until it ships, mk4 is a door the watch cannot see through, and
-//     it says so), Google Play payouts (the doorway lane reads the
-//     office; payout reports reconcile in slice 2), and the RoboSweeper
-//     Collector's affiliate balances (Tier 2 — they feed as real
-//     balances get fed; today they honestly read "not reported").
+//     no Plaid read is plugged into this watcher yet), Google Play
+//     payouts (the doorway lane reads the office; payout reports
+//     reconcile in slice 2), and the RoboSweeper Collector's affiliate
+//     balances (Tier 2 — they feed as real balances get fed; today
+//     they honestly read "not reported").
 //
 // PATTERN: the Email Keeper's (src/lib/emailKeeper.js). The Keeper's
 // data lives on the VM, so it POSTs an ingest; Money Watch's sources
@@ -57,17 +66,20 @@
 // label ('a developer (referrer)') at detection time — the raw value
 // never enters the watch state, so no view of this module can leak it.
 const db = require('../db');
+const paypalPlug = require('./paypalPlug');
 
 const KV_KEY = 'money_watch_state';
 
-// The doors, in board order. `wired` is a fact about TODAY, checked
+// The doors, in board order. `state` is a fact about TODAY, checked
 // against the code above it — if a door gets wired, flip it in the
-// same change that wires it.
+// same change that wires it. The PayPal door's state is computed at
+// view time (doorsView below): its lane exists (Playbook #2) but only
+// runs when its credential is seated in the server env.
 const DOORS = [
   { key: 'backend-sales', name: 'Website backend — sales records (orders)', state: 'wired', note: 'Paid website sales land in the backend ledger; the watcher reads them there.' },
   { key: 'penny-ledger', name: 'Penny Ledger — Profile Plug splits', state: 'wired', note: 'Every new split row in the append-only ledger (migration 105) is an event.' },
   { key: 'plaid-varo', name: 'Plaid — Varo (business overhead)', state: 'unwired', note: 'Bank-only revenue lands here (Play, CJ, eBay, AdSense, Amazon, Etsy). No bank feed is plugged into the watcher yet — named, not faked.' },
-  { key: 'paypal-mk4', name: 'Business PayPal — mk4', state: 'unwired', note: 'Business revenue\u2019s main door. The PayPal plug is approved to build (Service Plug playbook); until it ships, the watch cannot see into PayPal and says so.' },
+  { key: 'paypal-mk4', name: 'Business PayPal — mk4', state: 'built', note: 'PayPal — plug built, awaiting credential registration. Playbook #2 (Service Plug) shipped the read lane — balances + transaction history, read-only — and it runs the moment the owner\u2019s staged grant step seats the door\u2019s credential in the server env. Until then the watch cannot see into PayPal and says so.' },
   { key: 'play-payouts', name: 'Google Play payouts', state: 'unwired', note: 'The doorway lane reads the office today; payout reports reconcile against bank deposits in slice 2.' },
   { key: 'collector', name: 'RoboSweeper Collector — affiliate balances', state: 'unwired', note: 'Tier 2: feeds the watch as real balances are fed. Today every Collector balance honestly reads \u201cnot reported\u201d.' },
   { key: 'plaid-chime', name: 'Plaid — Chime (personal side)', state: 'unwired', personal: true, note: 'PERSONAL side — its figures, when wired, appear only in the owner\u2019s private view, never in business totals (§3).' },
@@ -205,17 +217,85 @@ function classifyPenny(row) {
   };
 }
 
+// PayPal rows arrive normalized from src/lib/paypalPlug.js:
+// { id (transaction ID), at (ms, transaction updated time),
+//   amount_cents (signed), currency, event_code, status }.
+// Classification by PayPal's transaction event-code families:
+//   T00xx payments — money IN from an outside payer is revenue; money
+//     OUT (a payment he sent) is shown as itself, never netted;
+//   T04xx withdrawals/payouts to a bank — transfers (his own money in
+//     motion between his own places);
+//   T11xx refunds/reversals and T12xx chargebacks — refunds: money
+//     that went back out, shown as itself, negative;
+//   anything else — unknown, shown as itself, never laundered.
+// Non-USD movements are never converted or counted: unknown, with the
+// currency named in the line. The payer's identity never enters the
+// state — the source is the door, not the person (the watch never
+// guesses a payer into existence, and no PII rides the board).
+function classifyPaypal(row) {
+  const at = Number(row.at) || 0;
+  const amt = Number(row.amount_cents) || 0;
+  const code = typeof row.event_code === 'string' ? row.event_code : '';
+  const base = { id: 'paypal:' + row.id, at, account: 'Business PayPal — mk4' };
+  if (row.currency && row.currency !== 'USD') {
+    const raw = `${row.currency} ${(Math.abs(amt) / 100).toFixed(2)}`;
+    return {
+      ...base, amount_cents: amt, source: 'PayPal — mk4', kind: 'unknown',
+      line: `PayPal movement in ${row.currency} (${raw}) — not converted, shown as itself.`,
+      split: [],
+    };
+  }
+  if (/^T04/.test(code)) {
+    return {
+      ...base, amount_cents: amt, source: 'PayPal payout', kind: 'transfer',
+      line: `PayPal payout — ${money(Math.abs(amt))} moved from Business PayPal (mk4) to the bank.`,
+      split: [],
+    };
+  }
+  if (/^T11/.test(code) || /^T12/.test(code)) {
+    return {
+      ...base, amount_cents: -Math.abs(amt), source: 'PayPal refund', kind: 'refund',
+      line: `PayPal refund — ${money(Math.abs(amt))} went back out of Business PayPal (mk4).`,
+      split: [],
+    };
+  }
+  if (/^T00/.test(code) && amt > 0) {
+    return {
+      ...base, amount_cents: amt, source: 'PayPal payment', kind: 'revenue',
+      line: `You made ${money(amt)} — PayPal payment → Business PayPal (mk4).`,
+      split: splitFor(amt),
+    };
+  }
+  if (/^T00/.test(code) && amt < 0) {
+    return {
+      ...base, amount_cents: amt, source: 'PayPal payment sent', kind: 'unknown',
+      line: `PayPal payment sent — ${money(-amt)} went out of Business PayPal (mk4), shown as itself.`,
+      split: [],
+    };
+  }
+  return {
+    ...base, amount_cents: amt, source: 'PayPal — mk4', kind: 'unknown',
+    line: `PayPal movement${code ? ` (${code})` : ''} — ${money(amt)} in Business PayPal (mk4), unclassified, shown as itself.`,
+    split: [],
+  };
+}
+
 // ---- state ----------------------------------------------------------
 
 function emptySeen() {
   return {
     orders: { watermark: 0, ids: [] },
     penny_ledger: { watermark: 0, ids: [] },
+    paypal: { watermark: 0, ids: [] },
   };
 }
 
 function emptyState() {
-  return { version: 1, baseline_at: null, last_run_at: null, seen: emptySeen(), landings: [] };
+  return {
+    version: 1, baseline_at: null, last_run_at: null,
+    paypal_baseline_at: null,
+    seen: emptySeen(), landings: [],
+  };
 }
 
 async function kvGet(name) {
@@ -244,9 +324,11 @@ async function getState() {
       version: 1,
       baseline_at: typeof s.baseline_at === 'number' ? s.baseline_at : null,
       last_run_at: typeof s.last_run_at === 'number' ? s.last_run_at : null,
+      paypal_baseline_at: typeof s.paypal_baseline_at === 'number' ? s.paypal_baseline_at : null,
       seen: {
         orders: sanitizeSeen(s.seen.orders),
         penny_ledger: sanitizeSeen(s.seen.penny_ledger),
+        paypal: sanitizeSeen(s.seen.paypal),
       },
       landings: s.landings.filter((l) => l && typeof l.id === 'string'
         && typeof l.at === 'number' && typeof l.amount_cents === 'number'),
@@ -313,7 +395,11 @@ async function scanPenny(watermark) {
 }
 
 // One watcher pass. First-ever pass = baseline (absorb, fire nothing).
-// Returns { ran_at, baseline, new_landings }.
+// Returns { ran_at, baseline, new_landings } (+ paypal_error when the
+// PayPal lane was configured but its read failed — the door parks with
+// its error class, its watermark untouched, and the rest of the pass
+// completes normally; a dead money door never takes the whole watch
+// down with it).
 async function runWatcher(nowMs = Date.now()) {
   const state = await getState();
   const baseline = state.baseline_at === null;
@@ -326,16 +412,43 @@ async function runWatcher(nowMs = Date.now()) {
   state.seen.orders = o.seen;
   state.seen.penny_ledger = p.seen;
 
+  // The PayPal lane (Playbook #2): runs only when the door's
+  // credential is seated in the env. Its first wired pass is the
+  // door's own baseline — history absorbed, nothing fires — the same
+  // rule the estate baseline follows, applied per door, so a door
+  // wired later never flashes its past as fresh money. A failed read
+  // parks the door: the seen marker is only assigned after a
+  // successful scan + diff, so exactly-once survives the failure.
+  let paypalFresh = [];
+  let paypalError = null;
+  if (paypalPlug.configured()) {
+    try {
+      const rows = await paypalPlug.scanTransactions(state.seen.paypal.watermark, nowMs);
+      const d = diffSource(rows, state.seen.paypal, (r) => r.at);
+      state.seen.paypal = d.seen;
+      if (!baseline && state.paypal_baseline_at !== null) {
+        paypalFresh = d.fresh.map(classifyPaypal);
+      }
+      if (state.paypal_baseline_at === null) state.paypal_baseline_at = nowMs;
+    } catch (e) {
+      paypalError = e.paypalClass || 'read_failed';
+      console.error('[money-watch] paypal lane parked:', paypalError, '-', e.message);
+    }
+  }
+
   let fresh = [];
   if (!baseline) {
-    fresh = [...o.fresh.map(classifyOrder), ...p.fresh.map(classifyPenny)]
+    fresh = [...o.fresh.map(classifyOrder), ...p.fresh.map(classifyPenny), ...paypalFresh]
       .sort((a, b) => a.at - b.at);
     state.landings = [...state.landings, ...fresh].slice(-LANDINGS_CAP);
   }
   if (baseline) state.baseline_at = nowMs;
   state.last_run_at = nowMs;
   await saveState(state);
-  return { ran_at: iso(nowMs), baseline, new_landings: baseline ? 0 : fresh.length };
+  return {
+    ran_at: iso(nowMs), baseline, new_landings: baseline ? 0 : fresh.length,
+    ...(paypalError ? { paypal_error: paypalError } : {}),
+  };
 }
 
 // ---- views ----------------------------------------------------------
@@ -420,6 +533,23 @@ function publicLanding(l) {
   };
 }
 
+// The door board as it stands TODAY: every door's recorded state,
+// except PayPal's, which is a function of the env seat — the lane is
+// built (Playbook #2), so unconfigured reads "built" with its
+// awaiting-registration note, and configured reads "wired".
+function doorsView() {
+  return DOORS.map((d) => {
+    if (d.key !== 'paypal-mk4') return { key: d.key, name: d.name, state: d.state, note: d.note };
+    if (paypalPlug.configured()) {
+      return {
+        key: d.key, name: d.name, state: 'wired',
+        note: 'PayPal — plug live (Playbook #2): the watch reads mk4 balances + transaction history (read-only) on every pass; new PayPal money lands here as it arrives.',
+      };
+    }
+    return { key: d.key, name: d.name, state: d.state, note: d.note };
+  });
+}
+
 function publicView(state, nowMs = Date.now()) {
   const landings = [...state.landings].sort((a, b) => b.at - a.at).map(publicLanding);
   const newest = landings[0];
@@ -427,7 +557,7 @@ function publicView(state, nowMs = Date.now()) {
     headline: newest ? newest.line : 'Watching.',
     generated_at: iso(state.last_run_at),
     baseline_at: iso(state.baseline_at),
-    doors: DOORS.map((d) => ({ key: d.key, name: d.name, state: d.state, note: d.note })),
+    doors: doorsView(),
     split_plan: SPLIT_PLAN,
     windows: computeWindows(state.landings, nowMs),
     landings: landings.slice(0, 50),
@@ -454,6 +584,11 @@ function fullView(state, nowMs = Date.now()) {
       seen: {
         orders: { watermark: state.seen.orders.watermark, ids_at_watermark: state.seen.orders.ids.length },
         penny_ledger: { watermark: state.seen.penny_ledger.watermark, ids_at_watermark: state.seen.penny_ledger.ids.length },
+        paypal: { watermark: state.seen.paypal.watermark, ids_at_watermark: state.seen.paypal.ids.length },
+      },
+      paypal: {
+        configured: paypalPlug.configured(),
+        baseline_at: iso(state.paypal_baseline_at),
       },
       landings_held: state.landings.length,
     },
@@ -462,7 +597,7 @@ function fullView(state, nowMs = Date.now()) {
 
 module.exports = {
   DOORS, SPLIT_PLAN,
-  classifyOrder, classifyPenny, diffSource,
+  classifyOrder, classifyPenny, classifyPaypal, diffSource, doorsView,
   windowStarts, computeWindows,
   getState, saveState, runWatcher,
   publicView, fullView,

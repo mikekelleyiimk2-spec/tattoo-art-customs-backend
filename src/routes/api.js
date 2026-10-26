@@ -189,10 +189,13 @@ router.post('/email-keeper/ingest', messageLimiter, express.json(), async (req, 
 // ~/workspace/your_files/money-watch-design-2026-10-26.md). The
 // watcher lives in src/lib/moneyWatch.js and reads the Tier-1 sources
 // the estate can actually read today — the backend's own sales records
-// (orders) and the Penny Ledger (migration 105). Doors that aren't
-// wired yet (Plaid bank feeds, mk4 PayPal — its plug is approved but
-// not built, Play payouts) are NAMED as unwired in the state, never
-// faked. READ-ONLY: nothing here can move money; the split shown per
+// (orders) and the Penny Ledger (migration 105). mk4 PayPal's plug
+// SHIPPED as Service Plug Playbook #2 (2026-10-26): the read lane runs
+// when the door's own credential is seated in the env, and until then
+// the door is NAMED in the state as built/awaiting registration —
+// never faked either way. Other doors that aren't wired yet (Plaid
+// bank feeds, Play payouts) are likewise NAMED, never faked.
+// READ-ONLY: nothing here can move money; the split shown per
 // landing is plan math (design §7A), and executing it is Phase 4,
 // which does not exist.
 //

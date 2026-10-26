@@ -64,6 +64,9 @@ async function runHttpTests(ok, req) {
   // The pieces written in today are actually in the book.
   const doorNames = (b.doors || []).map((e) => e.name);
   ok(doorNames.some((n) => /Play Developer API doorway/.test(n)), 'the Play API doorway is written in');
+  const paypalDoor = (b.doors || []).find((e) => /PayPal/.test(e.name));
+  ok(!!paypalDoor && /built/i.test(paypalDoor.state) && /awaiting credential/i.test(paypalDoor.state),
+    'the PayPal door is written in as built, awaiting credential registration (Playbook #2)');
   ok(doorNames.filter((n) => /^Gmail/.test(n)).length === 6, 'all six Gmail doors are written in');
   const tac = (b.doors || []).find((e) => /TAC/.test(e.name));
   ok(!!tac && tac.state === 'down', 'TAC door is on record as down (damage, not hidden)');
