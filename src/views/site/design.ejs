@@ -161,6 +161,11 @@
     <% } %>
   </div>
 </div>
+<% /* "Complete the kit" affiliate cross-sell — below the purchase path,
+     never inside the buy column. Restored 2026-10-26 (RoboScraper Gap 1:
+     the block had died on design pages while the Rolodex records still
+     claimed the placement). Disclosure rides inside the partial. */ %>
+<%- include('../partials/affiliate-kit') %>
 <% /* Share row (cross-connection audit 2026-10-21): every design page can be
      shared out to the socials. Intent/sharer URLs only — no affiliate
      content, so the ad-free purchase path decision (2026-10-15) stands. */ %>

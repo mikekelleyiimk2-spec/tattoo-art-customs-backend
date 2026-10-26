@@ -21,7 +21,7 @@ async function runHttpTests(ok, req) {
   ok(typeof b.law === 'string' && b.law.length > 0, 'codex carries its law');
   ok(b.prices && typeof b.prices.law === 'string' && /toll on the flow/i.test(b.prices.law),
     'prices carry the Codex price law (toll on the flow)');
-  ok(b.prices && /draft/i.test(b.prices.status || ''), 'prices status still flags the remaining DRAFT (unstruck sections)');
+  ok(b.prices && /all settled/i.test(b.prices.status || ''), 'prices status records ALL SETTLED after Approval Batch #1 (Oct 26)');
   ok(b.prices && /settled/i.test(b.prices.status || ''), 'prices status records the Oct 26 settled strike');
   const roloPrice = ((b.prices || {}).entries || []).find((e) => /Profile Plug/.test(e.name));
   ok(!!roloPrice && /settled/i.test(roloPrice.state || '')
@@ -29,7 +29,26 @@ async function runHttpTests(ok, req) {
     && roloPrice.state.includes('15%'),
     'Rolodex/Profile Plug price entry is SETTLED with the six struck numbers');
   const svcPrice = ((b.prices || {}).entries || []).find((e) => /AI API Service Plug/.test(e.name));
-  ok(!!svcPrice && /draft/i.test(svcPrice.state || ''), 'Service Plug price stays DRAFT (boundary kept)');
+  ok(!!svcPrice && /settled/i.test(svcPrice.state || '') && svcPrice.state.includes('$49'),
+    'Service Plug price is SETTLED at $49 (Approval Batch #1, items 2 + 4)');
+  const rootPrice = ((b.prices || {}).entries || []).find((e) => /Root AI API/.test(e.name));
+  ok(!!rootPrice && /settled/i.test(rootPrice.state || '') && rootPrice.state.includes('$149'),
+    'Root AI API price is SETTLED at $149 (Approval Batch #1, item 3)');
+  const docPrice = ((b.prices || {}).entries || []).find((e) => /Connection Doctor/.test(e.name));
+  ok(!!docPrice && /settled/i.test(docPrice.state || '') && docPrice.state.includes('$29'),
+    'Connection Doctor price is SETTLED at $29 (Approval Batch #1, item 5)');
+  const watchPrice = ((b.prices || {}).entries || []).find((e) => /Money Watch/.test(e.name));
+  ok(!!watchPrice && /settled/i.test(watchPrice.state || '') && watchPrice.state.includes('$4.99'),
+    'Money Watch price entry is present and SETTLED at $4.99 (Approval Batch #1, item 1)');
+  // No DRAFT price remains anywhere: every price entry reads SETTLED and
+  // the status line says the draft figures are gone (the struck-boundary
+  // wording "No DRAFT figures remain" is the settled truth, asserted as
+  // such — not an unsettled DRAFT marker).
+  const priceEntries = (b.prices || {}).entries || [];
+  ok(priceEntries.length > 0 && priceEntries.every((e) => /settled/i.test(e.state || '')),
+    'every price entry reads SETTLED — no DRAFT price remains (Approval Batch #1)');
+  ok(/no draft figures remain/i.test(b.prices.status || ''),
+    'prices status states no DRAFT figures remain');
 
   // Every entry: the public shape, exactly — name, kind, state, liveness.
   const entries = [...(b.doors || []), ...(b.plugs || []), ...(b.seats || []), ...((b.prices || {}).entries || [])];

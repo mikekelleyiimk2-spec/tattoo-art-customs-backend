@@ -956,8 +956,14 @@ router.get('/design/:id', async (req, res) => {
     // (owner directive 2026-10-10): vg-<game>-bg designs resolve to the
     // character slugs drawn to fit them.
     vgCharacters: require('../lib/vgBackgroundCharacters').matchingCharacters(design.id),
-    // Purchase path is ad-free (2026-10-15 money-path fix): no house ads,
-    // no affiliate cross-sell competing with the buy button.
+    // Purchase path carries no house ads / ad slots (2026-10-15). The
+    // "Complete the kit" affiliate cross-sell (partials/affiliate-kit)
+    // renders below the buy column — restored 2026-10-26 after
+    // RoboScraper's first run found the block dead on every design page
+    // while the Rolodex records still claimed the placement. Same
+    // partner set as the homepage; catalog is the single source.
+    kitPartners: ['baselabs-aftercare', 'drtattoo-aftercare-system', 'monstersink-supplies']
+      .map((id) => require('../lib/merchCatalog').getProduct(id)).filter(Boolean),
     noAds: true,
     // Show-featured discount state for the badge + member callout. The badge
     // is never air-gated; the discount is (server-side, in the quote above).

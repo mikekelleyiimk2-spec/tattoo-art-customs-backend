@@ -1,6 +1,8 @@
 // Guest design checkout tests (money-path fix 2026-10-15): a logged-out
 // visitor buys a premade design end-to-end — design page (no "Log in to
-// buy", trust block present, no ad/affiliate clutter) -> POST /orders/buy
+// buy", trust block present, no house ads/ad slots; the disclosed
+// "Complete the kit" affiliate block renders below the buy column —
+// restored 2026-10-26, RoboScraper Gap 1) -> POST /orders/buy
 // with a delivery email -> PayPal stub -> HMAC-gated approve/capture ->
 // emailed-token download page -> file download. The coordinator
 // (test/run.js) wires this in; do not run from here.
@@ -35,14 +37,20 @@ async function runHttpTests(ok, req, areq) {
     return { status: res.status, text, location: res.headers.get('location') || '' };
   };
 
-  // 1. Design page: guest buy form + trust block, no login wall, no clutter.
+  // 1. Design page: guest buy form + trust block, no login wall, no ad
+  // slots/house ads; the disclosed affiliate kit renders (restored
+  // 2026-10-26 — it had died in the 2026-10-15 pass while the Rolodex
+  // records still claimed the placement; RoboScraper Gap 1).
   let a = await anon('GET', `/design/${designId}`);
   ok(a.status === 200, 'guest: design page 200');
   ok(a.text.includes('name="guest_email"'), 'guest: design page has the guest delivery-email field');
   ok(!a.text.includes('Log in to buy'), 'guest: design page has no "Log in to buy" wall');
   ok(a.text.includes('What you get — no surprises'), 'guest: trust block renders on the design page');
   ok(a.text.includes('All sales are final'), 'guest: trust block states the real refund policy');
-  ok(!a.text.includes('Complete the kit'), 'guest: affiliate kit removed from the design page');
+  ok(a.text.includes('Complete the kit'), 'guest: affiliate kit renders on the design page (restored 2026-10-26)');
+  ok(a.text.includes('baselabs.is/?coupon=TAC20'), 'guest: kit carries the live Base Labs link + TAC20 code');
+  ok(a.text.includes('drtattooskin.com/TATTOOARTCUSTOMS'), 'guest: kit carries the live DrTattooSkin link');
+  ok(a.text.includes('rel="noopener nofollow sponsored"'), 'guest: kit links carry the sponsored rel (disclosure lock)');
   ok(!a.text.includes('house-ad'), 'guest: no house ads on the design page');
   ok(!a.text.includes('ad-slot'), 'guest: no ad slots on the design page');
 
