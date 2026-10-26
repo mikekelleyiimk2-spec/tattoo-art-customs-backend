@@ -190,11 +190,16 @@ app.use((req, res, next) => {
 // through to the baked set (express.static calls next() on a miss).
 const wmDir = path.join(config.assetDir, 'designs', 'linework-wm');
 const uploadWmDir = path.join(config.uploadDir, 'designs', 'linework-wm');
+// Watermarked finished-color previews (Batch #1 item 16): the ONLY color
+// derivatives ever served publicly, under /img/designs/color/. The clean
+// color files stay unmounted, exactly like clean linework.
+const colorWmDir = path.join(config.assetDir, 'designs', 'color-wm');
+const uploadColorWmDir = path.join(config.uploadDir, 'designs', 'color-wm');
 const photosDir = path.join(config.uploadDir, 'photos');
 const avatarsDir = path.join(config.uploadDir, 'avatars');
 const adsDir = path.join(config.uploadDir, 'ads');
 const healedDir = path.join(config.assetDir, 'uploads', 'healed');
-for (const d of [wmDir, uploadWmDir, photosDir, avatarsDir, adsDir, healedDir]) fs.mkdirSync(d, { recursive: true });
+for (const d of [wmDir, uploadWmDir, colorWmDir, uploadColorWmDir, photosDir, avatarsDir, adsDir, healedDir]) fs.mkdirSync(d, { recursive: true });
 // Gallery previews change rarely (watermarked files can be regenerated in
 // place on re-approval), so allow a week of caching with ETag revalidation.
 const imgCacheOpts = { maxAge: '7d' };
@@ -219,6 +224,8 @@ app.get('/img/designs/thumb/:file', async (req, res) => {
 });
 app.use('/img/designs', express.static(uploadWmDir, imgCacheOpts));
 app.use('/img/designs', express.static(wmDir, imgCacheOpts));
+app.use('/img/designs/color', express.static(uploadColorWmDir, imgCacheOpts));
+app.use('/img/designs/color', express.static(colorWmDir, imgCacheOpts));
 // R2 fallback for gallery previews: when a file isn't on local disk (e.g.
 // once we stop baking previews into the Docker image), redirect to the R2
 // public copy under the same designs/ key namespace the storage module uses

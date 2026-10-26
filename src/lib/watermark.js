@@ -274,6 +274,79 @@ async function applyWatermarkedLinework({ designId, lineworkAbs, choice = 'site'
   return outRel;
 }
 
+// Generate the public watermarked preview of a design's FINISHED COLOR
+// version (Approval Batch #1 item 16, 2026-10-26). Same treatment as the
+// linework pipeline above — same site texture passes, same solid-black
+// anti-trace marks aimed at the densest (darkest) regions, same per-design
+// seeded placement, same 1600px preview cap — applied to the color art.
+// The clean color file is NEVER touched and never served; only this
+// derivative is public. Returns the path relative to ASSET_DIR (suitable
+// for designs.color_wm_path).
+async function applyWatermarkedColor({ designId, colorAbs, choice = 'site', customWatermarkAbs = null, customInvert = false }) {
+  if (!fs.existsSync(colorAbs)) throw new Error('color file not found: ' + colorAbs);
+  const meta = await sharp(colorAbs).metadata();
+  const MAX_PREVIEW_DIM = 1600;
+  let W = meta.width || 1024;
+  let H = meta.height || 1024;
+  const dimScale = Math.min(1, MAX_PREVIEW_DIM / Math.max(W, H));
+  if (dimScale < 1) {
+    W = Math.max(1, Math.round(W * dimScale));
+    H = Math.max(1, Math.round(H * dimScale));
+  }
+  const overlays = [];
+  const rng = seededRng('wmtex-color:' + designId);
+  const jitter = (base, spread) => base + (rng() * 2 - 1) * spread;
+  const off = () => (rng() - 0.5) * 0.10;
+
+  // 1) Watermark texture pass(es) — identical to the linework pipeline.
+  const customOk = choice === 'custom' && customWatermarkAbs && fs.existsSync(customWatermarkAbs);
+  const wm1 = siteWmAbs(SITE_WM_1);
+  const wm2 = siteWmAbs(SITE_WM_2);
+  const passes = [];
+  if (customOk) {
+    passes.push({ abs: customWatermarkAbs, scale: 1.35, angle: jitter(-18, 12), opacity: 0.42, invert: customInvert });
+    passes.push({ abs: customWatermarkAbs, scale: 1.00, angle: jitter(22, 12), opacity: 0.30, invert: customInvert });
+  } else {
+    if (wm1) passes.push({ abs: wm1, scale: 1.35, angle: jitter(-18, 12), opacity: 0.42, invert: false });
+    if (wm2) passes.push({ abs: wm2, scale: 1.15, angle: jitter(24, 12), opacity: 0.36, invert: false });
+  }
+  for (const p of passes) {
+    const t = await texturePass(p.abs, W, H, p.scale, p.angle, off(), off(), p.invert);
+    overlays.push({ input: t.input, left: t.left, top: t.top, opacity: p.opacity });
+  }
+
+  // 2) Solid-black anti-trace marks — same site marks, placed over the
+  //    densest regions of the color art (density grid reads darkness, so
+  //    the marks land on the darkest, most detailed areas).
+  let grid = null;
+  try { grid = await lineDensityGrid(colorAbs); } catch (e) { grid = null; }
+  const positions = planMarkPositions({ designId: 'color:' + designId, grid });
+  for (let i = 0; i < BLACK_CROPS.length; i++) {
+    const abs = siteWmAbs(BLACK_CROPS[i].file);
+    if (!abs) continue;
+    const pos = positions[i] || MARK_POSITIONS[i % MARK_POSITIONS.length];
+    const left = Math.round(W * pos.x);
+    const top = Math.round(H * pos.y);
+    let mark = await blackSilhouette(abs, BLACK_CROPS[i], Math.round(W * MARK_WIDTH_FRAC));
+    const mMeta = await sharp(mark).metadata();
+    if (left + mMeta.width > W || top + mMeta.height > H) {
+      mark = await sharp(mark).resize({
+        width: Math.max(10, W - left), height: Math.max(10, H - top),
+        fit: 'inside', withoutEnlargement: true,
+      }).png().toBuffer();
+    }
+    overlays.push({ input: mark, left, top });
+  }
+
+  const outRel = `designs/color-wm/${designId}-color.jpg`;
+  const outAbs = path.join(config.uploadDir, outRel);
+  fs.mkdirSync(path.dirname(outAbs), { recursive: true });
+  await sharp(colorAbs)
+    .resize({ width: W, height: H, fit: 'inside', withoutEnlargement: true })
+    .composite(overlays).jpeg({ quality: 82 }).toFile(outAbs);
+  return outRel;
+}
+
 // Content-policy blur: a heavily blurred copy of the WATERMARKED linework,
 // used as the public preview for 'explicit' pieces (sexual acts / highly
 // offensive content). The watermark stays baked in underneath the blur.
@@ -293,6 +366,6 @@ async function applyBlurredVariant({ designId, watermarkedAbs }) {
 }
 
 module.exports = {
-  applyWatermarkedLinework, applyBlurredVariant, SITE_WM_1, SITE_WM_2,
+  applyWatermarkedLinework, applyWatermarkedColor, applyBlurredVariant, SITE_WM_1, SITE_WM_2,
   seededRng, lineDensityGrid, planMarkPositions, MARK_POSITIONS, DENSITY_GRID_N,
 };

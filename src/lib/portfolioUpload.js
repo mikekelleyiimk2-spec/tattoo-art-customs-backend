@@ -509,6 +509,17 @@ function titleIsByRequest(title) {
     console.error('watermark pipeline failed for design', id, e.message);
     wmNote = ' (automatic watermarking needs an admin touch — nothing for you to do)';
   }
+  // Watermarked finished-color preview (Batch #1 item 16): when the upload
+  // carries a color file, bake its public watermarked derivative now, the
+  // same best-effort way as the linework. The clean color stays private.
+  if (hasColor) {
+    try {
+      const { generateColorPreview } = require('./colorPreview');
+      await generateColorPreview(id);
+    } catch (e) {
+      console.error('color preview pipeline failed for design', id, e.message);
+    }
+  }
   // Every pending approval notifies ALL admins (in-app + email) — any one
   // of them may decide the piece's status. Trusted self-approved uploaders
   // (Adolfo, Chris, Cayli) skip the queue entirely: every upload goes live

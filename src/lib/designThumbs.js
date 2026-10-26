@@ -8,8 +8,8 @@
 // preview on first request and caches it under UPLOAD_DIR. The design
 // detail page keeps serving the full watermarked preview. Clean color /
 // clean linework files are never touched here — sources are looked up
-// only in the two watermarked-preview directories, same as the public
-// /img/designs static mounts.
+// only in the watermarked-preview directories (linework-wm + color-wm),
+// same as the public /img/designs static mounts.
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
@@ -23,6 +23,10 @@ function sourceDirs() {
   return [
     path.join(config.uploadDir, 'designs', 'linework-wm'),
     path.join(config.assetDir, 'designs', 'linework-wm'),
+    // Watermarked color previews (Batch #1 item 16) thumb the same way;
+    // basenames are distinct (<id>-color.jpg vs <id>-auto.jpg).
+    path.join(config.uploadDir, 'designs', 'color-wm'),
+    path.join(config.assetDir, 'designs', 'color-wm'),
   ];
 }
 

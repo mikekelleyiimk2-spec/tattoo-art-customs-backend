@@ -868,6 +868,38 @@ router.post('/rewatermark-missing', express.json(), async (req, res) => {
   }
 });
 
+// POST /api/muse/color-previews-missing — generate watermarked finished-
+// color previews (Batch #1 item 16) for approved designs that have a color
+// version but no public watermarked derivative yet (service-token auth).
+// Idempotent: skips designs that already have color_wm_path unless
+// {force:true}. This is the catalog backfill lane; new uploads and admin
+// color attaches generate inline.
+router.post('/color-previews-missing', express.json(), async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const { generateColorPreview } = require('../lib/colorPreview');
+    const force = req.body?.force === true;
+    const rows = await db.all(
+      `SELECT id, title, color_wm_path FROM designs
+       WHERE status = 'approved' AND color_path IS NOT NULL AND color_path <> ''
+       AND (? = 1 OR color_wm_path IS NULL OR color_wm_path = '')`, [force ? 1 : 0]);
+    const results = [];
+    for (const d of rows) {
+      try {
+        const rel = await generateColorPreview(d.id);
+        results.push({ id: d.id, title: d.title, result: rel ? 'ok' : 'no-source', wm: rel || undefined });
+      } catch (e) {
+        results.push({ id: d.id, title: d.title, result: 'error', error: e.message });
+      }
+    }
+    return res.json({ ok: true, count: rows.length, results });
+  } catch (e) {
+    console.error('[muse/color-previews-missing] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'color preview backfill failed' });
+  }
+});
+
 router.post('/upload-ipa', (req, res) => {
   if (!serviceToken()) return res.status(404).json({ ok: false });
   if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });

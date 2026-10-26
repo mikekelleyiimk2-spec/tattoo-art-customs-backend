@@ -12,10 +12,13 @@
 //      IS the administrator approval of the color version.
 //   4. When the design goes live, the designer is notified (informational).
 //
-// The site-created color version is a PURCHASE DELIVERABLE ONLY: it is never
-// added to the designer's portfolio, never publicly listed, and never
-// watermarked for display. After purchase it is delivered with the clean
-// linework exactly like any other color version.
+// The site-created color version itself is a PURCHASE DELIVERABLE ONLY: the
+// clean file is never added to the designer's portfolio and never publicly
+// listed. (Batch #1 item 16, 2026-10-26: a WATERMARKED derivative of the
+// finished color may be displayed — the gallery featured row — generated
+// by lib/colorPreview.js. The clean file stays private.) After purchase
+// it is delivered with the clean linework exactly like any other color
+// version.
 const path = require('path');
 const db = require('../db');
 const config = require('../config');
@@ -77,6 +80,15 @@ async function attachColorVersion(designId, colorAbsPath) {
     color_pending: 0,
     colorization_note: '',
   });
+  // Watermarked public preview of the finished color (Batch #1 item 16) —
+  // best-effort: the clean file above stays a private deliverable; only
+  // the watermarked derivative may ever be shown (gallery featured row).
+  try {
+    const { generateColorPreview } = require('./colorPreview');
+    await generateColorPreview(designId);
+  } catch (e) {
+    console.error('color preview pipeline failed for design', designId, e.message);
+  }
   const artist = await designerEmail(d.artist_id);
   const subject = `Your piece was colorized: "${d.title}"`;
   const body =

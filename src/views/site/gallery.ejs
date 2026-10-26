@@ -53,6 +53,27 @@
   <p><button class="btn" type="submit"><%= t('gallery.search_btn') %></button></p>
 </form>
 
+<% if (typeof featuredColor !== 'undefined' && featuredColor.length) { %>
+<%# Featured-in-color row (Batch #1 item 16): finished-color designs shown
+    ONLY as their watermarked previews (img src points at the color-wm
+    derivative's grid thumbnail). The clean color file is never referenced. %>
+<section class="card featured-color">
+  <h2><%= t('gallery.featured_color_h') %></h2>
+  <p class="muted"><%= t('gallery.featured_color_sub') %></p>
+  <div class="grid">
+    <% featuredColor.forEach(function(d) { %>
+    <article class="design-card">
+      <a href="/design/<%= d.id %>"><img src="/img/designs/thumb/<%= d.colorFile %>" alt="<%= t('home.design_alt', {title: d.title}) %>" loading="lazy" decoding="async"></a>
+      <div class="pad">
+        <h3><a href="/design/<%= d.id %>"><%= d.title %></a></h3>
+        <span class="like-count" title="<%= t('toploved.loves', {count: d.like_count || 0}) %>">♥ <%= d.like_count || 0 %></span>
+      </div>
+    </article>
+    <% }); %>
+  </div>
+</section>
+<% } %>
+
 <%- include('../partials/ad-slot', {slot: 'gallery_inline'}) %>
 
 <% if (typeof catIntro !== 'undefined' && catIntro) { %>

@@ -324,9 +324,20 @@ router.get('/gallery', async (req, res) => {
       galleryCanonical = `${base}/gallery?style=${encodeURIComponent(styleQ)}`;
     }
   }
+  // Featured-in-color row (Batch #1 item 16): top-hearted finished-color
+  // designs that have a WATERMARKED color preview (selection rule lives in
+  // lib/colorPreview.js). A discovery strip for the plain gallery view —
+  // suppressed while searching/filtering. Only the watermarked derivative
+  // is ever referenced; the clean color file never reaches the page.
+  let featuredColor = [];
+  if (!q && !cat && !styleQ) {
+    try {
+      featuredColor = await require('../lib/colorPreview').featuredColorDesigns();
+    } catch (e) { console.error('featured color row failed:', e.message); }
+  }
   res.render('site/gallery', {
     title: galleryTitle,
-    designs: thumbs, allCats, allStyles, q: req.query.q || '', cat: req.query.cat || '', style: req.query.style || '', sale: await salePriceActive(req.user),
+    designs: thumbs, featuredColor, allCats, allStyles, q: req.query.q || '', cat: req.query.cat || '', style: req.query.style || '', sale: await salePriceActive(req.user),
     premadePrice: withFeeCents(premadePriceCents(new Date(), member)),
     sort: newestOnly ? 'newest' : '',
     newestUrl: galleryUrl('newest'), allUrl: galleryUrl(''),
