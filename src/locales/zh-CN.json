@@ -936,7 +936,10 @@
     "pf_tee_valknut_lw_name": "Valknut Linework T恤",
     "pf_tee_valknut_lw_blurb": "高级黑色 Bella + Canvas T 恤上的Norse valknut knotwork in clean white linework。",
     "pf_tee_psyche_mushrooms_name": "Psychedelic Mushrooms T恤",
-    "pf_tee_psyche_mushrooms_blurb": "高级黑色 Bella + Canvas T 恤上的Trippy psychedelic mushrooms。"
+    "pf_tee_psyche_mushrooms_blurb": "高级黑色 Bella + Canvas T 恤上的Trippy psychedelic mushrooms。",
+    "aff_printful_name": "Printful — 销售你自己的周边",
+    "aff_printful_blurb": "来自我们T恤和海报背后同一家印刷商的按需印刷。把你自己的设计印在T恤、卫衣等产品上——Printful负责印刷和发货，利润归你。",
+    "aff_printful_cta": "开始用 Printful 销售"
   },
   "nav": {
     "about": "关于",
@@ -1373,7 +1376,15 @@
     "monstersink_h": "Monsters Ink Tattoo Supplies",
     "monstersink_text": "来自英国的专业纹身用品 — 纹身机、色料、针头和工作室必备品，供应商深受全欧洲艺术家青睐。通过我们的链接购买并使用代码 tattoo.art。",
     "monstersink_note": "⚠ 请注意：Monsters Ink 目前暂不向美国发货 — 美国配送将很快恢复。其他国家的订单照常发货。",
-    "monstersink_cta": "在 Monsters Ink 购物"
+    "monstersink_cta": "在 Monsters Ink 购物",
+    "printful_badge": "按需印刷",
+    "printful_h": "Printful — 销售你自己的周边",
+    "printful_text": "想卖自己的设计？Printful按需印刷并发货——和我们T恤、海报背后是同一家印刷商。无需库存，无需提前备货。",
+    "printful_cta": "开始用 Printful 销售",
+    "shopmy_badge": "精选推荐",
+    "shopmy_h": "我们的 ShopMy 店铺",
+    "shopmy_text": "我们的 ShopMy 店铺——我们真正使用的护理产品和美术用品，汇总在一个可购物的清单里。",
+    "shopmy_cta": "选购我们的 ShopMy 精选"
   },
   "li_sideload": {
     "sub": {

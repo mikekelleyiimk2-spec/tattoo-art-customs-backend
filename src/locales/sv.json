@@ -936,7 +936,10 @@
     "pf_tee_valknut_lw_name": "Valknut Linework t-shirt",
     "pf_tee_valknut_lw_blurb": "Norse valknut knotwork in clean white linework på en premium svart Bella + Canvas t-shirt.",
     "pf_tee_psyche_mushrooms_name": "Psychedelic Mushrooms t-shirt",
-    "pf_tee_psyche_mushrooms_blurb": "Trippy psychedelic mushrooms på en premium svart Bella + Canvas t-shirt."
+    "pf_tee_psyche_mushrooms_blurb": "Trippy psychedelic mushrooms på en premium svart Bella + Canvas t-shirt.",
+    "aff_printful_name": "Printful — Sälj din egen merch",
+    "aff_printful_blurb": "Print-on-demand från samma tryckeri som bakom våra t-shirts och affischer. Sätt dina egna motiv på tröjor, hoodies och mer — Printful trycker och skickar varje beställning, vinsten behåller du.",
+    "aff_printful_cta": "Börja sälja med Printful"
   },
   "nav": {
     "about": "Om oss",
@@ -1373,7 +1376,15 @@
     "monstersink_h": "Monsters Ink Tattoo Supplies",
     "monstersink_text": "Professionella tatueringsprodukter från Storbritannien — maskiner, bläck, nålar och studioessentials från en leverantör som artister i hela Europa handlar hos. Handla via vår länk och använd koden tattoo.art.",
     "monstersink_note": "⚠ Obs: Monsters Ink skickar för närvarande inte till USA — frakten till USA återkommer inom kort. Beställningar från andra länder skickas som vanligt.",
-    "monstersink_cta": "Handla hos Monsters Ink"
+    "monstersink_cta": "Handla hos Monsters Ink",
+    "printful_badge": "PRINT ON DEMAND",
+    "printful_h": "Printful — Sälj din egen merch",
+    "printful_text": "Vill du sälja dina egna motiv? Printful trycker och skickar merch på beställning — samma tryckeri som bakom våra t-shirts och affischer. Inget lager, inget förskottslager.",
+    "printful_cta": "Börja sälja med Printful",
+    "shopmy_badge": "UTVALDA TIPS",
+    "shopmy_h": "Vår ShopMy-butik",
+    "shopmy_text": "Vår ShopMy-butik — eftervården och konstmaterialen vi faktiskt använder, samlade i en enda shoppbar lista.",
+    "shopmy_cta": "Shoppa våra ShopMy-tips"
   },
   "li_sideload": {
     "sub": {

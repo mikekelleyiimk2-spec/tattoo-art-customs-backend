@@ -936,7 +936,10 @@
     "pf_tee_valknut_lw_name": "Camiseta Valknut Linework",
     "pf_tee_valknut_lw_blurb": "Norse valknut knotwork in clean white linework en una camiseta Bella + Canvas negra premium.",
     "pf_tee_psyche_mushrooms_name": "Camiseta Psychedelic Mushrooms",
-    "pf_tee_psyche_mushrooms_blurb": "Trippy psychedelic mushrooms en una camiseta Bella + Canvas negra premium."
+    "pf_tee_psyche_mushrooms_blurb": "Trippy psychedelic mushrooms en una camiseta Bella + Canvas negra premium.",
+    "aff_printful_name": "Printful — Vende tu propio merch",
+    "aff_printful_blurb": "Impresión bajo demanda de la misma imprenta detrás de nuestras camisetas y pósters. Pon tus propios diseños en camisetas, sudaderas y más — Printful imprime y envía cada pedido, tú te quedas con la ganancia.",
+    "aff_printful_cta": "Empieza a vender con Printful"
   },
   "nav": {
     "about": "Nosotros",
@@ -1373,7 +1376,15 @@
     "monstersink_h": "Monsters Ink Tattoo Supplies",
     "monstersink_text": "Suministros profesionales de tatuaje del Reino Unido — máquinas, tintas, agujas y esenciales de estudio, de un proveedor con el que se abastecen artistas de toda Europa. Compra a través de nuestro enlace y usa el código tattoo.art.",
     "monstersink_note": "⚠ Aviso: Monsters Ink no realiza envíos a EE. UU. en este momento — el envío a EE. UU. volverá en breve. Los pedidos de otros países se envían con normalidad.",
-    "monstersink_cta": "Comprar en Monsters Ink"
+    "monstersink_cta": "Comprar en Monsters Ink",
+    "printful_badge": "IMPRESIÓN BAJO DEMANDA",
+    "printful_h": "Printful — Vende tu propio merch",
+    "printful_text": "¿Quieres vender tus propios diseños? Printful imprime y envía merch bajo demanda — la misma imprenta detrás de nuestras camisetas y pósters. Sin inventario, sin stock por adelantado.",
+    "printful_cta": "Empieza a vender con Printful",
+    "shopmy_badge": "SELECCIÓN CURADA",
+    "shopmy_h": "Nuestra tienda ShopMy",
+    "shopmy_text": "Nuestra tienda ShopMy — los productos de cuidado y materiales de arte que realmente usamos, reunidos en una sola lista comprable.",
+    "shopmy_cta": "Comprar nuestras selecciones ShopMy"
   },
   "li_sideload": {
     "sub": {

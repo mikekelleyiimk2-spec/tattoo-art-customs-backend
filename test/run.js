@@ -665,6 +665,19 @@ async function main() {
   r = await req('GET', '/apps');
   ok(r.status === 200 && r.text.includes('id="odometer"') && r.text.includes('id="aibutton"'), 'apps page lists Odometer + AI Button cards (house ad landing anchors)');
 
+  // RoboSweeper fixes (2026-10-26): tip jar on /apps, /discounts, /aftercare
+  // (exactly one Business PayPal WA9DS6J8ERSHW instance per page — the shared
+  // partial), Printful affiliate + ShopMy storefront placed on /discounts
+  // with sponsored rel + the page disclosure.
+  const jarCount = (text) => (text.match(/ncp\/payment\/WA9DS6J8ERSHW/g) || []).length;
+  ok(jarCount(r.text) === 1, 'apps page carries exactly one tip jar');
+  r = await req('GET', '/discounts');
+  ok(r.status === 200 && jarCount(r.text) === 1, 'discounts page carries exactly one tip jar');
+  ok(r.text.includes('https://www.printful.com/a/15336743:69c9790aca714659403c1efc4041d4a4'), 'discounts page carries the Printful affiliate link');
+  ok(r.text.includes('https://shopmy.us/shop/tattooartcustoms'), 'discounts page carries the ShopMy storefront link');
+  r = await req('GET', '/aftercare');
+  ok(r.status === 200 && jarCount(r.text) === 1, 'aftercare page carries exactly one tip jar');
+
   r = await req('GET', '/account', { follow: false });
   ok(r.status === 302, 'account requires login');
 

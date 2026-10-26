@@ -70,6 +70,11 @@ async function runHttpTests(ok, req) {
       .some((s) => String(s).toLowerCase().includes('/merch'))),
     '?surface= filters by surfaces_placed');
   ok(surfPrograms.some((p) => p.name === 'Base Labs'), '?surface=/merch includes Base Labs');
+  ok(surfPrograms.some((p) => p.name === 'Printful'), '?surface=/merch includes Printful (placed 2026-10-26)');
+  const disc = await get('/api/rolodex?surface=' + encodeURIComponent('/discounts'));
+  const discPrograms = (disc.json && disc.json.programs) || [];
+  ok(discPrograms.some((p) => p.name === 'Printful'), '?surface=/discounts includes Printful (placed 2026-10-26)');
+  ok(discPrograms.some((p) => p.name === 'ShopMy'), '?surface=/discounts includes ShopMy (placed 2026-10-26)');
 
   // The proof consumer: /api/app-links keeps its exact shape and set, with
   // URLs now derived from the rolodex.

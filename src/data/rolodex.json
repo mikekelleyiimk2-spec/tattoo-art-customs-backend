@@ -206,7 +206,8 @@
       "disclosure": "Affiliate link — we may earn a commission at no extra cost to you.",
       "kid_safe": false,
       "surfaces_placed": [
-        "Storefront collections: 'Tattoo Aftercare & Artist Supplies' + 'Little Inkers Parent Picks — Art Supplies'"
+        "Storefront collections: 'Tattoo Aftercare & Artist Supplies' + 'Little Inkers Parent Picks — Art Supplies'",
+        "/discounts (ShopMy storefront card, 2026-10-26)"
       ],
       "notes": "Account ACTIVATED 2026-10-18 (username tattooartcustoms). Only 2 of 26 product links mintable so far: Aquaphor Healing Ointment (Target) https://go.shopmy.us/p-95859537 at 4% (tattoo collection); Crayola Crayons 64ct (Wayfair) https://go.shopmy.us/p-95860107 at 11% (kid collection). Never advertise a ShopMy product until its own generated link is live. No dedicated commercial yet."
     },
@@ -254,7 +255,10 @@
       "payout": "Min payout $25, PayPal USD",
       "disclosure": "Affiliate link — we may earn a commission at no extra cost to you.",
       "kid_safe": false,
-      "surfaces_placed": [],
+      "surfaces_placed": [
+        "/merch (affiliate partner card, 2026-10-26)",
+        "/discounts (Printful card, 2026-10-26)"
+      ],
       "notes": "APPROVED 2026-10-26; referral link gathered 2026-10-26 from Printful Dashboard > More > Affiliate > Affiliate link. Dashboard-verified: 10% of fulfillment price (taxes excluded, discounts included), 30-day cookie, $25 min payout via PayPal USD, payments reviewed manually (1-3 business days). LIVE in the Rolodex 2026-10-26 - served by /api/rolodex to every plugged surface."
     },
     {

@@ -936,7 +936,10 @@
     "pf_tee_valknut_lw_name": "T-shirt Valknut Linework",
     "pf_tee_valknut_lw_blurb": "Norse valknut knotwork in clean white linework sur un t-shirt Bella + Canvas noir premium.",
     "pf_tee_psyche_mushrooms_name": "T-shirt Psychedelic Mushrooms",
-    "pf_tee_psyche_mushrooms_blurb": "Trippy psychedelic mushrooms sur un t-shirt Bella + Canvas noir premium."
+    "pf_tee_psyche_mushrooms_blurb": "Trippy psychedelic mushrooms sur un t-shirt Bella + Canvas noir premium.",
+    "aff_printful_name": "Printful — Vendez votre propre merch",
+    "aff_printful_blurb": "L'impression à la demande par le même imprimeur que nos t-shirts et posters. Mettez vos propres designs sur des t-shirts, sweats et plus — Printful imprime et expédie chaque commande, vous gardez le profit.",
+    "aff_printful_cta": "Commencer à vendre avec Printful"
   },
   "nav": {
     "about": "À propos",
@@ -1373,7 +1376,15 @@
     "monstersink_h": "Monsters Ink Tattoo Supplies",
     "monstersink_text": "Fournitures de tatouage professionnelles du Royaume-Uni — machines, encres, aiguilles et essentiels de studio, d'un fournisseur chez qui les artistes de toute l'Europe s'approvisionnent. Achetez via notre lien et utilisez le code tattoo.art.",
     "monstersink_note": "⚠ À noter : Monsters Ink ne livre actuellement pas aux États-Unis — la livraison vers les États-Unis reprendra bientôt. Les commandes des autres pays sont expédiées normalement.",
-    "monstersink_cta": "Acheter chez Monsters Ink"
+    "monstersink_cta": "Acheter chez Monsters Ink",
+    "printful_badge": "IMPRESSION À LA DEMANDE",
+    "printful_h": "Printful — Vendez votre propre merch",
+    "printful_text": "Envie de vendre vos propres designs ? Printful imprime et expédie du merch à la demande — le même imprimeur que nos t-shirts et posters. Aucun stock, aucun inventaire à l'avance.",
+    "printful_cta": "Commencer à vendre avec Printful",
+    "shopmy_badge": "SÉLECTION",
+    "shopmy_h": "Notre boutique ShopMy",
+    "shopmy_text": "Notre boutique ShopMy — les soins et fournitures d'art que nous utilisons vraiment, réunis dans une seule liste achetable.",
+    "shopmy_cta": "Voir nos sélections ShopMy"
   },
   "li_sideload": {
     "sub": {

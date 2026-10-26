@@ -936,7 +936,10 @@
     "pf_tee_valknut_lw_name": "Valknut Linework 티셔츠",
     "pf_tee_valknut_lw_blurb": "프리미엄 블랙 Bella + Canvas 티셔츠에 Norse valknut knotwork in clean white linework.",
     "pf_tee_psyche_mushrooms_name": "Psychedelic Mushrooms 티셔츠",
-    "pf_tee_psyche_mushrooms_blurb": "프리미엄 블랙 Bella + Canvas 티셔츠에 Trippy psychedelic mushrooms."
+    "pf_tee_psyche_mushrooms_blurb": "프리미엄 블랙 Bella + Canvas 티셔츠에 Trippy psychedelic mushrooms.",
+    "aff_printful_name": "Printful — 나만의 머치 판매하기",
+    "aff_printful_blurb": "우리 티셔츠와 포스터를 만드는 바로 그 인쇄소의 주문형 인쇄. 내 디자인을 티셔츠, 후디 등에 올려보세요 — Printful이 주문마다 인쇄와 배송을 맡고, 수익은 당신의 몫입니다.",
+    "aff_printful_cta": "Printful로 판매 시작하기"
   },
   "nav": {
     "about": "소개",
@@ -1373,7 +1376,15 @@
     "monstersink_h": "Monsters Ink Tattoo Supplies",
     "monstersink_text": "영국의 전문 타투 용품 — 머신, 잉크, 니들, 스튜디오 필수품을 유럽 전역의 아티스트들이 찾는 공급업체에서 만나세요. 저희 링크로 구매하고 코드 tattoo.art를 사용하세요.",
     "monstersink_note": "⚠ 안내: Monsters Ink는 현재 미국으로 배송하지 않습니다 — 미국 배송은 곧 재개됩니다. 다른 국가의 주문은 정상적으로 배송됩니다.",
-    "monstersink_cta": "Monsters Ink에서 쇼핑하기"
+    "monstersink_cta": "Monsters Ink에서 쇼핑하기",
+    "printful_badge": "주문형 인쇄",
+    "printful_h": "Printful — 나만의 머치 판매하기",
+    "printful_text": "내 디자인을 팔고 싶나요? Printful은 주문형으로 머치를 인쇄하고 배송합니다 — 우리 티셔츠와 포스터를 만드는 바로 그 인쇄소입니다. 재고도, 선구매도 없습니다.",
+    "printful_cta": "Printful로 판매 시작하기",
+    "shopmy_badge": "엄선 추천",
+    "shopmy_h": "우리 ShopMy 스토어",
+    "shopmy_text": "우리 ShopMy 스토어 — 실제로 사용하는 애프터케어와 미술 용품을 하나의 쇼핑 가능한 목록으로 모았습니다.",
+    "shopmy_cta": "ShopMy 추천 상품 쇼핑하기"
   },
   "li_sideload": {
     "sub": {

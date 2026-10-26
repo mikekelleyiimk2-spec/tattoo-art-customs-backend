@@ -284,6 +284,22 @@ const CATALOG = [
     url: 'https://monstersink.com/michael',
     ctaKey: 'merch.aff_monstersink_cta',
   },
+  // --- Printful AFFILIATE program (live 2026-10-26) ---
+  // This is the referral/affiliate URL (10% of fulfillment, 30-day
+  // cookie) placed as a partner card for artists/shops who want to sell
+  // their OWN merch — NOT the Printful print-provider integration behind
+  // the pf-* POD products above. Placed per RoboSweeper run 2026-10-26
+  // (link was live in the Rolodex but on no page). Rolodex surfaces_placed
+  // records /merch + /discounts for this program.
+  {
+    id: 'printful-affiliate',
+    kind: 'affiliate',
+    status: 'live',
+    nameKey: 'merch.aff_printful_name',
+    blurbKey: 'merch.aff_printful_blurb',
+    url: 'https://www.printful.com/a/15336743:69c9790aca714659403c1efc4041d4a4',
+    ctaKey: 'merch.aff_printful_cta',
+  },
   {
     id: 'tee-music-genres',
     kind: 'pod',

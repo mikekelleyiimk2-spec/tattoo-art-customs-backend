@@ -936,7 +936,10 @@
     "pf_tee_valknut_lw_name": "Valknut Linework T-Shirt",
     "pf_tee_valknut_lw_blurb": "Norse valknut knotwork in clean white linework auf einem hochwertigen schwarzen Bella + Canvas T-Shirt.",
     "pf_tee_psyche_mushrooms_name": "Psychedelic Mushrooms T-Shirt",
-    "pf_tee_psyche_mushrooms_blurb": "Trippy psychedelic mushrooms auf einem hochwertigen schwarzen Bella + Canvas T-Shirt."
+    "pf_tee_psyche_mushrooms_blurb": "Trippy psychedelic mushrooms auf einem hochwertigen schwarzen Bella + Canvas T-Shirt.",
+    "aff_printful_name": "Printful — Verkaufe dein eigenes Merch",
+    "aff_printful_blurb": "Print-on-Demand von derselben Druckerei, die auch unsere Tees und Poster herstellt. Bringe deine eigenen Designs auf Shirts, Hoodies und mehr — Printful druckt und versendet jede Bestellung, der Gewinn bleibt bei dir.",
+    "aff_printful_cta": "Mit Printful verkaufen"
   },
   "nav": {
     "about": "Über uns",
@@ -1373,7 +1376,15 @@
     "monstersink_h": "Monsters Ink Tattoo Supplies",
     "monstersink_text": "Professioneller Tattoo-Bedarf aus Großbritannien — Maschinen, Farben, Nadeln und Studio-Essentials von einem Lieferanten, bei dem sich Artists in ganz Europa eindecken. Über unseren Link shoppen und Code tattoo.art verwenden.",
     "monstersink_note": "⚠ Hinweis: Monsters Ink liefert derzeit nicht in die USA — der US-Versand kehrt in Kürze zurück. Bestellungen aus anderen Ländern werden normal versendet.",
-    "monstersink_cta": "Bei Monsters Ink shoppen"
+    "monstersink_cta": "Bei Monsters Ink shoppen",
+    "printful_badge": "PRINT ON DEMAND",
+    "printful_h": "Printful — Verkaufe dein eigenes Merch",
+    "printful_text": "Du willst deine eigenen Designs verkaufen? Printful druckt und versendet Merch auf Bestellung — dieselbe Druckerei wie hinter unseren Tees und Postern. Kein Lager, keine Vorab-Bestände.",
+    "printful_cta": "Mit Printful verkaufen",
+    "shopmy_badge": "AUSGEWÄHLTE TIPPS",
+    "shopmy_h": "Unser ShopMy-Shop",
+    "shopmy_text": "Unser ShopMy-Shop — die Pflegeprodukte und Künstlerbedarf, die wir wirklich benutzen, in einer shoppbaren Liste gesammelt.",
+    "shopmy_cta": "Unsere ShopMy-Tipps shoppen"
   },
   "li_sideload": {
     "sub": {

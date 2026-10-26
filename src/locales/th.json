@@ -936,7 +936,10 @@
     "pf_tee_valknut_lw_name": "เสื้อยืด Valknut Linework",
     "pf_tee_valknut_lw_blurb": "Norse valknut knotwork in clean white linework บนเสื้อยืด Bella + Canvas สีดำระดับพรีเมียม",
     "pf_tee_psyche_mushrooms_name": "เสื้อยืด Psychedelic Mushrooms",
-    "pf_tee_psyche_mushrooms_blurb": "Trippy psychedelic mushrooms บนเสื้อยืด Bella + Canvas สีดำระดับพรีเมียม"
+    "pf_tee_psyche_mushrooms_blurb": "Trippy psychedelic mushrooms บนเสื้อยืด Bella + Canvas สีดำระดับพรีเมียม",
+    "aff_printful_name": "Printful — ขายสินค้าของคุณเอง",
+    "aff_printful_blurb": "พิมพ์ตามสั่งจากโรงพิมพ์เดียวกับที่อยู่เบื้องหลังเสื้อยืดและโปสเตอร์ของเรา ใส่ดีไซน์ของคุณลงบนเสื้อ ฮู้ดดี้ และอีกมากมาย — Printful พิมพ์และจัดส่งทุกออเดอร์ กำไรเป็นของคุณ",
+    "aff_printful_cta": "เริ่มขายกับ Printful"
   },
   "nav": {
     "about": "เกี่ยวกับ",
@@ -1373,7 +1376,15 @@
     "monstersink_h": "Monsters Ink Tattoo Supplies",
     "monstersink_text": "อุปกรณ์สักระดับมืออาชีพจากสหราชอาณาจักร — เครื่องสัก หมึก เข็ม และของใช้จำเป็นในสตูดิโอ จากซัพพลายเออร์ที่ศิลปินทั่วยุโรปเลือกใช้ ช้อปผ่านลิงก์ของเราและใช้โค้ด tattoo.art",
     "monstersink_note": "⚠ โปรดทราบ: Monsters Ink ขณะนี้ยังไม่จัดส่งไปยังสหรัฐอเมริกา — การจัดส่งไปสหรัฐฯ จะกลับมาในเร็ว ๆ นี้ คำสั่งซื้อจากประเทศอื่น ๆ จัดส่งตามปกติ",
-    "monstersink_cta": "ช้อปที่ Monsters Ink"
+    "monstersink_cta": "ช้อปที่ Monsters Ink",
+    "printful_badge": "พิมพ์ตามสั่ง",
+    "printful_h": "Printful — ขายสินค้าของคุณเอง",
+    "printful_text": "อยากขายดีไซน์ของตัวเอง? Printful พิมพ์และจัดส่งสินค้าตามสั่ง — โรงพิมพ์เดียวกับเสื้อยืดและโปสเตอร์ของเรา ไม่ต้องมีสต็อก ไม่ต้องซื้อของตุนไว้ก่อน",
+    "printful_cta": "เริ่มขายกับ Printful",
+    "shopmy_badge": "คัดสรรมาอย่างดี",
+    "shopmy_h": "ร้าน ShopMy ของเรา",
+    "shopmy_text": "ร้าน ShopMy ของเรา — ผลิตภัณฑ์ดูแลรอยสักและอุปกรณ์ศิลปะที่เราใช้จริง รวมไว้ในรายการเดียวที่ช้อปได้เลย",
+    "shopmy_cta": "ช้อปสินค้าคัดสรรจาก ShopMy"
   },
   "li_sideload": {
     "sub": {

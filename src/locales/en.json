@@ -936,7 +936,10 @@
     "pf_tee_valknut_lw_name": "Valknut Linework Tee",
     "pf_tee_valknut_lw_blurb": "Norse valknut knotwork in clean white linework on a premium black Bella + Canvas tee.",
     "pf_tee_psyche_mushrooms_name": "Psychedelic Mushrooms Tee",
-    "pf_tee_psyche_mushrooms_blurb": "Trippy psychedelic mushrooms on a premium black Bella + Canvas tee."
+    "pf_tee_psyche_mushrooms_blurb": "Trippy psychedelic mushrooms on a premium black Bella + Canvas tee.",
+    "aff_printful_name": "Printful — Sell Your Own Merch",
+    "aff_printful_blurb": "Print-on-demand from the same printer behind our tees and posters. Put your own designs on shirts, hoodies and more — Printful prints and ships each order, you keep the profit.",
+    "aff_printful_cta": "Start selling with Printful"
   },
   "nav": {
     "about": "About",
@@ -1428,7 +1431,15 @@
     "monstersink_h": "Monsters Ink Tattoo Supplies",
     "monstersink_text": "Professional tattoo supplies from the UK — machines, inks, needles and studio essentials, from a supplier artists across Europe stock up with. Shop through our link and use code tattoo.art.",
     "monstersink_note": "⚠ Please note: Monsters Ink does not currently ship to the USA — US shipping returns shortly. Orders from other countries ship as normal.",
-    "monstersink_cta": "Shop Monsters Ink"
+    "monstersink_cta": "Shop Monsters Ink",
+    "printful_badge": "PRINT ON DEMAND",
+    "printful_h": "Printful — Sell Your Own Merch",
+    "printful_text": "Want to sell your own designs? Printful prints and ships merch on demand — the same printer behind our tees and posters. No inventory, no stock up front.",
+    "printful_cta": "Start selling with Printful",
+    "shopmy_badge": "CURATED PICKS",
+    "shopmy_h": "Our ShopMy Storefront",
+    "shopmy_text": "Our ShopMy storefront — the aftercare and art supplies we actually use, gathered in one shoppable list.",
+    "shopmy_cta": "Shop our ShopMy picks"
   },
   "li_sideload": {
     "sub": {

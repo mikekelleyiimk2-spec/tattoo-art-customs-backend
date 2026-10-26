@@ -936,7 +936,10 @@
     "pf_tee_valknut_lw_name": "Valknut Linework Tシャツ",
     "pf_tee_valknut_lw_blurb": "プレミアムなブラックのBella + Canvas TシャツにNorse valknut knotwork in clean white linework。",
     "pf_tee_psyche_mushrooms_name": "Psychedelic Mushrooms Tシャツ",
-    "pf_tee_psyche_mushrooms_blurb": "プレミアムなブラックのBella + Canvas TシャツにTrippy psychedelic mushrooms。"
+    "pf_tee_psyche_mushrooms_blurb": "プレミアムなブラックのBella + Canvas TシャツにTrippy psychedelic mushrooms。",
+    "aff_printful_name": "Printful — 自分のマーチを販売",
+    "aff_printful_blurb": "当店のTシャツやポスターと同じ印刷会社のプリントオンデマンド。あなたのデザインをシャツやパーカーなどに — Printfulが注文ごとに印刷・発送し、利益はあなたのもの。",
+    "aff_printful_cta": "Printfulで販売を始める"
   },
   "nav": {
     "about": "概要",
@@ -1373,7 +1376,15 @@
     "monstersink_h": "Monsters Ink Tattoo Supplies",
     "monstersink_text": "英国発のプロ向けタトゥー用品 — マシン、インク、ニードル、スタジオ必需品。ヨーロッパ中のアーティストが仕入れるサプライヤーです。当店のリンクから購入し、コード tattoo.art をご利用ください。",
     "monstersink_note": "⚠ ご注意：Monsters Inkは現在、アメリカ合衆国への発送を行っていません — 米国向け発送は近日中に再開予定です。その他の国への注文は通常通り発送されます。",
-    "monstersink_cta": "Monsters Inkで購入"
+    "monstersink_cta": "Monsters Inkで購入",
+    "printful_badge": "プリントオンデマンド",
+    "printful_h": "Printful — 自分のマーチを販売",
+    "printful_text": "自分のデザインを売りたい？Printfulはオンデマンドでマーチを印刷・発送します — 当店のTシャツやポスターと同じ印刷会社です。在庫なし、前払いの仕入れもなし。",
+    "printful_cta": "Printfulで販売を始める",
+    "shopmy_badge": "厳選ピック",
+    "shopmy_h": "当店のShopMyストア",
+    "shopmy_text": "当店のShopMyストア — 実際に使っているアフターケアと画材を、買い物できる1つのリストにまとめました。",
+    "shopmy_cta": "ShopMyの厳選アイテムを見る"
   },
   "li_sideload": {
     "sub": {

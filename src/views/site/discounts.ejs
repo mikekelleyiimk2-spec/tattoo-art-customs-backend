@@ -54,9 +54,25 @@
     <p class="discount-note"><%= t('discounts.monstersink_note') %></p>
     <a class="btn" href="https://monstersink.com/michael" target="_blank" rel="noopener nofollow sponsored"><%= t('discounts.monstersink_cta') %></a>
   </div>
+
+  <div class="product-card discount-card">
+    <div class="discount-badge"><%= t('discounts.printful_badge') %></div>
+    <h3><%= t('discounts.printful_h') %></h3>
+    <p><%= t('discounts.printful_text') %></p>
+    <a class="btn" href="https://www.printful.com/a/15336743:69c9790aca714659403c1efc4041d4a4" target="_blank" rel="noopener nofollow sponsored"><%= t('discounts.printful_cta') %></a>
+  </div>
+
+  <div class="product-card discount-card">
+    <div class="discount-badge"><%= t('discounts.shopmy_badge') %></div>
+    <h3><%= t('discounts.shopmy_h') %></h3>
+    <p><%= t('discounts.shopmy_text') %></p>
+    <a class="btn" href="https://shopmy.us/shop/tattooartcustoms" target="_blank" rel="noopener nofollow sponsored"><%= t('discounts.shopmy_cta') %></a>
+  </div>
 </div>
 
 <p class="fineprint"><%= t('discounts.disclosure') %></p>
+
+<%- include('../partials/tip-jar') %>
 
 <style>
 .discount-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin: 1.5rem 0; }

@@ -936,7 +936,10 @@
     "pf_tee_valknut_lw_name": "Футболка Valknut Linework",
     "pf_tee_valknut_lw_blurb": "Norse valknut knotwork in clean white linework на премиальной чёрной футболке Bella + Canvas.",
     "pf_tee_psyche_mushrooms_name": "Футболка Psychedelic Mushrooms",
-    "pf_tee_psyche_mushrooms_blurb": "Trippy psychedelic mushrooms на премиальной чёрной футболке Bella + Canvas."
+    "pf_tee_psyche_mushrooms_blurb": "Trippy psychedelic mushrooms на премиальной чёрной футболке Bella + Canvas.",
+    "aff_printful_name": "Printful — продавайте свой мерч",
+    "aff_printful_blurb": "Печать по требованию от той же типографии, что печатает наши футболки и постеры. Размещайте свои дизайны на футболках, худи и многом другом — Printful печатает и отправляет каждый заказ, прибыль остаётся вам.",
+    "aff_printful_cta": "Начать продавать с Printful"
   },
   "nav": {
     "about": "О нас",
@@ -1373,7 +1376,15 @@
     "monstersink_h": "Monsters Ink Tattoo Supplies",
     "monstersink_text": "Профессиональные тату-расходники из Великобритании — машинки, краски, иглы и всё для студии от поставщика, у которого закупаются артисты по всей Европе. Покупайте по нашей ссылке и используйте код tattoo.art.",
     "monstersink_note": "⚠ Обратите внимание: Monsters Ink в настоящее время не осуществляет доставку в США — доставка в США скоро возобновится. Заказы из других стран отправляются в обычном режиме.",
-    "monstersink_cta": "Купить в Monsters Ink"
+    "monstersink_cta": "Купить в Monsters Ink",
+    "printful_badge": "ПЕЧАТЬ ПО ТРЕБОВАНИЮ",
+    "printful_h": "Printful — продавайте свой мерч",
+    "printful_text": "Хотите продавать свои дизайны? Printful печатает и отправляет мерч по требованию — та же типография, что и за нашими футболками и постерами. Без склада и запасов заранее.",
+    "printful_cta": "Начать продавать с Printful",
+    "shopmy_badge": "ПОДБОРКА",
+    "shopmy_h": "Наш магазин ShopMy",
+    "shopmy_text": "Наш магазин ShopMy — средства ухода и художественные материалы, которыми мы реально пользуемся, в одном удобном списке.",
+    "shopmy_cta": "Смотреть нашу подборку ShopMy"
   },
   "li_sideload": {
     "sub": {

@@ -24,6 +24,8 @@ async function runHttpTests(ok, req, areq) {
   let r = await req('GET', '/merch');
   ok(r.status === 200, 'GET /merch 200');
   ok(r.text.includes('baselabs.is/?coupon=TAC20'), '/merch carries the Base Labs affiliate link');
+  ok(r.text.includes('https://www.printful.com/a/15336743:69c9790aca714659403c1efc4041d4a4'), '/merch carries the Printful AFFILIATE link (partner card, not the POD integration)');
+  ok(require('../src/lib/merchCatalog').getProduct('printful-affiliate').kind === 'affiliate', 'Printful affiliate entry present in catalog');
   ok(r.text.includes('rel="noopener nofollow sponsored"'), 'affiliate link has sponsored rel');
   ok(r.text.includes('Music Genres Tee'), '/merch shows the music genres catalog product');
   ok(r.text.includes('Coming soon'), '/merch marks catalog products coming soon');

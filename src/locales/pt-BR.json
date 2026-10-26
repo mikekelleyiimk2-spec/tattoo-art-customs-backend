@@ -936,7 +936,10 @@
     "pf_tee_valknut_lw_name": "Camiseta Valknut Linework",
     "pf_tee_valknut_lw_blurb": "Norse valknut knotwork in clean white linework em uma camiseta Bella + Canvas preta premium.",
     "pf_tee_psyche_mushrooms_name": "Camiseta Psychedelic Mushrooms",
-    "pf_tee_psyche_mushrooms_blurb": "Trippy psychedelic mushrooms em uma camiseta Bella + Canvas preta premium."
+    "pf_tee_psyche_mushrooms_blurb": "Trippy psychedelic mushrooms em uma camiseta Bella + Canvas preta premium.",
+    "aff_printful_name": "Printful — Venda seu próprio merch",
+    "aff_printful_blurb": "Impressão sob demanda da mesma gráfica por trás das nossas camisetas e pôsteres. Coloque seus próprios designs em camisetas, moletons e mais — a Printful imprime e envia cada pedido, o lucro fica com você.",
+    "aff_printful_cta": "Comece a vender com a Printful"
   },
   "nav": {
     "about": "Sobre",
@@ -1373,7 +1376,15 @@
     "monstersink_h": "Monsters Ink Tattoo Supplies",
     "monstersink_text": "Suprimentos profissionais de tatuagem do Reino Unido — máquinas, tintas, agulhas e itens essenciais de estúdio, de um fornecedor onde artistas de toda a Europa se abastecem. Compre pelo nosso link e use o código tattoo.art.",
     "monstersink_note": "⚠ Atenção: A Monsters Ink não envia para os EUA no momento — o envio para os EUA retornará em breve. Pedidos de outros países são enviados normalmente.",
-    "monstersink_cta": "Comprar na Monsters Ink"
+    "monstersink_cta": "Comprar na Monsters Ink",
+    "printful_badge": "IMPRESSÃO SOB DEMANDA",
+    "printful_h": "Printful — Venda seu próprio merch",
+    "printful_text": "Quer vender seus próprios designs? A Printful imprime e envia merch sob demanda — a mesma gráfica das nossas camisetas e pôsteres. Sem estoque, sem inventário adiantado.",
+    "printful_cta": "Comece a vender com a Printful",
+    "shopmy_badge": "SELEÇÃO CURADA",
+    "shopmy_h": "Nossa loja ShopMy",
+    "shopmy_text": "Nossa loja ShopMy — os produtos de cuidado e materiais de arte que realmente usamos, reunidos em uma única lista comprável.",
+    "shopmy_cta": "Comprar nossas seleções ShopMy"
   },
   "li_sideload": {
     "sub": {

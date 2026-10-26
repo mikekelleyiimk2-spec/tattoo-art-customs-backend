@@ -936,7 +936,10 @@
     "pf_tee_valknut_lw_name": "Maglietta Valknut Linework",
     "pf_tee_valknut_lw_blurb": "Norse valknut knotwork in clean white linework su una maglietta Bella + Canvas nera premium.",
     "pf_tee_psyche_mushrooms_name": "Maglietta Psychedelic Mushrooms",
-    "pf_tee_psyche_mushrooms_blurb": "Trippy psychedelic mushrooms su una maglietta Bella + Canvas nera premium."
+    "pf_tee_psyche_mushrooms_blurb": "Trippy psychedelic mushrooms su una maglietta Bella + Canvas nera premium.",
+    "aff_printful_name": "Printful — Vendi il tuo merch",
+    "aff_printful_blurb": "Stampa su richiesta dallo stesso stampatore dietro le nostre magliette e poster. Metti i tuoi design su magliette, felpe e altro — Printful stampa e spedisce ogni ordine, il profitto resta a te.",
+    "aff_printful_cta": "Inizia a vendere con Printful"
   },
   "nav": {
     "about": "Chi siamo",
@@ -1373,7 +1376,15 @@
     "monstersink_h": "Monsters Ink Tattoo Supplies",
     "monstersink_text": "Forniture professionali per tatuaggi dal Regno Unito — macchinette, inchiostri, aghi ed essenziali da studio, da un fornitore da cui si riforniscono artisti in tutta Europa. Acquista tramite il nostro link e usa il codice tattoo.art.",
     "monstersink_note": "⚠ Attenzione: Monsters Ink al momento non spedisce negli Stati Uniti — la spedizione negli USA tornerà a breve. Gli ordini da altri paesi vengono spediti normalmente.",
-    "monstersink_cta": "Acquista da Monsters Ink"
+    "monstersink_cta": "Acquista da Monsters Ink",
+    "printful_badge": "STAMPA SU RICHIESTA",
+    "printful_h": "Printful — Vendi il tuo merch",
+    "printful_text": "Vuoi vendere i tuoi design? Printful stampa e spedisce merch su richiesta — lo stesso stampatore delle nostre magliette e poster. Nessun magazzino, nessuno stock anticipato.",
+    "printful_cta": "Inizia a vendere con Printful",
+    "shopmy_badge": "SCELTE CURATE",
+    "shopmy_h": "Il nostro negozio ShopMy",
+    "shopmy_text": "Il nostro negozio ShopMy — i prodotti per la cura e i materiali artistici che usiamo davvero, raccolti in un'unica lista acquistabile.",
+    "shopmy_cta": "Acquista le nostre scelte ShopMy"
   },
   "li_sideload": {
     "sub": {
