@@ -1744,7 +1744,43 @@ async function executeWordLoop(cmd, ctx, run) {
   return settleMulti(blocks, tally, 'the word loop');
 }
 
+// ── Messenger routing rule (spec §4 item 4; slice 1, migration
+// 109) ──────────────────────────────────────────────────────────
+// A command whose messenger_pairing_id is set is a cross-owner
+// Messenger send: the SENDER's words (messenger_messages.text) are
+// answered by the RECIPIENT's seat — the member fixed at pairing.
+// This is a named-recipient settlement, like SHARE: there is NO
+// failover and NO substitution, because a substitute would lie
+// about whose AI answered (spec §2.2's honesty rule). An
+// unconfigured seat posts its honest absence block as a failure —
+// the answer lands in the shared record either way; a send never
+// sits in delivered limbo.
+async function executeMessenger(cmd, ctx, run) {
+  const msg = await db.get(
+    'SELECT * FROM messenger_messages WHERE command_id = ?', [cmd.id]
+  );
+  if (!msg) {
+    return {
+      status: 'failed',
+      answer: 'Messenger routing failed: no messenger record rides this command, so there is nothing honest to run.',
+    };
+  }
+  const from = await db.get('SELECT * FROM ai_listings WHERE id = ?', [msg.from_listing_id]);
+  const seat = msg.seat_member;
+  const fromName = from
+    ? `${from.display_name} (@${from.handle}), whose AI is ${from.ai_name}`
+    : "another owner's AI";
+  const user = [
+    `You are ${seat}. A message arrived for your owner through OneMind Messenger, sent by ${fromName}.`,
+    `Their message: "${msg.text}"`,
+    'Answer it directly, as yourself. Your answer is posted verbatim into the shared Messenger record that both owners read — you are talking to their AI, in front of both owners.',
+  ].join('\n\n');
+  const copilotText = `Have Copilot answer a OneMind Messenger message sent by ${fromName}. Their message: "${msg.text}". Answer directly, as Copilot — the answer is posted into the shared Messenger record both owners read.`;
+  return answerFromMember(cmd, ctx, run, seat, user, copilotText);
+}
+
 async function executeCommand(cmd, ctx, run) {
+  if (cmd.messenger_pairing_id) return executeMessenger(cmd, ctx, run);
   const parsed = parseCommand(cmd.text);
   switch (parsed.type) {
     case 'route': return executeRoute(cmd, parsed, ctx, run);

@@ -552,6 +552,7 @@ async function main() {
   await require('./holidayRaffle').runDbTests(ok);
   await require('./merchCatalog').runDbTests(ok);
   await require('./apiLane').runDbTests(ok); // AI Master Button API lane (worker, adapters, grammar)
+  await require('./messenger').runDbTests(ok); // AI-to-AI Messenger slice 1 (worker routing rule: recipient seat, no failover)
   await require('./moneyWatch').runDbTests(ok); // Money Watch watcher (baseline, exactly-once, kinds, CT windows)
 
   // Mail retry (unit-level, no live SMTP): a transient failure is retried
@@ -1556,6 +1557,7 @@ async function main() {
   await require('./transfers').runHttpTests(ok, req); // [transfers] customer<->shop art pipeline
   await require('./appUpdates').runHttpTests(ok); // app auto-update service
   await require('./apiLane').runHttpTests(ok); // AI Master Button API lane enqueue contract
+  await require('./messenger').runHttpTests(ok); // AI-to-AI Messenger slice 1 (registry, AI-code connect, 1:1 record, refusals)
   await require('./rolodex').runHttpTests(ok, req); // affiliate rolodex plug (live-only + disclosure lock)
   await require('./links').runHttpTests(ok, req); // per-family link rolodexes + master index (internal entries never served)
   await require('./linkrolodex').runHttpTests(ok, req); // Link Rolodex line: privacy pages for the Social + Master rolodex apps
