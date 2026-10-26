@@ -1534,6 +1534,7 @@ async function main() {
   await require('./apiLane').runHttpTests(ok); // AI Master Button API lane enqueue contract
   await require('./rolodex').runHttpTests(ok, req); // affiliate rolodex plug (live-only + disclosure lock)
   await require('./emailKeeper').runHttpTests(ok, req); // email keeper live status (whitelist + service-token ingest)
+  await require('./codex').runHttpTests(ok, req); // codex for OneMind (registry projection — public fields only)
   r = await areq('POST', `/admin/orders/${orderId}/confirm-manual`);
   ok(r.status === 302, 'admin confirms manual payment');
 

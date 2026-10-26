@@ -14,6 +14,7 @@ const { authLimiter, formLimiter, messageLimiter, checkHoneypot } = require('../
 const { enforceSessionCap } = require('../lib/sessionLimits');
 const rolodex = require('../lib/rolodex');
 const emailKeeper = require('../lib/emailKeeper');
+const codex = require('../lib/codex');
 
 const router = express.Router();
 
@@ -110,6 +111,23 @@ router.get('/rolodex', (req, res) => {
     count: programs.length,
     programs,
   });
+});
+
+// ---- The Codex for OneMind (2026-10-26) ----
+// The written registry of the table, served live. Canonical book:
+// ~/workspace/app/codex/codex.json (README there defines the law: a plug,
+// price, or tie that isn't in the codex isn't real); served copy at
+// src/data/codex.json, projection in src/lib/codex.js.
+//
+//   GET /api/codex   public, read-only: names, kinds, states, and
+//                    liveness (how_checked + last_verified) for every
+//                    door, plug, seat, and price entry, plus the Codex
+//                    price law. Entry `notes` (internal ops history),
+//                    key material, pool addresses, tokens, and
+//                    connector ids are NEVER projected — the whitelist
+//                    lives in src/lib/codex.js.
+router.get('/codex', (req, res) => {
+  res.json({ ok: true, ...codex.publicBook() });
 });
 
 // ---- Email Keeper live status (2026-10-26) ----
