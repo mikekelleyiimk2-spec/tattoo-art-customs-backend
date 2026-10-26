@@ -251,7 +251,8 @@
     "instagram": "Instagram",
     "threads": "Threads",
     "x": "X",
-    "pinterest": "Pinterest"
+    "pinterest": "Pinterest",
+    "tester_hub": "🧪 Tester werden — Tester Hub"
   },
   "gallery": {
     "all_categories": "Alle Kategorien",
@@ -455,6 +456,11 @@
         "btn1": "Rook 98",
         "btn2": "Tattoo Art Customs",
         "btn3": "Little Inkers"
+      },
+      "testerhub": {
+        "title": "🧪 Tester Hub",
+        "text": "WERDE TESTER — ALS ERSTER DIE NEUESTEN APPS AUSPROBIEREN. Installiere den Hub: Mit einer Anmeldung bist du im Pool für jede unserer Apps — neue Apps erscheinen im Hub, sobald sie öffnen.",
+        "btn": "Tester Hub herunterladen"
       }
     },
     "showcase": {
@@ -1205,7 +1211,13 @@
     "lic_text": "Noch mehr Ausmalbilder für Kinder — freundliche Motive, kindersichere Werbung.",
     "sticker_text": "Eine fröhliche Sticker-Welt zum Sammeln, Tauschen und Gestalten.",
     "draw_text": "Schritt-für-Schritt-Zeichenstunden für kleine Künstler.",
-    "contests_text": "Fertige Ausmalbilder werden zu freundlichen Familien-Wettbewerben."
+    "contests_text": "Fertige Ausmalbilder werden zu freundlichen Familien-Wettbewerben.",
+    "hub_headline": "WERDE TESTER — ALS ERSTER DIE NEUESTEN APPS AUSPROBIEREN.",
+    "hub_text": "Die Tester-Hub-App bringt den ganzen Pool in deine Tasche: Neue Apps erscheinen im Hub, sobald sie öffnen — und du bist bei jeder als Erster dran.",
+    "hub_btn": "Tester-Hub-App herunterladen (Android)",
+    "hub_dev_h": "GENUG VOM TESTER-SUCHEN?",
+    "hub_dev_text": "Entwickler: In der Tester-Hub-App füllt eine einzige Zahlung deine Testerliste bis VOLL — $24.99 pro App, Tester in Wellen, bis 12 bestätigt sind, und die Liste bleibt deine 14 Tage lang voll.",
+    "hub_dev_link": "Hol dir den Hub und starte eine Füllung"
   },
   "byrequest": {
     "title": "By-Request Characters",
@@ -1314,7 +1326,8 @@
     "rook_text": "Unser zweiter Kanal — dieselben Werbespots plus weitere Design-Shorts und Uploads. Abonnieren Sie auch dort, damit Sie nichts verpassen.",
     "subscribe_tac": "📺 Abonnieren — Tattoo Art Customs",
     "subscribe_rook": "📺 Abonnieren — Rook 98",
-    "subscribe_note": "Abonnieren ist kostenlos und der beste Weg, die Kanäle zu unterstützen — jeder Abonnent hilft uns, mehr Künstler, Studios und Sammler zu erreichen."
+    "subscribe_note": "Abonnieren ist kostenlos und der beste Weg, die Kanäle zu unterstützen — jeder Abonnent hilft uns, mehr Künstler, Studios und Sammler zu erreichen.",
+    "testerhub_line": "🧪 Willst du die Apps vor allen anderen? Werde Tester — hol dir den Tester Hub"
   },
   "show": {
     "badge": "Gesehen in Color With Us!",

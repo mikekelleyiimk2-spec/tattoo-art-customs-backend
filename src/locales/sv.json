@@ -251,7 +251,8 @@
     "instagram": "Instagram",
     "threads": "Threads",
     "x": "X",
-    "pinterest": "Pinterest"
+    "pinterest": "Pinterest",
+    "tester_hub": "🧪 Bli testare — Tester Hub"
   },
   "gallery": {
     "all_categories": "Alla kategorier",
@@ -455,6 +456,11 @@
         "btn1": "Rook 98",
         "btn2": "Tattoo Art Customs",
         "btn3": "Little Inkers"
+      },
+      "testerhub": {
+        "title": "🧪 Tester Hub",
+        "text": "BLI TESTARE — FÖRST MED ATT PROVA DE NYASTE APPARNA. Installera Hub: en enda registrering ger dig plats i poolen för alla våra appar — nya appar dyker upp i Hub så fort de öppnar.",
+        "btn": "Ladda ner Tester Hub"
       }
     },
     "showcase": {
@@ -1205,7 +1211,13 @@
     "lic_text": "Ännu fler målarbilder för barn — vänlig konst, barnsäker reklam.",
     "sticker_text": "Ett glatt klistermärkesuniversum att samla, byta och skapa med.",
     "draw_text": "Steg-för-steg-ritteckningar som guidar små konstnärer.",
-    "contests_text": "Färdiga målarbilder blir vänliga familjetävlingar."
+    "contests_text": "Färdiga målarbilder blir vänliga familjetävlingar.",
+    "hub_headline": "BLI TESTARE — FÖRST MED ATT PROVA DE NYASTE APPARNA.",
+    "hub_text": "Tester Hub-appen lägger hela poolen i fickan: nya appar dyker upp i Hub så fort de öppnar, och du står först i kön till varenda en.",
+    "hub_btn": "Ladda ner Tester Hub-appen (Android)",
+    "hub_dev_h": "TRÖTT PÅ ATT LETA TESTARE?",
+    "hub_dev_text": "Utvecklare: i Tester Hub-appen fyller en enda betalning din testarlista till FULL — $24.99 per app, testare i vågor tills 12 är bekräftade, och listan hålls full under dina 14 dagar.",
+    "hub_dev_link": "Öppna Hub och starta en påfyllning"
   },
   "byrequest": {
     "title": "By-Request Characters",
@@ -1314,7 +1326,8 @@
     "rook_text": "Vår andra kanal — samma reklamfilmer plus fler designshorts och uppladdningar. Prenumerera där också så att du inte missar någon.",
     "subscribe_tac": "📺 Prenumerera — Tattoo Art Customs",
     "subscribe_rook": "📺 Prenumerera — Rook 98",
-    "subscribe_note": "Det är gratis att prenumerera, och det är det bästa sättet att stödja kanalerna — varje prenumerant hjälper oss att nå fler konstnärer, studios och samlare."
+    "subscribe_note": "Det är gratis att prenumerera, och det är det bästa sättet att stödja kanalerna — varje prenumerant hjälper oss att nå fler konstnärer, studios och samlare.",
+    "testerhub_line": "🧪 Vill du ha apparna före alla andra? Bli testare — skaffa Tester Hub"
   },
   "show": {
     "badge": "Sedda i Color With Us!",

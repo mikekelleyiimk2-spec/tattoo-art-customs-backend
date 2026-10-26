@@ -251,7 +251,8 @@
     "instagram": "Instagram",
     "threads": "Threads",
     "x": "X",
-    "pinterest": "Pinterest"
+    "pinterest": "Pinterest",
+    "tester_hub": "🧪 成为测试者 — Tester Hub"
   },
   "gallery": {
     "all_categories": "所有分类",
@@ -455,6 +456,11 @@
         "btn1": "Rook 98",
         "btn2": "Tattoo Art Customs",
         "btn3": "Little Inkers"
+      },
+      "testerhub": {
+        "title": "🧪 Tester Hub",
+        "text": "成为测试者 — 第一时间试用最新应用。安装 Hub，一次注册即可加入我们所有应用的测试池——新应用一上线就会出现在 Hub 中。",
+        "btn": "下载 Tester Hub"
       }
     },
     "showcase": {
@@ -1205,7 +1211,13 @@
     "lic_text": "更多儿童涂色页 — 友好的图画，儿童安全的广告。",
     "sticker_text": "快乐的贴纸世界，孩子们可以收集、交换和创作。",
     "draw_text": "一步一步的绘画课程，引导小小艺术家。",
-    "contests_text": "完成的涂色页变成友好的家庭比赛。"
+    "contests_text": "完成的涂色页变成友好的家庭比赛。",
+    "hub_headline": "成为测试者 — 第一时间试用最新应用。",
+    "hub_text": "Tester Hub 应用把整个测试池装进口袋：新应用一上线就出现在 Hub 中，每个你都排在第一位。",
+    "hub_btn": "下载 Tester Hub 应用（Android）",
+    "hub_dev_h": "厌倦了到处找测试者？",
+    "hub_dev_text": "开发者：在 Tester Hub 应用内，一次付款即可把测试名单填满——每款应用 $24.99，分批送入测试者直至 12 人确认，并在 14 天内持续保持满员。",
+    "hub_dev_link": "打开 Hub 开始填充"
   },
   "byrequest": {
     "title": "By-Request Characters",
@@ -1314,7 +1326,8 @@
     "rook_text": "我们的第二个频道——同样的广告，还有更多设计 Shorts 和视频。也请订阅那里，不要错过任何更新。",
     "subscribe_tac": "📺 订阅 — Tattoo Art Customs",
     "subscribe_rook": "📺 订阅 — Rook 98",
-    "subscribe_note": "订阅完全免费，也是支持频道最好的方式——每一位订阅者都能帮助我们触达更多艺术家、纹身店和收藏家。"
+    "subscribe_note": "订阅完全免费，也是支持频道最好的方式——每一位订阅者都能帮助我们触达更多艺术家、纹身店和收藏家。",
+    "testerhub_line": "🧪 想抢先体验应用？成为测试者——获取 Tester Hub"
   },
   "show": {
     "badge": "《Color With Us!》节目同款",

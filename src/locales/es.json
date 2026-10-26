@@ -251,7 +251,8 @@
     "instagram": "Instagram",
     "threads": "Threads",
     "x": "X",
-    "pinterest": "Pinterest"
+    "pinterest": "Pinterest",
+    "tester_hub": "🧪 Hazte tester — Tester Hub"
   },
   "gallery": {
     "all_categories": "Todas las categorías",
@@ -455,6 +456,11 @@
         "btn1": "Rook 98",
         "btn2": "Tattoo Art Customs",
         "btn3": "Little Inkers"
+      },
+      "testerhub": {
+        "title": "🧪 Tester Hub",
+        "text": "CONVIÉRTETE EN TESTER — EL PRIMERO EN PROBAR LAS APPS MÁS NUEVAS. Instala el Hub y con un solo registro entras en la lista de todas nuestras apps: las novedades aparecen en el Hub en cuanto se publican.",
+        "btn": "Descargar el Tester Hub"
       }
     },
     "showcase": {
@@ -1205,7 +1211,13 @@
     "lic_text": "Aún más páginas para colorear para niños: arte amable y anuncios seguros.",
     "sticker_text": "Un alegre universo de pegatinas para coleccionar, intercambiar y crear.",
     "draw_text": "Lecciones de dibujo paso a paso que guían a los pequeños artistas.",
-    "contests_text": "Las páginas coloreadas se convierten en concursos familiares amistosos."
+    "contests_text": "Las páginas coloreadas se convierten en concursos familiares amistosos.",
+    "hub_headline": "CONVIÉRTETE EN TESTER — EL PRIMERO EN PROBAR LAS APPS MÁS NUEVAS.",
+    "hub_text": "La app Tester Hub pone todo el grupo en tu bolsillo: las apps nuevas aparecen en el Hub en cuanto se publican, y tú eres el primero en la fila para cada una.",
+    "hub_btn": "Descargar la app Tester Hub (Android)",
+    "hub_dev_h": "¿CANSADO DE BUSCAR TESTERS?",
+    "hub_dev_text": "Desarrolladores: dentro de la app Tester Hub, un solo pago llena tu lista de testers hasta COMPLETA: $24.99 por app, testers en oleadas hasta 12 confirmados, y la lista se mantiene llena durante tus 14 días.",
+    "hub_dev_link": "Consigue el Hub y empieza a llenar tu lista"
   },
   "byrequest": {
     "title": "By-Request Characters",
@@ -1314,7 +1326,8 @@
     "rook_text": "Nuestro segundo canal: los mismos anuncios, además de más Shorts de diseños y vídeos. Suscríbete también allí para no perderte ninguno.",
     "subscribe_tac": "📺 Suscribirse — Tattoo Art Customs",
     "subscribe_rook": "📺 Suscribirse — Rook 98",
-    "subscribe_note": "Suscribirse es gratis y es la mejor forma de apoyar los canales: cada suscriptor nos ayuda a llegar a más artistas, estudios y coleccionistas."
+    "subscribe_note": "Suscribirse es gratis y es la mejor forma de apoyar los canales: cada suscriptor nos ayuda a llegar a más artistas, estudios y coleccionistas.",
+    "testerhub_line": "🧪 ¿Quieres las apps antes que nadie? Hazte tester: consigue el Tester Hub"
   },
   "show": {
     "badge": "¡Visto en Color With Us!",
