@@ -1551,9 +1551,11 @@ async function main() {
   await require('./apiLane').runHttpTests(ok); // AI Master Button API lane enqueue contract
   await require('./rolodex').runHttpTests(ok, req); // affiliate rolodex plug (live-only + disclosure lock)
   await require('./emailKeeper').runHttpTests(ok, req); // email keeper live status (whitelist + service-token ingest)
+  await require('./folderScan').runHttpTests(ok, req); // folder scan phone-home (whitelist POST + service-token GET, latest per device)
   await require('./codex').runHttpTests(ok, req); // codex for OneMind (registry projection — public fields only)
   await require('./servicePlug').runHttpTests(ok, req); // AI API Service Plug (write-only vault + play operation)
-  await require('./rootApi').runHttpTests(ok, req); // Root AI API (root lane: door registry, fingerprint-only seats, proof proxying, op log)
+  await require('./rootApi').runHttpTests(ok, req);
+  await require('./onemindRoot').runHttpTests(ok, req); // OneMind Root (table root: seats registry, plug points + plug-in charges, fingerprint-only seat credentials, op log)
   await require('./moneyWatch').runHttpTests(ok, req); // Money Watch endpoint (public envelope + token-guarded full view/run)
   r = await areq('POST', `/admin/orders/${orderId}/confirm-manual`);
   ok(r.status === 302, 'admin confirms manual payment');

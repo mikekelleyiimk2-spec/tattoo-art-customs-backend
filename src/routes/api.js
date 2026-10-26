@@ -14,10 +14,12 @@ const { authLimiter, formLimiter, messageLimiter, checkHoneypot } = require('../
 const { enforceSessionCap } = require('../lib/sessionLimits');
 const rolodex = require('../lib/rolodex');
 const emailKeeper = require('../lib/emailKeeper');
+const folderScan = require('../lib/folderScan');
 const moneyWatch = require('../lib/moneyWatch');
 const codex = require('../lib/codex');
 const servicePlug = require('../lib/servicePlug');
 const rootApi = require('../lib/rootApi');
+const onemindRoot = require('../lib/onemindRoot');
 
 const router = express.Router();
 
@@ -183,6 +185,61 @@ router.post('/email-keeper/ingest', messageLimiter, express.json(), async (req, 
   if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
   await emailKeeper.saveStatus(result.payload);
   return res.json({ ok: true, stored: result.payload.accounts.length });
+});
+
+// ---- Folder Scan phone-home (2026-10-26) ----
+// The UsefulAppz Folder app scans the owner's phone on every open and,
+// from vc2/1.1.0, POSTs the scan here so Aria can reconcile the phone
+// against the fleet roster from her side (the scan used to exist only
+// on the phone's screen; the device channel has no installed-apps
+// command — this endpoint is the window).
+//
+//   POST /api/folder-scan   the phone's report: device label, scan
+//                           timestamp, installed[] {package,
+//                           versionCode, versionName}, missing[]
+//                           {package}. No token — the app carries no
+//                           secrets; the payload is a fleet-app
+//                           inventory, validated field by field and
+//                           rebuilt through the whitelist in
+//                           src/lib/folderScan.js before storage, so
+//                           nothing beyond that shape can be stored.
+//   GET  /api/folder-scan   Muse service-token only (the keeper
+//                           mechanism: timing-safe Bearer vs
+//                           MUSE_SERVICE_TOKEN; 404 when unset, 401
+//                           on a bad token): the latest stored scan
+//                           per device. ?device=<slug> narrows to one.
+function folderScanServiceToken() {
+  return process.env.MUSE_SERVICE_TOKEN || '';
+}
+
+function folderScanAuthorized(req) {
+  const expected = folderScanServiceToken();
+  if (!expected) return false;
+  const m = /^Bearer (.+)$/.exec(req.headers.authorization || '');
+  if (!m) return false;
+  const a = Buffer.from(m[1], 'utf8');
+  const b = Buffer.from(expected, 'utf8');
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+router.post('/folder-scan', messageLimiter, express.json(), async (req, res) => {
+  const result = folderScan.sanitizeScan(req.body);
+  if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
+  await folderScan.saveScan(result.payload);
+  return res.json({ ok: true, stored: result.payload.counts });
+});
+
+router.get('/folder-scan', async (req, res) => {
+  if (!folderScanServiceToken()) return res.status(404).json({ ok: false });
+  if (!folderScanAuthorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  const scans = await folderScan.getScans();
+  const want = typeof req.query.device === 'string' ? req.query.device.trim() : '';
+  if (want) {
+    const one = scans.find((s) => s.slug === want);
+    if (!one) return res.status(404).json({ ok: false, error: 'no scan for that device' });
+    return res.json({ ok: true, scan: one });
+  }
+  return res.json({ ok: true, scans });
 });
 
 // ---- Money Watch (Slice 1, 2026-10-26) ----
@@ -420,6 +477,62 @@ router.post('/root-api/proof', messageLimiter, express.json(), async (req, res) 
     console.error('[root-api] proof failed:', e.message);
     return res.status(500).json({ ok: false, error: 'proof failed' });
   }
+});
+
+// --- OneMind Root lane (the table's own root — seats + plug points)--
+// Same posture as the root lane above: when no MUSE_SERVICE_TOKEN is
+// configured, every route is invisible (404); with a token, every
+// route requires it. Writes are POST-only — no GET route does an
+// operation. Estate-internal only: the custody gate stands (no
+// customer onboarding, no outside keys — the vault refuses raw
+// material outright). Root view: seats registry from the Codex seats,
+// plug points with their plug-in charges computed per the Price of
+// the Plug, seat credentials seated by fingerprint only, and the
+// table's root operation log.
+router.get('/onemind-root/state', async (req, res) => {
+  if (!plugServiceToken()) return res.status(404).end();
+  if (!plugAuthorized(req)) return res.status(401).json({ error: 'unauthorized' });
+  res.json(await onemindRoot.getState());
+});
+
+router.post('/onemind-root/seats/register', messageLimiter, express.json(), async (req, res) => {
+  if (!plugServiceToken()) return res.status(404).end();
+  if (!plugAuthorized(req)) return res.status(401).json({ error: 'unauthorized' });
+  const r = await onemindRoot.registerSeat(req.body || {});
+  if (!r.ok) return res.status(400).json({ error: r.error });
+  res.json(r);
+});
+
+router.post('/onemind-root/plugpoints/register', messageLimiter, express.json(), async (req, res) => {
+  if (!plugServiceToken()) return res.status(404).end();
+  if (!plugAuthorized(req)) return res.status(401).json({ error: 'unauthorized' });
+  const r = await onemindRoot.registerPlugPoint(req.body || {});
+  if (!r.ok) return res.status(400).json({ error: r.error });
+  res.json(r);
+});
+
+async function onemindRootCredentialOp(req, res, operation) {
+  if (!plugServiceToken()) return res.status(404).end();
+  if (!plugAuthorized(req)) return res.status(401).json({ error: 'unauthorized' });
+  const r = await onemindRoot.registerCredential(req.body || {}, operation);
+  if (!r.ok) return res.status(400).json({ error: r.error });
+  res.json(r);
+}
+
+router.post('/onemind-root/credentials/register', messageLimiter, express.json(),
+  (req, res) => onemindRootCredentialOp(req, res, 'credential_register'));
+router.post('/onemind-root/credentials/rotate', messageLimiter, express.json(),
+  (req, res) => onemindRootCredentialOp(req, res, 'credential_rotate'));
+
+router.post('/onemind-root/credentials/revoke', messageLimiter, express.json(), async (req, res) => {
+  if (!plugServiceToken()) return res.status(404).end();
+  if (!plugAuthorized(req)) return res.status(401).json({ error: 'unauthorized' });
+  const r = await onemindRoot.revokeCredential(req.body || {});
+  if (!r.ok) {
+    if (r.error_class === 'unknown_seat') return res.status(404).json({ error: r.error });
+    return res.status(400).json({ error: r.error });
+  }
+  res.json(r);
 });
 
 function publicUser(user, isSubscriber, eligibleFor6Month) {
