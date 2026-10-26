@@ -282,6 +282,7 @@
    },
    "name": "Affiliate Rolodex plug",
    "notes": "GET /api/rolodex serves the 15 live programs from the one rolodex (46 programs total in the book); /api/app-links derives from it \u2014 a link lands once in the canonical rolodex (~/workspace/app/affiliate-rolodex/rolodex.json) and lights up everywhere. Disclosure lock enforced server-side: no link ever leaves without its code + disclosure. Printful went live Oct 26 \u2014 the first link to land in the rolodex and light up on every surface at once. Android app built (com.usefulappz.rolodex vc1); console creation rides the next sitting. The Rolodex is also a developer product (owner, Oct 26): every developer's links in one place, auto-plugged \u2014 ours is unit #1.",
+   "plug_in_charge": "zero \u2014 the owner's own fleet (house into house, Price of the Plug (3)). As a developer product the Rolodex's own settled price stands in prices (app $4.99 \u00b7 links $0.99 or 15% ride \u00b7 first link free) \u2014 that is the product's price, not a plug fee.",
    "state": "live"
   },
   {
@@ -292,6 +293,7 @@
    },
    "name": "Tester Hub pool",
    "notes": "The tester-problem fixer (owner ruling Oct 26): NOT test-for-test trading \u2014 one pool; developers + beta customers sign up, sign-up IS the opt-in; the Hub holds the pool's Gmail accounts and populates a developer's tester list the moment an app is added \u2014 12+ already opted in, in one go. Pool count is honestly 0 today: the machine is live and verified (signup/leave/roster/feed test cycle passed), and sign-ups are now the work. Hub app vc2 built with the pool machine; slice 3 (notification-first feed, discovery copy, invite hooks) in flight.",
+   "plug_in_charge": "zero \u2014 the owner's own fleet (house into house). Developers plugging their links into Hub profiles ride the Profile Plug's settled charge (first link free \u00b7 $0.99 per link or a 15% ride).",
    "state": "live"
   },
   {
@@ -302,6 +304,7 @@
    },
    "name": "Email Keeper",
    "notes": "Connection Doctor's first working piece, email-first: read-tests all six mailboxes every 4 hours, board + token-guarded ingest, reports only on a transition. HARD LAW: the keeper never attempts a sign-in, password, or re-authorization on any account, ever \u2014 it reads only. Carries the lockout-proofing registry: all six accounts EXPOSED until the staged proofing sitting lands durable non-SMS routes.",
+   "plug_in_charge": "zero \u2014 the owner's own fleet (house into house). Outside estates ride the Connection Doctor / Email Keeper figures in prices (tool $29 \u00b7 watch $7/mo per estate \u00b7 lockout-proofing sitting $79).",
    "state": "live"
   },
   {
@@ -312,6 +315,7 @@
    },
    "name": "AI API Service Plug",
    "notes": "Standard tier (Messenger spec Addenda 6+7); Root AI API is a separate product \u2014 its slice 1 was built 2026-10-26 (see the Root AI API plug entry). Unit #1 = our own Play doorway: Playbook #1 (~/workspace/app/service-plug/playbook-google-play.md) written from the Oct 25 sitting \u2014 the API-access page does not exist in the current Console UI; the grant went through Users and permissions; the financial scope was deliberately NOT granted. The vault holds metadata + sha256 fingerprints only; secret bytes never move, and there is no read/export endpoint by design. Agents request operations (POST /api/service-plug/play/tracks) and never keys. Platforms without a durable credential class are not plug-compatible \u2014 the plug answers no, never session replay. Charge hooks exist (tool/window/door/plumbing); all figures SETTLED owner-approved Oct 26 (Batch #1 \u2014 see the prices section). The design doc\u2019s three slice-2 calls were DECIDED in the same batch: placement = STANDALONE toolbox product; Playbook #2 = the social/API doors (Meta/Instagram class); custody paper REQUIRED before any outside key (a slice-2 gate deliverable). Acceptance run landed 2026-10-26: vault registration + live dogfood tracks read both succeeded (see the Play doorway door entry's notes for the track record). PLAYBOOK #2 \u2014 PAYPAL BUILT 2026-10-26 (Batch #1 item 6): ~/workspace/app/service-plug/playbook-paypal.md + the read lane in the backend (src/lib/paypalPlug.js feeding Money Watch's mk4 door). The door is built and AWAITING CREDENTIAL REGISTRATION \u2014 the staged owner grant step is the playbook's \u00a72; no PayPal credential is held yet, and outside keys still wait on the custody paper gate. PLAYBOOK #3 \u2014 SOCIAL BUILT 2026-10-26: ~/workspace/app/service-plug/playbook-social.md \u2014 the Meta connector class (Instagram, Threads, Facebook, Messenger + the two DM companions) documented at its real door class: the grant lives in the connector's Accounts Center link, the lane holds no credential, and the plug's work is the watch + operation discipline; X and TikTok documented in the same playbook at browser/vault class \u2014 law 5's honest no, not plug doors. All \u00a74 proof reads ran live 2026-10-26 (Meta doors UP; Instagram Messages for @littleinkersapp grant_missing \u2014 staged owner step rides Batch #2). ROOT TIER LIVE 2026-10-26: the Root AI API slice 1 (estate-internal root lane over all 27 doors) is built and live-verified \u2014 see its own plug entry. Outside keys still wait on the custody paper gate.",
+   "plug_in_charge": "this plug IS the plug-in mechanism: an outside tool plugs in for its own subscription price carried in the bundle (no invented plug fee, ever) and our cut is the toll on the flow (standalone flow toll 10%). Settled tier figures in prices (tool $49 \u00b7 setup $99 DFY / $0 self-serve \u00b7 door watch $9/door/mo \u00b7 bundle $19/mo).",
    "state": "live \u2014 slice 1 (house instance: the Play doorway productized \u2014 write-only vault, door liveness checker, agent operation endpoint)"
   },
   {
@@ -322,6 +326,7 @@
    },
    "name": "Root AI API",
    "notes": "The root tier of the AI API Service Plug (project ~/workspace/app/root-api/; backend src/lib/rootApi.js + the /api/root-api routes in src/routes/api.js). ONE operations surface over ALL 27 Codex doors: list doors with state (the Codex registry merged with root-lane registrations), register/update a door entry, register/rotate/revoke a door's credential seat by sha256 FINGERPRINT ONLY through the standard plug's write-only vault (the registrar's hard-400 material rejection is inherited, not re-implemented), run a door's documented proof read where a backend lane exists (Play tracks read; PayPal balances once seated \u2014 until then the honest awaiting_credential_registration; Gmail doors from the Email Keeper's recorded read-test state; connector-class doors answer no_backend_lane with their documented proof text), and the OPERATION LOG (Root Checker posture: actor, door, operation, result, timestamp \u2014 no payloads, no secrets) served on the token-guarded GET /api/root-api/state, the lane's only GET. Writes are POST-only. ESTATE-INTERNAL ONLY: no customer onboarding exists and NO outside key is accepted, requested, or held \u2014 the custody-paper gate (Approval Batch #1) is absolute, and the paper's seven owner decisions ride Batch #2. This is the lane Aria herself operates through; the standard Service Plug serves one door at a time for customers later. Prices SETTLED (Batch #1 item 3): tool $149 one-time \u00b7 setup $199 \u00b7 watch $19/door/mo \u00b7 bundle $39/mo.",
+   "plug_in_charge": "the root tier of the same law: an outside tool plugs in for its own subscription price carried in the bundle (no invented plug fee) + our toll on the flow; settled root figures in prices (tool $149 \u00b7 setup $199 \u00b7 watch $19/door/mo \u00b7 bundle $39/mo). Estate-internal today \u2014 the custody gate stands.",
    "state": "live \u2014 slice 1 (estate-internal root lane over all 27 Codex doors: door registry, fingerprint-only credential seats via the write-only vault, proof-read proxying, operation log; NO outside keys \u2014 custody gate)"
   },
   {
@@ -332,6 +337,7 @@
    },
    "name": "Universal Affiliate Plug contract",
    "notes": "Defined in ~/workspace/app/affiliate-rolodex/PLUG.md: any approved program plugs into ONE machine once and is pulled by name / by surface / kid-safe filtered. Only status=live renders; a surface renders link + code + disclosure together or nothing. This contract is what makes the Rolodex a plug instead of a spreadsheet.",
+   "plug_in_charge": "the contract carries the settled Rolodex/Profile Plug charge shape: first link FREE, then $0.99 flat per link or a 15% ride of attributed earnings \u2014 flat or ride per link, never both (settled Oct 26 07:07; full split in prices).",
    "state": "live"
   },
   {
@@ -342,6 +348,7 @@
    },
    "name": "Profile Plug",
    "notes": "Tester Hub slice 4 (migration 105, src/lib/profilePlug.js). A developer profile (keyed to their intake Gmail) holds their own Rolodex in the house entry shape; links render on their profile + app cards only when status=live AND an entitlement is active AND the per-network allow-check passed. Price SETTLED Oct 26 07:07: first link FREE per profile; further links $0.99 flat (penny split: ~15c Google / 1c referrer / 1c prize pot / 1c buyer credit / ~81c house, append-only penny_ledger) or a 15% ride. Redirect /api/testers/go/:id counts clicks both sides can read. Plugging never changes feed order or pool counts. This slice: service-token admin management; Play IAP rail + self-serve Hub profile UI are recorded follow-ups. Public: GET /api/testers/profiles (no Gmails; pot total published).",
+   "plug_in_charge": "SETTLED (owner strike Oct 26 07:07): first link FREE per profile; further links $0.99 flat or a 15% ride of Hub-attributed earnings \u2014 flat or ride per link, never both; the penny split on every paid link stands in prices.",
    "state": "live \u2014 backend (slice 4)"
   },
   {
@@ -352,6 +359,7 @@
    },
    "name": "RoboSweeper",
    "notes": "Penny Toolbox #2 of 3 (owner order Oct 26 07:13; design ~/workspace/your_files/penny-toolbox-robosweeper-roboscraper-design-2026-10-26.md). The Drain Adder (penny-sweeper checklist audit, design-aware \u2014 paid = zero ads and kid-surface absence read as correct, never as gaps) + the Collector (manual-feed v1: recorded payout terms only; every balance reads 'not reported' until a real figure is fed in; ripe-pot alerts fire only on a recorded balance meeting a recorded threshold). Slice 1 is audit-only on the house estate (unit #1) \u2014 no page or app was changed by the sweep. Slice 2 = install mode on the house + AdMob serving behind the placeholders + outside estates. Registered the same day it was built, per the write-in rule.",
+   "plug_in_charge": "zero \u2014 the owner's own fleet (house into house). Its product price stands in prices ($4.99, Penny Toolbox).",
    "state": "live \u2014 slice 1 (house audit + Collector)"
   },
   {
@@ -362,6 +370,7 @@
    },
    "name": "RoboScraper",
    "notes": "Penny Toolbox #3 of 3 (owner order Oct 26 07:13; design ~/workspace/your_files/penny-toolbox-robosweeper-roboscraper-design-2026-10-26.md). The overlooked-penny hunter: the Gap Finder (gathered-not-placed, placed-but-dead, approved-never-on \u2014 re-derived from the Rolodex, the tracker, and live fetches every run, never hardcoded) + the Program Finder (candidates from the Oct 25 affiliate-56 research, every term labeled CLAIMED or VERIFIED \u2014 a directory claim is never presented as a verified term). Slice 1 is read-only and house-only: no signups, no applications, nothing edited; candidates are reported in Rolodex pending-entry shape but were NOT written into the canonical Rolodex this slice. First run found the design-page kit block dead (Base Labs + DrTattooSkin placements) \u2014 damage on record here and in the gap report, fix staged machine-side. Slice 2 = overlooked-money sweeps on the owner's own accounts (waits on the Service Plug custody posture; read-only; lockout law in full) + candidate landing + stale-terms hunt. Registered the same day it was built, per the write-in rule.",
+   "plug_in_charge": "zero \u2014 the owner's own fleet (house into house). Its product price stands in prices ($4.99, Penny Toolbox).",
    "state": "live \u2014 slice 1 (Gap Finder + Program Finder, house)"
   },
   {
@@ -372,7 +381,30 @@
    },
    "name": "Money Watch",
    "notes": "The landing detector (owner order Oct 26 07:59; design ~/workspace/your_files/money-watch-design-2026-10-26.md; price SETTLED $4.99 one-time \u2014 Approval Batch #1 item 1 under THE X RULE, recorded in prices). Watches money ARRIVE and reports it in the owner's sentence ('You made $XXX in XX time'); window totals (last hour / today / this week / this month, America/Chicago) sum revenue-kind landings only. Slice 1 wires the Tier-1 sources readable today: website-backend sales records (orders) + the Penny Ledger (migration 105) \u2014 event-based on source IDs with per-source watermarks in site_kv, so a landing fires exactly once and the first pass baselines history (incl. test rows) without firing. Kinds stay honest (revenue / transfer / refund / unknown); Penny Ledger Gmail accounts map to role labels at detection \u2014 no raw Gmail enters the state. Named unwired, never faked: Plaid Varo + Chime (personal = private view only), mk4 PayPal (plug BUILT 2026-10-26 as Service Plug Playbook #2, Batch #1 item 6 \u2014 the lane runs when the door's credential is seated in the server env; until then the door shows 'built \u2014 awaiting credential registration' and landings begin at registration, with the first wired pass as the door's baseline), Play payouts, Collector balances (Tier 2). The unit #1 split plan (10% of revenue to Varo overhead, rest down the mk4/Varo lanes, personal never mixed) rides each revenue landing as READ-ONLY plan math \u2014 Money Watch moves nothing; executing the split is Phase 4 (licensed rail + custody paper) and does not exist. App built: com.usefulappz.moneywatch vc1/1.0.0 (live-endpoint WebView + labeled bundled snapshot, Root Checker in, zero third-party ads; AAB 119,913 B sha256 1e9aaf84\u2026, sideload APK 124,133 B sha256 1ac10c7d\u2026; project ~/workspace/app/moneywatch). VM trigger money-watch-check.py mirrors state; PROPOSED cadence every 15 min \u2014 NOT scheduled (schedule changes ride the parent). Slice 2 = Collector-fed landings + Play payout reconciliation + PayPal plug + FCM notifications. Zero landings at registration \u2014 the board honestly reads 'Watching.'; the first real landing is slice 1's acceptance test.",
+   "plug_in_charge": "zero \u2014 the owner's own fleet (house into house). Its product price stands in prices ($4.99 one-time); the watch for outside developers rides the Service Plug's door-watch \u2014 no second charge on the door.",
    "state": "live \u2014 slice 1 (house watch: backend sales + Penny Ledger); PayPal door built (Playbook #2), awaiting credential registration"
+  },
+  {
+   "kind": "plug",
+   "liveness": {
+    "how_checked": "Build verification 2026-10-26: OneMind v1.8.0 (vc28) delivered and verified carrying the Table home with the AI2AI room under a BUILDING chip; spec calls all settled (Addenda 1\u201310). The Messenger lane has no live endpoint yet \u2014 no proof read exists and none is claimed",
+    "last_verified": "2026-10-26"
+   },
+   "name": "AI-to-AI Messenger (OneMind mode)",
+   "notes": "The AI-to-AI Messenger (spec ~/workspace/your_files/ai-to-ai-messenger-spec-2026-10-25.md; Addenda 1\u201310 all settled, every owner call closed). A MODE of OneMind, not a second app: three modes (1:1, switchable ends, Room), the Directory, seat pricing + showroom, and the Idiot Button one-flip attach. Overhaul slice 1 (landed 2026-10-26) built the Table plugin-host home and shows the AI2AI room with an honest BUILDING chip; slices 2+ owe the Messenger lane itself, Shared Browser wiring, the remaining seats, shelf billing, and the single sign-in (chipped COMING in slice 1 \u2014 never faked). Seat truth rides the seats section: Gemini is the only configured API-lane seat today; customers never touch API keys, ever.",
+   "plug_in_charge": "zero for the plug itself \u2014 a mode of the owner's own OneMind (house into house, Price of the Plug (3)). Outside AIs/tools joining the table through it pay the Price of the Plug: their own subscription price carried in the bundle (no invented plug fee) + our toll on the flow; a maker with no subscription pays in people.",
+   "state": "building \u2014 OneMind overhaul slice 1 landed (the AI2AI room is visible in OneMind v1.8.0 with a BUILDING chip); the Messenger lane itself is not live yet"
+  },
+  {
+   "kind": "plug",
+   "liveness": {
+    "how_checked": "Live probe 2026-10-26: GET /api/onemind-root/state answers 401 without the service token (token guard live); backend suite onemindRoot section green inside a full-suite ALL TESTS PASSED run; app APK signature + badging verified at delivery",
+    "last_verified": "2026-10-26"
+   },
+   "name": "OneMind Root",
+   "notes": "The root lane over the OneMind table itself (landed 2026-10-26 ~11:23; backend src/lib/onemindRoot.js + the /api/onemind-root routes). Seats registry; plug points WITH their charges computed per the Price of the Plug \u2014 the plug-in charge is priced at the door, never implied (owner law Oct 26 10:34); credential seats are fingerprint-only, delegated to the AI API Service Plug's write-only vault; writes are POST-only, reads token-gated. App: com.usefulappz.onemindroot vc1/1.0.0 (delivered 2026-10-26) reads the PUBLIC Codex only \u2014 zero token or lane material in the app. Custody gate stands: no outside keys until the custody paper is signed (Batch #2). Distinct from the Root AI API plug: that lane operates the estate's doors; this one operates the table.",
+   "plug_in_charge": "zero \u2014 the owner's own fleet (house into house, Price of the Plug (3))",
+   "state": "live \u2014 slice 1 (backend root lane /api/onemind-root + app com.usefulappz.onemindroot vc1/1.0.0)"
   }
  ],
  "prices": {
@@ -469,7 +501,7 @@
     "state": "SETTLED \u2014 owner-approved 2026-10-26: $4.99/mo (settled ahead of build)"
    }
   ],
-  "law": "THE PRICE OF THE PLUG (Codex law, owner-confirmed Oct 25): (1) an outside app/AI plugs in for its own subscription price, carried in the bundle \u2014 no second, invented plug fee, ever; (2) our cut is the toll on the flow across the plug, never a charge on the door (door + flow both charged = double-gating = empty room); (3) his own fleet plugs in for zero \u2014 house into house; (4) a maker with no subscription pays in people \u2014 plugging in ties his users to the table. CHARGE FOR ALL OF IT (owner, Oct 25): every layer is chargeable \u2014 the tool, the window (the guided opening), the door (keeping it propped \u2014 the watch), the plumbing (the toll on the flow).",
+  "law": "THE PRICE OF THE PLUG (Codex law, owner-confirmed Oct 25): (1) an outside app/AI plugs in for its own subscription price, carried in the bundle \u2014 no second, invented plug fee, ever; (2) our cut is the toll on the flow across the plug, never a charge on the door (door + flow both charged = double-gating = empty room); (3) his own fleet plugs in for zero \u2014 house into house; (4) a maker with no subscription pays in people \u2014 plugging in ties his users to the table. CHARGE FOR ALL OF IT (owner, Oct 25): every layer is chargeable \u2014 the tool, the window (the guided opening), the door (keeping it propped \u2014 the watch), the plumbing (the toll on the flow). PLUGGING INTO THE TABLE COSTS (owner law, Oct 26 10:34 \u2014 'OneMind plug ins the tools plug into the table and adding them cost duh'): adding a tool to the table is itself a chargeable event \u2014 never free, never implied. Every plug in this book carries its charge as an explicit written entry (each plug's plug_in_charge), priced by the Price of the Plug above: an outside tool plugs in for its own subscription price carried in the bundle (no invented plug fee), our cut is the toll on the flow across the plug, the owner's own fleet plugs in for zero (house into house), and a maker with no subscription pays in people.",
   "status": "ALL SETTLED \u2014 Rolodex/Profile Plug struck 2026-10-26 07:07; Service Plug, Root AI API, Connection Doctor/Keeper, standalone flow toll, and Money Watch owner-approved 2026-10-26 (Approval Batch #1). No DRAFT figures remain."
  },
  "seats": [
