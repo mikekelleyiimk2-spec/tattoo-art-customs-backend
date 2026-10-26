@@ -537,6 +537,7 @@ async function main() {
   ok(liveBody.includes('Test Admin'), 'go-live notice names the admin who approved');
 
   await require('./adminTaskPay').runDbTests(ok);
+  await require('./colorPreview').runDbTests(ok); // watermarked color previews (Batch #1 item 16)
   await require('./founding').runDbTests(ok);
   await require('./replacements').runDbTests(ok);
   await require('./shoptools-phase2').runDbTests(ok);
@@ -1538,6 +1539,7 @@ async function main() {
   await require('./favorites').runHttpTests(ok, req); // [wishlist] feature
   await require('./toploved').runHttpTests(ok, req); // [toploved] leaderboard
   await require('./shoplanding').runHttpTests(ok, req); // public /shop landing (Batch #1 item 15)
+  await require('./colorPreview').runHttpTests(ok, req); // gallery featured color row (Batch #1 item 16)
   await require('./lillikes').runHttpTests(ok, req); // [lilhearts] Little Inkers hearts
   await require('./doodleMerch').runHttpTests(ok, req); // doodle-to-merchandise
   await require('./holidayRaffle').runHttpTests(ok, req); // holiday doodle raffle

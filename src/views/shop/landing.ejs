@@ -1,0 +1,36 @@
+<%# Public "for shops" landing (Approval Batch #1 item 15, 2026-10-26).
+    Shown at GET /shop to logged-out visitors and logged-in
+    non-subscribers; active shop subscribers never see it (the route
+    hands them the dashboard). Offer facts reuse the same locale strings
+    as the homepage for-shops block and the membership page — one source
+    of truth. The subscriber-gated perk LINKS stay behind the wall in
+    /shop/perks; this page names the perks only, with disclosure. %>
+<h1><%= t('shop.landing.title') %></h1>
+<p class="muted"><%= t('membership.shops.tagline') %></p>
+<p><%= t('shop.landing.sub') %></p>
+
+<p class="price"><%= t('landing.forshops.price', { price: fmtMoney(10398) }) %></p>
+
+<ul>
+  <li><%= t('landing.forshops.b1') %></li>
+  <li><%= t('landing.forshops.b2') %></li>
+  <li><%= t('landing.forshops.b3') %></li>
+  <li><%= t('landing.forshops.b4') %></li>
+  <li><%= t('landing.forshops.b5') %></li>
+  <li><%= t('landing.forshops.b6') %></li>
+  <li><%= t('landing.forshops.b7') %></li>
+</ul>
+
+<p>
+  <a class="btn" href="/membership"><%= t('membership.shops.cta') %></a>
+  <a class="btn" href="/login"><%= t('shop.landing.login_cta') %></a>
+</p>
+<p class="muted"><%= t('membership.shops.login_note') %></p>
+
+<section class="card">
+  <h2><%= t('shop.landing.perks_h') %></h2>
+  <p><%= t('shop.landing.perks_text') %></p>
+  <p class="fineprint"><%= t('shop.perks.disclosure') %></p>
+</section>
+
+<%- include('../partials/tip-jar') %>

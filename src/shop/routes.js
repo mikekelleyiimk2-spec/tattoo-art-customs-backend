@@ -5,7 +5,7 @@
 const express = require('express');
 const db = require('../db');
 const config = require('../config');
-const { requireLogin, requireSubscription } = require('../middleware/auth');
+const { requireLogin, requireSubscription, hasActiveSubscription, isAdminRole } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { screenText } = require('../lib/screening');
 const { payableBalance } = require('../lib/commissions');
@@ -14,6 +14,26 @@ const { upsertProfile } = require('../lib/profiles');
 const { dualSubBonusActive } = require('./shopDesigner');
 
 const router = express.Router();
+
+// Public "for shops" landing (Approval Batch #1 item 15, 2026-10-26) —
+// registered BEFORE the login/subscription wall below. Anyone who is
+// not an active tattoo_shop subscriber (logged-out visitors and
+// logged-in non-subscribers alike) gets the public sell page; active
+// subscribers and admins fall through to the dashboard exactly as
+// before. Only the exact GET /shop path is intercepted — every shop
+// subpath keeps the wall.
+router.get('/', async (req, res, next) => {
+  try {
+    if (req.user && (isAdminRole(req.user.role)
+      || await hasActiveSubscription(req.user.id, 'tattoo_shop'))) return next();
+  } catch (e) { /* fall through to the landing on any check error */ }
+  return res.render('shop/landing', {
+    title: 'For Tattoo Shops — Tattoo Art Customs',
+    metaDescription: 'Tattoo Art Customs for shops: a verified listing, 20% on every verified referral sale, booking tools, and member-only supply perks. One plan, everything included.',
+    canonical: `${config.baseUrl.replace(/\/$/, '')}/shop`,
+  });
+});
+
 router.use(requireLogin, requireSubscription('tattoo_shop'));
 registerPayoutRoutes(router, 'shop');
 
