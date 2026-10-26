@@ -488,6 +488,11 @@ router.get('/onemind', (req, res) => {
     title: 'OneMind — All Your AIs, One Team | Useful Appz',
     metaDescription: 'OneMind puts your AIs at one table: speak or type once and the team works together. Live seat board from the Codex, OneMind Team $9.99/mo, in closed testing now.',
     canonical: `${base}/onemind`,
+    // This page carries NO links into kid-walled surfaces (pinned by
+    // test/codex.js): keep the littleinkers/poppyziggy house creatives
+    // out of the layout leaderboard on this page only. Their pools are
+    // untouched — adult→kids one-way cross-promo still runs elsewhere.
+    houseAdExclude: ['littleinkers', 'poppyziggy'],
     seats,
     codexUpdated: book.updated || null,
     ai2aiState: ai2ai ? String(ai2ai.state || '') : '',

@@ -131,9 +131,10 @@ function enabled() {
   return process.env.HOUSE_ADS !== '0';
 }
 
-function candidates({ audience = 'tattoo', pool = 'any' } = {}) {
+function candidates({ audience = 'tattoo', pool = 'any', exclude = [] } = {}) {
   return CREATIVES.filter(
-    (c) => c.audiences.includes(audience) && (pool === 'any' || c.pools.includes(pool))
+    (c) => !exclude.includes(c.id)
+      && c.audiences.includes(audience) && (pool === 'any' || c.pools.includes(pool))
       // Download creatives (filePkg) render only while the sideload file
       // is actually published — never advertise a dead download link.
       && (!c.filePkg || appDownloads.available(c.filePkg))
@@ -144,9 +145,9 @@ function candidates({ audience = 'tattoo', pool = 'any' } = {}) {
 // per slot, so two slots on the same page never show the same creative and
 // every visitor in the same minute sees the same page (cache-friendly).
 // No JS, no impression writes — house promos don't need stats to earn.
-function pick({ audience = 'tattoo', pool = 'any', slot = '' } = {}) {
+function pick({ audience = 'tattoo', pool = 'any', slot = '', exclude = [] } = {}) {
   if (!enabled()) return null;
-  const list = candidates({ audience, pool });
+  const list = candidates({ audience, pool, exclude });
   if (!list.length) return null;
   let salt = 0;
   for (const ch of String(slot)) salt = (salt * 31 + ch.charCodeAt(0)) >>> 0;
@@ -161,12 +162,17 @@ function pickForSlot(slot) {
 
 // Entry point for views: explicit audience/pool win; anything omitted
 // falls back to the slot's registered context, then the defaults.
-function pickForContext({ slot = '', audience, pool } = {}) {
+// `exclude` (creative ids) is page-scoped only: it keeps the named
+// creatives out of THIS page's slots without touching their pools —
+// e.g. /onemind pins no links into kid-walled surfaces (test/codex.js),
+// while the creatives still rotate on every other adult surface.
+function pickForContext({ slot = '', audience, pool, exclude } = {}) {
   const ctx = SLOT_CONTEXT[slot] || {};
   return pick({
     slot,
     audience: audience || ctx.audience || 'tattoo',
     pool: pool || ctx.pool || 'any',
+    exclude: exclude || [],
   });
 }
 

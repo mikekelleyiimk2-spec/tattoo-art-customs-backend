@@ -4,7 +4,7 @@
     Expects `slot` (string) and `activeAds` (map) in scope. %>
 <% const _ad = (typeof activeAds !== 'undefined' && activeAds && activeAds[slot]) || null; %>
 <% const _house = (!_ad && typeof pickHouseAd !== 'undefined' && pickHouseAd)
-  ? pickHouseAd({ slot: slot }) : null; %>
+  ? pickHouseAd({ slot: slot, exclude: typeof exclude !== 'undefined' ? exclude : undefined }) : null; %>
 <% if (_ad) { %>
 <div class="ad-slot ad-direct" role="complementary" aria-label="Advertisement">
   <a href="/ads/go/<%= _ad.id %>" target="_blank" rel="sponsored noopener">
