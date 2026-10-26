@@ -162,5 +162,23 @@
     "sizeBytes": 62871,
     "publishedAt": "2026-10-14T19:11:17Z",
     "gated": true
+  },
+  "com.usefulappz.testerhub": {
+    "versionCode": 6,
+    "versionName": "1.2.3",
+    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.testerhub/apk",
+    "notes": "Tester Hub with real ads: AdMob banner + interstitials at natural breaks (max one per 3 minutes, never on first open), rotating house commercials, both doors up front \u2014 testers join the pool, developers add an app and the pool fills their list.",
+    "sha256": "c9245f937d795185797853a73c0f74d91e93d4ee54ee6af50eba3df121d285bc",
+    "sizeBytes": 9362890,
+    "publishedAt": "2026-10-26T19:26:00Z"
+  },
+  "com.usefulappz.folder": {
+    "versionCode": 2,
+    "versionName": "1.0.1",
+    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.folder/apk",
+    "notes": "UsefulAppz Folder \u2014 keeps every Useful Appz app on your phone, current: it reports the phone's installed list back so updates reach you.",
+    "sha256": "33204b327fc019ff9882a6c8867e547bf1a69715e8e25f6b72f7588908f96c08",
+    "sizeBytes": 9124622,
+    "publishedAt": "2026-10-26T19:26:00Z"
   }
 }

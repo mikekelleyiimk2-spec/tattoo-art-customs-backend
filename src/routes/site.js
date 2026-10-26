@@ -136,6 +136,8 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/worlds`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/cannadash`, changefreq: 'weekly', priority: '0.6' },
     { loc: `${base}/onemind`, changefreq: 'weekly', priority: '0.7' },
+    { loc: `${base}/tester-hub`, changefreq: 'weekly', priority: '0.7' },
+    { loc: `${base}/folder`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/watch`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/guides`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/guides/aftercare`, changefreq: 'monthly', priority: '0.7' },
@@ -1185,11 +1187,12 @@ router.get('/privacy/ghost-box', (req, res) => res.render('site/privacy-ghostbox
   metaDescription: 'Privacy policy for Ghost Box — Spirit Radio. No microphone, no internet permission, nothing recorded or collected — an entertainment novelty that runs entirely on your device.',
 }));
 
-// Per-app policy for the Tester Hub Android app (zero permissions, no
-// network calls; the tester checklist is stored on-device only).
+// Per-app policy for the Tester Hub Android app (v1.2.3: free with
+// AdMob ads; sends only what the user types into its forms to the Hub
+// API; the tester checklist is stored on-device only).
 router.get('/privacy/tester-hub', (req, res) => res.render('site/privacy-testerhub', {
   title: 'Tester Hub Privacy Policy — Usefulappz',
-  metaDescription: 'Privacy policy for Tester Hub. Zero permissions, no network calls, no data collected — your testing checklist never leaves your phone.',
+  metaDescription: 'Privacy policy for Tester Hub. Free with ads (Google AdMob). Sends only what you type into its forms — your testing checklist never leaves your phone.',
 }));
 
 // Per-app policy for The Library Android app (no permissions, books

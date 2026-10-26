@@ -303,11 +303,13 @@ app.use('/store', require('./shop/routes-storefront'));
 app.use('/ios-app', require('./routes/iosApp'));
 // Sideload lineup (owner order 2026-10-08): Little Inkers iOS/Android (free,
 // kid-safe pages), TAC Android free, TAC Android Pro ($1.99 paid).
-const { liSideloadRouter, tacAndroidFreeRouter, tacAndroidProRouter } = require('./routes/sideload');
+const { liSideloadRouter, tacAndroidFreeRouter, tacAndroidProRouter, testerHubRouter, folderRouter } = require('./routes/sideload');
 app.use('/little-inkers-ios', liSideloadRouter('ios'));
 app.use('/little-inkers-android', liSideloadRouter('android'));
 app.use('/tac-android', tacAndroidFreeRouter());
 app.use('/tac-android-pro', tacAndroidProRouter());
+app.use('/tester-hub', testerHubRouter());
+app.use('/folder', folderRouter());
 // Paid sideload purchase pages for the UsefulAppz apps (owner ruling
 // 2026-10-14): /buy-app/:slug for Odometer, AI Button + the 8 per-AI Buttons.
 const { buyAppRouter } = require('./routes/buyApp');

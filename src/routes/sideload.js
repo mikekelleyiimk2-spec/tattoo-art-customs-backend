@@ -251,4 +251,32 @@ function tacAndroidProRouter() {
   return router;
 }
 
-module.exports = { liSideloadRouter, tacAndroidFreeRouter, tacAndroidProRouter, FREE_APPS };
+// ---- Tester Hub (free sideload, canonical public URL) ----
+// Owner order 2026-10-26: ONE memorable address every surface can
+// link — "Wanna be a tester? Here, join our tester app." The APK
+// bytes live in the app-updates store (uploaded via
+// POST /api/muse/upload-sideload, app=com.usefulappz.testerhub) and
+// are served by GET /api/apps/com.usefulappz.testerhub/apk; this
+// route is the stable front door that redirects to them.
+function testerHubRouter() {
+  const router = express.Router();
+  router.get('/', (req, res) => {
+    res.redirect(302, '/api/apps/com.usefulappz.testerhub/apk');
+  });
+  return router;
+}
+
+// ---- UsefulAppz Folder (free sideload, canonical public URL) ----
+// Same pattern as /tester-hub (owner order 2026-10-26: the Folder
+// goes out side by side with the Tester Hub): the memorable front
+// door redirects to the app-updates store bytes for
+// com.usefulappz.folder, uploaded via POST /api/muse/upload-sideload.
+function folderRouter() {
+  const router = express.Router();
+  router.get('/', (req, res) => {
+    res.redirect(302, '/api/apps/com.usefulappz.folder/apk');
+  });
+  return router;
+}
+
+module.exports = { liSideloadRouter, tacAndroidFreeRouter, tacAndroidProRouter, testerHubRouter, folderRouter, FREE_APPS };
