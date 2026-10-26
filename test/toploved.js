@@ -92,6 +92,43 @@ async function runHttpTests(ok, req) {
   const likeRow = tdb.prepare('SELECT voter_key FROM design_likes WHERE design_id = ?').get(d2);
   ok(likeRow && likeRow.voter_key.indexOf('user:') === 0, 'logged-in vote keyed by user id');
 
+  // [batch1-25] Guest hearts count publicly (supersedes the 2026-10-11
+  // signed-in-only rule). The public rollup IS design_like_counts — the
+  // same number the gallery, design pages and this leaderboard render.
+  const dM = 'love-test-' + randomUUID().slice(0, 8);
+  ins.run(dM, 'Love Test Migrate', 'desc', 'blackwork', '[]', 'approved', 'predesign', 'gallery', 7500, Date.now());
+  const vkM = randomUUID();
+  r = await jpost(guest, '/api/likes/' + dM, { voter_key: vkM });
+  ok(r.status === 200 && r.json.like_count === 1, '[25] guest heart moves the public count to 1');
+  const pubRow = tdb.prepare('SELECT like_count FROM design_like_counts WHERE design_id = ?').get(dM);
+  ok(pubRow && pubRow.like_count === 1, '[25] public rollup (design_like_counts) records the guest heart');
+  r = await jpost(guest, '/api/likes/' + dM, { voter_key: vkM });
+  ok(r.status === 200 && r.json.like_count === 1, '[25] repeat guest heart does not double-count');
+
+  // Retire is inert for logged-out callers: no session, no voter_key -> 400.
+  r = await jdel(guest, '/api/likes/' + dM, { retire_voter_key: vkM });
+  ok(r.status === 400, '[25] retire_voter_key without sign-in is not honored');
+
+  // Migration: the guest signs up; retiring the guest key and re-voting as
+  // the user keeps the public count at exactly 1 (no guest+user double).
+  const mig = makeClient();
+  r = await mig('POST', '/signup', { ...form({ display_name: 'Migrator', email: 'migrator@test.local', password: 'password123' }), follow: false });
+  ok(r.status === 302, '[25] migration user signup redirects');
+  r = await jdel(mig, '/api/likes/' + dM, { retire_voter_key: vkM });
+  ok(r.status === 200 && r.json.like_count === 0, '[25] retire removes the guest vote (count 0 before re-vote)');
+  r = await jpost(mig, '/api/likes/' + dM, {});
+  ok(r.status === 200 && r.json.like_count === 1, '[25] re-vote as user restores count to exactly 1');
+  const migRows = tdb.prepare('SELECT voter_key FROM design_likes WHERE design_id = ?').all(dM);
+  ok(migRows.length === 1 && migRows[0].voter_key.indexOf('user:') === 0,
+    '[25] exactly one vote row remains, keyed by the user');
+
+  // Client wiring: the browser client carries the guest UUID + retire flow.
+  const favJs = require('fs').readFileSync(require('path').join(__dirname, '..', 'src', 'public', 'js', 'favorites.js'), 'utf8');
+  ok(favJs.includes('tac_voter_uuid'), '[25] favorites.js keeps a tac_voter_uuid guest identity');
+  ok(favJs.includes('voter_key'), '[25] favorites.js sends voter_key for guest hearts');
+  ok(favJs.includes('retire_voter_key'), '[25] favorites.js migrates guest votes on login (retire flow)');
+  ok(!favJs.includes('showSigninToast'), '[25] the "sign in to count your like" toast is gone');
+
   // Backfill: existing wishlist favorites become likes (same SQL as migration 055).
   const u1 = tdb.prepare('SELECT id FROM users WHERE email = ?').get('lover@test.local').id;
   const u2 = 'user-' + randomUUID().slice(0, 8);
@@ -116,6 +153,9 @@ async function runHttpTests(ok, req) {
   // Leaderboard page: ranked most-loved first, counts shown, zero-like designs trail.
   r = await guest('GET', '/top-loved');
   ok(r.status === 200 && r.text.includes('design-card'), 'top-loved page renders');
+  // [batch1-18] Honest framing: no "ranked by love" overclaim over a tied field.
+  ok(r.text.includes('first hearts are landing'), 'top-loved uses the honest first-hearts framing');
+  ok(!/ranked by love/i.test(r.text), 'top-loved no longer claims "ranked by love"');
   const i3 = r.text.indexOf(d3);
   const i2 = r.text.indexOf(d2);
   const i1 = r.text.indexOf(d1);

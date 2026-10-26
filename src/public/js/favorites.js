@@ -10,12 +10,30 @@
   'use strict';
   var KEY = 'tac_favorites_v1';
   var TYPES_KEY = 'tac_fav_types_v1';
+  var VOTER_KEY = 'tac_voter_uuid';
   var HEART_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 21s-7.5-4.9-10-9.3C.4 8.6 2 4.5 6 4.5c2.2 0 3.7 1.2 4.6 2.6.9-1.4 2.4-2.6 4.6-2.6 4 0 5.6 4.1 4 7.2C19.5 16.1 12 21 12 21z"/></svg>';
 
   function strings() {
     return window.TAC_FAV_STRINGS || { add: 'Save to wishlist', remove: 'Remove from wishlist', buy: 'Buy now', saved: 'Saved', signin_like: 'Sign in to count your like', signin: 'Sign in', saved_merch: 'Saved merch', merch_tag: 'Merch' };
   }
   function loggedIn() { return !!window.TAC_LOGGED_IN; }
+
+  // Guest voter identity (Approval Batch #1 item 25, 2026-10-26): guest
+  // hearts count publicly. The server keys a guest's votes by this
+  // per-browser UUID ('guest:<uuid>' in design_likes / merch_likes), so
+  // one guest can never heart the same item twice. Generated once and
+  // kept in localStorage; it carries no personal data.
+  function voterUuid() {
+    try {
+      var v = localStorage.getItem(VOTER_KEY);
+      if (v && /^[A-Za-z0-9-]{8,64}$/.test(v)) return v;
+      v = (window.crypto && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : 'g-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 12) + Math.random().toString(36).slice(2, 12);
+      localStorage.setItem(VOTER_KEY, v);
+      return v;
+    } catch (e) { return null; }
+  }
 
   function readLocal() {
     try {
@@ -121,6 +139,11 @@
       var items = toMerge.map(function (id) { return { id: id, type: typeOf(id) }; });
       return api('POST', '/api/favorites/merge', { items: items }).then(function (m) {
         if (m && m.ok) { applyServerSet(m); writeLocal(m.ids); }
+        // Migrate this browser's guest votes to the user key: without it a
+        // merged favorite would keep its 'guest:' vote AND gain a 'user:'
+        // vote the next time the heart toggles — one person, two counts.
+        // Delete-then-post per id keeps the public tally exactly flat.
+        migrateGuestVotes(items);
       });
     }).catch(function () { /* offline: local only */ });
   }
@@ -140,13 +163,10 @@
     writeLocal(local);
     writeTypes(types);
     paint();
-    if (loggedIn()) {
-      pingLike(id, on, type); // [toploved] leaderboard vote — best-effort, never blocks wishlist
-    } else if (on) {
-      // Owner rule 2026-10-11: likes count only for signed-in users.
-      // Guests keep the local wishlist; the vote is held until they sign in.
-      showSigninToast();
-    }
+    // [toploved] leaderboard vote — best-effort, never blocks wishlist.
+    // Approval Batch #1 item 25 (2026-10-26) SUPERSEDES the 2026-10-11
+    // rule: guest hearts count publicly too, keyed by the guest UUID.
+    pingLike(id, on, type);
     if (loggedIn()) {
       api(on ? 'POST' : 'DELETE', '/api/favorites/' + encodeURIComponent(id), { type: type })
         .then(function () { return refreshServerIds(); })
@@ -164,8 +184,10 @@
     }
   }
 
-  // [toploved] — heart doubles as a leaderboard vote. Owner rule 2026-10-11:
-  // likes require sign-in; logged-in users are keyed by user id server-side.
+  // [toploved] — heart doubles as a leaderboard vote. Logged-in users are
+  // keyed by user id server-side; guests are keyed by their tac_voter_uuid
+  // (Batch #1 item 25: guest votes count in the public tally, deduped by
+  // the (item, voter_key) uniqueness on the server).
   // Fire-and-forget: the wishlist is the source of truth.
   function paintLikeCount(id, n) {
     Array.prototype.forEach.call(
@@ -173,11 +195,16 @@
       function (el) { el.textContent = '♥ ' + n; });
   }
   function pingLike(id, on, type) {
+    var payload = { type: type === 'merch' ? 'merch' : 'design' };
+    if (!loggedIn()) {
+      var vk = voterUuid();
+      if (vk) payload.voter_key = vk;
+    }
     fetch('/api/likes/' + encodeURIComponent(id), {
       method: on ? 'POST' : 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'same-origin',
-      body: JSON.stringify({ type: type === 'merch' ? 'merch' : 'design' }),
+      body: JSON.stringify(payload),
     }).then(function (r) {
       if (!r.ok) return null;
       return r.json();
@@ -186,22 +213,31 @@
     }).catch(function () {});
   }
 
-  // Guest nudge: one toast per tap, auto-dismisses, tap-to-dismiss.
-  function showSigninToast() {
-    if (document.getElementById('tac-signin-toast')) return;
-    var s = strings();
-    var el = document.createElement('div');
-    el.id = 'tac-signin-toast';
-    el.setAttribute('role', 'status');
-    var link = document.createElement('a');
-    link.href = '/login';
-    link.textContent = s.signin;
-    el.appendChild(document.createTextNode('♥ ' + s.signin_like + ' '));
-    el.appendChild(link);
-    document.body.appendChild(el);
-    var dismiss = function () { if (el.parentNode) el.parentNode.removeChild(el); };
-    el.addEventListener('click', dismiss);
-    setTimeout(dismiss, 5000);
+  // Guest->user vote migration (Batch #1 item 25): re-key this browser's
+  // guest votes to the signed-in user, sequentially per id (delete the
+  // 'guest:' row, then post the 'user:' vote). Best-effort throughout.
+  function migrateGuestVotes(items) {
+    var vk = voterUuid();
+    if (!vk || !items || !items.length) return;
+    var chain = Promise.resolve();
+    items.forEach(function (it) {
+      chain = chain.then(function () {
+        return fetch('/api/likes/' + encodeURIComponent(it.id), {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ type: it.type === 'merch' ? 'merch' : 'design', retire_voter_key: vk }),
+        }).catch(function () {});
+      }).then(function () {
+        return fetch('/api/likes/' + encodeURIComponent(it.id), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ type: it.type === 'merch' ? 'merch' : 'design' }),
+        }).catch(function () {});
+      });
+    });
+    return chain;
   }
 
   function onWishlistPage() { return !!document.getElementById('wishlist-grid'); }
