@@ -5041,6 +5041,7 @@ async function main() {
   await require('./sessionLimits').runHttpTests(ok);
   await require('./testerHub').runHttpTests(ok, req); // tester pool machine (signup/leave/roster/feed)
   await require('./profilePlug').runHttpTests(ok, req); // profile plug machine (profiles/rolodex/gate/redirect/penny ledger)
+  await require('./fillCycle').runHttpTests(ok, req); // fill my tester list (order/gate/waves/confirmations/board)
 
   sdb.close();
   server.kill();

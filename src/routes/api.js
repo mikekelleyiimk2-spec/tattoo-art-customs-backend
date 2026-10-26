@@ -941,6 +941,15 @@ router.get('/testers/pool', async (req, res) => {
 router.get('/testers/apps', async (req, res) => {
   try {
     const apps = await testerPool.listApps();
+    // Fill My Tester List decoration: an app with a live fill order
+    // carries its true progress (confirmed/target/status/wave). An
+    // unpaid order never decorates — it is not in the cycle.
+    const fillCycle = require('../lib/fillCycle');
+    for (const a of apps) {
+      if (a.package) {
+        try { a.fill = await fillCycle.fillForApp(a.package); } catch (e) { a.fill = null; }
+      }
+    }
     return res.json({ ok: true, count: apps.length, pool_count: await testerPool.poolCount(), apps });
   } catch (e) {
     console.error('[testers/apps] failed:', e.message);
@@ -973,6 +982,104 @@ router.post('/testers/apps', formLimiter, express.json(), async (req, res) => {
   } catch (e) {
     console.error('[testers/apps] add failed:', e.message);
     return res.status(500).json({ ok: false, error: 'add failed' });
+  }
+});
+
+// ---- Tester Hub: Fill My Tester List (owner design 2026-10-26) ----
+// The developer crowd's paid door: $24.99, one app, one charge. The
+// app enters the fill cycle ONLY through the entitlement grant (an
+// unpaid app never cycles — no fake paid state); testers opt in
+// themselves on Google's page and confirm in-app; the Hub counts
+// confirmations and cycles waves until FULL (12), with free top-ups
+// inside the app's 14-day run. Logic: src/lib/fillCycle.js.
+const fillCycle = require('../lib/fillCycle');
+
+// Create a fill order (public): { package, developer_gmail }.
+// Born 'awaiting_payment' — holds the place + price, nothing more.
+router.post('/testers/fill/order', formLimiter, express.json(), async (req, res) => {
+  try {
+    const b = req.body || {};
+    const r = await fillCycle.createFillOrder({ package: b.package, developer_gmail: b.developer_gmail });
+    if (!r.ok) return res.status(400).json({ ok: false, error: r.error });
+    return res.json({ ok: true, created: r.created, order: r.order });
+  } catch (e) {
+    console.error('[testers/fill/order] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'fill order failed' });
+  }
+});
+
+// THE ENTITLEMENT GATE (service token): { package, purchase_ref?,
+// simulated? } — flips an order to 'filling' and routes wave 1. This
+// is the managed grant the Profile Plug pattern runs on until Play
+// Billing receipt verification lands; simulated grants are recorded
+// as simulated, never dressed as sales.
+router.post('/testers/fill/grant', formLimiter, express.json(), async (req, res) => {
+  if (!plugAdminGuard(req, res)) return;
+  try {
+    const b = req.body || {};
+    const r = await fillCycle.grantFillEntitlement({
+      package: b.package, purchase_ref: b.purchase_ref, simulated: !!b.simulated,
+    });
+    if (!r.ok) return res.status(400).json({ ok: false, error: r.error });
+    return res.json({ ok: true, order: r.order });
+  } catch (e) {
+    console.error('[testers/fill/grant] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'fill grant failed' });
+  }
+});
+
+// Fill status (public read; counts only, no addresses):
+// ?package=...&gmail=... (gmail optional; when given it must be the
+// developer on the fill).
+router.get('/testers/fill/status', async (req, res) => {
+  try {
+    const r = await fillCycle.fillStatus({
+      package: req.query.package, developer_gmail: req.query.gmail,
+    });
+    if (!r.ok) return res.status(404).json({ ok: false, error: r.error });
+    return res.json(r);
+  } catch (e) {
+    console.error('[testers/fill/status] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'fill status failed' });
+  }
+});
+
+// A tester confirms their opt-in (public): { package, gmail }.
+// The confirmation follows Google's own tap — it never replaces it.
+router.post('/testers/fill/confirm', formLimiter, express.json(), async (req, res) => {
+  try {
+    const b = req.body || {};
+    const r = await fillCycle.confirmOptIn({ package: b.package, gmail: b.gmail });
+    if (!r.ok) return res.status(400).json({ ok: false, error: r.error });
+    return res.json(r);
+  } catch (e) {
+    console.error('[testers/fill/confirm] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'fill confirm failed' });
+  }
+});
+
+// A confirmed tester drops out of an app's test (public):
+// { package, gmail } — inside the run the cycle tops back up free.
+router.post('/testers/fill/dropout', formLimiter, express.json(), async (req, res) => {
+  try {
+    const b = req.body || {};
+    const r = await fillCycle.dropOut({ package: b.package, gmail: b.gmail });
+    if (!r.ok) return res.status(400).json({ ok: false, error: r.error });
+    return res.json(r);
+  } catch (e) {
+    console.error('[testers/fill/dropout] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'fill dropout failed' });
+  }
+});
+
+// The dopamine light board (public): real fill-cycle events only,
+// developer + app names (public Hub profiles), never tester data.
+router.get('/testers/board', async (req, res) => {
+  try {
+    return res.json(await fillCycle.lightBoard(req.query.limit));
+  } catch (e) {
+    console.error('[testers/board] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'board failed' });
   }
 });
 
