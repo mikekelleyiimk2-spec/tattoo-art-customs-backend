@@ -246,16 +246,16 @@
     {
       "name": "Printful",
       "network": "Printful Affiliate Program",
-      "status": "approved-not-placed",
-      "link": null,
-      "code": null,
+      "status": "live",
+      "link": "https://www.printful.com/a/15336743:69c9790aca714659403c1efc4041d4a4",
+      "code": "15336743:69c9790aca714659403c1efc4041d4a4",
       "rate": "10% of fulfillment price after discounts, recurring 12 months per referred customer; $25 per first Growth-plan sub",
       "cookie": "30 days",
       "payout": "Min payout $25, PayPal USD",
       "disclosure": "Affiliate link — we may earn a commission at no extra cost to you.",
       "kid_safe": false,
       "surfaces_placed": [],
-      "notes": "APPROVED 2026-10-26 (application submitted 2026-10-25). Referral link pending — copy it from Dashboard → Partner program, then place on TAC merch surfaces."
+      "notes": "APPROVED 2026-10-26; referral link gathered 2026-10-26 from Printful Dashboard > More > Affiliate > Affiliate link. Dashboard-verified: 10% of fulfillment price (taxes excluded, discounts included), 30-day cookie, $25 min payout via PayPal USD, payments reviewed manually (1-3 business days). LIVE in the Rolodex 2026-10-26 - served by /api/rolodex to every plugged surface."
     },
     {
       "name": "DragonHawk",

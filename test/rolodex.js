@@ -21,14 +21,14 @@ async function runHttpTests(ok, req) {
     && typeof p.disclosure === 'string' && p.disclosure.length > 0),
     'every entry carries link + code + disclosure (disclosure lock)');
   const names = programs.map((p) => p.name);
-  ok(!names.includes('Printful'), 'approved-not-placed program (Printful) stays out');
+  ok(names.includes('Printful'), 'newly-live program (Printful, link landed 2026-10-26) is served');
   ok(!names.includes('Libro.fm'), 'pending program (Libro.fm) stays out');
   ok(!names.includes('FlexOffers'), 'closed program (FlexOffers) stays out');
 
   // ?all=1 is NOT a public mode: non-live entries stay out regardless.
   const allFlag = await get('/api/rolodex?all=1');
   const allFlagNames = ((allFlag.json && allFlag.json.programs) || []).map((p) => p.name);
-  ok(allFlag.status === 200 && !allFlagNames.includes('Printful')
+  ok(allFlag.status === 200 && !allFlagNames.includes('Libro.fm')
     && (allFlag.json.programs || []).every((p) => p.status === 'live'),
     '?all=1 does not leak non-live entries');
 
@@ -39,8 +39,13 @@ async function runHttpTests(ok, req) {
     && one.json.program.code === 'TAC20'
     && typeof one.json.program.disclosure === 'string' && one.json.program.disclosure.length > 0,
     '?name= returns the single live program whole (link + code + disclosure)');
-  const notLive = await get('/api/rolodex?name=' + encodeURIComponent('Printful'));
+  const notLive = await get('/api/rolodex?name=' + encodeURIComponent('Libro.fm'));
   ok(notLive.status === 404, '?name= for a non-live program is 404');
+  const printful = await get('/api/rolodex?name=' + encodeURIComponent('Printful'));
+  ok(printful.status === 200 && printful.json.program
+    && printful.json.program.link === 'https://www.printful.com/a/15336743:69c9790aca714659403c1efc4041d4a4'
+    && typeof printful.json.program.disclosure === 'string' && printful.json.program.disclosure.length > 0,
+    '?name=Printful returns the live program whole (link + disclosure)');
   const missing = await get('/api/rolodex?name=' + encodeURIComponent('No Such Program'));
   ok(missing.status === 404, '?name= for an unknown program is 404');
 
