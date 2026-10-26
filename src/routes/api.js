@@ -4,14 +4,16 @@
 // attach to (and activate memberships on) the website account.
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const db = require('../db');
 const { hasAnyActiveSubscription, isAdminRole, isActiveMember, isCustomerMember } = require('../middleware/auth');
 const { isSaleWindow, premadePriceCents, customFullCents, salePriceActive } = require('../lib/pricing');
 const { viewerFor, displayImgFile } = require('../lib/contentPolicy');
 const { designThumbUrl } = require('../lib/designThumbs');
-const { authLimiter, formLimiter, checkHoneypot } = require('../middleware/rateLimit');
+const { authLimiter, formLimiter, messageLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { enforceSessionCap } = require('../lib/sessionLimits');
 const rolodex = require('../lib/rolodex');
+const emailKeeper = require('../lib/emailKeeper');
 
 const router = express.Router();
 
@@ -108,6 +110,58 @@ router.get('/rolodex', (req, res) => {
     count: programs.length,
     programs,
   });
+});
+
+// ---- Email Keeper live status (2026-10-26) ----
+// The keeper's board, live. keeper-check.py read-tests the six mailboxes
+// on the VM (read-only by law — it never attempts a sign-in) and
+// keeper-sync.py POSTs the fresh state here after every run; the Email
+// Keeper board (web first, app on its next build) reads it back.
+//
+//   GET  /api/email-keeper          public, read-only: the latest state
+//   POST /api/email-keeper/ingest   Muse service-token only: store state
+//
+// The public response carries ONLY, per mailbox: key, address, state,
+// checked_at, last_success_at, down_since, error_class, exposed (the
+// lockout-proofing summary). The whitelist lives in src/lib/emailKeeper.js
+// and is applied on the way IN (storage) and again on the way OUT —
+// connector account ids, doorway URLs and fix text never leave the VM.
+router.get('/email-keeper', async (req, res) => {
+  const status = await emailKeeper.getStatus();
+  res.json({
+    ok: true,
+    generated_at: status.generated_at,
+    ingested_at: status.ingested_at,
+    accounts: status.accounts,
+  });
+});
+
+// Service-token auth for the ingest — the EXACT mechanism of the Muse
+// pipe (src/routes/muse.js, /api/ingest): Authorization: Bearer <token>
+// compared timing-safe against the MUSE_SERVICE_TOKEN env var, read live
+// from process.env; the endpoint 404s when the env var is unset and 401s
+// on a bad token. Never log the token.
+function keeperServiceToken() {
+  return process.env.MUSE_SERVICE_TOKEN || '';
+}
+
+function keeperAuthorized(req) {
+  const expected = keeperServiceToken();
+  if (!expected) return false;
+  const m = /^Bearer (.+)$/.exec(req.headers.authorization || '');
+  if (!m) return false;
+  const a = Buffer.from(m[1], 'utf8');
+  const b = Buffer.from(expected, 'utf8');
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+router.post('/email-keeper/ingest', messageLimiter, express.json(), async (req, res) => {
+  if (!keeperServiceToken()) return res.status(404).json({ ok: false });
+  if (!keeperAuthorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  const result = emailKeeper.sanitizeIngest(req.body);
+  if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
+  await emailKeeper.saveStatus(result.payload);
+  return res.json({ ok: true, stored: result.payload.accounts.length });
 });
 
 function publicUser(user, isSubscriber, eligibleFor6Month) {
@@ -392,14 +446,127 @@ router.get('/founding-status', async (req, res) => {
   });
 });
 
+// ---- Tester Hub pool machine (owner ruling 2026-10-26) ----
+// ONE standing pool that fixes the 12-tester problem for every
+// developer — NOT test-for-test trading. A person signs up once with
+// their Gmail; sign-up IS the opt-in, and the Hub routes that Gmail
+// into the tester lists of apps in the Hub. A developer adds an app
+// and the existing pool populates its tester list in one go (the app
+// row records pool_snapshot — how many testers it instantly had).
+// The logic + validation live in src/lib/testerPool.js.
+const testerPool = require('../lib/testerPool');
+const nodeCrypto = require('crypto');
+
 // Tester pool size for the /testers page and admin checks. Returns ONLY
-// the count — no emails or names ever leave through here.
+// the count — no emails or names ever leave through here. Counts the
+// ACTIVE pool (members who left are out).
 router.get('/testers/count', async (req, res) => {
   try {
-    const row = await db.get('SELECT COUNT(*) AS n FROM tester_signups');
-    res.json({ ok: true, count: (row && row.n) || 0 });
+    res.json({ ok: true, count: await testerPool.poolCount() });
   } catch (e) {
     res.json({ ok: true, count: 0 });
+  }
+});
+
+// Join the pool: { name, gmail, source? } — idempotent per Gmail.
+// Joining is the opt-in, stated plainly in every client: the Gmail
+// goes on the tester lists of apps in the Hub.
+router.post('/testers/signup', formLimiter, express.json(), async (req, res) => {
+  try {
+    const r = await testerPool.joinPool({
+      name: req.body && req.body.name,
+      gmail: req.body && req.body.gmail,
+      source: (req.body && req.body.source) || 'hub-app',
+    });
+    if (!r.ok) return res.status(400).json({ ok: false, error: r.error });
+    return res.json({
+      ok: true, joined: true,
+      already_member: r.already_member, reactivated: r.reactivated,
+      pool_count: r.count,
+    });
+  } catch (e) {
+    console.error('[testers/signup] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'signup failed' });
+  }
+});
+
+// Leave the pool: { gmail } — one call, status flips to 'left', the
+// member is out of the count and the roster. No dark patterns.
+router.post('/testers/leave', formLimiter, express.json(), async (req, res) => {
+  try {
+    const r = await testerPool.leavePool({ gmail: req.body && req.body.gmail });
+    if (!r.ok) return res.status(r.notFound ? 404 : 400).json({ ok: false, error: r.error });
+    return res.json({ ok: true, left: true, pool_count: r.count });
+  } catch (e) {
+    console.error('[testers/leave] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'leave failed' });
+  }
+});
+
+// The pool roster — SERVICE-TOKEN ONLY, the exact mechanism of the
+// Muse pipe (src/routes/muse.js): Authorization: Bearer <token>
+// compared timing-safe against MUSE_SERVICE_TOKEN, read live from
+// process.env; 404s when the env var is unset, 401s on a bad token.
+// This is the pool's PII — names + Gmails for developer tester-list
+// population. It is never public and never logged.
+function poolServiceToken() {
+  return process.env.MUSE_SERVICE_TOKEN || '';
+}
+function poolAuthorized(req) {
+  const expected = poolServiceToken();
+  if (!expected) return false;
+  const m = /^Bearer (.+)$/.exec(req.headers.authorization || '');
+  if (!m) return false;
+  const a = Buffer.from(m[1], 'utf8');
+  const b = Buffer.from(expected, 'utf8');
+  return a.length === b.length && nodeCrypto.timingSafeEqual(a, b);
+}
+router.get('/testers/pool', async (req, res) => {
+  if (!poolServiceToken()) return res.status(404).json({ ok: false });
+  if (!poolAuthorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const testers = await testerPool.poolRoster();
+    return res.json({ ok: true, count: testers.length, testers });
+  } catch (e) {
+    console.error('[testers/pool] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'pool read failed' });
+  }
+});
+
+// The Hub app feed — public: every app in the Hub with its opt-in URL
+// and the pool snapshot from the day it was added. No developer
+// Gmails, no pool addresses — names, packages, links only.
+router.get('/testers/apps', async (req, res) => {
+  try {
+    const apps = await testerPool.listApps();
+    return res.json({ ok: true, count: apps.length, pool_count: await testerPool.poolCount(), apps });
+  } catch (e) {
+    console.error('[testers/apps] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'feed failed' });
+  }
+});
+
+// A developer adds an app: { app_name, package, optin_url,
+// developer_gmail, blurb? }. The pool that already exists becomes
+// its tester list — the response carries pool_snapshot, the number
+// of testers the app instantly has.
+router.post('/testers/apps', formLimiter, express.json(), async (req, res) => {
+  try {
+    const r = await testerPool.addApp({
+      app_name: req.body && req.body.app_name,
+      package: req.body && req.body.package,
+      optin_url: req.body && req.body.optin_url,
+      developer_gmail: req.body && req.body.developer_gmail,
+      blurb: req.body && req.body.blurb,
+    });
+    if (!r.ok) return res.status(400).json({ ok: false, error: r.error });
+    return res.json({
+      ok: true, added: true, already_listed: r.already_listed,
+      pool_count: r.count, app: r.app,
+    });
+  } catch (e) {
+    console.error('[testers/apps] add failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'add failed' });
   }
 });
 

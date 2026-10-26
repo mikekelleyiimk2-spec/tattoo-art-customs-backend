@@ -1533,6 +1533,7 @@ async function main() {
   await require('./appUpdates').runHttpTests(ok); // app auto-update service
   await require('./apiLane').runHttpTests(ok); // AI Master Button API lane enqueue contract
   await require('./rolodex').runHttpTests(ok, req); // affiliate rolodex plug (live-only + disclosure lock)
+  await require('./emailKeeper').runHttpTests(ok, req); // email keeper live status (whitelist + service-token ingest)
   r = await areq('POST', `/admin/orders/${orderId}/confirm-manual`);
   ok(r.status === 302, 'admin confirms manual payment');
 
