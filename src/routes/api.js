@@ -17,6 +17,7 @@ const emailKeeper = require('../lib/emailKeeper');
 const moneyWatch = require('../lib/moneyWatch');
 const codex = require('../lib/codex');
 const servicePlug = require('../lib/servicePlug');
+const rootApi = require('../lib/rootApi');
 
 const router = express.Router();
 
@@ -316,6 +317,109 @@ router.post('/service-plug/play/tracks', messageLimiter, express.json(), async (
   // claim -> run -> post discipline: a completed operation with its
   // result, or an honest failure with its class. Never a limbo.
   return res.json(result);
+});
+
+// ---- Root AI API (root tier, Slice 1, 2026-10-26) ----
+// The estate's own root doorway: one operations surface over every
+// door in the Codex (project: ~/workspace/app/root-api/). ALL routes
+// ride the same Muse service-token guard as the Service Plug above —
+// this lane is estate-internal; there is no public or customer
+// surface, and NO outside keys (the custody-paper gate is absolute).
+//
+//   GET  /api/root-api/state               READ-ONLY state: the door
+//        registry (Codex + root registrations), the root lane's seat
+//        index (metadata only), and the operation log. No credential
+//        material exists in any of it to leak.
+//   POST /api/root-api/doors/register      register/update a door
+//        entry (metadata only; material is a hard 400).
+//   POST /api/root-api/credentials/register | /rotate | /revoke
+//        credential-seat custody by sha256 FINGERPRINT ONLY, through
+//        the Service Plug's write-only vault — the registrar rejects
+//        raw credential material outright (hard 400), inherited, not
+//        re-implemented.
+//   POST /api/root-api/proof               run a door's documented
+//        proof read on the lane that can run it (Play tracks, PayPal
+//        balances, the Email Keeper's recorded read-test state);
+//        doors on other lanes answer honestly (no_backend_lane).
+//
+// Every operation appends to the operation log (door, operation,
+// result, timestamp, actor) — the Root Checker posture. Writes are
+// POST-only by construction: GET exists only on the state route.
+router.get('/root-api/state', async (req, res) => {
+  if (!plugServiceToken()) return res.status(404).json({ ok: false });
+  if (!plugAuthorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    return res.json({ ok: true, ...(await rootApi.getState()) });
+  } catch (e) {
+    console.error('[root-api] state failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'state failed' });
+  }
+});
+
+router.post('/root-api/doors/register', messageLimiter, express.json(), async (req, res) => {
+  if (!plugServiceToken()) return res.status(404).json({ ok: false });
+  if (!plugAuthorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const result = await rootApi.registerDoor(req.body);
+    if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
+    return res.json({ ok: true, registered: result.registered });
+  } catch (e) {
+    console.error('[root-api] door register failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'door register failed' });
+  }
+});
+
+async function rootCredentialOp(req, res, operation) {
+  if (!plugServiceToken()) return res.status(404).json({ ok: false });
+  if (!plugAuthorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const result = operation === 'credential_revoke'
+      ? await rootApi.revokeCredential(req.body)
+      : await rootApi.registerCredential(req.body, operation);
+    if (!result.ok) {
+      if (result.error_class === 'unknown_seat') {
+        return res.status(404).json({ ok: false, error: result.error });
+      }
+      return res.status(400).json({ ok: false, error: result.error });
+    }
+    return res.json({
+      ok: true,
+      ...(result.registered ? { registered: result.registered } : {}),
+      ...(result.revoked ? { revoked: result.revoked } : {}),
+      fingerprint_sha256: result.fingerprint_sha256,
+    });
+  } catch (e) {
+    console.error('[root-api] credential op failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'credential op failed' });
+  }
+}
+
+router.post('/root-api/credentials/register', messageLimiter, express.json(),
+  (req, res) => rootCredentialOp(req, res, 'credential_register'));
+router.post('/root-api/credentials/rotate', messageLimiter, express.json(),
+  (req, res) => rootCredentialOp(req, res, 'credential_rotate'));
+router.post('/root-api/credentials/revoke', messageLimiter, express.json(),
+  (req, res) => rootCredentialOp(req, res, 'credential_revoke'));
+
+router.post('/root-api/proof', messageLimiter, express.json(), async (req, res) => {
+  if (!plugServiceToken()) return res.status(404).json({ ok: false });
+  if (!plugAuthorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  try {
+    const result = await rootApi.runProof(req.body);
+    if (!result.ok && result.error) {
+      return res.status(result.error_class === 'unknown_door' ? 404 : 400)
+        .json({ ok: false, error: result.error, ...(result.error_class ? { error_class: result.error_class } : {}) });
+    }
+    if (!result.ok && result.error_class === 'bad_package') {
+      return res.status(400).json({ ok: false, error: 'bad package name', error_class: 'bad_package' });
+    }
+    // Operational outcomes ride 200 with ok + error_class (slice-1
+    // discipline): a completed proof, or an honest failure class.
+    return res.json(result);
+  } catch (e) {
+    console.error('[root-api] proof failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'proof failed' });
+  }
 });
 
 function publicUser(user, isSubscriber, eligibleFor6Month) {

@@ -136,6 +136,24 @@ async function kvSet(name, val) {
     [name, val, db.now()]);
 }
 
+// Flip the status of an existing record (rotation marker / revocation).
+// Custody events are status changes on the record, never new material.
+// Used by the Root AI API lane (src/lib/rootApi.js). Returns ONLY the
+// name + fingerprint ack, exactly like registerRecord; null when the
+// named seat is unknown. This is an internal mutation helper — it is
+// not a read/export path: no record leaves the server through it.
+async function markCredentialStatus(name, status) {
+  const raw = await kvGet(KV_KEY);
+  if (!raw) return null;
+  let vault;
+  try { vault = JSON.parse(raw); } catch { return null; }
+  if (!vault || !vault.records || typeof vault.records !== 'object' || !vault.records[name]) return null;
+  vault.records[name].status = String(status).slice(0, 200);
+  vault.records[name].status_updated_at = new Date().toISOString();
+  await kvSet(KV_KEY, JSON.stringify(vault));
+  return { name, fingerprint_sha256: vault.records[name].fingerprint_sha256 };
+}
+
 // Store one record, upserted by door name. Deliberately returns ONLY
 // the record's name + fingerprint for the ack — never the record, and
 // there is no companion read function. Write-only means write-only.
@@ -203,4 +221,4 @@ async function playTracks(packageName) {
   }
 }
 
-module.exports = { sanitizeRegister, registerRecord, playTracks };
+module.exports = { sanitizeRegister, registerRecord, playTracks, markCredentialStatus, containsMaterial };
