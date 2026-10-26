@@ -1174,7 +1174,8 @@
     "guest_login_tail": "para pagar com seus dados salvos e ver esta compra no seu histórico de pedidos."
   },
   "apps": {
-    "aibutton_badge": "US$ 9,99",
+    "aibutton_badge": "OneMind Team — US$ 9,99/mês",
+    "aibutton_link": "Conhecer o OneMind",
     "aibutton_text": "Um botão flutuante para todas as IAs — toque, fale e ouça a resposta em voz alta, sobre qualquer app.",
     "free_label": "Grátis",
     "pro_label": "Pro",
@@ -1684,7 +1685,7 @@
     "label_sponsored": "Patrocinado",
     "aibutton_h": "OneMind — todas as suas IAs, um só time",
     "aibutton_p": "Um microfone flutuante que conversa com ChatGPT, Claude, Gemini e mais.",
-    "aibutton_cta": "Baixar o app — US$ 9,99",
+    "aibutton_cta": "OneMind Team — US$ 9,99/mês",
     "amazonaftercare_h": "Favoritos de aftercare na Amazon",
     "amazonaftercare_p": "Curativos, pomadas e mais — nossos favoritos testados em uma lista só.",
     "amazonaftercare_cta": "Ver a seleção",

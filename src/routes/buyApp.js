@@ -28,7 +28,10 @@ const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 // slug -> { package, name, priceCents }
 const APPS = {
   'odometer': { package: 'com.usefulappz.odometer', name: 'Odometer — Mileage Tracker', priceCents: 199 },
-  'ai-button': { package: 'com.usefulappz.aibar', name: 'OneMind', priceCents: 999 },
+  // No 'ai-button' slug: OneMind's settled model is the Team subscription
+  // ($9.99/mo, settled Oct 26) — it is never sold as a one-time download.
+  // The subscription product is created in Play Console; /buy-app/ai-button
+  // 404s like any unknown slug.
   'muse-button': { package: 'com.usefulappz.musebar', name: 'Muse Button', priceCents: 99 },
   'chatgpt-button': { package: 'com.usefulappz.chatgptbar', name: 'ChatGPT Button', priceCents: 99 },
   'claude-button': { package: 'com.usefulappz.claudebar', name: 'Claude Button', priceCents: 99 },

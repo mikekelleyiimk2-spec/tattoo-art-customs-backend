@@ -666,6 +666,13 @@ async function main() {
   ok(r.status === 200 && r.text.includes('house-ad'), 'aftercare page renders a house ad slot');
   r = await req('GET', '/apps');
   ok(r.status === 200 && r.text.includes('id="odometer"') && r.text.includes('id="aibutton"'), 'apps page lists Odometer + AI Button cards (house ad landing anchors)');
+  // OneMind pricing (settled Oct 26): Team is a $9.99/mo subscription — no
+  // page may frame OneMind's $9.99 as a one-time/download price.
+  ok(r.text.includes('OneMind Team — $9.99/mo'), 'apps page OneMind card carries the settled $9.99/mo Team subscription wording');
+  ok(r.text.includes('href="/onemind"'), 'apps page OneMind card points at /onemind');
+  ok(!r.text.includes('Download now — $9.99'), 'apps page has no one-time $9.99 OneMind download button');
+  const buyGone = await req('GET', '/buy-app/ai-button');
+  ok(buyGone.status === 404, 'buy-app no longer sells OneMind as a one-time download (settled subscription model)');
 
   // RoboSweeper fixes (2026-10-26): tip jar on /apps, /discounts, /aftercare
   // (exactly one Business PayPal WA9DS6J8ERSHW instance per page — the shared

@@ -16,10 +16,11 @@ const path = require('path');
 const { resolveStoredPath } = require('./storage');
 
 // Package -> store price (null = free). Prices per the current models:
-// Odometer $1.99 (+ $1.99/mo automation on Play), AI Button $9.99,
+// Odometer $1.99 (+ $1.99/mo automation on Play), OneMind Team $9.99/mo
+// subscription (settled Oct 26 — no one-time $9.99 price exists),
 // per-AI Buttons + bars $0.99, kids apps free (ads + subs/IAP in-app).
 const APPS = {
-  'com.usefulappz.aibar': { price: '$9.99' },
+  'com.usefulappz.aibar': { price: '$9.99/mo' },
   'com.usefulappz.odometer': { price: '$1.99' },
   'com.usefulappz.musebar': { price: '$0.99' },
   'com.usefulappz.chatgptbar': { price: '$0.99' },

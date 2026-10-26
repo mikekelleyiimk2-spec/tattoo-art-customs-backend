@@ -33,8 +33,10 @@ const CREATIVES = [
     filePkg: 'com.usefulappz.odometer',
   },
   {
+    // OneMind's settled model is the Team subscription ($9.99/mo), so the
+    // creative points at the /onemind page, never a one-time APK sale.
     id: 'aibutton', kind: 'product', audiences: ['tattoo'], pools: ['any'],
-    href: '/api/apps/com.usefulappz.aibar/apk', external: false,
+    href: '/onemind', external: false,
     filePkg: 'com.usefulappz.aibar',
   },
   {

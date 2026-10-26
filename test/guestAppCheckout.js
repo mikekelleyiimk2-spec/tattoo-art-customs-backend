@@ -24,7 +24,7 @@ async function runHttpTests(ok, req, areq) {
   };
 
   // 1. Buy pages: guest form present, no login wall (two buy-app slugs + Pro).
-  for (const p of ['/buy-app/odometer', '/buy-app/ai-button', '/buy-app/clipboard-bar', '/tac-android-pro', '/ios-app']) {
+  for (const p of ['/buy-app/odometer', '/buy-app/muse-button', '/buy-app/clipboard-bar', '/tac-android-pro', '/ios-app']) {
     const a = await anon('GET', p);
     ok(a.status === 200, `guest: ${p} page 200`);
     ok(a.text.includes('name="guest_email"'), `guest: ${p} has the guest delivery-email field`);

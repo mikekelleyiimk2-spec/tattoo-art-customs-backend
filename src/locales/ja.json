@@ -1174,7 +1174,8 @@
     "guest_login_tail": "保存済みの情報でお支払いし、注文履歴でこの購入を確認できます。"
   },
   "apps": {
-    "aibutton_badge": "$9.99",
+    "aibutton_badge": "OneMind Team — $9.99/月",
+    "aibutton_link": "OneMind を見る",
     "aibutton_text": "すべてのAIに対応するフローティングボタン — タップして話すと、答えを音声で読み上げ。どのアプリの上でも使えます。",
     "free_label": "無料",
     "pro_label": "Pro",
@@ -1684,7 +1685,7 @@
     "label_sponsored": "スポンサー",
     "aibutton_h": "OneMind — すべてのAIを、ひとつのチームに",
     "aibutton_p": "ChatGPT、Claude、Geminiなどと話せるフローティングマイク。",
-    "aibutton_cta": "アプリを入手 — $9.99",
+    "aibutton_cta": "OneMind Team — $9.99/月",
     "amazonaftercare_h": "Amazonのアフターケアおすすめ",
     "amazonaftercare_p": "包帯、軟膏など — 実際に試したお気に入りを1つのリストに。",
     "amazonaftercare_cta": "リストを見る",

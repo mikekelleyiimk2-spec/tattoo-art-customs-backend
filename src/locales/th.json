@@ -1174,7 +1174,8 @@
     "guest_login_tail": "เพื่อชำระเงินด้วยข้อมูลที่บันทึกไว้และดูการซื้อนี้ในประวัติคำสั่งซื้อของคุณ"
   },
   "apps": {
-    "aibutton_badge": "$9.99",
+    "aibutton_badge": "OneMind Team — $9.99/เดือน",
+    "aibutton_link": "เยี่ยมชม OneMind",
     "aibutton_text": "ปุ่มลอยเดียวสำหรับทุก AI — แตะ พูด แล้วฟังคำตอบออกเสียง ใช้ทับแอปใดก็ได้",
     "free_label": "ฟรี",
     "pro_label": "Pro",
@@ -1684,7 +1685,7 @@
     "label_sponsored": "สปอนเซอร์",
     "aibutton_h": "OneMind — ทุก AI ในทีมเดียว",
     "aibutton_p": "ไมค์ลอยที่คุยกับ ChatGPT, Claude, Gemini และอื่น ๆ",
-    "aibutton_cta": "ดาวน์โหลดแอป — $9.99",
+    "aibutton_cta": "OneMind Team — $9.99/เดือน",
     "amazonaftercare_h": "ของดูแลรอยสักแนะนำบน Amazon",
     "amazonaftercare_p": "ผ้าพันแผล ขี้ผึ้ง และอื่น ๆ — ของโปรดที่ผ่านการลองใช้จริง รวมในลิสต์เดียว",
     "amazonaftercare_cta": "ดูลิสต์",

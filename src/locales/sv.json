@@ -1174,7 +1174,8 @@
     "guest_login_tail": "för att betala med dina sparade uppgifter och se köpet i din orderhistorik."
   },
   "apps": {
-    "aibutton_badge": "9,99 $",
+    "aibutton_badge": "OneMind Team — 9,99 $/mån",
+    "aibutton_link": "Besök OneMind",
     "aibutton_text": "En flytande knapp för alla AI-tjänster — tryck, prata och hör svaret högt, ovanpå vilken app som helst.",
     "free_label": "Gratis",
     "pro_label": "Pro",
@@ -1684,7 +1685,7 @@
     "label_sponsored": "Sponsrat",
     "aibutton_h": "OneMind — alla dina AI-tjänster, ett team",
     "aibutton_p": "En flytande mikrofon som pratar med ChatGPT, Claude, Gemini med flera.",
-    "aibutton_cta": "Hämta appen — 9,99 $",
+    "aibutton_cta": "OneMind Team — 9,99 $/mån",
     "amazonaftercare_h": "Eftervårdsfavoriter på Amazon",
     "amazonaftercare_p": "Förband, salvor och mer — våra testade favoriter i en lista.",
     "amazonaftercare_cta": "Se urvalet",

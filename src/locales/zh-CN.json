@@ -1174,7 +1174,8 @@
     "guest_login_tail": "使用已保存的信息结账，并在订单历史中查看此购买。"
   },
   "apps": {
-    "aibutton_badge": "$9.99",
+    "aibutton_badge": "OneMind Team — $9.99/月",
+    "aibutton_link": "访问 OneMind",
     "aibutton_text": "一个悬浮按钮连接所有AI — 点按、说话，即可在任何应用之上朗读答案。",
     "free_label": "免费",
     "pro_label": "Pro",
@@ -1684,7 +1685,7 @@
     "label_sponsored": "赞助",
     "aibutton_h": "OneMind — 所有AI，一个团队",
     "aibutton_p": "一个悬浮麦克风，与 ChatGPT、Claude、Gemini 等对话。",
-    "aibutton_cta": "获取应用 — $9.99",
+    "aibutton_cta": "OneMind Team — $9.99/月",
     "amazonaftercare_h": "亚马逊护理精选",
     "amazonaftercare_p": "绷带、药膏等 — 我们亲测的精选，一份清单全搞定。",
     "amazonaftercare_cta": "查看清单",
