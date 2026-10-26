@@ -21,7 +21,15 @@ async function runHttpTests(ok, req) {
   ok(typeof b.law === 'string' && b.law.length > 0, 'codex carries its law');
   ok(b.prices && typeof b.prices.law === 'string' && /toll on the flow/i.test(b.prices.law),
     'prices carry the Codex price law (toll on the flow)');
-  ok(b.prices && /draft/i.test(b.prices.status || ''), 'prices are marked DRAFT (awaiting owner strike)');
+  ok(b.prices && /draft/i.test(b.prices.status || ''), 'prices status still flags the remaining DRAFT (unstruck sections)');
+  ok(b.prices && /settled/i.test(b.prices.status || ''), 'prices status records the Oct 26 settled strike');
+  const roloPrice = ((b.prices || {}).entries || []).find((e) => /Profile Plug/.test(e.name));
+  ok(!!roloPrice && /settled/i.test(roloPrice.state || '')
+    && roloPrice.state.includes('$4.99') && roloPrice.state.includes('$0.99')
+    && roloPrice.state.includes('15%'),
+    'Rolodex/Profile Plug price entry is SETTLED with the six struck numbers');
+  const svcPrice = ((b.prices || {}).entries || []).find((e) => /AI API Service Plug/.test(e.name));
+  ok(!!svcPrice && /draft/i.test(svcPrice.state || ''), 'Service Plug price stays DRAFT (boundary kept)');
 
   // Every entry: the public shape, exactly — name, kind, state, liveness.
   const entries = [...(b.doors || []), ...(b.plugs || []), ...(b.seats || []), ...((b.prices || {}).entries || [])];
