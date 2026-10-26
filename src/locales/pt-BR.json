@@ -277,7 +277,9 @@
     "style_note": "Novos desenhos {name} são adicionados conforme os artistas os enviam. Quer uma alteração — outro tema, um nome incluído, cores trocadas? Peça como variação personalizada em qualquer página de desenho.",
     "intro_1": "Cada design desta galeria é uma arte original criada por um tatuador ou artista de design independente e colocada à venda aqui. A galeria mostra uma pré-visualização limpa em linhas de cada peça — é o que protege a arte finalizada de cópias antes da compra. Ao comprar um design, você recebe a arte final em cores e o arquivo de linhas (stencil), pronto para levar ao seu tatuador.",
     "intro_2": "Não achou exatamente a peça que imaginou? Encomende uma personalizada. Os designs personalizados são desenhados sob encomenda: descreva sua ideia, aprove a direção e o design final é entregue em até 48 horas. Você também pode transformar uma foto ou um rascunho rápido em um design de tatuagem finalizado, ou pedir alterações em qualquer design da galeria — outras flores, um nome adicionado, cores trocadas — ao encomendá-lo como variação personalizada.",
-    "intro_h": "Designs originais de artistas independentes"
+    "intro_h": "Designs originais de artistas independentes",
+    "featured_color_h": "Destaques em cores",
+    "featured_color_sub": "Artes em cores finalizadas, exibidas como prévias com marca d'água — compradores recebem os arquivos limpos em cores com a compra."
   },
   "giftcards": {
     "a_customer": "um cliente",
@@ -1151,7 +1153,7 @@
   },
   "toploved": {
     "title": "Mais amados",
-    "sub": "Todo mundo está amando estes — os designs mais amados da comunidade, classificados por amor.",
+    "sub": "Os primeiros corações estão chegando — o seu faz um design subir.",
     "loves": "{count} curtidas",
     "empty_title": "Sem votos ainda",
     "empty_text": "Toque no coração de um design para ser o primeiro a votar.",
@@ -1160,9 +1162,9 @@
     "badge_most_wanted": "Mais desejado",
     "badge_trending": "Em alta",
     "badge_selling_fast": "Vendendo rápido",
-    "intro_1": "Cada coração em um design é um voto. Esta página classifica toda a galeria por esses votos, os mais amados primeiro, e a ordem muda conforme as pessoas navegam. Toque no coração de qualquer design para votar nele — ele é salvo na sua lista de desejos ao mesmo tempo, para que seus favoritos estejam esperando quando você voltar.",
+    "intro_1": "Cada coração em um design é um voto, e os primeiros corações estão chegando agora. Esta página reúne os designs que as pessoas marcaram com corações — cada novo coração faz um design subir. Toque no coração de qualquer design para votar nele — ele é salvo na sua lista de desejos ao mesmo tempo, para que seus favoritos estejam esperando quando você voltar.",
     "intro_2": "Os selos são conquistados, não atribuídos: o primeiro lugar carrega «Mais amado», e os selos «Em alta» e «Vende rápido» vêm de corações e pedidos pagos reais dos últimos sete dias. Nada nesta página é escolhido a dedo ou pago. Se um design no topo chega perto, mas não é bem a sua história, abra-o e encomende uma variação personalizada desenhada do seu jeito.",
-    "intro_h": "Classificados por quem navega por eles"
+    "intro_h": "Amados por quem navega por eles"
   },
   "buyApp": {
     "guest_email_label": "E-mail para entrega",
@@ -1541,6 +1543,13 @@
       "monstersink_h": "Monsters Ink",
       "monstersink_text": "Suprimentos de tatuagem de nível profissional do Reino Unido — máquinas, tintas, agulhas e mobiliário para estúdios em funcionamento. Atenção: A Monsters Ink não envia para os EUA no momento — o envio para os EUA retornará em breve. Pedidos de outros países são enviados normalmente.",
       "monstersink_cta": "Comprar na Monsters Ink"
+    },
+    "landing": {
+      "title": "Sua loja na Tattoo Art Customs",
+      "sub": "Um lar verificado para a sua loja no marketplace que coloca o tatuador em primeiro lugar: seja encontrado por clientes, ganhe em cada venda que indicar e gerencie o negócio em um único painel.",
+      "perks_h": "Vantagens para lojas — ofertas de suprimentos para assinantes",
+      "perks_text": "Assinantes ativos de lojas desbloqueiam as vantagens: ofertas profissionais de suprimentos da CNC Tattoo, EZ Tattoo Supply e Monsters Ink, disponíveis apenas dentro do painel da loja.",
+      "login_cta": "Tem uma loja? Entrar"
     }
   },
   "bookings": {

@@ -277,7 +277,9 @@
     "cat_fallback": "Browse {count} original {name} tattoo designs from the Tattoo Art Customs gallery. Every design is sold with the full-color artwork and a clean linework stencil, delivered digitally after purchase — print it, size it with your artist, and get it tattooed anywhere.",
     "cat_note": "New {name} designs are added as artists upload them. Want one changed — different flowers, a name added, colors swapped? Order it as a custom variation from any design page.",
     "style_fallback": "Browse {count} original {name} tattoo designs from the Tattoo Art Customs gallery. Every design is sold with the full-color artwork and a clean linework stencil, delivered digitally after purchase — print it, size it with your artist, and get it tattooed anywhere.",
-    "style_note": "New {name} designs are added as artists upload them. Want one changed — a different subject, a name added, colors swapped? Order it as a custom variation from any design page."
+    "style_note": "New {name} designs are added as artists upload them. Want one changed — a different subject, a name added, colors swapped? Order it as a custom variation from any design page.",
+    "featured_color_h": "Featured in color",
+    "featured_color_sub": "Finished color pieces, shown as watermarked previews — buyers receive the clean full-color files with their purchase."
   },
   "giftcards": {
     "a_customer": "a customer",
@@ -1151,7 +1153,7 @@
   },
   "toploved": {
     "title": "Top Loved",
-    "sub": "Everyone's loving these — the community's most-hearted designs, ranked by love.",
+    "sub": "The first hearts are landing — yours moves a design up.",
     "loves": "{count} loves",
     "empty_title": "No loves yet",
     "empty_text": "Tap the heart on any design to cast the first vote.",
@@ -1160,8 +1162,8 @@
     "badge_most_wanted": "Most wanted",
     "badge_trending": "Trending",
     "badge_selling_fast": "Selling fast",
-    "intro_h": "Ranked by the people browsing them",
-    "intro_1": "Every heart on a design is a vote. This page ranks the whole gallery by those votes, most-loved first, and the order moves as people browse. Tap the heart on any design to vote for it — it is saved to your wishlist at the same time, so your favorites are waiting when you come back.",
+    "intro_h": "Loved by the people browsing them",
+    "intro_1": "Every heart on a design is a vote, and the first hearts are landing now. This page gathers the designs people have hearted — every new heart moves a design up. Tap the heart on any design to vote for it — it is saved to your wishlist at the same time, so your favorites are waiting when you come back.",
     "intro_2": "The badges are earned, not assigned: the top spot carries Most Loved, and the Trending and Selling Fast badges come from hearts and real paid orders in the last seven days. Nothing on this page is hand-picked or paid placement. If a top design is close but not quite your story, open it and order a custom variation drawn your way."
   },
   "buyApp": {
@@ -1596,6 +1598,13 @@
       "monstersink_h": "Monsters Ink",
       "monstersink_text": "Trade-grade tattoo supplies from the UK — machines, inks, needles and furniture for working studios. Please note: Monsters Ink does not currently ship to the USA — US shipping returns shortly. Orders from other countries ship as normal.",
       "monstersink_cta": "Shop Monsters Ink"
+    },
+    "landing": {
+      "title": "Your shop, on Tattoo Art Customs",
+      "sub": "A verified home for your shop on the marketplace built tattooist-first: get found by customers, earn on every sale you refer, and run the business from one dashboard.",
+      "perks_h": "Shop Perks — supply deals for subscribers",
+      "perks_text": "Active shop subscribers unlock Shop Perks: professional supply deals from CNC Tattoo, EZ Tattoo Supply, and Monsters Ink, available only inside the shop dashboard.",
+      "login_cta": "Shop owner? Log in"
     }
   },
   "bookings": {

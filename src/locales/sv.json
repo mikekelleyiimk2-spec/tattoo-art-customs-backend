@@ -277,7 +277,9 @@
     "style_note": "Nya {name}-designer läggs till när konstnärer laddar upp dem. Vill du ändra något — ett annat motiv, ett namn tillagt, andra färger? Beställ den som en anpassad variant från valfri designsida.",
     "intro_1": "Varje design i detta galleri är ett originalverk skapat av en oberoende tatuerare eller designkonstnär och erbjuds till försäljning här. Galleriet visar en ren linjeförhandsvisning av varje motiv — det skyddar det färdiga verket från kopiering innan det köps. När du köper en design får du det färdiga färgverket och linjefilen (stencilen), redo att ta med till din tatuerare.",
     "intro_2": "Hittar du inte exakt det motiv du föreställt dig? Beställ det skräddarsytt. Anpassade designer ritas på beställning: beskriv din idé, godkänn riktningen, och den färdiga designen levereras inom 48 timmar. Du kan också förvandla ett foto eller en grov skiss till en färdig tatueringsdesign, eller be om ändringar på valfri galleridesign — andra blommor, ett namn tillagt, färger utbytta — när du beställer den som en anpassad variant.",
-    "intro_h": "Originaldesign från oberoende konstnärer"
+    "intro_h": "Originaldesign från oberoende konstnärer",
+    "featured_color_h": "Utvalda i färg",
+    "featured_color_sub": "Färdiga färgverk visas som vattenmärkta förhandsvisningar — köpare får de rena fullfärgsfilerna med sitt köp."
   },
   "giftcards": {
     "a_customer": "en kund",
@@ -1151,7 +1153,7 @@
   },
   "toploved": {
     "title": "Mest gillade",
-    "sub": "Alla älskar dessa — communityns mest hjärtade designer, rankade efter kärlek.",
+    "sub": "De första hjärtana landar — ditt flyttar en design uppåt.",
     "loves": "{count} hjärtan",
     "empty_title": "Inga röster ännu",
     "empty_text": "Tryck på hjärtat på en design för att rösta först.",
@@ -1160,9 +1162,9 @@
     "badge_most_wanted": "Mest eftertraktad",
     "badge_trending": "Trendig",
     "badge_selling_fast": "Säljer snabbt",
-    "intro_1": "Varje hjärta på en design är en röst. Den här sidan rankar hela galleriet efter de rösterna, mest älskade först, och ordningen rör sig medan folk bläddrar. Tryck på hjärtat på valfri design för att rösta på den — den sparas samtidigt i din önskelista, så dina favoriter väntar när du kommer tillbaka.",
+    "intro_1": "Varje hjärta på en design är en röst, och de första hjärtana landar just nu. Den här sidan samlar de designer som människor har satt hjärtan på — varje nytt hjärta flyttar en design uppåt. Tryck på hjärtat på valfri design för att rösta på den — den sparas samtidigt i din önskelista, så dina favoriter väntar när du kommer tillbaka.",
     "intro_2": "Märkena förtjänas, de delas inte ut: topplatsen bär «Mest älskad», och märkena «Trendande» och «Säljer snabbt» kommer från hjärtan och riktiga betalda beställningar under de senaste sju dagarna. Inget på den här sidan är handplockat eller betald placering. Om en toppdesign är nära men inte riktigt din historia, öppna den och beställ en anpassad variant ritad på ditt sätt.",
-    "intro_h": "Rankade av människorna som bläddrar bland dem"
+    "intro_h": "Älskade av människorna som bläddrar bland dem"
   },
   "buyApp": {
     "guest_email_label": "E-post för leverans",
@@ -1541,6 +1543,13 @@
       "monstersink_h": "Monsters Ink",
       "monstersink_text": "Tatueringsprodukter i proffsklass från Storbritannien — maskiner, bläck, nålar och möbler för aktiva studios. Obs: Monsters Ink skickar för närvarande inte till USA — frakten till USA återkommer inom kort. Beställningar från andra länder skickas som vanligt.",
       "monstersink_cta": "Handla hos Monsters Ink"
+    },
+    "landing": {
+      "title": "Din studio på Tattoo Art Customs",
+      "sub": "Ett verifierat hem för din studio på marknadsplatsen som sätter tatueraren först: bli hittad av kunder, tjäna på varje försäljning du hänvisar och driv verksamheten från en enda panel.",
+      "perks_h": "Studioförmåner — materialerbjudanden för prenumeranter",
+      "perks_text": "Aktiva studioprenumeranter låser upp förmånerna: professionella materialerbjudanden från CNC Tattoo, EZ Tattoo Supply och Monsters Ink, endast tillgängliga inne i studions panel.",
+      "login_cta": "Studioägare? Logga in"
     }
   },
   "bookings": {

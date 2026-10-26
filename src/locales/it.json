@@ -277,7 +277,9 @@
     "style_note": "Nuovi disegni {name} vengono aggiunti man mano che gli artisti li caricano. Vuoi una modifica — un soggetto diverso, un nome aggiunto, colori cambiati? Ordinalo come variazione personalizzata da qualsiasi pagina del disegno.",
     "intro_1": "Ogni disegno in questa galleria è un’opera originale creata da un tatuatore o disegnatore indipendente e messa in vendita qui. La galleria mostra un’anteprima pulita in linea di ogni pezzo: così l’opera finita resta protetta dalle copie prima dell’acquisto. Quando compri un disegno, ricevi l’opera finale a colori e il file con le linee (stencil), pronto da portare al tuo tatuatore.",
     "intro_2": "Non trovi esattamente il pezzo che immaginavi? Commissionane uno su misura. I disegni personalizzati vengono realizzati su ordinazione: descrivi la tua idea, approva la direzione e il disegno finito viene consegnato entro 48 ore. Puoi anche trasformare una foto o uno schizzo veloce in un disegno per tatuaggio finito, oppure chiedere modifiche a qualsiasi disegno della galleria — fiori diversi, un nome aggiunto, colori cambiati — ordinandolo come variante personalizzata.",
-    "intro_h": "Disegni originali di artisti indipendenti"
+    "intro_h": "Disegni originali di artisti indipendenti",
+    "featured_color_h": "In evidenza a colori",
+    "featured_color_sub": "Disegni a colori finiti, mostrati come anteprime con filigrana: gli acquirenti ricevono i file a colori puliti con l'acquisto."
   },
   "giftcards": {
     "a_customer": "un cliente",
@@ -1151,7 +1153,7 @@
   },
   "toploved": {
     "title": "Più amati",
-    "sub": "Tutti li amano — i design più amati dalla community, classificati per amore.",
+    "sub": "I primi cuori stanno arrivando — il tuo fa salire un design.",
     "loves": "{count} mi piace",
     "empty_title": "Ancora nessun voto",
     "empty_text": "Tocca il cuore di un design per votare per primo.",
@@ -1160,9 +1162,9 @@
     "badge_most_wanted": "Più desiderato",
     "badge_trending": "Tendenza",
     "badge_selling_fast": "Vende veloce",
-    "intro_1": "Ogni cuore su un disegno è un voto. Questa pagina ordina l’intera galleria in base a quei voti, i più amati per primi, e l’ordine si muove mentre la gente naviga. Tocca il cuore su qualsiasi disegno per votarlo: viene salvato nella tua lista dei desideri allo stesso tempo, così i tuoi preferiti ti aspettano quando torni.",
+    "intro_1": "Ogni cuore su un disegno è un voto, e i primi cuori stanno arrivando proprio ora. Questa pagina raccoglie i design a cui le persone hanno messo un cuore — ogni nuovo cuore fa salire un design. Tocca il cuore su qualsiasi disegno per votarlo: viene salvato nella tua lista dei desideri allo stesso tempo, così i tuoi preferiti ti aspettano quando torni.",
     "intro_2": "I badge si guadagnano, non si assegnano: il primo posto porta «Il più amato», e i badge «Di tendenza» e «Vendita veloce» nascono dai cuori e dagli ordini pagati reali degli ultimi sette giorni. Niente in questa pagina è scelto a mano o piazzato a pagamento. Se un disegno in cima si avvicina ma non è del tutto la tua storia, aprilo e ordina una variante personalizzata disegnata a modo tuo.",
-    "intro_h": "Classificati dalle persone che li guardano"
+    "intro_h": "Amati dalle persone che li guardano"
   },
   "buyApp": {
     "guest_email_label": "Email di consegna",
@@ -1541,6 +1543,13 @@
       "monstersink_h": "Monsters Ink",
       "monstersink_text": "Forniture per tatuaggi di livello professionale dal Regno Unito — macchinette, inchiostri, aghi e arredi per studi attivi. Nota bene: Monsters Ink al momento non spedisce negli Stati Uniti — la spedizione negli USA tornerà a breve. Gli ordini da altri paesi vengono spediti normalmente.",
       "monstersink_cta": "Acquista da Monsters Ink"
+    },
+    "landing": {
+      "title": "Il tuo studio su Tattoo Art Customs",
+      "sub": "Una casa verificata per il tuo studio nel marketplace che mette il tatuatore al primo posto: fatti trovare dai clienti, guadagna su ogni vendita che segnali e gestisci l'attività da un'unica dashboard.",
+      "perks_h": "Vantaggi per gli studi — offerte di forniture per abbonati",
+      "perks_text": "Gli abbonati attivi degli studi sbloccano i vantaggi: offerte professionali di forniture da CNC Tattoo, EZ Tattoo Supply e Monsters Ink, disponibili solo nella dashboard dello studio.",
+      "login_cta": "Hai uno studio? Accedi"
     }
   },
   "bookings": {

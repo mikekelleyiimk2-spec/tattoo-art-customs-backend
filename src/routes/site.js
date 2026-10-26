@@ -877,7 +877,7 @@ router.get('/top-loved', async (req, res) => {
       prevUrl: page > 1 ? topLovedPageUrl(page - 1) : null,
       nextUrl: page < totalPages ? topLovedPageUrl(page + 1) : null,
     },
-    metaDescription: 'The Tattoo Art Customs community leaderboard — the most-hearted original tattoo designs, ranked by love.',
+    metaDescription: 'The Tattoo Art Customs community page — the original tattoo designs people are hearting. The first hearts are landing, and yours moves a design up.',
     canonical: `${config.baseUrl.replace(/\/$/, '')}/top-loved`,
   });
 });

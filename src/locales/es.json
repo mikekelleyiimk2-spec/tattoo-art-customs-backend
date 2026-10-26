@@ -277,7 +277,9 @@
     "cat_fallback": "Explora {count} diseños de tatuajes originales de {name} de la galería de Tattoo Art Customs. Cada diseño se vende con la obra a todo color y una plantilla de línea limpia, entregados digitalmente tras la compra: imprímelo, define el tamaño con tu artista y tatúatelo donde quieras.",
     "cat_note": "Se añaden nuevos diseños de {name} a medida que los artistas los suben. ¿Quieres cambiar uno — otras flores, un nombre, otros colores? Encárgalo como variante personalizada desde cualquier página de diseño.",
     "style_fallback": "Explora {count} diseños de tatuajes originales de {name} de la galería de Tattoo Art Customs. Cada diseño se vende con la ilustración a todo color y una plantilla de línea limpia, entregados digitalmente tras la compra: imprímelo, ajusta el tamaño con tu artista y tatúatelo donde quieras.",
-    "style_note": "Se añaden nuevos diseños de {name} a medida que los artistas los suben. ¿Quieres cambiar algo — otro motivo, un nombre, otros colores? Pídelo como variación personalizada desde cualquier página de diseño."
+    "style_note": "Se añaden nuevos diseños de {name} a medida que los artistas los suben. ¿Quieres cambiar algo — otro motivo, un nombre, otros colores? Pídelo como variación personalizada desde cualquier página de diseño.",
+    "featured_color_h": "Destacados en color",
+    "featured_color_sub": "Diseños a color terminados, mostrados como vistas previas con marca de agua: los compradores reciben los archivos limpios a todo color con su compra."
   },
   "giftcards": {
     "a_customer": "un cliente",
@@ -1151,7 +1153,7 @@
   },
   "toploved": {
     "title": "Más amados",
-    "sub": "Todos están amando estos — los diseños con más corazones de la comunidad, ordenados por amor.",
+    "sub": "Los primeros corazones están llegando: el tuyo hace subir un diseño.",
     "loves": "{count} favoritos",
     "empty_title": "Aún sin votos",
     "empty_text": "Toca el corazón de cualquier diseño para ser el primero en votar.",
@@ -1160,8 +1162,8 @@
     "badge_most_wanted": "Más deseado",
     "badge_trending": "Tendencia",
     "badge_selling_fast": "Se vende rápido",
-    "intro_h": "Clasificados por la gente que los visita",
-    "intro_1": "Cada corazón en un diseño es un voto. Esta página ordena toda la galería por esos votos, los más queridos primero, y el orden se mueve según la gente navega. Toca el corazón de cualquier diseño para votar por él: se guarda en tu lista de deseos al mismo tiempo, para que tus favoritos te esperen cuando vuelvas.",
+    "intro_h": "Amados por la gente que los visita",
+    "intro_1": "Cada corazón en un diseño es un voto, y los primeros corazones están llegando ahora. Esta página reúne los diseños que la gente ha marcado con corazones: cada corazón nuevo hace subir un diseño. Toca el corazón de cualquier diseño para votar por él: se guarda en tu lista de deseos al mismo tiempo, para que tus favoritos te esperen cuando vuelvas.",
     "intro_2": "Las insignias se ganan, no se asignan: el primer puesto lleva «Más querido», y las insignias «En tendencia» y «Se vende rápido» salen de los corazones y los pedidos pagados reales de los últimos siete días. Nada en esta página es selección manual ni colocación pagada. Si un diseño destacado se acerca pero no es del todo tu historia, ábrelo y encarga una variante personalizada dibujada a tu manera."
   },
   "buyApp": {
@@ -1541,6 +1543,13 @@
       "monstersink_h": "Monsters Ink",
       "monstersink_text": "Suministros de tatuaje de nivel profesional del Reino Unido — máquinas, tintas, agujas y mobiliario para estudios en activo. Ten en cuenta: Monsters Ink no realiza envíos a EE. UU. en este momento — el envío a EE. UU. volverá en breve. Los pedidos de otros países se envían con normalidad.",
       "monstersink_cta": "Comprar en Monsters Ink"
+    },
+    "landing": {
+      "title": "Tu tienda en Tattoo Art Customs",
+      "sub": "Un hogar verificado para tu tienda en el mercado que pone al tatuador primero: haz que los clientes te encuentren, gana con cada venta que refieras y gestiona el negocio desde un solo panel.",
+      "perks_h": "Ventajas para tiendas: ofertas de suministros para suscriptores",
+      "perks_text": "Los suscriptores activos de tiendas desbloquean las ventajas: ofertas profesionales de suministros de CNC Tattoo, EZ Tattoo Supply y Monsters Ink, disponibles solo dentro del panel de la tienda.",
+      "login_cta": "¿Tienes una tienda? Inicia sesión"
     }
   },
   "bookings": {

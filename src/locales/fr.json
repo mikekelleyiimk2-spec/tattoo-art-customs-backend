@@ -277,7 +277,9 @@
     "cat_fallback": "Parcourez {count} tatouages originaux {name} de la galerie Tattoo Art Customs. Chaque design est vendu avec l’œuvre en couleur et un stencil en lignes propre, livrés en numérique après l’achat — imprimez-le, choisissez la taille avec votre artiste, et faites-vous tatouer où vous voulez.",
     "cat_note": "De nouveaux designs {name} sont ajoutés au fur et à mesure que les artistes les mettent en ligne. Vous voulez en modifier un — d’autres fleurs, un prénom, d’autres couleurs ? Commandez-le comme variante personnalisée depuis n’importe quelle page de design.",
     "style_fallback": "Parcourez {count} motifs de tatouage originaux {name} de la galerie Tattoo Art Customs. Chaque motif est vendu avec l'illustration en couleur et un pochoir aux lignes propres, livrés numériquement après l'achat — imprimez-le, ajustez la taille avec votre tatoueur et faites-vous tatouer où vous voulez.",
-    "style_note": "De nouveaux motifs {name} sont ajoutés au fil des envois des artistes. Vous voulez une modification — un autre sujet, un nom ajouté, d'autres couleurs ? Commandez une variation personnalisée depuis n'importe quelle page de motif."
+    "style_note": "De nouveaux motifs {name} sont ajoutés au fil des envois des artistes. Vous voulez une modification — un autre sujet, un nom ajouté, d'autres couleurs ? Commandez une variation personnalisée depuis n'importe quelle page de motif.",
+    "featured_color_h": "À l'honneur en couleur",
+    "featured_color_sub": "Des créations couleur terminées, affichées en aperçus filigranés — les acheteurs reçoivent les fichiers couleur propres avec leur achat."
   },
   "giftcards": {
     "a_customer": "un client",
@@ -1151,7 +1153,7 @@
   },
   "toploved": {
     "title": "Coups de cœur",
-    "sub": "Tout le monde adore ces motifs — les créations les plus aimées de la communauté, classées par amour.",
+    "sub": "Les premiers cœurs arrivent — le vôtre fait monter un design.",
     "loves": "{count} j'aime",
     "empty_title": "Aucun vote pour l’instant",
     "empty_text": "Touchez le cœur d’un design pour voter en premier.",
@@ -1160,8 +1162,8 @@
     "badge_most_wanted": "Le plus convoité",
     "badge_trending": "Tendance",
     "badge_selling_fast": "Se vend vite",
-    "intro_h": "Classés par les personnes qui les parcourent",
-    "intro_1": "Chaque cœur sur un design est un vote. Cette page classe toute la galerie selon ces votes, les plus aimés d’abord, et l’ordre bouge au fil des visites. Touchez le cœur d’un design pour voter pour lui — il est en même temps enregistré dans votre liste de favoris, pour que vos préférés vous attendent à votre retour.",
+    "intro_h": "Aimés par les personnes qui les parcourent",
+    "intro_1": "Chaque cœur sur un design est un vote, et les premiers cœurs arrivent en ce moment. Cette page rassemble les créations que les gens ont marquées d'un cœur — chaque nouveau cœur fait monter une création. Touchez le cœur d'un design pour voter pour lui — il est en même temps enregistré dans votre liste de favoris, pour que vos préférés vous attendent à votre retour.",
     "intro_2": "Les badges se méritent, ils ne s’attribuent pas : la première place porte « Le plus aimé », et les badges « Tendance » et « Se vend vite » viennent des cœurs et des commandes payées réelles des sept derniers jours. Rien sur cette page n’est choisi à la main ni placé contre paiement. Si un design en tête est proche mais pas tout à fait votre histoire, ouvrez-le et commandez une variante personnalisée dessinée à votre façon."
   },
   "buyApp": {
@@ -1541,6 +1543,13 @@
       "monstersink_h": "Monsters Ink",
       "monstersink_text": "Fournitures de tatouage de qualité professionnelle du Royaume-Uni — machines, encres, aiguilles et mobilier pour studios en activité. À noter : Monsters Ink ne livre actuellement pas aux États-Unis — la livraison vers les États-Unis reprendra bientôt. Les commandes des autres pays sont expédiées normalement.",
       "monstersink_cta": "Acheter chez Monsters Ink"
+    },
+    "landing": {
+      "title": "Votre studio sur Tattoo Art Customs",
+      "sub": "Une vitrine vérifiée pour votre studio sur la place de marché pensée d'abord pour les tatoueurs : soyez trouvé par les clients, gagnez sur chaque vente que vous recommandez et gérez votre activité depuis un seul tableau de bord.",
+      "perks_h": "Avantages boutiques — offres de fournitures pour abonnés",
+      "perks_text": "Les abonnés boutiques actifs débloquent les avantages : des offres professionnelles de fournitures CNC Tattoo, EZ Tattoo Supply et Monsters Ink, disponibles uniquement dans le tableau de bord de la boutique.",
+      "login_cta": "Propriétaire d'un studio ? Se connecter"
     }
   },
   "bookings": {

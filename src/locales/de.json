@@ -277,7 +277,9 @@
     "cat_fallback": "Durchsuche {count} originale {name} Tattoo-Designs aus der Tattoo Art Customs Galerie. Jedes Design wird mit dem fertigen Farbwerk und einer sauberen Linienvorlage verkauft und nach dem Kauf digital geliefert — ausdrucken, mit deinem Künstler die Größe festlegen und überall tätowieren lassen.",
     "cat_note": "Neue {name} Designs kommen hinzu, sobald Künstler sie hochladen. Eines ändern lassen — andere Blumen, ein Name, andere Farben? Bestelle es als Custom-Variante auf jeder Designseite.",
     "style_fallback": "Durchstöbere {count} originale {name} Tattoo-Designs aus der Galerie von Tattoo Art Customs. Jedes Design wird mit der Farbvorlage und einer sauberen Linien-Schablone verkauft und nach dem Kauf digital geliefert — ausdrucken, mit deinem Tätowierer die Größe anpassen und überall stechen lassen.",
-    "style_note": "Neue {name} Designs kommen hinzu, sobald Künstler sie hochladen. Änderungswunsch — anderes Motiv, Name dazu, andere Farben? Bestelle es als individuelle Variante auf jeder Design-Seite."
+    "style_note": "Neue {name} Designs kommen hinzu, sobald Künstler sie hochladen. Änderungswunsch — anderes Motiv, Name dazu, andere Farben? Bestelle es als individuelle Variante auf jeder Design-Seite.",
+    "featured_color_h": "In Farbe vorgestellt",
+    "featured_color_sub": "Fertige Farbentwürfe als Wasserzeichen-Vorschau — Käufer erhalten die sauberen Vollfarbdateien mit ihrem Kauf."
   },
   "giftcards": {
     "a_customer": "ein Kunde",
@@ -1151,7 +1153,7 @@
   },
   "toploved": {
     "title": "Top-Lieblinge",
-    "sub": "Alle lieben diese — die beliebtesten Designs der Community, sortiert nach Liebe.",
+    "sub": "Die ersten Herzen kommen an — deins rückt ein Design nach oben.",
     "loves": "{count} Herzen",
     "empty_title": "Noch keine Herzen",
     "empty_text": "Tippe auf das Herz eines Designs, um die erste Stimme abzugeben.",
@@ -1160,8 +1162,8 @@
     "badge_most_wanted": "Meistgewolltes",
     "badge_trending": "Trend",
     "badge_selling_fast": "Verkauft sich schnell",
-    "intro_h": "Bewertet von den Menschen, die hier stöbern",
-    "intro_1": "Jedes Herz an einem Design ist eine Stimme. Diese Seite ordnet die gesamte Galerie nach diesen Stimmen, die beliebtesten zuerst, und die Reihenfolge bewegt sich mit dem Stöbern. Tippe auf das Herz an einem Design, um dafür zu stimmen — es wird gleichzeitig auf deiner Wunschliste gespeichert, sodass deine Favoriten bei deiner Rückkehr warten.",
+    "intro_h": "Geliebt von den Menschen, die hier stöbern",
+    "intro_1": "Jedes Herz an einem Design ist eine Stimme, und die ersten Herzen kommen gerade an. Diese Seite sammelt die Designs, die Menschen mit Herzen versehen haben — jedes neue Herz rückt ein Design nach oben. Tippe auf das Herz an einem Design, um dafür zu stimmen — es wird gleichzeitig auf deiner Wunschliste gespeichert, sodass deine Favoriten bei deiner Rückkehr warten.",
     "intro_2": "Die Abzeichen werden verdient, nicht vergeben: Der erste Platz trägt „Meistgeliebt“, und die Abzeichen „Trend“ und „Verkauft sich schnell“ entstehen aus Herzen und echten bezahlten Bestellungen der letzten sieben Tage. Nichts auf dieser Seite ist handverlesen oder bezahlte Platzierung. Wenn ein Top-Design fast, aber nicht ganz deine Geschichte ist, öffne es und bestelle eine Custom-Variante nach deinen Wünschen."
   },
   "buyApp": {
@@ -1541,6 +1543,13 @@
       "monstersink_h": "Monsters Ink",
       "monstersink_text": "Tattoo-Bedarf in Profi-Qualität aus Großbritannien — Maschinen, Farben, Nadeln und Möbel für arbeitende Studios. Bitte beachten: Monsters Ink liefert derzeit nicht in die USA — der US-Versand kehrt in Kürze zurück. Bestellungen aus anderen Ländern werden normal versendet.",
       "monstersink_cta": "Bei Monsters Ink shoppen"
+    },
+    "landing": {
+      "title": "Dein Shop bei Tattoo Art Customs",
+      "sub": "Ein verifiziertes Zuhause für deinen Shop auf dem Marktplatz, der Tätowierer an erste Stelle setzt: Werde von Kunden gefunden, verdiene an jedem vermittelten Verkauf und führe dein Geschäft über ein einziges Dashboard.",
+      "perks_h": "Shop-Vorteile — Händlerangebote für Abonnenten",
+      "perks_text": "Aktive Shop-Abonnenten schalten die Shop-Vorteile frei: Profi-Angebote für Supplies von CNC Tattoo, EZ Tattoo Supply und Monsters Ink — nur im Shop-Dashboard verfügbar.",
+      "login_cta": "Shop-Inhaber? Anmelden"
     }
   },
   "bookings": {
