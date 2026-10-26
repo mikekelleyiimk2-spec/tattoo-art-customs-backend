@@ -142,4 +142,8 @@ async function retryUnacknowledgedPurchases() {
 module.exports = {
   verifyPurchase, acknowledgePurchase, retryUnacknowledgedPurchases,
   serviceAccountConfigured, MEMBERSHIP_PLAN_BY_PRODUCT, PACKAGE_NAME,
+  // The AI API Service Plug's executor (src/lib/servicePlug.js) performs
+  // Play operations server-side through this same publisher client — the
+  // agent never sees the credential (Service Plug plug law 2).
+  getPublisher,
 };
