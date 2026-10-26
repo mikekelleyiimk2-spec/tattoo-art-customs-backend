@@ -180,5 +180,14 @@
     "sha256": "c5b49402b7814c94b3c506a174fa48e933bc98f1e98fc2fda7ace23c84c17eff",
     "sizeBytes": 9124622,
     "publishedAt": "2026-10-26T19:48:00Z"
+  },
+  "com.usefulappz.poppyziggy": {
+    "versionCode": 1,
+    "versionName": "1.0.0",
+    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.poppyziggy/apk",
+    "notes": "Poppy & Ziggy — the Kids' Corner game: a collection of mini-games in the show's own format. First mini-game: the Bounce Brigade blanket — Poppy and Ziggy hold the tilting blanket, you bounce Azul, Jewel, Mango, Pip and T-Rex home to their nests. Fully offline, no ads.",
+    "sha256": "630ce1814aef0818a6b60086eb51e7beabedb55c1b37d775f480c407443d46c1",
+    "sizeBytes": 1029972,
+    "publishedAt": "2026-10-26T21:38:20Z"
   }
 }
