@@ -193,18 +193,29 @@ async function listApps() {
 // repeat add refreshes the listing details but keeps the original
 // pool_snapshot — that number is the historical fact of how many
 // testers the app instantly had the first time it joined the Hub.
-async function addApp({ app_name, package: pkg, optin_url, developer_gmail, blurb }) {
+//
+// The opt-in URL requirement has ONE exception: a caller carrying
+// the Muse service token (the house's own inserts, enforced at the
+// route) may add a fleet app whose Play track does not exist yet
+// with optin_url null — the honest "Link coming" state, the same
+// shape as OneMind's seeded row. A null is never accepted from the
+// public intake: strangers must bring a real https opt-in URL.
+async function addApp({ app_name, package: pkg, optin_url, developer_gmail, blurb, service_token }) {
   const name = String(app_name || '').trim().slice(0, 120);
   if (!name) return { ok: false, error: 'app_name is required' };
   const packageId = String(pkg || '').trim().toLowerCase().slice(0, 160);
   if (!PACKAGE_RE.test(packageId)) return { ok: false, error: 'a valid app package id is required' };
   const optin = String(optin_url || '').trim().slice(0, 500);
-  let optinUrl;
-  try {
-    const u = new URL(optin);
-    if (u.protocol !== 'https:') throw new Error('https only');
-    optinUrl = u.toString();
-  } catch (e) {
+  let optinUrl = null;
+  if (optin) {
+    try {
+      const u = new URL(optin);
+      if (u.protocol !== 'https:') throw new Error('https only');
+      optinUrl = u.toString();
+    } catch (e) {
+      return { ok: false, error: 'a valid https opt-in URL is required' };
+    }
+  } else if (!service_token) {
     return { ok: false, error: 'a valid https opt-in URL is required' };
   }
   const devGmail = normalizeGmail(developer_gmail);
@@ -224,7 +235,8 @@ async function addApp({ app_name, package: pkg, optin_url, developer_gmail, blur
   const snapshot = await poolCount();
   const id = await db.insert('tester_hub_apps', {
     app_name: name, package: packageId, optin_url: optinUrl, blurb: cleanBlurb,
-    developer_gmail: devGmail, pool_snapshot: snapshot, source: 'hub-app', status: 'active',
+    developer_gmail: devGmail, pool_snapshot: snapshot,
+    source: service_token ? 'fleet' : 'hub-app', status: 'active',
   });
   const row = await db.get('SELECT * FROM tester_hub_apps WHERE id = ?', [id]);
   return { ok: true, added: true, already_listed: false, app: publicApp(row), count: snapshot };

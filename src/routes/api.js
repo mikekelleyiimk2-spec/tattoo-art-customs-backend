@@ -700,7 +700,10 @@ router.get('/testers/apps', async (req, res) => {
 // A developer adds an app: { app_name, package, optin_url,
 // developer_gmail, blurb? }. The pool that already exists becomes
 // its tester list — the response carries pool_snapshot, the number
-// of testers the app instantly has.
+// of testers the app instantly has. A request carrying the Muse
+// service token is the house's own insert: it alone may add a
+// fleet app with optin_url null ("Link coming" — no track yet);
+// the public intake still requires a valid https opt-in URL.
 router.post('/testers/apps', formLimiter, express.json(), async (req, res) => {
   try {
     const r = await testerPool.addApp({
@@ -709,6 +712,7 @@ router.post('/testers/apps', formLimiter, express.json(), async (req, res) => {
       optin_url: req.body && req.body.optin_url,
       developer_gmail: req.body && req.body.developer_gmail,
       blurb: req.body && req.body.blurb,
+      service_token: poolAuthorized(req),
     });
     if (!r.ok) return res.status(400).json({ ok: false, error: r.error });
     return res.json({

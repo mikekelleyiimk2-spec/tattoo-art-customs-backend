@@ -128,6 +128,54 @@ async function runHttpTests(ok, req) {
     're-adding the same package is idempotent and keeps the original snapshot');
   const feedFinal = await call('GET', '/api/testers/apps');
   ok(((feedFinal.json && feedFinal.json.apps) || []).length === 22, 'no duplicate app row was created');
+
+  // Fleet inserts ("Link coming"): a null opt-in URL is accepted
+  // ONLY under the Muse service token. The public intake — no
+  // token, or a wrong one — still requires a real https URL.
+  const nullPub = await call('POST', '/api/testers/apps', {
+    app_name: 'Fleet Null', package: 'com.example.fleetnull', optin_url: null,
+    developer_gmail: DEV_GMAIL, blurb: 'A fleet row whose track is not live yet.',
+  });
+  ok(nullPub.status === 400 && nullPub.json && /https opt-in URL/.test(nullPub.json.error || ''),
+    'public add-app with a null opt-in URL is still 400');
+  const nullBadTok = await call('POST', '/api/testers/apps', {
+    app_name: 'Fleet Null', package: 'com.example.fleetnull', optin_url: null,
+    developer_gmail: DEV_GMAIL,
+  }, 'wrong-token');
+  ok(nullBadTok.status === 400, 'add-app with a null opt-in URL and a wrong token is 400');
+  const feedAfterRejects = await call('GET', '/api/testers/apps');
+  ok(!((feedAfterRejects.json && feedAfterRejects.json.apps) || [])
+    .some((a) => a.package === 'com.example.fleetnull'),
+    'the rejected null-opt-in adds created no feed row');
+
+  const nullSvc = await call('POST', '/api/testers/apps', {
+    app_name: 'Fleet Null', package: 'com.example.fleetnull', optin_url: null,
+    developer_gmail: DEV_GMAIL, blurb: 'A fleet row whose track is not live yet.',
+  }, TOKEN);
+  ok(nullSvc.status === 200 && nullSvc.json && nullSvc.json.ok === true
+    && nullSvc.json.app && nullSvc.json.app.optin_url === null
+    && nullSvc.json.app.source === 'fleet',
+    'service-token add-app accepts a null opt-in as a fleet "Link coming" row');
+  const feedWithNull = await call('GET', '/api/testers/apps');
+  const nullRow = ((feedWithNull.json && feedWithNull.json.apps) || [])
+    .find((a) => a.package === 'com.example.fleetnull');
+  ok(!!nullRow && nullRow.optin_url === null && nullRow.source === 'fleet',
+    'the fleet null row appears in the public feed with no fabricated link');
+
+  // Once the track exists, a service re-post fills the real URL in
+  // on the same row (the post-sitting path) — no duplicate.
+  const fillSvc = await call('POST', '/api/testers/apps', {
+    app_name: 'Fleet Null', package: 'com.example.fleetnull',
+    optin_url: 'https://play.google.com/apps/testing/com.example.fleetnull',
+    developer_gmail: DEV_GMAIL,
+  }, TOKEN);
+  ok(fillSvc.status === 200 && fillSvc.json.already_listed === true
+    && fillSvc.json.app.optin_url === 'https://play.google.com/apps/testing/com.example.fleetnull',
+    'a service re-post with a real URL updates the fleet row in place');
+  const feedFilled = await call('GET', '/api/testers/apps');
+  ok(((feedFilled.json && feedFilled.json.apps) || [])
+    .filter((a) => a.package === 'com.example.fleetnull').length === 1,
+    'the URL fill-in created no duplicate row');
 }
 
 module.exports = { runHttpTests };
