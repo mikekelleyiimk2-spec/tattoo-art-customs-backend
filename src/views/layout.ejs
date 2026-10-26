@@ -87,6 +87,7 @@ gtag('config', 'G-9N1QECNMWL');
       <a href="/merch"><%= t('nav.custom_tees') %></a>
       <a href="/contests"><%= t('nav.contests') %></a>
       <a href="/about"><%= t('nav.about') %></a>
+      <a href="/worlds">🌎 Our Worlds</a>
       <% if (playStoreUrl && playStoreProUrl) { %><a class="btn" href="/apps"><%= t('nav.get_app') %></a><% } else if (playStoreUrl) { %><a class="btn" href="<%= playStoreUrl %>" target="_blank" rel="noopener"><%= t('nav.get_app') %></a><% } else if (playStoreProUrl) { %><a class="btn" href="<%= playStoreProUrl %>" target="_blank" rel="noopener"><%= t('nav.get_app') %></a><% } %>
       <% if (currentUser) { %>
         <a href="/account"><%= t('nav.account') %></a>
@@ -160,6 +161,7 @@ gtag('config', 'G-9N1QECNMWL');
       <a href="/terms"><%= t('footer.terms') %></a>
       <a href="/privacy"><%= t('footer.privacy') %></a>
       <a href="/about"><%= t('nav.about') %></a>
+      <a href="/worlds">🌎 Our Worlds</a>
       <a href="/contact"><%= t('footer.contact') %></a>
       <% if (youtubeUrl) { %><a href="<%= youtubeUrl %>" target="_blank" rel="noopener"><%= t('footer.youtube') %></a><% } %>
       <% if (littleInkersYoutubeUrl) { %><a href="<%= littleInkersYoutubeUrl %>" target="_blank" rel="noopener">🖍️ <%= t('footer.lil_youtube') %></a><% } %>

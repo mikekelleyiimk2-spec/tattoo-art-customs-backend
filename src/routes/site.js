@@ -130,6 +130,8 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/halloween-flash`, changefreq: 'daily', priority: '0.9' },
     { loc: `${base}/show-designs`, changefreq: 'daily', priority: '0.8', lastmod: new Date().toISOString().slice(0, 10) },
     { loc: `${base}/poppy-and-ziggy`, changefreq: 'weekly', priority: '0.7' },
+    { loc: `${base}/worlds`, changefreq: 'weekly', priority: '0.7' },
+    { loc: `${base}/cannadash`, changefreq: 'weekly', priority: '0.6' },
     { loc: `${base}/watch`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/guides`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/guides/aftercare`, changefreq: 'monthly', priority: '0.7' },
@@ -405,12 +407,49 @@ function byRequestList() {
 // Poppy & Ziggy show page (growth order 2026-10-15): the website home for
 // the kids' show — episode list, premiere dates, and the subscribe funnel
 // for @ZiggyPoppy-l3b. Kid-safe copy only; no tattoo affiliates on this page.
+// WEBSITE SPLIT (owner order 2026-10-26): this page renders in the walled
+// Little Inkers layout (layout-li) — it previously wore the full TAC chrome
+// (tattoo nav/footer) and a tattoo-audience ad slot. Kids' worlds never
+// point back into tattoo commerce: no TAC layout, no /show-designs link
+// (that page is TAC commerce), no tattoo-context ad slot.
 router.get('/poppy-and-ziggy', async (req, res) => {
   const base = config.baseUrl.replace(/\/$/, '');
   res.render('site/poppy-ziggy', {
-    title: 'Poppy & Ziggy — the Kids\' Cartoon | Tattoo Art Customs',
+    layout: 'layout-li',
+    title: 'Poppy & Ziggy — the Kids\' Cartoon | Little Inkers Studio',
     metaDescription: 'Poppy & Ziggy color a page and it comes to life! New episode every Friday at 5 PM CT on YouTube, plus a fun Short every day. Subscribe free.',
     canonical: `${base}/poppy-and-ziggy`,
+  });
+});
+
+// Our Worlds — the SPLITTER hub (owner order 2026-10-26): the site is one
+// roof with separate rooms. Each world gets its own one-line description
+// and its own link, so no world bleeds into another. This hub is a
+// grown-up / studio-level surface (it links onward to TAC and to the 21+
+// CannaDash page), so it is linked only from adult/studio surfaces —
+// never from a kid page.
+router.get('/worlds', (req, res) => {
+  const base = config.baseUrl.replace(/\/$/, '');
+  res.render('site/worlds', {
+    title: 'Our Worlds — Useful Appz | Tattoo Art Customs',
+    metaDescription: 'One roof, separate rooms: Tattoo Art Customs, Little Inkers, Poppy & Ziggy, CannaDash (21+), OneMind, the Library, and the Useful Appz studio — each world on its own page.',
+    canonical: `${base}/worlds`,
+  });
+});
+
+// CannaDash — its OWN page (owner order 2026-10-26; website-restricted
+// brand: it lives ONLY here, never on tattoo or kid surfaces). Content
+// stays inside the 2026-10-26 legality memo: CannaDash is software
+// licensed to licensed retailers (the plumbing play) — the retailer is
+// the seller of record, CannaDash never takes title to product and never
+// touches product money. No live ordering; no market opens until counsel
+// clears it and a licensed partner signs. 21+ framing throughout.
+router.get('/cannadash', (req, res) => {
+  const base = config.baseUrl.replace(/\/$/, '');
+  res.render('site/cannadash', {
+    title: 'CannaDash — Cannabis Delivery, Run by Licensed Retailers | Useful Appz',
+    metaDescription: 'CannaDash is the delivery platform licensed retailers plug into: ordering, dispatch, chain-of-custody and proof-of-delivery software. Two apps — CannaDash for customers, CannaDash Driver for drivers. 21+. Not live yet.',
+    canonical: `${base}/cannadash`,
   });
 });
 
