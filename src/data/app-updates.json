@@ -164,13 +164,13 @@
     "gated": true
   },
   "com.usefulappz.testerhub": {
-    "versionCode": 6,
-    "versionName": "1.2.3",
+    "versionCode": 7,
+    "versionName": "1.3.0",
     "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.testerhub/apk",
-    "notes": "Tester Hub with real ads: AdMob banner + interstitials at natural breaks (max one per 3 minutes, never on first open), rotating house commercials, both doors up front \u2014 testers join the pool, developers add an app and the pool fills their list.",
-    "sha256": "c9245f937d795185797853a73c0f74d91e93d4ee54ee6af50eba3df121d285bc",
-    "sizeBytes": 9362890,
-    "publishedAt": "2026-10-26T19:26:00Z"
+    "notes": "Fill My Tester List lands: developer door carries the TIRED OF LOOKING FOR TESTERS pitch, the $24.99 one-app one-charge fill (waves cycle until FULL=12 confirmed, free top-ups through the 14-day run), tester in-app opt-in confirmations, and the live dopamine light board (real fill events only). Tester face leads with BECOME A TESTER \u2014 FIRST IN LINE. Full ad stack unchanged: AdMob banner + capped interstitials (max 1 per 3 min, never on first open) + rotating house commercials.",
+    "sha256": "a20574f562eb3c18936698988de74a02566050a6fdb51f4d8d4b15de6f7ea8a8",
+    "sizeBytes": 9366986,
+    "publishedAt": "2026-10-26T20:10:00Z"
   },
   "com.usefulappz.folder": {
     "versionCode": 3,
