@@ -270,6 +270,26 @@
    "name": "TikTok \u2014 @usefulappz",
    "notes": "TikTok Shop Creator Pilot rides this account (graduation ~Nov 14). A saved login is on file, but Aria's own TikTok login has been dead since Oct 14, 2026 (reset maxed) \u2014 in-app work is owner-hands or nothing until that changes. Plug law 5 applies: no durable credential class, no plug door; watch class is the honest offer. Documented in Playbook #3 \u00a71/\u00a72 at its real class.",
    "state": "browser/vault class \u2014 no connector; Aria-side login DOWN since 2026-10-14; owner-hands only"
+  },
+  {
+   "kind": "door",
+   "liveness": {
+    "how_checked": "Live GET /api/onemind/ties (Muse service token) + POST /api/onemind/signin seat proof; backend suite test/onemindIdentity.js (registry refusals, tie writes, seat summary)",
+    "last_verified": "2026-10-26"
+   },
+   "name": "OneMind Sign-In \u2014 the one account (the original sign-in)",
+   "notes": "Owner law restated 2026-10-26: logging into anything we own IS the OneMind login \u2014 the backend IS OneMind (the hub where the plugs run together) and the OneMind app is one window into it, so the tie attaches on any surface with no dependence on the app being installed. Migration 110: users.onemind_id minted for every existing account (boot backfill in src/lib/onemind.js, no password change, no lockout) + account_ties (account x surface x first-seated x last-seen, first-seated written once at the sitting). The surface registry (src/lib/surfaces.js) is the allowlist: kids surfaces are absent by construction and can never write a tie \u2014 no flag exists to flip. Recognition is the default (owner payoff line: 'If you've ever had anything we make and later decide to get OneMind, it already recognizes you'): GET /api/onemind/seat returns the seat summary (first-seated anywhere, surfaces, tie count) so any surface greets a known seat; introduction is the failure mode. Web doors (/login, /signup, /api/bootstrap) seat the website tie; the app door is POST /api/onemind/signin. Contract: docs/onemind-signin-contract.md in the backend repo. App-side integrations ride each app's update train.",
+   "state": "live \u2014 foundation slice 1 (canonical id + tie registry + contract door + seat summary; per-app integrations ride update trains)"
+  },
+  {
+   "kind": "door",
+   "liveness": {
+    "how_checked": "Live GET /api/onemind/ties (Muse service token) \u2014 the website's tie row is counted there; backend suite test/onemindIdentity.js (web login/signup seat the website tie; migrated accounts carry it at their true creation dates)",
+    "last_verified": "2026-10-26"
+   },
+   "name": "Website \u2014 logged surface #1 of OneMind",
+   "notes": "Owner addition 2026-10-26: 'From here on the website also logs OneMind.' The website is a first-class logged surface of OneMind, not an implicit default: 'website' is entry #1 in the tieable-surface registry (src/lib/surfaces.js), and every website sign-in is a OneMind sign-in \u2014 /login, /signup, and /api/bootstrap seat the account's website tie in account_ties (first-seated written once at the sitting, last-seen moving after). The existing Tattoo Art Customs accounts were migrated onto it at their true first-seated dates (their own created_at) with credentials untouched \u2014 logins and passwords carry over as-is. The site's account page shows the seat ('Your OneMind seat'), and the sign-in pages state plainly that the account is the OneMind account.",
+   "state": "live \u2014 website logins are OneMind logins (migration 110 tie registry; existing accounts seated at true creation dates)"
   }
  ],
  "law": "The Codex is the written registry of the table \u2014 the Directory + every tie, seat, price, and result. A plug, price, or tie that isn't in the codex isn't real. Every entry carries its liveness: how it was checked and when it was last actually verified. A date in this file means somebody ran the check that day \u2014 never a guess, never a hope.",

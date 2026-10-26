@@ -111,6 +111,9 @@ router.get('/', requireLogin, async (req, res) => {
   // with per-session revoke, plus the plan cap.
   const { cap: sessionCap, exempt: sessionExempt } = await capForUserId(req.user.id);
   const sessions = sessionExempt ? [] : await listSessions(req.user.id, req.sessionID);
+  // OneMind seat: this account IS a OneMind account (migration 110) —
+  // the dashboard shows the seat and every surface holding its tie.
+  const oneMindSeat = await require('../lib/onemind').seatSummary(req.user).catch(() => null);
   res.render('account/dashboard', {
     title: 'My Account — Tattoo Art Customs', photos, subs, orders,
     metaDescription: 'Your Tattoo Art Customs account.',
@@ -118,7 +121,7 @@ router.get('/', requireLogin, async (req, res) => {
     destTypes: require('../lib/cashout').DEST_TYPES,
     ageVerified: !!(ageRow && ageRow.age_verified),
     showExplicit: !!(ageRow && ageRow.show_explicit),
-    sessions, sessionCap, sessionExempt,
+    sessions, sessionCap, sessionExempt, oneMindSeat,
   });
 });
 

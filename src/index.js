@@ -277,6 +277,7 @@ app.use('/orders', require('./routes/orders'));
 app.use('/transfers', require('./routes/transfers'));
 app.use('/play', require('./routes/play'));
 app.use('/api', require('./routes/api').router);
+app.use('/api', require('./routes/onemind'));
 app.use('/api', require('./routes/appUpdates'));
 app.use('/api/muse', require('./routes/muse'));
 app.use('/api/muse', require('./routes/messenger'));
@@ -411,6 +412,24 @@ process.on('unhandledRejection', (reason) => {
 
 async function start() {
   await migrate();
+  // OneMind identity migration (110): the existing website accounts
+  // ARE the migration population — every one gets its canonical
+  // onemind_id minted and its website tie seated at its true
+  // first-seated date (its own created_at). Credentials are never
+  // touched: logins and passwords carry over as-is. Idempotent and
+  // reversible-safe; a failure here must never block the boot. The
+  // counts land in the deploy log — that line is the migration
+  // report for the existing population.
+  try {
+    const onemindLib = require('./lib/onemind');
+    const minted = await onemindLib.backfillOneMindIds();
+    const seated = await onemindLib.seatMigratedAccounts();
+    if (minted || seated) {
+      console.log(`onemind: existing accounts migrated — ${minted} OneMind id(s) minted, ${seated} website tie(s) seated at true first-seated dates`);
+    }
+  } catch (e) {
+    console.error('onemind account migration failed:', e.message);
+  }
   // Periodic cleanup of expired sessions.
   sessionCleanupTimer = setInterval(() => {
     db.query('DELETE FROM sessions WHERE expires_at < ?', [Date.now()]).catch(() => {});

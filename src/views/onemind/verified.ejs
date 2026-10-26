@@ -1,0 +1,16 @@
+<h1>You&rsquo;re seated.</h1>
+<% if (createdAccount) { %>
+<p>We created your <strong>OneMind account</strong> for <strong><%= seat.email %></strong> and signed you in. One account works on everything Useful Appz makes &mdash; every app, every surface, one sign-in &mdash; and anything you pick up later will already recognize you.</p>
+<% } else { %>
+<p>Welcome back &mdash; you&rsquo;re signed in as <strong><%= seat.email %></strong>. This is your OneMind account: the same one you already had, with everything you already hold under it. Nothing new to register, nothing to re-enter.</p>
+<% } %>
+<p class="muted">OneMind ID: <strong><%= seat.onemind_id %></strong><% if (seat.first_seated_at) { %> &middot; First seated: <strong><%= new Date(seat.first_seated_at).toLocaleDateString('en-US') %></strong><% } %></p>
+<% if (seat.ties && seat.ties.length) { %>
+<p class="muted">Your seats so far:</p>
+<ul>
+  <% seat.ties.forEach(function (tie) { %>
+  <li><strong><%= tie.surface_name %></strong> &mdash; seated <%= new Date(tie.first_seated_at).toLocaleDateString('en-US') %></li>
+  <% }); %>
+</ul>
+<% } %>
+<p>You can close this page and head back to the app &mdash; it already knows you. Want a password too? <a href="/forgot">Set one here</a> any time, or keep using email links: they&rsquo;re the same door.</p>

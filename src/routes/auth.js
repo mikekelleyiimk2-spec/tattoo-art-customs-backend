@@ -12,6 +12,7 @@ const { authLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const router = express.Router();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const { ensureReferralCode, recordSignupReferral } = require('../lib/referrals');
+const onemind = require('../lib/onemind');
 const { screenText } = require('../lib/screening');
 const { enforceSessionCap } = require('../lib/sessionLimits');
 
@@ -69,6 +70,10 @@ router.post('/signup', authLimiter, checkHoneypot, async (req, res) => {
     }
   } catch (e) { console.error('raffle entry on signup failed:', e.message); }
   req.session.userId = id;
+  // OneMind: a new account is a OneMind account, seated at the table
+  // the moment it sits down (surface: website). Best-effort — a tie
+  // write never breaks a signup.
+  await onemind.seatQuietly(id, 'website');
   await enforceSessionCap(req); // new account: no other sessions, a no-op
   if (!req.session.flash) req.session.flash = 'Welcome to Tattoo Art Customs!';
   res.redirect(req.session.returnTo || '/account');
@@ -86,6 +91,9 @@ router.post('/login', authLimiter, checkHoneypot, async (req, res) => {
     return res.redirect('/login');
   }
   req.session.userId = user.id;
+  // OneMind: signing in on the website seats the account's website
+  // tie (first-seated sticks, last-seen moves). Best-effort.
+  await onemind.seatQuietly(user.id, 'website');
   await enforceSessionCap(req); // evicts oldest sessions when over the plan cap
   const dest = req.session.returnTo || '/account';
   delete req.session.returnTo;

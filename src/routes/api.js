@@ -650,6 +650,10 @@ router.get('/bootstrap', async (req, res) => {
   const user = await db.get('SELECT id FROM users WHERE api_token = ?', [token]);
   if (!user) return res.status(401).render('error', { title: 'Not linked', message: 'Link your website account in the app first.' });
   req.session.userId = user.id;
+  // OneMind: the bootstrap IS a website sign-in (an app holding the
+  // account's token seating its person on the site) — write the
+  // website tie. Best-effort; never blocks the bootstrap.
+  await require('../lib/onemind').seatQuietly(user.id, 'website');
   // The app reaches the site through this WebView bootstrap, so session
   // cookies carry over and device caps apply automatically (app parity).
   await enforceSessionCap(req);

@@ -553,6 +553,7 @@ async function main() {
   await require('./merchCatalog').runDbTests(ok);
   await require('./apiLane').runDbTests(ok); // AI Master Button API lane (worker, adapters, grammar)
   await require('./messenger').runDbTests(ok); // AI-to-AI Messenger slice 1 (worker routing rule: recipient seat, no failover)
+  await require('./onemindIdentity').runDbTests(ok); // OneMind identity foundation (migration 110: onemind_id backfill + tie registry + surface refusals)
   await require('./moneyWatch').runDbTests(ok); // Money Watch watcher (baseline, exactly-once, kinds, CT windows)
 
   // Mail retry (unit-level, no live SMTP): a transient failure is retried
@@ -1567,6 +1568,7 @@ async function main() {
   await require('./servicePlug').runHttpTests(ok, req); // AI API Service Plug (write-only vault + play operation)
   await require('./rootApi').runHttpTests(ok, req);
   await require('./onemindRoot').runHttpTests(ok, req); // OneMind Root (table root: seats registry, plug points + plug-in charges, fingerprint-only seat credentials, op log)
+  await require('./onemindIdentity').runHttpTests(ok); // OneMind sign-in (the one account: app door, ties, recognition seat summary, book view)
   await require('./moneyWatch').runHttpTests(ok, req); // Money Watch endpoint (public envelope + token-guarded full view/run)
   r = await areq('POST', `/admin/orders/${orderId}/confirm-manual`);
   ok(r.status === 302, 'admin confirms manual payment');
