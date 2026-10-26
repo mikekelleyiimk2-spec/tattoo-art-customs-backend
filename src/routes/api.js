@@ -11,6 +11,7 @@ const { viewerFor, displayImgFile } = require('../lib/contentPolicy');
 const { designThumbUrl } = require('../lib/designThumbs');
 const { authLimiter, formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { enforceSessionCap } = require('../lib/sessionLimits');
+const rolodex = require('../lib/rolodex');
 
 const router = express.Router();
 
@@ -19,22 +20,43 @@ const router = express.Router();
 // /merch + /discounts, so any app surface can render the full set from one
 // payload. Keep in sync with src/lib/merchCatalog.js. CNC Tattoo is
 // shop-subscriber-gated and NEVER appears here or on any public surface.
+//
+// Affiliate Rolodex plug (Slice 2, 2026-10-26): the affiliate entries'
+// URLs are NO LONGER hard-coded here — each one is pulled live from the
+// rolodex (src/lib/rolodex.js, data in src/data/rolodex.json), so a link
+// change in the rolodex updates this payload with no code change. The
+// slot list below only fixes the response shape app clients already
+// consume (id / display name / order); per the plug contract only LIVE
+// rolodex programs render, so a program that leaves `live` drops out of
+// the payload rather than serving a stale link. Amazon Associates has no
+// single program link by design — its rolodex `code` IS the Associates
+// tag, so its URL is the Amazon storefront carrying that tag.
+const APP_LINK_AFFILIATES = [
+  { id: 'baselabs', name: 'Base Labs', program: 'Base Labs' },
+  { id: 'electrum', name: 'Electrum Supply', program: 'Electrum Supply' },
+  { id: 'drtattooskin', name: 'DrTattooSkin', program: 'DrTattooSkin' },
+  { id: 'recovery', name: 'Recovery Aftercare', program: 'Recovery Aftercare' },
+  { id: 'leda', name: 'Leda Art Supply', program: 'Leda Art Supply' },
+  { id: 'amazon', name: 'Amazon', program: 'Amazon Associates', urlFromTag: true },
+  { id: 'monstersink', name: 'Monsters Ink', program: 'Monsters Ink' },
+];
+
 function appLinkSet(config) {
   const base = config.baseUrl;
+  const affiliates = [];
+  for (const slot of APP_LINK_AFFILIATES) {
+    const p = rolodex.findLiveByName(slot.program);
+    if (!p) continue;
+    const url = p.link || (slot.urlFromTag && p.code ? `https://www.amazon.com/?tag=${p.code}` : null);
+    if (!url) continue;
+    affiliates.push({ id: slot.id, name: slot.name, url });
+  }
   return {
     merch: `${base}/merch`,
     discounts: `${base}/discounts`,
     aftercare: `${base}/aftercare`,
     giftCards: `${base}/gift-cards/buy`,
-    affiliates: [
-      { id: 'baselabs', name: 'Base Labs', url: 'https://baselabs.is/?coupon=TAC20' },
-      { id: 'electrum', name: 'Electrum Supply', url: 'https://club.co/s/R6gQCOlWghEC9' },
-      { id: 'drtattooskin', name: 'DrTattooSkin', url: 'https://www.drtattooskin.com/TATTOOARTCUSTOMS' },
-      { id: 'recovery', name: 'Recovery Aftercare', url: 'https://lasso.to/auGY590feE/' },
-      { id: 'leda', name: 'Leda Art Supply', url: 'https://lasso.to/RfUlWaYEwK/' },
-      { id: 'amazon', name: 'Amazon', url: 'https://www.amazon.com/?tag=tattooartcust-20' },
-      { id: 'monstersink', name: 'Monsters Ink', url: 'https://monstersink.com/michael' },
-    ],
+    affiliates,
   };
 }
 
@@ -52,6 +74,39 @@ router.get('/app-links', (req, res) => {
     appStoreUrl: config.appStoreUrl || '',
     appsPage: `${config.baseUrl}/apps`,
     links: appLinkSet(config),
+  });
+});
+
+// Affiliate Rolodex — the live plug endpoint (Slice 2, 2026-10-26).
+// Serves src/data/rolodex.json per the plug contract (canonical project:
+// ~/workspace/app/affiliate-rolodex/ — README.md + PLUG.md):
+//   GET /api/rolodex                  all live programs
+//   GET /api/rolodex?name=Base+Labs   one live program by name
+//   GET /api/rolodex?surface=/merch   live programs placed on a surface
+//   GET /api/rolodex?kid_safe=1       live kid-safe programs only
+// Only status=live entries are EVER returned — there is deliberately no
+// ?all=1: pending / approved-not-placed / closed entries stay out of
+// every response. Every entry carries link + code + disclosure together
+// (the disclosure lock, enforced in src/lib/rolodex.js) — there is no
+// way to pull a bare link from this endpoint.
+router.get('/rolodex', (req, res) => {
+  const name = String(req.query.name || '').trim();
+  if (name) {
+    const program = rolodex.findLiveByName(name);
+    if (!program) return res.status(404).json({ ok: false, error: 'not found' });
+    return res.json({ ok: true, program });
+  }
+  const surface = String(req.query.surface || '').trim();
+  const kidSafe = req.query.kid_safe === '1' || req.query.kid_safe === 'true';
+  const programs = rolodex.queryLive({ surface, kidSafe });
+  res.json({
+    ok: true,
+    rolodex: 'Affiliate Rolodex',
+    version: rolodex.version(),
+    updated: rolodex.updated(),
+    disclosure: rolodex.disclosureStandard(),
+    count: programs.length,
+    programs,
   });
 });
 
