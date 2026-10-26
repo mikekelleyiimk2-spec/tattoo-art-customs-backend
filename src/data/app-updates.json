@@ -173,13 +173,13 @@
     "publishedAt": "2026-10-26T20:10:00Z"
   },
   "com.usefulappz.folder": {
-    "versionCode": 4,
-    "versionName": "1.2.0",
+    "versionCode": 5,
+    "versionName": "1.2.1",
     "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.folder/apk",
-    "notes": "UsefulAppz Folder vc4: the list now files in the folder's own order \u2014 8 groups A\u2013Z, apps A\u2013Z inside, all 47 apps \u2014 and the last two spots are filled: Poppy & Ziggy the game sits in Kids & Family, and the AI to AI door at the top of AI Team opens OneMind's AI-to-AI room. Full ad stack unchanged (AdMob banner + interstitials at natural breaks + house slot); the scan still phones home so updates reach you.",
-    "sha256": "a015a07ed942f7e33b29b84732252e5da73493ebbd4fe1b8a75bb180a0b0038d",
+    "notes": "UsefulAppz Folder vc5: per the owner's change of orders, the AI to AI door no longer aims at OneMind's room \u2014 AI-to-AI is a standalone app now (com.usefulappz.ai2ai) and the door launches it, with OneMind as the fallback until it's installed. Everything else from vc4 stands: the list files in the folder's own order (8 groups A\u2013Z, apps A\u2013Z inside, all 47 apps), Poppy & Ziggy the game in Kids & Family, full ad stack unchanged.",
+    "sha256": "37bfd8ffdcb85d17f8f490685384a00d776755d6f2c62220ee65f979e3945d5e",
     "sizeBytes": 9128718,
-    "publishedAt": "2026-10-26T21:52:00Z"
+    "publishedAt": "2026-10-26T22:05:16Z"
   },
   "com.usefulappz.poppyziggy": {
     "versionCode": 1,
