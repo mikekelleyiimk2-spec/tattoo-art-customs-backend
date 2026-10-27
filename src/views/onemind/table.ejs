@@ -1,54 +1,315 @@
 <style>
-  .om-ntp { min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 14vh 1rem 2rem; }
-  .om-wordmark { font-size: 4.2rem; font-weight: 500; letter-spacing: -.02em; margin: 0 0 2rem; color: #202124; user-select: none; }
-  @media (prefers-color-scheme: dark) { .om-wordmark { color: #e8eaed; } }
-  .om-search { display: flex; align-items: center; gap: .6rem; width: 100%; max-width: 560px; background: #fff; border: 1px solid transparent; border-radius: 999px; box-shadow: 0 1px 6px rgba(32,33,36,.28); padding: .8rem 1.1rem; }
-  @media (prefers-color-scheme: dark) { .om-search { background: #303134; box-shadow: none; } }
-  .om-search svg { flex: 0 0 auto; fill: #5f6368; }
-  @media (prefers-color-scheme: dark) { .om-search svg { fill: #9aa0a6; } }
-  .om-search input { flex: 1 1 auto; border: 0; outline: 0; background: transparent; font-size: 1rem; color: inherit; min-width: 0; }
-  .om-tiles { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem .25rem; max-width: 640px; margin-top: 2.2rem; }
-  .om-tile { display: flex; flex-direction: column; align-items: center; gap: .45rem; width: 96px; padding: .8rem 0 .6rem; border-radius: 12px; text-decoration: none; color: #202124; }
-  @media (prefers-color-scheme: dark) { .om-tile { color: #e8eaed; } }
-  .om-tile:hover { background: rgba(32,33,36,.06); }
-  @media (prefers-color-scheme: dark) { .om-tile:hover { background: rgba(232,234,237,.08); } }
-  .om-tile .om-ic { width: 48px; height: 48px; border-radius: 50%; background: #f1f3f4; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-  @media (prefers-color-scheme: dark) { .om-tile .om-ic { background: #303134; } }
-  .om-tile .om-ic img { width: 24px; height: 24px; }
-  .om-tile .om-ic span { font-size: 1.15rem; font-weight: 500; color: #fff; }
-  .om-tile .om-lb { font-size: .78rem; text-align: center; line-height: 1.15; max-width: 88px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* OneMind table face — dark browser-grammar workspace, rebuilt
+     2026-10-27 to the owner's GPT-built reference (Eye corpus:
+     REF-2026-10-27-gpt-onemind-landing-owner-built-first-try).
+     Palette (N-W3): deep navy ground, electric blue, cyan glow —
+     one hue family plus neutrals. Everything on the face is a door
+     or a real state from the Codex; panels with no live data yet
+     render their honest empty state in the same language. */
+  body { background: #060b16; }
+  .omt { min-height: 100vh; display: grid; grid-template-columns: 236px minmax(0, 1fr) 288px; background: #060b16; color: #e7eef8; font-family: "Segoe UI", Arial, Roboto, sans-serif; }
+  .omt a { color: inherit; }
+  .omt ::selection { background: rgba(53, 196, 255, .35); }
+
+  /* --- rails, shared furniture --- */
+  .omt-rail, .omt-people { background: #081120; border-right: 1px solid #16263f; padding: 1.1rem .9rem 1.4rem; display: flex; flex-direction: column; gap: .35rem; }
+  .omt-people { border-right: 0; border-left: 1px solid #16263f; }
+  .omt-brand { display: flex; align-items: center; gap: .6rem; text-decoration: none; padding: .2rem .4rem 1rem; }
+  .omt-brand svg { flex: 0 0 auto; filter: drop-shadow(0 0 6px rgba(53, 196, 255, .55)); }
+  .omt-brand strong { display: block; font-size: 1.28rem; letter-spacing: .01em; line-height: 1.05; }
+  .omt-brand small { display: block; color: #7f95b5; font-size: .72rem; margin-top: .15rem; }
+  .omt-nav { display: flex; flex-direction: column; gap: .15rem; }
+  .omt-nav a, .omt-actions a { display: flex; align-items: center; gap: .55rem; padding: .5rem .6rem; border-radius: 9px; text-decoration: none; font-size: .92rem; color: #c6d4e8; }
+  .omt-nav a:hover, .omt-actions a:hover { background: rgba(47, 123, 255, .14); color: #fff; }
+  .omt-nav a.is-active { background: linear-gradient(90deg, rgba(47, 123, 255, .35), rgba(47, 123, 255, .12)); color: #fff; box-shadow: inset 2px 0 0 #35c4ff; }
+  .omt-nav .omt-ic, .omt-actions .omt-ic { width: 1.05rem; text-align: center; flex: 0 0 auto; opacity: .85; }
+  .omt-side-label { margin: 1.05rem .4rem .35rem; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: #63789a; }
+  .omt-actions { display: flex; flex-direction: column; gap: .3rem; }
+  .omt-actions a { border: 1px solid #1b2c49; background: #0b1730; font-size: .88rem; }
+  .omt-rail-foot, .omt-people-foot { margin-top: auto; padding: .9rem .4rem 0; color: #7f95b5; font-style: italic; font-size: .85rem; line-height: 1.45; }
+  .omt-session-card { border: 1px solid #1b2c49; background: linear-gradient(160deg, #0c1830, #0a1425); border-radius: 12px; padding: .7rem .75rem; display: flex; flex-direction: column; gap: .3rem; }
+  .omt-session-card strong { font-size: .92rem; }
+  .omt-session-card span { font-size: .78rem; color: #8fa3bf; line-height: 1.4; }
+  .omt-session-card .omt-live-dot { color: #34d399; }
+
+  /* --- main column --- */
+  .omt-main { padding: 1rem 1.2rem 1.4rem; display: flex; flex-direction: column; gap: .9rem; min-width: 0; }
+  .omt-omnibox { display: flex; align-items: center; gap: .6rem; background: #0c1730; border: 1px solid #1e3050; border-radius: 999px; padding: .55rem 1rem; box-shadow: 0 2px 14px rgba(0, 0, 0, .35); }
+  .omt-omnibox:focus-within { border-color: #2f7bff; box-shadow: 0 0 0 3px rgba(47, 123, 255, .25); }
+  .omt-omnibox svg { flex: 0 0 auto; fill: #7f95b5; }
+  .omt-omnibox input, .omt-composer input { flex: 1 1 auto; min-width: 0; border: 0; outline: 0; background: transparent; color: #e7eef8; font-size: .98rem; }
+  .omt-omnibox input::placeholder, .omt-composer input::placeholder { color: #63789a; }
+
+  .omt-hero { position: relative; overflow: hidden; border: 1px solid #1b2c49; border-radius: 16px; padding: 1.3rem 1.4rem 1.2rem; background:
+      radial-gradient(560px 240px at 72% -10%, rgba(53, 196, 255, .20), rgba(53, 196, 255, 0) 62%),
+      radial-gradient(480px 220px at 8% 115%, rgba(47, 123, 255, .18), rgba(47, 123, 255, 0) 60%),
+      radial-gradient(2px 2px at 12% 22%, rgba(255,255,255,.75) 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 34% 12%, rgba(255,255,255,.55) 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 88% 30%, rgba(255,255,255,.5) 50%, transparent 51%),
+      radial-gradient(2px 2px at 58% 18%, rgba(255,255,255,.45) 50%, transparent 51%),
+      linear-gradient(168deg, #0c1a33 0%, #081426 55%, #060f1f 100%); }
+  .omt-hero-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, .9fr) minmax(0, 1fr); gap: 1.2rem; align-items: center; position: relative; }
+  .omt-hero h1 { margin: 0; font-size: 2.6rem; font-weight: 650; letter-spacing: -.01em; line-height: 1.02; }
+  .omt-hero-line { margin: .35rem 0 0; font-size: 1.06rem; font-weight: 600; color: #dbe7fa; }
+  .omt-hero-sub { margin: .55rem 0 0; color: #9db1cf; font-size: .92rem; line-height: 1.5; max-width: 34ch; }
+  .omt-hero-live { margin: .8rem 0 0; font-size: .8rem; color: #35c4ff; letter-spacing: .02em; }
+  .omt-orbit { position: relative; height: 168px; }
+  .omt-orbit .omt-ring { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .omt-orbit-core { position: absolute; left: 50%; top: 50%; width: 74px; height: 74px; margin: -37px 0 0 -37px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(circle at 38% 32%, rgba(140, 225, 255, .95), rgba(47, 123, 255, .75) 45%, rgba(14, 42, 90, .95) 78%);
+      box-shadow: 0 0 34px rgba(53, 196, 255, .55), inset 0 0 18px rgba(255, 255, 255, .25); animation: omt-pulse 3.2s ease-in-out infinite; }
+  @keyframes omt-pulse { 0%, 100% { box-shadow: 0 0 26px rgba(53, 196, 255, .45), inset 0 0 18px rgba(255,255,255,.22); } 50% { box-shadow: 0 0 44px rgba(53, 196, 255, .7), inset 0 0 22px rgba(255,255,255,.3); } }
+  @media (prefers-reduced-motion: reduce) { .omt-orbit-core { animation: none; } }
+  .omt-orbit-node { position: absolute; width: 34px; height: 34px; border-radius: 50%; background: #0d1a30; border: 1px solid #2a4a7d; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 12px rgba(53, 196, 255, .3); }
+  .omt-orbit-node img { width: 19px; height: 19px; }
+  .omt-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .8rem; }
+  .omt-chips li { display: flex; flex-direction: column; gap: .12rem; padding-left: 2.1rem; position: relative; }
+  .omt-chips .omt-chip-ic { position: absolute; left: 0; top: .05rem; width: 1.55rem; height: 1.55rem; border-radius: 8px; border: 1px solid #2a4a7d; background: rgba(47, 123, 255, .15); display: flex; align-items: center; justify-content: center; font-size: .85rem; }
+  .omt-chips strong { font-size: .9rem; color: #eaf2fd; }
+  .omt-chips span { font-size: .78rem; color: #8fa3bf; line-height: 1.4; }
+
+  .omt-strip { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; border: 1px solid #1b2c49; background: #0b1730; border-radius: 12px; padding: .55rem .9rem; }
+  .omt-strip-topic { font-weight: 650; font-size: .95rem; }
+  .omt-strip-state { color: #8fa3bf; font-size: .85rem; }
+  .omt-strip-tabs { display: flex; gap: .3rem; margin-left: auto; }
+  .omt-strip-tabs a { padding: .38rem .8rem; border-radius: 999px; text-decoration: none; font-size: .85rem; color: #c6d4e8; border: 1px solid transparent; }
+  .omt-strip-tabs a:hover { border-color: #2a4a7d; color: #fff; }
+  .omt-strip-tabs a:first-child { background: rgba(47, 123, 255, .3); color: #fff; }
+  .omt-share { border: 1px solid #2a4a7d; background: #0d1c38; color: #dbe7fa; border-radius: 999px; padding: .42rem .95rem; font-size: .85rem; cursor: pointer; }
+  .omt-share:hover { background: #12305f; }
+
+  .omt-stage { border: 1px solid #16263f; border-radius: 14px; background: linear-gradient(180deg, rgba(17, 32, 58, .55), rgba(10, 20, 38, .55)); padding: 1rem; }
+  .omt-empty { border: 1px dashed #24406b; border-radius: 12px; padding: 1.4rem 1.2rem; text-align: center; display: flex; flex-direction: column; gap: .4rem; align-items: center; }
+  .omt-empty strong { font-size: 1.02rem; color: #eaf2fd; }
+  .omt-empty span { color: #8fa3bf; font-size: .88rem; line-height: 1.5; max-width: 56ch; }
+
+  .omt-panels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .9rem; }
+  .omt-panel { border: 1px solid #1b2c49; background: #0a1528; border-radius: 14px; padding: .95rem 1rem; min-height: 128px; }
+  .omt-panel h2 { margin: 0 0 .5rem; font-size: .95rem; display: flex; align-items: center; gap: .5rem; }
+  .omt-panel h2 .omt-live { margin-left: auto; font-size: .68rem; letter-spacing: .07em; color: #34d399; text-transform: uppercase; display: flex; align-items: center; gap: .3rem; }
+  .omt-panel h2 .omt-live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #34d399; box-shadow: 0 0 8px rgba(52, 211, 153, .8); }
+  .omt-panel p { margin: 0; color: #8fa3bf; font-size: .85rem; line-height: 1.55; }
+
+  .omt-composer { position: sticky; bottom: .9rem; display: flex; align-items: center; gap: .7rem; background: #0c1730; border: 1px solid #24406b; border-radius: 999px; padding: .5rem .55rem .5rem 1.05rem; box-shadow: 0 8px 28px rgba(0, 0, 0, .5); }
+  .omt-composer:focus-within { border-color: #2f7bff; box-shadow: 0 0 0 3px rgba(47, 123, 255, .25), 0 8px 28px rgba(0, 0, 0, .5); }
+  .omt-composer-dot { width: 10px; height: 10px; border-radius: 50%; background: #35c4ff; box-shadow: 0 0 10px rgba(53, 196, 255, .8); flex: 0 0 auto; }
+  .omt-send { flex: 0 0 auto; border: 0; border-radius: 999px; background: linear-gradient(135deg, #2f7bff, #1f6ae0); color: #fff; font-size: .92rem; font-weight: 600; padding: .55rem 1.25rem; cursor: pointer; }
+  .omt-send:hover { background: linear-gradient(135deg, #4a8dff, #2f7bff); }
+
+  /* --- participants rail --- */
+  .omt-people-head { display: flex; align-items: baseline; gap: .5rem; padding: 0 .4rem .55rem; }
+  .omt-people-head h2 { margin: 0; font-size: 1rem; }
+  .omt-people-head span { color: #63789a; font-size: .78rem; }
+  .omt-people-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .12rem; }
+  .omt-person { display: flex; align-items: center; gap: .65rem; padding: .42rem .5rem; border-radius: 10px; text-decoration: none; }
+  a.omt-person:hover { background: rgba(47, 123, 255, .13); }
+  .omt-avatar { width: 32px; height: 32px; border-radius: 50%; background: #0d1a30; border: 1px solid #22385e; display: flex; align-items: center; justify-content: center; overflow: hidden; flex: 0 0 auto; font-weight: 650; color: #9fd8ff; }
+  .omt-avatar img { width: 19px; height: 19px; }
+  .omt-avatar-you { background: linear-gradient(135deg, #2f7bff, #35c4ff); color: #fff; border-color: transparent; }
+  .omt-person-meta { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+  .omt-person-meta strong { font-size: .9rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .omt-person-meta small { color: #7f95b5; font-size: .72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .omt-dot { width: 8px; height: 8px; border-radius: 50%; background: #3a4f74; flex: 0 0 auto; }
+  .omt-dot.is-on { background: #34d399; box-shadow: 0 0 8px rgba(52, 211, 153, .75); }
+  .omt-person-you-row { border-top: 1px solid #16263f; margin-top: .45rem; padding-top: .45rem; }
+
+  @media (max-width: 1180px) {
+    .omt { grid-template-columns: 208px minmax(0, 1fr); }
+    .omt-people { grid-column: 1 / -1; border-left: 0; border-top: 1px solid #16263f; }
+    .omt-people-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
+    .omt-hero-grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+    .omt-orbit { display: none; }
+  }
+  @media (max-width: 720px) {
+    .omt { grid-template-columns: minmax(0, 1fr); }
+    .omt-rail { border-right: 0; border-bottom: 1px solid #16263f; }
+    .omt-rail-foot { display: none; }
+    .omt-hero-grid { grid-template-columns: minmax(0, 1fr); }
+    .omt-panels { grid-template-columns: minmax(0, 1fr); }
+    .omt-strip-tabs { margin-left: 0; }
+  }
 </style>
-<div class="om-ntp">
-  <h1 class="om-wordmark">OneMind</h1>
-  <form class="om-search" id="om-search" role="search" autocomplete="off">
-    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14"/></svg>
-    <input id="om-q" type="text" placeholder="Search Google or type URL" aria-label="Search Google or type URL">
-    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-2.08A7 7 0 0 0 19 12z"/></svg>
-  </form>
-  <nav class="om-tiles" aria-label="Shortcuts">
-    <a class="om-tile" href="https://chatgpt.com"><span class="om-ic"><img alt="" src="https://www.google.com/s2/favicons?domain=chatgpt.com&sz=128"></span><span class="om-lb">ChatGPT</span></a>
-    <a class="om-tile" href="https://claude.ai"><span class="om-ic"><img alt="" src="https://www.google.com/s2/favicons?domain=claude.ai&sz=128"></span><span class="om-lb">Claude</span></a>
-    <a class="om-tile" href="https://gemini.google.com"><span class="om-ic"><img alt="" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=128"></span><span class="om-lb">Gemini</span></a>
-    <a class="om-tile" href="https://grok.com"><span class="om-ic"><img alt="" src="https://www.google.com/s2/favicons?domain=grok.com&sz=128"></span><span class="om-lb">Grok</span></a>
-    <a class="om-tile" href="https://www.perplexity.ai"><span class="om-ic"><img alt="" src="https://www.google.com/s2/favicons?domain=perplexity.ai&sz=128"></span><span class="om-lb">Perplexity</span></a>
-    <a class="om-tile" href="https://copilot.microsoft.com"><span class="om-ic"><img alt="" src="https://www.google.com/s2/favicons?domain=copilot.microsoft.com&sz=128"></span><span class="om-lb">Copilot</span></a>
-    <a class="om-tile" href="https://chat.deepseek.com"><span class="om-ic"><img alt="" src="https://www.google.com/s2/favicons?domain=deepseek.com&sz=128"></span><span class="om-lb">DeepSeek</span></a>
-    <a class="om-tile" href="/"><span class="om-ic" style="background:#7a1f1f;"><span>T</span></span><span class="om-lb">Tattoo Art Customs</span></a>
-    <a class="om-tile" href="/onemind"><span class="om-ic" style="background:#14532d;"><span>O</span></span><span class="om-lb">OneMind</span></a>
-    <a class="om-tile" href="/onemind/tester-hub"><span class="om-ic" style="background:#1d4ed8;"><span>H</span></span><span class="om-lb">Tester Hub</span></a>
-    <a class="om-tile" href="/onemind/tools"><span class="om-ic" style="background:#6d28d9;"><span>T</span></span><span class="om-lb">The Tools</span></a>
-    <a class="om-tile" href="/onemind/poppy-and-ziggy"><span class="om-ic" style="background:#db2777;"><span>P</span></span><span class="om-lb">Poppy &amp; Ziggy</span></a>
-    <a class="om-tile" href="/onemind/little-inkers"><span class="om-ic" style="background:#ea580c;"><span>L</span></span><span class="om-lb">Little Inkers</span></a>
-    <a class="om-tile" href="/onemind/killintime"><span class="om-ic" style="background:#111827;"><span>K</span></span><span class="om-lb">KillinTime</span></a>
-  </nav>
+<div class="omt">
+  <aside class="omt-rail">
+    <a class="omt-brand" href="/onemind/table" aria-label="OneMind — the table">
+      <svg width="36" height="36" viewBox="0 0 40 40" aria-hidden="true"><g fill="none" stroke="#35c4ff" stroke-width="1.4" opacity=".8"><path d="M20 20 8 10M20 20 32 9M20 20 7 27M20 20 33 28M20 20 20 5M20 20 14 34M20 20 28 33"/></g><g fill="#7dd3fc"><circle cx="20" cy="20" r="4.2" fill="#35c4ff"/><circle cx="8" cy="10" r="2.4"/><circle cx="32" cy="9" r="2.4"/><circle cx="7" cy="27" r="2.4"/><circle cx="33" cy="28" r="2.4"/><circle cx="20" cy="5" r="2.2"/><circle cx="14" cy="34" r="2.2"/><circle cx="28" cy="33" r="2.2"/></g></svg>
+      <span><strong>OneMind</strong><small>All Minds. One Browser.</small></span>
+    </a>
+    <nav class="omt-nav" aria-label="OneMind">
+      <a class="is-active" href="/onemind/table"><span class="omt-ic">⌂</span>Home</a>
+      <a href="#omt-composer"><span class="omt-ic">✦</span>New Session</a>
+      <a href="#omt-debate"><span class="omt-ic">⚖</span>AI Debate</a>
+      <a href="#omt-search-panel"><span class="omt-ic">🔍</span>Research</a>
+      <a href="#omt-learn"><span class="omt-ic">📖</span>Learning</a>
+    </nav>
+    <div class="omt-side-label">Branches</div>
+    <nav class="omt-nav" aria-label="Branches">
+      <a href="/"><span class="omt-ic">🎨</span>Tattoo Art Customs</a>
+      <a href="/onemind"><span class="omt-ic">🧠</span>OneMind Hub</a>
+      <a href="/onemind/tester-hub"><span class="omt-ic">🧪</span>Tester Hub</a>
+      <a href="/onemind/tools"><span class="omt-ic">🧰</span>The Tools</a>
+      <a href="/onemind/killintime"><span class="omt-ic">🕹</span>KillinTime</a>
+      <a href="/onemind/poppy-and-ziggy"><span class="omt-ic">🌸</span>Poppy &amp; Ziggy</a>
+      <a href="/onemind/little-inkers"><span class="omt-ic">🖍</span>Little Inkers</a>
+    </nav>
+    <div class="omt-side-label">Active Session</div>
+    <div class="omt-session-card">
+      <strong>The Table</strong>
+      <span><span class="omt-live-dot">●</span> <%= bars.length %> AIs around it · <%= configuredCount %> seated &amp; configured</span>
+      <% if (codexUpdated) { %><span>Table book updated <%= codexUpdated %></span><% } %>
+      <span>No topic yet — ask below and the answers land here.</span>
+    </div>
+    <div class="omt-side-label">Quick Actions</div>
+    <div class="omt-actions">
+      <a href="#omt-composer"><span class="omt-ic">✦</span>Ask the Table</a>
+      <a href="#omt-omnibox"><span class="omt-ic">🔍</span>Search the Web</a>
+      <a href="#omt-answers"><span class="omt-ic">⚖</span>Compare AI Answers</a>
+    </div>
+    <p class="omt-rail-foot">Different minds.<br>Better answers.</p>
+  </aside>
+
+  <main class="omt-main">
+    <form class="omt-omnibox" id="omt-omnibox" data-omt-form role="search" autocomplete="off">
+      <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14"/></svg>
+      <input type="text" placeholder="Search Google or type URL" aria-label="Search Google or type URL">
+      <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-2.08A7 7 0 0 0 19 12z"/></svg>
+    </form>
+
+    <section class="omt-hero">
+      <div class="omt-hero-grid">
+        <div>
+          <h1>OneMind</h1>
+          <p class="omt-hero-line">Every AI. Every User. One Browser.</p>
+          <p class="omt-hero-sub">Search the internet, bring in any combination of AI, and explore, debate, and learn — together.</p>
+          <p class="omt-hero-live"><%= numbers.plugs %> plugs on the table · <%= numbers.doors %> doors in the Codex · <%= numbers.partners %> partners in the Rolodex</p>
+        </div>
+        <div class="omt-orbit" aria-hidden="true">
+          <svg class="omt-ring" viewBox="0 0 300 168" preserveAspectRatio="none"><g fill="none" stroke="rgba(53,196,255,.35)" stroke-width="1"><ellipse cx="150" cy="84" rx="142" ry="72"/><ellipse cx="150" cy="84" rx="104" ry="50" stroke="rgba(47,123,255,.4)"/><ellipse cx="150" cy="84" rx="62" ry="28" stroke="rgba(125,211,252,.35)"/></g></svg>
+          <div class="omt-orbit-core">
+            <svg width="36" height="36" viewBox="0 0 40 40" aria-hidden="true"><g fill="none" stroke="#eaf7ff" stroke-width="1.5" opacity=".9"><path d="M20 20 8 10M20 20 32 9M20 20 7 27M20 20 33 28M20 20 20 5M20 20 14 34M20 20 28 33"/></g><g fill="#fff"><circle cx="20" cy="20" r="4" /><circle cx="8" cy="10" r="2.2"/><circle cx="32" cy="9" r="2.2"/><circle cx="7" cy="27" r="2.2"/><circle cx="33" cy="28" r="2.2"/><circle cx="20" cy="5" r="2"/><circle cx="14" cy="34" r="2"/><circle cx="28" cy="33" r="2"/></g></svg>
+          </div>
+          <span class="omt-orbit-node" style="left:6%; top:12%;"><img alt="" src="https://www.google.com/s2/favicons?domain=chatgpt.com&sz=128"></span>
+          <span class="omt-orbit-node" style="right:8%; top:6%;"><img alt="" src="https://www.google.com/s2/favicons?domain=claude.ai&sz=128"></span>
+          <span class="omt-orbit-node" style="left:0; bottom:14%;"><img alt="" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=128"></span>
+          <span class="omt-orbit-node" style="right:2%; bottom:8%;"><img alt="" src="https://www.google.com/s2/favicons?domain=grok.com&sz=128"></span>
+        </div>
+        <ul class="omt-chips">
+          <li><span class="omt-chip-ic">✦</span><strong>Multiple AI Models</strong><span>ChatGPT, Claude, Gemini, Grok, DeepSeek and more.</span></li>
+          <li><span class="omt-chip-ic">◎</span><strong>Live Web Access</strong><span>Real-time search and current information, from the bar above.</span></li>
+          <li><span class="omt-chip-ic">⚖</span><strong>Group Discussions</strong><span>Debate, compare, and build better understanding.</span></li>
+          <li><span class="omt-chip-ic">🎓</span><strong>Learn Together</strong><span>Turn conversations into knowledge.</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="omt-strip">
+      <span class="omt-strip-topic">🧠 The Table</span>
+      <span class="omt-strip-state">No topic yet — your first question sets it.</span>
+      <nav class="omt-strip-tabs" aria-label="Session modes">
+        <a href="#omt-debate">Debate</a>
+        <a href="#omt-search-panel">Research</a>
+        <a href="#omt-learn">Learn</a>
+        <a href="#omt-search-panel">Sources</a>
+      </nav>
+      <button type="button" class="omt-share" id="omt-share">Share</button>
+    </div>
+
+    <section class="omt-stage" id="omt-answers" aria-label="Answers from your AIs">
+      <div class="omt-empty">
+        <strong>Answers from your AIs land here</strong>
+        <span>Ask the table below and each AI&rsquo;s answer appears side by side — compare them here instead of copy-pasting between apps.</span>
+      </div>
+    </section>
+
+    <section class="omt-panels">
+      <div class="omt-panel" id="omt-search-panel">
+        <h2>🔍 Live Web Search <span class="omt-live">Live</span></h2>
+        <p>Search from the bar at the top — results open on the web in front of you, sources first, ready to bring into the session.</p>
+      </div>
+      <div class="omt-panel" id="omt-debate">
+        <h2>⚖ AI Debate</h2>
+        <p>No debate yet. When your AIs disagree, the argument plays out here — point by point, where you can judge it.</p>
+      </div>
+      <div class="omt-panel" id="omt-learn">
+        <h2>📖 Learning Resources</h2>
+        <p>Nothing saved yet. Lessons and guides the table builds out of your sessions will collect here.</p>
+      </div>
+    </section>
+
+    <form class="omt-composer" id="omt-composer" data-omt-form autocomplete="off">
+      <span class="omt-composer-dot" aria-hidden="true"></span>
+      <input type="text" placeholder="Ask a question, give a prompt, or tell the AI what to explore…" aria-label="Ask a question, give a prompt, or tell the AI what to explore">
+      <button type="submit" class="omt-send">➤ Send</button>
+    </form>
+  </main>
+
+  <aside class="omt-people">
+    <div class="omt-people-head">
+      <h2>AI Participants</h2>
+      <span><%= bars.length %> AI<% if (user) { %> + you<% } %></span>
+    </div>
+    <ul class="omt-people-list">
+      <% bars.forEach(function (b) { %>
+      <li>
+        <% if (b.url) { %><a class="omt-person" href="<%= b.url %>"><% } else { %><span class="omt-person"><% } %>
+          <span class="omt-avatar"><% if (b.favicon) { %><img alt="" src="https://www.google.com/s2/favicons?domain=<%= b.favicon %>&sz=128"><% } else { %>M<% } %></span>
+          <span class="omt-person-meta"><strong><%= b.name %></strong><small><%= b.chip %></small></span>
+          <span class="omt-dot<%= b.configured ? ' is-on' : '' %>"></span>
+        <% if (b.url) { %></a><% } else { %></span><% } %>
+      </li>
+      <% }); %>
+      <li class="omt-person-you-row">
+        <% if (user) { %>
+        <span class="omt-person">
+          <span class="omt-avatar omt-avatar-you"><%= (user.name || 'Y').trim().charAt(0).toUpperCase() %></span>
+          <span class="omt-person-meta"><strong><%= user.name %></strong><small>You — seated at the table</small></span>
+          <span class="omt-dot is-on"></span>
+        </span>
+        <% } else { %>
+        <a class="omt-person" href="/onemind">
+          <span class="omt-avatar omt-avatar-you">?</span>
+          <span class="omt-person-meta"><strong>You</strong><small>Not signed in — take your seat</small></span>
+          <span class="omt-dot"></span>
+        </a>
+        <% } %>
+      </li>
+    </ul>
+    <div class="omt-side-label">Quick Tools</div>
+    <div class="omt-actions">
+      <a href="#omt-omnibox"><span class="omt-ic">🔍</span>Search Any Topic</a>
+      <a href="#omt-answers"><span class="omt-ic">⚖</span>Compare AI Responses</a>
+      <a href="#omt-composer"><span class="omt-ic">✦</span>Ask the Table</a>
+    </div>
+    <p class="omt-people-foot">More perspectives.<br>Deeper understanding.</p>
+  </aside>
 </div>
 <script>
-  document.getElementById('om-search').addEventListener('submit', function (e) {
-    e.preventDefault();
-    var q = document.getElementById('om-q').value.trim();
-    if (!q) return;
-    if (/^https?:\/\//i.test(q)) { window.location.href = q; return; }
-    if (!/\s/.test(q) && /\.[a-z]{2,}$/i.test(q)) { window.location.href = 'https://' + q; return; }
-    window.location.href = 'https://www.google.com/search?q=' + encodeURIComponent(q);
+  // The table's one input behavior — unchanged from the browser face
+  // this rebuild replaces: a URL goes to the URL, anything else is a
+  // Google search. Both inputs (the browser bar and the composer)
+  // run it, exactly as the old face's single bar did.
+  document.querySelectorAll('form[data-omt-form]').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var input = form.querySelector('input');
+      var q = (input.value || '').trim();
+      if (!q) return;
+      if (/^https?:\/\//i.test(q)) { window.location.href = q; return; }
+      if (!/\s/.test(q) && /\.[a-z]{2,}$/i.test(q)) { window.location.href = 'https://' + q; return; }
+      window.location.href = 'https://www.google.com/search?q=' + encodeURIComponent(q);
+    });
   });
+  var shareBtn = document.getElementById('omt-share');
+  if (shareBtn) {
+    shareBtn.addEventListener('click', function () {
+      var data = { title: 'OneMind — the Table', url: window.location.href };
+      if (navigator.share) { navigator.share(data).catch(function () {}); return; }
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(window.location.href).then(function () {
+          shareBtn.textContent = 'Link copied';
+          setTimeout(function () { shareBtn.textContent = 'Share'; }, 1800);
+        }).catch(function () {});
+      }
+    });
+  }
 </script>

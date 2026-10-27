@@ -172,10 +172,39 @@ router.get('/onemind', async (req, res) => {
   });
 });
 
+// The table's eight AI bars, in the order the owner named them for
+// the participants rail (2026-10-27 GPT-reference rebuild). Each
+// bar's live state comes from the Codex book (tableBook's seat
+// chips) — the rail tells the same truth as the seat board on
+// page 1, never a dressed-up one. `url` is the AI's own home (the
+// same doors the shortcut tiles opened); Muse is the house AI and
+// has no outside door, so its row is present but not a link out.
+const AI_BARS = [
+  { name: 'Muse', url: null, favicon: null },
+  { name: 'ChatGPT', url: 'https://chatgpt.com', favicon: 'chatgpt.com' },
+  { name: 'Claude', url: 'https://claude.ai', favicon: 'claude.ai' },
+  { name: 'Gemini', url: 'https://gemini.google.com', favicon: 'gemini.google.com' },
+  { name: 'Grok', url: 'https://grok.com', favicon: 'grok.com' },
+  { name: 'Perplexity', url: 'https://www.perplexity.ai', favicon: 'perplexity.ai' },
+  { name: 'DeepSeek', url: 'https://chat.deepseek.com', favicon: 'deepseek.com' },
+  { name: 'Copilot', url: 'https://copilot.microsoft.com', favicon: 'copilot.microsoft.com' },
+];
+
 // --- Page 2: /onemind/table — the table ------------------------------
 router.get('/onemind/table', async (req, res) => {
   const t = tableBook();
   const numbers = await liveNumbers(t.book);
+  const seatByName = new Map(t.seats.map((s) => [s.name, s]));
+  const bars = AI_BARS.map((b) => {
+    const seat = seatByName.get(b.name);
+    return {
+      ...b,
+      chip: seat ? seat.chip : 'Not configured yet',
+      configured: seat ? seat.configured : false,
+      lastVerified: seat ? seat.lastVerified : null,
+    };
+  });
+  const cu = res.locals.currentUser;
   res.render('onemind/table', {
     layout: 'layout-onemind',
     title: 'OneMind',
@@ -186,6 +215,9 @@ router.get('/onemind/table', async (req, res) => {
     plugs: t.plugs,
     codexUpdated: t.codexUpdated,
     numbers,
+    bars,
+    configuredCount: bars.filter((b) => b.configured).length,
+    user: cu ? { name: cu.display_name || cu.email, email: cu.email } : null,
     partners: placementsFor(TABLE_PLACEMENTS),
     disclosureStandard: rolodex.disclosureStandard(),
   });
