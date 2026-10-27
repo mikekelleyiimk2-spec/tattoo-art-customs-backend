@@ -267,7 +267,7 @@
     "sort_all": "All designs",
     "sort_newest": "Newest arrivals",
     "intro_top": "Every design in this gallery is original work by an independent designer, and every purchase delivers the pair your tattoo artist actually works from: the finished full-color artwork plus the clean linework stencil. Previews show linework only, so the color you bought stays yours alone. If the perfect piece is not here yet, the custom desk will draw it for you — that is the other half of this studio.",
-    "sub": "Search 4,700+ original tattoo designs by style and category. Showing linework previews only — full color is delivered to buyers after purchase.",
+    "sub": "Search {count} original tattoo designs by style and category. Showing linework previews only — full color is delivered to buyers after purchase.",
     "title": "Tattoo design gallery — buy original designs",
     "style": "Style",
     "all_styles": "All styles",

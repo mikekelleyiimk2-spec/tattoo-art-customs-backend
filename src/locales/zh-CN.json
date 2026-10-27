@@ -265,7 +265,7 @@
     "search_ph": "wolf, mandala, rose…",
     "sort_all": "所有设计",
     "sort_newest": "最新上架",
-    "sub": "按风格和类别搜索 4,700 多款原创纹身设计。仅显示线条预览——全彩成品在购买后交付给买家。",
+    "sub": "按风格和类别搜索 {count} 款原创纹身设计。仅显示线条预览——全彩成品在购买后交付给买家。",
     "title": "纹身设计画廊——购买原创设计",
     "style": "Style",
     "all_styles": "All styles",

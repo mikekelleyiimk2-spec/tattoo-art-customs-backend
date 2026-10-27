@@ -16,7 +16,7 @@
 </style>
 
 <h1><%= t('gallery.title') %></h1>
-<p class="muted"><%= t('gallery.sub') %></p>
+<p class="muted"><%= t('gallery.sub', { count: fmtNum(catalogCount) }) %></p>
 <p class="mix-match"><strong><%= t('gallery.mix_match') %></strong></p>
 <p><%= t('gallery.intro_top') %></p>
 <p>

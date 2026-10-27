@@ -256,6 +256,7 @@ router.get('/gallery', async (req, res) => {
   const newestOnly = (req.query.sort || '').trim().toLowerCase() === 'newest';
   const member = await isActiveMember(req.user);
   let designs = await approvedDesigns(member);
+  const catalogCount = designs.length;
   const allCats = [...new Set(designs.flatMap((d) => d.categories))].sort();
   const allStyles = [...new Set(designs.map((d) => (d.style || '').trim()).filter(Boolean))].sort();
   if (newestOnly) {
@@ -363,6 +364,7 @@ router.get('/gallery', async (req, res) => {
     } catch (e) { console.error('featured color row failed:', e.message); }
   }
   res.render('site/gallery', {
+    catalogCount,
     title: galleryTitle,
     designs: thumbs, featuredColor, allCats, allStyles, q: req.query.q || '', cat: req.query.cat || '', style: req.query.style || '', sale: await salePriceActive(req.user),
     premadePrice: withFeeCents(premadePriceCents(new Date(), member)),
