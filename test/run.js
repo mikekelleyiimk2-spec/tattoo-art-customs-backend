@@ -696,7 +696,7 @@ async function main() {
 
   // signup + login
   r = await req('POST', '/signup', { body: { display_name: 'Tester', email: 'buyer@test.local', password: 'password123' }, follow: false });
-  ok(r.status === 302 && r.location.includes('/account'), 'signup redirects to account');
+  ok(r.status === 302 && r.location.includes('/account'), 'signup honors the remembered returnTo (deep-link intent wins over the OneMind default)');
   r = await req('GET', '/account');
   ok(r.status === 200 && r.text.includes('buyer@test.local'), 'logged in after signup');
 
@@ -1536,7 +1536,7 @@ async function main() {
     return { status: res.status, text: await res.text(), location: res.headers.get('location') };
   }
   r = await areq('POST', '/login', { body: { email: 'admin@test.local', password: 'AdminTest123!' } });
-  ok(r.status === 302 && (r.location || '').includes('/account'), 'admin login ok');
+  ok(r.status === 302 && (r.location || '').includes('/onemind'), 'admin login ok (lands on OneMind)');
   r = await areq('GET', '/admin');
   ok(r.status === 200, 'admin dashboard loads');
   await require('./founding').runHttpTests(ok, req, areq);

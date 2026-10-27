@@ -238,7 +238,7 @@ async function runHttpTests(ok) {
   const su = await form('POST', '/signup', {
     display_name: 'Seat Tester', email, password, referral_code: '', website: '',
   });
-  ok(su.status === 302 && (su.location || '').includes('/account'), 'web signup succeeds');
+  ok(su.status === 302 && su.location === '/onemind', 'web signup succeeds and lands on OneMind (the front door)');
   const cookie = cookieOf(su);
   ok(!!cookie, 'web signup sets a session cookie');
   const dash = await fetch(`${BASE}/account`, { headers: { cookie }, redirect: 'manual' });
@@ -287,11 +287,36 @@ async function runHttpTests(ok) {
 
   // Web login seats again (count on the website tie moves to 2).
   const li = await form('POST', '/login', { email, password, website: '' });
-  ok(li.status === 302, 'web login succeeds');
+  ok(li.status === 302 && li.location === '/onemind', 'web login succeeds and lands on OneMind (the front door)');
   const seat2 = await call('GET', '/api/onemind/seat', undefined,
     { 'x-api-token': si.json.api_token });
   const webTie = seat2.json && (seat2.json.ties || []).find((t) => t.surface === 'website');
   ok(!!webTie && webTie.signin_count === 2, 'web login bumped the website tie');
+
+  // Deep-link intent still wins over the OneMind default landing:
+  // bounce off a login-gated page, sign in, land back on the page
+  // the person actually asked for.
+  const bRes = await fetch(`${BASE}/account`, { redirect: 'manual' });
+  const bCookie = (typeof bRes.headers.getSetCookie === 'function' ? bRes.headers.getSetCookie() : [])
+    .map((c) => c.split(';')[0]).join('; ');
+  ok(bRes.status === 302 && (bRes.headers.get('location') || '').startsWith('/login?next=') && !!bCookie,
+    'a login-gated page bounces to the sign-in, remembering the intent');
+  const liBack = await form('POST', '/login', { email, password, website: '' }, bCookie);
+  ok(liBack.status === 302 && liBack.location === '/account',
+    'after login, an explicit returnTo still wins over the OneMind default');
+
+  // The app WebView bootstrap is a sign-in too: its default landing
+  // is OneMind, and an explicit next (a deep link from the app)
+  // still wins.
+  const boot = await fetch(`${BASE}/api/bootstrap?api_token=${encodeURIComponent(si.json.api_token)}`,
+    { redirect: 'manual' });
+  ok(boot.status === 302 && boot.headers.get('location') === '/onemind',
+    'bootstrap with no next lands on OneMind (the front door)');
+  const bootNext = await fetch(
+    `${BASE}/api/bootstrap?api_token=${encodeURIComponent(si.json.api_token)}&next=${encodeURIComponent('/account')}`,
+    { redirect: 'manual' });
+  ok(bootNext.status === 302 && bootNext.headers.get('location') === '/account',
+    'bootstrap with an explicit next still honors it');
 
   // Kids' and unknown surfaces are refused on every door, and no
   // tie is ever written for them.
@@ -391,6 +416,29 @@ async function runHttpTests(ok) {
     const stHttpBad = await call('POST', '/api/onemind/link/status',
       { claim_id: hc.claim_id, claim_secret: 'not-the-claim-secret' });
     ok(stHttpBad.status === 401, 'claim status refuses a wrong claim secret over HTTP');
+  }
+
+  // --- Password reset completion lands on OneMind, not the old
+  // branded login page (the flash still carries: "please log in").
+  // Runs last: it changes this account's password.
+  const fr = await form('POST', '/forgot', { email, website: '' });
+  ok(fr.status === 302, 'forgot-password request is accepted');
+  // The token travels by email; in the suite it is read straight
+  // from the test DB file (the in-process db handle is closed by
+  // the HTTP phase — same pattern as the coordinator's sdb).
+  const Database = require('better-sqlite3');
+  const sdb = new Database(process.env.SQLITE_PATH, { readonly: true });
+  const uRow = sdb.prepare('SELECT reset_token FROM users WHERE email = ?').get(email);
+  sdb.close();
+  ok(!!(uRow && uRow.reset_token), 'the reset request stored a token');
+  if (uRow && uRow.reset_token) {
+    const newPassword = ['seat', 'test', 'newpass'].join('-');
+    const rp = await form('POST', `/reset/${uRow.reset_token}`, { password: newPassword, website: '' });
+    ok(rp.status === 302 && rp.location === '/onemind',
+      'password reset completion lands on OneMind (the front door)');
+    const liNew = await form('POST', '/login', { email, password: newPassword, website: '' });
+    ok(liNew.status === 302 && liNew.location === '/onemind',
+      'login with the reset password lands on OneMind');
   }
 }
 
