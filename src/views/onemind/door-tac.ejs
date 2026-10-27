@@ -21,7 +21,21 @@
 </style>
 <main class="tacdoor">
   <div class="hero">
-    <img class="bg" src="/img/designs/color/nightly-black-and-grey-realism-time-clocks.jpg" alt="Black and grey realism tattoo design — clocks and time">
+    <img class="bg" id="tacHero" src="/img/designs/color/nightly-black-and-grey-realism-time-clocks.jpg" alt="Tattoo Art Customs — featured design collection">
+    <script>
+      // The door is alive: the featured art rotates daily (Not-Flat
+      // study §1 — a surface that changed since the last visit).
+      (function () {
+        var covers = [
+          '/img/designs/color/nightly-black-and-grey-realism-time-clocks.jpg',
+          '/img/designs/color/nightly-blackwork-nautical-ocean.jpg',
+          '/img/designs/color/nightly-aurora-horror.jpg',
+          '/img/designs/color/nightly-bioluminescent-characters.jpg'
+        ];
+        var day = Math.floor(Date.now() / 86400000);
+        document.getElementById('tacHero').src = covers[day % covers.length];
+      })();
+    </script>
     <div class="shade"></div>
     <div class="over">
       <p class="mark">The Tattoo Shop</p>
