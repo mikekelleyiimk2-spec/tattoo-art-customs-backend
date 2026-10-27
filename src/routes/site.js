@@ -212,8 +212,19 @@ router.get('/', async (req, res) => {
   // Live catalog size for the home page's studio story (high-value pass).
   const designCountRow = await db.get("SELECT COUNT(*) AS n FROM designs WHERE status = 'approved'");
   const designCount = designCountRow ? Number(designCountRow.n) : 0;
+  // Live hearts for the front door's hearts banner (everything-audit fix,
+  // 2026-10-27): the total cast so far + the most-loved design's run at
+  // the 2,000-heart merch yardstick — real numbers only, queried live.
+  const heartsTotalRow = await db.get('SELECT COUNT(*) AS n FROM design_likes');
+  const heartsTotal = heartsTotalRow ? Number(heartsTotalRow.n) : 0;
+  const topHeartRow = await db.get(
+    'SELECT like_count FROM design_like_counts ORDER BY like_count DESC LIMIT 1');
+  const topHearts = topHeartRow ? Number(topHeartRow.like_count || 0) : 0;
   res.render('site/landing', {
     designCount,
+    heartsTotal,
+    topHearts,
+    heartsGoal: 2000,
     // Payoff before the house ad (wanting audit 2026-10-25): the layout's
     // leaderboard slot is suppressed on the homepage only; landing.ejs
     // renders the same slot itself, after the hero.

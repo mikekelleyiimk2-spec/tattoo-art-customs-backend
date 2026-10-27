@@ -390,7 +390,7 @@
       "title": "Everything we do",
       "premade": {
         "title": "Premade designs",
-        "text": "4,700+ original designs, ready to buy and take to your artist. Full color + clean linework included.",
+        "text": "{count} original designs, ready to buy and take to your artist. Full color + clean linework included.",
         "price": "{price} ({sale} Saturday sale)",
         "btn": "Browse the gallery"
       },

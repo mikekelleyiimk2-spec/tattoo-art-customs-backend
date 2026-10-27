@@ -1,7 +1,11 @@
 <style>
-.lp-deal-banner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: linear-gradient(135deg, #1a1a2e, #16213e); color: #fff; padding: .8rem 1.2rem; border-radius: 10px; margin-bottom: 1.2rem; border: 1px solid var(--accent); }
+.lp-deal-banner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: #171310; color: #f5efe4; padding: .8rem 1.2rem; border-radius: 10px; margin-bottom: 1.2rem; border: 1px solid var(--accent); }
 .lp-deal-banner .btn-small { padding: .4rem .9rem; font-size: .9rem; white-space: nowrap; }
-.lp-hearts-banner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: linear-gradient(135deg, #2e1a1a, #3e1621); color: #fff; padding: .8rem 1.2rem; border-radius: 10px; margin-bottom: 1.2rem; border: 1px solid #e5486c; }
+.lp-hearts-banner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: #FFF7E8; color: #241c14; padding: .8rem 1.2rem; border-radius: 10px; margin-bottom: 1.2rem; border: 1px solid #c8432b; }
+.lp-hearts-progress { margin: 0 0 1.2rem; }
+.lp-hearts-progress .bar { height: 10px; border-radius: 999px; background: #e9dfca; overflow: hidden; }
+.lp-hearts-progress .bar i { display: block; height: 100%; background: #c8432b; border-radius: 999px; }
+.lp-hearts-progress .cap { font-size: .85rem; color: #5c5240; margin-top: .35rem; }
 .lp-hearts-banner .btn-small { padding: .4rem .9rem; font-size: .9rem; white-space: nowrap; }
 .lp-hearts-links { display: flex; gap: .5rem; flex-shrink: 0; }
 .lp-hero { position: relative; border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; }
@@ -38,6 +42,12 @@
     <a class="btn btn-small btn-secondary" href="/top-loved"><%= t('landing.hearts.cta_toploved') %></a>
   </span>
 </div>
+<% if (typeof heartsTotal !== 'undefined' && heartsTotal > 0) { %>
+<div class="lp-hearts-progress" role="img" aria-label="Most-loved design: <%= topHearts %> of <%= heartsGoal %> hearts toward becoming merch">
+  <div class="bar"><i style="width: <%= Math.min(100, Math.round(topHearts / heartsGoal * 100)) %>%"></i></div>
+  <p class="cap">❤️ <%= fmtNum(heartsTotal) %> hearts cast so far · the most-loved design has <%= fmtNum(topHearts) %> — at <%= fmtNum(heartsGoal) %> it becomes merch.</p>
+</div>
+<% } %>
 
 <div class="lp-hero">
   <img src="/img/landing/hero.webp" alt="<%= t('landing.hero.img_alt') %>" width="1200" height="514" fetchpriority="high" decoding="async">
@@ -64,7 +74,7 @@
 <div class="lp-offer-grid">
   <div class="lp-offer">
     <h3><%= t('landing.offers.premade.title') %></h3>
-    <p><%= t('landing.offers.premade.text') %></p>
+    <p><%= t('landing.offers.premade.text', {count: fmtNum(typeof designCount !== 'undefined' ? designCount : 0)}) %></p>
     <p class="price"><%= t('landing.offers.premade.price', {price: fmtMoney(7500), sale: fmtMoney(5000)}) %></p>
     <p><a class="btn" href="/gallery"><%= t('landing.offers.premade.btn') %></a></p>
   </div>
