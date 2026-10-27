@@ -554,6 +554,7 @@ async function main() {
   await require('./apiLane').runDbTests(ok); // AI Master Button API lane (worker, adapters, grammar)
   await require('./messenger').runDbTests(ok); // AI-to-AI Messenger slice 1 (worker routing rule: recipient seat, no failover)
   await require('./onemindIdentity').runDbTests(ok); // OneMind identity foundation (migration 110: onemind_id backfill + tie registry + surface refusals)
+  await require('./onemindWeb').runDbTests(ok); // OneMind web structure (front-door flag truth table, kid-safe rolodex pull, link registry)
   await require('./guestBridge').runDbTests(ok); // guest bridge (design claims on buy; sideload pending ties fire at store go-live)
   await require('./moneyWatch').runDbTests(ok); // Money Watch watcher (baseline, exactly-once, kinds, CT windows)
 
@@ -1571,6 +1572,7 @@ async function main() {
   await require('./rootApi').runHttpTests(ok, req);
   await require('./onemindRoot').runHttpTests(ok, req); // OneMind Root (table root: seats registry, plug points + plug-in charges, fingerprint-only seat credentials, op log)
   await require('./onemindIdentity').runHttpTests(ok); // OneMind sign-in (the one account: app door, ties, recognition seat summary, book view)
+  await require('./onemindWeb').runHttpTests(ok); // OneMind web (hub = page 1 sign-in, table = page 2 branches, kid wall, TAC links out)
   await require('./moneyWatch').runHttpTests(ok, req); // Money Watch endpoint (public envelope + token-guarded full view/run)
   r = await areq('POST', `/admin/orders/${orderId}/confirm-manual`);
   ok(r.status === 302, 'admin confirms manual payment');

@@ -17,7 +17,7 @@ async function runHttpTests(ok, req) {
   ok(fams.affiliates && fams.affiliates.endpoint === '/api/rolodex', 'index keeps affiliates on /api/rolodex (separate product)');
   ok(fams.affiliates && fams.affiliates.count === 46 && fams.affiliates.live === 15, 'index reports affiliate counts (46 total / 15 live)');
   ok(fams.socials && fams.socials.endpoint === '/api/social-links' && fams.socials.count === 10, 'index lists the socials family (10)');
-  ok(fams.web_pages && fams.web_pages.count === 35, 'index lists web pages (35 public)');
+  ok(fams.web_pages && fams.web_pages.count === 45, 'index lists web pages (45 public)');
   ok(fams.channels && fams.channels.count === 4, 'index lists channels (4)');
   ok(fams.storefronts && fams.storefronts.count === 11, 'index lists storefronts (11)');
   ok(fams.app_links && fams.app_links.count === 23, 'index lists app links (23 public)');
@@ -40,7 +40,7 @@ async function runHttpTests(ok, req) {
 
   // Web family: the internal repo entry is never served publicly.
   const web = await get('/api/web-links');
-  ok(web.status === 200 && web.json.count === 35, 'web-links returns 35 public pages');
+  ok(web.status === 200 && web.json.count === 45, 'web-links returns 45 public pages');
   ok(!(web.json.entries || []).some((e) => String(e.url || '').includes('github.com')), 'web-links never serves the internal repo entry');
   const cd = (web.json.entries || []).find((e) => String(e.url || '').endsWith('/cannadash'));
   ok(cd && cd.state === 'live', 'web-links carries /cannadash with its live state (split deploy landed 2026-10-26)');

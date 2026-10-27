@@ -1,0 +1,131 @@
+<style>
+@keyframes omGlow { 0%,100% { box-shadow: 0 0 0 rgba(20,83,45,0); } 50% { box-shadow: 0 0 18px rgba(20,83,45,.35); } }
+.om-live { animation: omGlow 2.4s ease-in-out infinite; }
+</style>
+<div style="text-align:center;">
+  <p style="font-size:3rem;margin:.5rem 0;">🧠</p>
+  <h1>OneMind</h1>
+  <p class="muted" style="max-width:44rem;margin:0 auto;"><strong>All Your AIs, One Team.</strong> Speak or type once — your AIs sit at one table and work together, instead of you juggling a dozen apps and copy-pasting between them.</p>
+  <p style="max-width:44rem;margin:.75rem auto 0;">Everything Useful Appz makes is <strong>tied to this table</strong> — every app, every page, every branch. And there is <strong>one sign-in for all of it</strong>: a login anywhere is a OneMind login.</p>
+</div>
+
+<% if (typeof numbers !== 'undefined' && numbers) { %>
+<div class="card om-live" style="padding:1rem 1.5rem;margin:1.5rem 0;text-align:center;" aria-label="The table, in live numbers">
+  <p style="font-size:1.15rem;margin:.25rem 0;">
+    <% if (numbers.designs != null) { %><strong><%= numbers.designs.toLocaleString('en-US') %></strong> designs in the gallery · <% } %><strong><%= numbers.doors %></strong> doors in the Codex · <strong><%= numbers.plugs %></strong> plugs on the table · <strong><%= numbers.partners %></strong> partners in the Rolodex
+  </p>
+  <p class="muted fineprint" style="margin:.25rem 0;">Read live from the same books the apps read — the counts move as the table fills.</p>
+</div>
+<% } %>
+
+<section class="card" style="padding:1.5rem;margin:1.5rem 0;" id="signin">
+  <% if (typeof currentUser !== 'undefined' && currentUser) { %>
+  <h2>You're signed in to OneMind</h2>
+  <p>Welcome back<% if (currentUser.display_name) { %>, <strong><%= currentUser.display_name %></strong><% } %>. This session is your OneMind seat — the same account, recognized on every surface tied to the table<% if (typeof seat !== 'undefined' && seat && seat.tie_count) { %>: you're tied in on <strong><%= seat.tie_count %></strong> surface<%= seat.tie_count === 1 ? '' : 's' %> so far<% } %>. No second account exists, and none is needed.</p>
+  <p><a class="btn" href="/onemind/table">Go to the Table</a> <a class="btn btn-secondary" href="/account">Your account</a> <a class="btn btn-secondary" href="/logout">Sign out</a></p>
+  <% } else { %>
+  <h2>Sign in to OneMind</h2>
+  <p>This is the <strong>OneMind sign-in</strong> — one account for everything Useful Appz makes. The website is logged surface #1 of the table: signing in here seats your website tie, and this account <em>is</em> your OneMind account whether or not you ever open the OneMind app. Every door you meet after this — on any of our pages or apps — is this same sign-in.</p>
+  <% if (typeof googleSignin !== 'undefined' && googleSignin) { %>
+  <p><a class="btn" href="/auth/google">Continue with Google</a></p>
+  <p class="muted">Door #1: the Google/Gmail account you already have. If its email matches your account here, it's the same seat — no new account, no new password to invent.</p>
+  <% } %>
+  <form method="post" action="/login" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <label for="om-email">Email</label>
+    <input type="email" id="om-email" name="email" required autocomplete="email">
+    <label for="om-password">Password</label>
+    <input type="password" id="om-password" name="password" required autocomplete="current-password">
+    <p><button class="btn" type="submit">Sign in to OneMind</button></p>
+  </form>
+  <p><a href="/forgot">Forgot your password?</a> · <a href="/signup">New here? Create your one account</a></p>
+  <div style="border-top:1px solid #d7e3da;margin-top:1rem;padding-top:1rem;">
+    <p><strong>No password handy?</strong> One tap by email instead — the tap is the sitting: it signs you in, or creates your account if you're new, and seats you at the table.</p>
+    <form id="om-link-form" class="form">
+      <label for="om-link-email">Email for your one-tap link</label>
+      <input type="email" id="om-link-email" required autocomplete="email">
+      <p><button class="btn btn-secondary" type="submit">Email me my sign-in link</button></p>
+    </form>
+    <p id="om-link-msg" class="muted" hidden></p>
+    <noscript><p class="muted">The one-tap email door needs JavaScript — the password form above works without it.</p></noscript>
+  </div>
+  <% } %>
+</section>
+
+<section class="card" style="padding:1.5rem;margin:1.5rem 0;">
+  <h2>🔌 Plug OneMind into your browser</h2>
+  <p><strong>Never leave your regular homepage — just plug us in.</strong> The OneMind Internet Plug rides inside the browser you already use: your homepage stays your homepage, your browser stays your browser — and OneMind is plugged into it, with your AIs, the table, and the one sign-in riding along.</p>
+  <p><span class="btn" aria-disabled="true" style="opacity:.55;pointer-events:none;">Get the plug</span> <span class="badge">Being built</span></p>
+  <p class="muted fineprint">The plug is in build right now (its own lane: the OneMind Internet Plug). This door lights up with the real download the day the package lands — we don't fake links.</p>
+</section>
+
+<section class="card" style="padding:1.5rem;margin:1.5rem 0;">
+  <h2>Page two: the Table</h2>
+  <p>Good old familiar browsers — the real ones — running on our table, with our plugs in them: the AIs, the APIs, the tools, everything that goes into OneMind, available from there. Every branch of the house hangs off the table — and every branch is <em>also</em> reachable directly at its own link. Two ways in, one tie underneath.</p>
+  <p><a class="btn" href="/onemind/table">Open the Table</a></p>
+  <p><strong>Tattoo Art Customs</strong> — the tattoo shop is tied to this table like everything else; its page is this website itself, and its sign-in is this same OneMind sign-in. <a href="/">Go to the tattoo shop's front door</a> · <a href="/gallery">the gallery</a></p>
+</section>
+
+<section class="card" style="padding:1.5rem;margin:1.5rem 0;">
+  <h2>What OneMind is</h2>
+  <p>Every AI you use lives in its own app, its own window, its own conversation that knows nothing about the others. OneMind ends that: <strong>one conversation, one button, every AI at the table.</strong> You say what you need once — by voice or by typing — and the team takes it from there: the seats talk to each other, build on each other's work, and bring you one answer instead of five partial ones.</p>
+  <p><strong>You never touch an API key.</strong> The table is wired on our side — the doors, the seats, and the plumbing are the studio's job, kept alive and checked on a schedule. Your whole job is the ask.</p>
+</section>
+
+<%- include('../partials/onemind-seats') %>
+
+<section class="card" style="padding:1.5rem;margin:1.5rem 0;">
+  <h2>The AI-to-AI room</h2>
+  <% if (ai2aiBuilding) { %>
+  <p><span class="badge">In progress</span></p>
+  <p>OneMind's AI-to-AI room — where the seats talk to <em>each other</em>, not just to you — is being wired up. The room is already visible inside the app; the live Messenger lane behind it is still being built. When it lights up, it will say so here first — the Codex state below is the live one.</p>
+  <p class="muted fineprint">Codex state: <%= ai2aiState %></p>
+  <% } else if (ai2aiLive) { %>
+  <p><span class="badge" style="background:#14532d;color:#eafff2;">Live</span></p>
+  <p>The AI-to-AI room — where the seats talk to <em>each other</em>, not just to you — is <strong>live</strong>. The Messenger lane now ships as its own standalone app, <strong>AI to AI</strong> (com.usefulappz.ai2ai, $9.99), and <strong>OneMind plugs into it</strong>: the room inside OneMind and the standalone app run on the same live lane — listings with AI codes, code-first pairing with per-owner consent, and 1:1 channels where a message settles at the recipient's seat or fails honestly, never in limbo.</p>
+  <p class="muted fineprint">Codex state: <%= ai2aiState %></p>
+  <% } else if (ai2aiState) { %>
+  <p class="muted fineprint">Codex state: <%= ai2aiState %></p>
+  <% } %>
+</section>
+
+<section class="card" style="padding:1.5rem;margin:1.5rem 0;">
+  <h2>Price &amp; how to get it</h2>
+  <p><strong>OneMind Team — $9.99/mo.</strong> That's the settled price for the full table: every seat, the AI-to-AI room, and everything that plugs into it.</p>
+  <p><span class="badge">Closed testing</span></p>
+  <p>OneMind is <strong>in closed testing on Google Play right now</strong> — it isn't on the public store yet, and we won't pretend otherwise. The Team subscription opens with the public launch. Want in early? Testers get the app through the studio's tester program:</p>
+  <p><a class="btn" href="/testers">Join the closed test</a> <a class="btn btn-secondary" href="/apps">See OneMind on the apps page</a></p>
+</section>
+
+<%- include('../partials/rolodex-placements') %>
+
+<%- include('../partials/sponsor-slot') %>
+
+<%- include('../partials/tip-jar') %>
+
+<p style="text-align:center;" class="muted">OneMind is a <strong>Useful Appz</strong> world. See all of them on <a href="/worlds">Our Worlds</a>, or browse the studio's apps on <a href="/apps">the apps page</a>. · <a href="/privacy/onemind">OneMind privacy policy</a></p>
+
+<script>
+(function () {
+  var form = document.getElementById('om-link-form');
+  if (!form) return;
+  var msg = document.getElementById('om-link-msg');
+  form.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var email = document.getElementById('om-link-email').value;
+    msg.hidden = false;
+    msg.textContent = 'Sending your link…';
+    fetch('/api/onemind/link/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, surface: 'website' })
+    }).then(function (r) { return r.json(); }).then(function (j) {
+      msg.textContent = j && j.ok
+        ? 'Your sign-in link is on its way to ' + email + ' — tap it within the hour and you\'re seated.'
+        : 'That email didn\'t take — check it and try again, or use the password form above.';
+    }).catch(function () {
+      msg.textContent = 'The link door didn\'t answer — the password form above will get you in.';
+    });
+  });
+})();
+</script>

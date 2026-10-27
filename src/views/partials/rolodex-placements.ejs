@@ -1,0 +1,26 @@
+<%# Affiliate placements pulled LIVE from the Affiliate Rolodex (the
+    same data /api/rolodex serves — src/lib/rolodex.js). Entries arrive
+    whole: name, link, code and the program's own disclosure travel
+    together (the disclosure lock) — this partial can render them no
+    other way. Expects `partners` (array) in scope; renders nothing
+    when no live program honestly covers the surface. Optional
+    `placementsHeading` overrides the heading. Kid pages pass only
+    kid_safe programs (the router enforces the pull). %>
+<% const _partners = (typeof partners !== 'undefined' && partners) || (typeof kidPartners !== 'undefined' && kidPartners) || []; %>
+<% if (_partners.length) { %>
+<section class="rolodex-placements" aria-label="Partners">
+  <h2><%= (typeof placementsHeading !== 'undefined' && placementsHeading) || 'Partners — from the Affiliate Rolodex' %></h2>
+  <div class="grid">
+    <% _partners.forEach(function (p) { %>
+    <article class="card" style="padding:1rem;">
+      <h3 style="margin-top:0;"><%= p.name %></h3>
+      <% if (p.rate) { %><p class="muted" style="margin:.25rem 0;"><%= p.rate %></p><% } %>
+      <% if (p.code) { %><p style="margin:.25rem 0;">Code: <strong><%= p.code %></strong></p><% } %>
+      <% if (p.link) { %><p><a class="btn" href="<%= p.link %>" target="_blank" rel="sponsored noopener nofollow">Visit <%= p.name %></a></p><% } %>
+      <% if (p.disclosure) { %><p class="fineprint muted"><%= p.disclosure %></p><% } %>
+    </article>
+    <% }); %>
+  </div>
+  <% if (typeof disclosureStandard !== 'undefined' && disclosureStandard) { %><p class="fineprint muted"><%= disclosureStandard %></p><% } %>
+</section>
+<% } %>

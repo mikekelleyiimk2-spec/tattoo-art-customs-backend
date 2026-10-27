@@ -1,0 +1,83 @@
+<style>
+@keyframes omGlow { 0%,100% { box-shadow: 0 0 0 rgba(20,83,45,0); } 50% { box-shadow: 0 0 18px rgba(20,83,45,.35); } }
+.om-live { animation: omGlow 2.4s ease-in-out infinite; }
+</style>
+<div style="text-align:center;">
+  <p style="font-size:3rem;margin:.5rem 0;">🪑</p>
+  <h1>The Table</h1>
+  <p class="muted" style="max-width:44rem;margin:0 auto;">Good old familiar browsers — <strong>the real ones</strong> — running on our table, with our plugs in them: the AIs, the APIs, the tools, anything going into OneMind, available from here.</p>
+  <p style="max-width:44rem;margin:.75rem auto 0;">Everything below is <strong>tied to OneMind</strong> — and everything is <strong>also reachable directly at its own link</strong>. Two ways in, one tie underneath: a login anywhere is a OneMind login, on the hub, on a branch, on any page of this site.</p>
+</div>
+
+<% if (typeof numbers !== 'undefined' && numbers) { %>
+<div class="card om-live" style="padding:1rem 1.5rem;margin:1.5rem 0;text-align:center;" aria-label="The table, in live numbers">
+  <p style="font-size:1.15rem;margin:.25rem 0;">
+    <% if (numbers.designs != null) { %><strong><%= numbers.designs.toLocaleString('en-US') %></strong> designs in the gallery · <% } %><strong><%= numbers.doors %></strong> doors in the Codex · <strong><%= numbers.plugs %></strong> plugs on the table · <strong><%= numbers.partners %></strong> partners in the Rolodex
+  </p>
+  <p class="muted fineprint" style="margin:.25rem 0;">Live from the Codex and the Rolodex — and the table is still filling: seats are being configured one by one, the first game ports are in pursuit, and the Tester Hub pool is filling. Come back and watch the numbers move.</p>
+</div>
+<% } %>
+
+<section style="margin:1.5rem 0;">
+  <h2>The branches — every house, its own door</h2>
+  <div class="grid">
+    <article class="card" style="padding:1rem;">
+      <h3 style="margin-top:0;">🎨 Tattoo Art Customs</h3>
+      <p>The tattoo shop. Its house is this website itself — the front door, the gallery of <% if (numbers && numbers.designs != null) { %><%= numbers.designs.toLocaleString('en-US') %> <% } %>designs, the shop. Tied to the table like everything else: its logins are OneMind logins.</p>
+      <p><a class="btn" href="/">The tattoo shop's front door</a> <a class="btn btn-secondary" href="/gallery">The gallery</a></p>
+    </article>
+    <article class="card" style="padding:1rem;">
+      <h3 style="margin-top:0;">🧠 OneMind</h3>
+      <p>Page one of the table: the sign-in, the seat board, the price. One account for everything we make.</p>
+      <p><a class="btn" href="/onemind">OneMind — page one</a> <a class="btn btn-secondary" href="/testers">Join the closed test</a></p>
+    </article>
+    <article class="card" style="padding:1rem;">
+      <h3 style="margin-top:0;">🎨 Poppy &amp; Ziggy</h3>
+      <p>The kids' cartoon where a coloring page comes to life — new episode every Friday at 5 PM CT. Its branch page is kid-safe; the show's own home carries the episodes and the subscribe door.</p>
+      <p><a class="btn" href="/onemind/poppy-and-ziggy">The Poppy &amp; Ziggy branch</a> <a class="btn btn-secondary" href="/poppy-and-ziggy">The show's own page</a></p>
+    </article>
+    <article class="card" style="padding:1rem;">
+      <h3 style="margin-top:0;">🖍️ Little Inkers</h3>
+      <p>Free coloring fun for kids — the coloring show and the app where pages come to life. Its branch page is kid-safe; its own doors are the app pages and the show.</p>
+      <p><a class="btn" href="/onemind/little-inkers">The Little Inkers branch</a> <a class="btn btn-secondary" href="/little-inkers-android">Get the free app</a></p>
+    </article>
+    <article class="card" style="padding:1rem;">
+      <h3 style="margin-top:0;">🕹️ KillinTime</h3>
+      <p>The ports shelf: classic games, licensed properly, brought to phones. Ports carry no ads, ever. Seated at this table as a plug — and reachable at its own link.</p>
+      <p><a class="btn" href="/onemind/killintime">The KillinTime branch</a></p>
+    </article>
+    <article class="card" style="padding:1rem;">
+      <h3 style="margin-top:0;">🧪 Tester Hub</h3>
+      <p>The fix for every developer's 12-tester problem: one pool, sign up once, and the pool fills your list. First in line for the newest apps — or get your own app filled.</p>
+      <p><a class="btn" href="/onemind/tester-hub">The Tester Hub</a></p>
+    </article>
+    <article class="card" style="padding:1rem;">
+      <h3 style="margin-top:0;">🧰 The Tools</h3>
+      <p>The Useful Appz toolbox — the Rolodex, the Sweeper, the Scraper, Money Watch, the Keeper, the Doctor. Small sharp tools, each born from a problem we hit first.</p>
+      <p><a class="btn" href="/onemind/tools">The tools branch</a> <a class="btn btn-secondary" href="/apps">All the apps</a></p>
+    </article>
+  </div>
+</section>
+
+<section class="card" style="padding:1.5rem;margin:1.5rem 0;">
+  <h2>The plugs — what's wired into the table</h2>
+  <p>Read <strong>live from the Codex</strong><% if (codexUpdated) { %> (book updated <%= codexUpdated %>)<% } %>. A plug, a price, or a tie that isn't in the book isn't real — and nothing here is dressed up beyond what the book says.</p>
+  <div class="grid">
+    <% (plugs || []).forEach(function (p) { %>
+    <article class="card" style="padding:1rem;">
+      <h3 style="margin-top:0;"><%= p.name %></h3>
+      <p class="muted fineprint">Codex state: <%= p.state && p.state.length > 220 ? p.state.slice(0, 220) + '…' : p.state %></p>
+    </article>
+    <% }); %>
+  </div>
+</section>
+
+<%- include('../partials/onemind-seats') %>
+
+<%- include('../partials/rolodex-placements') %>
+
+<%- include('../partials/sponsor-slot') %>
+
+<%- include('../partials/tip-jar') %>
+
+<p style="text-align:center;" class="muted">Back to <a href="/onemind">page one — the OneMind sign-in</a> · See every world on <a href="/worlds">Our Worlds</a></p>

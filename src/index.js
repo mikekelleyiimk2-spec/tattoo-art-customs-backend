@@ -266,6 +266,14 @@ app.use('/img/by-request', express.static(byRequestDir, imgCacheOpts));
 const BUILD_COMMIT = process.env.RENDER_GIT_COMMIT || null;
 app.get('/health', (req, res) => res.json({ ok: true, time: Date.now(), commit: BUILD_COMMIT }));
 
+// OneMind web hub (owner directive 2026-10-26): /onemind (page 1, the
+// sign-in), /onemind/table (page 2, the branches), the branch pages,
+// and the ONEMIND_FRONT_DOOR flag on GET /. Mounted BEFORE the site
+// router so the hub owns /onemind and can intercept / first; every
+// other path falls through untouched. The site router's older
+// /onemind product page remains as fallback code (unreachable while
+// this router is mounted) — the hub renders its full content and more.
+app.use('/', require('./routes/onemindWeb'));
 app.use('/', require('./routes/site'));
 app.use('/', require('./routes/auth'));
 app.use('/membership', require('./routes/memberships'));

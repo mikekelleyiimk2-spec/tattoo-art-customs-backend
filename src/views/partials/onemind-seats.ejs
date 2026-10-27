@@ -1,0 +1,22 @@
+<%# The seat board — read live from the Codex (src/lib/codex, the same
+    book /api/codex serves) by the router and rendered identically on
+    the hub and the table. A seat is only marked configured when it
+    actually is. Expects `seats` and `codexUpdated` in scope. %>
+<section class="card" style="padding:1.5rem;margin:1.5rem 0;">
+  <h2>The table — who's seated, honestly</h2>
+  <p>This board is read <strong>live from the Codex</strong> — the written registry of the table, the same book the OneMind app reads<% if (typeof codexUpdated !== 'undefined' && codexUpdated) { %> (book updated <%= codexUpdated %>)<% } %>. A seat is only marked configured when it actually is. Today the table is a workbench with <strong>one configured seat</strong>; the rest are exactly as labeled — no seat is ever dressed up as live before it is.</p>
+  <div class="grid">
+    <% (seats || []).forEach(function (s) { %>
+    <article class="card" style="padding:1rem;">
+      <h3 style="margin-top:0;"><%= s.name %></h3>
+      <% if (s.configured) { %>
+      <p><span class="badge" style="background:#14532d;color:#eafff2;"><%= s.chip %></span></p>
+      <% } else { %>
+      <p><span class="badge"><%= s.chip %></span></p>
+      <% } %>
+      <p class="muted fineprint">Codex state: <%= s.state %><% if (s.lastVerified) { %> · last verified <%= s.lastVerified %><% } %></p>
+    </article>
+    <% }); %>
+  </div>
+  <p class="muted">The registry itself is public: <a href="/api/codex">the Codex for OneMind</a>.</p>
+</section>

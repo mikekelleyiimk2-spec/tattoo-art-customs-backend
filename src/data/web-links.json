@@ -1,7 +1,7 @@
 {
   "family": "web_pages",
   "rolodex": "Web Links (Master Rolodex section)",
-  "version": 1,
+  "version": 2,
   "updated": "2026-10-26",
   "entries": [
     {
@@ -137,7 +137,7 @@
       "placed": []
     },
     {
-      "name": "Privacy \u2014 main",
+      "name": "Privacy — main",
       "url": "https://tattoo-art-customs.onrender.com/privacy",
       "kind": "web-page",
       "world": "studio",
@@ -148,7 +148,7 @@
       "placed": []
     },
     {
-      "name": "Privacy \u2014 ai-bar",
+      "name": "Privacy — ai-bar",
       "url": "https://tattoo-art-customs.onrender.com/privacy/ai-bar",
       "kind": "web-page",
       "world": "studio",
@@ -159,7 +159,7 @@
       "placed": []
     },
     {
-      "name": "Privacy \u2014 email-keeper",
+      "name": "Privacy — email-keeper",
       "url": "https://tattoo-art-customs.onrender.com/privacy/email-keeper",
       "kind": "web-page",
       "world": "studio",
@@ -170,7 +170,7 @@
       "placed": []
     },
     {
-      "name": "Privacy \u2014 ghost-box",
+      "name": "Privacy — ghost-box",
       "url": "https://tattoo-art-customs.onrender.com/privacy/ghost-box",
       "kind": "web-page",
       "world": "studio",
@@ -181,7 +181,7 @@
       "placed": []
     },
     {
-      "name": "Privacy \u2014 habit-dot",
+      "name": "Privacy — habit-dot",
       "url": "https://tattoo-art-customs.onrender.com/privacy/habit-dot",
       "kind": "web-page",
       "world": "studio",
@@ -192,7 +192,7 @@
       "placed": []
     },
     {
-      "name": "Privacy \u2014 kids-wing",
+      "name": "Privacy — kids-wing",
       "url": "https://tattoo-art-customs.onrender.com/privacy/kids-wing",
       "kind": "web-page",
       "world": "studio",
@@ -203,7 +203,7 @@
       "placed": []
     },
     {
-      "name": "Privacy \u2014 library",
+      "name": "Privacy — library",
       "url": "https://tattoo-art-customs.onrender.com/privacy/library",
       "kind": "web-page",
       "world": "studio",
@@ -214,7 +214,7 @@
       "placed": []
     },
     {
-      "name": "Privacy \u2014 loophole-ciphers",
+      "name": "Privacy — loophole-ciphers",
       "url": "https://tattoo-art-customs.onrender.com/privacy/loophole-ciphers",
       "kind": "web-page",
       "world": "studio",
@@ -225,7 +225,7 @@
       "placed": []
     },
     {
-      "name": "Privacy \u2014 money-watch",
+      "name": "Privacy — money-watch",
       "url": "https://tattoo-art-customs.onrender.com/privacy/money-watch",
       "kind": "web-page",
       "world": "studio",
@@ -236,7 +236,7 @@
       "placed": []
     },
     {
-      "name": "Privacy \u2014 odometer",
+      "name": "Privacy — odometer",
       "url": "https://tattoo-art-customs.onrender.com/privacy/odometer",
       "kind": "web-page",
       "world": "studio",
@@ -247,7 +247,7 @@
       "placed": []
     },
     {
-      "name": "Privacy \u2014 robosweeper",
+      "name": "Privacy — robosweeper",
       "url": "https://tattoo-art-customs.onrender.com/privacy/robosweeper",
       "kind": "web-page",
       "world": "studio",
@@ -258,7 +258,7 @@
       "placed": []
     },
     {
-      "name": "Privacy \u2014 rolodex",
+      "name": "Privacy — rolodex",
       "url": "https://tattoo-art-customs.onrender.com/privacy/rolodex",
       "kind": "web-page",
       "world": "studio",
@@ -269,7 +269,7 @@
       "placed": []
     },
     {
-      "name": "Privacy \u2014 screenqr",
+      "name": "Privacy — screenqr",
       "url": "https://tattoo-art-customs.onrender.com/privacy/screenqr",
       "kind": "web-page",
       "world": "studio",
@@ -280,7 +280,7 @@
       "placed": []
     },
     {
-      "name": "Privacy \u2014 tester-hub",
+      "name": "Privacy — tester-hub",
       "url": "https://tattoo-art-customs.onrender.com/privacy/tester-hub",
       "kind": "web-page",
       "world": "studio",
@@ -291,7 +291,7 @@
       "placed": []
     },
     {
-      "name": "Privacy \u2014 world-weather",
+      "name": "Privacy — world-weather",
       "url": "https://tattoo-art-customs.onrender.com/privacy/world-weather",
       "kind": "web-page",
       "world": "studio",
@@ -302,7 +302,7 @@
       "placed": []
     },
     {
-      "name": "Poppy & Ziggy \u2014 brand page",
+      "name": "Poppy & Ziggy — brand page",
       "url": "https://tattoo-art-customs.onrender.com/poppy-and-ziggy",
       "kind": "web-page",
       "world": "poppy-and-ziggy",
@@ -313,26 +313,26 @@
       "placed": []
     },
     {
-      "name": "CannaDash \u2014 brand page",
+      "name": "CannaDash — brand page",
       "url": "https://tattoo-art-customs.onrender.com/cannadash",
       "kind": "web-page",
       "world": "cannadash",
       "kid_safe": false,
       "visibility": "public",
       "state": "live",
-      "verified": "live-checked 200 (2026-10-26) \u2014 split commit 1384447 deployed; corrected from building the same day",
+      "verified": "live-checked 200 (2026-10-26) — split commit 1384447 deployed; corrected from building the same day",
       "placed": [],
       "note": "21+ world. Never linked from any kid surface."
     },
     {
-      "name": "Our Worlds \u2014 splitter hub",
+      "name": "Our Worlds — splitter hub",
       "url": "https://tattoo-art-customs.onrender.com/worlds",
       "kind": "web-page",
       "world": "studio",
       "kid_safe": false,
       "visibility": "public",
       "state": "live",
-      "verified": "live-checked 200 (2026-10-26) \u2014 split commit 1384447 deployed; corrected from building the same day",
+      "verified": "live-checked 200 (2026-10-26) — split commit 1384447 deployed; corrected from building the same day",
       "placed": []
     },
     {
@@ -391,7 +391,7 @@
       "placed": []
     },
     {
-      "name": "GitHub \u2014 website backend repo (INTERNAL)",
+      "name": "GitHub — website backend repo (INTERNAL)",
       "url": "https://github.com/mikekelleyiimk2-spec/tattoo-art-customs-backend",
       "kind": "repo",
       "world": "studio",
@@ -400,7 +400,117 @@
       "state": "live",
       "verified": "git remote of record",
       "placed": [],
-      "note": "Internal only \u2014 never served by the public endpoint."
+      "note": "Internal only — never served by the public endpoint."
+    },
+    {
+      "name": "OneMind — hub (page 1: the sign-in)",
+      "url": "https://tattoo-art-customs.onrender.com/onemind",
+      "kind": "web-page",
+      "world": "onemind",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "route added 2026-10-26 (OneMind web structure); suite-verified 200 — live deploy rides the Render unblock",
+      "placed": []
+    },
+    {
+      "name": "OneMind — the Table (page 2: the branches)",
+      "url": "https://tattoo-art-customs.onrender.com/onemind/table",
+      "kind": "web-page",
+      "world": "onemind",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "route added 2026-10-26 (OneMind web structure); suite-verified 200 — live deploy rides the Render unblock",
+      "placed": []
+    },
+    {
+      "name": "OneMind branch — Poppy & Ziggy (kid-safe)",
+      "url": "https://tattoo-art-customs.onrender.com/onemind/poppy-and-ziggy",
+      "kind": "web-page",
+      "world": "little-inkers",
+      "kid_safe": true,
+      "visibility": "public",
+      "state": "live",
+      "verified": "route added 2026-10-26 (OneMind web structure); suite-verified 200 — live deploy rides the Render unblock",
+      "placed": []
+    },
+    {
+      "name": "OneMind branch — Little Inkers (kid-safe)",
+      "url": "https://tattoo-art-customs.onrender.com/onemind/little-inkers",
+      "kind": "web-page",
+      "world": "little-inkers",
+      "kid_safe": true,
+      "visibility": "public",
+      "state": "live",
+      "verified": "route added 2026-10-26 (OneMind web structure); suite-verified 200 — live deploy rides the Render unblock",
+      "placed": []
+    },
+    {
+      "name": "OneMind branch — KillinTime (ports shelf)",
+      "url": "https://tattoo-art-customs.onrender.com/onemind/killintime",
+      "kind": "web-page",
+      "world": "killintime",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "route added 2026-10-26 (OneMind web structure); suite-verified 200 — live deploy rides the Render unblock",
+      "placed": []
+    },
+    {
+      "name": "OneMind branch — Tester Hub (routes to /tester-hub)",
+      "url": "https://tattoo-art-customs.onrender.com/onemind/tester-hub",
+      "kind": "web-page",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "route added 2026-10-26 (OneMind web structure); suite-verified 200 — live deploy rides the Render unblock",
+      "placed": []
+    },
+    {
+      "name": "OneMind branch — the Tools",
+      "url": "https://tattoo-art-customs.onrender.com/onemind/tools",
+      "kind": "web-page",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "route added 2026-10-26 (OneMind web structure); suite-verified 200 — live deploy rides the Render unblock",
+      "placed": []
+    },
+    {
+      "name": "Tester Hub",
+      "url": "https://tattoo-art-customs.onrender.com/tester-hub",
+      "kind": "web-page",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "route added 2026-10-26 (OneMind web structure); suite-verified 200 — live deploy rides the Render unblock",
+      "placed": []
+    },
+    {
+      "name": "Privacy — OneMind",
+      "url": "https://tattoo-art-customs.onrender.com/privacy/onemind",
+      "kind": "web-page",
+      "world": "onemind",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "route added 2026-10-26 (OneMind web structure); suite-verified 200 — live deploy rides the Render unblock",
+      "placed": []
+    },
+    {
+      "name": "UsefulAppz Folder downloads",
+      "url": "https://tattoo-art-customs.onrender.com/folder",
+      "kind": "web-page",
+      "world": "studio",
+      "kid_safe": false,
+      "visibility": "public",
+      "state": "live",
+      "verified": "route added 2026-10-26 (OneMind web structure); suite-verified 200 — live deploy rides the Render unblock",
+      "placed": []
     }
   ]
 }
