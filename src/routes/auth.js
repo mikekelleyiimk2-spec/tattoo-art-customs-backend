@@ -78,9 +78,12 @@ router.post('/signup', authLimiter, checkHoneypot, async (req, res) => {
   await onemind.seatQuietly(id, 'website');
   await enforceSessionCap(req); // new account: no other sessions, a no-op
   if (!req.session.flash) req.session.flash = 'Welcome to Tattoo Art Customs!';
-  // Post-auth landing is OneMind (the front door); an explicit
-  // returnTo (deep-link intent) still wins.
-  res.redirect(req.session.returnTo || '/onemind');
+  // Post-auth landing is the person's own account page; an explicit
+  // returnTo (deep-link intent) still wins. Nobody is ever funneled
+  // to OneMind — it has its own address and is reached only by
+  // asking for it (owner ruling 2026-10-27 09:38 CDT). The seat/tie
+  // still attaches quietly underneath (seatQuietly above).
+  res.redirect(req.session.returnTo || '/account');
 });
 
 router.get('/login', (req, res) => res.render('auth/login', {
@@ -130,9 +133,9 @@ router.get('/auth/google/callback', async (req, res) => {
       // web signup gets (idempotent, best effort).
       try { await require('../lib/founding').enterRaffleOnSignup(r.user.id); }
       catch (e) { console.error('raffle entry on google signup failed:', e.message); }
-      req.session.flash = 'Welcome to OneMind — your account is ready.';
+      req.session.flash = 'Welcome to Tattoo Art Customs!';
     }
-    const dest = req.session.returnTo || '/onemind';
+    const dest = req.session.returnTo || '/account';
     delete req.session.returnTo;
     res.redirect(dest);
   } catch (e) {
@@ -154,7 +157,7 @@ router.post('/login', authLimiter, checkHoneypot, async (req, res) => {
   // tie (first-seated sticks, last-seen moves). Best-effort.
   await onemind.seatQuietly(user.id, 'website');
   await enforceSessionCap(req); // evicts oldest sessions when over the plan cap
-  const dest = req.session.returnTo || '/onemind';
+  const dest = req.session.returnTo || '/account';
   delete req.session.returnTo;
   res.redirect(dest);
 });
@@ -204,7 +207,7 @@ router.post('/reset/:token', authLimiter, checkHoneypot, async (req, res) => {
     password_hash: await bcrypt.hash(password, 12), reset_token: null, reset_expires: null,
   });
   req.session.flash = 'Password updated — please log in.';
-  res.redirect('/onemind');
+  res.redirect('/login');
 });
 
 module.exports = router;

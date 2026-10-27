@@ -1,83 +1,54 @@
 <style>
-@keyframes omGlow { 0%,100% { box-shadow: 0 0 0 rgba(20,83,45,0); } 50% { box-shadow: 0 0 18px rgba(20,83,45,.35); } }
-.om-live { animation: omGlow 2.4s ease-in-out infinite; }
+  .om-ntp { min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 14vh 1rem 2rem; }
+  .om-wordmark { font-size: 4.2rem; font-weight: 500; letter-spacing: -.02em; margin: 0 0 2rem; color: #202124; user-select: none; }
+  @media (prefers-color-scheme: dark) { .om-wordmark { color: #e8eaed; } }
+  .om-search { display: flex; align-items: center; gap: .6rem; width: 100%; max-width: 560px; background: #fff; border: 1px solid transparent; border-radius: 999px; box-shadow: 0 1px 6px rgba(32,33,36,.28); padding: .8rem 1.1rem; }
+  @media (prefers-color-scheme: dark) { .om-search { background: #303134; box-shadow: none; } }
+  .om-search svg { flex: 0 0 auto; fill: #5f6368; }
+  @media (prefers-color-scheme: dark) { .om-search svg { fill: #9aa0a6; } }
+  .om-search input { flex: 1 1 auto; border: 0; outline: 0; background: transparent; font-size: 1rem; color: inherit; min-width: 0; }
+  .om-tiles { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem .25rem; max-width: 640px; margin-top: 2.2rem; }
+  .om-tile { display: flex; flex-direction: column; align-items: center; gap: .45rem; width: 96px; padding: .8rem 0 .6rem; border-radius: 12px; text-decoration: none; color: #202124; }
+  @media (prefers-color-scheme: dark) { .om-tile { color: #e8eaed; } }
+  .om-tile:hover { background: rgba(32,33,36,.06); }
+  @media (prefers-color-scheme: dark) { .om-tile:hover { background: rgba(232,234,237,.08); } }
+  .om-tile .om-ic { width: 48px; height: 48px; border-radius: 50%; background: #f1f3f4; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  @media (prefers-color-scheme: dark) { .om-tile .om-ic { background: #303134; } }
+  .om-tile .om-ic img { width: 24px; height: 24px; }
+  .om-tile .om-ic span { font-size: 1.15rem; font-weight: 500; color: #fff; }
+  .om-tile .om-lb { font-size: .78rem; text-align: center; line-height: 1.15; max-width: 88px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 </style>
-<div style="text-align:center;">
-  <p style="font-size:3rem;margin:.5rem 0;">🪑</p>
-  <h1>The Table</h1>
-  <p class="muted" style="max-width:44rem;margin:0 auto;">Good old familiar browsers — <strong>the real ones</strong> — running on our table, with our plugs in them: the AIs, the APIs, the tools, anything going into OneMind, available from here.</p>
-  <p style="max-width:44rem;margin:.75rem auto 0;">Everything below is <strong>tied to OneMind</strong> — and everything is <strong>also reachable directly at its own link</strong>. Two ways in, one tie underneath: a login anywhere is a OneMind login, on the hub, on a branch, on any page of this site.</p>
+<div class="om-ntp">
+  <h1 class="om-wordmark">OneMind</h1>
+  <form class="om-search" id="om-search" role="search" autocomplete="off">
+    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14"/></svg>
+    <input id="om-q" type="text" placeholder="Search Google or type URL" aria-label="Search Google or type URL">
+    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-2.08A7 7 0 0 0 19 12z"/></svg>
+  </form>
+  <nav class="om-tiles" aria-label="Shortcuts">
+    <a class="om-tile" href="https://chatgpt.com"><span class="om-ic"><img alt="" src="https://www.google.com/s2/favicons?domain=chatgpt.com&sz=128"></span><span class="om-lb">ChatGPT</span></a>
+    <a class="om-tile" href="https://claude.ai"><span class="om-ic"><img alt="" src="https://www.google.com/s2/favicons?domain=claude.ai&sz=128"></span><span class="om-lb">Claude</span></a>
+    <a class="om-tile" href="https://gemini.google.com"><span class="om-ic"><img alt="" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=128"></span><span class="om-lb">Gemini</span></a>
+    <a class="om-tile" href="https://grok.com"><span class="om-ic"><img alt="" src="https://www.google.com/s2/favicons?domain=grok.com&sz=128"></span><span class="om-lb">Grok</span></a>
+    <a class="om-tile" href="https://www.perplexity.ai"><span class="om-ic"><img alt="" src="https://www.google.com/s2/favicons?domain=perplexity.ai&sz=128"></span><span class="om-lb">Perplexity</span></a>
+    <a class="om-tile" href="https://copilot.microsoft.com"><span class="om-ic"><img alt="" src="https://www.google.com/s2/favicons?domain=copilot.microsoft.com&sz=128"></span><span class="om-lb">Copilot</span></a>
+    <a class="om-tile" href="https://chat.deepseek.com"><span class="om-ic"><img alt="" src="https://www.google.com/s2/favicons?domain=deepseek.com&sz=128"></span><span class="om-lb">DeepSeek</span></a>
+    <a class="om-tile" href="/"><span class="om-ic" style="background:#7a1f1f;"><span>T</span></span><span class="om-lb">Tattoo Art Customs</span></a>
+    <a class="om-tile" href="/onemind"><span class="om-ic" style="background:#14532d;"><span>O</span></span><span class="om-lb">OneMind</span></a>
+    <a class="om-tile" href="/onemind/tester-hub"><span class="om-ic" style="background:#1d4ed8;"><span>H</span></span><span class="om-lb">Tester Hub</span></a>
+    <a class="om-tile" href="/onemind/tools"><span class="om-ic" style="background:#6d28d9;"><span>T</span></span><span class="om-lb">The Tools</span></a>
+    <a class="om-tile" href="/onemind/poppy-and-ziggy"><span class="om-ic" style="background:#db2777;"><span>P</span></span><span class="om-lb">Poppy &amp; Ziggy</span></a>
+    <a class="om-tile" href="/onemind/little-inkers"><span class="om-ic" style="background:#ea580c;"><span>L</span></span><span class="om-lb">Little Inkers</span></a>
+    <a class="om-tile" href="/onemind/killintime"><span class="om-ic" style="background:#111827;"><span>K</span></span><span class="om-lb">KillinTime</span></a>
+  </nav>
 </div>
-
-<% if (typeof numbers !== 'undefined' && numbers) { %>
-<div class="card om-live" style="padding:1rem 1.5rem;margin:1.5rem 0;text-align:center;" aria-label="The table, in live numbers">
-  <p style="font-size:1.15rem;margin:.25rem 0;">
-    <% if (numbers.designs != null) { %><strong><%= numbers.designs.toLocaleString('en-US') %></strong> designs in the gallery · <% } %><strong><%= numbers.doors %></strong> doors in the Codex · <strong><%= numbers.plugs %></strong> plugs on the table · <strong><%= numbers.partners %></strong> partners in the Rolodex
-  </p>
-  <p class="muted fineprint" style="margin:.25rem 0;">Live from the Codex and the Rolodex — and the table is still filling: seats are being configured one by one, the first game ports are in pursuit, and the Tester Hub pool is filling. Come back and watch the numbers move.</p>
-</div>
-<% } %>
-
-<section style="margin:1.5rem 0;">
-  <h2>The branches — every house, its own door</h2>
-  <div class="grid">
-    <article class="card" style="padding:1rem;">
-      <h3 style="margin-top:0;">🎨 Tattoo Art Customs</h3>
-      <p>The tattoo shop. Its house is this website itself — the front door, the gallery of <% if (numbers && numbers.designs != null) { %><%= numbers.designs.toLocaleString('en-US') %> <% } %>designs, the shop. Tied to the table like everything else: its logins are OneMind logins.</p>
-      <p><a class="btn" href="/">The tattoo shop's front door</a> <a class="btn btn-secondary" href="/gallery">The gallery</a></p>
-    </article>
-    <article class="card" style="padding:1rem;">
-      <h3 style="margin-top:0;">🧠 OneMind</h3>
-      <p>Page one of the table: the sign-in, the seat board, the price. One account for everything we make.</p>
-      <p><a class="btn" href="/onemind">OneMind — page one</a> <a class="btn btn-secondary" href="/testers">Join the closed test</a></p>
-    </article>
-    <article class="card" style="padding:1rem;">
-      <h3 style="margin-top:0;">🎨 Poppy &amp; Ziggy</h3>
-      <p>The kids' cartoon where a coloring page comes to life — new episode every Friday at 5 PM CT. Its branch page is kid-safe; the show's own home carries the episodes and the subscribe door.</p>
-      <p><a class="btn" href="/onemind/poppy-and-ziggy">The Poppy &amp; Ziggy branch</a> <a class="btn btn-secondary" href="/poppy-and-ziggy">The show's own page</a></p>
-    </article>
-    <article class="card" style="padding:1rem;">
-      <h3 style="margin-top:0;">🖍️ Little Inkers</h3>
-      <p>Free coloring fun for kids — the coloring show and the app where pages come to life. Its branch page is kid-safe; its own doors are the app pages and the show.</p>
-      <p><a class="btn" href="/onemind/little-inkers">The Little Inkers branch</a> <a class="btn btn-secondary" href="/little-inkers-android">Get the free app</a></p>
-    </article>
-    <article class="card" style="padding:1rem;">
-      <h3 style="margin-top:0;">🕹️ KillinTime</h3>
-      <p>The ports shelf: classic games, licensed properly, brought to phones. Ports carry no ads, ever. Seated at this table as a plug — and reachable at its own link.</p>
-      <p><a class="btn" href="/onemind/killintime">The KillinTime branch</a></p>
-    </article>
-    <article class="card" style="padding:1rem;">
-      <h3 style="margin-top:0;">🧪 Tester Hub</h3>
-      <p>The fix for every developer's 12-tester problem: one pool, sign up once, and the pool fills your list. First in line for the newest apps — or get your own app filled.</p>
-      <p><a class="btn" href="/onemind/tester-hub">The Tester Hub</a></p>
-    </article>
-    <article class="card" style="padding:1rem;">
-      <h3 style="margin-top:0;">🧰 The Tools</h3>
-      <p>The Useful Appz toolbox — the Rolodex, the Sweeper, the Scraper, Money Watch, the Keeper, the Doctor. Small sharp tools, each born from a problem we hit first.</p>
-      <p><a class="btn" href="/onemind/tools">The tools branch</a> <a class="btn btn-secondary" href="/apps">All the apps</a></p>
-    </article>
-  </div>
-</section>
-
-<section class="card" style="padding:1.5rem;margin:1.5rem 0;">
-  <h2>The plugs — what's wired into the table</h2>
-  <p>Read <strong>live from the Codex</strong><% if (codexUpdated) { %> (book updated <%= codexUpdated %>)<% } %>. A plug, a price, or a tie that isn't in the book isn't real — and nothing here is dressed up beyond what the book says.</p>
-  <div class="grid">
-    <% (plugs || []).forEach(function (p) { %>
-    <article class="card" style="padding:1rem;">
-      <h3 style="margin-top:0;"><%= p.name %></h3>
-      <p class="muted fineprint">Codex state: <%= p.state && p.state.length > 220 ? p.state.slice(0, 220) + '…' : p.state %></p>
-    </article>
-    <% }); %>
-  </div>
-</section>
-
-<%- include('../partials/onemind-seats') %>
-
-<%- include('../partials/rolodex-placements') %>
-
-<%- include('../partials/sponsor-slot') %>
-
-<%- include('../partials/tip-jar') %>
-
-<p style="text-align:center;" class="muted">Back to <a href="/onemind">page one — the OneMind sign-in</a> · See every world on <a href="/worlds">Our Worlds</a></p>
+<script>
+  document.getElementById('om-search').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var q = document.getElementById('om-q').value.trim();
+    if (!q) return;
+    if (/^https?:\/\//i.test(q)) { window.location.href = q; return; }
+    if (!/\s/.test(q) && /\.[a-z]{2,}$/i.test(q)) { window.location.href = 'https://' + q; return; }
+    window.location.href = 'https://www.google.com/search?q=' + encodeURIComponent(q);
+  });
+</script>

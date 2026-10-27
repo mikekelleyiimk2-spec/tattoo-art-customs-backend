@@ -6,11 +6,12 @@
 // pages at their own links, the kid-wall on the two kid branches
 // (kid-safe Rolodex pulls only, no tattoo commerce, no way back into
 // grown-up commerce), the tattoo shop as an OUTBOUND link (no hosted
-// /onemind/tattoo-shop page — owner correction 20:05), the
-// ONEMIND_FRONT_DOOR flag (default off; flipping it is the owner's
-// tap), the seated /onemind → /onemind/table redirect (owner ruling
-// 2026-10-27 08:57), and the /api/links registry carrying the new
-// structure.
+// /onemind/tattoo-shop page — owner correction 20:05), the front
+// door law (GET / is ALWAYS the tattoo shop's — the old
+// ONEMIND_FRONT_DOOR redirect was retired by owner ruling 2026-10-27
+// 09:38: nobody is taken anywhere they didn't ask to go), the
+// seated /onemind → /onemind/table redirect (owner ruling 2026-10-27
+// 08:57), and the /api/links registry carrying the new structure.
 const BASE = 'http://localhost:4137';
 
 async function runDbTests(ok) {
@@ -19,20 +20,11 @@ async function runDbTests(ok) {
   const rolodex = require('../src/lib/rolodex');
   const links = require('../src/lib/links');
 
-  // The front-door flag: OFF unless the env says exactly "on".
-  const saved = process.env.ONEMIND_FRONT_DOOR;
-  delete process.env.ONEMIND_FRONT_DOOR;
-  ok(web.frontDoorEnabled() === false, 'front-door flag defaults OFF (no env)');
-  process.env.ONEMIND_FRONT_DOOR = 'on';
-  ok(web.frontDoorEnabled() === true, 'front-door flag is ON when env=on');
-  process.env.ONEMIND_FRONT_DOOR = 'ON';
-  ok(web.frontDoorEnabled() === true, 'front-door flag accepts ON (case-insensitive)');
-  process.env.ONEMIND_FRONT_DOOR = 'off';
-  ok(web.frontDoorEnabled() === false, 'front-door flag is OFF when env=off');
-  process.env.ONEMIND_FRONT_DOOR = 'yes';
-  ok(web.frontDoorEnabled() === false, 'front-door flag is OFF for any other value');
-  if (saved === undefined) delete process.env.ONEMIND_FRONT_DOOR;
-  else process.env.ONEMIND_FRONT_DOOR = saved;
+  // The front-door redirect is RETIRED (owner ruling 2026-10-27
+  // 09:38 CDT): GET / is the tattoo shop's front door, always — the
+  // ONEMIND_FRONT_DOOR env flag is inert and ignored, and nobody is
+  // funneled to OneMind. The behavioral pin lives in the HTTP phase
+  // below (GET / serves 200 with the flag forced ON).
 
   // The kid pull the kid branches render: kid-safe programs only.
   const kid = rolodex.queryLive({ kidSafe: true });
@@ -77,9 +69,17 @@ async function runHttpTests(ok) {
     };
   };
 
-  // The flag is OFF in the suite: / is the site's own front door.
+  // The front door law: / is the site's own front door, ALWAYS —
+  // even with the retired flag forced ON, nobody is redirected to
+  // OneMind (owner ruling 2026-10-27 09:38).
   const root = await call('GET', '/');
-  ok(root.status === 200, 'GET / serves the site front door while ONEMIND_FRONT_DOOR is off (no redirect)');
+  ok(root.status === 200, 'GET / serves the site front door (no redirect)');
+  const savedEnv = process.env.ONEMIND_FRONT_DOOR;
+  process.env.ONEMIND_FRONT_DOOR = 'on';
+  const rootOn = await call('GET', '/');
+  ok(rootOn.status === 200 && !rootOn.location, 'GET / STILL serves the tattoo shop with ONEMIND_FRONT_DOOR=on (flag retired — no funnel)');
+  if (savedEnv === undefined) delete process.env.ONEMIND_FRONT_DOOR;
+  else process.env.ONEMIND_FRONT_DOOR = savedEnv;
 
   // Page 1 — the hub: the sign-in IS the OneMind sign-in.
   const hub = await call('GET', '/onemind');
@@ -122,11 +122,14 @@ async function runHttpTests(ok) {
     ok(table.text.includes(`href="${href}"`), `/onemind/table branches to ${href}`);
   }
   ok(table.text.includes('href="/"'), '/onemind/table links OUT to the tattoo shop\u2019s own home');
-  ok(/a login anywhere is a OneMind login/i.test(table.text), '/onemind/table states the tie law (one login everywhere)');
-  ok(table.text.includes('AI-to-AI Messenger'), '/onemind/table renders the Codex plugs (AI-to-AI Messenger)');
-  ok(table.text.includes('Affiliate Rolodex plug'), '/onemind/table renders the Codex plugs (Affiliate Rolodex)');
-  const mi = rolodex.findLiveByName('Monsters Ink');
-  ok(mi && table.text.includes(mi.link), '/onemind/table placements are pulled live from the Rolodex (house rotation: Monsters Ink)');
+  // Owner ruling 2026-10-27 09:33 CDT: the table face is a BROWSER —
+  // Chrome grammar, plumbing invisible. No manifesto copy, no plug
+  // cards, no placements furniture on the face; the tie runs
+  // underneath, unstated. (Supersedes the old tie-law/plugs pins.)
+  ok(!/a login anywhere is a OneMind login/i.test(table.text) && !/tied to OneMind/i.test(table.text), '/onemind/table carries NO manifesto copy (plumbing invisible, owner ruling 2026-10-27)');
+  ok(table.text.includes('Search Google or type URL'), '/onemind/table renders the browser search bar');
+  ok(table.text.includes('href="https://chatgpt.com"') && table.text.includes('href="https://claude.ai"'), '/onemind/table shortcut tiles open the real AIs');
+  ok(!/SPONSORED/.test(table.text), '/onemind/table carries no sponsor/placements furniture on the face');
 
   // The tattoo shop is NOT a branch page (owner correction, 20:05).
   const tac = await call('GET', '/onemind/tattoo-shop');

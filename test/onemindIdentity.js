@@ -238,7 +238,7 @@ async function runHttpTests(ok) {
   const su = await form('POST', '/signup', {
     display_name: 'Seat Tester', email, password, referral_code: '', website: '',
   });
-  ok(su.status === 302 && su.location === '/onemind', 'web signup succeeds and lands on OneMind (the front door)');
+  ok(su.status === 302 && su.location === '/account', 'web signup succeeds and lands on the account page (no OneMind funnel — owner ruling 2026-10-27)');
   const cookie = cookieOf(su);
   ok(!!cookie, 'web signup sets a session cookie');
   const dash = await fetch(`${BASE}/account`, { headers: { cookie }, redirect: 'manual' });
@@ -287,7 +287,7 @@ async function runHttpTests(ok) {
 
   // Web login seats again (count on the website tie moves to 2).
   const li = await form('POST', '/login', { email, password, website: '' });
-  ok(li.status === 302 && li.location === '/onemind', 'web login succeeds and lands on OneMind (the front door)');
+  ok(li.status === 302 && li.location === '/account', 'web login succeeds and lands on the account page (no OneMind funnel — owner ruling 2026-10-27)');
   const seat2 = await call('GET', '/api/onemind/seat', undefined,
     { 'x-api-token': si.json.api_token });
   const webTie = seat2.json && (seat2.json.ties || []).find((t) => t.surface === 'website');
@@ -303,15 +303,15 @@ async function runHttpTests(ok) {
     'a login-gated page bounces to the sign-in, remembering the intent');
   const liBack = await form('POST', '/login', { email, password, website: '' }, bCookie);
   ok(liBack.status === 302 && liBack.location === '/account',
-    'after login, an explicit returnTo still wins over the OneMind default');
+    'after login, an explicit returnTo still wins over the account default');
 
   // The app WebView bootstrap is a sign-in too: its default landing
-  // is OneMind, and an explicit next (a deep link from the app)
-  // still wins.
+  // is the account page, and an explicit next (a deep link from the
+  // app) still wins.
   const boot = await fetch(`${BASE}/api/bootstrap?api_token=${encodeURIComponent(si.json.api_token)}`,
     { redirect: 'manual' });
-  ok(boot.status === 302 && boot.headers.get('location') === '/onemind',
-    'bootstrap with no next lands on OneMind (the front door)');
+  ok(boot.status === 302 && boot.headers.get('location') === '/account',
+    'bootstrap with no next lands on the account page (no OneMind funnel)');
   const bootNext = await fetch(
     `${BASE}/api/bootstrap?api_token=${encodeURIComponent(si.json.api_token)}&next=${encodeURIComponent('/account')}`,
     { redirect: 'manual' });
@@ -434,11 +434,11 @@ async function runHttpTests(ok) {
   if (uRow && uRow.reset_token) {
     const newPassword = ['seat', 'test', 'newpass'].join('-');
     const rp = await form('POST', `/reset/${uRow.reset_token}`, { password: newPassword, website: '' });
-    ok(rp.status === 302 && rp.location === '/onemind',
-      'password reset completion lands on OneMind (the front door)');
+    ok(rp.status === 302 && rp.location === '/login',
+      'password reset completion lands back on the login page');
     const liNew = await form('POST', '/login', { email, password: newPassword, website: '' });
-    ok(liNew.status === 302 && liNew.location === '/onemind',
-      'login with the reset password lands on OneMind');
+    ok(liNew.status === 302 && liNew.location === '/account',
+      'login with the reset password lands on the account page');
   }
 }
 

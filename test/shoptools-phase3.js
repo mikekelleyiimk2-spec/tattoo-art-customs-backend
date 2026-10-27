@@ -298,7 +298,7 @@ async function runHttpTests(ok, req) {
   }
   async function login(j, email) {
     const r = await j('POST', '/login', { body: { email, password: 'P3Test123!' }, follow: false });
-    ok(r.status === 302 && (r.location || '').includes('/onemind'), `login ok for ${email}`);
+    ok(r.status === 302 && (r.location || '').includes('/account'), `login ok for ${email}`);
   }
 
   const cust = makeJar(), cust4 = makeJar(), shop = makeJar(), anon = makeJar();

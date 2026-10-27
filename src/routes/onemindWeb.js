@@ -20,9 +20,11 @@
 //     board (live from the Codex), the price, and the door to page 2.
 //     A seated session skips page 1 entirely — straight to page 2
 //     (owner ruling 2026-10-27 08:57 CDT).
-//   Page 2 — GET /onemind/table: "the table" — the familiar browsers
-//     pitch, every plug from the Codex, and every branch as a lit
-//     card with its own link.
+//   Page 2 — GET /onemind/table: "the table" — a BROWSER face in
+//     Chrome's grammar (owner ruling 2026-10-27 09:33 CDT): wordmark,
+//     one search/URL bar, shortcut tiles to the real AIs and every
+//     branch. The plumbing is invisible — no pitch, no plug cards,
+//     no manifesto copy on the face; the tie runs underneath.
 //   Branches — full standalone pages at their own links, reachable
 //     directly or through the table: /onemind/poppy-and-ziggy,
 //     /onemind/little-inkers (both kid-safe, walled layout),
@@ -31,9 +33,13 @@
 //   The tattoo shop is NOT a branch page: the hub and the table link
 //   OUT to its own home — this website's front door (/).
 //
-// THE MAIN LINK: GET / redirects to /onemind ONLY when the env flag
-// ONEMIND_FRONT_DOOR=on (read live per request). Default OFF — the
-// flip is the owner's one tap. When off, / behaves exactly as today.
+// THE MAIN LINK: GET / is the tattoo shop's front door — ALWAYS.
+// An earlier build could redirect / to /onemind behind the
+// ONEMIND_FRONT_DOOR env flag; the owner retired that 2026-10-27
+// 09:38 CDT: nobody is ever taken somewhere they didn't ask to go —
+// "that's exactly how you lost their interest on step 1." OneMind
+// has its own address (/onemind) and is reached only by asking for
+// it (typing it, tapping its own link). The env flag is inert.
 //
 // Mounted BEFORE the site router (see src/index.js) so this file owns
 // /onemind and can intercept / first; the site router's older /onemind
@@ -51,13 +57,6 @@ const onemind = require('../lib/onemind');
 const router = express.Router();
 
 const base = () => config.baseUrl.replace(/\/$/, '');
-
-// The front-door flag: env ONEMIND_FRONT_DOOR=on makes / the OneMind
-// door. Read live so the flip needs no code change (and so the suite
-// can pin the truth table).
-function frontDoorEnabled() {
-  return String(process.env.ONEMIND_FRONT_DOOR || '').trim().toLowerCase() === 'on';
-}
 
 // Same seat-chip mapping the site router's /onemind page used — the
 // board must tell the identical truth in both places (pinned by
@@ -125,11 +124,10 @@ function placementsFor(surfaceTokens, { kidSafe = false } = {}) {
 const HUB_PLACEMENTS = ['REFERRAL-HUB'];
 const TABLE_PLACEMENTS = ['REFERRAL-HUB', 'house-ads rotation'];
 
-// --- The main link (flag-gated) -------------------------------------
-router.get('/', (req, res, next) => {
-  if (!frontDoorEnabled()) return next();
-  return res.redirect(302, '/onemind');
-});
+// --- The main link ---------------------------------------------------
+// GET / belongs to the tattoo shop (the site router serves it). This
+// router never intercepts it: no redirect to OneMind, ever — people
+// reach OneMind by asking for it, at its own address.
 
 // --- Page 1: /onemind — sign up to OneMind ---------------------------
 router.get('/onemind', async (req, res) => {
@@ -179,8 +177,9 @@ router.get('/onemind/table', async (req, res) => {
   const t = tableBook();
   const numbers = await liveNumbers(t.book);
   res.render('onemind/table', {
-    title: 'The Table — OneMind | Useful Appz',
-    metaDescription: 'The OneMind table on the web: the familiar browsers running with our plugs — the AIs, the APIs, the tools — and every branch of the house, each tied to the table and each reachable at its own link.',
+    layout: 'layout-onemind',
+    title: 'OneMind',
+    metaDescription: 'OneMind — your browsers, your AIs, your tools, behind one search bar.',
     canonical: `${base()}/onemind/table`,
     houseAdExclude: ['littleinkers', 'poppyziggy'],
     seats: t.seats,
@@ -249,4 +248,3 @@ router.get('/onemind/tools', async (req, res) => {
 router.get('/onemind/tester-hub', (req, res) => res.redirect(302, '/tester-hub'));
 
 module.exports = router;
-module.exports.frontDoorEnabled = frontDoorEnabled;

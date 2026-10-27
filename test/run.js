@@ -1536,7 +1536,7 @@ async function main() {
     return { status: res.status, text: await res.text(), location: res.headers.get('location') };
   }
   r = await areq('POST', '/login', { body: { email: 'admin@test.local', password: 'AdminTest123!' } });
-  ok(r.status === 302 && (r.location || '').includes('/onemind'), 'admin login ok (lands on OneMind)');
+  ok(r.status === 302 && (r.location || '').includes('/account'), 'admin login ok (lands on account)');
   r = await areq('GET', '/admin');
   ok(r.status === 200, 'admin dashboard loads');
   await require('./founding').runHttpTests(ok, req, areq);
