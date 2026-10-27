@@ -273,6 +273,12 @@ app.get('/health', (req, res) => res.json({ ok: true, time: Date.now(), commit: 
 // other path falls through untouched. The site router's older
 // /onemind product page remains as fallback code (unreachable while
 // this router is mounted) — the hub renders its full content and more.
+// OneMind standalone host (onemind.onrender.com): mounted ONLY when
+// ONEMIND_STANDALONE=on — the tattoo shop's service never sets it,
+// so this router does not exist there. See routes/onemindStandalone.js.
+if (String(process.env.ONEMIND_STANDALONE || '').trim().toLowerCase() === 'on') {
+  app.use('/', require('./routes/onemindStandalone'));
+}
 app.use('/', require('./routes/onemindWeb'));
 app.use('/', require('./routes/site'));
 app.use('/', require('./routes/auth'));

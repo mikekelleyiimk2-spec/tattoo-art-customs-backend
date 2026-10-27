@@ -26,6 +26,42 @@ async function runDbTests(ok) {
   // funneled to OneMind. The behavioral pin lives in the HTTP phase
   // below (GET / serves 200 with the flag forced ON).
 
+  // OneMind standalone host (onemind.onrender.com, owner order
+  // 2026-10-27 09:49): the flag + the door handlers.
+  const standalone = require('../src/routes/onemindStandalone');
+  const savedSa = process.env.ONEMIND_STANDALONE;
+  delete process.env.ONEMIND_STANDALONE;
+  ok(standalone.standaloneEnabled() === false, 'standalone flag defaults OFF (no env)');
+  process.env.ONEMIND_STANDALONE = 'on';
+  ok(standalone.standaloneEnabled() === true, 'standalone flag is ON when env=on');
+  if (savedSa === undefined) delete process.env.ONEMIND_STANDALONE;
+  else process.env.ONEMIND_STANDALONE = savedSa;
+  const mockRes = () => ({
+    locals: {}, rendered: null, redirected: null,
+    render(v, l) { this.rendered = { v, l }; },
+    redirect(c, u) { this.redirected = { c, u }; },
+  });
+  let mr = mockRes();
+  standalone.handlers.rootHandler({}, mr);
+  ok(mr.redirected && mr.redirected.u === '/onemind', 'standalone root sends new visitors to the OneMind door');
+  mr = mockRes(); mr.locals.currentUser = { id: 1 };
+  standalone.handlers.rootHandler({}, mr);
+  ok(mr.redirected && mr.redirected.u === '/onemind/table', 'standalone root sends seated visitors straight to the browser face');
+  mr = mockRes();
+  standalone.handlers.tacDoorHandler({}, mr);
+  ok(mr.rendered && mr.rendered.v === 'onemind/door-tac'
+    && String(mr.rendered.l.shopUrl).includes('tattoo-art-customs.onrender.com'),
+  'standalone /tac renders the TAC door pointing at the shop\u2019s own address');
+  mr = mockRes();
+  standalone.handlers.portsHandler({}, mr);
+  ok(mr.rendered && mr.rendered.v === 'onemind/door-ports', 'standalone /ports renders the arcade ports door');
+  mr = mockRes();
+  standalone.handlers.toolboxHandler({}, mr);
+  ok(mr.rendered && mr.rendered.v === 'onemind/door-toolbox', 'standalone /toolbox renders the toolbox door');
+  mr = mockRes();
+  standalone.handlers.poppyHandler({}, mr);
+  ok(mr.rendered && mr.rendered.v === 'onemind/branch-poppy', 'standalone /poppyandziggy renders the Poppy & Ziggy branch face');
+
   // The kid pull the kid branches render: kid-safe programs only.
   const kid = rolodex.queryLive({ kidSafe: true });
   ok(kid.length >= 1, 'rolodex serves at least one live kid-safe program');
