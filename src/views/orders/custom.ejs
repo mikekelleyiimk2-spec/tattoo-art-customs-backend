@@ -21,7 +21,7 @@
   </select>
   <% } %>
   <% if (typeof rushFee !== 'undefined' && rushFee > 0) { %>
-  <p class="rush-box" style="border:2px solid #e8a13d;border-radius:8px;padding:10px 12px;background:#fff8ec;">
+  <p class="rush-box" style="border:2px solid #e8a13d;border-radius:8px;padding:10px 12px;background:#221a10;">
     <label for="rush"><input type="checkbox" id="rush" name="rush" value="1"> <strong><%= t('customs.rush_title', {fee: fmtMoney(rushFee)}) %></strong></label><br>
     <span class="muted"><%= t('customs.rush_text', {fee: fmtMoney(rushFee), total: fmtMoney(rushDepositTotal), cut: fmtMoney(typeof rushDesignerCents !== 'undefined' ? rushDesignerCents : 1800)}) %></span>
   </p>

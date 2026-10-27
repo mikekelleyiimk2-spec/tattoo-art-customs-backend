@@ -24,6 +24,7 @@ const router = express.Router();
 router.get('/buy', requireLogin, async (req, res) => {
   const def = 5000;
   res.render('site-giftcards/buy', {
+    homeFace: true, darkFace: true, bodyClass: 'page-dark',
     title: 'Buy a Gift Card — Tattoo Art Customs',
     presets: SITE_GIFT_CARD_AMOUNTS, fee: SITE_GIFT_CARD_FEE_CENTS,
     shipping: SITE_GIFT_CARD_SHIPPING_CENTS, defaultQuote: siteGiftCardQuote(def, false),

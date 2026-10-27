@@ -381,6 +381,7 @@ router.get('/gallery', async (req, res) => {
     } catch (e) { console.error('featured color row failed:', e.message); }
   }
   res.render('site/gallery', {
+    homeFace: true, darkFace: true, bodyClass: 'page-dark',
     catalogCount,
     title: galleryTitle,
     designs: thumbs, featuredColor, allCats, allStyles, q: req.query.q || '', cat: req.query.cat || '', style: req.query.style || '', sale: await salePriceActive(req.user),
@@ -1092,6 +1093,7 @@ router.get('/design/:id', async (req, res) => {
     },
   };
   res.render('site/design', {
+    homeFace: true, darkFace: true, bodyClass: 'page-dark',
     title: `${design.title} — ${styleBit}Tattoo Design for Sale | Tattoo Art Customs`,
     design, artist, price, isCustom, sale: await salePriceActive(req.user), owned,
     imgFile, blurred, prevId, nextId,
@@ -1313,6 +1315,7 @@ router.get('/about', (req, res) => res.render('site/about', {
 }));
 
 router.get('/apps', (req, res) => res.render('site/apps', {
+  homeFace: true, darkFace: true, bodyClass: 'page-dark',
   title: 'Apps by Usefulappz™',
   metaDescription: 'Mobile apps built by Usefulappz — Tattoo Art Customs for Android and iPhone.',
   playStoreUrl: res.locals.playStoreUrl || null,

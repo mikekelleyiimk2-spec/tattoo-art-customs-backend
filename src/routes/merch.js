@@ -52,6 +52,7 @@ router.get('/', async (req, res) => {
     likeCounts[row.merch_id] = Number(row.like_count || 0);
   }
   res.render('merch/index', {
+    homeFace: true, darkFace: true, bodyClass: 'page-dark',
     title: "Mike's Custom Tees",
     configured,
     sizes: pricing.TEE_SIZES,

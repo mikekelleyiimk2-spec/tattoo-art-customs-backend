@@ -252,6 +252,7 @@ router.get('/custom', requireLogin, async (req, res) => {
      AND (u.commission_suspended_until IS NULL OR u.commission_suspended_until <= ?)
      ORDER BY u.display_name`, [nowMs]);
   res.render('orders/custom', {
+    homeFace: true, darkFace: true, bodyClass: 'page-dark',
     title: 'Request a Custom Design — Tattoo Art Customs', noAds: true,
     deposit, full, sale: quote.sale, artists,
     designBrief, designTitle,

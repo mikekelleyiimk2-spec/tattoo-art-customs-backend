@@ -7,7 +7,7 @@
 <p>The apps exist because the businesses needed them. The gallery needed a real storefront in your pocket, artists needed working tools, parents needed a coloring app they could trust, and developers everywhere needed a way to find testers — so we built each one, and every one of them is a tool we rely on in our own business first. When you buy an app here, you are buying from the people who use it every day.</p>
 <p style="text-align:center;margin:1rem 0;"><a class="btn" href="/testers"><%= t('testers.apps_link') %></a></p>
 
-<div style="border:2px solid #b8860b;background:#fdf6e0;border-radius:8px;padding:1.25rem;text-align:center;margin:1.5rem 0;">
+<div style="border:2px solid #b8860b;background:#221a10;border-radius:8px;padding:1.25rem;text-align:center;margin:1.5rem 0;">
   <p style="font-size:1.15rem;margin-top:0;"><strong><%= t('apps.hub_headline') %></strong></p>
   <p><%= t('apps.hub_text') %></p>
   <p style="margin-bottom:0;"><a class="btn" style="display:block;padding:1rem;font-size:1.05rem;" href="/tester-hub"><%= t('apps.hub_btn') %></a></p>
@@ -15,21 +15,21 @@
 <p style="border:1px dashed #b8860b;border-radius:8px;padding:1rem 1.25rem;"><strong><%= t('apps.hub_dev_h') %></strong> <%= t('apps.hub_dev_text') %> <a href="/tester-hub"><%= t('apps.hub_dev_link') %></a>.</p>
 
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem;margin:1.5rem 0;">
-  <div id="tac" style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1.5rem;">
+  <div id="tac" style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1.5rem;">
     <p style="font-size:2rem;">🎨</p>
     <p><strong>Tattoo Art Customs</strong></p>
     <p class="muted">Full design gallery, custom tattoos in 48 hours, memberships, shop tools.</p>
     <% if (playStoreUrl || playStoreProUrl) { %>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin:1rem 0;text-align:center;">
         <% if (playStoreUrl) { %>
-        <div style="border:1px solid var(--line,#ddd);border-radius:8px;padding:1rem;">
+        <div style="border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1rem;">
           <p><strong><%= t('apps.free_label') %></strong></p>
           <p class="muted"><%= t('apps.free_text') %></p>
           <p><a class="btn" href="<%= playStoreUrl %>"><%= t('home.get_play_free') %></a></p>
         </div>
         <% } %>
         <% if (playStoreProUrl) { %>
-        <div style="border:1px solid var(--line,#ddd);border-radius:8px;padding:1rem;">
+        <div style="border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1rem;">
           <p><strong><%= t('apps.pro_label') %></strong></p>
           <p class="muted"><%= t('apps.pro_text') %></p>
           <p><a class="btn" href="<%= playStoreProUrl %>"><%= t('home.get_play_pro') %></a></p>
@@ -47,7 +47,7 @@
       <p><a class="btn" href="/ios-app">Get the iPhone app — sideload edition ($1.67)</a></p>
     <% } %>
   </div>
-  <div id="little-inkers" style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1.5rem;">
+  <div id="little-inkers" style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1.5rem;">
     <p style="font-size:2rem;">🖍️</p>
     <p><strong><%= t('apps.lil_title') %></strong></p>
     <p class="muted"><%= t('apps.lil_text') %></p>
@@ -59,7 +59,7 @@
     <p><span class="badge"><%= t('apps.free_label') %></span></p>
     <p class="muted fineprint"><%= t('apps.lil_notify') %></p>
   </div>
-  <div style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1.5rem;background:linear-gradient(135deg,#fff5f5,#f0f8ff);">
+  <div style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1.5rem;background:linear-gradient(135deg,#2b1216,#101a26);">
     <p style="font-size:2rem;">🌈</p>
     <p><strong>Poppy &amp; Ziggy Show</strong></p>
     <p class="muted">Our new kids' show! Poppy &amp; Ziggy learn colors, numbers, shapes and more through fun adventures. New episodes every Friday at 5pm.</p>
@@ -71,14 +71,14 @@
       <a href="https://www.facebook.com/profile.php?id=1313070431894024" target="_blank" rel="noopener">🔢 Hide and Seek</a>
     </p>
   </div>
-  <div id="odometer" style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1.5rem;">
+  <div id="odometer" style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1.5rem;">
     <p style="font-size:2rem;">🚗</p>
     <p><strong>Odometer</strong></p>
     <p class="muted"><%= t('apps.odometer_text') %></p>
     <p><span class="badge"><%= t('apps.odometer_badge') %></span></p>
     <% if (dl && dl['com.usefulappz.odometer']) { %><p><a class="btn" href="/api/apps/com.usefulappz.odometer/apk"><%= t('apps.dl_now', {price: '$1.99'}) %></a></p><% } %>
   </div>
-  <div id="aibutton" style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1.5rem;">
+  <div id="aibutton" style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1.5rem;">
     <p style="font-size:2rem;">🎙️</p>
     <p><strong>OneMind</strong></p>
     <p class="muted"><%= t('apps.aibutton_text') %></p>
@@ -92,49 +92,49 @@
 <h2>Our Other Apps</h2>
 <p class="muted">Home-screen widgets that talk straight to your favorite AI — tap the mic or type, and you're in the app. $0.99 each, coming soon to Google Play.</p>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin:1.5rem 0;">
-  <div style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1rem;">
+  <div style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1rem;">
     <p style="font-size:1.75rem;">🤖</p>
     <p><strong>Muse Bar</strong></p>
     <p class="muted fineprint">Mic + type bar for the Muse app.</p>
     <% if (dl && dl['com.usefulappz.musebar']) { %><p><a class="btn" href="/api/apps/com.usefulappz.musebar/apk"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge">Coming soon — $0.99</span></p><% } %>
   </div>
-  <div style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1rem;">
+  <div style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1rem;">
     <p style="font-size:1.75rem;">💬</p>
     <p><strong>ChatGPT Bar</strong></p>
     <p class="muted fineprint">Mic + type bar for the ChatGPT app.</p>
     <% if (dl && dl['com.usefulappz.chatgptbar']) { %><p><a class="btn" href="/api/apps/com.usefulappz.chatgptbar/apk"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge">Coming soon — $0.99</span></p><% } %>
   </div>
-  <div style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1rem;">
+  <div style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1rem;">
     <p style="font-size:1.75rem;">✨</p>
     <p><strong>Gemini Bar</strong></p>
     <p class="muted fineprint">Mic + type bar for the Gemini app.</p>
     <% if (dl && dl['com.usefulappz.geminibar']) { %><p><a class="btn" href="/api/apps/com.usefulappz.geminibar/apk"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge">Coming soon — $0.99</span></p><% } %>
   </div>
-  <div style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1rem;">
+  <div style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1rem;">
     <p style="font-size:1.75rem;">🧠</p>
     <p><strong>Claude Bar</strong></p>
     <p class="muted fineprint">Mic + type bar for the Claude app.</p>
     <% if (dl && dl['com.usefulappz.claudebar']) { %><p><a class="btn" href="/api/apps/com.usefulappz.claudebar/apk"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge">Coming soon — $0.99</span></p><% } %>
   </div>
-  <div style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1rem;">
+  <div style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1rem;">
     <p style="font-size:1.75rem;">🪟</p>
     <p><strong>Copilot Bar</strong></p>
     <p class="muted fineprint">Mic + type bar for the Copilot app.</p>
     <% if (dl && dl['com.usefulappz.copilotbar']) { %><p><a class="btn" href="/api/apps/com.usefulappz.copilotbar/apk"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge">Coming soon — $0.99</span></p><% } %>
   </div>
-  <div style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1rem;">
+  <div style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1rem;">
     <p style="font-size:1.75rem;">🔍</p>
     <p><strong>Perplexity Bar</strong></p>
     <p class="muted fineprint">Mic + type bar for the Perplexity app.</p>
     <% if (dl && dl['com.usefulappz.perplexitybar']) { %><p><a class="btn" href="/api/apps/com.usefulappz.perplexitybar/apk"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge">Coming soon — $0.99</span></p><% } %>
   </div>
-  <div style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1rem;">
+  <div style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1rem;">
     <p style="font-size:1.75rem;">❌</p>
     <p><strong>Grok Bar</strong></p>
     <p class="muted fineprint">Mic + type bar for the Grok app.</p>
     <% if (dl && dl['com.usefulappz.grokbar']) { %><p><a class="btn" href="/api/apps/com.usefulappz.grokbar/apk"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge">Coming soon — $0.99</span></p><% } %>
   </div>
-  <div style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1rem;">
+  <div style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1rem;">
     <p style="font-size:1.75rem;">🌊</p>
     <p><strong>DeepSeek Bar</strong></p>
     <p class="muted fineprint">Mic + type bar for the DeepSeek app.</p>
@@ -145,43 +145,43 @@
 <h2><%= t('apps.more_title') %></h2>
 <p class="muted"><%= t('apps.more_text') %></p>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin:1.5rem 0;">
-  <div style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1rem;">
+  <div style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1rem;">
     <p style="font-size:1.75rem;">📋</p>
     <p><strong>Clipboard Bar</strong></p>
     <p class="muted fineprint"><%= t('apps.clip_text') %></p>
     <% if (dl && dl['com.usefulappz.clipboardbar']) { %><p><a class="btn" href="/buy-app/clipboard-bar"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge"><%= t('apps.play_soon') %> — $0.99</span></p><% } %>
   </div>
-  <div style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1rem;">
+  <div style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1rem;">
     <p style="font-size:1.75rem;">⏳</p>
     <p><strong>Countdown Bar</strong></p>
     <p class="muted fineprint"><%= t('apps.count_text') %></p>
     <% if (dl && dl['com.usefulappz.countdownbar']) { %><p><a class="btn" href="/buy-app/countdown-bar"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge"><%= t('apps.play_soon') %> — $0.99</span></p><% } %>
   </div>
-  <div style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1rem;">
+  <div style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1rem;">
     <p style="font-size:1.75rem;">📷</p>
     <p><strong>ScreenQR</strong></p>
     <p class="muted fineprint"><%= t('apps.screenqr_text') %></p>
     <% if (dl && dl['com.usefulappz.screenqr']) { %><p><a class="btn" href="/api/apps/com.usefulappz.screenqr/apk"><%= t('apps.dl_free') %></a></p><% } else { %><p><span class="badge"><%= t('apps.play_soon') %> — <%= t('apps.free_label') %></span></p><% } %>
   </div>
-  <div style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1rem;">
+  <div style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1rem;">
     <p style="font-size:1.75rem;">🖍️</p>
     <p><strong>Little Inkers Coloring</strong></p>
     <p class="muted fineprint"><%= t('apps.lic_text') %></p>
     <% if (dl && dl['com.usefulappz.littleinkerscoloring']) { %><p><a class="btn" href="/api/apps/com.usefulappz.littleinkerscoloring/apk"><%= t('apps.dl_free') %></a></p><% } else { %><p><span class="badge"><%= t('apps.play_soon') %> — <%= t('apps.free_label') %></span></p><% } %>
   </div>
-  <div style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1rem;">
+  <div style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1rem;">
     <p style="font-size:1.75rem;">🌟</p>
     <p><strong>Little Inkers Sticker World</strong></p>
     <p class="muted fineprint"><%= t('apps.sticker_text') %></p>
     <% if (dl && dl['com.usefulappz.stickerworld']) { %><p><a class="btn" href="/api/apps/com.usefulappz.stickerworld/apk"><%= t('apps.dl_free') %></a></p><% } else { %><p><span class="badge"><%= t('apps.play_soon') %> — <%= t('apps.free_label') %></span></p><% } %>
   </div>
-  <div style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1rem;">
+  <div style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1rem;">
     <p style="font-size:1.75rem;">✏️</p>
     <p><strong>Little Inkers Draw With Me</strong></p>
     <p class="muted fineprint"><%= t('apps.draw_text') %></p>
     <% if (dl && dl['com.usefulappz.drawwithme']) { %><p><a class="btn" href="/api/apps/com.usefulappz.drawwithme/apk"><%= t('apps.dl_free') %></a></p><% } else { %><p><span class="badge"><%= t('apps.play_soon') %> — <%= t('apps.free_label') %></span></p><% } %>
   </div>
-  <div style="text-align:center;border:1px solid var(--line,#ddd);border-radius:8px;padding:1rem;">
+  <div style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1rem;">
     <p style="font-size:1.75rem;">🏆</p>
     <p><strong>Little Inkers Coloring Contests</strong></p>
     <p class="muted fineprint"><%= t('apps.contests_text') %></p>

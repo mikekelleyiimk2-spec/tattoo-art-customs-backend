@@ -1,0 +1,97 @@
+/* Tattoo Art Customs — DARK FACE, PASS 1 (trickle-down, 2026-10-27).
+   The front door's design system (home.css, owner-approved standard)
+   carried down the buyer's path: /gallery, /design/:id, /merch, /apps,
+   /orders/custom, /gift-cards/buy. Same tokens as the home face — black
+   field #0a0806, panel #171310, border #2b241c, bone text #e9e1cf /
+   #f5efe4, muted #a89a80, input well #221c16 / #3a322a — applied to the
+   shared components (cards, forms, buttons, tables) exactly the way
+   home.css's .lp2-rest section restyles them below the home fold.
+   Loaded ONLY on pages whose route sets darkFace (+ homeFace for the
+   shared home header); every other page keeps the classic cream face.
+   No layout, copy, or behavior changes — color/type treatment only. */
+
+@font-face {
+  font-family: 'TAC Brush';
+  src: url('/fonts/permanent-marker.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+.brush { font-family: 'TAC Brush', 'Arial Black', Arial, sans-serif; font-weight: 400; }
+
+body.page-dark {
+  background: #0a0806; color: #e9e1cf;
+  /* Shared-component tokens re-pointed at the home face's dark values, so
+     every var()-driven component (tags, badges, table heads, house ads,
+     hairlines) lands on the same palette without per-class restyles. */
+  --line: #2b241c;
+  --paper-dim: #221c16;
+  --muted: #a89a80;
+  --surface: #171310;
+}
+
+/* ============================ TYPE ============================ */
+body.page-dark h1, body.page-dark h2, body.page-dark h3 { color: #f7f1e3; }
+body.page-dark h1 {
+  font-family: 'TAC Brush', 'Arial Black', Arial, sans-serif;
+  font-weight: 400; letter-spacing: .01em;
+}
+body.page-dark .fineprint { color: #a89a80; }
+
+/* ============================ CARDS ============================ */
+body.page-dark .card,
+body.page-dark .design-card,
+body.page-dark .product-card,
+body.page-dark .discount-card,
+body.page-dark .tattoo-entry,
+body.page-dark .thread li,
+body.page-dark .byrequest-list li {
+  background: #171310; border-color: #2b241c; color: #e9e1cf;
+}
+body.page-dark .design-card img { background: #14100d; }
+body.page-dark summary { color: #f5efe4; }
+
+/* ============================ FORMS ============================ */
+/* Scoped to <main>: the shared footer's newsletter field keeps the exact
+   treatment it has on the home face. */
+body.page-dark main input[type='text'], body.page-dark main input[type='email'],
+body.page-dark main input[type='password'], body.page-dark main input[type='url'],
+body.page-dark main input[type='number'], body.page-dark main input[type='tel'],
+body.page-dark main input[type='file'], body.page-dark main input[type='date'],
+body.page-dark main input[type='search'],
+body.page-dark main textarea, body.page-dark main select {
+  background: #221c16; color: #f5efe4; border: 1px solid #3a322a;
+}
+body.page-dark main input::placeholder, body.page-dark main textarea::placeholder { color: #a89a80; }
+body.page-dark main fieldset { border-color: #3a322a; }
+body.page-dark main legend { color: #f5efe4; }
+
+/* ============================ FEEDBACK ============================ */
+body.page-dark .notice { background: #16283f; border-color: #2c4a73; color: #cfe2f7; }
+body.page-dark .error { background: #3d1618; border-color: #7c2d2d; color: #f6c9c9; }
+body.page-dark .badge.ok { background: #1d3a1f; color: #9fd3a3; }
+body.page-dark .badge.warn { background: #3a2a10; color: #f0c987; }
+body.page-dark .badge.bad { background: #3d1618; color: #f3a9a9; }
+body.page-dark .muted-badge { background: #221c16; color: #a89a80; }
+
+/* ============================ TABLES ============================ */
+body.page-dark th { background: #221c16; }
+@media (max-width: 640px) {
+  body.page-dark table tr { background: #171310; border-color: #2b241c; }
+  body.page-dark table td::before { color: #a89a80; }
+}
+
+/* ============================ BUTTONS ============================ */
+body.page-dark .btn-quiet { background: transparent; color: #f5efe4; border-color: #3a322a; }
+body.page-dark .btn-quiet:hover, body.page-dark .btn-quiet:focus { background: #221c16; }
+body.page-dark .slot-grid button { background: #221c16; color: #f5efe4; border-color: #3a322a; }
+body.page-dark .slot-grid button:hover, body.page-dark .slot-grid button.selected {
+  background: var(--accent); border-color: var(--accent); color: #fff;
+}
+
+/* ============================ GALLERY ============================ */
+/* The deals strip's own <style> paints it accent-on-cream; on the dark
+   field it takes the home face's deal-strip treatment (.lp2-deal). */
+body.page-dark .deals-strip { background: #171310; border-color: #2b241c; color: #ffb3ab; }
+body.page-dark .deals-strip:hover, body.page-dark .deals-strip:focus { color: #ffb3ab; }
