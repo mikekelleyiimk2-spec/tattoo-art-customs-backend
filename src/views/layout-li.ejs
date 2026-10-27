@@ -10,17 +10,23 @@
 <link rel="stylesheet" href="/css/style.css">
 <link rel="stylesheet" href="/css/motion.css">
 <% if (typeof pzFace !== 'undefined' && pzFace) { %><link rel="stylesheet" href="/css/pz.css"><% } %>
+<% if (typeof liFace !== 'undefined' && liFace) { %><link rel="stylesheet" href="/css/li.css"><% } %>
 <style>
 .li-header { background: #FFF7E8; border-bottom: 3px solid #ffd166; padding: .75rem 1rem; }
 .li-header .brand { font-size: 1.4rem; font-weight: 800; color: #5b4a68; text-decoration: none; }
 .li-footer { margin-top: 2rem; padding: 1.25rem 1rem; background: #FFF7E8; border-top: 3px solid #ffd166; text-align: center; color: #5b4a68; }
 </style>
 </head>
-<body<% if (typeof pzFace !== 'undefined' && pzFace) { %> class="pz-body"<% } %>>
+<body<% if (typeof pzFace !== 'undefined' && pzFace) { %> class="pz-body"<% } else if (typeof liFace !== 'undefined' && liFace) { %> class="li-body"<% } %>>
 <% if (typeof pzFace !== 'undefined' && pzFace) { %>
 <header class="pz-header">
   <span class="pz-header-brand">🖍️ Little Inkers</span>
   <span class="pz-header-badge">Kids' Corner ☀️ by Useful Appz</span>
+</header>
+<% } else if (typeof liFace !== 'undefined' && liFace) { %>
+<header class="li2-header">
+  <span class="li2-header-brand">🖍️ Little Inkers</span>
+  <span class="li2-header-badge">Kids' Corner ☀️ by Useful Appz</span>
 </header>
 <% } else { %>
 <header class="li-header">
@@ -36,7 +42,14 @@
   <%- body %>
 </main>
 
-<% if (typeof pzFace !== 'undefined' && pzFace) { %>
+<% if (typeof liFace !== 'undefined' && liFace) { %>
+<footer class="li2-footer">
+  <p class="li2-foot-mark">Little Inkers</p>
+  <p class="li2-foot-motto">Color ★ Watch ★ Play ★ Grow</p>
+  <p><strong>Little Inkers</strong> — free coloring fun for kids, by Usefulappz.</p>
+  <p class="fineprint">Grown-ups: this is a kid-safe page. No accounts, no ads that track, no links out.</p>
+</footer>
+<% } else if (typeof pzFace !== 'undefined' && pzFace) { %>
 <footer class="pz-footer">
   <p class="pz-foot-mark">Poppy &amp; Ziggy</p>
   <p class="pz-foot-motto">Watch ★ Learn ★ Play ★ Grow</p>

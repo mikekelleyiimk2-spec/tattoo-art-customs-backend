@@ -248,6 +248,7 @@ router.get('/onemind/little-inkers', (req, res) => {
     title: 'Little Inkers — Free Coloring Fun for Kids | OneMind Branch',
     metaDescription: 'Little Inkers: the free coloring show and app where coloring pages come to life — Color With Us every Wednesday and Saturday, new coloring pages every Monday. Kid-safe branch page.',
     canonical: `${base()}/onemind/little-inkers`,
+    liFace: true,
     kidPartners: rolodex.queryLive({ kidSafe: true }),
     disclosureStandard: rolodex.disclosureStandard(),
   });

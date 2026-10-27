@@ -1,29 +1,161 @@
-<div style="background:linear-gradient(90deg,#7bd747,#3ec1f3,#b388ff,#ff5d8f);border-radius:16px;padding:30px 22px;text-align:center;margin-bottom:22px;">
-  <div style="font-size:44px;line-height:1.1;font-weight:900;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.25);">🖍️ Little Inkers</div>
-  <div style="font-size:19px;font-weight:700;color:#fff;margin-top:6px;">Free coloring fun — where coloring pages come to life!</div>
+<%# Little Inkers branch face — rebuilt Oct 27 2026 (trickle-down pass 2)
+    into the Kids' Corner design system, sibling to the Poppy & Ziggy
+    face: sky-to-paper field, bubbly marker wordmark, four icon chips,
+    four chunky cards in the fixed accent system, navy grown-ups footer.
+    The hero is the product itself — a coloring page caught mid-coloring,
+    half line-art, half filled (drawn as inline SVG line work; no
+    character art is invented for this brand). Every link, the kid-safe
+    Rolodex pull, both fineprints and the single grown-ups tip jar are
+    the same wires the flat page carried — only the face changed.
+    Kid wall holds: no tattoo commerce, no links back into the shop. %>
+<div class="li-bleed">
+  <div class="li-top">
+    <h1 class="li-wordmark"><span class="li-w-little">Little</span> <span class="li-w-inkers">Inkers</span></h1>
+    <span class="li-tagline">🖍️ Free coloring fun — where coloring pages come to life!</span>
+    <ul class="li-chips">
+      <li><a href="#show"><span class="li-chip purple">📺</span>Watch</a></li>
+      <li><a href="#color"><span class="li-chip green">🎨</span>Color</a></li>
+      <li><a href="#sister"><span class="li-chip orange">🌈</span>Sister Show</a></li>
+      <li><a href="#grownups"><span class="li-chip blue">🛡️</span>Parents</a></li>
+    </ul>
+  </div>
+
+  <div class="li-hero">
+    <div class="li-hero-frame">
+      <svg viewBox="0 0 1200 560" role="img" aria-label="A coloring page caught halfway through being colored: a rainbow and sun in bright colors, a house and flower still waiting as outlines" preserveAspectRatio="xMidYMid meet">
+        <rect x="0" y="0" width="1200" height="560" fill="#fffdf6"/>
+        <!-- the rainbow: the colored half of the page -->
+        <g fill="none" stroke-linecap="round">
+          <path d="M 300 500 A 300 300 0 0 1 900 500" stroke="#ff5d8f" stroke-width="46"/>
+          <path d="M 348 500 A 252 252 0 0 1 852 500" stroke="#ff8a00" stroke-width="46"/>
+          <path d="M 396 500 A 204 204 0 0 1 804 500" stroke="#ffd93b" stroke-width="46"/>
+          <path d="M 444 500 A 156 156 0 0 1 756 500" stroke="#1fae4e" stroke-width="46"/>
+          <path d="M 492 500 A 108 108 0 0 1 708 500" stroke="#1f74e0" stroke-width="46"/>
+        </g>
+        <!-- sun, colored in -->
+        <g stroke="#33254d" stroke-width="7" stroke-linecap="round">
+          <line x1="168" y1="36" x2="168" y2="66"/><line x1="84" y1="72" x2="106" y2="94"/>
+          <line x1="252" y1="72" x2="230" y2="94"/><line x1="48" y1="150" x2="78" y2="150"/>
+          <line x1="258" y1="150" x2="288" y2="150"/>
+        </g>
+        <circle cx="168" cy="150" r="58" fill="#ffd93b" stroke="#33254d" stroke-width="7"/>
+        <circle cx="148" cy="142" r="6" fill="#33254d"/><circle cx="188" cy="142" r="6" fill="#33254d"/>
+        <path d="M 146 168 Q 168 186 190 168" fill="none" stroke="#33254d" stroke-width="7" stroke-linecap="round"/>
+        <!-- cloud, still an outline -->
+        <path d="M 880 168 a52 52 0 0 1 10 -103 a66 66 0 0 1 122 -18 a46 46 0 0 1 34 121 z" fill="#ffffff" stroke="#33254d" stroke-width="7" stroke-linejoin="round"/>
+        <!-- house, still an outline -->
+        <g fill="#ffffff" stroke="#33254d" stroke-width="7" stroke-linejoin="round" stroke-linecap="round">
+          <path d="M 96 500 L 96 372 L 216 292 L 336 372 L 336 500 Z"/>
+          <path d="M 76 378 L 216 282 L 356 378" fill="none"/>
+          <rect x="188" y="416" width="56" height="84"/>
+          <rect x="122" y="392" width="42" height="42"/>
+        </g>
+        <!-- flower: stem + center colored, petals waiting -->
+        <g stroke="#33254d" stroke-width="7" stroke-linecap="round">
+          <line x1="1010" y1="500" x2="1010" y2="392" stroke="#1fae4e"/>
+          <path d="M 1010 452 q -52 -8 -62 -48 q 46 2 62 48" fill="#1fae4e" stroke="none"/>
+          <g fill="#ffffff">
+            <circle cx="1010" cy="318" r="30"/><circle cx="972" cy="348" r="30"/>
+            <circle cx="1048" cy="348" r="30"/><circle cx="986" cy="382" r="30"/>
+            <circle cx="1034" cy="382" r="30"/>
+          </g>
+          <circle cx="1010" cy="356" r="24" fill="#ff8a00"/>
+        </g>
+        <!-- grass: colored tufts on the left, outlines on the right -->
+        <g stroke-linecap="round" fill="none">
+          <path d="M 60 500 q 6 -34 -8 -52 M 92 500 q 2 -30 16 -46 M 420 500 q 6 -34 -8 -52 M 452 500 q 2 -30 16 -46" stroke="#1fae4e" stroke-width="8"/>
+          <path d="M 760 500 q 6 -34 -8 -52 M 792 500 q 2 -30 16 -46 M 1120 500 q 6 -34 -8 -52 M 1152 500 q 2 -30 16 -46" stroke="#33254d" stroke-width="6"/>
+        </g>
+        <!-- the crayon that did it -->
+        <g transform="translate(600 478) rotate(-18)">
+          <rect x="-110" y="-20" width="170" height="40" rx="8" fill="#9b1fe0" stroke="#33254d" stroke-width="6"/>
+          <rect x="-78" y="-20" width="26" height="40" fill="#ffd93b" stroke="#33254d" stroke-width="5"/>
+          <path d="M 60 -20 L 108 0 L 60 20 Z" fill="#f3e2ff" stroke="#33254d" stroke-width="6" stroke-linejoin="round"/>
+          <path d="M 92 -6 L 108 0 L 92 6 Z" fill="#9b1fe0"/>
+        </g>
+      </svg>
+    </div>
+    <div class="li-burst"><span class="li-burst-star">★</span> NEW PAGES <span class="li-burst-star">★</span><br>EVERY MONDAY!</div>
+  </div>
+
+  <p class="li-hero-cta">
+    <a class="li-btn green" href="/little-inkers-android">🎨 GET THE FREE APP</a>
+  </p>
+  <p class="li-schedule">📺 Color With Us — Wednesdays at 5 PM &amp; Saturday mornings · brand-new coloring pages every Monday</p>
+
+  <nav class="li-cards" aria-label="Little Inkers doors">
+    <a class="li-card purple" href="#show">
+      <span class="li-card-art">📺</span>
+      <span class="li-card-label"><span class="li-card-icon">▶️</span>WATCH THE SHOW</span>
+    </a>
+    <a class="li-card green" href="/little-inkers-android">
+      <span class="li-card-art">🎨</span>
+      <span class="li-card-label"><span class="li-card-icon">🖍️</span>COLOR IN THE APP</span>
+    </a>
+    <a class="li-card orange" href="#color">
+      <span class="li-card-art">🌈</span>
+      <span class="li-card-label"><span class="li-card-icon">📄</span>NEW PAGES MONDAY</span>
+    </a>
+    <a class="li-card blue" href="#grownups">
+      <span class="li-card-art">🛡️</span>
+      <span class="li-card-label"><span class="li-card-icon">🛡️</span>PARENTS &amp; GUARDIANS</span>
+    </a>
+  </nav>
 </div>
-<p><strong>Free coloring fun for kids — where coloring pages come to life.</strong> Little Inkers is a show and an app from Useful Appz: kids color a page, and the page jumps off the paper into a story.</p>
 
-<h2>Color With Us — the show</h2>
-<p>🎬 New episodes every <strong>Wednesday at 5 PM</strong> and <strong>Saturday morning</strong> — and brand-new coloring pages every <strong>Monday</strong>. Watch, color along, and see what the page becomes.</p>
-<p><a class="btn" href="https://www.youtube.com/@littleinkersapp" target="_blank" rel="noopener">📺 Watch + subscribe on YouTube</a></p>
+<section class="li-sec" id="show">
+  <h2><span class="li-h-star">★</span> Color With Us — the show</h2>
+  <p class="li-lede"><strong>Free coloring fun for kids — where coloring pages come to life.</strong> Little Inkers is a show and an app from Useful Appz: kids color a page, and the page jumps off the paper into a story.</p>
+  <div class="li-panel">
+    <p>🎬 New episodes every <strong>Wednesday at 5 PM</strong> and <strong>Saturday morning</strong> — and brand-new coloring pages every <strong>Monday</strong>. Watch, color along, and see what the page becomes.</p>
+    <p><a class="li-btn" href="https://www.youtube.com/@littleinkersapp" target="_blank" rel="noopener">📺 Watch + subscribe on YouTube</a></p>
+  </div>
+</section>
 
-<h2>The free app</h2>
-<p>The Little Inkers app is <strong>free</strong> — coloring pages, tap-to-fill, a paint program, and color-by-numbers, all made for little hands. No ads aimed at kids, ever.</p>
-<p>
-  <a class="btn" href="/little-inkers-android">Little Inkers for Android — free</a>
-  <a class="btn btn-secondary" href="/little-inkers-ios">Little Inkers for iPhone — free</a>
-</p>
+<section class="li-sec" id="color">
+  <h2><span class="li-h-star">★</span> The free app</h2>
+  <p class="li-lede">The Little Inkers app is <strong>free</strong> — coloring pages, tap-to-fill, a paint program, and color-by-numbers, all made for little hands. No ads aimed at kids, ever.</p>
+  <div class="li-modes">
+    <div class="li-mode">
+      <div class="li-mode-art">👆</div>
+      <h3>Tap-to-Fill</h3>
+      <p>Tap a shape and it fills with color — made for the youngest artists.</p>
+    </div>
+    <div class="li-mode">
+      <div class="li-mode-art">🖌️</div>
+      <h3>Paint</h3>
+      <p>A free paint mode with real brushes, for kids who like their own plan.</p>
+    </div>
+    <div class="li-mode">
+      <div class="li-mode-art">🔢</div>
+      <h3>Color-by-Numbers</h3>
+      <p>Follow the numbers and watch the whole picture fill in.</p>
+    </div>
+  </div>
+  <div class="li-panel">
+    <p>
+      <a class="li-btn green" href="/little-inkers-android">Little Inkers for Android — free</a>
+      <a class="li-btn white" href="/little-inkers-ios">Little Inkers for iPhone — free</a>
+    </p>
+  </div>
+</section>
 
-<h2>The sister show</h2>
-<p>Poppy &amp; Ziggy — the cartoon where Poppy, Ziggy, Pip, Bones, the Mummy and the whole crew color a page and it comes to life — is Little Inkers' sister show, with a new episode every Friday at 5 PM CT.</p>
-<p><a class="btn btn-secondary" href="/onemind/poppy-and-ziggy">Visit the Poppy &amp; Ziggy branch</a> <a class="btn btn-secondary" href="/poppy-and-ziggy">The show's own page</a></p>
+<section class="li-sec" id="sister">
+  <h2><span class="li-h-star">★</span> The sister show</h2>
+  <div class="li-panel">
+    <p>Poppy &amp; Ziggy — the cartoon where Poppy, Ziggy, Pip, Bones, the Mummy and the whole crew color a page and it comes to life — is Little Inkers' sister show, with a new episode every Friday at 5 PM CT.</p>
+    <p><a class="li-btn white" href="/onemind/poppy-and-ziggy">Visit the Poppy &amp; Ziggy branch</a> <a class="li-btn white" href="/poppy-and-ziggy">The show's own page</a></p>
+  </div>
+</section>
 
-<%- include('../partials/rolodex-placements', { partners: kidPartners, placementsHeading: 'Art supplies we like' }) %>
-<p class="fineprint">Grown-ups: the supplies above are affiliate links for parents — they help keep Little Inkers free. Nothing here is aimed at kids, and this page carries no other advertising.</p>
+<section class="li-sec" id="grownups">
+  <div class="li-panel li-parents">
+    <h2>🛡️ For grown-ups</h2>
+    <%- include('../partials/rolodex-placements', { partners: kidPartners, placementsHeading: 'Art supplies we like' }) %>
+    <p class="li-fineprint">Grown-ups: the supplies above are affiliate links for parents — they help keep Little Inkers free. Nothing here is aimed at kids, and this page carries no other advertising.</p>
+    <p class="li-fineprint">Grown-ups: this is a branch of OneMind — everything Useful Appz makes is tied to one table, and a login anywhere is a OneMind login. This page itself is for coloring fun: no accounts, no sign-ups, nothing for kids to buy.</p>
+    <%- include('../partials/tip-jar') %>
+  </div>
+</section>
 
-<p class="fineprint">Grown-ups: this is a branch of OneMind — everything Useful Appz makes is tied to one table, and a login anywhere is a OneMind login. This page itself is for coloring fun: no accounts, no sign-ups, nothing for kids to buy.</p>
-
-<%- include('../partials/tip-jar') %>
-
-<p style="text-align:center;"><strong>Next:</strong> brand-new coloring pages land <strong>Monday</strong>, and new episodes arrive Wednesday and Saturday — <a href="/little-inkers-android">get the free app</a> so the next page is already waiting.</p>
+<p class="li-next"><strong>Next:</strong> brand-new coloring pages land <strong>Monday</strong>, and new episodes arrive Wednesday and Saturday — <a href="/little-inkers-android">get the free app</a> so the next page is already waiting.</p>

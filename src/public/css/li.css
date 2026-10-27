@@ -1,0 +1,223 @@
+/* Little Inkers face — the Kids' Corner design system, coloring branch.
+   Trickle-down pass 2 (Oct 27 2026): built to the same anchor grammar
+   as the Poppy & Ziggy face (pz.css) — sky header band, bubbly marker
+   wordmark, four round icon chips, one focal hero, four chunky cards in
+   the fixed accent system (purple/green/orange/blue), navy footer —
+   with Little Inkers' own decision on top: the field melts from sky
+   into warm coloring-paper cream, and the hero IS the product — a
+   coloring page caught mid-coloring, half line-art, half filled.
+   Palette discipline (N-W3): sky + paper field, deep plum-navy text,
+   crayon yellow accent; the four card colors are the Kids' Corner
+   accent system, reused identically in chips, cards and buttons. */
+
+@font-face {
+  font-family: 'LI Marker';
+  src: url('/fonts/permanent-marker.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+body.li-body {
+  background: linear-gradient(180deg, #37b6ff 0, #8fd8ff 300px, #fdf3d8 640px, #fff7e8 100%);
+  color: #33254d;
+}
+body.li-body main.container { max-width: 1120px; }
+
+/* Slim sky header / navy footer, swapped in by layout-li when liFace. */
+.li2-header {
+  background: linear-gradient(180deg, #1d9bf0, #37b6ff);
+  color: #fff;
+  padding: .55rem 1rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  font-weight: 800;
+}
+.li2-header .li2-header-brand { font-size: 1.05rem; letter-spacing: .01em; }
+.li2-header .li2-header-badge {
+  background: #ffd93b; color: #7a4d00; border-radius: 999px;
+  padding: .2rem .7rem; font-size: .82rem; white-space: nowrap;
+  box-shadow: 0 2px 0 rgba(51, 37, 77, .35);
+}
+.li2-footer {
+  margin-top: 2.5rem;
+  background: linear-gradient(180deg, #2a1a56, #1d1240);
+  color: #e6dcff; text-align: center; padding: 1.6rem 1rem 1.8rem;
+  border-top: 6px solid #ffd93b;
+}
+.li2-footer .li2-foot-mark {
+  font-family: 'LI Marker', 'Arial Black', Arial, sans-serif;
+  font-size: 1.5rem; color: #fff; letter-spacing: .02em;
+}
+.li2-footer .li2-foot-motto { font-weight: 800; color: #ffd93b; margin: .35rem 0 .6rem; }
+.li2-footer p { margin: .25rem 0; }
+.li2-footer .fineprint { color: #bdb0e8; }
+
+/* Full-bleed breakout inside the walled layout's container. */
+.li-bleed {
+  width: 100vw; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw);
+}
+
+/* --- Top bar: wordmark + chips ------------------------------------- */
+.li-top { padding: 1.1rem 1rem .4rem; text-align: center; }
+.li-wordmark {
+  font-family: 'LI Marker', 'Arial Black', Arial, sans-serif;
+  font-size: clamp(2.4rem, 7.5vw, 4.2rem);
+  line-height: 1.02; margin: 0; letter-spacing: .01em;
+  color: #fff;
+  text-shadow:
+    0 3px 0 #6d28a8, 0 6px 0 rgba(51, 37, 77, .5),
+    -2px 0 0 #6d28a8, 2px 0 0 #6d28a8, 0 -2px 0 #6d28a8;
+}
+.li-wordmark .li-w-little { color: #fff; }
+.li-wordmark .li-w-inkers { color: #ffd93b; }
+.li-tagline {
+  display: inline-block; margin-top: .55rem;
+  background: #fff; color: #33254d; font-weight: 800;
+  border-radius: 999px; padding: .35rem 1rem; font-size: 1.02rem;
+  box-shadow: 0 3px 0 rgba(51, 37, 77, .25);
+}
+.li-chips {
+  display: flex; justify-content: center; gap: .9rem 1.4rem; flex-wrap: wrap;
+  margin: 1rem 0 .2rem; padding: 0; list-style: none;
+}
+.li-chips a {
+  display: flex; flex-direction: column; align-items: center; gap: .3rem;
+  text-decoration: none; color: #33254d; font-weight: 800; font-size: .95rem;
+}
+.li-chips .li-chip {
+  width: 58px; height: 58px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.65rem; color: #fff;
+  border: 3px solid #fff; box-shadow: 0 4px 0 rgba(51, 37, 77, .3);
+  transition: transform .15s ease;
+}
+.li-chips a:hover .li-chip, .li-chips a:focus .li-chip { transform: translateY(-3px) scale(1.05); }
+.li-chip.purple { background: #9b1fe0; }
+.li-chip.green { background: #1fae4e; }
+.li-chip.orange { background: #ff8a00; }
+.li-chip.blue { background: #1f74e0; }
+
+/* --- Hero: the coloring page itself, caught mid-coloring ------------ */
+.li-hero { position: relative; padding: 0 1rem; margin-top: .6rem; }
+.li-hero-frame {
+  border-radius: 28px; overflow: hidden; border: 5px solid #fff;
+  box-shadow: 0 14px 34px rgba(51, 37, 77, .32);
+  background: #fffdf6;
+}
+.li-hero-frame svg { display: block; width: 100%; height: auto; }
+.li-burst {
+  position: absolute; left: 50%; bottom: -14px; transform: translateX(-50%) rotate(-2deg);
+  background: #6d28a8; color: #fff; text-align: center;
+  font-family: 'LI Marker', 'Arial Black', Arial, sans-serif;
+  font-size: clamp(1rem, 3.4vw, 1.55rem); line-height: 1.15;
+  padding: .7rem 1.6rem; border-radius: 22px; border: 3px solid #fff;
+  box-shadow: 0 8px 0 rgba(51, 37, 77, .35);
+  white-space: nowrap;
+}
+.li-burst .li-burst-star { color: #ffd93b; }
+.li-hero-cta { text-align: center; margin: 2rem 0 .4rem; }
+.li-btn {
+  display: inline-block; text-decoration: none; cursor: pointer;
+  font-weight: 900; font-size: 1.12rem; color: #fff !important;
+  background: #9b1fe0; border: 3px solid #fff; border-radius: 999px;
+  padding: .8em 1.9em; box-shadow: 0 6px 0 rgba(51, 37, 77, .4);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.li-btn:hover, .li-btn:focus { transform: translateY(-2px); box-shadow: 0 8px 0 rgba(51, 37, 77, .4); }
+.li-btn.green { background: #1fae4e; }
+.li-btn.orange { background: #ff8a00; }
+.li-btn.blue { background: #1f74e0; }
+.li-btn.white { background: #fff; color: #33254d !important; border-color: #ffd9a8; }
+.li-schedule { text-align: center; font-weight: 800; color: #33254d; margin: .8rem 0 0; font-size: 1.05rem; }
+
+/* --- The four chunky cards ------------------------------------------ */
+.li-cards {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;
+  margin: 1.6rem 0 .4rem; padding: 0 1rem;
+}
+@media (max-width: 900px) { .li-cards { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .li-cards { grid-template-columns: 1fr; } }
+.li-card {
+  border-radius: 26px; overflow: hidden; text-decoration: none; color: #fff;
+  border: 4px solid #fff; box-shadow: 0 10px 22px rgba(51, 37, 77, .26);
+  display: flex; flex-direction: column; min-height: 218px;
+  transition: transform .15s ease;
+}
+.li-card:hover, .li-card:focus { transform: translateY(-4px); }
+.li-card .li-card-art {
+  flex: 1 1 auto; min-height: 118px;
+  display: flex; align-items: center; justify-content: center; font-size: 3.2rem;
+}
+.li-card .li-card-label {
+  display: flex; align-items: center; gap: .55rem;
+  font-family: 'LI Marker', 'Arial Black', Arial, sans-serif;
+  font-size: 1.06rem; line-height: 1.12; padding: .7rem .85rem .85rem;
+}
+.li-card .li-card-icon {
+  flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%;
+  background: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+}
+.li-card.purple { background: #9b1fe0; }
+.li-card.purple .li-card-art { background: radial-gradient(circle at 30% 25%, #c05cff, #9b1fe0 72%); }
+.li-card.green { background: #1fae4e; }
+.li-card.green .li-card-art { background: radial-gradient(circle at 30% 25%, #4ed07e, #1fae4e 72%); }
+.li-card.orange { background: #ff8a00; }
+.li-card.orange .li-card-art { background: radial-gradient(circle at 30% 25%, #ffb84d, #ff8a00 72%); }
+.li-card.blue { background: #1f74e0; }
+.li-card.blue .li-card-art { background: radial-gradient(circle at 30% 25%, #57a7ff, #1f74e0 72%); }
+
+/* --- Sections -------------------------------------------------------- */
+.li-sec { padding: 0 1rem; margin-top: 2.2rem; }
+.li-sec h2 {
+  font-family: 'LI Marker', 'Arial Black', Arial, sans-serif;
+  color: #33254d; font-size: clamp(1.5rem, 4.5vw, 2.1rem);
+  margin: 0 0 .5rem; letter-spacing: .01em;
+}
+.li-sec h2 .li-h-star { color: #ff8a00; }
+.li-lede { font-size: 1.08rem; line-height: 1.55; max-width: 62ch; }
+.li-panel {
+  background: #fff; border-radius: 26px; border: 3px solid #ffd9a8;
+  box-shadow: 0 8px 20px rgba(51, 37, 77, .12);
+  padding: 1.3rem 1.4rem; margin-top: 1rem;
+}
+.li-panel p { line-height: 1.55; }
+.li-panel .li-btn { margin: .25rem .35rem .25rem 0; }
+.li-panel iframe { border: 0; }
+
+/* The three ways to color — one tile per mode in the app. */
+.li-modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
+@media (max-width: 700px) { .li-modes { grid-template-columns: 1fr; } }
+.li-mode {
+  background: #fffdf6; border-radius: 22px; border: 3px solid #ffd9a8;
+  box-shadow: 0 6px 14px rgba(51, 37, 77, .1);
+  text-align: center; padding: 1.1rem 1rem;
+}
+.li-mode .li-mode-art { font-size: 2.6rem; line-height: 1.1; }
+.li-mode h3 {
+  font-family: 'LI Marker', 'Arial Black', Arial, sans-serif;
+  color: #33254d; margin: .45rem 0 .3rem; font-size: 1.05rem; line-height: 1.2;
+}
+.li-mode p { margin: 0; line-height: 1.5; font-size: .98rem; }
+
+/* Grown-ups zone: calm plum panel, clearly for parents. */
+.li-parents {
+  background: linear-gradient(180deg, #f3edff, #e7ddff);
+  border: 3px solid #c4aef5;
+}
+.li-parents h2 { color: #33254d; }
+.li-fineprint { color: #5d4a86; font-size: .9rem; line-height: 1.5; }
+
+.li-next {
+  text-align: center; font-size: 1.08rem; margin: 2rem 1rem 0;
+  background: #fff; border: 3px solid #ffd93b; border-radius: 22px;
+  padding: 1rem 1.2rem; box-shadow: 0 6px 14px rgba(51, 37, 77, .12);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .li-burst { animation: li-bob 3.2s ease-in-out infinite; }
+  @keyframes li-bob {
+    0%, 100% { transform: translateX(-50%) rotate(-2deg) translateY(0); }
+    50% { transform: translateX(-50%) rotate(-2deg) translateY(-5px); }
+  }
+}

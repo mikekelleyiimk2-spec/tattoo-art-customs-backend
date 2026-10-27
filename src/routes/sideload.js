@@ -68,6 +68,7 @@ function liSideloadRouter(kind) {
     const rel = process.env[cfg.envVar] || cfg.defaultRel;
     res.render('site/little-inkers-sideload', {
       layout: 'layout-li',
+      liFace: true,
       title: `Little Inkers for ${kind === 'ios' ? 'iPhone' : 'Android'} — Free Download`,
       metaDescription: 'Download the free Little Inkers coloring app for kids.',
       kind,

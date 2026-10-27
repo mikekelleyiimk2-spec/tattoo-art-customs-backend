@@ -1,45 +1,80 @@
-<h1>Little Inkers for <%= kind === 'ios' ? 'iPhone' : 'Android' %></h1>
-<p class="muted">The free coloring app for kids — 30+ pages, new packs every Monday. 100% free.</p>
-
-<% if (typeof downloadReady !== 'undefined' && downloadReady) { %>
-<div class="card">
-  <h2>Free download</h2>
-  <p>The Little Inkers app is ready — free for <%= kind === 'ios' ? 'iPhone' : 'Android' %>, no account needed.</p>
-  <p><a class="btn" href="<%= downloadUrl %>">Download the app (free)</a></p>
-  <% if (kind === 'android') { %><p class="muted">It's an APK file: tap it, then allow "install from your browser" if your phone asks. That's it!</p><% } %>
-</div>
-<% } else { %>
-<div class="card">
-  <h2>Coming early November!</h2>
-  <p>The Little Inkers app is almost here — free download for <%= kind === 'ios' ? 'iPhone' : 'Android' %> lands in early November.</p>
-  <p class="muted">Check back soon — the download button will appear right here the moment it's ready.</p>
-</div>
-<% } %>
-
-<div class="card" style="margin-top:1rem;">
-  <h2>What Little Inkers is</h2>
-  <p>Little Inkers is a coloring app built for kids — and for the grown-ups who color alongside them. Every page comes from an episode of the Little Inkers show, so children color the same characters and scenes they just watched. There are three ways to color: tap-to-fill for the youngest artists, a free paint mode with real brushes, and color-by-numbers for kids who like a plan. New packs arrive every Monday, following the show.</p>
-</div>
-
-<div class="card" style="margin-top:1rem;">
-  <h2>Watch the app in action</h2>
-  <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;">
-    <iframe style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" src="https://www.youtube.com/embed/vn60dfEaPac" title="Little Inkers — free coloring app for kids" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+<%# Little Inkers sideload page — face rebuilt Oct 27 2026 (trickle-down
+    pass 2) into the Kids' Corner design system (li.css via liFace).
+    The one job — the free download — is the hero, startable in one
+    tap; the honest coming-soon state keeps its own panel when no
+    build file is in storage. Same wires as before: downloadReady /
+    downloadUrl from the route, the app-in-action video, the three
+    ways to color, the subscribe card (i18n keys), the parents notes.
+    Kid-safe page: no tattoo links, ever. %>
+<div class="li-bleed">
+  <div class="li-top">
+    <h1 class="li-wordmark"><span class="li-w-little">Little</span> <span class="li-w-inkers">Inkers</span></h1>
+    <span class="li-tagline">🖍️ The free coloring app for kids — 30+ pages, new packs every Monday. 100% free.</span>
   </div>
-  <p class="muted" style="margin-top:0.5rem;">New episodes and coloring pages every week on <a href="https://www.youtube.com/@littleinkersapp" target="_blank" rel="noopener">our YouTube channel</a>. Don't forget to hit that subscribe button so you never miss an episode</p>
+
+  <section class="li-sec" style="margin-top:1rem;">
+    <div class="li-panel" style="text-align:center;">
+      <h2 style="font-family:'LI Marker','Arial Black',Arial,sans-serif;color:#33254d;margin:.1rem 0 .5rem;">Little Inkers for <%= kind === 'ios' ? 'iPhone' : 'Android' %></h2>
+      <% if (typeof downloadReady !== 'undefined' && downloadReady) { %>
+      <p>The Little Inkers app is ready — free for <%= kind === 'ios' ? 'iPhone' : 'Android' %>, no account needed.</p>
+      <p><a class="li-btn green" href="<%= downloadUrl %>">🎨 Download the app (free)</a></p>
+      <% if (kind === 'android') { %><p class="li-fineprint">It's an APK file: tap it, then allow "install from your browser" if your phone asks. That's it!</p><% } %>
+      <% } else { %>
+      <p style="font-size:2rem;margin:.2rem 0;">🌈</p>
+      <p><strong>Coming early November!</strong> The Little Inkers app is almost here — free download for <%= kind === 'ios' ? 'iPhone' : 'Android' %> lands in early November.</p>
+      <p class="li-fineprint">Check back soon — the download button will appear right here the moment it's ready.</p>
+      <% } %>
+    </div>
+  </section>
 </div>
 
-<div class="card" style="margin-top:1rem;background:linear-gradient(135deg,#FFF7E8,#FFE9C7);border-color:#ffd166;text-align:center;">
-  <h2><%= t('li_sideload.sub.title') %></h2>
-  <p><%= t('li_sideload.sub.text') %></p>
-  <p><a class="btn" href="https://www.youtube.com/@littleinkersapp?sub_confirmation=1" target="_blank" rel="noopener">🔔 <%= t('li_sideload.sub.btn') %></a></p>
-</div>
+<section class="li-sec">
+  <h2><span class="li-h-star">★</span> What Little Inkers is</h2>
+  <p class="li-lede">Little Inkers is a coloring app built for kids — and for the grown-ups who color alongside them. Every page comes from an episode of the Little Inkers show, so children color the same characters and scenes they just watched. New packs arrive every Monday, following the show.</p>
+  <div class="li-modes">
+    <div class="li-mode">
+      <div class="li-mode-art">👆</div>
+      <h3>Tap-to-Fill</h3>
+      <p>Tap a shape and it fills — for the youngest artists.</p>
+    </div>
+    <div class="li-mode">
+      <div class="li-mode-art">🖌️</div>
+      <h3>Paint</h3>
+      <p>A free paint mode with real brushes.</p>
+    </div>
+    <div class="li-mode">
+      <div class="li-mode-art">🔢</div>
+      <h3>Color-by-Numbers</h3>
+      <p>For kids who like a plan — follow the numbers.</p>
+    </div>
+  </div>
+</section>
 
-<div class="card" style="margin-top:1rem;">
-  <h2>Parents, quick notes</h2>
-  <ul>
-    <li>No accounts for kids. No chat, no uploads from the app.</li>
-    <li>Ads are kid-safe and never track your child.</li>
-    <li>New free coloring packs land every Monday.</li>
-  </ul>
-</div>
+<section class="li-sec">
+  <h2><span class="li-h-star">★</span> Watch the app in action</h2>
+  <div class="li-panel">
+    <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:16px;">
+      <iframe style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" src="https://www.youtube.com/embed/vn60dfEaPac" title="Little Inkers — free coloring app for kids" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    </div>
+    <p class="li-fineprint" style="margin-top:0.5rem;">New episodes and coloring pages every week on <a href="https://www.youtube.com/@littleinkersapp" target="_blank" rel="noopener">our YouTube channel</a>. Don't forget to hit that subscribe button so you never miss an episode</p>
+  </div>
+</section>
+
+<section class="li-sec">
+  <div class="li-panel" style="text-align:center;background:linear-gradient(135deg,#fff3d6,#ffe3ae);">
+    <h2 style="font-family:'LI Marker','Arial Black',Arial,sans-serif;color:#33254d;margin:.1rem 0 .5rem;"><%= t('li_sideload.sub.title') %></h2>
+    <p><%= t('li_sideload.sub.text') %></p>
+    <p><a class="li-btn orange" href="https://www.youtube.com/@littleinkersapp?sub_confirmation=1" target="_blank" rel="noopener">🔔 <%= t('li_sideload.sub.btn') %></a></p>
+  </div>
+</section>
+
+<section class="li-sec" id="grownups">
+  <div class="li-panel li-parents">
+    <h2>🛡️ Parents, quick notes</h2>
+    <ul>
+      <li>No accounts for kids. No chat, no uploads from the app.</li>
+      <li>Ads are kid-safe and never track your child.</li>
+      <li>New free coloring packs land every Monday.</li>
+    </ul>
+  </div>
+</section>
