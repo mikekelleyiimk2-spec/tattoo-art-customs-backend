@@ -62,6 +62,66 @@ async function runDbTests(ok) {
   standalone.handlers.poppyHandler({}, mr);
   ok(mr.rendered && mr.rendered.v === 'onemind/branch-poppy', 'standalone /poppyandziggy renders the Poppy & Ziggy branch face');
 
+  // The CannaDash door (owner order 2026-10-27): its own face on this
+  // host, intake only — no market is live, nothing is sold, the join
+  // is a founding-list signup that persists (migration 114).
+  const db = require('../src/db');
+  mr = mockRes();
+  standalone.handlers.cannadashDoorHandler({}, mr);
+  ok(mr.rendered && mr.rendered.v === 'onemind/door-cannadash'
+    && mr.rendered.l.layout === 'layout-onemind' && mr.rendered.l.joinRole === 'order',
+  'standalone /cannadash renders the CannaDash door (order list by default)');
+  mr = mockRes();
+  standalone.handlers.cannadashDoorHandler({ query: { join: 'partner' } }, mr);
+  ok(mr.rendered && mr.rendered.l.joinRole === 'partner', 'cannadash door preselects the partner list from ?join=');
+  mr = mockRes();
+  standalone.handlers.cannadashCheckHandler({ body: { area: 'Lafayette, LA' } }, mr);
+  ok(mr.redirected && mr.redirected.u.startsWith('/cannadash?checked=')
+    && mr.redirected.u.includes('Lafayette'), 'cannadash area check redirects back with the area (honest not-live answer renders)');
+  const joinRes = () => ({ locals: {}, redirected: null, redirect(c, u) { this.redirected = { c, u }; } });
+  let jr = joinRes();
+  await standalone.handlers.cannadashJoinHandler({ body: {
+    role: 'order', name: 'TEST Cannadash', email: 'TEST-Cannadash@test.local',
+    area: 'Lafayette, LA', detail: '', age_ok: '1', website: '',
+  } }, jr);
+  ok(jr.redirected && jr.redirected.u === '/cannadash?joined=order#join', 'cannadash join accepts a valid founding-list signup');
+  const cdRow = await db.get('SELECT * FROM cannadash_waitlist WHERE role = ? AND email = ?',
+    ['order', 'test-cannadash@test.local']);
+  ok(!!cdRow && cdRow.name === 'TEST Cannadash' && cdRow.area === 'Lafayette, LA',
+    'cannadash join PERSISTS the signup (lowercased email, role, area)');
+  jr = joinRes();
+  await standalone.handlers.cannadashJoinHandler({ body: {
+    role: 'order', name: 'TEST Cannadash', email: 'test-cannadash@test.local',
+    area: 'Abbeville, LA', detail: '', age_ok: '1', website: '',
+  } }, jr);
+  ok(jr.redirected && jr.redirected.u.includes('again=1'), 'cannadash re-join is honest (already on the list)');
+  const cdRows = await db.all('SELECT id FROM cannadash_waitlist WHERE email = ?',
+    ['test-cannadash@test.local']);
+  ok(cdRows.length === 1, 'cannadash waitlist dedupes on (role, email) — one row per person per list');
+  jr = joinRes();
+  await standalone.handlers.cannadashJoinHandler({ body: {
+    role: 'drive', name: 'TEST Driver', email: 'not-an-email', area: '', detail: '', age_ok: '1', website: '',
+  } }, jr);
+  ok(jr.redirected && jr.redirected.u.includes('error=email'), 'cannadash join rejects a bad email');
+  jr = joinRes();
+  await standalone.handlers.cannadashJoinHandler({ body: {
+    role: 'drive', name: 'TEST Driver', email: 'test-driver@test.local', area: '', detail: '', website: '',
+  } }, jr);
+  ok(jr.redirected && jr.redirected.u.includes('error=age'), 'cannadash join requires the 21+ confirmation');
+  // The door face itself: the candidate's grammar + the sweeper stack,
+  // and NO commerce — intake only while the legality gate stands.
+  const cdView = require('fs').readFileSync(
+    require('path').join(__dirname, '../src/views/onemind/door-cannadash.ejs'), 'utf8');
+  for (const marker of ['Legal cannabis. Delivered.', 'Licensed dispensaries only',
+    'From licensed shops.', 'Earn on your schedule', 'Reach more patients',
+    '/img/logos/cannadash-logo.jpg', 'action="/cannadash/check"', 'action="/cannadash/join"',
+    "include('../partials/tip-jar')", "include('../partials/sponsor-slot')",
+    "include('../partials/house-ad', {slot: 'door_cannadash'})"]) {
+    ok(cdView.includes(marker), `cannadash door face carries ${marker}`);
+  }
+  ok(!/paypal\.com\/checkout|buy now|order now/i.test(cdView.replace(/ncp\/payment\/WA9DS6J8ERSHW/g, '')),
+    'cannadash door sells NOTHING (tip jar aside) — no checkout, no order-now language');
+
   // The kid pull the kid branches render: kid-safe programs only.
   const kid = rolodex.queryLive({ kidSafe: true });
   ok(kid.length >= 1, 'rolodex serves at least one live kid-safe program');
