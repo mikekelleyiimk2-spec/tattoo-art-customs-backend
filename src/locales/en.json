@@ -386,6 +386,18 @@
       "search_btn": "Search",
       "img_alt": "Vibrant full-color tattoo art showcase"
     },
+    "face": {
+      "subline": "Original tattoo designs for real people",
+      "search_placeholder": "Search tattoo designs…",
+      "featured_eyebrow": "Featured designs",
+      "featured_title": "Original Artwork",
+      "view_gallery": "View Gallery",
+      "youpick_title": "You Pick.",
+      "youpick_text": "Heart what you love. The top designs become merch.",
+      "youpick_cta": "Heart the designs",
+      "tees": "Tees",
+      "store": "Store"
+    },
     "offers": {
       "title": "Everything we do",
       "premade": {
@@ -983,6 +995,7 @@
     "toggle_menu": "Toggle menu",
     "wallet": "Wallet",
     "tap_to_pay": "Tap to Pay",
+    "our_worlds": "Our Worlds",
     "wishlist": "Wishlist",
     "top_loved": "Top Loved",
     "watch": "Watch",

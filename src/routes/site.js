@@ -220,11 +220,28 @@ router.get('/', async (req, res) => {
   const topHeartRow = await db.get(
     'SELECT like_count FROM design_like_counts ORDER BY like_count DESC LIMIT 1');
   const topHearts = topHeartRow ? Number(topHeartRow.like_count || 0) : 0;
+  // HOME FACE (owner-approved standard, 2026-10-27): the featured row is
+  // REAL designs — the same top-hearted watermarked-color selection the
+  // gallery's featured row uses (lib/colorPreview). An empty catalog hides
+  // the row in the view; cards are never faked. The YOU PICK visual is the
+  // top design's full watermarked color preview, falling back to the
+  // shop's real tattooing photo when no color preview exists yet.
+  let featuredDesigns = [];
+  try {
+    featuredDesigns = await require('../lib/colorPreview').featuredColorDesigns(8);
+  } catch (e) { console.error('home featured designs failed:', e.message); }
+  const youPickImg = featuredDesigns.length
+    ? `/img/designs/color/${featuredDesigns[0].colorFile}`
+    : '/img/landing/shop.webp';
   res.render('site/landing', {
     designCount,
     heartsTotal,
     topHearts,
     heartsGoal: 2000,
+    homeFace: true,
+    bodyClass: 'home-dark',
+    featuredDesigns,
+    youPickImg,
     // Payoff before the house ad (wanting audit 2026-10-25): the layout's
     // leaderboard slot is suppressed on the homepage only; landing.ejs
     // renders the same slot itself, after the hero.

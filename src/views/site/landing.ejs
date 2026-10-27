@@ -1,39 +1,90 @@
 <style>
-.lp-deal-banner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: #171310; color: #f5efe4; padding: .8rem 1.2rem; border-radius: 10px; margin-bottom: 1.2rem; border: 1px solid var(--accent); }
-.lp-deal-banner .btn-small { padding: .4rem .9rem; font-size: .9rem; white-space: nowrap; }
-.lp-hearts-banner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: #FFF7E8; color: #241c14; padding: .8rem 1.2rem; border-radius: 10px; margin-bottom: 1.2rem; border: 1px solid #c8432b; }
-.lp-hearts-progress { margin: 0 0 1.2rem; }
-.lp-hearts-progress .bar { height: 10px; border-radius: 999px; background: #e9dfca; overflow: hidden; }
-.lp-hearts-progress .bar i { display: block; height: 100%; background: #c8432b; border-radius: 999px; }
-.lp-hearts-progress .cap { font-size: .85rem; color: #5c5240; margin-top: .35rem; }
-.lp-hearts-banner .btn-small { padding: .4rem .9rem; font-size: .9rem; white-space: nowrap; }
-.lp-hearts-links { display: flex; gap: .5rem; flex-shrink: 0; }
-.lp-hero { position: relative; border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; }
-.lp-hero img { width: 100%; height: 340px; object-fit: cover; display: block; }
-.lp-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.78), rgba(0,0,0,.15)); display: flex; flex-direction: column; justify-content: flex-end; padding: 1.5rem; color: #fff; }
-.lp-hero-overlay h1 { margin: 0 0 .4rem; font-size: 2rem; color: #fff; }
-.lp-hero-overlay p { margin: 0 0 1rem; max-width: 34rem; }
-.lp-search { display: flex; gap: .5rem; max-width: 34rem; }
-.lp-search input { flex: 1; padding: .7rem 1rem; border-radius: 8px; border: none; font-size: 1rem; }
+/* Below-the-fold sections kept from the classic face (offers, steps, CTA
+   bands, hearts banner) — restyled dark by /css/home.css (.lp2-rest). */
 .lp-offer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin: 1rem 0 1.5rem; }
-.lp-offer { border: 1px solid var(--border); border-radius: 10px; padding: 1rem; background: var(--surface); }
+.lp-offer { border: 1px solid var(--border, #2b241c); border-radius: 10px; padding: 1rem; background: var(--surface, #171310); }
 .lp-offer h3 { margin: 0 0 .35rem; }
 .lp-offer p { margin: 0 0 .7rem; }
 .lp-offer .price { font-weight: bold; }
-.lp-showcase { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin: 1rem 0 1.5rem; }
-.lp-showcase figure { margin: 0; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
-.lp-showcase img { width: 100%; height: 220px; object-fit: cover; display: block; }
-.lp-showcase figcaption { padding: .7rem 1rem; }
 .lp-steps { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0 1.5rem; }
 .lp-step { text-align: center; padding: 1rem; }
 .lp-step .num { display: inline-block; width: 2.2rem; height: 2.2rem; line-height: 2.2rem; border-radius: 50%; background: var(--accent); color: #fff; font-weight: bold; margin-bottom: .5rem; }
-.lp-cta-band { text-align: center; padding: 2rem 1rem; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); margin-bottom: 1.5rem; }
+.lp-cta-band { text-align: center; padding: 2rem 1rem; border-radius: 12px; background: var(--surface, #171310); border: 1px solid var(--border, #2b241c); margin-bottom: 1.5rem; }
+.lp-hearts-banner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .8rem 1.2rem; border-radius: 10px; margin-bottom: 1.2rem; border: 1px solid var(--accent); }
+.lp-hearts-banner .btn-small { padding: .4rem .9rem; font-size: .9rem; white-space: nowrap; }
+.lp-hearts-links { display: flex; gap: .5rem; flex-shrink: 0; }
 </style>
 
-<div class="lp-deal-banner">
+<%# ================= HOME FACE (owner-approved standard, 2026-10-27) ====
+    Dark, photographic, art-first: full-bleed koi hero with the brush
+    wordmark over the real artwork, one pill search, the live hearts
+    numbers, a row of REAL top-hearted color designs, and YOU PICK. %>
+<section class="lp2-hero">
+  <img src="/img/landing/hero.webp" alt="<%= t('landing.hero.img_alt') %>" width="1200" height="514" fetchpriority="high" decoding="async">
+  <div class="lp2-hero-scrim" aria-hidden="true"></div>
+  <div class="lp2-hero-inner">
+    <% const _brandWords = String(t('landing.hero.brand')).split(' '); %>
+    <h1 class="lp2-wordmark brush"><%= _brandWords.slice(0, 2).join(' ') %><br><%= _brandWords.slice(2).join(' ') %></h1>
+    <p class="lp2-sub"><%= t('landing.face.subline') %></p>
+    <form class="lp2-search" method="get" action="/gallery" role="search">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="search" name="q" placeholder="<%= t('landing.face.search_placeholder') %>" aria-label="<%= t('landing.hero.search_aria') %>">
+      <button type="submit" aria-label="<%= t('landing.hero.search_aria') %>"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
+    </form>
+    <% if (typeof heartsTotal !== 'undefined' && heartsTotal > 0) { %>
+    <div class="lp2-live" role="img" aria-label="Most-loved design: <%= topHearts %> of <%= heartsGoal %> hearts toward becoming merch">
+      <span>❤️ <strong><%= fmtNum(heartsTotal) %> hearts cast so far</strong> · the most-loved design has <%= fmtNum(topHearts) %> — at <%= fmtNum(heartsGoal) %> it becomes merch.</span>
+      <div class="bar"><i style="width: <%= Math.min(100, Math.round(topHearts / heartsGoal * 100)) %>%"></i></div>
+    </div>
+    <% } %>
+  </div>
+</section>
+
+<%- include('../partials/ad-slot', {slot: 'leaderboard'}) %>
+
+<% if (typeof featuredDesigns !== 'undefined' && featuredDesigns.length) { %>
+<section class="lp2-featured">
+  <p class="lp2-eyebrow"><%= t('landing.face.featured_eyebrow') %></p>
+  <h2 class="brush"><%= t('landing.face.featured_title') %></h2>
+  <div class="lp2-row">
+    <% featuredDesigns.forEach(function(d) { %>
+    <figure class="lp2-card">
+      <a href="/design/<%= d.id %>"><img src="/img/designs/thumb/<%= d.colorFile %>" alt="<%= t('home.design_alt', {title: d.title}) %>" loading="lazy" decoding="async"></a>
+      <button type="button" class="fav-heart" data-fav-id="<%= d.id %>" aria-pressed="false" aria-label="<%= t('fav.add') %>" title="<%= t('fav.add') %>"></button><span class="like-count" data-like-count="<%= d.id %>" title="<%= t('toploved.loves', {count: d.like_count || 0}) %>">♥ <%= d.like_count || 0 %></span>
+      <figcaption><%= d.title %></figcaption>
+    </figure>
+    <% }); %>
+  </div>
+  <p class="lp2-cta"><a class="btn-brush" href="/gallery"><%= t('landing.face.view_gallery') %> →</a></p>
+</section>
+<% } %>
+
+<section class="lp2-youpick">
+  <div class="yp-grid">
+    <div class="yp-copy">
+      <svg class="yp-heart" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 21s-7.5-4.9-10-9.3C.4 8.6 2 4.5 6 4.5c2.2 0 3.7 1.2 4.6 2.6.9-1.4 2.4-2.6 4.6-2.6 4 0 5.6 4.1 4 7.2C19.5 16.1 12 21 12 21z"/></svg>
+      <h2 class="brush"><%= t('landing.face.youpick_title') %></h2>
+      <p class="big"><%= t('landing.face.youpick_text') %></p>
+      <p><a class="btn-brush" href="/top-loved"><%= t('landing.face.youpick_cta') %></a></p>
+      <% if (typeof heartsTotal !== 'undefined' && heartsTotal > 0) { %>
+      <div class="lp2-live" role="img" aria-label="Most-loved design: <%= topHearts %> of <%= heartsGoal %> hearts toward becoming merch">
+        <span>❤️ <strong><%= fmtNum(heartsTotal) %> hearts cast so far</strong> · the most-loved design has <%= fmtNum(topHearts) %> — at <%= fmtNum(heartsGoal) %> it becomes merch.</span>
+        <div class="bar"><i style="width: <%= Math.min(100, Math.round(topHearts / heartsGoal * 100)) %>%"></i></div>
+      </div>
+      <% } %>
+    </div>
+    <div class="yp-photo" aria-hidden="true">
+      <img src="<%= typeof youPickImg !== 'undefined' && youPickImg ? youPickImg : '/img/landing/shop.webp' %>" alt="" loading="lazy" decoding="async">
+    </div>
+  </div>
+</section>
+
+<div class="lp2-deal">
   <span>🔥 <%= t('discounts.banner_text') %></span>
-  <a class="btn btn-small" href="/discounts"><%= t('discounts.banner_cta') %></a>
+  <a href="/discounts"><%= t('discounts.banner_cta') %></a>
 </div>
+
+<div class="lp2-rest">
 
 <div class="lp-hearts-banner">
   <span>❤️ <strong><%= t('landing.hearts.lead') %></strong> <%= t('landing.hearts.text') %></span>
@@ -42,26 +93,6 @@
     <a class="btn btn-small btn-secondary" href="/top-loved"><%= t('landing.hearts.cta_toploved') %></a>
   </span>
 </div>
-<% if (typeof heartsTotal !== 'undefined' && heartsTotal > 0) { %>
-<div class="lp-hearts-progress" role="img" aria-label="Most-loved design: <%= topHearts %> of <%= heartsGoal %> hearts toward becoming merch">
-  <div class="bar"><i style="width: <%= Math.min(100, Math.round(topHearts / heartsGoal * 100)) %>%"></i></div>
-  <p class="cap">❤️ <%= fmtNum(heartsTotal) %> hearts cast so far · the most-loved design has <%= fmtNum(topHearts) %> — at <%= fmtNum(heartsGoal) %> it becomes merch.</p>
-</div>
-<% } %>
-
-<div class="lp-hero">
-  <img src="/img/landing/hero.webp" alt="<%= t('landing.hero.img_alt') %>" width="1200" height="514" fetchpriority="high" decoding="async">
-  <div class="lp-hero-overlay">
-    <h1><%= t('landing.hero.brand') %></h1>
-    <p><%= t('landing.hero.sub') %></p>
-    <form class="lp-search" method="get" action="/gallery">
-      <input type="search" name="q" placeholder="<%= t('landing.hero.search_placeholder') %>" aria-label="<%= t('landing.hero.search_aria') %>">
-      <button class="btn" type="submit"><%= t('landing.hero.search_btn') %></button>
-    </form>
-  </div>
-</div>
-
-<%- include('../partials/ad-slot', {slot: 'leaderboard'}) %>
 
 <section class="lp-story">
   <h2><%= t('landing.story.title') %></h2>
@@ -235,22 +266,6 @@
 
 <%- include('../partials/house-ad', {slot: 'home_inline'}) %>
 
-<h2><%= t('landing.showcase.title') %></h2>
-<div class="lp-showcase">
-  <figure>
-    <img src="/img/landing/premade.webp" alt="<%= t('landing.showcase.premade.alt') %>" width="800" height="533" loading="lazy" decoding="async">
-    <figcaption><strong><%= t('landing.showcase.premade.cap_title') %></strong> &mdash; <%= t('landing.showcase.premade.cap_text') %></figcaption>
-  </figure>
-  <figure>
-    <img src="/img/landing/custom.webp" alt="<%= t('landing.showcase.custom.alt') %>" width="800" height="533" loading="lazy" decoding="async">
-    <figcaption><strong><%= t('landing.showcase.custom.cap_title') %></strong> &mdash; <%= t('landing.showcase.custom.cap_text') %></figcaption>
-  </figure>
-  <figure>
-    <img src="/img/landing/shop.webp" alt="<%= t('landing.showcase.shop.alt') %>" width="800" height="533" loading="lazy" decoding="async">
-    <figcaption><strong><%= t('landing.showcase.shop.cap_title') %></strong> &mdash; <%= t('landing.showcase.shop.cap_text') %></figcaption>
-  </figure>
-</div>
-
 <h2><%= t('landing.watch.title') %></h2>
 <p><%= t('landing.watch.text') %></p>
 <div style="max-width:720px;margin:0 auto 1rem;">
@@ -347,3 +362,4 @@
     <video controls playsinline preload="metadata" poster="/img/landing/promo-poster.webp" style="width:100%;max-width:320px;border-radius:8px;" src="/videos/promo-short.mp4"></video>
   </div>
 </section>
+</div>

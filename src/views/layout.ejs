@@ -44,6 +44,7 @@
 <% } %>
 <link rel="stylesheet" href="/css/style.css">
 <link rel="stylesheet" href="/css/motion.css">
+<% if (typeof homeFace !== 'undefined' && homeFace) { %><link rel="stylesheet" href="/css/home.css"><% } %>
 <style>
 /* Sitewide rotating linework background: one of 12 collage tiles, picked per
    page render below. Fixed div (never background-attachment:fixed — iOS) at
@@ -64,12 +65,82 @@ gtag('js', new Date());
 gtag('config', 'G-9N1QECNMWL');
 </script>
 </head>
-<body>
+<body<% if (typeof bodyClass !== 'undefined' && bodyClass) { %> class="<%= bodyClass %>"<% } %>>
 <% /* Rotating sitewide linework background — one of 12 tiles per page render. */ %>
 <% const bgTiles = ['/img/landing/linework-bg.webp','/img/landing/linework-bg-02.webp','/img/landing/linework-bg-03.webp','/img/landing/linework-bg-04.webp','/img/landing/linework-bg-05.webp','/img/landing/linework-bg-06.webp','/img/landing/linework-bg-07.webp','/img/landing/linework-bg-08.webp','/img/landing/linework-bg-09.webp','/img/landing/linework-bg-10.webp','/img/landing/linework-bg-11.webp','/img/landing/linework-bg-12.webp']; %>
 <% const bgTile = bgTiles[Math.floor(Math.random() * bgTiles.length)]; %>
 <div class="site-bg" aria-hidden="true" style="background-image:url('<%= bgTile %>')"></div>
 <a class="skip" href="#main"><%= t('nav.skip') %></a>
+<% if (typeof homeFace !== 'undefined' && homeFace) { %>
+<%# HOME FACE header (owner-approved standard 2026-10-27): wordmark, the five
+    front-door links, wishlist/account/store icons, brush SIGN UP. Every
+    classic nav destination stays one tap away in the toggle panel below,
+    and the signed-in user chip keeps its exact classic markup. %>
+<header class="site-header home-header">
+  <nav class="nav home-nav" aria-label="<%= t('nav.main') %>">
+    <a class="home-brand" href="/"><img src="/img/logos/tattoo-art-customs-header.webp" alt="" /><span class="wordmark">Tattoo Art Customs<sup>™</sup></span></a>
+    <div class="home-links">
+      <a href="/gallery"><%= t('nav.gallery') %></a>
+      <a href="/merch"><%= t('landing.face.tees') %></a>
+      <a href="/contests"><%= t('nav.contests') %></a>
+      <a href="/about"><%= t('nav.about') %></a>
+      <a href="/worlds"><%= t('nav.our_worlds') %></a>
+    </div>
+    <div class="home-icons">
+      <a class="home-icon" href="/wishlist" aria-label="<%= t('nav.wishlist') %>"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.9-10-9.3C.4 8.6 2 4.5 6 4.5c2.2 0 3.7 1.2 4.6 2.6.9-1.4 2.4-2.6 4.6-2.6 4 0 5.6 4.1 4 7.2C19.5 16.1 12 21 12 21z"/></svg><span class="badge" data-fav-count style="display:none">0</span></a>
+      <a class="home-icon" href="<%= currentUser ? '/account' : '/login' %>" aria-label="<%= t('nav.account') %>"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg></a>
+      <a class="home-icon" href="/merch" aria-label="<%= t('landing.face.store') %>"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8h15l-1.5 9.5a2 2 0 0 1-2 1.5h-11a2 2 0 0 1-2-1.5L3 4H1"/><circle cx="9" cy="21" r="1"/><circle cx="18" cy="21" r="1"/></svg></a>
+      <% if (currentUser) { %>
+      <% const chipNameH = currentUser.display_name || currentUser.email || ''; %>
+      <a class="user-chip" href="/account" aria-label="<%= t('nav.account') %>">
+        <% if (currentUser.avatar_url) { %>
+        <img class="user-avatar-img" src="<%= currentUser.avatar_url %>" alt="">
+        <% } else { %>
+        <span class="user-avatar" aria-hidden="true"><%= (chipNameH.charAt(0) || '?').toUpperCase() %></span>
+        <% } %>
+        <span class="user-name"><%= chipNameH %></span>
+      </a>
+      <% } else { %>
+      <a class="home-login" href="/login"><%= t('nav.login') %></a>
+      <a class="btn-brush small" href="/signup"><%= t('nav.signup') %></a>
+      <% } %>
+      <button class="nav-toggle home-toggle" aria-label="<%= t('nav.toggle_menu') %>" aria-expanded="false" onclick="document.querySelector('.home-nav').classList.toggle('open');this.setAttribute('aria-expanded',document.querySelector('.home-nav').classList.contains('open'))">☰</button>
+    </div>
+  </nav>
+  <div class="home-more">
+    <nav aria-label="<%= t('nav.main') %>">
+      <a href="/gallery"><%= t('nav.gallery') %></a>
+      <a href="/by-request"><%= t('nav.by_request') %></a>
+      <a href="/doodle-to-tattoo"><%= t('nav.doodle') %></a>
+      <a href="/wishlist"><%= t('nav.wishlist') %></a>
+      <a href="/top-loved"><%= t('nav.top_loved') %></a>
+      <a href="/watch"><%= t('nav.watch') %></a>
+      <a href="/orders/custom"><%= t('nav.custom_design') %></a>
+      <a href="/membership"><%= t('nav.membership') %></a>
+      <a href="/gift-cards/buy"><%= t('nav.gift_cards') %></a>
+      <a href="/merch"><%= t('nav.custom_tees') %></a>
+      <a href="/contests"><%= t('nav.contests') %></a>
+      <a href="/about"><%= t('nav.about') %></a>
+      <a href="/worlds"><%= t('nav.our_worlds') %></a>
+      <a href="/apps"><%= t('nav.get_app') %></a>
+      <% if (currentUser) { %>
+        <a href="/account"><%= t('nav.account') %></a>
+        <a href="/wallet"><%= t('nav.wallet') %></a>
+        <a href="/studio"><%= t('nav.studio') %></a>
+        <% if (currentUser.role === 'design_artist') { %><a href="/artist"><%= t('nav.artist') %></a><% } %>
+        <% if (currentUser.role === 'tattoo_shop') { %><a href="/shop"><%= t('nav.shop') %></a><% } %>
+        <% if (currentUser.role === 'admin' || currentUser.role === 'head_admin') { %><a href="/admin"><%= t('nav.admin') %></a><% } %>
+        <a href="/messages"><%= t('nav.messages') %></a>
+        <a href="/notifications"><%= t('nav.notifications') %><% if (typeof notifCount !== 'undefined' && notifCount > 0) { %> <span class="badge warn"><%= notifCount %></span><% } %></a>
+        <a href="/logout"><%= t('nav.logout') %></a>
+      <% } else { %>
+        <a href="/login"><%= t('nav.login') %></a>
+        <a href="/signup"><%= t('nav.signup') %></a>
+      <% } %>
+    </nav>
+  </div>
+</header>
+<% } else { %>
 <header class="site-header">
   <nav class="nav" aria-label="<%= t('nav.main') %>">
     <a class="brand" href="/"><img src="/img/logos/tattoo-art-customs-header.webp" alt="Tattoo Art Customs™ logo" style="height:2rem;width:auto;vertical-align:middle;margin-right:.5rem;border-radius:4px;" />Tattoo Art Customs™</a>
@@ -118,6 +189,7 @@ gtag('config', 'G-9N1QECNMWL');
     <% } %>
   </nav>
 </header>
+<% } %>
 
 <% if (typeof impersonator !== 'undefined' && impersonator) { %>
 <div class="flash" role="alert" style="background:#7c2d12;border-color:#f59e0b">
