@@ -74,10 +74,13 @@ gtag('config', 'G-9N1QECNMWL');
 <div class="site-bg" aria-hidden="true" style="background-image:url('<%= bgTile %>')"></div>
 <a class="skip" href="#main"><%= t('nav.skip') %></a>
 <% if (typeof homeFace !== 'undefined' && homeFace) { %>
-<%# HOME FACE header (owner-approved standard 2026-10-27): wordmark, the five
-    front-door links, wishlist/account/store icons, brush SIGN UP. Every
-    classic nav destination stays one tap away in the toggle panel below,
-    and the signed-in user chip keeps its exact classic markup. %>
+<%# HOME FACE header (owner-approved standard 2026-10-27): wordmark, the
+    front-door links, wishlist/account/store icons, brush SIGN UP. The old
+    16-link toggle panel under the header was cut in the homepage declutter
+    (2026-10-27): it duplicated this nav and the footer link for link. One
+    panel link graduated into the nav itself — Top Loved, the hearts
+    leaderboard, is a front-door destination (suite-pinned on the nav).
+    The signed-in user chip keeps its exact classic markup. %>
 <header class="site-header home-header">
   <nav class="nav home-nav" aria-label="<%= t('nav.main') %>">
     <a class="home-brand" href="/"><img src="/img/logos/tattoo-art-customs-header.webp" alt="" /><span class="wordmark">Tattoo Art Customs<sup>™</sup></span></a>
@@ -85,6 +88,7 @@ gtag('config', 'G-9N1QECNMWL');
       <a href="/gallery"><%= t('nav.gallery') %></a>
       <a href="/merch"><%= t('landing.face.tees') %></a>
       <a href="/contests"><%= t('nav.contests') %></a>
+      <a href="/top-loved"><%= t('nav.top_loved') %></a>
       <a href="/about"><%= t('nav.about') %></a>
       <a href="/worlds"><%= t('nav.our_worlds') %></a>
     </div>
@@ -106,41 +110,8 @@ gtag('config', 'G-9N1QECNMWL');
       <a class="home-login" href="/login"><%= t('nav.login') %></a>
       <a class="btn-brush small" href="/signup"><%= t('nav.signup') %></a>
       <% } %>
-      <button class="nav-toggle home-toggle" aria-label="<%= t('nav.toggle_menu') %>" aria-expanded="false" onclick="document.querySelector('.home-nav').classList.toggle('open');this.setAttribute('aria-expanded',document.querySelector('.home-nav').classList.contains('open'))">☰</button>
     </div>
   </nav>
-  <div class="home-more">
-    <nav aria-label="<%= t('nav.main') %>">
-      <a href="/gallery"><%= t('nav.gallery') %></a>
-      <a href="/by-request"><%= t('nav.by_request') %></a>
-      <a href="/doodle-to-tattoo"><%= t('nav.doodle') %></a>
-      <a href="/wishlist"><%= t('nav.wishlist') %></a>
-      <a href="/top-loved"><%= t('nav.top_loved') %></a>
-      <a href="/watch"><%= t('nav.watch') %></a>
-      <a href="/orders/custom"><%= t('nav.custom_design') %></a>
-      <a href="/membership"><%= t('nav.membership') %></a>
-      <a href="/gift-cards/buy"><%= t('nav.gift_cards') %></a>
-      <a href="/merch"><%= t('nav.custom_tees') %></a>
-      <a href="/contests"><%= t('nav.contests') %></a>
-      <a href="/about"><%= t('nav.about') %></a>
-      <a href="/worlds"><%= t('nav.our_worlds') %></a>
-      <a href="/apps"><%= t('nav.get_app') %></a>
-      <% if (currentUser) { %>
-        <a href="/account"><%= t('nav.account') %></a>
-        <a href="/wallet"><%= t('nav.wallet') %></a>
-        <a href="/studio"><%= t('nav.studio') %></a>
-        <% if (currentUser.role === 'design_artist') { %><a href="/artist"><%= t('nav.artist') %></a><% } %>
-        <% if (currentUser.role === 'tattoo_shop') { %><a href="/shop"><%= t('nav.shop') %></a><% } %>
-        <% if (currentUser.role === 'admin' || currentUser.role === 'head_admin') { %><a href="/admin"><%= t('nav.admin') %></a><% } %>
-        <a href="/messages"><%= t('nav.messages') %></a>
-        <a href="/notifications"><%= t('nav.notifications') %><% if (typeof notifCount !== 'undefined' && notifCount > 0) { %> <span class="badge warn"><%= notifCount %></span><% } %></a>
-        <a href="/logout"><%= t('nav.logout') %></a>
-      <% } else { %>
-        <a href="/login"><%= t('nav.login') %></a>
-        <a href="/signup"><%= t('nav.signup') %></a>
-      <% } %>
-    </nav>
-  </div>
 </header>
 <% } else { %>
 <header class="site-header">

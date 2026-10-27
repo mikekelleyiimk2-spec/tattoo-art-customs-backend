@@ -369,7 +369,7 @@
     },
     "story": {
       "title": "A working studio, not a clip-art mill",
-      "p1": "Tattoo Art Customs is the storefront of Useful Appz Development Studios, an independent studio based in Abbeville, Louisiana. Everything in the gallery is original work uploaded by independent tattoo designers — {count} designs and growing — never stock art, never traced screenshots. Each piece is drawn to be tattooed: a finished full-color design and the clean linework your artist stencils from, delivered together when you buy.",
+      "p1": "Tattoo Art Customs is the storefront of Useful Appz Development Studios, an independent studio in Abbeville, Louisiana. Every design in the gallery — {count} and growing — is original work by independent tattoo designers, never stock art: a finished full-color piece plus the clean linework your artist stencils from, delivered together when you buy.",
       "p2": "Why build a catalog this deep? Because a tattoo is a one-time decision you wear for life, and nobody should have to settle for the least-bad option on a shop wall. A deep catalog means the design fits the person — their story, their body, their artist's hand — instead of the other way around. And when nothing on the shelves is quite it, the custom desk draws it: describe what you want, approve the direction, and the finished design is yours within 48 hours.",
       "p3": "The studio is bigger than the gallery. The same team builds the apps on this site, produces two shows — Color With Us, where featured designs are colored on screen, and Poppy & Ziggy, our educational series for kids — and runs Little Inkers, the free coloring app for children. One small studio in Louisiana, doing all of it in-house."
     },
@@ -606,6 +606,9 @@
       "free_dl": "Download free",
       "see_apps": "See the apps page",
       "note": "The Tattoo Art Customs apps — download direct from us (or on Google Play where listed). Prices in USD."
+    },
+    "workwithus": {
+      "title": "Work with us"
     }
   },
   "membership": {

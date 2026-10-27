@@ -1,6 +1,6 @@
 <style>
-/* Below-the-fold sections kept from the classic face (offers, steps, CTA
-   bands, hearts banner) — restyled dark by /css/home.css (.lp2-rest). */
+/* Below-the-fold sections (custom, steps, offer cards, work-with-us strip,
+   guides row) — restyled dark by /css/home.css (.lp2-rest). */
 .lp-offer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin: 1rem 0 1.5rem; }
 .lp-offer { border: 1px solid var(--border, #2b241c); border-radius: 10px; padding: 1rem; background: var(--surface, #171310); }
 .lp-offer h3 { margin: 0 0 .35rem; }
@@ -9,22 +9,22 @@
 .lp-steps { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0 1.5rem; }
 .lp-step { text-align: center; padding: 1rem; }
 .lp-step .num { display: inline-block; width: 2.2rem; height: 2.2rem; line-height: 2.2rem; border-radius: 50%; background: var(--accent); color: #fff; font-weight: bold; margin-bottom: .5rem; }
-.lp-cta-band { text-align: center; padding: 2rem 1rem; border-radius: 12px; background: var(--surface, #171310); border: 1px solid var(--border, #2b241c); margin-bottom: 1.5rem; }
-.lp-hearts-banner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .8rem 1.2rem; border-radius: 10px; margin-bottom: 1.2rem; border: 1px solid var(--accent); }
-.lp-hearts-banner .btn-small { padding: .4rem .9rem; font-size: .9rem; white-space: nowrap; }
-.lp-hearts-links { display: flex; gap: .5rem; flex-shrink: 0; }
+.lp-work ul { margin: .4rem 0 .8rem; padding-left: 1.15rem; }
+.lp-guides-row { margin: 1rem 0 1.5rem; }
+.lp-guides-row a { white-space: nowrap; }
 </style>
 
 <%# ================= HOME FACE (owner-approved standard, 2026-10-27) ====
     Dark, photographic, art-first: full-bleed koi hero with the brush
     wordmark over the real artwork, one pill search, the live hearts
-    numbers, a row of REAL top-hearted color designs, and YOU PICK. %>
+    numbers (stated ONCE, here in the hero), and a row of REAL top-hearted
+    color designs. Decluttered 2026-10-27: one job per section below. %>
 <section class="lp2-hero">
   <img src="/img/landing/hero.webp" alt="<%= t('landing.hero.img_alt') %>" width="1200" height="514" fetchpriority="high" decoding="async">
   <div class="lp2-hero-scrim" aria-hidden="true"></div>
   <div class="lp2-hero-inner">
     <% const _brandWords = String(t('landing.hero.brand')).split(' '); %>
-    <h1 class="lp2-wordmark brush"><%= _brandWords.slice(0, 2).join(' ') %><br><%= _brandWords.slice(2).join(' ') %></h1>
+    <h1 class="lp2-wordmark brush"><%= _brandWords.slice(0, 2).join(' ') %> <br><%= _brandWords.slice(2).join(' ') %></h1>
     <p class="lp2-sub"><%= t('landing.face.subline') %></p>
     <form class="lp2-search" method="get" action="/gallery" role="search">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -59,47 +59,23 @@
 </section>
 <% } %>
 
-<section class="lp2-youpick">
-  <div class="yp-grid">
-    <div class="yp-copy">
-      <svg class="yp-heart" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 21s-7.5-4.9-10-9.3C.4 8.6 2 4.5 6 4.5c2.2 0 3.7 1.2 4.6 2.6.9-1.4 2.4-2.6 4.6-2.6 4 0 5.6 4.1 4 7.2C19.5 16.1 12 21 12 21z"/></svg>
-      <h2 class="brush"><%= t('landing.face.youpick_title') %></h2>
-      <p class="big"><%= t('landing.face.youpick_text') %></p>
-      <p><a class="btn-brush" href="/top-loved"><%= t('landing.face.youpick_cta') %></a></p>
-      <% if (typeof heartsTotal !== 'undefined' && heartsTotal > 0) { %>
-      <div class="lp2-live" role="img" aria-label="Most-loved design: <%= topHearts %> of <%= heartsGoal %> hearts toward becoming merch">
-        <span>❤️ <strong><%= fmtNum(heartsTotal) %> hearts cast so far</strong> · the most-loved design has <%= fmtNum(topHearts) %> — at <%= fmtNum(heartsGoal) %> it becomes merch.</span>
-        <div class="bar"><i style="width: <%= Math.min(100, Math.round(topHearts / heartsGoal * 100)) %>%"></i></div>
-      </div>
-      <% } %>
-    </div>
-    <div class="yp-photo" aria-hidden="true">
-      <img src="<%= typeof youPickImg !== 'undefined' && youPickImg ? youPickImg : '/img/landing/shop.webp' %>" alt="" loading="lazy" decoding="async">
-    </div>
-  </div>
-</section>
-
-<div class="lp2-deal">
-  <span>🔥 <%= t('discounts.banner_text') %></span>
-  <a href="/discounts"><%= t('discounts.banner_cta') %></a>
-</div>
-
 <div class="lp2-rest">
 
-<div class="lp-hearts-banner">
-  <span>❤️ <strong><%= t('landing.hearts.lead') %></strong> <%= t('landing.hearts.text') %></span>
-  <span class="lp-hearts-links">
-    <a class="btn btn-small" href="/gallery"><%= t('landing.hearts.cta_gallery') %></a>
-    <a class="btn btn-small btn-secondary" href="/top-loved"><%= t('landing.hearts.cta_toploved') %></a>
-  </span>
-</div>
-
-<section class="lp-story">
-  <h2><%= t('landing.story.title') %></h2>
-  <p><%= t('landing.story.p1', {count: fmtNum(typeof designCount !== 'undefined' ? designCount : 0)}) %></p>
-  <p><%= t('landing.story.p2') %></p>
-  <p><%= t('landing.story.p3') %></p>
+<%# Custom designs — the second job on the door (declutter spine, 2026-10-27):
+    48-hour pitch + the settled $150 price, one CTA to the custom desk. %>
+<section>
+  <h2><%= t('home.custom_section_title') %></h2>
+  <p><%= t('home.custom_section_text') %></p>
+  <p class="price"><%= t('landing.offers.custom.price', {price: fmtMoney(15000), sale: fmtMoney(12500)}) %></p>
+  <p><a class="btn" href="/orders/custom"><%= t('landing.offers.custom.btn') %></a></p>
 </section>
+
+<h2><%= t('landing.steps.title') %></h2>
+<div class="lp-steps">
+  <div class="lp-step"><span class="num">1</span><h3><%= t('landing.steps.s1.title') %></h3><p><%= t('landing.steps.s1.text') %></p></div>
+  <div class="lp-step"><span class="num">2</span><h3><%= t('landing.steps.s2.title') %></h3><p><%= t('landing.steps.s2.text') %></p></div>
+  <div class="lp-step"><span class="num">3</span><h3><%= t('landing.steps.s3.title') %></h3><p><%= t('landing.steps.s3.text') %></p></div>
+</div>
 
 <h2><%= t('landing.offers.title') %></h2>
 <div class="lp-offer-grid">
@@ -132,53 +108,49 @@
     <p><%= t('landing.offers.tees.text') %></p>
     <p><a class="btn" href="/merch"><%= t('landing.offers.tees.btn') %></a></p>
   </div>
+</div>
+
+<%# Studio story, compressed (declutter 2026-10-27): one short paragraph,
+    below the product sections — the long version lives on /about. %>
+<section class="lp-story">
+  <h3><%= t('landing.story.title') %></h3>
+  <p><%= t('landing.story.p1', {count: fmtNum(typeof designCount !== 'undefined' ? designCount : 0)}) %></p>
+</section>
+
+<%# Work with us (declutter merge 2026-10-27): the three "For …" sections
+    become one strip — three columns, condensed bullets, one CTA each. %>
+<h2><%= t('landing.workwithus.title') %></h2>
+<div class="lp-offer-grid lp-work">
   <div class="lp-offer">
-    <h3><%= t('landing.offers.contests.title') %></h3>
-    <p><%= t('landing.offers.contests.text') %></p>
-    <p><a class="btn" href="/contests"><%= t('landing.offers.contests.btn1') %></a> <a class="btn btn-secondary" href="/raffle"><%= t('landing.offers.contests.btn2') %></a></p>
+    <h3><%= t('landing.forshops.title') %></h3>
+    <p class="price"><%= t('landing.forshops.price', {price: fmtMoney(10398)}) %></p>
+    <ul>
+      <li><%= t('landing.forshops.b1') %></li>
+      <li><%= t('landing.forshops.b2') %></li>
+      <li><%= t('landing.forshops.b3') %></li>
+      <li><%= t('landing.forshops.b4') %></li>
+    </ul>
+    <p><a class="btn" href="/shop"><%= t('landing.forshops.cta') %></a></p>
   </div>
   <div class="lp-offer">
-    <h3><%= t('landing.offers.giftcards.title') %></h3>
-    <p><%= t('landing.offers.giftcards.text') %></p>
-    <p><a class="btn" href="/gift-cards/buy"><%= t('landing.offers.giftcards.btn') %></a></p>
+    <h3><%= t('landing.forcustomers.title') %></h3>
+    <p class="price"><%= t('landing.forcustomers.price', {price: fmtMoney(567)}) %></p>
+    <ul>
+      <li><%= t('landing.forcustomers.b1', {price: fmtMoney(7500), sale: fmtMoney(5000)}) %></li>
+      <li><%= t('landing.forcustomers.b2', {price: fmtMoney(15000)}) %></li>
+      <li><%= t('landing.forcustomers.b3') %></li>
+    </ul>
+    <p><a class="btn" href="/membership"><%= t('landing.forcustomers.cta') %></a></p>
   </div>
   <div class="lp-offer">
-    <h3><%= t('landing.offers.app.title') %></h3>
-    <p><%= t('landing.offers.app.text') %></p>
-    <p class="price"><%= t('landing.offers.app.price', {price: fmtMoney(199)}) %></p>
-    <p><a class="btn" href="#app"><%= t('landing.offers.app.btn') %></a></p>
-  </div>
-  <div class="lp-offer">
-    <h3><%= t('landing.offers.utility.title') %></h3>
-    <p><%= t('landing.offers.utility.text') %></p>
-    <p class="price"><%= t('landing.offers.utility.price', {price: fmtMoney(99)}) %></p>
-    <p><a class="btn" href="/apps"><%= t('landing.offers.utility.btn') %></a></p>
-  </div>
-  <div class="lp-offer">
-    <h3><%= t('landing.offers.bizcards.title') %></h3>
-    <p><%= t('landing.offers.bizcards.text') %></p>
-    <p class="price"><%= t('landing.offers.bizcards.price', {price: fmtMoney(2350)}) %></p>
-    <p><a class="btn" href="/merch"><%= t('landing.offers.bizcards.btn') %></a></p>
-  </div>
-  <div class="lp-offer">
-    <h3><%= t('landing.offers.kids.title') %></h3>
-    <p><%= t('landing.offers.kids.text') %></p>
-    <p><a class="btn" href="/poppy-and-ziggy"><%= t('landing.offers.kids.btn') %></a> <a class="btn btn-secondary" href="/apps#little-inkers"><%= t('landing.offers.kids.btn2') %></a></p>
-  </div>
-  <div class="lp-offer">
-    <h3><%= t('landing.offers.doodle.title') %></h3>
-    <p><%= t('landing.offers.doodle.text') %></p>
-    <p><a class="btn" href="/doodle-to-tattoo"><%= t('landing.offers.doodle.btn1') %></a> <a class="btn btn-secondary" href="/by-request"><%= t('landing.offers.doodle.btn2') %></a></p>
-  </div>
-  <div class="lp-offer">
-    <h3><%= t('landing.offers.watch.title') %></h3>
-    <p><%= t('landing.offers.watch.text') %></p>
-    <p><a class="btn" href="https://www.youtube.com/@rook9860?sub_confirmation=1" target="_blank" rel="noopener"><%= t('landing.offers.watch.btn1') %></a> <a class="btn btn-secondary" href="https://www.youtube.com/@tattooartcustoms-s8f?sub_confirmation=1" target="_blank" rel="noopener"><%= t('landing.offers.watch.btn2') %></a> <a class="btn btn-secondary" href="https://www.youtube.com/@littleinkersapp?sub_confirmation=1" target="_blank" rel="noopener"><%= t('landing.offers.watch.btn3') %></a></p>
-  </div>
-  <div class="lp-offer">
-    <h3><%= t('landing.offers.testerhub.title') %></h3>
-    <p><%= t('landing.offers.testerhub.text') %></p>
-    <p><a class="btn" href="/tester-hub"><%= t('landing.offers.testerhub.btn') %></a></p>
+    <h3><%= t('landing.fordesigners.title') %></h3>
+    <p class="price"><%= t('landing.fordesigners.price', {price: fmtMoney(567)}) %></p>
+    <ul>
+      <li><%= t('landing.fordesigners.b1') %></li>
+      <li><%= t('landing.fordesigners.b2') %></li>
+      <li><%= t('landing.fordesigners.b3') %></li>
+    </ul>
+    <p><a class="btn" href="/membership"><%= t('landing.fordesigners.cta') %></a></p>
   </div>
 </div>
 
@@ -193,59 +165,9 @@
   <a href="https://monstersink.com/michael" target="_blank" rel="noopener nofollow sponsored"><%= t('discounts.monstersink_h') %> — tattoo.art</a> ·
   <a href="https://www.amazon.com/s?k=tattoo+aftercare&tag=tattooartcust-20" target="_blank" rel="noopener nofollow sponsored"><%= t('discounts.amazon_h') %></a>
 </p>
-<p><a class="btn" href="/discounts"><%= t('landing.partners.btn') %></a> <a class="btn btn-secondary" href="/aftercare"><%= t('landing.partners.aftercare_btn') %></a></p>
+<p><a href="/discounts"><%= t('landing.partners.btn') %></a> · <a href="/aftercare"><%= t('landing.partners.aftercare_btn') %></a></p>
 <p class="fineprint"><%= t('discounts.disclosure') %></p>
 <p class="fineprint"><%= t('discounts.monstersink_note') %></p>
-
-<h2><%= t('landing.forshops.title') %></h2>
-<p class="price"><%= t('landing.forshops.price', {price: fmtMoney(10398)}) %></p>
-<ul>
-  <li><%= t('landing.forshops.b1') %></li>
-  <li><%= t('landing.forshops.b2') %></li>
-  <li><%= t('landing.forshops.b3') %></li>
-  <li><%= t('landing.forshops.b4') %></li>
-  <li><%= t('landing.forshops.b5') %></li>
-  <li><%= t('landing.forshops.b6') %></li>
-  <li><%= t('landing.forshops.b7') %></li>
-</ul>
-<p><a class="btn" href="/shop"><%= t('landing.forshops.cta') %></a></p>
-
-<h2><%= t('landing.forcustomers.title') %></h2>
-<p class="price"><%= t('landing.forcustomers.price', {price: fmtMoney(567)}) %></p>
-<ul>
-  <li><%= t('landing.forcustomers.b1', {price: fmtMoney(7500), sale: fmtMoney(5000)}) %></li>
-  <li><%= t('landing.forcustomers.b2', {price: fmtMoney(15000)}) %></li>
-  <li><%= t('landing.forcustomers.b3') %></li>
-  <li><%= t('landing.forcustomers.b4') %></li>
-  <li><%= t('landing.forcustomers.b5') %></li>
-  <li><%= t('landing.forcustomers.b6') %></li>
-</ul>
-<p><a class="btn" href="/membership"><%= t('landing.forcustomers.cta') %></a> <a class="btn btn-secondary" href="/gallery"><%= t('landing.forcustomers.cta2') %></a></p>
-
-<h2><%= t('landing.fordesigners.title') %></h2>
-<p class="price"><%= t('landing.fordesigners.price', {price: fmtMoney(567)}) %></p>
-<ul>
-  <li><%= t('landing.fordesigners.b1') %></li>
-  <li><%= t('landing.fordesigners.b2') %></li>
-  <li><%= t('landing.fordesigners.b3') %></li>
-  <li><%= t('landing.fordesigners.b4') %></li>
-  <li><%= t('landing.fordesigners.b5') %></li>
-  <li><%= t('landing.fordesigners.b6') %></li>
-  <li><%= t('landing.fordesigners.b7') %></li>
-</ul>
-<p><a class="btn" href="/membership"><%= t('landing.fordesigners.cta') %></a></p>
-
-<h2><%= t('landing.merchx.title') %></h2>
-<p><%= t('landing.merchx.intro') %></p>
-<ul>
-  <li><%= t('landing.merchx.b1') %></li>
-  <li><%= t('landing.merchx.b2') %></li>
-  <li><%= t('landing.merchx.b3') %></li>
-  <li><%= t('landing.merchx.b4') %></li>
-</ul>
-<p><%= t('landing.merchx.money') %></p>
-<p><a class="btn" href="/merch"><%= t('landing.merchx.cta') %></a></p>
-<p class="fineprint"><%= t('discounts.disclosure') %></p>
 
 <h2><%= t('landing.appbuttons.title') %></h2>
 <p><%= t('landing.appbuttons.sub') %></p>
@@ -263,8 +185,6 @@
   <% }); %>
 </div>
 <p class="muted"><%= t('landing.appbuttons.note') %></p>
-
-<%- include('../partials/house-ad', {slot: 'home_inline'}) %>
 
 <h2><%= t('landing.watch.title') %></h2>
 <p><%= t('landing.watch.text') %></p>
@@ -284,82 +204,14 @@
   </div>
   <% }); %>
 </div>
-<p style="text-align:center;margin-top:1rem;"><a class="btn" href="/watch"><%= t('landing.watch.more_btn') %></a> <a class="btn btn-secondary" href="<%= tacChannelUrl %>?sub_confirmation=1" target="_blank" rel="noopener"><%= t('watch.subscribe_tac') %></a></p>
+<p style="text-align:center;margin-top:1rem;"><a class="btn" href="/watch"><%= t('landing.watch.more_btn') %></a> <a class="btn btn-secondary" href="https://www.youtube.com/@rook9860?sub_confirmation=1" target="_blank" rel="noopener"><%= t('landing.offers.watch.btn1') %></a> <a class="btn btn-secondary" href="<%= tacChannelUrl %>?sub_confirmation=1" target="_blank" rel="noopener"><%= t('landing.offers.watch.btn2') %></a> <a class="btn btn-secondary" href="<%= (typeof littleInkersYoutubeUrl !== 'undefined' && littleInkersYoutubeUrl ? littleInkersYoutubeUrl : 'https://www.youtube.com/@littleinkersapp') + '?sub_confirmation=1' %>" target="_blank" rel="noopener"><%= t('landing.offers.watch.btn3') %></a></p>
 
-<h2><%= t('landing.guides.title') %></h2>
-<p><%= t('landing.guides.text') %></p>
-<p><%= t('landing.guides.text2') %></p>
-<div class="lp-offer-grid">
-  <div class="lp-offer">
-    <h3><%= t('footer.aftercare_guide') %></h3>
-    <p><a class="btn" href="/guides/aftercare"><%= t('footer.aftercare_guide') %></a></p>
-  </div>
-  <div class="lp-offer">
-    <h3><%= t('footer.choosing_guide') %></h3>
-    <p><a class="btn" href="/guides/choosing-a-design"><%= t('footer.choosing_guide') %></a></p>
-  </div>
-  <div class="lp-offer">
-    <h3><%= t('footer.custom_guide') %></h3>
-    <p><a class="btn" href="/guides/custom-design-process"><%= t('footer.custom_guide') %></a></p>
-  </div>
-  <div class="lp-offer">
-    <h3><%= t('footer.shops_guide') %></h3>
-    <p><a class="btn" href="/guides/for-tattoo-shops"><%= t('footer.shops_guide') %></a></p>
-  </div>
-</div>
+<p class="lp-guides-row"><strong><%= t('landing.guides.title') %>:</strong> <a href="/guides/aftercare"><%= t('footer.aftercare_guide') %></a> · <a href="/guides/choosing-a-design"><%= t('footer.choosing_guide') %></a> · <a href="/guides/custom-design-process"><%= t('footer.custom_guide') %></a> · <a href="/guides/for-tattoo-shops"><%= t('footer.shops_guide') %></a></p>
 
-<h2><%= t('landing.steps.title') %></h2>
-<div class="lp-steps">
-  <div class="lp-step"><span class="num">1</span><h3><%= t('landing.steps.s1.title') %></h3><p><%= t('landing.steps.s1.text') %></p></div>
-  <div class="lp-step"><span class="num">2</span><h3><%= t('landing.steps.s2.title') %></h3><p><%= t('landing.steps.s2.text') %></p></div>
-  <div class="lp-step"><span class="num">3</span><h3><%= t('landing.steps.s3.title') %></h3><p><%= t('landing.steps.s3.text') %></p></div>
-</div>
-
-<%- include('../partials/affiliate-kit') %>
-
-<div class="lp-cta-band">
-  <h2><%= t('landing.cta.title') %></h2>
-  <p><%= t('landing.cta.text') %></p>
-  <p><a class="btn" href="/membership"><%= t('landing.cta.designer_btn', {price: fmtMoney(567)}) %></a> <a class="btn btn-secondary" href="/membership"><%= t('landing.cta.shop_btn', {price: fmtMoney(10398)}) %></a></p>
-</div>
-
-<div class="lp-cta-band" style="background: linear-gradient(135deg, #FFF7E8, #FFE9C7); border-color: #ffd166;">
-  <h2><%= t('landing.li_sub.title') %></h2>
-  <p><%= t('landing.li_sub.text') %></p>
-  <p><a class="btn" href="<%= (typeof littleInkersYoutubeUrl !== 'undefined' && littleInkersYoutubeUrl ? littleInkersYoutubeUrl : 'https://www.youtube.com/@littleinkersapp') + '?sub_confirmation=1' %>" target="_blank" rel="noopener"><%= t('landing.li_sub.btn') %></a></p>
-</div>
+<%# Penny Sweeper cluster (declutter 2026-10-27): the house slot and the
+    mk4 tip jar stay on the door — demoted to compact modules at the foot
+    of the page, never deleted. %>
+<%- include('../partials/house-ad', {slot: 'home_inline'}) %>
 
 <%- include('../partials/tip-jar') %>
-
-<section class="card" id="app">
-  <% if (playStoreUrl || playStoreProUrl || appStoreUrl) { %>
-  <h2><%= t('home.app_title_live') %></h2>
-  <p><%= t('home.app_text_live') %></p>
-  <p><% if (playStoreUrl && playStoreProUrl) { %><a class="btn" href="<%= playStoreUrl %>"><%= t('home.get_play_free') %></a> <a class="btn btn-secondary" href="<%= playStoreProUrl %>"><%= t('home.get_play_pro') %></a><% } else if (playStoreUrl) { %><a class="btn" href="<%= playStoreUrl %>"><%= t('home.get_play') %></a><% } else if (playStoreProUrl) { %><a class="btn" href="<%= playStoreProUrl %>"><%= t('home.get_play_pro') %></a><% } %> <% if (appStoreUrl) { %><a class="btn" href="<%= appStoreUrl %>"><%= t('home.get_appstore') %></a><% } %></p>
-  <% if (!appStoreUrl) { %>
-  <p class="muted"><%= t('home.ios_soon') %></p>
-  <form method="post" action="/app-notify" class="form">
-    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-    <input type="hidden" name="platform" value="ios">
-    <input type="email" name="email" maxlength="120" required placeholder="you@example.com" aria-label="<%= t('home.ios_soon') %>">
-    <button type="submit"><%= t('home.notify_me') %></button>
-  </form>
-  <% } %>
-  <p style="margin-top:0.75rem;"><a class="btn btn-secondary" href="/ios-app"><%= t('home.get_ios_sideload') %></a></p>
-  <p style="margin-top:0.75rem;"><a class="btn btn-secondary" href="/tac-android"><%= t('home.get_android_sideload') %></a> <a href="/apps"><%= t('home.all_apps') %></a></p>
-  <% } else { %>
-  <h2><%= t('home.app_title_soon') %></h2>
-  <p><%= t('home.app_text_soon') %></p>
-  <form method="post" action="/app-notify" class="form">
-    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-    <input type="email" name="email" maxlength="120" required placeholder="you@example.com" aria-label="<%= t('home.notify_me') %>">
-    <button type="submit"><%= t('home.notify_me') %></button>
-  </form>
-  <p style="margin-top:0.75rem;"><a class="btn btn-secondary" href="/ios-app"><%= t('home.get_ios_sideload') %></a></p>
-  <p style="margin-top:0.75rem;"><a class="btn btn-secondary" href="/tac-android"><%= t('home.get_android_sideload') %></a> <a href="/apps"><%= t('home.all_apps') %></a></p>
-  <% } %>
-  <div style="margin-top:1rem;text-align:center;">
-    <video controls playsinline preload="metadata" poster="/img/landing/promo-poster.webp" style="width:100%;max-width:320px;border-radius:8px;" src="/videos/promo-short.mp4"></video>
-  </div>
-</section>
 </div>
