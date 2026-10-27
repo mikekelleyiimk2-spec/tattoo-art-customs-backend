@@ -1,0 +1,247 @@
+/* Poppy & Ziggy face — the branch design system.
+   Built from the owner-approved anchor (GPT candidate 1, ❤️ Oct 27 2026,
+   filed LIT-2026-10-27-poppyziggy-homepage-standard-owner-approved-gpt):
+   sky-blue field, bubbly wordmark, four round icon chips, a star-burst
+   badge over the cast picture, four chunky color cards, a friends band,
+   and a navy wave footer — "Watch ★ Learn ★ Play ★ Grow".
+   All character art is the show's own canon art (see /img/pz/).
+   Palette discipline (N-W3): sky/navy field, purple brand, sunny yellow
+   accent; green/orange/blue exist only as the fixed card-system colors,
+   reused identically in the chips and the cards. */
+
+@font-face {
+  font-family: 'PZ Marker';
+  src: url('/fonts/permanent-marker.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+body.pz-body {
+  background: linear-gradient(180deg, #37b6ff 0, #8fd8ff 340px, #eaf9ff 720px, #f4fcff 100%);
+  color: #14315c;
+}
+body.pz-body main.container { max-width: 1120px; }
+
+/* Slim sky header / navy footer, swapped in by layout-li when pzFace. */
+.pz-header {
+  background: linear-gradient(180deg, #1d9bf0, #37b6ff);
+  color: #fff;
+  padding: .55rem 1rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  font-weight: 800;
+}
+.pz-header .pz-header-brand { font-size: 1.05rem; letter-spacing: .01em; }
+.pz-header .pz-header-badge {
+  background: #ffd93b; color: #7a4d00; border-radius: 999px;
+  padding: .2rem .7rem; font-size: .82rem; white-space: nowrap;
+  box-shadow: 0 2px 0 rgba(10, 42, 110, .35);
+}
+.pz-footer {
+  margin-top: 2.5rem;
+  background: linear-gradient(180deg, #0d2f77, #081f52);
+  color: #dceaff; text-align: center; padding: 1.6rem 1rem 1.8rem;
+  border-top: 6px solid #ffd93b;
+}
+.pz-footer .pz-foot-mark {
+  font-family: 'PZ Marker', 'Arial Black', Arial, sans-serif;
+  font-size: 1.5rem; color: #fff; letter-spacing: .02em;
+}
+.pz-footer .pz-foot-motto { font-weight: 800; color: #ffd93b; margin: .35rem 0 .6rem; }
+.pz-footer p { margin: .25rem 0; }
+.pz-footer .fineprint { color: #a9c6f5; }
+
+/* Full-bleed breakout inside the walled layout's container. */
+.pz-bleed {
+  width: 100vw; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw);
+}
+
+/* --- Top bar: wordmark + chips ------------------------------------- */
+.pz-top { padding: 1.1rem 1rem .4rem; text-align: center; }
+.pz-wordmark {
+  font-family: 'PZ Marker', 'Arial Black', Arial, sans-serif;
+  font-size: clamp(2.4rem, 7.5vw, 4.2rem);
+  line-height: 1.02; margin: 0; letter-spacing: .01em;
+  color: #fff;
+  text-shadow:
+    0 3px 0 #7b1fa2, 0 6px 0 rgba(10, 42, 110, .55),
+    -2px 0 0 #7b1fa2, 2px 0 0 #7b1fa2, 0 -2px 0 #7b1fa2;
+}
+.pz-wordmark .pz-w-poppy { color: #ff5da2; }
+.pz-wordmark .pz-w-amp { color: #ffd93b; font-size: .62em; vertical-align: .18em; }
+.pz-wordmark .pz-w-ziggy { color: #ffd93b; }
+.pz-tagline {
+  display: inline-block; margin-top: .55rem;
+  background: #fff; color: #0d2f77; font-weight: 800;
+  border-radius: 999px; padding: .35rem 1rem; font-size: 1.02rem;
+  box-shadow: 0 3px 0 rgba(10, 42, 110, .25);
+}
+.pz-chips {
+  display: flex; justify-content: center; gap: .9rem 1.4rem; flex-wrap: wrap;
+  margin: 1rem 0 .2rem; padding: 0; list-style: none;
+}
+.pz-chips a {
+  display: flex; flex-direction: column; align-items: center; gap: .3rem;
+  text-decoration: none; color: #0d2f77; font-weight: 800; font-size: .95rem;
+}
+.pz-chips .pz-chip {
+  width: 58px; height: 58px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.65rem; color: #fff;
+  border: 3px solid #fff; box-shadow: 0 4px 0 rgba(10, 42, 110, .3);
+  transition: transform .15s ease;
+}
+.pz-chips a:hover .pz-chip, .pz-chips a:focus .pz-chip { transform: translateY(-3px) scale(1.05); }
+.pz-chip.purple { background: #9b1fe0; }
+.pz-chip.green { background: #1fae4e; }
+.pz-chip.orange { background: #ff8a00; }
+.pz-chip.blue { background: #1f74e0; }
+
+/* --- Hero: the cast picture + burst badge + pill -------------------- */
+.pz-hero { position: relative; padding: 0 1rem; margin-top: .6rem; }
+.pz-hero-frame {
+  border-radius: 28px; overflow: hidden; border: 5px solid #fff;
+  box-shadow: 0 14px 34px rgba(10, 42, 110, .35);
+  background: #bfe9ff;
+}
+.pz-hero-frame img { display: block; width: 100%; height: auto; }
+.pz-burst {
+  position: absolute; left: 50%; bottom: -14px; transform: translateX(-50%) rotate(-2deg);
+  background: #1447c8; color: #fff; text-align: center;
+  font-family: 'PZ Marker', 'Arial Black', Arial, sans-serif;
+  font-size: clamp(1rem, 3.4vw, 1.55rem); line-height: 1.15;
+  padding: .7rem 1.6rem; border-radius: 22px; border: 3px solid #fff;
+  box-shadow: 0 8px 0 rgba(10, 42, 110, .35);
+  white-space: nowrap;
+}
+.pz-burst .pz-burst-star { color: #ffd93b; }
+.pz-hero-cta { text-align: center; margin: 2rem 0 .4rem; }
+.pz-btn {
+  display: inline-block; text-decoration: none; cursor: pointer;
+  font-weight: 900; font-size: 1.12rem; color: #fff !important;
+  background: #9b1fe0; border: 3px solid #fff; border-radius: 999px;
+  padding: .8em 1.9em; box-shadow: 0 6px 0 rgba(10, 42, 110, .4);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.pz-btn:hover, .pz-btn:focus { transform: translateY(-2px); box-shadow: 0 8px 0 rgba(10, 42, 110, .4); }
+.pz-btn.green { background: #1fae4e; }
+.pz-btn.orange { background: #ff8a00; }
+.pz-btn.blue { background: #1f74e0; }
+.pz-btn.white { background: #fff; color: #0d2f77 !important; border-color: #bfe0ff; }
+.pz-schedule { text-align: center; font-weight: 800; color: #0d2f77; margin: .8rem 0 0; font-size: 1.05rem; }
+
+/* --- The four chunky cards ------------------------------------------ */
+.pz-cards {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;
+  margin: 1.6rem 0 .4rem; padding: 0 1rem;
+}
+@media (max-width: 900px) { .pz-cards { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .pz-cards { grid-template-columns: 1fr; } }
+.pz-card {
+  border-radius: 26px; overflow: hidden; text-decoration: none; color: #fff;
+  border: 4px solid #fff; box-shadow: 0 10px 22px rgba(10, 42, 110, .28);
+  display: flex; flex-direction: column; min-height: 218px;
+  transition: transform .15s ease;
+}
+.pz-card:hover, .pz-card:focus { transform: translateY(-4px); }
+.pz-card .pz-card-art { flex: 1 1 auto; min-height: 118px; background-size: cover; background-position: center 22%; }
+.pz-card .pz-card-label {
+  display: flex; align-items: center; gap: .55rem;
+  font-family: 'PZ Marker', 'Arial Black', Arial, sans-serif;
+  font-size: 1.06rem; line-height: 1.12; padding: .7rem .85rem .85rem;
+}
+.pz-card .pz-card-icon {
+  flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%;
+  background: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+}
+.pz-card.purple { background: #9b1fe0; }
+.pz-card.green { background: #1fae4e; }
+.pz-card.orange { background: #ff8a00; }
+.pz-card.blue { background: #1f74e0; }
+.pz-card.blue .pz-card-art {
+  background: radial-gradient(circle at 30% 25%, #57a7ff, #1f74e0 70%);
+  display: flex; align-items: center; justify-content: center; font-size: 3rem;
+}
+
+/* --- Sections -------------------------------------------------------- */
+.pz-sec { padding: 0 1rem; margin-top: 2.2rem; }
+.pz-sec h2 {
+  font-family: 'PZ Marker', 'Arial Black', Arial, sans-serif;
+  color: #0d2f77; font-size: clamp(1.5rem, 4.5vw, 2.1rem);
+  margin: 0 0 .5rem; letter-spacing: .01em;
+}
+.pz-sec h2 .pz-h-star { color: #ffb300; }
+.pz-lede { font-size: 1.08rem; line-height: 1.55; max-width: 62ch; }
+.pz-panel {
+  background: #fff; border-radius: 26px; border: 3px solid #bfe0ff;
+  box-shadow: 0 8px 20px rgba(10, 42, 110, .12);
+  padding: 1.3rem 1.4rem; margin-top: 1rem;
+}
+.pz-panel p { line-height: 1.55; }
+.pz-panel .pz-btn { margin: .25rem .35rem .25rem 0; }
+
+/* Crew trading-card grid: the show's own canon art, one friend per tile. */
+.pz-crew {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 1rem;
+}
+@media (max-width: 900px) { .pz-crew { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 560px) { .pz-crew { grid-template-columns: repeat(2, 1fr); } }
+.pz-friend {
+  background: #fff; border-radius: 22px; overflow: hidden;
+  border: 3px solid #bfe0ff; box-shadow: 0 6px 14px rgba(10, 42, 110, .12);
+  text-align: center;
+}
+.pz-friend .pz-friend-art {
+  aspect-ratio: 3 / 3.4; background-size: cover; background-position: center 18%;
+  background-color: #dff4ff;
+}
+.pz-friend .pz-friend-art.contain {
+  background-size: contain; background-repeat: no-repeat; background-position: center bottom;
+  background-color: #173f3a;
+}
+.pz-friend .pz-friend-art.wide { aspect-ratio: 3 / 3.4; }
+.pz-friend .pz-friend-name {
+  font-family: 'PZ Marker', 'Arial Black', Arial, sans-serif;
+  color: #0d2f77; padding: .5rem .3rem .65rem; font-size: 1rem; line-height: 1.1;
+}
+
+/* Episode cards on the show's own home page. */
+.pz-eps { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1rem; }
+@media (max-width: 640px) { .pz-eps { grid-template-columns: 1fr; } }
+.pz-ep {
+  background: #fff; border-radius: 22px; border: 3px solid #bfe0ff;
+  box-shadow: 0 6px 14px rgba(10, 42, 110, .12); padding: 1.1rem 1.2rem;
+}
+.pz-ep h3 {
+  font-family: 'PZ Marker', 'Arial Black', Arial, sans-serif;
+  color: #0d2f77; margin: 0 0 .4rem; font-size: 1.12rem; line-height: 1.25;
+}
+.pz-ep p { line-height: 1.5; margin: .35rem 0; }
+.pz-badge {
+  display: inline-block; background: #ffd93b; color: #7a4d00; font-weight: 800;
+  border-radius: 999px; padding: .15rem .7rem; font-size: .85rem;
+}
+.pz-badge.live { background: #1fae4e; color: #fff; }
+
+/* Grown-ups zone: calm blue panel, clearly for parents. */
+.pz-parents {
+  background: linear-gradient(180deg, #eaf4ff, #dceeff);
+  border: 3px solid #9cc8ff;
+}
+.pz-parents h2 { color: #0d2f77; }
+.pz-fineprint { color: #46638f; font-size: .9rem; line-height: 1.5; }
+
+.pz-next {
+  text-align: center; font-size: 1.08rem; margin: 2rem 1rem 0;
+  background: #fff; border: 3px solid #ffd93b; border-radius: 22px;
+  padding: 1rem 1.2rem; box-shadow: 0 6px 14px rgba(10, 42, 110, .12);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pz-burst { animation: pz-bob 3.2s ease-in-out infinite; }
+  @keyframes pz-bob {
+    0%, 100% { transform: translateX(-50%) rotate(-2deg) translateY(0); }
+    50% { transform: translateX(-50%) rotate(-2deg) translateY(-5px); }
+  }
+}

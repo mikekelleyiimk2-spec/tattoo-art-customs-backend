@@ -236,6 +236,7 @@ router.get('/onemind/poppy-and-ziggy', (req, res) => {
     title: 'Poppy & Ziggy — the Kids\' Cartoon | OneMind Branch',
     metaDescription: 'Poppy & Ziggy: the cartoon where a coloring page comes to life. New episode every Friday at 5 PM CT, a fun Short every day. Kid-safe branch page — grown-ups, start here.',
     canonical: `${base()}/onemind/poppy-and-ziggy`,
+    pzFace: true,
     kidPartners: rolodex.queryLive({ kidSafe: true }),
     disclosureStandard: rolodex.disclosureStandard(),
   });

@@ -460,6 +460,7 @@ router.get('/poppy-and-ziggy', async (req, res) => {
     title: 'Poppy & Ziggy — the Kids\' Cartoon | Little Inkers Studio',
     metaDescription: 'Poppy & Ziggy color a page and it comes to life! New episode every Friday at 5 PM CT on YouTube, plus a fun Short every day. Subscribe free.',
     canonical: `${base}/poppy-and-ziggy`,
+    pzFace: true,
   });
 });
 

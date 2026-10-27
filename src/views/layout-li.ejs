@@ -9,16 +9,24 @@
 <% } %>
 <link rel="stylesheet" href="/css/style.css">
 <link rel="stylesheet" href="/css/motion.css">
+<% if (typeof pzFace !== 'undefined' && pzFace) { %><link rel="stylesheet" href="/css/pz.css"><% } %>
 <style>
 .li-header { background: #FFF7E8; border-bottom: 3px solid #ffd166; padding: .75rem 1rem; }
 .li-header .brand { font-size: 1.4rem; font-weight: 800; color: #5b4a68; text-decoration: none; }
 .li-footer { margin-top: 2rem; padding: 1.25rem 1rem; background: #FFF7E8; border-top: 3px solid #ffd166; text-align: center; color: #5b4a68; }
 </style>
 </head>
-<body>
+<body<% if (typeof pzFace !== 'undefined' && pzFace) { %> class="pz-body"<% } %>>
+<% if (typeof pzFace !== 'undefined' && pzFace) { %>
+<header class="pz-header">
+  <span class="pz-header-brand">🖍️ Little Inkers</span>
+  <span class="pz-header-badge">Kids' Corner ☀️ by Useful Appz</span>
+</header>
+<% } else { %>
 <header class="li-header">
   <span class="brand">🖍️ Little Inkers</span>
 </header>
+<% } %>
 
 <% if (typeof flash !== 'undefined' && flash) { %>
 <div class="flash" role="alert"><%= flash %></div>
@@ -28,9 +36,18 @@
   <%- body %>
 </main>
 
+<% if (typeof pzFace !== 'undefined' && pzFace) { %>
+<footer class="pz-footer">
+  <p class="pz-foot-mark">Poppy &amp; Ziggy</p>
+  <p class="pz-foot-motto">Watch ★ Learn ★ Play ★ Grow</p>
+  <p><strong>Little Inkers</strong> — free coloring fun for kids, by Usefulappz.</p>
+  <p class="fineprint">Grown-ups: this is a kid-safe page. No accounts, no ads that track, no links out.</p>
+</footer>
+<% } else { %>
 <footer class="li-footer">
   <p><strong>Little Inkers</strong> — free coloring fun for kids, by Usefulappz.</p>
   <p class="fineprint">Grown-ups: this is a kid-safe page. No accounts, no ads that track, no links out.</p>
 </footer>
+<% } %>
 </body>
 </html>

@@ -78,6 +78,7 @@ function poppyHandler(req, res) {
     title: 'Poppy & Ziggy — the Kids\' Cartoon | OneMind',
     metaDescription: 'Poppy & Ziggy: the cartoon where a coloring page comes to life. New episode every Friday at 5 PM CT, a fun Short every day. Kid-safe branch page — grown-ups, start here.',
     canonical: `${base()}/poppyandziggy`,
+    pzFace: true,
     kidPartners: rolodex.queryLive({ kidSafe: true }),
     disclosureStandard: rolodex.disclosureStandard(),
   });
