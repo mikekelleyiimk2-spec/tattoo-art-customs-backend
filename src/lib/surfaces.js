@@ -24,6 +24,7 @@ const SURFACES = [
   { id: 'tester-hub', name: 'Tester Hub', kind: 'app' },
   { id: 'killintime-console', name: 'KillinTime Console', kind: 'app' },
   { id: 'folder-app', name: 'UsefulAppz Folder', kind: 'app' },
+  { id: 'onemind-web-plug', name: 'OneMind web plug (browser extension)', kind: 'web' },
 ];
 
 const BY_ID = new Map(SURFACES.map((s) => [s.id, s]));
