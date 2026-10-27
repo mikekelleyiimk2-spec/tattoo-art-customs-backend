@@ -1,7 +1,8 @@
 // OneMind web structure tests (owner directive 2026-10-26 ~20:03–20:09).
 // The coordinator (test/run.js) wires this in; do not run from here.
-// Covers: /onemind as page 1 (the real OneMind sign-in door + the
-// preserved flagship board), /onemind/table as page 2 (every branch
+// Covers: /onemind as page 1 (OneMind's own browser face + the
+// standard sign-in card — never the Tattoo Art Customs site skin),
+// /onemind/table as page 2 (every branch
 // lit, every plug from the Codex), the branch pages as full standalone
 // pages at their own links, the kid-wall on the two kid branches
 // (kid-safe Rolodex pulls only, no tattoo commerce, no way back into
@@ -177,30 +178,45 @@ async function runHttpTests(ok) {
   if (savedEnv === undefined) delete process.env.ONEMIND_FRONT_DOOR;
   else process.env.ONEMIND_FRONT_DOOR = savedEnv;
 
-  // Page 1 — the hub: the sign-in IS the OneMind sign-in.
+  // Page 1 — /onemind: OneMind’s OWN face (owner law: OneMind’s face
+  // is its own). The unseated door serves the browser face in
+  // layout-onemind — the same face as page 2 — with a standard
+  // sign-in card in the stage. It NEVER wears the tattoo shop’s site
+  // skin (the old hub render passed no layout and fell back to the
+  // TAC layout; that was the bug), and it carries no manifesto copy:
+  // no pitch paragraphs, no seat board, no price section.
   const hub = await call('GET', '/onemind');
   ok(hub.status === 200, '/onemind serves 200');
-  ok(hub.text.includes('All Your AIs, One Team'), '/onemind carries the OneMind name line');
-  ok(hub.text.includes('Sign in to OneMind'), '/onemind leads with the OneMind sign-in');
+  ok(hub.text.includes('id="omt-omnibox"') && hub.text.includes('Search Google or type URL'),
+    '/onemind renders the browser face (omnibox, Chrome grammar)');
+  ok(hub.text.includes('OneMind') && hub.text.includes('AI Participants'),
+    '/onemind carries the OneMind wordmark + the AI participants rail');
+  ok(!hub.text.includes('site-header') && !hub.text.includes('tattoo-art-customs-header')
+    && !hub.text.includes('/css/style.css'),
+  '/onemind wears NO Tattoo Art Customs skin (no site header, no TAC header logo, no site stylesheet)');
+  ok(!hub.text.includes('All Your AIs, One Team') && !hub.text.includes('logged surface #1'),
+    '/onemind carries no manifesto hub copy (the face law governs page 1 too)');
+  // The sign-in wiring, standard shape: the card in the stage, the
+  // real web door, the one-tap email pipe, the standard side doors.
+  ok(hub.text.includes('id="omt-signin"'), '/onemind face carries the guest sign-in card in the stage');
   ok(hub.text.includes('action="/login"'), '/onemind sign-in form posts to the real web door (/login)');
   ok(hub.text.includes('/api/onemind/link/start'), '/onemind wires the one-tap email door (seat-claim machinery)');
-  ok(hub.text.includes('logged surface #1'), '/onemind says the website is logged surface #1');
-  ok(hub.text.includes('href="/onemind/table"'), '/onemind doors onward to page 2, the Table');
-  ok(hub.text.includes('Plug OneMind into your browser'), '/onemind carries the first-class plug door');
-  ok(hub.text.includes('Never leave your regular homepage'), '/onemind plug door carries the owner\u2019s line');
-  ok(hub.text.includes('Being built'), '/onemind plug door is honestly staged (package not landed yet — no fake link)');
-  ok(hub.text.includes('href="/"'), '/onemind links OUT to the tattoo shop\u2019s own home (no hosted branch page)');
-  ok(hub.text.includes('paypal.com/ncp/payment/WA9DS6J8ERSHW'), '/onemind carries the mk4 tip jar');
-  ok(/SPONSORED/.test(hub.text) && /This spot is open/.test(hub.text), '/onemind sponsor slot is labeled and honestly open');
-  const leda = rolodex.findLiveByName('Leda Art Supply');
-  ok(leda && hub.text.includes(leda.link), '/onemind placements are pulled live from the Rolodex (REFERRAL-HUB: Leda)');
-  ok(!/little-inkers|poppy-and-ziggy/.test(hub.text), '/onemind carries no links into kid-walled surfaces (pin held)');
+  ok(hub.text.includes('href="/forgot"') && hub.text.includes('href="/signup"'),
+    '/onemind sign-in card carries the standard forgot-password / create-account doors');
+  ok(!hub.text.includes('href="/auth/google"'),
+    '/onemind renders no dead Google button while the door is unconfigured (it renders when enabled)');
+  for (const href of ['/onemind/table', '/onemind/poppy-and-ziggy', '/onemind/little-inkers',
+    '/onemind/killintime', '/onemind/tester-hub', '/onemind/tools']) {
+    ok(hub.text.includes(`href="${href}"`), `/onemind face doors onward to ${href} (same branch doors as the table)`);
+  }
+  ok(hub.text.includes('href="/"'), '/onemind links OUT to the tattoo shop’s own home (no hosted branch page)');
+  ok(hub.text.includes('href="#omt-signin"'), '/onemind people-rail guest row points at the sign-in card on the same page');
 
   // Seated → straight to the Table (owner ruling 2026-10-27 08:57 CDT):
   // a signed-in session IS a seated session (signup runs seatQuietly),
-  // so it never stops at the hub — /onemind redirects to page 2. The
-  // hub remains the unseated face (the anonymous 200 checks above pin
-  // it: hub carries the sign-in door for visitors).
+  // so it never stops at page 1 — /onemind redirects to page 2. The
+  // browser face is the unseated face (the anonymous 200 checks above
+  // pin it: the face carries the sign-in card for visitors).
   const su = await form('/signup', {
     email: 'hubtest@test.local', password: 'test-password-123', display_name: 'Hub Test', website: '',
   });
@@ -209,6 +225,24 @@ async function runHttpTests(ok) {
   ok(hubIn.status === 302 && hubIn.location === '/onemind/table', 'seated /onemind goes straight to /onemind/table (owner ruling 2026-10-27)');
   const tableIn = await call('GET', '/onemind/table', { cookie: su.cookie });
   ok(tableIn.status === 200, 'the seated redirect lands on a live table (200)');
+
+  // Signing in AT OneMind's own door lands on the table: the guest
+  // render of /onemind seats req.session.returnTo=/onemind/table (the
+  // login flow's deep-link slot), and POST /login honors it.
+  const anonRes = await fetch(`${BASE}/onemind`, { redirect: 'manual' });
+  await anonRes.text();
+  const anonCookie = (typeof anonRes.headers.getSetCookie === 'function' ? anonRes.headers.getSetCookie() : [])
+    .map((c) => c.split(';')[0]).join('; ');
+  ok(anonRes.status === 200 && !!anonCookie, 'an anonymous visit to /onemind starts a session (the returnTo carrier)');
+  const liOm = await fetch(`${BASE}/login`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded', cookie: anonCookie },
+    body: new URLSearchParams({ email: 'hubtest@test.local', password: 'test-password-123', website: '' }),
+    redirect: 'manual',
+  });
+  await liOm.text();
+  ok(liOm.status === 302 && liOm.headers.get('location') === '/onemind/table',
+    'signing in at OneMind’s own door lands on /onemind/table (returnTo carried)');
 
   // Page 2 — the table: every branch lit, plugs from the Codex.
   const table = await call('GET', '/onemind/table');
@@ -226,6 +260,7 @@ async function runHttpTests(ok) {
   ok(table.text.includes('Search Google or type URL'), '/onemind/table renders the browser search bar');
   ok(table.text.includes('href="https://chatgpt.com"') && table.text.includes('href="https://claude.ai"'), '/onemind/table shortcut tiles open the real AIs');
   ok(!/SPONSORED/.test(table.text), '/onemind/table carries no sponsor/placements furniture on the face');
+  ok(table.text.includes('id="omt-signin"'), '/onemind/table shows a guest the same sign-in card in the stage');
 
   // The tattoo shop is NOT a branch page (owner correction, 20:05).
   const tac = await call('GET', '/onemind/tattoo-shop');

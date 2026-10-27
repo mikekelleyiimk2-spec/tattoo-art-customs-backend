@@ -16,10 +16,19 @@
 //   always. Independent never means untied.
 //
 // STRUCTURE (owner's pages):
-//   Page 1 — GET /onemind: sign up / sign in to OneMind, the seat
-//     board (live from the Codex), the price, and the door to page 2.
-//     A seated session skips page 1 entirely — straight to page 2
-//     (owner ruling 2026-10-27 08:57 CDT).
+//   Page 1 — GET /onemind: OneMind's own front door, wearing
+//     OneMind's OWN face — the same browser face as page 2 (the
+//     table template in layout-onemind), never the tattoo shop's
+//     site skin. An unseated visitor gets the face with a standard
+//     sign-in card in the stage (the real web door: Google +
+//     POST /login + the one-tap email link of /api/onemind/link/*)
+//     and nothing else on top of it: no pitch, no seat board, no
+//     price section — the face law below governs page 1 exactly as
+//     it governs page 2. (The old page 1 was a manifesto hub
+//     rendered in the shop's skin; the owner named that as the bug:
+//     OneMind's face is its own.) A seated session skips page 1
+//     entirely — straight to page 2 (owner ruling 2026-10-27
+//     08:57 CDT).
 //   Page 2 — GET /onemind/table: "the table" — a BROWSER face in
 //     Chrome's grammar (owner ruling 2026-10-27 09:33 CDT): wordmark,
 //     one search/URL bar, shortcut tiles to the real AIs and every
@@ -52,7 +61,6 @@ const db = require('../db');
 const codex = require('../lib/codex');
 const rolodex = require('../lib/rolodex');
 const googleSeat = require('../lib/googleSeat');
-const onemind = require('../lib/onemind');
 
 const router = express.Router();
 
@@ -129,46 +137,36 @@ const TABLE_PLACEMENTS = ['REFERRAL-HUB', 'house-ads rotation'];
 // router never intercepts it: no redirect to OneMind, ever — people
 // reach OneMind by asking for it, at its own address.
 
-// --- Page 1: /onemind — sign up to OneMind ---------------------------
+// --- Page 1: /onemind — OneMind's own front door ----------------------
 router.get('/onemind', async (req, res) => {
   // Owner ruling 2026-10-27 08:57 CDT ("web sign-in goes straight to
-  // the table too"): a SEATED session never stops at the hub — it goes
+  // the table too"): a SEATED session never stops at page 1 — it goes
   // straight to page 2. "Seated" is the session the loadUser middleware
   // resolved (res.locals.currentUser, src/middleware/auth.js): every
   // sign-in path (signup, login, Google callback) runs
   // onemind.seatQuietly(user, 'website'), so an authenticated session
-  // IS a seated session — the tie attaches at the sitting. Unseated
-  // visitors get the hub exactly as before: it carries the sign-in
-  // door, the seat board, and the price.
+  // IS a seated session — the tie attaches at the sitting.
   if (res.locals.currentUser) return res.redirect(302, '/onemind/table');
-  const t = tableBook();
-  const numbers = await liveNumbers(t.book);
-  let seat = null;
-  const cu = res.locals.currentUser;
-  if (cu) {
-    try {
-      const full = await db.get('SELECT * FROM users WHERE id = ?', [cu.id]);
-      if (full) seat = await onemind.seatSummary(full);
-    } catch (e) { seat = null; }
-  }
-  res.render('onemind/hub', {
-    title: 'OneMind — All Your AIs, One Team | Useful Appz',
-    metaDescription: 'OneMind is the table everything Useful Appz makes is tied to: one sign-in everywhere, your AIs at one table, every plug and branch reachable from here or at its own link. OneMind Team $9.99/mo, in closed testing now.',
+  // Unseated: OneMind's OWN face — the browser face in its own layout
+  // (layout-onemind), with the standard sign-in card in the stage.
+  // The old render wore the tattoo shop's site skin (no layout was
+  // passed, so it fell back to the TAC layout) and carried the
+  // manifesto hub; that was the bug the owner named — OneMind's
+  // face is its own. The hub template stays on disk, unrouted.
+  seatReturnTo(req);
+  const data = await tableLocals();
+  res.render('onemind/table', {
+    layout: 'layout-onemind',
+    title: 'OneMind',
+    metaDescription: 'OneMind — your browsers, your AIs, your tools, behind one search bar.',
     canonical: `${base()}/onemind`,
-    // As the product page before it: no kid-world house creatives in
-    // this page's layout slots (the tie is universal; the ad wall is
-    // not — kid surfaces are never advertised into from here).
+    // No kid-world house creatives ride this face's data (the tie is
+    // universal; the ad wall is not — kid surfaces are never
+    // advertised into from here).
     houseAdExclude: ['littleinkers', 'poppyziggy'],
-    seats: t.seats,
-    codexUpdated: t.codexUpdated,
-    ai2aiState: t.ai2aiState,
-    ai2aiBuilding: t.ai2aiBuilding,
-    ai2aiLive: t.ai2aiLive,
-    numbers,
-    seat,
+    ...data,
+    user: null,
     googleSignin: googleSeat.enabled(),
-    partners: placementsFor(HUB_PLACEMENTS),
-    disclosureStandard: rolodex.disclosureStandard(),
   });
 });
 
@@ -190,8 +188,12 @@ const AI_BARS = [
   { name: 'Copilot', url: 'https://copilot.microsoft.com', favicon: 'copilot.microsoft.com' },
 ];
 
-// --- Page 2: /onemind/table — the table ------------------------------
-router.get('/onemind/table', async (req, res) => {
+// The table face's data — ONE builder for both doors that serve the
+// face (GET /onemind for unseated visitors, GET /onemind/table for
+// everyone), so the two can never drift apart. Bars carry the Codex
+// seat truth (tableBook's chips); the numbers are the honest live
+// ones, read from the same sources the APIs serve.
+async function tableLocals() {
   const t = tableBook();
   const numbers = await liveNumbers(t.book);
   const seatByName = new Map(t.seats.map((s) => [s.name, s]));
@@ -204,22 +206,46 @@ router.get('/onemind/table', async (req, res) => {
       lastVerified: seat ? seat.lastVerified : null,
     };
   });
-  const cu = res.locals.currentUser;
-  res.render('onemind/table', {
-    layout: 'layout-onemind',
-    title: 'OneMind',
-    metaDescription: 'OneMind — your browsers, your AIs, your tools, behind one search bar.',
-    canonical: `${base()}/onemind/table`,
-    houseAdExclude: ['littleinkers', 'poppyziggy'],
+  return {
     seats: t.seats,
     plugs: t.plugs,
     codexUpdated: t.codexUpdated,
     numbers,
     bars,
     configuredCount: bars.filter((b) => b.configured).length,
-    user: cu ? { name: cu.display_name || cu.email, email: cu.email } : null,
     partners: placementsFor(TABLE_PLACEMENTS),
     disclosureStandard: rolodex.disclosureStandard(),
+  };
+}
+
+// A guest who signs in at OneMind's own door lands on the table.
+// req.session.returnTo is the login flow's deep-link slot — set by
+// requireLogin for gated pages and honored (then cleared) by
+// POST /login, POST /signup and the Google callback in
+// src/routes/auth.js. Setting it here aims that same mechanism at
+// OneMind's own page 2: the person is already standing at OneMind's
+// door asking to sit down, so the table is their own destination —
+// nobody is funneled anywhere they didn't ask to go.
+function seatReturnTo(req) {
+  try { if (req.session) req.session.returnTo = '/onemind/table'; } catch (e) { /* session unavailable */ }
+}
+
+// --- Page 2: /onemind/table — the table ------------------------------
+router.get('/onemind/table', async (req, res) => {
+  const data = await tableLocals();
+  const cu = res.locals.currentUser;
+  // A guest reading the table directly gets the same sign-in card in
+  // the stage, and the same landing when they use it.
+  if (!cu) seatReturnTo(req);
+  res.render('onemind/table', {
+    layout: 'layout-onemind',
+    title: 'OneMind',
+    metaDescription: 'OneMind — your browsers, your AIs, your tools, behind one search bar.',
+    canonical: `${base()}/onemind/table`,
+    houseAdExclude: ['littleinkers', 'poppyziggy'],
+    ...data,
+    user: cu ? { name: cu.display_name || cu.email, email: cu.email } : null,
+    googleSignin: googleSeat.enabled(),
   });
 });
 

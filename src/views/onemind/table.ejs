@@ -83,6 +83,25 @@
   .omt-empty strong { font-size: 1.02rem; color: #eaf2fd; }
   .omt-empty span { color: #8fa3bf; font-size: .88rem; line-height: 1.5; max-width: 56ch; }
 
+  /* --- guest sign-in card (the standard sign-in shape, in the
+     face's own dark system — same fields, same doors as everywhere:
+     Google, email + password, one-tap email link) --- */
+  .hp { position: absolute; left: -9999px; }
+  .omt-signin { max-width: 430px; margin: 0 auto; border: 1px solid #1b2c49; background: #0a1528; border-radius: 12px; padding: 1.3rem 1.4rem 1.2rem; }
+  .omt-signin h2 { margin: 0 0 .9rem; font-size: 1.25rem; }
+  .omt-google-btn { display: block; text-align: center; background: #fff; color: #202124; border-radius: 999px; padding: .55rem 1rem; font-weight: 600; font-size: .92rem; text-decoration: none; margin-bottom: .6rem; }
+  .omt-google-btn:hover { background: #e8eaed; }
+  .omt-signin-form { display: flex; flex-direction: column; gap: .35rem; }
+  .omt-signin-form label { font-size: .8rem; color: #8fa3bf; margin-top: .45rem; }
+  .omt-signin-form input { background: #0c1730; border: 1px solid #1e3050; border-radius: 9px; padding: .55rem .8rem; color: #e7eef8; font-size: .95rem; outline: 0; font-family: inherit; }
+  .omt-signin-form input:focus { border-color: #2f7bff; box-shadow: 0 0 0 3px rgba(47, 123, 255, .25); }
+  .omt-signin-form .omt-send { margin-top: .7rem; align-self: flex-start; }
+  .omt-signin-form .omt-share { margin-top: .7rem; align-self: flex-start; }
+  .omt-signin-links { margin: .9rem 0 0; font-size: .88rem; color: #8fa3bf; }
+  .omt-signin-links a { color: #7dd3fc; }
+  .omt-signin-or { border-top: 1px solid #16263f; margin-top: 1.1rem; padding-top: .9rem; }
+  .omt-signin-note { color: #8fa3bf; font-size: .88rem; line-height: 1.5; margin: .6rem 0 0; }
+
   .omt-panels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .9rem; }
   .omt-panel { border: 1px solid #1b2c49; background: #0a1528; border-radius: 14px; padding: .95rem 1rem; min-height: 128px; }
   .omt-panel h2 { margin: 0 0 .5rem; font-size: .95rem; display: flex; align-items: center; gap: .5rem; }
@@ -215,10 +234,37 @@
     </div>
 
     <section class="omt-stage" id="omt-answers" aria-label="Answers from your AIs">
+      <% if (user) { %>
       <div class="omt-empty">
         <strong>Answers from your AIs land here</strong>
         <span>Ask the table below and each AI&rsquo;s answer appears side by side — compare them here instead of copy-pasting between apps.</span>
       </div>
+      <% } else { %>
+      <div class="omt-signin" id="omt-signin">
+        <h2>Sign in</h2>
+        <% if (typeof googleSignin !== 'undefined' && googleSignin) { %>
+        <a class="omt-google-btn" href="/auth/google">Continue with Google</a>
+        <% } %>
+        <form method="post" action="/login" class="omt-signin-form">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <label for="omt-email">Email</label>
+          <input type="email" id="omt-email" name="email" required autocomplete="email">
+          <label for="omt-password">Password</label>
+          <input type="password" id="omt-password" name="password" required autocomplete="current-password">
+          <button class="omt-send" type="submit">Sign in</button>
+        </form>
+        <p class="omt-signin-links"><a href="/forgot">Forgot your password?</a> · <a href="/signup">Create your account</a></p>
+        <div class="omt-signin-or">
+          <form id="omt-link-form" class="omt-signin-form">
+            <label for="omt-link-email">Email for your one-tap link</label>
+            <input type="email" id="omt-link-email" required autocomplete="email">
+            <button class="omt-share" type="submit">Email me my sign-in link</button>
+          </form>
+          <p id="omt-link-msg" class="omt-signin-note" hidden></p>
+          <noscript><p class="omt-signin-note">The one-tap email door needs JavaScript — the password form above works without it.</p></noscript>
+        </div>
+      </div>
+      <% } %>
     </section>
 
     <section class="omt-panels">
@@ -266,7 +312,7 @@
           <span class="omt-dot is-on"></span>
         </span>
         <% } else { %>
-        <a class="omt-person" href="/onemind">
+        <a class="omt-person" href="#omt-signin">
           <span class="omt-avatar omt-avatar-you">?</span>
           <span class="omt-person-meta"><strong>You</strong><small>Not signed in — take your seat</small></span>
           <span class="omt-dot"></span>
@@ -312,4 +358,31 @@
       }
     });
   }
+</script>
+<script>
+  // The one-tap email door in the guest sign-in card — the same pipe
+  // (and the same answers) the hub's form used: POST
+  // /api/onemind/link/start with {email, surface:'website'}.
+  (function () {
+    var form = document.getElementById('omt-link-form');
+    if (!form) return;
+    var msg = document.getElementById('omt-link-msg');
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var email = document.getElementById('omt-link-email').value;
+      msg.hidden = false;
+      msg.textContent = 'Sending your link…';
+      fetch('/api/onemind/link/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, surface: 'website' })
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        msg.textContent = j && j.ok
+          ? 'Your sign-in link is on its way to ' + email + ' — tap it within the hour and you\'re seated.'
+          : 'That email didn\'t take — check it and try again, or use the password form above.';
+      }).catch(function () {
+        msg.textContent = 'The link door didn\'t answer — the password form above will get you in.';
+      });
+    });
+  })();
 </script>

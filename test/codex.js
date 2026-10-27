@@ -98,39 +98,33 @@ async function runHttpTests(ok, req) {
   ok(!/plug-pricing-draft/.test(all.text), 'the internal draft doc path is not projected');
   ok(!/custody debt/i.test(all.text), 'internal notes (custody debt) are not projected');
 
-  // /onemind — the product's own page (website split follow-up,
-  // 2026-10-26). Its seat board renders from this same book, so the
-  // page must tell the identical truth: exactly one configured seat
-  // (Gemini), every other seat labeled as unconfigured / phone-lane /
-  // named-not-built, the settled $9.99/mo price, and honest
-  // closed-testing status.
-  console.log('onemind page (seat board renders the codex truth):');
+  // /onemind — OneMind's own front door. The face's participants
+  // rail renders its seat chips from this same book, so the rail
+  // must tell the identical truth for the eight AI bars: exactly one
+  // configured seat (Gemini), the rest labeled unconfigured /
+  // phone-lane. (Page 1 used to be a manifesto hub with a full seat
+  // board, the $9.99/mo price and closed-testing sections; the
+  // owner's face law replaced it with the browser face, so those
+  // hub pins went with the hub. The named worker seats are not among
+  // the eight bars the face renders — their truth stays pinned on
+  // the book/API checks above.)
+  console.log('onemind page (participants rail renders the codex truth):');
   // Anonymous fetch on purpose: since the owner ruling 2026-10-27
   // 08:57 CDT a seated session hitting /onemind goes straight to
   // /onemind/table, and the shared req jar holds a session by this
-  // point in the run. The hub — sign-in door, seat board, price — is
-  // the UNSEATED face; that is the surface whose board must tell the
-  // codex truth. (Seated-redirect coverage lives in test/onemindWeb.js.)
+  // point in the run. The browser face is the UNSEATED face; that is
+  // the surface whose rail must tell the codex truth.
+  // (Seated-redirect coverage lives in test/onemindWeb.js.)
   const pageRes = await fetch('http://localhost:4137/onemind', { redirect: 'manual' });
   const page = { status: pageRes.status, text: await pageRes.text() };
   ok(page.status === 200, '/onemind serves 200');
-  ok(/All Your AIs, One Team/.test(page.text), '/onemind carries the OneMind name line');
-  ok(page.text.includes('$9.99/mo'), '/onemind states the settled OneMind Team price $9.99/mo');
-  ok(/closed testing/i.test(page.text), '/onemind honestly says the app is in closed testing');
-  ok(page.text.includes('href="/testers"'), '/onemind download door points at the tester path');
+  ok(page.text.includes('Search Google or type URL') && page.text.includes('AI Participants'),
+    '/onemind serves the browser face (omnibox + participants rail), not the hub');
   const configuredCount = (page.text.match(/Seated — configured/g) || []).length;
   ok(configuredCount === 1, '/onemind marks exactly ONE seat configured (Gemini) — none faked live');
-  ok(page.text.includes('Gemini'), '/onemind seat board names Gemini');
+  ok(page.text.includes('Gemini'), '/onemind participants rail names Gemini');
   ok(page.text.includes('Not configured yet'), '/onemind labels unconfigured seats as not configured');
   ok(page.text.includes('Phone lane — chair unclaimed'), '/onemind labels Copilot as phone lane, chair unclaimed');
-  ok(page.text.includes('Named — not built yet'), '/onemind labels the named worker seats as not built');
-  ok(/Live/.test(page.text) && /AI-to-AI room/.test(page.text), '/onemind shows the AI-to-AI room as live');
-  ok(!/under construction/.test(page.text) && !/>Building</.test(page.text), '/onemind no longer shows the AI-to-AI room as building');
-  ok(page.text.includes('AI to AI') && page.text.includes('com.usefulappz.ai2ai'), '/onemind names the standalone AI to AI app');
-  ok(/OneMind plugs into it/.test(page.text), '/onemind says OneMind plugs into the standalone app');
-  ok(page.text.includes('paypal.com/ncp/payment/WA9DS6J8ERSHW'), '/onemind carries the mk4 tip jar');
-  ok(/SPONSORED/.test(page.text) && /This spot is open/.test(page.text), '/onemind sponsor slot is labeled and pending-fill (no affiliate fits yet)');
-  ok(!/little-inkers|poppy-and-ziggy/.test(page.text), '/onemind carries no links into kid-walled surfaces');
 
   const worlds = await req('GET', '/worlds');
   ok(worlds.status === 200 && worlds.text.includes('href="/onemind"'), '/worlds OneMind card points at /onemind');
