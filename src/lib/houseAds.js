@@ -124,6 +124,8 @@ const SLOT_CONTEXT = {
   gallery_inline: { audience: 'tattoo', pool: 'any' },
   design_page: { audience: 'tattoo', pool: 'any' },
   home_inline: { audience: 'tattoo', pool: 'any' },
+  merch_inline: { audience: 'tattoo', pool: 'any' },
+  apps_inline: { audience: 'tattoo', pool: 'any' },
   aftercare_inline: { audience: 'tattoo', pool: 'aftercare' },
 };
 

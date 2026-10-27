@@ -169,8 +169,22 @@ const config = {
   feedbackEmail: process.env.FEEDBACK_EMAIL || 'mikekelleyii.mk2@gmail.com',
 
   // Google AdSense — empty publisher ID means ads stay off.
+  // slots: per-placement ad unit IDs created in the AdSense console
+  // (Ads > By ad unit). A placement renders a real AdSense unit only when
+  // its slot ID is set here; without one the ad-slot chain ends at the
+  // house creative — a bare <ins> with no data-ad-slot can never fill, so
+  // none is emitted (Polish Day fix 2026-10-27).
   adsense: {
     publisherId: process.env.ADSENSE_PUBLISHER_ID || '',
+    slots: {
+      leaderboard: process.env.ADSENSE_SLOT_LEADERBOARD || '',
+      gallery_inline: process.env.ADSENSE_SLOT_GALLERY_INLINE || '',
+      design_page: process.env.ADSENSE_SLOT_DESIGN_PAGE || '',
+      home_inline: process.env.ADSENSE_SLOT_HOME_INLINE || '',
+      merch_inline: process.env.ADSENSE_SLOT_MERCH_INLINE || '',
+      apps_inline: process.env.ADSENSE_SLOT_APPS_INLINE || '',
+      aftercare_inline: process.env.ADSENSE_SLOT_AFTERCARE_INLINE || '',
+    },
   },
 
   // Apple Pay (via PayPal) — the domain association file content goes here

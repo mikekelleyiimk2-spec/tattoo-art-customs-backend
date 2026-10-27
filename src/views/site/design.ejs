@@ -177,3 +177,10 @@
   <a href="https://x.com/intent/post?text=<%= encodeURIComponent(design.title + ' — Tattoo Art Customs ' + canonical) %>" target="_blank" rel="noopener">X</a> ·
   <a href="https://www.threads.com/intent/post?text=<%= encodeURIComponent(design.title + ' — Tattoo Art Customs ' + canonical) %>" target="_blank" rel="noopener">Threads</a>
 </p>
+<% /* Ad placement (Polish Day 2026-10-27): ONE unit at the very bottom of
+     the page — below the artwork, the buy column, the trust block, the
+     affiliate kit and the share row. The purchase path itself stays
+     ad-free per the 2026-10-15 decision (the layout leaderboard stays
+     suppressed via noAds); this slot only ever shows after everything a
+     buyer came for. Registered context: 'design_page' in lib/houseAds. */ %>
+<%- include('../partials/ad-slot', {slot: 'design_page'}) %>

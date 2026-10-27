@@ -1,9 +1,16 @@
-<%# Responsive AdSense display unit. Renders nothing until ADSENSE_PUBLISHER_ID is set. %>
-<% if (typeof adsenseId !== 'undefined' && adsenseId) { %>
+<%# Responsive AdSense display unit. Renders only when BOTH the publisher
+    ID and this placement's ad-unit (slot) ID are configured — a bare <ins>
+    without data-ad-slot can never fill and only ships broken markup, so
+    until the console-side unit exists the ad-slot chain above this partial
+    (direct ads, then our house creatives) is what the placement shows.
+    Slot IDs live in config.adsense.slots (ADSENSE_SLOT_* env vars). %>
+<% const _slotId = (typeof adsenseSlots !== 'undefined' && adsenseSlots && typeof slot !== 'undefined' && slot) ? (adsenseSlots[slot] || '') : ''; %>
+<% if (typeof adsenseId !== 'undefined' && adsenseId && _slotId) { %>
 <div class="ad-slot" role="complementary" aria-label="Advertisement">
   <ins class="adsbygoogle"
        style="display:block"
        data-ad-client="<%= adsenseId %>"
+       data-ad-slot="<%= _slotId %>"
        data-ad-format="auto"
        data-full-width-responsive="true"></ins>
   <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>

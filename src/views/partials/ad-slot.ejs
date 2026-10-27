@@ -14,5 +14,5 @@
 <% } else if (_house) { %>
 <%- include('house-ad', {creative: _house}) %>
 <% } else { %>
-<%- include('ad-unit') %>
+<%- include('ad-unit', {slot: slot}) %>
 <% } %>

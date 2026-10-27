@@ -37,10 +37,13 @@ async function runHttpTests(ok, req, areq) {
     return { status: res.status, text, location: res.headers.get('location') || '' };
   };
 
-  // 1. Design page: guest buy form + trust block, no login wall, no ad
-  // slots/house ads; the disclosed affiliate kit renders (restored
-  // 2026-10-26 — it had died in the 2026-10-15 pass while the Rolodex
-  // records still claimed the placement; RoboScraper Gap 1).
+  // 1. Design page: guest buy form + trust block, no login wall, and no
+  // ad markup anywhere in or above the purchase path — the one ad slot
+  // (Polish Day 2026-10-27) sits below the affiliate kit at the very
+  // bottom of the page, so the kit marker must precede any ad markup.
+  // The disclosed affiliate kit renders (restored 2026-10-26 — it had
+  // died in the 2026-10-15 pass while the Rolodex records still claimed
+  // the placement; RoboScraper Gap 1).
   let a = await anon('GET', `/design/${designId}`);
   ok(a.status === 200, 'guest: design page 200');
   ok(a.text.includes('name="guest_email"'), 'guest: design page has the guest delivery-email field');
@@ -51,8 +54,11 @@ async function runHttpTests(ok, req, areq) {
   ok(a.text.includes('baselabs.is/?coupon=TAC20'), 'guest: kit carries the live Base Labs link + TAC20 code');
   ok(a.text.includes('drtattooskin.com/TATTOOARTCUSTOMS'), 'guest: kit carries the live DrTattooSkin link');
   ok(a.text.includes('rel="noopener nofollow sponsored"'), 'guest: kit links carry the sponsored rel (disclosure lock)');
-  ok(!a.text.includes('house-ad'), 'guest: no house ads on the design page');
-  ok(!a.text.includes('ad-slot'), 'guest: no ad slots on the design page');
+  const kitAt = a.text.indexOf('Complete the kit');
+  const firstAdAt = Math.min(
+    a.text.indexOf('house-ad') === -1 ? Infinity : a.text.indexOf('house-ad'),
+    a.text.indexOf('ad-slot') === -1 ? Infinity : a.text.indexOf('ad-slot'));
+  ok(kitAt !== -1 && firstAdAt > kitAt, 'guest: no house ads / ad slots in or above the design purchase path (only below the kit)');
 
   // 2. Buy without a delivery email bounces back to the design — never /login.
   a = await anon('POST', `/orders/buy/${designId}`, { linework_only: '0' });
@@ -106,11 +112,14 @@ async function runHttpTests(ok, req, areq) {
     'guest: paid approve link returns to the download page');
 
   // 8. Member regression: a logged-in buyer still sees the trust block, no
-  // ads on the design page, and the member buy form (no guest email field).
+  // ads in or above the purchase path, and the member buy form (no guest
+  // email field).
   if (areq) {
     const r = await areq('GET', `/design/${designId}`);
     ok(r.status === 200 && r.text.includes('What you get — no surprises'), 'member: trust block renders on the design page');
-    ok(r.status === 200 && !r.text.includes('house-ad'), 'member: no house ads on the design page');
+    const mKitAt = r.text.indexOf('Complete the kit');
+    const mAdAt = r.text.indexOf('house-ad');
+    ok(r.status === 200 && (mAdAt === -1 || (mKitAt !== -1 && mAdAt > mKitAt)), 'member: no house ads in or above the design purchase path');
     ok(r.status === 200 && !r.text.includes('name="guest_email"'), 'member: buy form has no guest email field');
   }
   tdb.close();

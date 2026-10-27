@@ -138,6 +138,7 @@ app.use((req, res, next) => {
   res.locals.klarnaReady = config.klarnaConfigured();
   res.locals.afterpayReady = config.afterpayConfigured();
   res.locals.adsenseId = config.adsense.publisherId;
+  res.locals.adsenseSlots = config.adsense.slots;
   res.locals.siteName = 'Tattoo Art Customs';
   res.locals.baseUrl = config.baseUrl;
   res.locals.googleVerification = config.googleSiteVerification;

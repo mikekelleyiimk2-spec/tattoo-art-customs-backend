@@ -97,7 +97,9 @@ router.get('/sitemap.xml', async (req, res) => {
       loc: `${base}/gallery?style=${encodeURIComponent(s)}`,
       changefreq: 'weekly', priority: '0.7', lastmod: new Date().toISOString().slice(0, 10),
     })),
-    { loc: `${base}/membership`, changefreq: 'weekly', priority: '0.7' },
+    // /membership itself is NOT listed: it 302s anonymous visitors to
+    // /login, and a sitemap entry that lands on a login wall is a
+    // low-value signal (Polish Day 2026-10-27). The public shops page is.
     { loc: `${base}/membership/shops`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/advertise`, changefreq: 'weekly', priority: '0.6' },
     { loc: `${base}/about`, changefreq: 'monthly', priority: '0.5' },
@@ -137,7 +139,9 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/cannadash`, changefreq: 'weekly', priority: '0.6' },
     { loc: `${base}/onemind`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/tester-hub`, changefreq: 'weekly', priority: '0.7' },
-    { loc: `${base}/folder`, changefreq: 'weekly', priority: '0.7' },
+    // /folder is NOT listed: it 302s straight to the Folder app's APK
+    // download — a sitemap URL that lands on a binary is a low-value
+    // signal (Polish Day 2026-10-27). The app itself is on /apps.
     { loc: `${base}/watch`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/guides`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/guides/aftercare`, changefreq: 'monthly', priority: '0.7' },
