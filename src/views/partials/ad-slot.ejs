@@ -1,9 +1,13 @@
-<%# Ad slot: shows the booked direct ad for this slot, else one of our own
-    house creatives (lib/houseAds.js, HOUSE_ADS=0 disables), else the
-    AdSense remnant unit, else nothing.
+<%# Ad slot chain: the booked direct ad for this slot wins; else the real
+    AdSense unit when this placement has one configured (publisher ID +
+    ADSENSE_SLOT_* — the units went live 2026-10-27, and a unit that never
+    renders can neither earn nor pass Google's review); else one of our own
+    house creatives (lib/houseAds.js, HOUSE_ADS=0 disables); else nothing.
     Expects `slot` (string) and `activeAds` (map) in scope. %>
 <% const _ad = (typeof activeAds !== 'undefined' && activeAds && activeAds[slot]) || null; %>
-<% const _house = (!_ad && typeof pickHouseAd !== 'undefined' && pickHouseAd)
+<% const _hasUnit = !_ad && typeof adsenseId !== 'undefined' && adsenseId
+  && typeof adsenseSlots !== 'undefined' && adsenseSlots && adsenseSlots[slot]; %>
+<% const _house = (!_ad && !_hasUnit && typeof pickHouseAd !== 'undefined' && pickHouseAd)
   ? pickHouseAd({ slot: slot, exclude: typeof exclude !== 'undefined' ? exclude : undefined }) : null; %>
 <% if (_ad) { %>
 <div class="ad-slot ad-direct" role="complementary" aria-label="Advertisement">
@@ -11,6 +15,8 @@
     <img src="<%= _ad.image_path %>" alt="Advertisement: <%= _ad.title %>" loading="lazy">
   </a>
 </div>
+<% } else if (_hasUnit) { %>
+<%- include('ad-unit', {slot: slot}) %>
 <% } else if (_house) { %>
 <%- include('house-ad', {creative: _house}) %>
 <% } else { %>

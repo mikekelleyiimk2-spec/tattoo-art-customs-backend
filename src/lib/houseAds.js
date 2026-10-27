@@ -1,6 +1,8 @@
 // House ads: OUR OWN ad creatives, shown in the existing ad slots when no
-// direct-sold ad is booked (see views/partials/ad-slot.ejs chain:
-// direct ad -> house ad -> AdSense remnant). Owner order 2026-10-14:
+// direct-sold ad is booked and the placement has no configured AdSense unit
+// (see views/partials/ad-slot.ejs chain: direct ad -> configured AdSense
+// unit -> house ad -> nothing; the unit step activated 2026-10-27 when the
+// six real units were created and their slot IDs set). Owner order 2026-10-14:
 // "Make sure everything that can have ADS has ADS; make sure everything
 // we sell is advertised" — AdSense is still in Google's review queue, so
 // the slots promote what actually earns us money: our products and our
