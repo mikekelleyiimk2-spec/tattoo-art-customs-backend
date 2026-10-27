@@ -18,7 +18,7 @@
 <% } %>
 <% if (sale) { %><div class="sale-banner" role="status"><%= t('gallery.sale_banner', {price: fmtMoney(regularPrice)}) %></div><% } %>
 
-<% if (!designs.length) { %><p><%= t('show.empty') %></p><% } %>
+<% if (!designs.length) { %><p><%= t('show.empty') %></p><p><a class="btn" href="/gallery"><%= t('landing.hearts.cta_gallery') %></a> <a class="btn" href="/top-loved"><%= t('landing.hearts.cta_toploved') %></a></p><% } %>
 <div class="grid">
   <% designs.forEach(function(d) { %>
   <article class="design-card">
