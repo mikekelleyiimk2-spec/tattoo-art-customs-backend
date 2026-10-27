@@ -182,10 +182,17 @@ async function runHttpTests(ok) {
     ok(page.text.includes('kid-safe page'), `${path} renders in the walled Little Inkers layout`);
     ok(page.text.includes(`href="${ownHome}"`), `${path} links onward to its own home (${ownHome})`);
     const badHrefs = ['href="/gallery"', 'href="/shop"', 'href="/merch"', 'href="/onemind/table"',
-      'href="/onemind"', 'href="/apps"', 'href="/advertise"', 'paypal.com/ncp/payment'];
+      'href="/onemind"', 'href="/apps"', 'href="/advertise"'];
     for (const bad of badHrefs) {
       ok(!page.text.includes(bad), `${path} carries no ${bad} (kid wall: no tattoo commerce, no way back)`);
     }
+    // The ONE money element the wall allows (owner money-sweeper pass,
+    // 2026-10-27): the grown-ups tip jar in the fineprint zone —
+    // parent-facing, exactly one, the shared mk4 partial. It is not
+    // tattoo commerce and not a door back into the shop; every
+    // commerce href above stays banned.
+    ok((page.text.match(/ncp\/payment\/WA9DS6J8ERSHW/g) || []).length === 1,
+      `${path} carries exactly one grown-ups tip jar (mk4)`);
     for (const p of rolodex.livePrograms()) {
       if (!p.kid_safe && p.link) {
         ok(!page.text.includes(p.link), `${path} never renders the non-kid-safe program ${p.name}`);

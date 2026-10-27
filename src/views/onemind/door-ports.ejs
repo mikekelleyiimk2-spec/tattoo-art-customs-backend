@@ -14,6 +14,23 @@
     box-shadow:0 0 24px rgba(250,204,21,.55); }
   .ports a.insert:hover { background:#fde047; }
   .ports .fine { margin-top:24px; font-size:13px; color:#6d6a9e; letter-spacing:1px; }
+  /* Penny-sweeper stack (shared partials, door-native dress): the
+     OneMind layout loads no site CSS, so the partials' classes are
+     styled here, in the door's own palette. Below the cabinet — the
+     ports themselves still carry no ads, ever; this is the door. */
+  .ports .sweep { max-width:640px; margin:34px auto 0; }
+  .ports .sweep .fineprint { font-size:12px; letter-spacing:1px; text-transform:uppercase; color:#6d6a9e; margin:.2rem 0; }
+  .ports .sweep a { color:#e8e6ff; }
+  .ports .sweep .house-ad { text-align:left; border:1px solid #3b2d8f; border-radius:12px; background:#0b0b22; padding:.9rem 1.1rem 1rem; margin:1.5rem 0; }
+  .ports .house-ad-label { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#a5b4fc; border:1px solid #3b2d8f; border-radius:999px; padding:2px 10px; margin-bottom:8px; }
+  .ports .house-ad-body { display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+  .ports .house-ad-text { display:flex; flex-direction:column; gap:3px; min-width:0; }
+  .ports .house-ad-headline { font-size:16px; color:#fff; }
+  .ports .house-ad-pitch { color:#c7cbe8; font-size:13px; }
+  .ports .house-ad-disclosure { font-size:11px; color:#6d6a9e; }
+  .ports .sweep a.house-ad-cta { background:#facc15; color:#1a1000; text-decoration:none; font-weight:900; letter-spacing:1px; padding:10px 22px; border-radius:999px; white-space:nowrap; }
+  .ports .sweep-jar { color:#17324a; }
+  .ports .sweep-jar a.btn { display:inline-block; background:#facc15; color:#1a1000; text-decoration:none; font-weight:900; letter-spacing:1px; padding:12px 30px; border-radius:999px; }
   @media (max-width:560px){ .ports h1{ font-size:42px; letter-spacing:6px; } }
 </style>
 <main class="ports">
@@ -29,5 +46,10 @@
       <div style="border-radius:10px;padding:20px 8px 14px;background:linear-gradient(160deg,#db2777,#8b5cf6);box-shadow:0 8px 22px rgba(0,0,0,.5);"><div style="font-size:30px;">🧩</div><div style="font-size:12px;letter-spacing:2px;margin-top:8px;">PUZZLERS</div></div>
     </div>
     <p class="fine">1UP · HI-SCORE · THE SHELF GROWS AS LICENSES LAND</p>
+  </div>
+  <div class="sweep">
+    <%- include('../partials/house-ad', {slot: 'door_ports'}) %>
+    <%- include('../partials/sponsor-slot') %>
+    <div class="sweep-jar"><%- include('../partials/tip-jar') %></div>
   </div>
 </main>

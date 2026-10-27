@@ -17,6 +17,21 @@
   .bench a.open { display:inline-block; background:#f59e0b; color:#1a1000; text-decoration:none;
     font-size:18px; font-weight:800; padding:14px 34px; border-radius:8px; }
   .bench a.open:hover { background:#fbbf24; }
+  /* Penny-sweeper stack (shared partials, door-native dress): the
+     OneMind layout loads no site CSS, so the partials' classes are
+     styled here, in the door's own palette. */
+  .bench .sweep .fineprint { font-size:12px; letter-spacing:1px; text-transform:uppercase; color:#b3a184; margin:.2rem 0; }
+  .bench .sweep a { color:#f3e9d8; }
+  .bench .sweep .house-ad { text-align:left; border:1px solid #3d3125; border-radius:10px; background:#221b16; padding:.9rem 1.1rem 1rem; margin:1.5rem 0; }
+  .bench .house-ad-label { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#b3a184; border:1px solid #3d3125; border-radius:999px; padding:2px 10px; margin-bottom:8px; }
+  .bench .house-ad-body { display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+  .bench .house-ad-text { display:flex; flex-direction:column; gap:3px; min-width:0; }
+  .bench .house-ad-headline { font-size:17px; }
+  .bench .house-ad-pitch { color:#c9b797; font-size:14px; }
+  .bench .house-ad-disclosure { font-size:12px; color:#b3a184; }
+  .bench .sweep a.house-ad-cta { background:#f59e0b; color:#1a1000; text-decoration:none; font-weight:800; padding:10px 22px; border-radius:8px; white-space:nowrap; }
+  .bench .sweep-jar { color:#17324a; }
+  .bench .sweep-jar a.btn { display:inline-block; background:#f59e0b; color:#1a1000; text-decoration:none; font-weight:800; padding:12px 30px; border-radius:8px; }
   @media (max-width:560px){ .bench h1{ font-size:36px; } }
 </style>
 <main class="bench">
@@ -31,4 +46,9 @@
     <div class="tool"><div class="chip" style="background:linear-gradient(140deg,#3b82f6,#93c5fd);">SP</div><h2>Service Plug</h2><p>The whole service, plugged in and kept alive: door, drawer and plumbing.</p><span class="price">$49</span></div>
   </div>
   <p class="cta"><a class="open" href="/onemind/tools">Open the full toolbox →</a></p>
+  <div class="sweep">
+    <%- include('../partials/house-ad', {slot: 'door_toolbox'}) %>
+    <%- include('../partials/sponsor-slot') %>
+    <div class="sweep-jar"><%- include('../partials/tip-jar') %></div>
+  </div>
 </main>
