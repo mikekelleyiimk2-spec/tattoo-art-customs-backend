@@ -109,6 +109,32 @@ async function runDbTests(ok) {
   const reseated = await onemind.seatMigratedAccounts();
   ok(reseated === 0, 'migration seating is idempotent (second pass seats none)');
 
+  // --- Sign in with Google: door #1 resolves BY EMAIL to the one
+  // seat (owner anchor, 2026-10-26). No OAuth client is configured
+  // in the test env, so the door itself stays closed (proven in
+  // the http phase); the resolve is what must be exact.
+  const googleSeat = require('../src/lib/googleSeat');
+  ok(googleSeat.enabled() === false, 'the google door is closed until the OAuth client is configured');
+  const memberRow = await db.get('SELECT * FROM users WHERE email = ?', ['class-member@test.local']);
+  const gExisting = await googleSeat.resolveGoogleSeat(
+    { email: 'Class-Member@Test.Local', email_verified: true, name: 'Class Member' });
+  ok(gExisting.ok === true && gExisting.created === false && gExisting.user.id === memberRow.id,
+    'a Google sign-in on an existing email resolves to the SAME seat (never a duplicate)');
+  const gNew = await googleSeat.resolveGoogleSeat(
+    { email: 'google-new@test.local', email_verified: true, name: 'Google New' });
+  ok(gNew.ok === true && gNew.created === true && gNew.user.role === 'customer'
+    && Number(gNew.user.email_verified) === 1,
+    'a Google sign-in on a new email creates the seat, verified');
+  const gAgain = await googleSeat.resolveGoogleSeat(
+    { email: 'google-new@test.local', email_verified: true, name: 'Google New' });
+  ok(gAgain.ok === true && gAgain.created === false && gAgain.user.id === gNew.user.id,
+    'the same Google email never mints a second seat');
+  const gUnverified = await googleSeat.resolveGoogleSeat(
+    { email: 'google-unverified@test.local', email_verified: false, name: 'Nope' });
+  ok(gUnverified.ok === false
+    && !(await db.get('SELECT id FROM users WHERE email = ?', ['google-unverified@test.local'])),
+    'an unverified Google email is refused and creates nothing');
+
   // --- Seat claims: the device-email link ---
   const claims = require('../src/lib/seatClaims');
   const kidClaim = await claims.startClaim('kidlink@test.local', 'poppy-ziggy-game');
@@ -195,6 +221,15 @@ async function runHttpTests(ok) {
   const signupPage = await call('GET', '/signup');
   ok(signupPage.status === 200 && /OneMind account/.test(signupPage.text),
     'the signup page states plainly that it creates a OneMind account');
+
+  // The Google door while unconfigured: closed honestly — the
+  // route 404s and NO page renders a dead button to it.
+  const gDoor = await call('GET', '/auth/google');
+  ok(gDoor.status === 404, 'the google door 404s while the OAuth client is unconfigured');
+  const gCb = await call('GET', '/auth/google/callback?code=x&state=y');
+  ok(gCb.status === 404, 'the google callback 404s while unconfigured');
+  ok(!/href="\/auth\/google"/.test(loginPage.text) && !/href="\/auth\/google"/.test(signupPage.text),
+    'no page renders a dead Google button while the door is closed');
 
   // A brand-new account through the real web door (private cookie jar
   // — the shared harness jar is not touched).

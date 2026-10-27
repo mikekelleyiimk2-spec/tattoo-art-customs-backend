@@ -65,6 +65,21 @@ Consequences, all binding on every surface:
    OneMind account; a section gated on the site account is gated
    on OneMind.* Sections found admitting a person without the
    canonical account are named in §10, never left silent.
+6. **Door #1 is the structure everyone already has: Google**
+   (owner anchor, 2026-10-26: *"see them Gmail over there — the
+   ones everyone has... that established structure on here... use
+   that."*). The OneMind sign-in's primary door is **Sign in with
+   Google** — the Gmail/Google identity people already carry. We
+   never make anyone invent a new identity to sit at the table:
+   a verified Google sign-in resolves **by email** to the one
+   seat (§4, door #1) — an existing account is the same seat with
+   its password untouched (one identity, two keys, never a
+   duplicate seat), and a new email is seated in the same tap.
+   Where no Google door exists on a surface, the device-email
+   link (§7) is the same thread: both mint/resolve the one seat
+   by email. Email + password remains a working key for every
+   account that has one — carry-over stands, nobody is forced
+   onto any single door.
 
 ## 2. What OneMind is (read this before building anything)
 
@@ -120,6 +135,33 @@ migration report for the existing population.
 ## 4. The doors (what an integrating surface calls)
 
 All doors resolve to the same account record.
+
+### Door #1 — Sign in with Google (the established structure)
+
+The primary door rides the identity everyone already has
+(§1.6). On the website: `GET /auth/google` sends the person to
+Google's own consent screen; `GET /auth/google/callback` takes
+the verified profile back. The resolve is **by email**
+(`src/lib/googleSeat.js`):
+
+- Google email matches an existing account → **the same seat**.
+  The account's password is untouched; Google is a second key to
+  the one identity, never a duplicate seat.
+- No account under that email → the seat is created in the same
+  tap (role `customer`, email verified by Google; passwordless —
+  an unusable random hash until the person sets a password via
+  `/forgot`). The website tie is written at the sitting, exactly
+  like every other door.
+- An email Google has **not** verified is refused outright.
+
+The door is config-gated and honest: it exists only when
+`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` are set (the owner's
+one-time OAuth client in Google Cloud Console, redirect URI
+`{BASE_URL}/auth/google/callback`). Unset → no button renders on
+the login/sign-up pages and both routes answer 404. A dead or
+fake Google door is never shipped. Surfaces that gain a native
+Google door later follow the same rule: verify with Google,
+resolve by email to the one seat.
 
 ### App door — `POST /api/onemind/signin`
 
@@ -347,7 +389,9 @@ gated adult moment, never against the kid play space.
 
 1. Carry the one pop (§8) with its persisted client state.
 2. The pop's tap — and any sign-in screen — runs the contract
-   doors: the device-email link (§7) as the front door,
+   doors: **Sign in with Google first where the surface offers it
+   (door #1, §4 — the established structure)**, the device-email
+   link (§7) as the same thread where no Google door exists,
    `POST /api/onemind/signin` (§4) where a password form is
    offered. No local account store, no local password handling
    beyond passing credentials to the door.
@@ -366,7 +410,16 @@ every account, the existing population migrated with credentials
 untouched (§3.1), the tie registry with the website as logged
 surface #1, the registry-refusing doors, the seat summary, the
 device-email link (claims + verify + status), and the site copy
-stating the account is the OneMind account. **Not yet true:** the
+stating the account is the OneMind account. **Sign in with Google
+(door #1) is built** — consent redirect, callback, resolve-by-email
+to the same seat, honest 404 + no rendered button while
+unconfigured — **and waits on exactly one owner step**: create
+the OAuth client (Web application) in Google Cloud Console →
+APIs & Services → Credentials with authorized redirect URI
+`https://tattoo-art-customs.onrender.com/auth/google/callback`,
+then set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` on the
+Render service. The moment those land, the door opens on the
+login and sign-up pages with no further code. **Not yet true:** the
 apps have not integrated — per-app sign-in screens and one-pop
 behavior ride their update trains (§9), and the OneMind app's
 first-open recognition greeting rides the next OneMind build.

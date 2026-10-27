@@ -13,6 +13,7 @@ const router = express.Router();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const { ensureReferralCode, recordSignupReferral } = require('../lib/referrals');
 const onemind = require('../lib/onemind');
+const googleSeat = require('../lib/googleSeat');
 const { screenText } = require('../lib/screening');
 const { enforceSessionCap } = require('../lib/sessionLimits');
 
@@ -24,6 +25,7 @@ router.get('/signup', async (req, res) => {
   res.render('auth/signup', {
     title: 'Create account — Tattoo Art Customs', metaDescription: 'Create your Tattoo Art Customs account.',
     referralCode: String(ref || req.cookies?.ref_code || '').slice(0, 16),
+    googleSignin: googleSeat.enabled(),
   });
 });
 router.post('/signup', authLimiter, checkHoneypot, async (req, res) => {
@@ -81,7 +83,62 @@ router.post('/signup', authLimiter, checkHoneypot, async (req, res) => {
 
 router.get('/login', (req, res) => res.render('auth/login', {
   title: 'Log in — Tattoo Art Customs', metaDescription: 'Log in to Tattoo Art Customs.',
+  googleSignin: googleSeat.enabled(),
 }));
+
+// --- Sign in with Google: door #1 of the OneMind log ---
+// The established structure everyone already carries (their
+// Google/Gmail). A verified Google email resolves BY EMAIL to the
+// one seat (lib/googleSeat): an existing account is the same seat
+// with its password untouched; a new email is seated in one tap.
+// Until the owner's OAuth client exists (config unset), the door
+// is closed: no button renders and these routes 404 — never faked.
+router.get('/auth/google', (req, res) => {
+  if (!googleSeat.enabled()) {
+    return res.status(404).render('error', {
+      title: 'Not available', message: 'Sign in with Google is not available right now — use your email and password below.',
+    });
+  }
+  const state = crypto.randomBytes(16).toString('hex');
+  req.session.googleState = state;
+  res.redirect(googleSeat.authUrl(state));
+});
+router.get('/auth/google/callback', async (req, res) => {
+  if (!googleSeat.enabled()) {
+    return res.status(404).render('error', {
+      title: 'Not available', message: 'Sign in with Google is not available right now — use your email and password below.',
+    });
+  }
+  try {
+    const code = String(req.query.code || '');
+    const state = String(req.query.state || '');
+    const expected = req.session.googleState;
+    delete req.session.googleState;
+    if (!code || !state || !expected || state !== expected) throw new Error('state_mismatch');
+    const profile = await googleSeat.exchangeCode(code);
+    const r = await googleSeat.resolveGoogleSeat(profile);
+    if (!r.ok || !r.user) throw new Error(r.error || 'resolve_failed');
+    req.session.userId = r.user.id;
+    // OneMind: the Google door seats the same website tie as every
+    // other door — the moment of the sitting is what counts.
+    await onemind.seatQuietly(r.user.id, 'website');
+    await enforceSessionCap(req);
+    if (r.created) {
+      // New seat via Google gets the same opening-raffle entry a
+      // web signup gets (idempotent, best effort).
+      try { await require('../lib/founding').enterRaffleOnSignup(r.user.id); }
+      catch (e) { console.error('raffle entry on google signup failed:', e.message); }
+      req.session.flash = 'Welcome to Tattoo Art Customs — your OneMind account is ready.';
+    }
+    const dest = req.session.returnTo || '/account';
+    delete req.session.returnTo;
+    res.redirect(dest);
+  } catch (e) {
+    console.error('google sign-in failed:', e.message);
+    req.session.flash = 'Google sign-in did not complete — try again, or use your email and password.';
+    res.redirect('/login');
+  }
+});
 router.post('/login', authLimiter, checkHoneypot, async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const password = String(req.body.password || '');

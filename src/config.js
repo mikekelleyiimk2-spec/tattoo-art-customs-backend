@@ -27,6 +27,15 @@ const config = {
   port: parseInt(process.env.PORT || '3000', 10),
   baseUrl: (process.env.BASE_URL || 'http://localhost:3000').replace(/\/$/, ''),
   googleSiteVerification: process.env.GOOGLE_SITE_VERIFICATION || '',
+  // Sign in with Google — door #1 of the OneMind log (owner anchor,
+  // 2026-10-26: ride the established structure everyone already has).
+  // Both values come from the one OAuth client the owner creates in
+  // Google Cloud Console. Until both are set the door is CLOSED —
+  // the button does not render and /auth/google 404s (lib/googleSeat).
+  googleSignin: {
+    clientId: process.env.GOOGLE_CLIENT_ID || '',
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+  },
   playStoreUrl: process.env.PLAY_STORE_URL || '',
   playStoreProUrl: process.env.PLAY_STORE_URL_PRO || '',
   appStoreUrl: process.env.APP_STORE_URL || '',
