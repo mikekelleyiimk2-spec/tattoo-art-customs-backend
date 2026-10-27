@@ -13,6 +13,8 @@ const paypal = require('../lib/paypal');
 const guestCheckout = require('../lib/guestCheckout');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { resolveStoredPath } = require('../lib/storage');
+const testerPool = require('../lib/testerPool');
+const fillCycle = require('../lib/fillCycle');
 
 // app key -> file config. Keys match the `app` allowlist on
 // POST /api/muse/upload-sideload.
@@ -255,18 +257,70 @@ function tacAndroidProRouter() {
   return router;
 }
 
-// ---- Tester Hub (free sideload, canonical public URL) ----
+// ---- Tester Hub (canonical public URL) ----
 // Owner order 2026-10-26: ONE memorable address every surface can
 // link — "Wanna be a tester? Here, join our tester app." The APK
 // bytes live in the app-updates store (uploaded via
 // POST /api/muse/upload-sideload, app=com.usefulappz.testerhub) and
-// are served by GET /api/apps/com.usefulappz.testerhub/apk; this
-// route is the stable front door that redirects to them.
+// are served by GET /api/apps/com.usefulappz.testerhub/apk.
+//
+// Fix-queue (everything audit 2026-10-26): the address itself is a
+// real LANDING PAGE now, not a redirect stub — the printed URL on
+// every social post was a closed door (the dopamine landing sat
+// stranded at /testers). GET / renders the landing: tester-side
+// face only, live pool count + light board from the same books the
+// Hub reads, the ONE action (pool signup) wired to the pool machine
+// (POST /join here, or POST /api/testers/signup from the page's JS —
+// both land in testerPool.joinPool, source 'web'). The APK stays
+// one tap away at GET /download, which keeps the old redirect.
 function testerHubRouter() {
   const router = express.Router();
-  router.get('/', (req, res) => {
+
+  router.get('/', async (req, res) => {
+    let poolCount = 0;
+    let board = { founding: true, tester: [], new_apps_today: 0 };
+    let apps = [];
+    try { poolCount = await testerPool.poolCount(); } catch (e) { /* page renders regardless */ }
+    try { board = await fillCycle.lightBoard(8); } catch (e) { /* founding state stands */ }
+    try { apps = (await testerPool.listApps()).slice(0, 6); } catch (e) { /* feed is a bonus, not the door */ }
+    const errCode = ['gmail', 'name', 'other'].includes(req.query.error) ? req.query.error : null;
+    res.render('site/tester-hub', {
+      title: 'Become a Tester — First in Line | Tester Hub by Useful Appz',
+      metaDescription: 'BECOME A TESTER — FIRST IN LINE TO TRY THE NEWEST APPS. One signup puts you first in line for every new app in the Tester Hub.',
+      poolCount, board, apps,
+      joined: req.query.joined === '1',
+      joinError: errCode,
+    });
+  });
+
+  // The old front-door behavior, kept as the download button's
+  // target: one tap from the landing to the APK bytes.
+  router.get('/download', (req, res) => {
     res.redirect(302, '/api/apps/com.usefulappz.testerhub/apk');
   });
+
+  // The ONE action, no-JS path: a plain form post into the same
+  // pool machine the Hub app uses (testerPool.joinPool). The page's
+  // JS enhancement posts to POST /api/testers/signup instead; both
+  // pipes end at the same table, so the wire is one wire.
+  router.post('/join', formLimiter, checkHoneypot, async (req, res) => {
+    try {
+      const r = await testerPool.joinPool({
+        name: req.body && req.body.name,
+        gmail: req.body && req.body.gmail,
+        source: 'web',
+      });
+      if (!r.ok) {
+        const code = /gmail/i.test(r.error || '') ? 'gmail' : (/name/i.test(r.error || '') ? 'name' : 'other');
+        return res.redirect(`/tester-hub?error=${code}#join`);
+      }
+      return res.redirect('/tester-hub?joined=1#join');
+    } catch (e) {
+      console.error('[tester-hub/join] failed:', e.message);
+      return res.redirect('/tester-hub?error=other#join');
+    }
+  });
+
   return router;
 }
 
