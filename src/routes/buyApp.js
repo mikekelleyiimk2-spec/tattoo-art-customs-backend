@@ -178,6 +178,11 @@ function buyAppRouter() {
           order, appName: app.name,
           downloadPageUrl: `${config.baseUrl}${downloadPath(req, order)}`,
         });
+        // Guest bridge (owner ruling 2026-10-26, contract §10):
+        // sideload buyers stay guests until this app is live on the
+        // store — record the pending tie (claims on buy only once
+        // the app has gone live). Best-effort; never breaks the flow.
+        await guestCheckout.bridgeGuestPurchase(order, app.package);
       }
       req.session.flash = 'Payment complete — your app download is ready.';
       res.redirect(downloadPath(req, order));

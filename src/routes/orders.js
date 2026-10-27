@@ -491,6 +491,14 @@ router.get('/approve/:orderId', async (req, res) => {
     const fresh = await db.get('SELECT * FROM orders WHERE id = ?', [order.id]);
     await recordSaleCommissions(fresh);
     try { await require('../lib/holidayRaffle').awardPurchaseEntries(fresh); } catch (e) { console.error('holiday raffle purchase entries failed:', e.message); }
+    // Guest bridge (owner ruling 2026-10-26, contract §10): a
+    // completed guest DESIGN buy fires the §7 claim for the delivery
+    // email — the verify tap seats the buyer and attaches the
+    // order. Best-effort; never breaks the buyer's flow.
+    if (guestOrder) {
+      try { await require('../lib/guestCheckout').bridgeGuestPurchase(fresh); }
+      catch (e) { console.error('guest design bridge failed:', e.message); }
+    }
     // Buy-for-client: land the art cost on a client bill for the shop to
     // collect from the client (idempotent per order).
     if (fresh.client_email) {

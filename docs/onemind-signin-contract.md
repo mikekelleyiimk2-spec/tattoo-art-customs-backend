@@ -65,6 +65,21 @@ Consequences, all binding on every surface:
    OneMind account; a section gated on the site account is gated
    on OneMind.* Sections found admitting a person without the
    canonical account are named in §10, never left silent.
+   **Settled commerce exception (owner ruling 2026-10-26 19:21,
+   refined 19:23 — this paragraph is part of the rule, not a
+   loophole in it):** the two guest checkout lanes named in §10
+   stay open. A guest may *buy* without the log; no-entry governs
+   member areas, the parent gate, seats, and everything internal.
+   The exception is temporary by construction — **the bridge**:
+   a completed guest DESIGN purchase fires the §7 claim for the
+   delivery email immediately (the verify tap seats the buyer and
+   attaches the order to the seat); a completed guest PAID-APP
+   (sideload) purchase does NOT claim on buy — while the app is
+   sideload-only its buyers stay guests like everyone else, the
+   purchase records a pending tie, and the ties fire (one claim
+   email per buyer) when that app goes live on the store. Either
+   way, commerce keeps its door and nobody stays a guest forever
+   by accident.
 6. **Door #1 is the structure everyone already has: Google**
    (owner anchor, 2026-10-26: *"see them Gmail over there — the
    ones everyone has... that established structure on here... use
@@ -427,34 +442,59 @@ Until an app integrates, its users' ties are written when they
 sign in on the web doors or complete a device-email link — the
 seat is the same when the app catches up.
 
-**Found guest lanes (no-entry audit, 2026-10-26 — named, not
-silent; closing them is an owner call because both are live money
-doors built deliberately on 2026-10-15):**
+**Guest lanes — SETTLED (owner ruling 2026-10-26 19:21,
+refined 19:23; no longer an open question).** The no-entry audit
+found the two guest checkout lanes (live money doors built
+deliberately on 2026-10-15). The owner ruled: **"Keep them
+bridged — guest buys, the claim ties their seat after"** — the
+lanes stay, no-entry governs member areas and seats, and the
+bridge (§1.5) is automatic. The lanes differ:
 
-1. **Guest design checkout** — `src/routes/orders.js`
+1. **Guest design checkout — bridges on buy.** `src/routes/orders.js`
    (`POST /orders/buy`) + `src/lib/guestCheckout.js`: a logged-out
-   visitor buys a premade design with only a delivery email; the
-   order carries `guest_email` and no buyer account, and the
-   download travels by emailed token.
-2. **Guest paid-app checkout** — `src/routes/buyApp.js`
-   (`/buy-app/:slug`), `src/routes/sideload.js`
-   (`/tac-android-pro`), and `src/routes/iosApp.js` (`/ios-app`),
-   all on `src/lib/guestCheckout.js`: a logged-out visitor buys a
-   sideload app with only a delivery email, same guest-order
-   shape.
+   visitor buys a design with only a delivery email; the order
+   carries `guest_email` and no buyer account, and the download
+   travels by emailed token. The moment the purchase completes,
+   `bridgeGuestPurchase` fires a §7 claim for the delivery email
+   (`claim_source` 'guest-purchase', `seatClaims
+   .startPurchaseClaim`): exactly one verify email — "your
+   purchase is tied to your OneMind seat; one tap finishes it" —
+   deduped against any pending or recent claim for that email, so
+   repeat buys never re-mail inside the window. The tap signs the
+   buyer in (or creates the account — an existing account under
+   that email is the same seat, never a duplicate) **and attaches
+   the order**: every paid guest order under that email gains the
+   account reference (`orders.buyer_id`), and the seat summary
+   reflects the purchases.
+2. **Guest paid-app checkout — bridges at store go-live.**
+   `src/routes/buyApp.js` (`/buy-app/:slug`), `src/routes
+   /sideload.js` (`/tac-android-pro`), and `src/routes/iosApp.js`
+   (`/ios-app`), all on `src/lib/guestCheckout.js`: a logged-out
+   visitor buys a sideload app with only a delivery email, same
+   guest-order shape. **No claim fires on buy.** While the app is
+   sideload-only its buyers stay guests like everyone else; the
+   completed purchase records a **pending tie** instead
+   (`guest_pending_ties`, migration 113: buyer email x app x
+   order; `lib/pendingTies`). When the app goes live on the Play
+   store, the pending ties for that app fire — one claim email
+   per buyer (the same guest-purchase claim as the design lane;
+   its tap seats the buyer and attaches the purchases). **The
+   go-live trigger needs no new code:** `POST
+   /api/onemind/pending-ties/fire` with the Muse service token
+   and `{ "app_key": "..." }` flips the app live
+   (`app_store_live`) and drains its queue; `GET
+   /api/onemind/pending-ties` shows the book (counts + live
+   flags). After the flip, new guest buys of that app bridge on
+   buy exactly like designs. `app_key` is the checkout flow's app
+   identifier: the buy-app package name (e.g.
+   `com.usefulappz.odometer`), `tac_android_pro`, or `ios_app`.
 3. **Observed, lesser: tester pool signup** — `src/routes/site.js`
    (`POST /testers`): an email-only roster signup
    (`tester_signups`). It grants no member area, purchase, or
    account access, but a person enters the pool under an email
-   alone.
-
-The bridge for all three already exists at the identity layer: a
-guest/token email is exactly what a §7 device-email claim seats,
-so a guest buyer can be claimed into their seat with one tap.
-Re-keying existing guest orders to seats, and closing the guest
-lanes behind the log, are named follow-ups awaiting the owner's
-call — they are **not** done in the foundation build, and they
-are not hidden.
+   alone. Unchanged by the ruling: it holds no door, and when a
+   person on the roster takes a seat, the §7 claim under the same
+   email is the bridge.
 
 **Partner-login audit (2026-10-26, §1.4): clean, with rosters
 named.** Every password check in the codebase runs against the

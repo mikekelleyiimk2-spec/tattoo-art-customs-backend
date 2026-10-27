@@ -226,6 +226,10 @@ function tacAndroidProRouter() {
           order, appName: 'Tattoo Art Customs Pro',
           downloadPageUrl: `${config.baseUrl}${downloadPath(order)}`,
         });
+        // Guest bridge (owner ruling 2026-10-26, contract §10):
+        // sideload buyers stay guests until the app is live on the
+        // store — record the pending tie. Best-effort.
+        await guestCheckout.bridgeGuestPurchase(order, GUEST_SCOPE);
       }
       req.session.flash = 'Payment complete — your Pro APK download is ready.';
       res.redirect(downloadPath(order));

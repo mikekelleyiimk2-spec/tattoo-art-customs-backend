@@ -554,6 +554,7 @@ async function main() {
   await require('./apiLane').runDbTests(ok); // AI Master Button API lane (worker, adapters, grammar)
   await require('./messenger').runDbTests(ok); // AI-to-AI Messenger slice 1 (worker routing rule: recipient seat, no failover)
   await require('./onemindIdentity').runDbTests(ok); // OneMind identity foundation (migration 110: onemind_id backfill + tie registry + surface refusals)
+  await require('./guestBridge').runDbTests(ok); // guest bridge (design claims on buy; sideload pending ties fire at store go-live)
   await require('./moneyWatch').runDbTests(ok); // Money Watch watcher (baseline, exactly-once, kinds, CT windows)
 
   // Mail retry (unit-level, no live SMTP): a transient failure is retried
@@ -1555,6 +1556,7 @@ async function main() {
   await require('./merchCatalog').runHttpTests(ok, req, areq); // merch catalog (POD + affiliate)
   await require('./guestCheckout').runHttpTests(ok, req, areq); // guest design checkout (no account wall)
   await require('./guestAppCheckout').runHttpTests(ok, req, areq); // guest paid-app checkout (buy-app + TAC Pro + ios-app, no account wall)
+  await require('./guestBridge').runHttpTests(ok); // guest bridge route wiring (design claim row; sideload pending tie; go-live endpoint)
   await require('./transfers').runHttpTests(ok, req); // [transfers] customer<->shop art pipeline
   await require('./appUpdates').runHttpTests(ok); // app auto-update service
   await require('./apiLane').runHttpTests(ok); // AI Master Button API lane enqueue contract

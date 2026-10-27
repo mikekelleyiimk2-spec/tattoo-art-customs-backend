@@ -22,9 +22,11 @@
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const db = require('../db');
+const config = require('../config');
 const surfaces = require('./surfaces');
 const onemind = require('./onemind');
 const { ensureReferralCode } = require('./referrals');
+const { sendMail } = require('./mail');
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const LINK_TTL_MS = 60 * 60 * 1000; // 1 hour, same as password resets
@@ -42,8 +44,10 @@ function secretMatches(raw, storedHash) {
 // Creates the pending claim. Returns the raw token + claim secret
 // ONCE, for the caller (the route emails the token; the initiating
 // device keeps the secret to poll claimStatus). Never reveals
-// whether the email already holds an account.
-async function startClaim(emailRaw, surfaceId) {
+// whether the email already holds an account. claimSource records
+// honestly how the claim came to be ('device-email' for the §7
+// link; 'guest-purchase' for the guest bridge, §10).
+async function startClaim(emailRaw, surfaceId, claimSource = 'device-email') {
   if (!surfaces.isTieable(surfaceId)) {
     return { ok: false, error: 'surface_not_tieable', surface: surfaceId || null };
   }
@@ -64,13 +68,28 @@ async function startClaim(emailRaw, surfaceId) {
     email, surface: surfaceId,
     token_hash: hashToken(token),
     claim_secret_hash: hashToken(claimSecret),
-    status: 'pending', claim_source: 'device-email',
+    status: 'pending', claim_source: claimSource,
     user_id: null, created_at: now, expires_at: now + LINK_TTL_MS, verified_at: null,
   });
   return {
     ok: true, claim_id: id, claim_secret: claimSecret,
     expires_at: now + LINK_TTL_MS, token, email, surface: surfaceId,
   };
+}
+
+// Attach a seated buyer's guest purchases to their seat (the guest
+// bridge, owner ruling 2026-10-26): every PAID order still carrying
+// the guest sentinel (buyer_id '') under this delivery email gains
+// the account reference. guest_email stays on the row — it is the
+// honest record of how the order began. Returns how many attached.
+async function linkGuestOrders(userId, email) {
+  const rows = await db.all(
+    "SELECT id FROM orders WHERE guest_email = ? AND buyer_id = '' AND status = 'paid'",
+    [String(email || '').trim().toLowerCase()]);
+  for (const r of rows) {
+    await db.update('orders', r.id, { buyer_id: userId });
+  }
+  return rows.length;
 }
 
 // The tap. Activates the seat and writes the tie. Single-use.
@@ -113,8 +132,74 @@ async function verifyClaim(rawToken) {
   await db.update('seat_claims', claim.id, {
     status: 'verified', verified_at: now, user_id: user.id,
   });
+  // A purchase claim's tap does double duty (owner ruling
+  // 2026-10-26): it signs the buyer in AND attaches their guest
+  // purchases to the seat, so the seat summary recognizes what
+  // they already hold.
+  let linkedOrders = 0;
+  if (claim.claim_source === 'guest-purchase') {
+    linkedOrders = await linkGuestOrders(user.id, claim.email);
+  }
   const seat = await onemind.seatSummary(user);
-  return { ok: true, user, created_account: createdAccount, seat, tie: tie.tie };
+  return {
+    ok: true, user, created_account: createdAccount, seat, tie: tie.tie,
+    linked_orders: linkedOrders,
+  };
+}
+
+// The guest bridge's claim (owner ruling 2026-10-26 19:21, contract
+// §10): a completed guest purchase fires ONE claim for the buyer's
+// delivery email on the website surface, framed as what it is —
+// "your purchase is tied to your seat; one tap finishes it." The
+// tap signs the buyer in (or creates the account) and attaches the
+// order (see verifyClaim). Dedupe is part of the ruling: one claim
+// per purchase event, and never a re-mail on repeat buys inside a
+// short window — if a claim for this email on the website is
+// already pending, or one was started within the link TTL, this is
+// a no-op. Never throws into the checkout path: payment is already
+// captured when this runs, so failures are logged, not surfaced.
+async function startPurchaseClaim(emailRaw) {
+  const email = String(emailRaw || '').trim().toLowerCase().slice(0, 160);
+  if (!EMAIL_RE.test(email)) return { ok: false, error: 'invalid_email', mailed: false };
+  try {
+    const pending = await db.get(
+      "SELECT id FROM seat_claims WHERE email = ? AND surface = 'website' AND status = 'pending'",
+      [email]);
+    if (pending) return { ok: true, mailed: false, skipped: 'pending_claim', claim_id: pending.id };
+    const recent = await db.get(
+      "SELECT id FROM seat_claims WHERE email = ? AND surface = 'website' AND created_at > ? ORDER BY created_at DESC",
+      [email, db.now() - LINK_TTL_MS]);
+    if (recent) return { ok: true, mailed: false, skipped: 'recent_claim', claim_id: recent.id };
+    const claim = await startClaim(email, 'website', 'guest-purchase');
+    if (!claim.ok) return { ok: false, error: claim.error, mailed: false };
+    const link = `${config.baseUrl}/api/onemind/link/verify?token=${claim.token}`;
+    try {
+      await sendMail({
+        to: email,
+        subject: 'Your purchase is tied to your OneMind seat — one tap finishes it',
+        text: [
+          'Thanks for your purchase.',
+          '',
+          'Your purchase is tied to your OneMind seat — one tap finishes it:',
+          'the tap signs you in (or creates your account if you\u2019re new) and',
+          'attaches your purchase to your seat, so it\u2019s there whenever you',
+          'open anything Useful Appz makes.',
+          '',
+          link,
+          '',
+          'The link works once and expires in 1 hour. If you didn\u2019t buy',
+          'anything from Tattoo Art Customs, ignore this email.',
+        ].join('\n'),
+      });
+      return { ok: true, mailed: true, claim_id: claim.claim_id };
+    } catch (e) {
+      console.error('guest bridge claim email failed:', e.message);
+      return { ok: true, mailed: false, skipped: 'mail_failed', claim_id: claim.claim_id };
+    }
+  } catch (e) {
+    console.error('guest bridge claim failed:', e.message);
+    return { ok: false, error: 'bridge_failed', mailed: false };
+  }
 }
 
 // The initiating device polls this with the claim secret it was
@@ -139,4 +224,7 @@ async function claimStatus(claimId, claimSecret) {
   return { ok: true, status: claim.status === 'pending' ? 'pending' : 'expired' };
 }
 
-module.exports = { startClaim, verifyClaim, claimStatus, hashToken, LINK_TTL_MS };
+module.exports = {
+  startClaim, verifyClaim, claimStatus, hashToken, LINK_TTL_MS,
+  startPurchaseClaim, linkGuestOrders,
+};

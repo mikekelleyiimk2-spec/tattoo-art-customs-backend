@@ -12,6 +12,8 @@
 // is never served on a public URL. Member flows are untouched.
 const updateTokens = require('./updateTokens');
 const { sendMail } = require('./mail');
+const seatClaims = require('./seatClaims');
+const pendingTies = require('./pendingTies');
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
@@ -70,4 +72,31 @@ async function sendGuestAppReceipt({ order, appName, downloadPageUrl }) {
   }
 }
 
-module.exports = { isGuestOrder, parseGuestEmail, guestToken, verifyGuestToken, sendGuestAppReceipt };
+// The guest bridge (owner ruling 2026-10-26 19:21 + refinement
+// 19:23, contract §10). Called by the checkout routes the moment a
+// guest purchase completes. The lanes differ on purpose:
+//   - no appKey (a DESIGN purchase): the claim fires now — one
+//     verify email to the delivery address; the tap seats the
+//     buyer and attaches the order (seatClaims.startPurchaseClaim).
+//   - appKey (a PAID-APP / sideload purchase): while the app is
+//     sideload-only the buyer stays a guest like everyone else —
+//     a pending tie is recorded and NO claim is mailed; the ties
+//     fire when the app goes live on the store (lib/pendingTies).
+// Best-effort by contract: payment is already captured, so this
+// never throws into the buyer's flow.
+async function bridgeGuestPurchase(order, appKey) {
+  if (!isGuestOrder(order)) return { ok: false, error: 'not_a_guest_order' };
+  try {
+    if (appKey) return await pendingTies.bridgeAppPurchase(order, appKey);
+    const res = await seatClaims.startPurchaseClaim(order.guest_email);
+    return { ok: res.ok, mode: 'claim', ...res };
+  } catch (e) {
+    console.error('guest bridge failed:', e.message);
+    return { ok: false, error: 'bridge_failed' };
+  }
+}
+
+module.exports = {
+  isGuestOrder, parseGuestEmail, guestToken, verifyGuestToken, sendGuestAppReceipt,
+  bridgeGuestPurchase,
+};

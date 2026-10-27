@@ -39,6 +39,7 @@ const db = require('../db');
 const config = require('../config');
 const onemind = require('../lib/onemind');
 const seatClaims = require('../lib/seatClaims');
+const pendingTies = require('../lib/pendingTies');
 const surfaces = require('../lib/surfaces');
 const { sendMail } = require('../lib/mail');
 const { authLimiter } = require('../middleware/rateLimit');
@@ -170,6 +171,7 @@ router.get('/onemind/link/verify', async (req, res) => {
   if (req.query.format === 'json') {
     return res.json({
       ok: true, created_account: result.created_account,
+      linked_orders: result.linked_orders || 0,
       ...result.seat, api_token: result.user.api_token,
     });
   }
@@ -191,6 +193,29 @@ router.get('/onemind/ties', async (req, res) => {
   if (!serviceAuthorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
   const book = await onemind.tieBook();
   return res.json({ ok: true, ...book });
+});
+
+// --- Pending ties: the sideload guest bridge (migration 113) ---
+// Guest paid-app purchases record pending ties while the app is
+// sideload-only (contract §10). The go-live trigger is a service
+// call, not a build: POST /onemind/pending-ties/fire {app_key}
+// flips the app live and fires one bridge claim per waiting buyer;
+// from then on that app's guest buys claim on buy, like designs.
+// GET returns the aggregate book (counts + live flags, no emails).
+router.get('/onemind/pending-ties', async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!serviceAuthorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  const book = await pendingTies.pendingTieBook();
+  return res.json({ ok: true, ...book });
+});
+
+router.post('/onemind/pending-ties/fire', express.json(), async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!serviceAuthorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  const appKey = String((req.body && req.body.app_key) || '').trim().slice(0, 128);
+  if (!appKey) return res.status(400).json({ ok: false, error: 'app_key required' });
+  const result = await pendingTies.firePendingTies(appKey);
+  return res.json({ ok: true, ...result });
 });
 
 module.exports = router;

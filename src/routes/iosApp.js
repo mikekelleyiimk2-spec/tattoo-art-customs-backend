@@ -134,6 +134,10 @@ router.get('/approve/:orderId', async (req, res) => {
         order, appName: 'Tattoo Art Customs — iOS App',
         downloadPageUrl: `${config.baseUrl}${downloadPath(order)}`,
       });
+      // Guest bridge (owner ruling 2026-10-26, contract §10):
+      // sideload buyers stay guests until the app is live on the
+      // store — record the pending tie. Best-effort.
+      await guestCheckout.bridgeGuestPurchase(order, GUEST_SCOPE);
     } else {
       // Pro-app perk registry (owner directive 2026-10-05): the iOS sideload
       // buyer is known here (signed-in capture), so record the verified Pro

@@ -171,9 +171,18 @@ async function tiesFor(userId) {
 
 // The recognition payload for one account: who the seat is, when
 // they first sat down ANYWHERE, and every surface holding their tie.
+// Purchases ride along (the guest bridge, 2026-10-26): a buyer
+// whose guest orders were claimed into this seat sees them
+// reflected here — recognition covers what they hold, not just
+// where they sat.
 async function seatSummary(user) {
   const onemindId = await ensureOneMindId(user);
   const ties = await tiesFor(user.id);
+  const purchaseCountRow = await db.get(
+    "SELECT COUNT(*) AS n FROM orders WHERE buyer_id = ? AND status = 'paid'", [user.id]);
+  const purchaseRows = await db.all(
+    `SELECT id, order_type, amount_cents, paid_at FROM orders
+     WHERE buyer_id = ? AND status = 'paid' ORDER BY paid_at DESC LIMIT 25`, [user.id]);
   return {
     user_id: user.id,
     onemind_id: onemindId,
@@ -185,6 +194,13 @@ async function seatSummary(user) {
     tie_count: ties.length,
     surfaces: ties.map((t) => t.surface),
     ties,
+    purchase_count: Number((purchaseCountRow && purchaseCountRow.n) || 0),
+    purchases: purchaseRows.map((o) => ({
+      order_id: o.id,
+      order_type: o.order_type,
+      amount_cents: Number(o.amount_cents || 0),
+      paid_at: o.paid_at == null ? null : Number(o.paid_at),
+    })),
   };
 }
 
