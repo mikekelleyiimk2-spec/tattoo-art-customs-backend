@@ -105,7 +105,14 @@ async function runHttpTests(ok, req) {
   // named-not-built, the settled $9.99/mo price, and honest
   // closed-testing status.
   console.log('onemind page (seat board renders the codex truth):');
-  const page = await req('GET', '/onemind');
+  // Anonymous fetch on purpose: since the owner ruling 2026-10-27
+  // 08:57 CDT a seated session hitting /onemind goes straight to
+  // /onemind/table, and the shared req jar holds a session by this
+  // point in the run. The hub — sign-in door, seat board, price — is
+  // the UNSEATED face; that is the surface whose board must tell the
+  // codex truth. (Seated-redirect coverage lives in test/onemindWeb.js.)
+  const pageRes = await fetch('http://localhost:4137/onemind', { redirect: 'manual' });
+  const page = { status: pageRes.status, text: await pageRes.text() };
   ok(page.status === 200, '/onemind serves 200');
   ok(/All Your AIs, One Team/.test(page.text), '/onemind carries the OneMind name line');
   ok(page.text.includes('$9.99/mo'), '/onemind states the settled OneMind Team price $9.99/mo');

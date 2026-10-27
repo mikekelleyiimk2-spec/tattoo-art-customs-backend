@@ -18,6 +18,8 @@
 // STRUCTURE (owner's pages):
 //   Page 1 — GET /onemind: sign up / sign in to OneMind, the seat
 //     board (live from the Codex), the price, and the door to page 2.
+//     A seated session skips page 1 entirely — straight to page 2
+//     (owner ruling 2026-10-27 08:57 CDT).
 //   Page 2 — GET /onemind/table: "the table" — the familiar browsers
 //     pitch, every plug from the Codex, and every branch as a lit
 //     card with its own link.
@@ -131,6 +133,16 @@ router.get('/', (req, res, next) => {
 
 // --- Page 1: /onemind — sign up to OneMind ---------------------------
 router.get('/onemind', async (req, res) => {
+  // Owner ruling 2026-10-27 08:57 CDT ("web sign-in goes straight to
+  // the table too"): a SEATED session never stops at the hub — it goes
+  // straight to page 2. "Seated" is the session the loadUser middleware
+  // resolved (res.locals.currentUser, src/middleware/auth.js): every
+  // sign-in path (signup, login, Google callback) runs
+  // onemind.seatQuietly(user, 'website'), so an authenticated session
+  // IS a seated session — the tie attaches at the sitting. Unseated
+  // visitors get the hub exactly as before: it carries the sign-in
+  // door, the seat board, and the price.
+  if (res.locals.currentUser) return res.redirect(302, '/onemind/table');
   const t = tableBook();
   const numbers = await liveNumbers(t.book);
   let seat = null;

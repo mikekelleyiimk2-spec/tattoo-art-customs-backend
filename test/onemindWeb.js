@@ -8,7 +8,9 @@
 // grown-up commerce), the tattoo shop as an OUTBOUND link (no hosted
 // /onemind/tattoo-shop page — owner correction 20:05), the
 // ONEMIND_FRONT_DOOR flag (default off; flipping it is the owner's
-// tap), and the /api/links registry carrying the new structure.
+// tap), the seated /onemind → /onemind/table redirect (owner ruling
+// 2026-10-27 08:57), and the /api/links registry carrying the new
+// structure.
 const BASE = 'http://localhost:4137';
 
 async function runDbTests(ok) {
@@ -98,15 +100,19 @@ async function runHttpTests(ok) {
   ok(leda && hub.text.includes(leda.link), '/onemind placements are pulled live from the Rolodex (REFERRAL-HUB: Leda)');
   ok(!/little-inkers|poppy-and-ziggy/.test(hub.text), '/onemind carries no links into kid-walled surfaces (pin held)');
 
-  // Recognition: a signed-in account is greeted as a seated OneMind seat.
+  // Seated → straight to the Table (owner ruling 2026-10-27 08:57 CDT):
+  // a signed-in session IS a seated session (signup runs seatQuietly),
+  // so it never stops at the hub — /onemind redirects to page 2. The
+  // hub remains the unseated face (the anonymous 200 checks above pin
+  // it: hub carries the sign-in door for visitors).
   const su = await form('/signup', {
     email: 'hubtest@test.local', password: 'test-password-123', display_name: 'Hub Test', website: '',
   });
   ok(su.status === 302 && !!su.cookie, 'signup seats a new OneMind account (session issued)');
   const hubIn = await call('GET', '/onemind', { cookie: su.cookie });
-  ok(hubIn.status === 200 && hubIn.text.includes('signed in to OneMind'), '/onemind recognizes the signed-in seat');
-  ok(hubIn.text.includes('tied in on') && hubIn.text.includes('surface'), '/onemind shows the seat\u2019s tie count (recognition, not introduction)');
-  ok(!hubIn.text.includes('action="/login"'), '/onemind shows no sign-in form to a signed-in seat');
+  ok(hubIn.status === 302 && hubIn.location === '/onemind/table', 'seated /onemind goes straight to /onemind/table (owner ruling 2026-10-27)');
+  const tableIn = await call('GET', '/onemind/table', { cookie: su.cookie });
+  ok(tableIn.status === 200, 'the seated redirect lands on a live table (200)');
 
   // Page 2 — the table: every branch lit, plugs from the Codex.
   const table = await call('GET', '/onemind/table');
