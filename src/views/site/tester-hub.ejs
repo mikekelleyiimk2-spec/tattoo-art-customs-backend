@@ -1,100 +1,12 @@
-<style>
-@keyframes thGlow { 0%,100% { box-shadow: 0 0 0 rgba(245,197,66,0); } 50% { box-shadow: 0 0 26px rgba(245,197,66,.55); } }
-@keyframes thFloat { 0% { transform: translateY(0) scale(1); opacity:.85; } 50% { transform: translateY(-14px) scale(1.25); opacity:1; } 100% { transform: translateY(0) scale(1); opacity:.85; } }
-@keyframes thBarShine { 0% { background-position: 0 0; } 100% { background-position: 56px 0; } }
-@keyframes thRise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
-.th-hero {
-  position: relative; overflow: hidden; border-radius: 18px; color: #fff;
-  background: radial-gradient(120% 160% at 15% 0%, #3b1185 0%, #1d0650 52%, #12032f 100%);
-  padding: 2.4rem 1.5rem 2rem; text-align: center; margin: 1rem 0 1.5rem;
-}
-.th-hero::before, .th-hero::after {
-  content: "✦"; position: absolute; color: #f5c542; font-size: 1.3rem;
-  animation: thFloat 3.6s ease-in-out infinite;
-}
-.th-hero::before { top: 14%; left: 8%; }
-.th-hero::after { top: 22%; right: 9%; animation-delay: 1.4s; }
-.th-hero h1 {
-  color: #fff; font-size: clamp(1.7rem, 6vw, 2.9rem); line-height: 1.15; margin: .3rem auto .6rem;
-  max-width: 46rem; text-shadow: 0 2px 22px rgba(245,197,66,.35);
-}
-.th-hero h1 .th-gold { color: #f5c542; }
-.th-eyebrow { letter-spacing: .28em; font-size: .78rem; color: #d9c8ff; margin: 0; font-family: Arial, sans-serif; }
-.th-sub { color: #efe9ff; max-width: 40rem; margin: 0 auto; font-size: 1.08rem; }
-.th-pill {
-  display: inline-block; margin-top: 1.2rem; padding: .55rem 1.2rem; border-radius: 999px;
-  background: rgba(245,197,66,.14); border: 1px solid #f5c542; color: #ffe9a8;
-  font-family: Arial, sans-serif; font-weight: 700; animation: thGlow 2.6s ease-in-out infinite;
-}
-.th-card {
-  background: #fff; border: 2px solid #f5c542; border-radius: 14px; padding: 1.5rem;
-  margin: 1.5rem 0; animation: thRise .5s ease both;
-}
-.th-card h2 { margin-top: 0; }
-.th-input {
-  width: 100%; max-width: 460px; padding: .75rem .8rem; font-size: 1.05rem;
-  border: 1px solid var(--line, #ddd3c0); border-radius: 8px; margin-top: .25rem;
-}
-.th-join-btn {
-  background: linear-gradient(180deg, #ffd968, #f5a623); color: #241300 !important; font-weight: 800;
-  font-family: 'Arial Black', Arial, sans-serif; letter-spacing: .02em; border: none; cursor: pointer;
-  padding: 1rem 1.8rem; border-radius: 10px; font-size: 1.12rem; min-height: 52px; width: 100%; max-width: 460px;
-  animation: thGlow 2.6s ease-in-out infinite;
-}
-.th-join-btn:hover, .th-join-btn:focus { background: linear-gradient(180deg, #ffe082, #f7b733); }
-.th-board {
-  background: #17102e; color: #f3efff; border-radius: 14px; padding: 1.5rem; margin: 1.5rem 0;
-  border: 1px solid #463a75;
-}
-.th-board h2 { color: #f5c542; margin-top: 0; }
-.th-bar-track { background: #2c2154; border-radius: 999px; height: 16px; overflow: hidden; margin: .35rem 0 .9rem; }
-.th-bar-fill {
-  height: 100%; border-radius: 999px;
-  background: repeating-linear-gradient(45deg, #f5c542 0 14px, #ffd968 14px 28px);
-  background-size: 56px 100%; animation: thBarShine 1.2s linear infinite;
-}
-.th-apps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin: 1rem 0 1.5rem; }
-.th-app {
-  background: #fff; border: 1px solid var(--line, #ddd3c0); border-top: 4px solid #7c3aed;
-  border-radius: 10px; padding: 1.1rem 1.2rem;
-}
-.th-badge {
-  display: inline-block; background: #ede9fe; color: #4c1d95; border-radius: 999px;
-  padding: .12rem .6rem; font-size: .78rem; font-family: Arial, sans-serif; font-weight: 700;
-}
-.th-download {
-  background: linear-gradient(135deg, #241047, #3b1185); color: #fff; border-radius: 14px;
-  padding: 1.5rem; margin: 1.5rem 0; text-align: center;
-}
-.th-download h2 { color: #fff; margin-top: 0; }
-.th-download p { color: #e6defc; max-width: 38rem; margin-left: auto; margin-right: auto; }
-.th-dl-btn {
-  display: inline-block; background: #f5c542; color: #241300 !important; font-weight: 800;
-  padding: 1rem 1.8rem; border-radius: 10px; text-decoration: none; font-size: 1.1rem; min-height: 52px;
-  font-family: 'Arial Black', Arial, sans-serif;
-}
-.th-dl-btn:hover, .th-dl-btn:focus { background: #ffd968; }
-.th-joined {
-  background: #14532d; color: #eafff2; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1rem;
-  border: 1px solid #2e7d32; animation: thRise .5s ease both;
-}
-.th-error {
-  background: #fdf0e6; color: #7c2d12; border: 1px solid #f59e0b; border-radius: 12px;
-  padding: 1rem 1.25rem; margin-bottom: 1rem;
-}
-.th-devline { border-top: 1px solid var(--line, #ddd3c0); margin-top: 2rem; padding-top: 1rem; }
-@media (min-width: 900px) {
-  .th-hero { padding: 3.8rem 2rem 3.2rem; }
-  .th-hero h1 { font-size: 3.35rem; }
-  .th-sub { font-size: 1.2rem; }
-}
-@media (max-width: 560px) {
-  .th-hero::before { top: .55rem; left: .7rem; font-size: 1rem; }
-  .th-hero::after { top: .55rem; right: .7rem; font-size: 1rem; }
-}
-</style>
-
-<section class="th-hero">
+<%# Tester Hub landing — trickle-down pass 3 (2026-10-27): the face now
+    rides the shipped anchor system (home header + page-dark field +
+    /css/th.css, the Hub's own violet-and-gold system). The hero carries
+    the ONE job in the first viewport: headline, the real live pool
+    count, and the signup itself. The board below is the living surface
+    — real fill events from fillCycle.lightBoard, never seeded.
+    Wiring is byte-identical to the previous face: same form action,
+    same JS pipe (POST /api/testers/signup), same download tap. %>
+<section class="th-hero" id="join">
   <p class="th-eyebrow">TESTER HUB · USEFUL APPZ</p>
   <h1>BECOME A TESTER — <span class="th-gold">FIRST IN LINE</span> TO TRY THE NEWEST APPS.</h1>
   <p class="th-sub">New apps drop here before they drop anywhere else. First eyes. First hands. First in line — every time.</p>
@@ -103,39 +15,37 @@
   <% } else { %>
   <p class="th-pill">✨ THE FOUNDING BOARD IS OPEN</p>
   <% } %>
-</section>
-
-<section class="th-card" id="join">
-  <h2>Get in line</h2>
-  <% if (joined) { %>
-  <div class="th-joined" role="status">
-    <p style="font-size:1.2rem;margin:.2rem 0;"><strong>🎉 YOU'RE IN — the next drop finds you first.</strong></p>
-    <p style="margin:.2rem 0;">There are now <strong><%= poolCount %></strong> tester<%= poolCount === 1 ? '' : 's' %> in line — and you're one of them. First eyes. First hands. Yours.</p>
+  <div class="th-join">
+    <% if (joined) { %>
+    <div class="th-joined" role="status">
+      <p style="font-size:1.2rem;margin:.2rem 0;"><strong>🎉 YOU'RE IN — the next drop finds you first.</strong></p>
+      <p style="margin:.2rem 0;">There are now <strong><%= poolCount %></strong> tester<%= poolCount === 1 ? '' : 's' %> in line — and you're one of them. First eyes. First hands. Yours.</p>
+    </div>
+    <% } %>
+    <% if (joinError) { %>
+    <div class="th-error" role="alert">
+      <% if (joinError === 'gmail') { %><strong>That address didn't take.</strong> The line runs on Gmail — the Google account on your phone. Check it and go again.<% } else if (joinError === 'name') { %><strong>One thing missing: your name.</strong> Any name you like — it's the one that goes up in lights.<% } else { %><strong>That signup didn't land.</strong> Give it another go — your place in line is waiting.<% } %>
+    </div>
+    <% } %>
+    <div id="th-live-joined" class="th-joined" role="status" hidden>
+      <p style="font-size:1.2rem;margin:.2rem 0;"><strong>🎉 YOU'RE IN — the next drop finds you first.</strong></p>
+      <p style="margin:.2rem 0;">There are now <strong id="th-live-count"></strong> testers in line — and you're one of them. First eyes. First hands. Yours.</p>
+    </div>
+    <p id="th-live-error" class="th-error" role="alert" hidden></p>
+    <form id="th-join-form" method="post" action="/tester-hub/join">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <p>
+        <label for="th-name"><strong>Your name</strong></label><br>
+        <input class="th-input" id="th-name" type="text" name="name" maxlength="80" autocomplete="name" placeholder="The name that goes up in lights">
+      </p>
+      <p>
+        <label for="th-gmail"><strong>Your Gmail</strong> — the one on your Android phone</label><br>
+        <input class="th-input" id="th-gmail" type="email" name="gmail" required maxlength="120" autocomplete="email" placeholder="you@gmail.com">
+      </p>
+      <p><button class="th-join-btn" type="submit">PUT ME FIRST IN LINE →</button></p>
+    </form>
+    <p class="th-deal">One signup, every app: joining puts your Gmail on the tester list of each new app in the Hub the moment it drops — that's the whole deal, stated plain. Leaving is just as easy, whenever you like: one tap in the Hub app and you're out — no hard feelings.</p>
   </div>
-  <% } %>
-  <% if (joinError) { %>
-  <div class="th-error" role="alert">
-    <% if (joinError === 'gmail') { %><strong>That address didn't take.</strong> The line runs on Gmail — the Google account on your phone. Check it and go again.<% } else if (joinError === 'name') { %><strong>One thing missing: your name.</strong> Any name you like — it's the one that goes up in lights.<% } else { %><strong>That signup didn't land.</strong> Give it another go — your place in line is waiting.<% } %>
-  </div>
-  <% } %>
-  <div id="th-live-joined" class="th-joined" role="status" hidden>
-    <p style="font-size:1.2rem;margin:.2rem 0;"><strong>🎉 YOU'RE IN — the next drop finds you first.</strong></p>
-    <p style="margin:.2rem 0;">There are now <strong id="th-live-count"></strong> testers in line — and you're one of them. First eyes. First hands. Yours.</p>
-  </div>
-  <p id="th-live-error" class="th-error" role="alert" hidden></p>
-  <form id="th-join-form" method="post" action="/tester-hub/join">
-    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-    <p>
-      <label for="th-name"><strong>Your name</strong></label><br>
-      <input class="th-input" id="th-name" type="text" name="name" maxlength="80" autocomplete="name" placeholder="The name that goes up in lights">
-    </p>
-    <p>
-      <label for="th-gmail"><strong>Your Gmail</strong> — the one on your Android phone</label><br>
-      <input class="th-input" id="th-gmail" type="email" name="gmail" required maxlength="120" autocomplete="email" placeholder="you@gmail.com">
-    </p>
-    <p><button class="th-join-btn" type="submit">PUT ME FIRST IN LINE →</button></p>
-  </form>
-  <p class="muted" style="margin-bottom:0;">One signup, every app: joining puts your Gmail on the tester list of each new app in the Hub the moment it drops — that's the whole deal, stated plain. Leaving is just as easy, whenever you like: one tap in the Hub app and you're out — no hard feelings.</p>
 </section>
 
 <section class="th-board" aria-label="The board, live">
@@ -171,12 +81,22 @@
   <h2>TAKE THE HUB WITH YOU</h2>
   <p>The Tester Hub app puts every new drop in your pocket the moment it opens — and your place in line travels with you.</p>
   <p><a class="th-dl-btn" href="/tester-hub/download">⬇ GET THE TESTER HUB APP — ANDROID</a></p>
-  <p style="margin-bottom:0;">One family: the <a href="/folder" style="color:#f5c542;">Useful Appz Folder</a> keeps every Useful Appz app on your phone current, so the newest versions always reach you first.</p>
+  <p style="margin-bottom:0;">One family: the <a href="/folder">Useful Appz Folder</a> keeps every Useful Appz app on your phone current, so the newest versions always reach you first — and the <a href="/apps">apps page</a> carries the whole lineup.</p>
 </section>
 
-<%- include('../partials/tip-jar') %>
+<%- include('../partials/rolodex-placements') %>
 
-<p class="muted th-devline"><strong>Building an app of your own?</strong> Developers: inside the Tester Hub app, one payment fills your tester list to FULL — $24.99, one app, testers cycled in waves until 12 confirmed, and kept full through your 14 days. <a href="/testers">Fill your list →</a></p>
+<div class="th-sweep">
+  <%- include('../partials/house-ad', {slot: 'tester_hub'}) %>
+  <%- include('../partials/sponsor-slot') %>
+  <%- include('../partials/tip-jar') %>
+</div>
+
+<section class="th-dev">
+  <h2>TIRED OF LOOKING FOR TESTERS?</h2>
+  <p><strong>Building an app of your own?</strong> One payment inside the Tester Hub app fills your tester list to FULL — $24.99, one app, testers cycled in waves until 12 confirmed, and kept full through your 14 days. The Fill lives in the Tester app — nowhere else.</p>
+  <p style="margin-bottom:0;"><a class="th-dev-btn" href="/testers">Fill your list →</a></p>
+</section>
 
 <script>
 (function () {

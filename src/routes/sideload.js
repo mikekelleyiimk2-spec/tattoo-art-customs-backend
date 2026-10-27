@@ -15,6 +15,7 @@ const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { resolveStoredPath } = require('../lib/storage');
 const testerPool = require('../lib/testerPool');
 const fillCycle = require('../lib/fillCycle');
+const rolodex = require('../lib/rolodex');
 
 // app key -> file config. Keys match the `app` allowlist on
 // POST /api/muse/upload-sideload.
@@ -284,11 +285,19 @@ function testerHubRouter() {
     try { poolCount = await testerPool.poolCount(); } catch (e) { /* page renders regardless */ }
     try { board = await fillCycle.lightBoard(8); } catch (e) { /* founding state stands */ }
     try { apps = (await testerPool.listApps()).slice(0, 6); } catch (e) { /* feed is a bonus, not the door */ }
+    // Penny Sweeper affiliate door: placements pulled LIVE from the
+    // Affiliate Rolodex for this surface only — whole entries (link +
+    // code + disclosure travel together). Renders nothing until a
+    // program is honestly placed on the TESTER-HUB surface.
+    let partners = [];
+    try { partners = rolodex.queryLive({ surface: 'TESTER-HUB' }); } catch (e) { /* door stays shut, page renders */ }
     const errCode = ['gmail', 'name', 'other'].includes(req.query.error) ? req.query.error : null;
     res.render('site/tester-hub', {
+      homeFace: true, darkFace: true, thFace: true, bodyClass: 'page-dark',
       title: 'Become a Tester — First in Line | Tester Hub by Useful Appz',
       metaDescription: 'BECOME A TESTER — FIRST IN LINE TO TRY THE NEWEST APPS. One signup puts you first in line for every new app in the Tester Hub.',
-      poolCount, board, apps,
+      poolCount, board, apps, partners,
+      disclosureStandard: rolodex.disclosureStandard(),
       joined: req.query.joined === '1',
       joinError: errCode,
     });
