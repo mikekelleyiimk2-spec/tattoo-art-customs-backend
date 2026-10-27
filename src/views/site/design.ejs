@@ -42,7 +42,9 @@
     <h1><%= design.title %><button type="button" class="fav-heart fav-heart-inline" data-fav-id="<%= design.id %>" aria-pressed="false" aria-label="<%= t('fav.add') %>" title="<%= t('fav.add') %>"></button> <span class="like-count like-count-inline" data-like-count="<%= design.id %>" title="<%= t('toploved.loves', {count: design.like_count || 0}) %>">♥ <%= design.like_count || 0 %></span></h1>
     <% if (design.show_featured) { %><p><a href="/show-designs" class="badge ok" style="text-decoration:none"><%= t('show.badge') %></a></p><% } %>
     <% design.categories.forEach(function(c) { %><span class="tag"><%= c %></span><% }); %>
-    <p><%= design.description %></p>
+    <% (typeof descriptionParagraphs !== 'undefined' && descriptionParagraphs && descriptionParagraphs.length ? descriptionParagraphs : (design.description ? [design.description] : [])).forEach(function (para) { %>
+    <p><%= para %></p>
+    <% }); %>
     <% /* Video-game backgrounds link to their matching by-request characters */ %>
     <% if (typeof vgCharacters !== 'undefined' && vgCharacters && vgCharacters.length) { %>
     <section class="card" aria-label="<%= t('design.vg_chars_title') %>">

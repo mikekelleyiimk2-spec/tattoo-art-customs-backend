@@ -53,6 +53,13 @@
 
 <%- include('../partials/ad-slot', {slot: 'leaderboard'}) %>
 
+<section class="lp-story">
+  <h2><%= t('landing.story.title') %></h2>
+  <p><%= t('landing.story.p1', {count: fmtNum(typeof designCount !== 'undefined' ? designCount : 0)}) %></p>
+  <p><%= t('landing.story.p2') %></p>
+  <p><%= t('landing.story.p3') %></p>
+</section>
+
 <h2><%= t('landing.offers.title') %></h2>
 <div class="lp-offer-grid">
   <div class="lp-offer">

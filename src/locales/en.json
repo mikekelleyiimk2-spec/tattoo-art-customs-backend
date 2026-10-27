@@ -4,7 +4,8 @@
     "for_artists": "For design artists",
     "for_shops": "For tattoo shops",
     "house_rules": "House rules",
-    "intro": "Tattoo Art Customs is a marketplace for original tattoo designs — hundreds of premade pieces plus custom designs drawn to order ({custom}, or {sale} during the Saturday sale; 50% deposit, 48-hour delivery).",
+    "intro": "Tattoo Art Customs is a marketplace for original tattoo designs, built and run by Useful Appz Development Studios in Abbeville, Louisiana. Independent designers upload their own original work — thousands of premade pieces across every major style — plus custom designs drawn to order ({custom}, or {sale} during the Saturday sale; 50% deposit, 48-hour delivery).",
+    "story": "The catalog is deep on purpose. A tattoo is permanent, so choosing one should never mean settling for whatever a single shop happens to have on its wall — here you can search thousands of original designs by style and subject, buy the finished full-color artwork together with the clean linework your artist stencils from, or hand the whole thing to the custom desk and have a design drawn for you alone.",
     "rule1": "All contact stays through the site — no off-site emails, phones, socials, or payment info in bios, profiles, or messages.",
     "rule2": "Off-site sales mean membership cancellation with no refund.",
     "rule3": "All sales, subscriptions, and memberships are final.",
@@ -265,6 +266,7 @@
     "search_ph": "wolf, mandala, rose…",
     "sort_all": "All designs",
     "sort_newest": "Newest arrivals",
+    "intro_top": "Every design in this gallery is original work by an independent designer, and every purchase delivers the pair your tattoo artist actually works from: the finished full-color artwork plus the clean linework stencil. Previews show linework only, so the color you bought stays yours alone. If the perfect piece is not here yet, the custom desk will draw it for you — that is the other half of this studio.",
     "sub": "Search 4,700+ original tattoo designs by style and category. Showing linework previews only — full color is delivered to buyers after purchase.",
     "title": "Tattoo design gallery — buy original designs",
     "style": "Style",
@@ -364,6 +366,12 @@
       "text": "Browse the gallery and heart the designs you'd actually wear — the most-hearted become real merch.",
       "cta_gallery": "Browse the gallery",
       "cta_toploved": "See the Top Loved"
+    },
+    "story": {
+      "title": "A working studio, not a clip-art mill",
+      "p1": "Tattoo Art Customs is the storefront of Useful Appz Development Studios, an independent studio based in Abbeville, Louisiana. Everything in the gallery is original work uploaded by independent tattoo designers — {count} designs and growing — never stock art, never traced screenshots. Each piece is drawn to be tattooed: a finished full-color design and the clean linework your artist stencils from, delivered together when you buy.",
+      "p2": "Why build a catalog this deep? Because a tattoo is a one-time decision you wear for life, and nobody should have to settle for the least-bad option on a shop wall. A deep catalog means the design fits the person — their story, their body, their artist's hand — instead of the other way around. And when nothing on the shelves is quite it, the custom desk draws it: describe what you want, approve the direction, and the finished design is yours within 48 hours.",
+      "p3": "The studio is bigger than the gallery. The same team builds the apps on this site, produces two shows — Color With Us, where featured designs are colored on screen, and Poppy & Ziggy, our educational series for kids — and runs Little Inkers, the free coloring app for children. One small studio in Louisiana, doing all of it in-house."
     },
     "watch": {
       "title": "📺 Watch",
@@ -702,6 +710,8 @@
     "full_name": "Full name",
     "includes_fee": "(includes processing fee)",
     "intro": "Your purchased Tattoo Art Customs designs, printed on premium Bella + Canvas 3001 tees and shipped to your door.",
+    "story_h": "Your design, on a shirt you will actually wear",
+    "story_text": "This is not a logo store. The tees here carry tattoo designs — the same original artwork from the gallery, including designs you have purchased and own. Pick the piece, pick the size, and we print it on a premium Bella + Canvas 3001 tee and ship it to your door. The most-hearted designs in the gallery become merch too: heart the designs you would actually wear, and you are voting on what gets printed next.",
     "login_tail": "to order — tees are available for designs you've purchased.",
     "made_order": "Tees are made to order and ship within 5–7 business days. All merch sales are final.",
     "notify_me": "Notify me",
@@ -1251,6 +1261,8 @@
   "dguide": {
     "title": "Designer Guide",
     "sub": "Everything you need to submit great by-request designs and earn.",
+    "intro_h": "Your work here is the product",
+    "intro_text": "There is no stock library behind this marketplace — clients come because independent designers draw things nobody else has. By-request work is a conversation: a client describes the piece they are dreaming about, you confirm it is in your hand, and the studio handles payment, file delivery and the client relationship so your hours go to drawing. The specs below are what make a design sell and print cleanly — read them before your first submission, and your work will go live faster.",
     "specs_h": "Submission Specs",
     "spec1": "Linework: clean black lines, JPG/PNG/WebP, max 15 MB per image.",
     "spec2": "Color version optional but recommended — full-color designs sell better.",

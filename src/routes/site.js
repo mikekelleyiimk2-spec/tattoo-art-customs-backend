@@ -209,7 +209,11 @@ router.use((req, res, next) => {
 router.get('/', async (req, res) => {
   const base = config.baseUrl.replace(/\/$/, '');
   const watchVideos = require('../lib/watchVideos');
+  // Live catalog size for the home page's studio story (high-value pass).
+  const designCountRow = await db.get("SELECT COUNT(*) AS n FROM designs WHERE status = 'approved'");
+  const designCount = designCountRow ? Number(designCountRow.n) : 0;
   res.render('site/landing', {
+    designCount,
     // Payoff before the house ad (wanting audit 2026-10-25): the layout's
     // leaderboard slot is suppressed on the homepage only; landing.ejs
     // renders the same slot itself, after the hero.
@@ -1031,6 +1035,13 @@ router.get('/design/:id', async (req, res) => {
   const canonical = `${base}/design/${design.id}`;
   const styleBit = design.style ? `${design.style} ` : '';
   const artistName = artist && artist.display_name ? artist.display_name : 'Tattoo Art Customs';
+  // Real page copy (high-value pass 2026-10-26): substantive stored
+  // descriptions pass through; empty/stub/stamped ones are replaced by a
+  // description built from the design's own record (see lib).
+  const designDesc = require('../lib/designDescription');
+  const creditName = artist && artist.display_name ? artistName : null;
+  const descriptionParagraphs = designDesc.descriptionParagraphs(design, creditName);
+  const descriptionSummary = designDesc.descriptionSummary(design, creditName);
   const catBit = design.categories.length ? ` (${design.categories.slice(0, 3).join(', ')})` : '';
   const priceTotalCents = withFeeCents(price);
   const priceStr = `$${(priceTotalCents / 100).toFixed(2)}`;
@@ -1040,7 +1051,7 @@ router.get('/design/:id', async (req, res) => {
     '@type': 'Product',
     name: `${design.title} — ${styleBit}tattoo design`,
     image: ogImgFile ? `${base}/img/designs/${ogImgFile}` : canonical,
-    description: `Original ${styleBit}tattoo design "${design.title}" by ${artistName}. Buy the full color and clean linework files at Tattoo Art Customs.`,
+    description: descriptionSummary,
     brand: { '@type': 'Brand', name: 'Tattoo Art Customs' },
     offers: {
       '@type': 'Offer',
@@ -1085,7 +1096,10 @@ router.get('/design/:id', async (req, res) => {
     lineworkDiscount: LINEWORK_ONLY_DISCOUNT,
     // Send to Little Inkers add-on (kids coloring app redeem code).
     sendToAppTotal: withFeeCents(require('../lib/littleInkers').SEND_TO_APP_FEE_CENTS),
-    metaDescription: `Buy "${design.title}" — an original ${styleBit}tattoo design${catBit} by ${artistName}. ${priceStr}, full color + linework delivered after purchase.`,
+    metaDescription: isCustom
+      ? `${descriptionSummary} Portfolio piece at Tattoo Art Customs — request a custom design like it.`
+      : `${descriptionSummary} ${priceStr} — full-color artwork and clean linework delivered after purchase.`,
+    descriptionParagraphs,
     canonical, ogImage: ogImgFile ? `${base}/img/designs/${ogImgFile}` : '', ogType: 'product', jsonLd,
     creditBalance: req.user ? await require('../lib/credits').getCreditBalance(req.user.id) : 0,
   });
