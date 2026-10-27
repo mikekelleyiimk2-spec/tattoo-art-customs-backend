@@ -1,0 +1,50 @@
+/* Universal motion pass (everything-audit fix, 2026-10-27).
+   The audit found surfaces with no motion at all — nothing moved
+   in the first 2 seconds anywhere. This layer gives every page
+   the same eased arrival + tactile feedback, the way the
+   established internet feels: content rises in, taps answer,
+   cards lift. One file, every layout, no per-page drift.
+   Honours prefers-reduced-motion: stillness on request. */
+
+@keyframes ua-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes ua-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Arrival: the page's main column rises in, eased, once. */
+#main { animation: ua-rise .5s cubic-bezier(.22, .8, .32, 1) both; }
+
+/* Tactile: interactive elements ease between states, never snap. */
+a, button, input, select, textarea, summary {
+  transition: background-color .18s ease, color .18s ease,
+              border-color .18s ease, box-shadow .18s ease,
+              transform .18s ease;
+}
+
+/* Press feedback: a tap visibly answers. */
+button:active, .btn:active, a.btn:active { transform: scale(.98); }
+
+/* Cards lift toward the tap/hover instead of sitting flat. */
+.card { transition: transform .2s ease, box-shadow .2s ease; }
+.card:hover { transform: translateY(-2px); }
+
+/* Gallery tiles breathe the same way. */
+.design-card, .tile, .grid-item {
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.design-card:hover, .tile:hover, .grid-item:hover {
+  transform: translateY(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #main { animation: none; }
+  *, *::before, *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
