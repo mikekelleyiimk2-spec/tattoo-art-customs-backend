@@ -239,6 +239,10 @@ router.post('/catalog', requireLogin, formLimiter, checkHoneypot, async (req, re
       : 'OS';
     const color = 'black';
     const qty = Math.min(10, Math.max(1, parseInt(req.body.quantity, 10) || 1));
+    // CannaDash sticker 3-pack (2026-10-28): the pack is ONE catalog size
+    // option priced as a bundle, but Printful fulfills per sticker — the
+    // print quantity must carry the 3x so a paid 3-pack prints 3 stickers.
+    const printQty = (product.id === 'cannadash-sticker' && size === '3-PACK') ? qty * 3 : qty;
 
     const ship = {
       ship_name: String(req.body.ship_name || '').slice(0, 120).trim(),
@@ -272,7 +276,7 @@ router.post('/catalog', requireLogin, formLimiter, checkHoneypot, async (req, re
     await db.insert('print_orders', {
       id: db.newId(), order_id: orderId, user_id: req.user.id,
       design_id: null, combo_id: null, catalog_asset: product.asset,
-      product: product.printfulProduct, quantity: qty,
+      product: product.printfulProduct, quantity: printQty,
       style: 'color', size, color, ...ship, status: 'pending',
       fulfill_token: db.newId() + db.newId(), created_at: db.now(),
     });

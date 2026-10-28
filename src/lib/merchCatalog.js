@@ -1123,6 +1123,73 @@ const CATALOG = [
     priceCents: 1599,
     open: true,
   },
+  // --- CannaDash logo merch (live 2026-10-28) ---
+  // Printful content clearance: support reply 2026-10-28 (Claire Simmons) —
+  // no blanket prohibition on stylized cannabis leaves / original brand
+  // logos on standard merchandise; artwork generally permissible provided
+  // fully original (it is the owner's own logo); no US destination/category
+  // restrictions. Automated screening may place an order On Hold for manual
+  // review (resolvable via content@printful.com with ownership proof) —
+  // that is standard procedure, not a rejection. Printful sync products:
+  // tee 486714213, hoodie 486714217, mug 486714210, sticker 486714184.
+  {
+    id: 'cannadash-tee',
+    kind: 'pod',
+    status: 'live',
+    nameKey: 'merch.cannadash_tee_name',
+    blurbKey: 'merch.cannadash_tee_blurb',
+    image: '/img/merch/cannadash-tee.webp',
+    printfulProduct: 'sync_cannadash_tee',
+    asset: 'catalog/merch/cannadash-logo-apparel-4500px-300dpi.png',
+    syncVariants: { S: 5601645012, M: 5601645013, L: 5601645014, XL: 5601645015, '2XL': 5601645016, '3XL': 5601645017 },
+    sizes: ['S', 'M', 'L', 'XL', '2XL', '3XL'],
+    priceCents: { S: 2899, M: 2899, L: 2899, XL: 2899, '2XL': 3099, '3XL': 3299 },
+    open: true,
+  },
+  {
+    id: 'cannadash-hoodie',
+    kind: 'pod',
+    status: 'live',
+    nameKey: 'merch.cannadash_hoodie_name',
+    blurbKey: 'merch.cannadash_hoodie_blurb',
+    image: '/img/merch/cannadash-hoodie.webp',
+    printfulProduct: 'sync_cannadash_hoodie',
+    asset: 'catalog/merch/cannadash-logo-apparel-4500px-300dpi.png',
+    syncVariants: { S: 5601645058, M: 5601645059, L: 5601645060, XL: 5601645062, '2XL': 5601645063, '3XL': 5601645064 },
+    sizes: ['S', 'M', 'L', 'XL', '2XL', '3XL'],
+    priceCents: { S: 4499, M: 4499, L: 4499, XL: 4499, '2XL': 4799, '3XL': 4999 },
+    open: true,
+  },
+  {
+    id: 'cannadash-mug',
+    kind: 'pod',
+    status: 'live',
+    nameKey: 'merch.cannadash_mug_name',
+    blurbKey: 'merch.cannadash_mug_blurb',
+    image: '/img/merch/cannadash-mug.webp',
+    printfulProduct: 'sync_cannadash_mug',
+    asset: 'catalog/merch/cannadash-logo-native-1254px-300dpi.png',
+    syncVariants: { '11 OZ': 5601645009, '15 OZ': 5601645010 },
+    sizes: ['11 OZ', '15 OZ'],
+    priceCents: { '11 OZ': 1999, '15 OZ': 2199 },
+    open: true,
+  },
+  {
+    id: 'cannadash-sticker',
+    kind: 'pod',
+    status: 'live',
+    nameKey: 'merch.cannadash_sticker_name',
+    blurbKey: 'merch.cannadash_sticker_blurb',
+    image: '/img/merch/cannadash-sticker.webp',
+    printfulProduct: 'sync_cannadash_sticker',
+    asset: 'catalog/merch/cannadash-logo-native-1254px-300dpi.png',
+    // 3-PACK is the same 3x3 sticker printed x3 — routes/merch.js
+    // multiplies the print quantity for that size option.
+    syncVariants: { SINGLE: 5601644855, '3-PACK': 5601644855 },
+    sizes: ['SINGLE', '3-PACK'],
+    priceCents: { SINGLE: 899, '3-PACK': 2199 },
+    open: true,
+  },
 ];
 
 function getProduct(id) {
