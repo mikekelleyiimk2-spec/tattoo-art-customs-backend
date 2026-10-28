@@ -557,7 +557,7 @@ async function main() {
   await require('./onemindWeb').runDbTests(ok); // OneMind web structure (front-door flag truth table, kid-safe rolodex pull, link registry)
   await require('./guestBridge').runDbTests(ok); // guest bridge (design claims on buy; sideload pending ties fire at store go-live)
   await require('./moneyWatch').runDbTests(ok); // Money Watch watcher (baseline, exactly-once, kinds, CT windows)
-  await require('./thebigone').runDbTests(ok); // The Big One register (plans, prices, founding cap)
+  await require('./thebigone').runDbTests(ok); // Dawnfold register (plans, prices, founding cap)
   await require('./cannadashFounding').runDbTests(ok); // Bundle C B1: CannaDash founding fee config (prices withheld pre-strike)
   await require('./cannadashFounding').runUnitTests(ok);
   await require('./librarySponsors').runDbTests(ok); // Bundle C B2: Library shelf sponsorship config
@@ -1583,7 +1583,7 @@ async function main() {
   await require('./emailKeeper').runHttpTests(ok, req); // email keeper live status (whitelist + service-token ingest)
   await require('./folderScan').runHttpTests(ok, req); // folder scan phone-home (whitelist POST + service-token GET, latest per device)
   await require('./codex').runHttpTests(ok, req); // codex for OneMind (registry projection — public fields only)
-  await require('./thebigone').runHttpTests(ok, req); // The Big One web edition + money doors (own face, register, classifieds intake)
+  await require('./thebigone').runHttpTests(ok, req); // Dawnfold web edition + money doors (own face, register, classifieds intake)
   await require('./thebigone').runBundleAHttp(ok, req); // Bundle A web: founding push section + Your Local insert + locality doors
   await require('./devtools').runHttpTests(ok, req); // Developer Tools bundle B (fill service face, rolodex demo, money watch offer)
   await require('./servicePlug').runHttpTests(ok, req); // AI API Service Plug (write-only vault + play operation)

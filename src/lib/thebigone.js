@@ -1,4 +1,4 @@
-// The Big One — the house publication's web money surfaces
+// Dawnfold — the house publication's web money surfaces
 // (owner order 2026-10-27, Lane A: web edition + money doors).
 //
 // ONE config place for the publication's prices: the subscription plan
@@ -51,11 +51,11 @@ const PLAN_SLUGS = [
 ];
 
 const PLAN_DESCRIPTIONS = {
-  the_big_one: 'The Big One, every morning: every department, every day, the big Sunday edition, and the Library shelves behind the Documentary page. $4.99/month.',
-  the_big_one_annual: 'The Big One for a full year — every department, every day, every Sunday edition. $39.99/year (two months free vs monthly).',
-  the_big_one_founding: 'Founding Member rate: The Big One at $2.99/month, locked for as long as the subscription stays active. First 500 members only — when they are gone, this rate is gone.',
+  the_big_one: 'Dawnfold, every morning: every department, every day, the big Sunday edition, and the Library shelves behind the Documentary page. $4.99/month.',
+  the_big_one_annual: 'Dawnfold for a full year — every department, every day, every Sunday edition. $39.99/year (two months free vs monthly).',
+  the_big_one_founding: 'Founding Member rate: Dawnfold at $2.99/month, locked for as long as the subscription stays active. First 500 members only — when they are gone, this rate is gone.',
   the_big_one_supporter: 'Supporter tier: everything in the subscription, plus your name in the masthead supporter roll — the readers who keep the desk lit. $9.99/month.',
-  the_big_one_waiting_room: 'Waiting Room edition for businesses: The Big One delivered for your waiting room, lobby, or shop counter — one business subscription, your customers read while they wait. $19.99/month.',
+  the_big_one_waiting_room: 'Waiting Room edition for businesses: Dawnfold delivered for your waiting room, lobby, or shop counter — one business subscription, your customers read while they wait. $19.99/month.',
 };
 
 // One-time listing products (register prices INCLUDE the house fee
@@ -111,7 +111,7 @@ const SPONSORS = [
     name: 'Waiting Room subscription for shops',
     baseCents: 1999, // $19.99/mo — the the_big_one_waiting_room plan
     per: 'month',
-    blurb: 'The business rate: The Big One in your waiting room, lobby, or shop, every morning. Bought as the Waiting Room plan at the register below.',
+    blurb: 'The business rate: Dawnfold in your waiting room, lobby, or shop, every morning. Bought as the Waiting Room plan at the register below.',
     planSlug: 'the_big_one_waiting_room',
   },
   {

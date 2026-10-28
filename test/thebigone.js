@@ -1,4 +1,4 @@
-// The Big One — web edition + money surfaces (Lane A, 2026-10-27).
+// Dawnfold — web edition + money surfaces (Lane A, 2026-10-27).
 // DB phase: the register (plans) + price config + founding cap.
 // HTTP phase: the publication's own face, its money doors, and the
 // classifieds intake (nothing auto-publishes).
@@ -62,46 +62,60 @@ async function runHttpTests(ok, req) {
     return { status: r.status, text: await r.text(), location: r.headers.get('location') };
   };
 
-  const home = await anon('/the-big-one');
-  ok(home.status === 200, '/the-big-one serves 200');
-  ok(home.text.includes('The Big One') && home.text.includes('VOL. I — NO. 1'), 'masthead carries Vol. I, No. 1');
+  const home = await anon('/dawnfold');
+  ok(home.status === 200, '/dawnfold serves 200');
+  ok(home.text.includes('Dawnfold') && home.text.includes('VOL. I — NO. 1'), 'masthead carries Vol. I, No. 1');
   ok(home.text.includes('Wednesday, October 28, 2026'), 'masthead carries the edition date');
   ok(home.text.includes('IN ORDER!') && home.text.includes('puzzleCards'), 'the IN ORDER! puzzle is in the page, playable');
   ok(home.text.includes('The News in Two Frames') && home.text.includes('The Back of the Book')
     && home.text.includes('The Documentary Shelf') && home.text.includes('COLOPHON'),
     'edition departments + colophon ported intact');
   ok(home.text.includes('/audio/the-big-one/edition-1.mp3'), 'Listen player points at the edition audio');
-  ok(home.text.includes('/the-big-one/signin'), 'sign-in door present (return path into existing auth)');
-  ok(home.text.includes('/the-big-one/link'), 'email sign-in link door present');
+  ok(home.text.includes('/dawnfold/signin'), 'sign-in door present (return path into existing auth)');
+  ok(home.text.includes('/dawnfold/link'), 'email sign-in link door present');
   ok(home.text.includes('action="/membership/subscribe/the_big_one"') || home.text.includes('Sign in to subscribe'),
     'subscribe door wired to the membership register');
-  ok(home.text.includes('/the-big-one/gift') || home.text.includes('Sign in to give a gift'), 'gift door present');
-  ok(home.text.includes('/the-big-one/sponsors') && home.text.includes('/the-big-one/classifieds'), 'sponsor chair + classifieds doors linked');
+  ok(home.text.includes('/dawnfold/gift') || home.text.includes('Sign in to give a gift'), 'gift door present');
+  ok(home.text.includes('/dawnfold/sponsors') && home.text.includes('/dawnfold/classifieds'), 'sponsor chair + classifieds doors linked');
   ok(home.text.includes('https://www.paypal.com/ncp/payment/WA9DS6J8ERSHW'), 'tip jar is the Business PayPal mk4 link');
   ok(home.text.includes('href="/onemind"') && home.text.includes('href="/apps"'), 'sister links: OneMind + apps');
   ok(home.text.includes('$4.99') || home.text.includes('$5.65'), 'subscription price shown from the register');
   ok(!home.text.includes('tbo-layout-marker-absent') && !/navbar|site-header/.test(home.text), 'publication face is its own (no TAC chrome markers)');
 
-  const signin = await anon('/the-big-one/signin');
-  ok(signin.status === 302 && signin.location === '/login', '/the-big-one/signin hands off to the standard login door');
+  // Rename pins (2026-10-28, was "The Big One"): the old GET doors
+  // 301 to Dawnfold; the old privacy slug 301s; the new privacy door
+  // serves; the legacy classifieds POST stays mounted.
+  const oldHome = await anon('/the-big-one');
+  ok(oldHome.status === 301 && oldHome.location === '/dawnfold', 'pre-rename /the-big-one 301-redirects to /dawnfold');
+  const oldSponsors = await anon('/the-big-one/sponsors');
+  ok(oldSponsors.status === 301 && oldSponsors.location === '/dawnfold/sponsors', 'pre-rename sponsors door 301-redirects');
+  const oldClassifieds = await anon('/the-big-one/classifieds');
+  ok(oldClassifieds.status === 301 && oldClassifieds.location === '/dawnfold/classifieds', 'pre-rename classifieds door 301-redirects');
+  const oldPrivacy = await anon('/privacy/the-big-one');
+  ok(oldPrivacy.status === 301 && oldPrivacy.location === '/privacy/dawnfold', 'pre-rename privacy slug 301-redirects to /privacy/dawnfold');
+  const privacy = await anon('/privacy/dawnfold');
+  ok(privacy.status === 200 && privacy.text.includes('Dawnfold'), '/privacy/dawnfold serves the publication privacy page');
 
-  const sponsors = await anon('/the-big-one/sponsors');
-  ok(sponsors.status === 200, '/the-big-one/sponsors serves 200');
+  const signin = await anon('/dawnfold/signin');
+  ok(signin.status === 302 && signin.location === '/login', '/dawnfold/signin hands off to the standard login door');
+
+  const sponsors = await anon('/dawnfold/sponsors');
+  ok(sponsors.status === 200, '/dawnfold/sponsors serves 200');
   ok(sponsors.text.includes('Presented by') && sponsors.text.includes('Department sponsorship')
     && sponsors.text.includes('Sponsored puzzle') && sponsors.text.includes('Acadiana')
     && sponsors.text.includes('Feed licensing'), 'rate card carries every offer');
   ok(sponsors.text.includes('action="/contact"'), 'sponsor inquiries run through the contact machinery');
   ok(!/\d[\d,]* (readers|subscribers|views) (per|a) (day|month)/i.test(sponsors.text), 'no invented reach numbers on the rate card');
 
-  const classifieds = await anon('/the-big-one/classifieds');
-  ok(classifieds.status === 200, '/the-big-one/classifieds serves 200');
+  const classifieds = await anon('/dawnfold/classifieds');
+  ok(classifieds.status === 200, '/dawnfold/classifieds serves 200');
   ok(classifieds.text.includes('Founding listings open'), 'empty board honestly says founding listings open');
   ok(classifieds.text.includes('name="business_name"') && classifieds.text.includes('name="listing_text"')
     && classifieds.text.includes('name="department"'), 'submission form carries business/email/text/department');
 
   // A submission lands for review and does NOT appear on the board.
   const jar = {};
-  const post = await fetch('http://localhost:4137/the-big-one/classifieds', {
+  const post = await fetch('http://localhost:4137/dawnfold/classifieds', {
     method: 'POST', redirect: 'manual',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
@@ -112,29 +126,43 @@ async function runHttpTests(ok, req) {
   for (const c of (post.headers.getSetCookie ? post.headers.getSetCookie() : [])) {
     const [pair] = c.split(';'); const [k, v] = pair.split('='); jar[k.trim()] = (v || '').trim();
   }
-  ok(post.status === 302 && (post.headers.get('location') || '').includes('/the-big-one/classifieds'),
+  ok(post.status === 302 && (post.headers.get('location') || '').includes('/dawnfold/classifieds'),
     'classifieds submission accepted for review (302 back to the board)');
-  const board = await anon('/the-big-one/classifieds');
+  const board = await anon('/dawnfold/classifieds');
   ok(!board.text.includes('Bayou Test Biz'), 'submitted listing does NOT auto-publish to the board');
 
+  // Legacy POST mount: a form still pointed at the pre-rename path
+  // is accepted (a 301 cannot carry a form post) and lands on the
+  // Dawnfold board.
+  const legacyPost = await fetch('http://localhost:4137/the-big-one/classifieds', {
+    method: 'POST', redirect: 'manual',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      business_name: 'Legacy Path Biz', contact_email: 'legacy@test.local',
+      department: 'classifieds', listing_text: 'Posted through the pre-rename form path.',
+    }),
+  });
+  ok(legacyPost.status === 302 && (legacyPost.headers.get('location') || '').includes('/dawnfold/classifieds'),
+    'legacy /the-big-one/classifieds POST stays mounted and lands on the Dawnfold board');
+
   // Gift path is login-gated like every register door.
-  const gift = await anon('/the-big-one/gift', { method: 'POST' });
+  const gift = await anon('/dawnfold/gift', { method: 'POST' });
   ok(gift.status === 302 && (gift.location || '').startsWith('/login'), 'gift POST requires login (guest-commerce door, not a wall-less form)');
 
   const sm = await req('GET', '/sitemap.xml');
-  ok(sm.status === 200 && sm.text.includes('/the-big-one</loc>') && sm.text.includes('/the-big-one/sponsors')
-    && sm.text.includes('/the-big-one/classifieds'), 'sitemap lists all three Big One doors');
+  ok(sm.status === 200 && sm.text.includes('/dawnfold</loc>') && sm.text.includes('/dawnfold/sponsors')
+    && sm.text.includes('/dawnfold/classifieds'), 'sitemap lists all three Dawnfold doors');
 
   const apps = await anon('/apps');
-  ok(apps.status === 200 && apps.text.includes('href="/the-big-one"'), '/apps cross-links The Big One');
+  ok(apps.status === 200 && apps.text.includes('href="/dawnfold"'), '/apps cross-links Dawnfold');
 
   const codex = await req('GET', '/api/codex');
   const book = JSON.parse(codex.text);
-  ok((book.doors || []).some((d) => /The Big One — web edition/.test(d.name)), 'codex records the web edition door');
-  ok((book.plugs || []).some((p) => /The Big One publication/.test(p.name)), 'codex records the publication plug (OneMind tie)');
-  ok((book.prices.entries || []).filter((e) => /The Big One/.test(e.name)).length >= 4
+  ok((book.doors || []).some((d) => /Dawnfold — web edition/.test(d.name)), 'codex records the web edition door');
+  ok((book.plugs || []).some((p) => /Dawnfold publication/.test(p.name)), 'codex records the publication plug (OneMind tie)');
+  ok((book.prices.entries || []).filter((e) => /Dawnfold/.test(e.name)).length >= 4
     && (book.prices.entries || []).every((e) => /settled/i.test(e.state || '')),
-    'codex price entries for The Big One are in and settled');
+    'codex price entries for Dawnfold are in and settled');
 }
 
 // ---- Bundle A (2026-10-28): Founding-500 push + Your Local insert ----
@@ -212,21 +240,21 @@ async function runBundleAHttp(ok, req) {
     return { status: r.status, text: await r.text(), location: r.headers.get('location') };
   };
 
-  const home = await anon('/the-big-one');
-  ok(home.status === 200, '/the-big-one serves 200 (bundle A)');
+  const home = await anon('/dawnfold');
+  ok(home.status === 200, '/dawnfold serves 200 (bundle A)');
   ok(home.text.includes('id="your-local"'), 'Your Local insert section is in the page');
   ok(home.text.includes('id="tboLocalLabel">Abbeville, Louisiana</span>'),
     'anon readers get the house locality (Abbeville) in the insert masthead');
   ok(/of 500 founding spots left/.test(home.text), 'founding push shows the real seats-left count from the register');
   ok(home.text.includes('id="founding"'), 'founding push section is in the page');
 
-  const badWx = await anon('/the-big-one/local/weather?lat=999&lon=0');
+  const badWx = await anon('/dawnfold/local/weather?lat=999&lon=0');
   ok(badWx.status === 400, 'local weather door rejects bad coordinates');
-  const search = await anon('/the-big-one/local/search?q=abbeville');
+  const search = await anon('/dawnfold/local/search?q=abbeville');
   ok(search.status === 200 && Array.isArray(JSON.parse(search.text).places),
     'local search door answers a JSON places array (empty offline — never fabricated)');
 
-  const guestPost = await anon('/the-big-one/locality', {
+  const guestPost = await anon('/dawnfold/locality', {
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ label: 'Lafayette, Louisiana', lat: '30.2241', lon: '-92.0198' }),
@@ -250,12 +278,12 @@ async function runBundleAHttp(ok, req) {
   };
   const login = await jarReq('POST', '/login', { email: 'tbo-seated@test.local', password: 'BundleA123!' });
   ok(login.status === 302 || login.status === 200, 'seated founder login works');
-  const save = await jarReq('POST', '/the-big-one/locality', {
+  const save = await jarReq('POST', '/dawnfold/locality', {
     label: 'Lafayette, Louisiana', name: 'Lafayette', region: 'Louisiana',
     country: 'United States', lat: '30.2241', lon: '-92.0198',
   });
   ok(save.status === 302, 'seated locality save accepted (302 back to the insert)');
-  const mine = await jarReq('GET', '/the-big-one');
+  const mine = await jarReq('GET', '/dawnfold');
   ok(mine.status === 200 && mine.text.includes('id="tboLocalLabel">Lafayette, Louisiana</span>'),
     'seated reader’s edition carries their own locality in the insert');
   ok(mine.text.includes('FOUNDING MEMBER'), 'seated founder sees the founding recognition in the edition');

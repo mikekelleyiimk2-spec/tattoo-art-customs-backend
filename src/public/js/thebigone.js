@@ -1,8 +1,8 @@
-/* The Big One — edition engine (web). Ported verbatim from the app
+/* Dawnfold — edition engine (web). Ported verbatim from the app
    bundle's app.js: department progress + the IN ORDER! Ritual.
    On the web the Root Checker bridge is absent, so the root
    line honestly reads 'on duty'. */
-/* THE BIG ONE — edition engine.
+/* DAWNFOLD — edition engine.
    Finite edition mechanics: department progress + the Ritual puzzle.
    State persists on-device (localStorage) so a finisher stays finished. */
 (function () {

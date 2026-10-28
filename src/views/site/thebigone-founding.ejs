@@ -1,5 +1,5 @@
 <%#
-  The Big One — FOUNDING 500 push section.
+  Dawnfold — FOUNDING 500 push section.
   Locals (all guarded — this partial must never throw):
     plans, money, foundingLeft, foundingCap, paypalReady, user, founder.
   Seats remaining comes ONLY from foundingLeft (the live count the
@@ -40,7 +40,7 @@
       <button class="tbo-btn" type="submit">Pay with site credit</button>
     </form>
     <% } else { %>
-    <p><a class="tbo-btn gold" href="/the-big-one/signin">Sign in to subscribe</a></p>
+    <p><a class="tbo-btn gold" href="/dawnfold/signin">Sign in to subscribe</a></p>
     <p class="tbo-note">Subscribing rides your OneMind account — sign in (or create it in one tap) and you're back here to finish.</p>
     <% } %>
     <% if (!_paypalReady.the_big_one_founding) { %>
@@ -50,7 +50,7 @@
     <p><b>The founding 500 are full.</b></p>
     <p>The founding rate is closed — every one of the first <%= _foundingCap %> spots is held.
     The regular subscription carries the same edition, every department, every day:</p>
-    <p><a class="tbo-btn gold" href="#subscribe">Subscribe to The Big One</a></p>
+    <p><a class="tbo-btn gold" href="#subscribe">Subscribe to Dawnfold</a></p>
     <% } %>
   </article>
 </section>

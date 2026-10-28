@@ -21,11 +21,11 @@ const SURFACES = [
   { id: 'onemind-app', name: 'OneMind app', kind: 'app' },
   { id: 'ai2ai-app', name: 'AI to AI app', kind: 'app' },
   { id: 'tac-app', name: 'Tattoo Art Customs app', kind: 'app' },
-  // The Big One app (v1.1.0, Lane B 2026-10-27): the publication's
+  // Dawnfold app (v1.1.0, Lane B 2026-10-27): the publication's
   // native OneMind sign-in, copied from the OneMind app's contract
   // pattern — its sign-in seats the tie at the sitting, same as every
   // other app surface here.
-  { id: 'thebigone-app', name: 'The Big One app', kind: 'app' },
+  { id: 'thebigone-app', name: 'Dawnfold app', kind: 'app' },
   { id: 'tester-hub', name: 'Tester Hub', kind: 'app' },
   { id: 'killintime-console', name: 'KillinTime Console', kind: 'app' },
   { id: 'folder-app', name: 'UsefulAppz Folder', kind: 'app' },

@@ -1,4 +1,4 @@
-/* The Big One — "Your Local" insert (client).
+/* Dawnfold — "Your Local" insert (client).
    Vanilla, defensive: exits quietly when the section is absent.
    - Signed-in readers: a pick fills the hidden server form and
      submits it — the locality is saved to their OneMind account.
@@ -91,7 +91,7 @@
   }
 
   function fetchWeatherFor(place) {
-    return fetch("/the-big-one/local/weather?lat=" + encodeURIComponent(place.lat) + "&lon=" + encodeURIComponent(place.lon))
+    return fetch("/dawnfold/local/weather?lat=" + encodeURIComponent(place.lat) + "&lon=" + encodeURIComponent(place.lon))
       .then(function (r) { return r.json(); })
       .then(function (j) {
         if (j && j.ok) {
@@ -144,7 +144,7 @@
     if (!q) { setStatus("Type your town first, then tap Find my town."); return; }
     setStatus("Finding “" + q + "”…");
     if (resultsEl) resultsEl.innerHTML = "";
-    fetch("/the-big-one/local/search?q=" + encodeURIComponent(q))
+    fetch("/dawnfold/local/search?q=" + encodeURIComponent(q))
       .then(function (r) { return r.json(); })
       .then(function (j) {
         var places = (j && j.ok && Array.isArray(j.places)) ? j.places : [];

@@ -297,8 +297,8 @@
     "how_checked": "Backend suite (test/thebigone.js: all three doors 200 on the test server with masthead/IN ORDER!/rate-card/form markers) + live curl verification of both Render hosts, 2026-10-27",
     "last_verified": "2026-10-27"
    },
-   "name": "The Big One — web edition (/the-big-one)",
-   "notes": "The publication's OWN web face (owner order 2026-10-27, Lane A): own layout (cream/ink/gold masthead grammar ported from the app's first screen), Edition No. 1 (Wed Oct 28 2026, Vol I No 1) with all departments + IN ORDER! playable in-page, Listen player at /audio/the-big-one/edition-1.mp3. OneMind tie: the page is public; its sign-in door (Google + email/password via /the-big-one/signin -> /login with returnTo, plus the email sign-in link door POST /the-big-one/link -> seatClaims on the website surface) resolves through the site's existing auth, so seatQuietly attaches the tie at the sitting like every other door. Sister links out: OneMind, TAC, /apps, Library. Recorded per the Everything-Ties-To-OneMind law (2026-10-27) — nothing ships as an island.",
+   "name": "Dawnfold — web edition (/dawnfold)",
+   "notes": "The publication's OWN web face (owner order 2026-10-27, Lane A): own layout (cream/ink/gold masthead grammar ported from the app's first screen), Edition No. 1 (Wed Oct 28 2026, Vol I No 1) with all departments + IN ORDER! playable in-page, Listen player at /audio/the-big-one/edition-1.mp3. OneMind tie: the page is public; its sign-in door (Google + email/password via /dawnfold/signin -> /login with returnTo, plus the email sign-in link door POST /dawnfold/link -> seatClaims on the website surface) resolves through the site's existing auth, so seatQuietly attaches the tie at the sitting like every other door. Sister links out: OneMind, TAC, /apps, Library. Recorded per the Everything-Ties-To-OneMind law (2026-10-27) — nothing ships as an island.",
    "state": "live — web edition serving Edition No. 1 on both hosts (tattoo-art-customs + onemind standalone)"
   },
   {
@@ -307,7 +307,7 @@
     "how_checked": "Backend suite (test/thebigone.js) + live curl verification of both Render hosts, 2026-10-27",
     "last_verified": "2026-10-27"
    },
-   "name": "The Big One — sponsors rate card (/the-big-one/sponsors)",
+   "name": "Dawnfold — sponsors rate card (/dawnfold/sponsors)",
    "notes": "Founding rate card in the publication's face: edition Presented-by $75/mo, department sponsorship $25/mo, sponsored IN ORDER! contest $50/Sunday edition, Waiting Room business plan, Acadiana local bundle $99/mo, feed licensing $49/mo per feed + the flow toll. Honest founding copy — audience growing, NO invented reach numbers. Inquiries run through the existing POST /contact machinery. Prices live in src/lib/thebigone.js (SPONSORS), fee pass-through applied at display.",
    "state": "live — founding rates open, inquiries via the contact machinery"
   },
@@ -317,7 +317,7 @@
     "how_checked": "Backend suite (test/thebigone.js: form renders, submission lands as orders pending_review, board shows the honest empty state) + live curl verification, 2026-10-27",
     "last_verified": "2026-10-27"
    },
-   "name": "The Big One — classifieds & notices (/the-big-one/classifieds)",
+   "name": "Dawnfold — classifieds & notices (/dawnfold/classifieds)",
    "notes": "Small register products: Classifieds $5.67 / Notices $3.60 (register prices incl. fee pass-through; base $5 / $3), 30-day run. Submissions insert orders rows (order_type 'the_big_one_listing', status 'pending_review', payload in orders.guest_note per migration 115) + an admin notification; NOTHING auto-publishes — the desk reviews, confirms payment by hand (Business PayPal mk4 link, the gift-card manual pattern), then flips to 'published'. Board renders only published rows; empty state honestly reads 'Founding listings open'.",
    "state": "live — founding listings open, desk-reviewed, nothing auto-published"
   },
@@ -503,7 +503,7 @@
     "how_checked": "Backend suite (test/thebigone.js) + live curl verification of both Render hosts, 2026-10-27",
     "last_verified": "2026-10-27"
    },
-   "name": "The Big One publication (web + app)",
+   "name": "Dawnfold publication (web + app)",
    "notes": "The house publication plugged into the table: one product across the Android app and the web edition, one OneMind account for readers (sign-in on either surface seats the same tie), the subscription register shared with the website's membership machinery, and its departments + IN ORDER! offered as licensable feeds (per-feed price + the flow toll, per the Price of the Plug). House into house: the fleet plug-in charge is zero by Codex law (3).",
    "plug_in_charge": "zero — house fleet (Codex law 3); outside feed licensees pay the per-feed price + toll on the flow",
    "state": "live — web edition + register doors shipped 2026-10-27 (Lane A); app edition ships from the same desk"
@@ -608,7 +608,7 @@
      "how_checked": "Owner build order 2026-10-27 (subscription $4.99/mo + annual $39.99/yr named in the order; founding prices set under the same order)",
      "last_verified": "2026-10-27"
     },
-    "name": "The Big One — subscription",
+    "name": "Dawnfold — subscription",
     "notes": "Subscription $4.99/mo and Annual $39.99/yr (register prices with the house fee pass-through: $5.65/mo, $41.88/yr — plans the_big_one / the_big_one_annual in config.pricing.plans, seeded into the plans table). Checkout rides the membership machinery: site-credit path live; PayPal recurring checkout PARKED until the owner creates the plans in the PayPal dashboard (PAYPAL_PLAN_THE_BIG_ONE / _ANNUAL) — the house-standard parked state, stated plainly on the page.",
     "state": "SETTLED — owner order 2026-10-27: $4.99/mo · $39.99/yr (register $5.65 / $41.88 fee-incl.)"
    },
@@ -618,7 +618,7 @@
      "how_checked": "Set 2026-10-27 under the owner's build order ('set sensible founding prices in the same config')",
      "last_verified": "2026-10-27"
     },
-    "name": "The Big One — Founding Member",
+    "name": "Dawnfold — Founding Member",
     "notes": "Founding Member $2.99/mo locked rate (register $3.58 fee-incl.), capped at the first 500 founding subscriptions — the cap counts pending+active subscription rows on the the_big_one_founding plan (src/lib/thebigone.js foundingSpotsLeft), enforced on both the PayPal and site-credit subscribe paths. Same checkout state as the subscription: credit path live, PayPal parked on the dashboard plan (PAYPAL_PLAN_THE_BIG_ONE_FOUNDING).",
     "state": "SETTLED — founding price set 2026-10-27: $2.99/mo locked, first 500 (register $3.58 fee-incl.)"
    },
@@ -628,7 +628,7 @@
      "how_checked": "Set 2026-10-27 under the owner's build order ('set sensible founding prices in the same config')",
      "last_verified": "2026-10-27"
     },
-    "name": "The Big One — Supporter + Waiting Room",
+    "name": "Dawnfold — Supporter + Waiting Room",
     "notes": "Supporter tier $9.99/mo (register $10.83) — subscription + name in the masthead supporter roll. Waiting Room business rate $19.99/mo (register $21.18) — the publication delivered for a shop/lobby/waiting room. Plans the_big_one_supporter / the_big_one_waiting_room; same checkout state as the subscription (credit live, PayPal parked on dashboard plans).",
     "state": "SETTLED — founding prices set 2026-10-27: Supporter $9.99/mo · Waiting Room $19.99/mo (register $10.83 / $21.18 fee-incl.)"
    },
@@ -638,7 +638,7 @@
      "how_checked": "Set 2026-10-27 under the owner's build order ('set sensible founding prices in the same config')",
      "last_verified": "2026-10-27"
     },
-    "name": "The Big One — sponsors, classifieds & feed licensing",
+    "name": "Dawnfold — sponsors, classifieds & feed licensing",
     "notes": "Founding rate card (src/lib/thebigone.js SPONSORS/LISTINGS, fee pass-through at display): edition Presented-by $75/mo, department sponsorship $25/mo, sponsored IN ORDER! contest $50 per Sunday edition, Acadiana local bundle $99/mo, classifieds listing $5/30 days (register $5.67), notices $3/30 days (register $3.60). Feed licensing: departments / IN ORDER! as licensed feeds at $49/mo per feed plus the toll on the flow across the plug (Price of the Plug — never a second charge on the door). No invented reach numbers anywhere on the rate card.",
     "state": "SETTLED — founding rate card set 2026-10-27: Presented-by $75/mo · department $25/mo · puzzle $50 · bundle $99/mo · classifieds $5 · notices $3 · feeds $49/mo per feed + flow toll"
    },

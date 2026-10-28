@@ -1,5 +1,5 @@
-<%# The Big One — "Your Local" insert (partial, included inside the
-    /the-big-one page). Locals contract (coordinator supplies):
+<%# Dawnfold — "Your Local" insert (partial, included inside the
+    /dawnfold page). Locals contract (coordinator supplies):
     local ({label, lat, lon, isHouse}), localWx (getLocalWeather
     result or null), user (or null), briefs (briefSlots result).
     Every local is guarded so the partial renders with only
@@ -109,7 +109,7 @@
     <p class="tbo-note">Stored on this device only — sign in and it follows you everywhere.</p>
     <% } %>
     <% if (_user) { %>
-    <form method="post" action="/the-big-one/locality" id="tboLocalForm">
+    <form method="post" action="/dawnfold/locality" id="tboLocalForm">
       <input type="hidden" name="label" id="tboLocalFormLabel">
       <input type="hidden" name="name" id="tboLocalFormName">
       <input type="hidden" name="region" id="tboLocalFormRegion">

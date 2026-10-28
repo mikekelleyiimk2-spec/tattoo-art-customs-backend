@@ -1,4 +1,4 @@
-<%# The Big One — Classifieds & Notices board + submission form.
+<%# Dawnfold — Classifieds & Notices board + submission form.
     Nothing auto-publishes: submissions land in orders as
     pending_review for the desk; the board below shows only listings
     the desk has published, and says so honestly while it's empty. %>
@@ -10,7 +10,7 @@
   </div>
   <h1 class="mast-name" style="font-size:38px;">Classifieds</h1>
   <p class="mast-tag">The small print at the back of the paper — where the town talks.</p>
-  <p class="mast-date"><a href="/the-big-one">← Read today's edition</a> · <a href="/the-big-one/sponsors">Sponsor rate card</a></p>
+  <p class="mast-date"><a href="/dawnfold">← Read today's edition</a> · <a href="/dawnfold/sponsors">Sponsor rate card</a></p>
 </header>
 
 <div class="tbo-doors">
@@ -44,7 +44,7 @@
         <li>Pay the listing price through the Business PayPal link (note your business name so the desk can match it).</li>
         <li>The desk reviews the text, confirms payment, and your listing runs for 30 days.</li>
       </ol>
-      <form method="post" action="/the-big-one/classifieds" class="tbo-form">
+      <form method="post" action="/dawnfold/classifieds" class="tbo-form">
         <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
         <label for="clBiz">Business name</label>
         <input id="clBiz" type="text" name="business_name" required maxlength="120">
@@ -60,11 +60,11 @@
         <p><button class="tbo-btn gold" type="submit">Send for review</button></p>
       </form>
       <p><a class="tbo-btn" href="https://www.paypal.com/ncp/payment/WA9DS6J8ERSHW" target="_blank" rel="noopener">Pay the listing price via Business PayPal</a></p>
-      <p class="tbo-note">The desk may decline a listing that doesn't fit the paper (no spam, no misleading claims) — a declined listing's payment is returned. Questions? <a href="/the-big-one/sponsors">The sponsors page</a> reaches the same desk.</p>
+      <p class="tbo-note">The desk may decline a listing that doesn't fit the paper (no spam, no misleading claims) — a declined listing's payment is returned. Questions? <a href="/dawnfold/sponsors">The sponsors page</a> reaches the same desk.</p>
     </div>
     <%- include('../partials/ad-slot', {slot: 'home_inline'}) %>
     <div class="tbo-card">
-      <p class="tbo-note">From the same house: <a href="/onemind">OneMind</a> · <a href="/">Tattoo Art Customs</a> · <a href="/apps">Every app</a> · <a href="/the-big-one">Today's edition</a></p>
+      <p class="tbo-note">From the same house: <a href="/onemind">OneMind</a> · <a href="/">Tattoo Art Customs</a> · <a href="/apps">Every app</a> · <a href="/dawnfold">Today's edition</a></p>
     </div>
   </section>
 </div>

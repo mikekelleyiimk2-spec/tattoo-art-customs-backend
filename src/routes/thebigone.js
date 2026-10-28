@@ -1,14 +1,23 @@
-// The Big One — web edition + money surfaces (owner order 2026-10-27,
+// Dawnfold — web edition + money surfaces (owner order 2026-10-27,
 // Lane A). The publication's OWN face: its own layout (cream / ink /
 // gold masthead grammar, ported from the app's first screen), never
 // the TAC layout skin.
 //
-//   GET  /the-big-one              Edition No. 1 + every money door
-//   GET  /the-big-one/signin       sets the return path, into /login
-//   GET  /the-big-one/sponsors     the rate card (same face)
-//   GET  /the-big-one/classifieds  listings + submission form
-//   POST /the-big-one/classifieds  submission -> orders (pending_review)
-//   POST /the-big-one/gift         gift subscription -> orders + claim
+// RENAMED 2026-10-28 (owner strike): the publication was "The Big
+// One"; it is Dawnfold now. The doors moved to /dawnfold*; the old
+// /the-big-one GET doors 301-redirect below (query preserved), the
+// old POST paths stay mounted alongside the new ones (a redirect
+// cannot carry a form post), and the old sign-in link verify door
+// stays mounted so links already emailed keep working. Internal
+// names (this file, lib/thebigone, plan slugs the_big_one*) never
+// changed — display name only.
+//
+//   GET  /dawnfold              Edition No. 1 + every money door
+//   GET  /dawnfold/signin       sets the return path, into /login
+//   GET  /dawnfold/sponsors     the rate card (same face)
+//   GET  /dawnfold/classifieds  listings + submission form
+//   POST /dawnfold/classifieds  submission -> orders (pending_review)
+//   POST /dawnfold/gift         gift subscription -> orders + claim
 //
 // OneMind tie: the page is public; the sign-in door runs through the
 // site's existing auth (Google + email/password on /login, and the
@@ -29,6 +38,20 @@ const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 
 const router = express.Router();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Pre-rename GET doors (RENAMED 2026-10-28, was "The Big One"):
+// 301 to the Dawnfold doors, query string preserved.
+const OLD_GET_DOORS = [
+  '/the-big-one', '/the-big-one/signin', '/the-big-one/sponsors',
+  '/the-big-one/classifieds', '/the-big-one/local/search',
+  '/the-big-one/local/weather',
+];
+router.get(OLD_GET_DOORS, (req, res) => {
+  const target = req.path.replace(/^\/the-big-one/, '/dawnfold');
+  const qs = req.originalUrl.includes('?')
+    ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '';
+  return res.redirect(301, `${target}${qs}`);
+});
 
 function face(res, view, locals) {
   const base = config.baseUrl.replace(/\/$/, '');
@@ -76,11 +99,11 @@ async function localLocals(req) {
 // Edition No. 1 — Wed Oct 28 2026, Vol I No 1. The edition body is
 // ported verbatim from the app's bundled index.html (departments,
 // sources, colophon intact) into views/site/thebigone-edition.ejs.
-router.get('/the-big-one', async (req, res) => {
+router.get('/dawnfold', async (req, res) => {
   face(res, 'site/thebigone', {
-    path: '/the-big-one',
-    title: 'The Big One — Vol. I, No. 1 · Wednesday, October 28, 2026',
-    metaDescription: 'The Big One: the whole day in one sitting — news in two frames, world events, the Spotlight, weather, money in plain words, Today In…, the Documentary Shelf, the Back of the Book, and IN ORDER!, the daily puzzle you can finish.',
+    path: '/dawnfold',
+    title: 'Dawnfold — Vol. I, No. 1 · Wednesday, October 28, 2026',
+    metaDescription: 'Dawnfold: the whole day in one sitting — news in two frames, world events, the Spotlight, weather, money in plain words, Today In…, the Documentary Shelf, the Back of the Book, and IN ORDER!, the daily puzzle you can finish.',
     ...(await doorLocals(req)),
     flash: res.locals.flash || null,
   });
@@ -88,7 +111,7 @@ router.get('/the-big-one', async (req, res) => {
 
 // Your Local — typed-place search (the World Weather pattern:
 // Open-Meteo geocoding; no location without a tap, anywhere here).
-router.get('/the-big-one/local/search', async (req, res) => {
+router.get('/dawnfold/local/search', async (req, res) => {
   const q = String(req.query.q || '').trim().slice(0, 80);
   if (q.length < 2) return res.json({ ok: true, places: [] });
   const places = await li.searchPlaces(q);
@@ -97,7 +120,7 @@ router.get('/the-big-one/local/search', async (req, res) => {
 
 // Your Local — weather for an arbitrary locality (the guest device
 // pick path; signed-in readers get theirs rendered server-side).
-router.get('/the-big-one/local/weather', async (req, res) => {
+router.get('/dawnfold/local/weather', async (req, res) => {
   const lat = Number(req.query.lat);
   const lon = Number(req.query.lon);
   if (!Number.isFinite(lat) || !Number.isFinite(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
@@ -111,10 +134,10 @@ router.get('/the-big-one/local/weather', async (req, res) => {
 // Your Local — save the reader's locality to their account (the
 // OneMind seat carries it to every device). Guests never POST here;
 // their pick lives on the device (see thebigone-local.js).
-router.post('/the-big-one/locality', formLimiter, checkHoneypot, async (req, res) => {
+router.post(['/dawnfold/locality', '/the-big-one/locality'], formLimiter, checkHoneypot, async (req, res) => {
   if (!req.user) {
     req.session.flash = 'Sign in first — then your town saves to your account and follows you to every device.';
-    return res.redirect('/the-big-one#your-local');
+    return res.redirect('/dawnfold#your-local');
   }
   let pick = null;
   const lat = Number(req.body.lat);
@@ -135,7 +158,7 @@ router.post('/the-big-one/locality', formLimiter, checkHoneypot, async (req, res
   req.session.flash = saved
     ? `Your local page is set to ${saved.label} — its weather and briefs now ride your edition.`
     : 'That place didn’t resolve — try the town name with its state or country.';
-  res.redirect('/the-big-one#your-local');
+  res.redirect('/dawnfold#your-local');
 });
 
 // The sign-in door: aim the login flow's existing returnTo slot back
@@ -143,9 +166,9 @@ router.post('/the-big-one/locality', formLimiter, checkHoneypot, async (req, res
 // routes/onemindWeb.js), then hand off to the standard /login page —
 // Google, email + password, and account creation all live there, and
 // every path seats the OneMind tie via seatQuietly.
-router.get('/the-big-one/signin', (req, res) => {
-  if (req.user) return res.redirect('/the-big-one');
-  try { if (req.session) req.session.returnTo = '/the-big-one'; } catch (e) { /* session unavailable */ }
+router.get('/dawnfold/signin', (req, res) => {
+  if (req.user) return res.redirect('/dawnfold');
+  try { if (req.session) req.session.returnTo = '/dawnfold'; } catch (e) { /* session unavailable */ }
   res.redirect('/login');
 });
 
@@ -155,25 +178,25 @@ router.get('/the-big-one/signin', (req, res) => {
 // difference here is only the landing: the tap comes back to THIS
 // page's verify route, which sets the web session, so the reader
 // lands signed in on the publication instead of the app's seat page.
-router.post('/the-big-one/link', formLimiter, checkHoneypot, async (req, res) => {
+router.post(['/dawnfold/link', '/the-big-one/link'], formLimiter, checkHoneypot, async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase().slice(0, 160);
   if (!EMAIL_RE.test(email)) {
     req.session.flash = 'Enter a valid email address and we’ll send your sign-in link.';
-    return res.redirect('/the-big-one');
+    return res.redirect('/dawnfold');
   }
   const seatClaims = require('../lib/seatClaims');
   const claim = await seatClaims.startClaim(email, 'website');
   if (!claim.ok) {
     req.session.flash = 'We couldn’t start that sign-in link — try again, or use the sign-in door above.';
-    return res.redirect('/the-big-one');
+    return res.redirect('/dawnfold');
   }
-  const link = `${config.baseUrl.replace(/\/$/, '')}/the-big-one/link/verify?token=${claim.token}`;
+  const link = `${config.baseUrl.replace(/\/$/, '')}/dawnfold/link/verify?token=${claim.token}`;
   let sent = 0;
   try {
     const { sendMail } = require('../lib/mail');
     await sendMail({
       to: claim.email,
-      subject: 'Your OneMind sign-in link — The Big One',
+      subject: 'Your OneMind sign-in link — Dawnfold',
       text: [
         'Tap this link to finish — it signs you in, or creates your OneMind account if you’re new.',
         'One account works on everything Useful Appz makes, and this tap seats you at the table.',
@@ -190,20 +213,20 @@ router.post('/the-big-one/link', formLimiter, checkHoneypot, async (req, res) =>
   req.session.flash = sent > 0
     ? `Sign-in link sent to ${email} — tap it within the hour and you’re seated.`
     : 'Sorry — the sign-in link couldn’t be sent right now. Use the Google or password door above.';
-  res.redirect('/the-big-one');
+  res.redirect('/dawnfold');
 });
 
-router.get('/the-big-one/link/verify', async (req, res) => {
+router.get(['/dawnfold/link/verify', '/the-big-one/link/verify'], async (req, res) => {
   const seatClaims = require('../lib/seatClaims');
   const result = await seatClaims.verifyClaim(String(req.query.token || ''));
   if (!result.ok || !result.user) {
     return res.status(400).render('site/thebigone-message', {
       layout: 'layout-thebigone',
-      path: '/the-big-one',
-      title: 'That link couldn’t seat you — The Big One',
+      path: '/dawnfold',
+      title: 'That link couldn’t seat you — Dawnfold',
       metaDescription: 'That sign-in link is invalid, expired, or already used.',
       heading: 'That link couldn’t seat you',
-      body: 'The link is invalid, expired, or already used. Head back to The Big One and ask for a fresh one — it only takes a tap.',
+      body: 'The link is invalid, expired, or already used. Head back to Dawnfold and ask for a fresh one — it only takes a tap.',
       flash: null,
     });
   }
@@ -213,17 +236,17 @@ router.get('/the-big-one/link/verify', async (req, res) => {
   req.session.flash = result.created_account
     ? 'Welcome — your OneMind account is created and you’re seated. This same account signs you in everywhere Useful Appz makes.'
     : 'You’re seated — welcome back. This same account signs you in everywhere Useful Appz makes.';
-  res.redirect('/the-big-one');
+  res.redirect('/dawnfold');
 });
 
 // Sponsors — the rate card, in the publication's face. Every offer's
 // inquiry runs through the site's existing contact machinery
 // (POST /contact, the form pattern the HerbHaul partner door uses).
-router.get('/the-big-one/sponsors', async (req, res) => {
+router.get('/dawnfold/sponsors', async (req, res) => {
   face(res, 'site/thebigone-sponsors', {
-    path: '/the-big-one/sponsors',
-    title: 'Sponsor The Big One — Founding Rate Card',
-    metaDescription: 'Sponsor The Big One: edition “Presented by”, department sponsorships, sponsored IN ORDER! contests, waiting-room subscriptions, the Acadiana local bundle, classifieds, and feed licensing — at founding rates.',
+    path: '/dawnfold/sponsors',
+    title: 'Sponsor Dawnfold — Founding Rate Card',
+    metaDescription: 'Sponsor Dawnfold: edition “Presented by”, department sponsorships, sponsored IN ORDER! contests, waiting-room subscriptions, the Acadiana local bundle, classifieds, and feed licensing — at founding rates.',
     offers: tbo.SPONSORS.map((o) => ({ ...o, priceCents: pricing.withFeeCents(o.baseCents) })),
     listings: Object.values(tbo.LISTINGS).map((l) => ({ ...l, priceCents: tbo.listingPriceCents(l.kind) })),
     money: pricing.money,
@@ -235,7 +258,7 @@ router.get('/the-big-one/sponsors', async (req, res) => {
 // Classifieds + Notices: the public board (honest while empty) and
 // the submission form. Nothing auto-publishes — submissions land in
 // `orders` as pending_review register products for the desk.
-router.get('/the-big-one/classifieds', async (req, res) => {
+router.get('/dawnfold/classifieds', async (req, res) => {
   await tbo.ensurePlans();
   let published = [];
   try {
@@ -249,9 +272,9 @@ router.get('/the-big-one/classifieds', async (req, res) => {
     return { business: meta.business || '', text: meta.text || '', kind: meta.kind || 'classifieds' };
   });
   face(res, 'site/thebigone-classifieds', {
-    path: '/the-big-one/classifieds',
-    title: 'The Big One — Classifieds & Notices',
-    metaDescription: 'Classifieds and notices in The Big One: founding listings are open. A small register product — reviewed by the desk, never auto-published.',
+    path: '/dawnfold/classifieds',
+    title: 'Dawnfold — Classifieds & Notices',
+    metaDescription: 'Classifieds and notices in Dawnfold: founding listings are open. A small register product — reviewed by the desk, never auto-published.',
     listings,
     prices: Object.fromEntries(Object.values(tbo.LISTINGS).map((l) => [l.kind, tbo.listingPriceCents(l.kind)])),
     money: pricing.money,
@@ -260,14 +283,14 @@ router.get('/the-big-one/classifieds', async (req, res) => {
   });
 });
 
-router.post('/the-big-one/classifieds', formLimiter, checkHoneypot, async (req, res) => {
+router.post(['/dawnfold/classifieds', '/the-big-one/classifieds'], formLimiter, checkHoneypot, async (req, res) => {
   const business = String(req.body.business_name || '').trim().slice(0, 120);
   const email = String(req.body.contact_email || '').trim().toLowerCase().slice(0, 160);
   const text = String(req.body.listing_text || '').trim().slice(0, 600);
   const kind = req.body.department === 'notices' ? 'notices' : 'classifieds';
   if (!business || !EMAIL_RE.test(email) || text.length < 10) {
     req.session.flash = 'Please include your business name, a valid contact email, and your listing text (at least a sentence).';
-    return res.redirect('/the-big-one/classifieds');
+    return res.redirect('/dawnfold/classifieds');
   }
   const priceCents = tbo.listingPriceCents(kind);
   const orderId = await db.insert('orders', {
@@ -285,13 +308,13 @@ router.post('/the-big-one/classifieds', formLimiter, checkHoneypot, async (req, 
   // contact form uses — a human reads every listing before it runs.
   try {
     await require('../lib/notify').notifyAdmins({
-      kind: 'contact', title: `The Big One ${kind} submission: ${business}`,
+      kind: 'contact', title: `Dawnfold ${kind} submission: ${business}`,
       body: `${business} <${email}> — ${pricing.money(priceCents)} listing, awaiting review + payment confirmation (order ${orderId})`,
-      link: '/the-big-one/classifieds',
+      link: '/dawnfold/classifieds',
     });
   } catch (e) { console.error('classifieds notify failed:', e.message); }
   req.session.flash = `Listing received for review — nothing publishes automatically. The desk confirms payment (${pricing.money(priceCents)} via the Business PayPal link on this page) and reviews the text, then your ${kind === 'notices' ? 'notice' : 'classified'} runs for 30 days. Order reference: ${orderId}.`;
-  res.redirect('/the-big-one/classifieds');
+  res.redirect('/dawnfold/classifieds');
 });
 
 // Gift a subscription (owner order 2026-10-27): buyer + recipient
@@ -299,22 +322,22 @@ router.post('/the-big-one/classifieds', formLimiter, checkHoneypot, async (req, 
 // orders row first, payment confirmation at the desk) and the
 // guest-commerce claim bridge (the recipient's emailed claim tap
 // seats their OneMind account and attaches the purchase).
-router.post('/the-big-one/gift', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
+router.post(['/dawnfold/gift', '/the-big-one/gift'], requireLogin, formLimiter, checkHoneypot, async (req, res) => {
   const recipient = String(req.body.recipient_email || '').trim().toLowerCase().slice(0, 160);
   const slug = req.body.plan === 'the_big_one_annual' ? 'the_big_one_annual' : 'the_big_one';
   if (!EMAIL_RE.test(recipient)) {
     req.session.flash = 'Enter the recipient’s email address for the gift.';
-    return res.redirect('/the-big-one');
+    return res.redirect('/dawnfold');
   }
   if (recipient === String(req.user.email || '').toLowerCase()) {
     req.session.flash = 'That’s your own email — a gift needs a recipient. For yourself, use the subscribe door.';
-    return res.redirect('/the-big-one');
+    return res.redirect('/dawnfold');
   }
   const plans = await tbo.getPlans();
   const plan = plans[slug];
   if (!plan) {
     req.session.flash = 'That gift plan is not in the register yet — please try again shortly.';
-    return res.redirect('/the-big-one');
+    return res.redirect('/dawnfold');
   }
   const orderId = await db.insert('orders', {
     buyer_id: req.user.id,
@@ -335,13 +358,13 @@ router.post('/the-big-one/gift', requireLogin, formLimiter, checkHoneypot, async
   } catch (e) { console.error('thebigone gift claim failed:', e.message); }
   try {
     await require('../lib/notify').notifyAdmins({
-      kind: 'contact', title: `The Big One gift: ${plan.name}`,
+      kind: 'contact', title: `Dawnfold gift: ${plan.name}`,
       body: `${req.user.email} gifted ${plan.name} (${pricing.money(plan.price_cents)}) to ${recipient} — order ${orderId}, awaiting payment confirmation`,
-      link: '/the-big-one',
+      link: '/dawnfold',
     });
   } catch (e) { console.error('thebigone gift notify failed:', e.message); }
   req.session.flash = `Gift recorded: ${plan.name} for ${recipient}. The desk confirms payment at the register (PayPal, like everything in the house) and a one-tap claim link is on its way to ${recipient} — their tap seats their OneMind account and attaches the gift.`;
-  res.redirect('/the-big-one');
+  res.redirect('/dawnfold');
 });
 
 module.exports = router;

@@ -12,25 +12,25 @@
 //   books bundled in the app, pulled from Project Gutenberg).
 // - "The Listening Shelf" is the Library app's own audiobook shelf
 //   (index.html / listening.html in the app; LibriVox recordings).
-// - "The Documentary Shelf" is The Big One's Library department
+// - "The Documentary Shelf" is Dawnfold's Library department
 //   (Edition No. 1, section #doc: "From the Library's public-domain
 //   shelves — real films, free forever"), sourced from the Prelinger
 //   Collection at the Internet Archive as printed in the edition.
-// These are NOT The Big One's departments renamed — the departments
+// These are NOT Dawnfold's departments renamed — the departments
 // list belongs to thebigone.js; this list is the Library's shelves.
 //
 // PRICES — ASSESSED, PENDING OWNER STRIKE:
 // Every baseCents below is an Aria assessment, NOT an owner-settled
-// price. Scale: The Big One's owner-ordered department sponsorship
+// price. Scale: Dawnfold's owner-ordered department sponsorship
 // is $25/mo and its edition "Presented by" is $75/mo
 // (src/lib/thebigone.js SPONSORS, 2026-10-27), so a single Library
 // shelf is assessed at the department level ($25/mo for the flagship
 // shelves, $20/mo for the narrower shelves), the Documentary Shelf
-// at $30/mo (it also carries a chair in The Big One's edition), and
+// at $30/mo (it also carries a chair in Dawnfold's edition), and
 // the whole-Library "Presented by" at $75/mo. PRICE_STATUS carries
 // the flag on every entry.
 //
-// Price presentation mirrors /the-big-one/sponsors exactly (that
+// Price presentation mirrors /dawnfold/sponsors exactly (that
 // page SHOWS its prices): the route displays the register price —
 // base + the house fee pass-through, pricing.withFeeCents, the same
 // function the Big One route uses — labelled as a founding rate.
@@ -126,9 +126,9 @@ const SHELVES = [
   {
     key: 'the-documentary-shelf',
     name: 'The Documentary Shelf',
-    source: 'The Big One Edition No. 1, section #doc — "From the Library\u2019s public-domain shelves"',
-    blurb: 'Real public-domain films, one at a time — the shelf The Big One\u2019s Documentary department draws from. This sponsorship also carries the labeled sponsor chair printed in that department of the edition.',
-    baseCents: 3000, // $30/mo assessed — shelf + the chair in The Big One edition
+    source: 'Dawnfold Edition No. 1, section #doc — "From the Library\u2019s public-domain shelves"',
+    blurb: 'Real public-domain films, one at a time — the shelf Dawnfold\u2019s Documentary department draws from. This sponsorship also carries the labeled sponsor chair printed in that department of the edition.',
+    baseCents: 3000, // $30/mo assessed — shelf + the chair in Dawnfold edition
     per: 'month',
     availability: AVAILABLE,
     sponsorEligible: true,
@@ -147,7 +147,7 @@ const SHELVES = [
   },
 ];
 
-// The whole-Library offer, mirroring The Big One's edition
+// The whole-Library offer, mirroring Dawnfold's edition
 // "Presented by" ($75/mo, owner-ordered there; assessed here).
 const WHOLE_LIBRARY = {
   key: 'whole-library',
@@ -161,7 +161,7 @@ const WHOLE_LIBRARY = {
 };
 
 // Register price for a shelf/offer: base + house fee pass-through,
-// exactly as /the-big-one/sponsors computes its offers. Null for a
+// exactly as /dawnfold/sponsors computes its offers. Null for a
 // shelf that is not sponsor-eligible (no price exists to show).
 function shelfPriceCents(entry) {
   if (!entry || !entry.sponsorEligible || !entry.baseCents) return null;

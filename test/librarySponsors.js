@@ -35,7 +35,7 @@ async function runDbTests(ok) {
   const verne = lib.shelfByKey('the-verne-shelf');
   ok(verne && verne.baseCents === 2500, 'Verne Shelf assessed at the Big One department level ($25/mo base)');
   ok(lib.WHOLE_LIBRARY.baseCents === 7500, 'whole-Library presented-by assessed at the Big One presented-by level ($75/mo base)');
-  ok(lib.shelfPriceCents(verne) === pricing.withFeeCents(2500), 'register price = base + house fee pass-through (same math as /the-big-one/sponsors)');
+  ok(lib.shelfPriceCents(verne) === pricing.withFeeCents(2500), 'register price = base + house fee pass-through (same math as /dawnfold/sponsors)');
   ok(lib.eligibleShelves().every((s) => s.baseCents >= 2000 && s.baseCents <= 3000), 'eligible shelf bases scale sensibly ($20–$30/mo)');
 
   // Kid-safe rule: the children's shelf sells no chairs.
@@ -77,8 +77,8 @@ async function runHttpTests(ok, req) {
   ok(r.text.includes('SPONSOR') && r.text.includes('founding sponsor chair open'), 'sponsor chairs render labelled + unsold on the offer page');
 
   // The chair on a real shelf surface: the Documentary Shelf
-  // department of The Big One edition.
-  const edition = await req('GET', '/the-big-one');
+  // department of Dawnfold edition.
+  const edition = await req('GET', '/dawnfold');
   ok(edition.status === 200 && edition.text.includes('The Documentary Shelf'), 'edition still serves with its Documentary Shelf');
   ok(edition.text.includes('This shelf is carried by') && edition.text.includes('/library/sponsors#shelf-the-documentary-shelf'),
     'Documentary Shelf in the edition carries the unsold Library sponsor chair linking to /library/sponsors');

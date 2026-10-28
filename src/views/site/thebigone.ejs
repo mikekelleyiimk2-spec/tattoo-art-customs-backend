@@ -1,4 +1,4 @@
-<%# The Big One — web edition face. Edition body first (ported from
+<%# Dawnfold — web edition face. Edition body first (ported from
     the app), then the register: every money door for the publication
     on its own page, in its own grammar. %>
 <%- include('thebigone-edition') %>
@@ -34,7 +34,7 @@
     <% for (const sp of subPlans) { const plan = plans[sp.slug]; if (!plan) continue; %>
     <article class="tbo-card">
       <p class="src" style="letter-spacing:2px;"><%= sp.badge %></p>
-      <h4><%= plan.name.replace('The Big One — ', '') %></h4>
+      <h4><%= plan.name.replace('Dawnfold — ', '') %></h4>
       <p class="tbo-price"><%= money(plan.price_cents) %><span class="tbo-note"> / <%= plan.interval === 'year' ? 'year' : 'month' %></span></p>
       <p><%= sp.note %></p>
       <% if (sp.slug === 'the_big_one_founding' && foundingLeft <= 0) { %>
@@ -52,18 +52,18 @@
       <p class="tbo-note">Honest state of this door: this plan's PayPal checkout is still being set up at the register — the button will tell you so, plainly, and the site-credit path works today. No charge is ever taken by a door that isn't ready.</p>
       <% } %>
       <% } else { %>
-      <p><a class="tbo-btn gold" href="/the-big-one/signin">Sign in to subscribe</a></p>
+      <p><a class="tbo-btn gold" href="/dawnfold/signin">Sign in to subscribe</a></p>
       <p class="tbo-note">Subscribing rides your OneMind account — sign in (or create it in one tap) and you're back here to finish.</p>
       <% } %>
     </article>
     <% } %>
 
     <article class="tbo-card">
-      <h4>🎁 Give The Big One</h4>
+      <h4>🎁 Give Dawnfold</h4>
       <p>Gift a subscription — monthly or annual. The recipient gets a one-tap claim link by email:
       their tap seats their OneMind account and attaches your gift, the house's guest-commerce bridge.</p>
       <% if (user) { %>
-      <form method="post" action="/the-big-one/gift" class="tbo-form">
+      <form method="post" action="/dawnfold/gift" class="tbo-form">
         <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
         <label for="giftPlan">Which subscription?</label>
         <select id="giftPlan" name="plan">
@@ -76,7 +76,7 @@
         <p class="tbo-note">The desk confirms gift payments at the register (PayPal, like everything in the house) — the gift is recorded the moment you submit, and the claim link goes out with it.</p>
       </form>
       <% } else { %>
-      <p><a class="tbo-btn" href="/the-big-one/signin">Sign in to give a gift</a></p>
+      <p><a class="tbo-btn" href="/dawnfold/signin">Sign in to give a gift</a></p>
       <% } %>
     </article>
   </section>
@@ -86,8 +86,8 @@
     <div class="tbo-card">
       <p>The Sponsor Chair sits at the back of every edition, seen by every finisher.
       Founding rates are open — audience growing, no invented numbers.</p>
-      <p><a class="tbo-btn" href="/the-big-one/sponsors">See the sponsor rate card</a>
-         <a class="tbo-btn" href="/the-big-one/classifieds">Classifieds &amp; notices</a></p>
+      <p><a class="tbo-btn" href="/dawnfold/sponsors">See the sponsor rate card</a>
+         <a class="tbo-btn" href="/dawnfold/classifieds">Classifieds &amp; notices</a></p>
     </div>
     <div class="tbo-card">
       <h4>☕ Tip the Desk</h4>
@@ -102,7 +102,7 @@
         <a href="/">Tattoo Art Customs</a> ·
         <a href="/apps">Every app</a> ·
         <a href="/apps">The Library &amp; World Weather</a> ·
-        <a href="/privacy/the-big-one">Privacy — The Big One</a>
+        <a href="/privacy/dawnfold">Privacy — Dawnfold</a>
       </p>
       <p class="tbo-note">Every door in this house signs in with the same OneMind account — the tie attaches at the sitting, wherever you sit down.</p>
     </div>

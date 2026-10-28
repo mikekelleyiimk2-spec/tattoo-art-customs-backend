@@ -85,7 +85,7 @@ const config = {
       tap_solo: process.env.PAYPAL_PLAN_TAP_SOLO || '',
       tap_studio: process.env.PAYPAL_PLAN_TAP_STUDIO || '',
       tap_shop: process.env.PAYPAL_PLAN_TAP_SHOP || '',
-      // The Big One publication plans (owner order 2026-10-27): created
+      // Dawnfold publication plans (owner order 2026-10-27): created
       // in the PayPal dashboard (mk4 business app) like every other plan
       // here. Until an ID is set, that plan's PayPal checkout shows the
       // house-standard "being set up" state — the plan still exists in
@@ -236,16 +236,16 @@ const config = {
       customer_6month: { slug: 'customer_6month', name: 'Customer Membership (6-Month)', priceCents: 2637, interval: '6month' }, // $25.00 + $1.37
       artist: { slug: 'design_artist', name: 'Design Artist', priceCents: 567, interval: 'month' }, // $5.00 + $0.67
       shop: { slug: 'tattoo_shop', name: 'Tattoo Shop', priceCents: 10398, interval: 'year' }, // $99.99 + $3.99
-      // The Big One publication (owner order 2026-10-27; base prices set
+      // Dawnfold publication (owner order 2026-10-27; base prices set
       // in the publication order, fee pass-through applied like every
       // plan above). lib/thebigone.js is the publication's own config
       // face (sponsor rate card, classifieds fees, founding cap) and
       // reads these plan rows — prices live in exactly one place each.
-      the_big_one: { slug: 'the_big_one', name: 'The Big One — Subscription', priceCents: 565, interval: 'month' }, // $4.99 + $0.66
-      the_big_one_annual: { slug: 'the_big_one_annual', name: 'The Big One — Subscription (Annual)', priceCents: 4188, interval: 'year' }, // $39.99 + $1.89
-      the_big_one_founding: { slug: 'the_big_one_founding', name: 'The Big One — Founding Member', priceCents: 358, interval: 'month' }, // $2.99 + $0.59, locked rate, first 500
-      the_big_one_supporter: { slug: 'the_big_one_supporter', name: 'The Big One — Supporter', priceCents: 1083, interval: 'month' }, // $9.99 + $0.84, name in the masthead
-      the_big_one_waiting_room: { slug: 'the_big_one_waiting_room', name: 'The Big One — Waiting Room', priceCents: 2118, interval: 'month' }, // $19.99 + $1.19, business rate
+      the_big_one: { slug: 'the_big_one', name: 'Dawnfold — Subscription', priceCents: 565, interval: 'month' }, // $4.99 + $0.66
+      the_big_one_annual: { slug: 'the_big_one_annual', name: 'Dawnfold — Subscription (Annual)', priceCents: 4188, interval: 'year' }, // $39.99 + $1.89
+      the_big_one_founding: { slug: 'the_big_one_founding', name: 'Dawnfold — Founding Member', priceCents: 358, interval: 'month' }, // $2.99 + $0.59, locked rate, first 500
+      the_big_one_supporter: { slug: 'the_big_one_supporter', name: 'Dawnfold — Supporter', priceCents: 1083, interval: 'month' }, // $9.99 + $0.84, name in the masthead
+      the_big_one_waiting_room: { slug: 'the_big_one_waiting_room', name: 'Dawnfold — Waiting Room', priceCents: 2118, interval: 'month' }, // $19.99 + $1.19, business rate
     },
     // Subscription incentives (see memberships.js / referrals.js).
     firstMonth: {

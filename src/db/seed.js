@@ -17,7 +17,7 @@ async function seed() {
       customer: 'Lower-cost custom commissions, pre-made designs, early access to new content. First month $1.53.',
       customer_annual: 'Everything in Customer Membership, billed yearly — two months free ($52.24/year).',
       customer_6month: 'Everything in Customer Membership, billed every 6 months — 6 months for the price of 5, first month free with a Pro app purchase ($26.37/6 months). Pro-app owners only.',
-      // The Big One plans: descriptions live in lib/thebigone (single
+      // Dawnfold plans: descriptions live in lib/thebigone (single
       // source — ensurePlans() upserts the same text at runtime).
       ...Object.fromEntries(Object.entries(require('../lib/thebigone').PLAN_DESCRIPTIONS)),
       design_artist: 'Upload your art, write an artist bio, earn 60% commission per sale.',

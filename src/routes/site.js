@@ -129,7 +129,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/privacy/master-rolodex`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/robosweeper`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/money-watch`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/the-big-one`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/dawnfold`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/herbhaul`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/herbhaul-driver`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/discounts`, changefreq: 'weekly', priority: '0.7' },
@@ -146,10 +146,10 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/worlds`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/herbhaul`, changefreq: 'weekly', priority: '0.6' },
     { loc: `${base}/herbhaul/founding`, changefreq: 'weekly', priority: '0.6' },
-    // The Big One — the publication's own doors (owner order 2026-10-27).
-    { loc: `${base}/the-big-one`, changefreq: 'daily', priority: '0.8', lastmod: new Date().toISOString().slice(0, 10) },
-    { loc: `${base}/the-big-one/sponsors`, changefreq: 'weekly', priority: '0.6' },
-    { loc: `${base}/the-big-one/classifieds`, changefreq: 'weekly', priority: '0.6' },
+    // Dawnfold — the publication's own doors (owner order 2026-10-27).
+    { loc: `${base}/dawnfold`, changefreq: 'daily', priority: '0.8', lastmod: new Date().toISOString().slice(0, 10) },
+    { loc: `${base}/dawnfold/sponsors`, changefreq: 'weekly', priority: '0.6' },
+    { loc: `${base}/dawnfold/classifieds`, changefreq: 'weekly', priority: '0.6' },
     { loc: `${base}/fill-my-list`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/rolodex-demo`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/money-watch`, changefreq: 'weekly', priority: '0.7' },
@@ -1397,17 +1397,20 @@ router.get('/privacy/money-watch', (req, res) => res.render('site/privacy-moneyw
   metaDescription: 'Privacy policy for Money Watch. It displays the moment money lands for our own business — it never connects to your bank, holds no credentials, and moves no money.',
 }));
 
-// Per-app policy for The Big One Android app (the house publication;
+// Per-app policy for Dawnfold Android app (the house publication;
 // bundled offline editions, one fixed-place weather refresh, no data
 // collected; Play requires a public privacy-policy URL).
-router.get('/privacy/the-big-one', (req, res) => res.render('site/privacy-thebigone', {
-  title: 'The Big One Privacy Policy — Usefulappz',
-  metaDescription: 'Privacy policy for The Big One. A daily edition you read offline — no accounts, no data collected, and a weather line that never asks where you are.',
+router.get('/privacy/dawnfold', (req, res) => res.render('site/privacy-thebigone', {
+  title: 'Dawnfold Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for Dawnfold. A daily edition you read offline — no accounts, no data collected, and a weather line that never asks where you are.',
 }));
+// Pre-rename slug (was "The Big One", RENAMED 2026-10-28): 301 to the
+// Dawnfold privacy page.
+router.get('/privacy/the-big-one', (req, res) => res.redirect(301, '/privacy/dawnfold'));
 
 // Library shelf sponsorships (Bundle C Build 2, 2026-10-28): the
 // offer surface for The Library's own shelves, mirroring the house
-// pattern at GET /the-big-one/sponsors — prices shown as register
+// pattern at GET /dawnfold/sponsors — prices shown as register
 // prices (lib/pricing.withFeeCents over the assessed base in
 // lib/librarySponsors.js, flagged pending owner strike there),
 // honest availability, no invented reach numbers, and inquiries
