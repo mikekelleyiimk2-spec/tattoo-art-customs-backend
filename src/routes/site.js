@@ -125,6 +125,8 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/privacy/robosweeper`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/money-watch`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/the-big-one`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/cannadash`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/cannadash-driver`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/discounts`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/aftercare`, changefreq: 'monthly', priority: '0.6' },
     { loc: `${base}/merch`, changefreq: 'weekly', priority: '0.7' },
@@ -1325,6 +1327,23 @@ router.get('/privacy/money-watch', (req, res) => res.render('site/privacy-moneyw
 router.get('/privacy/the-big-one', (req, res) => res.render('site/privacy-thebigone', {
   title: 'The Big One Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for The Big One. A daily edition you read offline — no accounts, no data collected, and a weather line that never asks where you are.',
+}));
+
+// Per-app policy for the CannaDash Android app (demo build; zero
+// permissions, zero network, bundled demo data only, no data
+// collected; Play requires a public privacy-policy URL).
+router.get('/privacy/cannadash', (req, res) => res.render('site/privacy-cannadash', {
+  title: 'CannaDash Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for CannaDash. A demo build with no permissions and no network — no accounts, no data collected, nothing leaves your phone.',
+}));
+
+// Per-app policy for the CannaDash Driver Android app (demo build;
+// zero permissions, bundled demo data only, no in-app network — the
+// only exits are the driver-tapped nav handoff and browser links;
+// Play requires a public privacy-policy URL).
+router.get('/privacy/cannadash-driver', (req, res) => res.render('site/privacy-cannadashdriver', {
+  title: 'CannaDash Driver Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for CannaDash Driver. A demo build with no permissions and no network — no data collected; directions go to your own nav app only when you tap.',
 }));
 
 router.get('/about', (req, res) => res.render('site/about', {
