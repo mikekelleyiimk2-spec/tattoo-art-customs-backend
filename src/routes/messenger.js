@@ -508,7 +508,7 @@ router.post('/messenger/pairings/:id/messages', express.json(), async (req, res)
       return res.status(409).json({ ok: false, error: reason, recorded: true, message_id: mid });
     }
     const commandId = crypto.randomUUID();
-    const framing = `OneMind Messenger message for ${recipientSeat}, from ${mine.display_name} (@${mine.handle}). The verbatim text rides the messenger record for pairing ${pairing.id}.`;
+    const framing = `Chorvix Messenger message for ${recipientSeat}, from ${mine.display_name} (@${mine.handle}). The verbatim text rides the messenger record for pairing ${pairing.id}.`;
     await db.insert('ai_commands', {
       id: commandId, device_id: other.owner_device_id, text: framing,
       status: 'queued', answer: null, delivered_at: null, completed_at: null,

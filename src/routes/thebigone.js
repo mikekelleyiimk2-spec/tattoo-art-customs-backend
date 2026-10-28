@@ -196,9 +196,9 @@ router.post(['/dawnfold/link', '/the-big-one/link'], formLimiter, checkHoneypot,
     const { sendMail } = require('../lib/mail');
     await sendMail({
       to: claim.email,
-      subject: 'Your OneMind sign-in link — Dawnfold',
+      subject: 'Your Chorvix sign-in link — Dawnfold',
       text: [
-        'Tap this link to finish — it signs you in, or creates your OneMind account if you’re new.',
+        'Tap this link to finish — it signs you in, or creates your Chorvix account if you’re new.',
         'One account works on everything Useful Appz makes, and this tap seats you at the table.',
         '',
         link,
@@ -234,7 +234,7 @@ router.get(['/dawnfold/link/verify', '/the-big-one/link/verify'], async (req, re
   await require('../lib/onemind').seatQuietly(result.user.id, 'website');
   try { await require('../lib/sessionLimits').enforceSessionCap(req); } catch (e) { /* best effort */ }
   req.session.flash = result.created_account
-    ? 'Welcome — your OneMind account is created and you’re seated. This same account signs you in everywhere Useful Appz makes.'
+    ? 'Welcome — your Chorvix account is created and you’re seated. This same account signs you in everywhere Useful Appz makes.'
     : 'You’re seated — welcome back. This same account signs you in everywhere Useful Appz makes.';
   res.redirect('/dawnfold');
 });
@@ -321,7 +321,7 @@ router.post(['/dawnfold/classifieds', '/the-big-one/classifieds'], formLimiter, 
 // emails, mirroring the site gift-card register pattern (a pending
 // orders row first, payment confirmation at the desk) and the
 // guest-commerce claim bridge (the recipient's emailed claim tap
-// seats their OneMind account and attaches the purchase).
+// seats their Chorvix account and attaches the purchase).
 router.post(['/dawnfold/gift', '/the-big-one/gift'], requireLogin, formLimiter, checkHoneypot, async (req, res) => {
   const recipient = String(req.body.recipient_email || '').trim().toLowerCase().slice(0, 160);
   const slug = req.body.plan === 'the_big_one_annual' ? 'the_big_one_annual' : 'the_big_one';
@@ -363,7 +363,7 @@ router.post(['/dawnfold/gift', '/the-big-one/gift'], requireLogin, formLimiter, 
       link: '/dawnfold',
     });
   } catch (e) { console.error('thebigone gift notify failed:', e.message); }
-  req.session.flash = `Gift recorded: ${plan.name} for ${recipient}. The desk confirms payment at the register (PayPal, like everything in the house) and a one-tap claim link is on its way to ${recipient} — their tap seats their OneMind account and attaches the gift.`;
+  req.session.flash = `Gift recorded: ${plan.name} for ${recipient}. The desk confirms payment at the register (PayPal, like everything in the house) and a one-tap claim link is on its way to ${recipient} — their tap seats their Chorvix account and attaches the gift.`;
   res.redirect('/dawnfold');
 });
 

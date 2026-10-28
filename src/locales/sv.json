@@ -428,7 +428,7 @@
       },
       "utility": {
         "title": "Appar för förare, skapare och vardagen",
-        "text": "Odometer loggar dina mil automatiskt för skatten. OneMind lägger hela ditt AI-team ett tryck bort. Plus åtta AI-rader, Clipboard Bar, Countdown Bar och Habit Dot, vår gratis vanespårare.",
+        "text": "Odometer loggar dina mil automatiskt för skatten. Chorvix lägger hela ditt AI-team ett tryck bort. Plus åtta AI-rader, Clipboard Bar, Countdown Bar och Habit Dot, vår gratis vanespårare.",
         "price": "Från {price}, engångsbetalning",
         "btn": "Se alla appar"
       },
@@ -1192,8 +1192,8 @@
     "guest_login_tail": "för att betala med dina sparade uppgifter och se köpet i din orderhistorik."
   },
   "apps": {
-    "aibutton_badge": "OneMind Team — 9,99 $/mån",
-    "aibutton_link": "Besök OneMind",
+    "aibutton_badge": "Chorvix Team — 9,99 $/mån",
+    "aibutton_link": "Besök Chorvix",
     "aibutton_text": "En flytande knapp för alla AI-tjänster — tryck, prata och hör svaret högt, ovanpå vilken app som helst.",
     "free_label": "Gratis",
     "pro_label": "Pro",
@@ -1708,9 +1708,9 @@
     "disclosure": "Affiliatelänk — vi kan få provision, utan extra kostnad för dig.",
     "label_ad": "Annons",
     "label_sponsored": "Sponsrat",
-    "aibutton_h": "OneMind — alla dina AI-tjänster, ett team",
+    "aibutton_h": "Chorvix — alla dina AI-tjänster, ett team",
     "aibutton_p": "En flytande mikrofon som pratar med ChatGPT, Claude, Gemini med flera.",
-    "aibutton_cta": "OneMind Team — 9,99 $/mån",
+    "aibutton_cta": "Chorvix Team — 9,99 $/mån",
     "amazonaftercare_h": "Eftervårdsfavoriter på Amazon",
     "amazonaftercare_p": "Förband, salvor och mer — våra testade favoriter i en lista.",
     "amazonaftercare_cta": "Se urvalet",

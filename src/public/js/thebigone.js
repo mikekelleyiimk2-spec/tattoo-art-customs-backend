@@ -127,13 +127,13 @@
 
   /* ---------- HOUSE PROMO slot (fleet HouseSlot pattern, in-page) ----------
      One labeled card, rotates every 11 seconds through the house bank,
-     led by the OneMind Team pitch. No ad SDK, no third-party anything.
+     led by the Chorvix Team pitch. No ad SDK, no third-party anything.
      HOUSE_ADS is the fleet kill switch: set it false and the slot hides. */
   var HOUSE_ADS = true;
   var SPOTS = [
-    { title: "OneMind Team — All Your AIs, One Team",
+    { title: "Chorvix Team — All Your AIs, One Team",
       text: "One subscription that puts every AI you use on one team — speak once and the whole table works. $9.99/mo.",
-      cta: "See OneMind Team", href: "https://tattoo-art-customs.onrender.com/apps" },
+      cta: "See Chorvix Team", href: "https://tattoo-art-customs.onrender.com/apps" },
     { title: "Money Watch — $4.99",
       text: "Never search for or miss money again — payouts, orders and pennies, watched for you.",
       cta: "See Money Watch", href: "https://tattoo-art-customs.onrender.com/apps" },

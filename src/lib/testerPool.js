@@ -65,7 +65,7 @@ const FLEET_APPS = [
   ['com.usefulappz.perplexitybar', 'Perplexity Bar', 'A one-tap floating bar for Perplexity.'],
   ['com.usefulappz.copilotbar', 'Copilot Bar', 'A one-tap floating bar for Copilot.'],
   ['com.usefulappz.deepseekbar', 'DeepSeek Bar', 'A one-tap floating bar for DeepSeek.'],
-  ['com.usefulappz.aibar', 'OneMind (AI Bar)', 'All your AIs, one team — the master bar.'],
+  ['com.usefulappz.aibar', 'Chorvix (AI Bar)', 'All your AIs, one team — the master bar.'],
   ['com.usefulappz.screenqr', 'ScreenQR', 'Scan QR codes right off your screen.'],
   ['com.usefulappz.odometer', 'Odometer — Mileage Tracker', 'Simple mileage tracking for drivers.'],
   ['com.usefulappz.habitdot', 'Habit Dot', 'A tiny daily habit tracker — one dot a day.'],

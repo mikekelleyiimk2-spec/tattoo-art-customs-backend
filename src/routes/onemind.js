@@ -1,4 +1,5 @@
 // OneMind sign-in — the one account (migration 110, contract:
+// RENAME NOTE (Oct 28 2026): the platform brand is now Chorvix (owner strike, coined-word clearance round). Internal working names — files, routes (/onemind, /api/onemind), ids (onemind_id), env (ONEMIND_STANDALONE) — keep the onemind names by standing law; only people-facing copy carries Chorvix.
 // docs/onemind-signin-contract.md). Owner law restated 2026-10-26:
 // logging into anything we own IS the OneMind login. This backend
 // is OneMind (the hub where the plugs run together); the OneMind
@@ -140,9 +141,9 @@ router.post('/onemind/link/start', authLimiter, express.json(), async (req, res)
   try {
     await sendMail({
       to: claim.email,
-      subject: 'Your OneMind sign-in link',
+      subject: 'Your Chorvix sign-in link',
       text: [
-        'Tap this link to finish — it signs you in, or creates your OneMind account if you\u2019re new.',
+        'Tap this link to finish — it signs you in, or creates your Chorvix account if you\u2019re new.',
         'One account works on everything Useful Appz makes, and this tap seats you at the table.',
         '',
         link,
@@ -176,7 +177,7 @@ router.get('/onemind/link/verify', async (req, res) => {
     });
   }
   return res.render('onemind/verified', {
-    title: 'You\u2019re seated — OneMind',
+    title: 'You\u2019re seated — Chorvix',
     seat: result.seat, createdAccount: result.created_account,
   });
 });

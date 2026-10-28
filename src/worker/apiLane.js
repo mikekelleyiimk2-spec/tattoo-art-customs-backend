@@ -1771,11 +1771,11 @@ async function executeMessenger(cmd, ctx, run) {
     ? `${from.display_name} (@${from.handle}), whose AI is ${from.ai_name}`
     : "another owner's AI";
   const user = [
-    `You are ${seat}. A message arrived for your owner through OneMind Messenger, sent by ${fromName}.`,
+    `You are ${seat}. A message arrived for your owner through Chorvix Messenger, sent by ${fromName}.`,
     `Their message: "${msg.text}"`,
     'Answer it directly, as yourself. Your answer is posted verbatim into the shared Messenger record that both owners read — you are talking to their AI, in front of both owners.',
   ].join('\n\n');
-  const copilotText = `Have Copilot answer a OneMind Messenger message sent by ${fromName}. Their message: "${msg.text}". Answer directly, as Copilot — the answer is posted into the shared Messenger record both owners read.`;
+  const copilotText = `Have Copilot answer a Chorvix Messenger message sent by ${fromName}. Their message: "${msg.text}". Answer directly, as Copilot — the answer is posted into the shared Messenger record both owners read.`;
   return answerFromMember(cmd, ctx, run, seat, user, copilotText);
 }
 

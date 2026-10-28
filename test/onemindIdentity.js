@@ -22,7 +22,7 @@ async function runDbTests(ok) {
   // The registry: tieable surfaces exist; kids' surfaces do not.
   ok(surfaces.isTieable('website') === true, 'website is a tieable surface');
   ok(surfaces.isTieable('onemind-app') === true, 'the OneMind app surface is tieable');
-  ok(surfaces.isTieable('killintime-console') === true, 'the KillinTime Console surface is tieable');
+  ok(surfaces.isTieable('killintime-console') === true, 'the Neon Tombstone Console surface is tieable');
   ok(surfaces.isTieable('poppy-ziggy-game') === false, 'the Poppy & Ziggy game can never write a tie');
   ok(surfaces.isTieable('little-inkers') === false, 'Little Inkers can never write a tie');
   ok(surfaces.isTieable('little-inkers-app') === false, 'the Little Inkers app can never write a tie');

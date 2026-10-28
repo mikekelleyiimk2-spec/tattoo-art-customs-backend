@@ -493,7 +493,7 @@ router.get('/worlds', (req, res) => {
   const base = config.baseUrl.replace(/\/$/, '');
   res.render('site/worlds', {
     title: 'Our Worlds — Useful Appz | Tattoo Art Customs',
-    metaDescription: 'One roof, separate rooms: Tattoo Art Customs, Little Inkers, Poppy & Ziggy, HerbHaul (21+), OneMind, the Library, and the Useful Appz studio — each world on its own page.',
+    metaDescription: 'One roof, separate rooms: Tattoo Art Customs, Little Inkers, Poppy & Ziggy, HerbHaul (21+), Chorvix, the Library, and the Useful Appz studio — each world on its own page.',
     canonical: `${base}/worlds`,
   });
 });
@@ -571,8 +571,8 @@ router.get('/onemind', (req, res) => {
   }));
   const ai2ai = (book.plugs || []).find((p) => /AI-to-AI Messenger/i.test(p.name || ''));
   res.render('site/onemind', {
-    title: 'OneMind — All Your AIs, One Team | Useful Appz',
-    metaDescription: 'OneMind puts your AIs at one table: speak or type once and the team works together. Live seat board from the Codex, OneMind Team $9.99/mo, in closed testing now.',
+    title: 'Chorvix — All Your AIs, One Team | Useful Appz',
+    metaDescription: 'Chorvix puts your AIs at one table: speak or type once and the team works together. Live seat board from the Codex, Chorvix Team $9.99/mo, in closed testing now.',
     canonical: `${base}/onemind`,
     // This page carries NO links into kid-walled surfaces (pinned by
     // test/codex.js): keep the littleinkers/poppyziggy house creatives
@@ -1247,8 +1247,8 @@ router.get('/privacy/screenqr', (req, res) => res.render('site/privacy-screenqr'
 // Per-app policy for the AI Button Android app (voice-loop app:
 // microphone + overlay permissions need a public policy URL for Play).
 router.get('/privacy/ai-bar', (req, res) => res.render('site/privacy-aibar', {
-  title: 'OneMind Privacy Policy — Usefulappz',
-  metaDescription: 'Privacy policy for OneMind. No accounts, no server, no ads, no analytics — your voice and prompts go only to the AI you choose.',
+  title: 'Chorvix Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for Chorvix. No accounts, no server, no ads, no analytics — your voice and prompts go only to the AI you choose.',
 }));
 
 // The same OneMind policy at its product-name URL (2026-10-26): the app
@@ -1256,8 +1256,8 @@ router.get('/privacy/ai-bar', (req, res) => res.render('site/privacy-aibar', {
 // above predates the rename and stays live for existing listings).
 // One policy, one source — this route renders the same view.
 router.get('/privacy/onemind', (req, res) => res.render('site/privacy-aibar', {
-  title: 'OneMind Privacy Policy — Usefulappz',
-  metaDescription: 'Privacy policy for OneMind. No accounts, no server, no ads, no analytics — your voice and prompts go only to the AI you choose.',
+  title: 'Chorvix Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for Chorvix. No accounts, no server, no ads, no analytics — your voice and prompts go only to the AI you choose.',
 }));
 
 // Per-app policy for the Habit Dot Android app (Google Play requires a
@@ -1488,7 +1488,7 @@ const TESTER_APPS_OPEN = [
   { name: 'ScreenQR', url: 'https://play.google.com/apps/testing/com.usefulappz.screenqr' },
 ];
 // On the console, tracks not live yet — no opt-in link exists to give.
-const TESTER_APPS_SOON = ['AI Bar (OneMind)', 'Odometer — Mileage Tracker', 'Habit Dot'];
+const TESTER_APPS_SOON = ['AI Bar (Chorvix)', 'Odometer — Mileage Tracker', 'Habit Dot'];
 // Builds in flight — not on the console yet.
 const TESTER_APPS_WORKS = ['World Weather', 'The Library', 'Loophole Ciphers', 'Ghost Box'];
 

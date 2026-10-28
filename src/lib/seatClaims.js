@@ -176,11 +176,11 @@ async function startPurchaseClaim(emailRaw) {
     try {
       await sendMail({
         to: email,
-        subject: 'Your purchase is tied to your OneMind seat — one tap finishes it',
+        subject: 'Your purchase is tied to your Chorvix seat — one tap finishes it',
         text: [
           'Thanks for your purchase.',
           '',
-          'Your purchase is tied to your OneMind seat — one tap finishes it:',
+          'Your purchase is tied to your Chorvix seat — one tap finishes it:',
           'the tap signs you in (or creates your account if you\u2019re new) and',
           'attaches your purchase to your seat, so it\u2019s there whenever you',
           'open anything Useful Appz makes.',

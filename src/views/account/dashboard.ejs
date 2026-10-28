@@ -2,10 +2,10 @@
 <p class="muted">Signed in as <%= currentUser.email %> · Role: <strong><%= currentUser.role.replace('_', ' ') %></strong></p>
 
 <section class="card">
-  <h2>Your OneMind seat</h2>
-  <p>This account is your <strong>OneMind account</strong>. Everything Useful Appz makes runs on OneMind — the same account signs you in on every surface, whether or not you ever open the OneMind app. Anything you use with this account seats you at the same table, and anything you get later already recognizes you.</p>
+  <h2>Your Chorvix seat</h2>
+  <p>This account is your <strong>Chorvix account</strong>. Everything Useful Appz makes runs on Chorvix — the same account signs you in on every surface, whether or not you ever open the Chorvix app. Anything you use with this account seats you at the same table, and anything you get later already recognizes you.</p>
   <% if (oneMindSeat) { %>
-  <p class="muted">OneMind ID: <strong><%= oneMindSeat.onemind_id %></strong><% if (oneMindSeat.first_seated_at) { %> · First seated: <strong><%= new Date(oneMindSeat.first_seated_at).toLocaleDateString('en-US') %></strong><% } %></p>
+  <p class="muted">Chorvix ID: <strong><%= oneMindSeat.onemind_id %></strong><% if (oneMindSeat.first_seated_at) { %> · First seated: <strong><%= new Date(oneMindSeat.first_seated_at).toLocaleDateString('en-US') %></strong><% } %></p>
   <% if (oneMindSeat.ties && oneMindSeat.ties.length) { %>
   <ul>
     <% oneMindSeat.ties.forEach(function (tie) { %>

@@ -1,4 +1,5 @@
 // OneMind on the web — the hub, the table, and the branch pages
+// RENAME NOTE (Oct 28 2026): the platform brand is now Chorvix (owner strike, coined-word clearance round). Internal working names — files, routes (/onemind, /api/onemind), ids (onemind_id), env (ONEMIND_STANDALONE) — keep the onemind names by standing law; only people-facing copy carries Chorvix.
 // (owner directive 2026-10-26 ~20:03–20:09 CDT).
 //
 // THE LAW this file is built on, in the owner's sense:
@@ -158,8 +159,8 @@ router.get('/onemind', async (req, res) => {
   const data = await tableLocals();
   res.render('onemind/table', {
     layout: 'layout-onemind',
-    title: 'OneMind',
-    metaDescription: 'OneMind — your browsers, your AIs, your tools, behind one search bar.',
+    title: 'Chorvix',
+    metaDescription: 'Chorvix — your browsers, your AIs, your tools, behind one search bar.',
     canonical: `${base()}/onemind`,
     // No kid-world house creatives ride this face's data (the tie is
     // universal; the ad wall is not — kid surfaces are never
@@ -272,8 +273,8 @@ router.get('/onemind/table', async (req, res) => {
   if (!cu) seatReturnTo(req);
   res.render('onemind/table', {
     layout: 'layout-onemind',
-    title: 'OneMind',
-    metaDescription: 'OneMind — your browsers, your AIs, your tools, behind one search bar.',
+    title: 'Chorvix',
+    metaDescription: 'Chorvix — your browsers, your AIs, your tools, behind one search bar.',
     canonical: `${base()}/onemind/table`,
     houseAdExclude: ['littleinkers', 'poppyziggy'],
     ...data,
@@ -292,7 +293,7 @@ router.get('/onemind/table', async (req, res) => {
 router.get('/onemind/poppy-and-ziggy', (req, res) => {
   res.render('onemind/branch-poppy', {
     layout: 'layout-li',
-    title: 'Poppy & Ziggy — the Kids\' Cartoon | OneMind Branch',
+    title: 'Poppy & Ziggy — the Kids\' Cartoon | Chorvix Branch',
     metaDescription: 'Poppy & Ziggy: the cartoon where a coloring page comes to life. New episode every Friday at 5 PM CT, a fun Short every day. Kid-safe branch page — grown-ups, start here.',
     canonical: `${base()}/onemind/poppy-and-ziggy`,
     pzFace: true,
@@ -304,7 +305,7 @@ router.get('/onemind/poppy-and-ziggy', (req, res) => {
 router.get('/onemind/little-inkers', (req, res) => {
   res.render('onemind/branch-little-inkers', {
     layout: 'layout-li',
-    title: 'Little Inkers — Free Coloring Fun for Kids | OneMind Branch',
+    title: 'Little Inkers — Free Coloring Fun for Kids | Chorvix Branch',
     metaDescription: 'Little Inkers: the free coloring show and app where coloring pages come to life — Color With Us every Wednesday and Saturday, new coloring pages every Monday. Kid-safe branch page.',
     canonical: `${base()}/onemind/little-inkers`,
     liFace: true,
@@ -317,8 +318,8 @@ router.get('/onemind/killintime', async (req, res) => {
   const t = tableBook();
   const numbers = await liveNumbers(t.book);
   res.render('onemind/branch-killintime', {
-    title: 'KillinTime — the Ports Shelf | Useful Appz',
-    metaDescription: 'KillinTime is the Useful Appz ports console: classic games, licensed properly, brought to phones. Ports carry no ads, ever. A OneMind plug — reachable here directly or through the table.',
+    title: 'Neon Tombstone — the Ports Shelf | Useful Appz',
+    metaDescription: 'Neon Tombstone is the Useful Appz ports console: classic games, licensed properly, brought to phones. Ports carry no ads, ever. A Chorvix plug — reachable here directly or through the table.',
     canonical: `${base()}/onemind/killintime`,
     numbers,
   });
@@ -328,8 +329,8 @@ router.get('/onemind/tools', async (req, res) => {
   const t = tableBook();
   const numbers = await liveNumbers(t.book);
   res.render('onemind/branch-tools', {
-    title: 'The Tools — the Useful Appz Toolbox | OneMind Branch',
-    metaDescription: 'The tool apps of Useful Appz: the Affiliate Rolodex, RoboSweeper, RoboScraper, Money Watch, Email Keeper, Connection Doctor, Service Plug and more — every one tied to OneMind, every one at its own link.',
+    title: 'The Tools — the Useful Appz Toolbox | Chorvix Branch',
+    metaDescription: 'The tool apps of Useful Appz: the Affiliate Rolodex, RoboSweeper, RoboScraper, Money Watch, Email Keeper, Connection Doctor, Service Plug and more — every one tied to Chorvix, every one at its own link.',
     canonical: `${base()}/onemind/tools`,
     numbers,
     partners: placementsFor(HUB_PLACEMENTS),

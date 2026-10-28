@@ -428,7 +428,7 @@
       },
       "utility": {
         "title": "แอปสำหรับคนขับ ครีเอเตอร์ และใช้ทุกวัน",
-        "text": "Odometer บันทึกไมล์อัตโนมัติสำหรับภาษี OneMind ให้ทีม AI ทั้งหมดอยู่แค่ปลายนิ้ว พร้อม AI bar อีกแปดตัว Clipboard Bar, Countdown Bar และ Habit Dot ตัวติดตามนิสัยฟรีของเรา",
+        "text": "Odometer บันทึกไมล์อัตโนมัติสำหรับภาษี Chorvix ให้ทีม AI ทั้งหมดอยู่แค่ปลายนิ้ว พร้อม AI bar อีกแปดตัว Clipboard Bar, Countdown Bar และ Habit Dot ตัวติดตามนิสัยฟรีของเรา",
         "price": "เริ่มต้น {price} จ่ายครั้งเดียว",
         "btn": "ดูแอปทั้งหมด"
       },
@@ -1192,8 +1192,8 @@
     "guest_login_tail": "เพื่อชำระเงินด้วยข้อมูลที่บันทึกไว้และดูการซื้อนี้ในประวัติคำสั่งซื้อของคุณ"
   },
   "apps": {
-    "aibutton_badge": "OneMind Team — $9.99/เดือน",
-    "aibutton_link": "เยี่ยมชม OneMind",
+    "aibutton_badge": "Chorvix Team — $9.99/เดือน",
+    "aibutton_link": "เยี่ยมชม Chorvix",
     "aibutton_text": "ปุ่มลอยเดียวสำหรับทุก AI — แตะ พูด แล้วฟังคำตอบออกเสียง ใช้ทับแอปใดก็ได้",
     "free_label": "ฟรี",
     "pro_label": "Pro",
@@ -1708,9 +1708,9 @@
     "disclosure": "ลิงก์พันธมิตร — เราอาจได้รับค่าคอมมิชชัน โดยไม่มีค่าใช้จ่ายเพิ่มสำหรับคุณ",
     "label_ad": "โฆษณา",
     "label_sponsored": "สปอนเซอร์",
-    "aibutton_h": "OneMind — ทุก AI ในทีมเดียว",
+    "aibutton_h": "Chorvix — ทุก AI ในทีมเดียว",
     "aibutton_p": "ไมค์ลอยที่คุยกับ ChatGPT, Claude, Gemini และอื่น ๆ",
-    "aibutton_cta": "OneMind Team — $9.99/เดือน",
+    "aibutton_cta": "Chorvix Team — $9.99/เดือน",
     "amazonaftercare_h": "ของดูแลรอยสักแนะนำบน Amazon",
     "amazonaftercare_p": "ผ้าพันแผล ขี้ผึ้ง และอื่น ๆ — ของโปรดที่ผ่านการลองใช้จริง รวมในลิสต์เดียว",
     "amazonaftercare_cta": "ดูลิสต์",

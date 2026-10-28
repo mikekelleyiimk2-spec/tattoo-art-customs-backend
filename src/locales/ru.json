@@ -428,7 +428,7 @@
       },
       "utility": {
         "title": "Приложения для водителей, авторов и на каждый день",
-        "text": "Odometer автоматически записывает пробег для налогов. OneMind ставит всю вашу команду ИИ в одно касание. Плюс восемь ИИ-панелей, Clipboard Bar, Countdown Bar и Habit Dot — наш бесплатный трекер привычек.",
+        "text": "Odometer автоматически записывает пробег для налогов. Chorvix ставит всю вашу команду ИИ в одно касание. Плюс восемь ИИ-панелей, Clipboard Bar, Countdown Bar и Habit Dot — наш бесплатный трекер привычек.",
         "price": "От {price}, разовый платёж",
         "btn": "Все приложения"
       },
@@ -1192,8 +1192,8 @@
     "guest_login_tail": "чтобы оплатить сохранёнными данными и видеть эту покупку в истории заказов."
   },
   "apps": {
-    "aibutton_badge": "OneMind Team — $9.99/мес",
-    "aibutton_link": "Открыть OneMind",
+    "aibutton_badge": "Chorvix Team — $9.99/мес",
+    "aibutton_link": "Открыть Chorvix",
     "aibutton_text": "Одна плавающая кнопка для всех ИИ — коснитесь, говорите и слушайте ответ вслух поверх любого приложения.",
     "free_label": "Бесплатно",
     "pro_label": "Pro",
@@ -1708,9 +1708,9 @@
     "disclosure": "Партнёрская ссылка — мы можем получить комиссию без доплат с вашей стороны.",
     "label_ad": "Реклама",
     "label_sponsored": "Спонсор",
-    "aibutton_h": "OneMind — все ваши ИИ, одна команда",
+    "aibutton_h": "Chorvix — все ваши ИИ, одна команда",
     "aibutton_p": "Плавающий микрофон, который общается с ChatGPT, Claude, Gemini и другими.",
-    "aibutton_cta": "OneMind Team — $9.99/мес",
+    "aibutton_cta": "Chorvix Team — $9.99/мес",
     "amazonaftercare_h": "Подборка ухода на Amazon",
     "amazonaftercare_p": "Повязки, мази и другое — наши проверенные фавориты в одном списке.",
     "amazonaftercare_cta": "Смотреть подборку",

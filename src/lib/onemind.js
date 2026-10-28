@@ -1,4 +1,5 @@
 // OneMind identity — the foundation (migration 110, owner law
+// RENAME NOTE (Oct 28 2026): the platform brand is now Chorvix (owner strike, coined-word clearance round). Internal working names — files, routes (/onemind, /api/onemind), ids (onemind_id), env (ONEMIND_STANDALONE) — keep the onemind names by standing law; only people-facing copy carries Chorvix.
 // restated 2026-10-26). This backend IS OneMind: the hub where all
 // the plugs run together. The OneMind app is one window into it.
 // Every row in `users` is a OneMind account; `users.onemind_id` is

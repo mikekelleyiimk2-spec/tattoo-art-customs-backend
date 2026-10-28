@@ -1,4 +1,4 @@
-// The Codex for OneMind — the live plug (Slice 1, 2026-10-26).
+// The Codex for Chorvix — the live plug (Slice 1, 2026-10-26).
 //
 // CANONICAL SOURCE: ~/workspace/app/codex/codex.json — the Codex project
 // (its README.md defines the book: the written registry of the table —
@@ -38,7 +38,7 @@ function load() {
     // Fail safe: a broken book means the board shows an empty registry —
     // never a crash, never a guessed state.
     console.error('codex load failed:', e.message);
-    cached = { codex: 'The Codex for OneMind', version: null, updated: null, law: null, doors: [], plugs: [], seats: [], prices: null };
+    cached = { codex: 'The Codex for Chorvix', version: null, updated: null, law: null, doors: [], plugs: [], seats: [], prices: null };
   }
   return cached;
 }
@@ -60,7 +60,7 @@ function publicBook() {
   const b = load();
   const prices = b.prices || {};
   return {
-    codex: b.codex || 'The Codex for OneMind',
+    codex: b.codex || 'The Codex for Chorvix',
     version: b.version != null ? b.version : null,
     updated: b.updated || null,
     law: b.law || null,

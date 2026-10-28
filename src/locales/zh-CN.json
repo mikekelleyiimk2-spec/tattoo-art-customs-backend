@@ -428,7 +428,7 @@
       },
       "utility": {
         "title": "为司机、创作者和日常打造的应用",
-        "text": "Odometer 自动记录里程用于报税，OneMind 让整个 AI 团队一触即达。还有八个 AI 栏、Clipboard Bar、Countdown Bar 和免费的习惯追踪 Habit Dot。",
+        "text": "Odometer 自动记录里程用于报税，Chorvix 让整个 AI 团队一触即达。还有八个 AI 栏、Clipboard Bar、Countdown Bar 和免费的习惯追踪 Habit Dot。",
         "price": "{price} 起，一次性付费",
         "btn": "查看所有应用"
       },
@@ -1192,8 +1192,8 @@
     "guest_login_tail": "使用已保存的信息结账，并在订单历史中查看此购买。"
   },
   "apps": {
-    "aibutton_badge": "OneMind Team — $9.99/月",
-    "aibutton_link": "访问 OneMind",
+    "aibutton_badge": "Chorvix Team — $9.99/月",
+    "aibutton_link": "访问 Chorvix",
     "aibutton_text": "一个悬浮按钮连接所有AI — 点按、说话，即可在任何应用之上朗读答案。",
     "free_label": "免费",
     "pro_label": "Pro",
@@ -1708,9 +1708,9 @@
     "disclosure": "联盟链接 — 我们可能会获得佣金，您无需支付额外费用。",
     "label_ad": "广告",
     "label_sponsored": "赞助",
-    "aibutton_h": "OneMind — 所有AI，一个团队",
+    "aibutton_h": "Chorvix — 所有AI，一个团队",
     "aibutton_p": "一个悬浮麦克风，与 ChatGPT、Claude、Gemini 等对话。",
-    "aibutton_cta": "OneMind Team — $9.99/月",
+    "aibutton_cta": "Chorvix Team — $9.99/月",
     "amazonaftercare_h": "亚马逊护理精选",
     "amazonaftercare_p": "绷带、药膏等 — 我们亲测的精选，一份清单全搞定。",
     "amazonaftercare_cta": "查看清单",

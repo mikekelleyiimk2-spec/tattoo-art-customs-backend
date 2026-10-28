@@ -1,4 +1,5 @@
 // OneMind Root — the root tier's home inside the table (2026-10-26).
+// RENAME NOTE (Oct 28 2026): the platform brand is now Chorvix (owner strike, coined-word clearance round). Internal working names — files, routes (/onemind, /api/onemind), ids (onemind_id), env (ONEMIND_STANDALONE) — keep the onemind names by standing law; only people-facing copy carries Chorvix.
 //
 // CANONICAL PROJECT: ~/workspace/app/onemind-root/ — the owner-level
 // root doorway over the OneMind TABLE ITSELF. Distinct from the Root
@@ -225,7 +226,7 @@ async function seatRegistry(book) {
       state: rec.state || null,
       about: rec.about || null,
       availability: rec.availability || null,
-      liveness: { how_checked: 'registered on the OneMind Root lane', last_verified: rec.last_verified || null },
+      liveness: { how_checked: 'registered on the Chorvix Root lane', last_verified: rec.last_verified || null },
       source: 'root',
       updated_at: rec.updated_at || null,
     });
@@ -246,7 +247,7 @@ async function plugPointRegistry(book, prices) {
       name: rec.name,
       kind: 'plug',
       state: rec.state || (prev && prev.state) || null,
-      liveness: { how_checked: 'registered on the OneMind Root lane', last_verified: rec.last_verified || null },
+      liveness: { how_checked: 'registered on the Chorvix Root lane', last_verified: rec.last_verified || null },
       plug_class: rec.plug_class || 'fleet',
       charge: chargeFor(rec.plug_class || 'fleet', rec),
       price_label: rec.price_label || null,
@@ -405,7 +406,7 @@ async function revokeCredential(body) {
   const name = (body.name || '').trim();
   if (!name) return { ok: false, error: 'missing field: name' };
   const seat = typeof body.seat === 'string' ? body.seat.trim().slice(0, 160) : '';
-  const ack = await servicePlug.markCredentialStatus(name, `revoked — OneMind Root lane ${new Date().toISOString().slice(0, 10)}`);
+  const ack = await servicePlug.markCredentialStatus(name, `revoked — Chorvix Root lane ${new Date().toISOString().slice(0, 10)}`);
   if (!ack) {
     await logOp(actor, seat || name, 'credential_revoke', 'unknown_seat');
     return { ok: false, error_class: 'unknown_seat', error: 'unknown credential seat' };
@@ -424,7 +425,7 @@ async function getState() {
   const seatIndex = await kvJson(SEAT_INDEX_KV, {});
   const log = await kvJson(OPLOG_KV, []);
   return {
-    table: 'OneMind',
+    table: 'Chorvix',
     seats,
     seat_count: seats.length,
     plug_points: plugPoints,

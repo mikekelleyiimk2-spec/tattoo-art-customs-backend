@@ -428,7 +428,7 @@
       },
       "utility": {
         "title": "Apps für Fahrer, Kreative & den Alltag",
-        "text": "Odometer protokolliert deine Meilen automatisch für die Steuer. OneMind bringt dein gesamtes KI-Team in einen Tipp Entfernung. Plus acht KI-Bars, Clipboard Bar, Countdown Bar und Habit Dot, unser kostenloser Gewohnheits-Tracker.",
+        "text": "Odometer protokolliert deine Meilen automatisch für die Steuer. Chorvix bringt dein gesamtes KI-Team in einen Tipp Entfernung. Plus acht KI-Bars, Clipboard Bar, Countdown Bar und Habit Dot, unser kostenloser Gewohnheits-Tracker.",
         "price": "Ab {price}, einmalig",
         "btn": "Alle Apps ansehen"
       },
@@ -1192,8 +1192,8 @@
     "guest_login_tail": "um mit Ihren gespeicherten Daten zu zahlen und diesen Kauf in Ihrer Bestellhistorie zu sehen."
   },
   "apps": {
-    "aibutton_badge": "OneMind Team — 9,99 $/Monat",
-    "aibutton_link": "OneMind ansehen",
+    "aibutton_badge": "Chorvix Team — 9,99 $/Monat",
+    "aibutton_link": "Chorvix ansehen",
     "aibutton_text": "Ein schwebender Button für jede KI – tippen, sprechen und die Antwort laut hören, über jeder App.",
     "free_label": "Kostenlos",
     "pro_label": "Pro",
@@ -1708,9 +1708,9 @@
     "disclosure": "Affiliate-Link – wir erhalten ggf. eine Provision, ohne Mehrkosten für dich.",
     "label_ad": "Werbung",
     "label_sponsored": "Gesponsert",
-    "aibutton_h": "OneMind — alle KIs, ein Team",
+    "aibutton_h": "Chorvix — alle KIs, ein Team",
     "aibutton_p": "Ein schwebendes Mikrofon, das mit ChatGPT, Claude, Gemini und mehr spricht.",
-    "aibutton_cta": "OneMind Team — 9,99 $/Monat",
+    "aibutton_cta": "Chorvix Team — 9,99 $/Monat",
     "amazonaftercare_h": "Aftercare-Auswahl bei Amazon",
     "amazonaftercare_p": "Verbände, Salben und mehr – unsere getesteten Favoriten in einer Liste.",
     "amazonaftercare_cta": "Auswahl ansehen",

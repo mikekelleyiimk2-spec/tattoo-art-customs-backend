@@ -448,7 +448,7 @@
       },
       "utility": {
         "title": "Apps for drivers, creators & everyday",
-        "text": "Odometer auto-logs your miles for taxes. OneMind puts your whole AI team one tap away. Plus eight AI bars, Clipboard Bar, Countdown Bar and Habit Dot, our free habit tracker.",
+        "text": "Odometer auto-logs your miles for taxes. Chorvix puts your whole AI team one tap away. Plus eight AI bars, Clipboard Bar, Countdown Bar and Habit Dot, our free habit tracker.",
         "price": "From {price} one-time",
         "btn": "See all the apps"
       },
@@ -1215,8 +1215,8 @@
     "guest_login_tail": "to check out with your saved details and see this purchase in your order history."
   },
   "apps": {
-    "aibutton_badge": "OneMind Team — $9.99/mo",
-    "aibutton_link": "Visit OneMind",
+    "aibutton_badge": "Chorvix Team — $9.99/mo",
+    "aibutton_link": "Visit Chorvix",
     "aibutton_text": "One floating button for every AI — tap, talk, and hear the answer out loud, over any app.",
     "free_label": "Free",
     "pro_label": "Pro",
@@ -1733,9 +1733,9 @@
     "disclosure": "Affiliate link — we may earn a commission at no extra cost to you.",
     "label_ad": "Ad",
     "label_sponsored": "Sponsored",
-    "aibutton_h": "OneMind — All Your AIs, One Team",
+    "aibutton_h": "Chorvix — All Your AIs, One Team",
     "aibutton_p": "A floating mic that talks to ChatGPT, Claude, Gemini and more.",
-    "aibutton_cta": "OneMind Team — $9.99/mo",
+    "aibutton_cta": "Chorvix Team — $9.99/mo",
     "amazonaftercare_h": "Aftercare picks on Amazon",
     "amazonaftercare_p": "Bandages, ointments and more — our tested favorites in one list.",
     "amazonaftercare_cta": "See the picks",

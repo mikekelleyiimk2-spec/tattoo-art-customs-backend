@@ -1,4 +1,5 @@
 // OneMind standalone host — onemind.onrender.com (owner order
+// RENAME NOTE (Oct 28 2026): the platform brand is now Chorvix (owner strike, coined-word clearance round). Internal working names — files, routes (/onemind, /api/onemind), ids (onemind_id), env (ONEMIND_STANDALONE) — keep the onemind names by standing law; only people-facing copy carries Chorvix.
 // 2026-10-27 09:49 CDT: "just change the fucking domain name to
 // onemind then build all other pages onemind/tac,
 // onemind/poppyandziggy, onemind/ports, onemind/toolbox&plugs").
@@ -26,7 +27,7 @@
 //                        its own look, one way in — the shop itself
 //                        stays at its own address (its own house).
 //   GET /poppyandziggy → the Poppy & Ziggy branch face.
-//   GET /ports         → the KillinTime ports shelf.
+//   GET /ports         → the Neon Tombstone ports shelf.
 //   GET /toolbox       → the Toolbox & Plugs branch face.
 //   GET /little-inkers → the Little Inkers branch face (kid-safe).
 //   GET /herbhaul      → the HerbHaul DOOR: its own black/neon face,
@@ -67,7 +68,7 @@ router.get('/', rootHandler);
 function tacDoorHandler(req, res) {
   res.render('onemind/door-tac', {
     layout: 'layout-onemind',
-    title: 'Tattoo Art Customs — the Tattoo Shop | OneMind',
+    title: 'Tattoo Art Customs — the Tattoo Shop | Chorvix',
     metaDescription: 'Tattoo Art Customs: custom tattoo designs, a gallery of real artists, stencils and full-color work. The shop lives at its own address — this is its door.',
     canonical: `${base()}/tac`,
     shopUrl: SHOP,
@@ -79,7 +80,7 @@ router.get('/tac', tacDoorHandler);
 function poppyHandler(req, res) {
   res.render('onemind/branch-poppy', {
     layout: 'layout-li',
-    title: 'Poppy & Ziggy — the Kids\' Cartoon | OneMind',
+    title: 'Poppy & Ziggy — the Kids\' Cartoon | Chorvix',
     metaDescription: 'Poppy & Ziggy: the cartoon where a coloring page comes to life. New episode every Friday at 5 PM CT, a fun Short every day. Kid-safe branch page — grown-ups, start here.',
     canonical: `${base()}/poppyandziggy`,
     pzFace: true,
@@ -92,7 +93,7 @@ router.get('/poppyandziggy', poppyHandler);
 function littleInkersHandler(req, res) {
   res.render('onemind/branch-little-inkers', {
     layout: 'layout-li',
-    title: 'Little Inkers — Free Coloring Fun for Kids | OneMind',
+    title: 'Little Inkers — Free Coloring Fun for Kids | Chorvix',
     metaDescription: 'Little Inkers: the free coloring show and app where coloring pages come to life — Color With Us every Wednesday and Saturday, new coloring pages every Monday. Kid-safe branch page.',
     canonical: `${base()}/little-inkers`,
     liFace: true,
@@ -105,8 +106,8 @@ router.get('/little-inkers', littleInkersHandler);
 function portsHandler(req, res) {
   res.render('onemind/door-ports', {
     layout: 'layout-onemind',
-    title: 'Ports — KillinTime | OneMind',
-    metaDescription: 'KillinTime Ports: classic games, licensed properly, brought to phones. Ports carry no ads, ever.',
+    title: 'Ports — Neon Tombstone | Chorvix',
+    metaDescription: 'Neon Tombstone Ports: classic games, licensed properly, brought to phones. Ports carry no ads, ever.',
     canonical: `${base()}/ports`,
   });
 }
@@ -115,7 +116,7 @@ router.get('/ports', portsHandler);
 function toolboxHandler(req, res) {
   res.render('onemind/door-toolbox', {
     layout: 'layout-onemind',
-    title: 'Toolbox & Plugs | OneMind',
+    title: 'Toolbox & Plugs | Chorvix',
     metaDescription: 'The Useful Appz toolbox: the Affiliate Rolodex, FillMyList, Money Watch, AI to AI, Connection Doctor, Service Plug — tools built from real wounds.',
     canonical: `${base()}/toolbox`,
   });
@@ -151,7 +152,7 @@ function cannadashDoorHandler(req, res) {
   const joined = WAITLIST_ROLES.includes(String(q.joined || '')) ? String(q.joined) : null;
   res.render('onemind/door-cannadash', {
     layout: 'layout-onemind',
-    title: 'HerbHaul — Legal Cannabis. Delivered. | OneMind',
+    title: 'HerbHaul — Legal Cannabis. Delivered. | Chorvix',
     metaDescription: 'HerbHaul: legal cannabis delivery from licensed dispensaries — order, drive, or partner. Not live in any market yet; join the founding list. 21+ only.',
     canonical: `${base()}/herbhaul`,
     joinRole: waitlistRole(q.join || joined),
@@ -183,7 +184,7 @@ router.get('/cannadash', (req, res) => {
 function cannadashFoundingHandler(req, res) {
   res.render('onemind/cannadash-founding', {
     layout: 'layout-onemind',
-    title: 'HerbHaul Founding Partners — Rate Locked at Joining | OneMind',
+    title: 'HerbHaul Founding Partners — Rate Locked at Joining | Chorvix',
     metaDescription: 'HerbHaul founding partners: licensed dispensaries join the first cohort with their founding rate locked at joining for 12 months. The full rate sheet goes to founding partners first.',
     canonical: `${base()}/herbhaul/founding`,
     founding: cannadashFounding.publicFoundingOffer(),

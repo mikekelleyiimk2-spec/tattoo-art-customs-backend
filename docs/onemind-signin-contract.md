@@ -1,5 +1,10 @@
 # The OneMind Sign-In Contract
 
+*RENAME NOTE (Oct 28 2026): the platform brand is now **Chorvix** (owner
+strike, coined-word clearance round). This contract's law is unchanged —
+every "OneMind" below reads as Chorvix; internal working names (files,
+routes, `onemind_id`, env) keep the onemind names by standing law.*
+
 *The plug contract for identity across everything Useful Appz makes.
 Foundation: migrations 110–111 + `src/lib/onemind.js` +
 `src/lib/surfaces.js` + `src/lib/seatClaims.js` +
