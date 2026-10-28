@@ -72,6 +72,18 @@ async function checkAll(ok) {
   const routerSrc = fs.readFileSync(path.join(__dirname, '../src/routes/onemindStandalone.js'), 'utf8');
   ok(routerSrc.includes("router.get('/cannadash/founding', cannadashFoundingHandler)"),
     "standalone router mounts GET /cannadash/founding");
+  // --- Main host: the shop's site router mounts the SAME handlers ---
+  // (Regression pin for the 2026-10-28 money-sweep find: the founding
+  // page was registered only on the standalone router, which index.js
+  // mounts only under ONEMIND_STANDALONE=on, so /cannadash/founding
+  // 404'd on tattoo-art-customs.onrender.com while serving on the
+  // OneMind host.)
+  const siteSrc = fs.readFileSync(path.join(__dirname, '../src/routes/site.js'), 'utf8');
+  ok(siteSrc.includes("router.get('/cannadash/founding', cannadashStandalone.handlers.cannadashFoundingHandler)"),
+    'site router mounts GET /cannadash/founding with the shared standalone handler');
+  ok(siteSrc.includes("router.post('/cannadash/join', formLimiter, checkHoneypot, cannadashStandalone.handlers.cannadashJoinHandler)"),
+    'site router mounts POST /cannadash/join with the shared standalone handler (founding form works on the main host)');
+
   const mr = mockRes();
   standalone.handlers.cannadashFoundingHandler({}, mr);
   ok(mr.rendered && mr.rendered.v === 'onemind/cannadash-founding'

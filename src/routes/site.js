@@ -145,6 +145,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/poppy-and-ziggy`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/worlds`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/cannadash`, changefreq: 'weekly', priority: '0.6' },
+    { loc: `${base}/cannadash/founding`, changefreq: 'weekly', priority: '0.6' },
     // The Big One — the publication's own doors (owner order 2026-10-27).
     { loc: `${base}/the-big-one`, changefreq: 'daily', priority: '0.8', lastmod: new Date().toISOString().slice(0, 10) },
     { loc: `${base}/the-big-one/sponsors`, changefreq: 'weekly', priority: '0.6' },
@@ -513,6 +514,23 @@ router.get('/cannadash', (req, res) => {
     canonical: `${base}/cannadash`,
   });
 });
+
+// CannaDash founding partner offer (Bundle C Build 1, 2026-10-28) —
+// on THIS host too. The founding page was originally registered only
+// on the OneMind standalone router (routes/onemindStandalone.js),
+// which src/index.js mounts ONLY when ONEMIND_STANDALONE=on — so the
+// page served on onemind.onrender.com but 404'd here, the shop's own
+// host (found by the first daily money sweep, 2026-10-28). The fix
+// mounts the standalone module's exported handlers on this router:
+// one source of truth, identical render + gated fee rows on both
+// hosts. pricesLive stays false in lib/cannadashFounding.js — zero
+// prices render until the owner strikes. POST /cannadash/join rides
+// along so the founding page's application form actually takes the
+// application on this host instead of posting into a 404; it is the
+// same handler, writing the same cannadash_waitlist intake.
+const cannadashStandalone = require('./onemindStandalone');
+router.get('/cannadash/founding', cannadashStandalone.handlers.cannadashFoundingHandler);
+router.post('/cannadash/join', formLimiter, checkHoneypot, cannadashStandalone.handlers.cannadashJoinHandler);
 
 // OneMind — its OWN page (website split follow-up, 2026-10-26): the
 // flagship existed only as a card on /apps. Grown-up world, standard
