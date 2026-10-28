@@ -563,6 +563,8 @@ async function main() {
   await require('./librarySponsors').runDbTests(ok); // Bundle C B2: Library shelf sponsorship config
   await require('./healedWall').runDbTests(ok); // Bundle C B3: Healed Wall shop add-on config
   await require('./merchDrops').runDbTests(ok); // Bundle C B4: hearts -> merch drop candidates (signed-in only)
+  await require('./thebigone').runBundleADb(ok); // Bundle A: founding push (founderInfo) + Your Local insert (locality store)
+  await require('./devtools').runDbTests(ok); // Developer Tools bundle B (settled prices, interest register)
 
   // Mail retry (unit-level, no live SMTP): a transient failure is retried
   // with backoff and eventually delivered; a permanent failure exhausts all
@@ -1579,6 +1581,8 @@ async function main() {
   await require('./folderScan').runHttpTests(ok, req); // folder scan phone-home (whitelist POST + service-token GET, latest per device)
   await require('./codex').runHttpTests(ok, req); // codex for OneMind (registry projection — public fields only)
   await require('./thebigone').runHttpTests(ok, req); // The Big One web edition + money doors (own face, register, classifieds intake)
+  await require('./thebigone').runBundleAHttp(ok, req); // Bundle A web: founding push section + Your Local insert + locality doors
+  await require('./devtools').runHttpTests(ok, req); // Developer Tools bundle B (fill service face, rolodex demo, money watch offer)
   await require('./servicePlug').runHttpTests(ok, req); // AI API Service Plug (write-only vault + play operation)
   await require('./rootApi').runHttpTests(ok, req);
   await require('./onemindRoot').runHttpTests(ok, req); // OneMind Root (table root: seats registry, plug points + plug-in charges, fingerprint-only seat credentials, op log)

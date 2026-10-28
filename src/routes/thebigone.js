@@ -22,6 +22,7 @@ const express = require('express');
 const db = require('../db');
 const config = require('../config');
 const tbo = require('../lib/thebigone');
+const li = require('../lib/localinsert');
 const pricing = require('../lib/pricing');
 const { requireLogin } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
@@ -46,8 +47,29 @@ async function doorLocals(req) {
     user: req.user || null,
     foundingLeft: await tbo.foundingSpotsLeft(),
     foundingCap: tbo.FOUNDING_CAP,
+    founder: req.user ? await tbo.founderInfo(req.user.id) : null,
     paypalReady: Object.fromEntries(tbo.PLAN_SLUGS.map((s) => [s, tbo.paypalReadyFor(s)])),
     tipJarUrl: tbo.TIP_JAR_URL,
+    ...(await localLocals(req)),
+  };
+}
+
+// The "Your Local" insert (owner order 2026-10-28: locals for ALL
+// customers, not just Abbeville): the reader's locality comes from
+// their account when they've set one, else the house hometown
+// (Abbeville) — the bundled/default edition locality. Guests pick on
+// the device (localStorage, swapped in by thebigone-local.js through
+// the JSON doors below); no location is ever taken without a tap.
+async function localLocals(req) {
+  let local = li.HOUSE_LOCALITY;
+  if (req.user) {
+    const saved = await li.getUserLocality(req.user.id);
+    if (saved) local = saved;
+  }
+  return {
+    local,
+    localWx: await li.getLocalWeather(local.lat, local.lon),
+    briefs: li.briefSlots(local),
   };
 }
 
@@ -62,6 +84,58 @@ router.get('/the-big-one', async (req, res) => {
     ...(await doorLocals(req)),
     flash: res.locals.flash || null,
   });
+});
+
+// Your Local — typed-place search (the World Weather pattern:
+// Open-Meteo geocoding; no location without a tap, anywhere here).
+router.get('/the-big-one/local/search', async (req, res) => {
+  const q = String(req.query.q || '').trim().slice(0, 80);
+  if (q.length < 2) return res.json({ ok: true, places: [] });
+  const places = await li.searchPlaces(q);
+  res.json({ ok: true, places });
+});
+
+// Your Local — weather for an arbitrary locality (the guest device
+// pick path; signed-in readers get theirs rendered server-side).
+router.get('/the-big-one/local/weather', async (req, res) => {
+  const lat = Number(req.query.lat);
+  const lon = Number(req.query.lon);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+    return res.status(400).json({ ok: false, error: 'bad coordinates' });
+  }
+  const label = String(req.query.label || '').trim().slice(0, 120);
+  const weather = await li.getLocalWeather(lat, lon);
+  res.json({ ok: true, locality: { label, lat, lon }, weather });
+});
+
+// Your Local — save the reader's locality to their account (the
+// OneMind seat carries it to every device). Guests never POST here;
+// their pick lives on the device (see thebigone-local.js).
+router.post('/the-big-one/locality', formLimiter, checkHoneypot, async (req, res) => {
+  if (!req.user) {
+    req.session.flash = 'Sign in first — then your town saves to your account and follows you to every device.';
+    return res.redirect('/the-big-one#your-local');
+  }
+  let pick = null;
+  const lat = Number(req.body.lat);
+  const lon = Number(req.body.lon);
+  if (Number.isFinite(lat) && Number.isFinite(lon) && String(req.body.label || '').trim()) {
+    pick = {
+      label: String(req.body.label).trim().slice(0, 120),
+      name: String(req.body.name || '').trim().slice(0, 80),
+      region: String(req.body.region || '').trim().slice(0, 80),
+      country: String(req.body.country || '').trim().slice(0, 80),
+      lat, lon,
+    };
+  } else if (String(req.body.place || '').trim()) {
+    const places = await li.searchPlaces(String(req.body.place).trim().slice(0, 80));
+    if (places.length) pick = places[0];
+  }
+  const saved = pick ? await li.saveUserLocality(req.user.id, pick) : null;
+  req.session.flash = saved
+    ? `Your local page is set to ${saved.label} — its weather and briefs now ride your edition.`
+    : 'That place didn’t resolve — try the town name with its state or country.';
+  res.redirect('/the-big-one#your-local');
 });
 
 // The sign-in door: aim the login flow's existing returnTo slot back

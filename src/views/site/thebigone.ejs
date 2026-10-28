@@ -2,8 +2,10 @@
     the app), then the register: every money door for the publication
     on its own page, in its own grammar. %>
 <%- include('thebigone-edition') %>
+<%- include('thebigone-local') %>
 
 <div class="tbo-doors">
+  <%- include('thebigone-founding') %>
   <section id="subscribe">
     <h3>🗞️ The Register — Subscribe</h3>
     <p>The edition above is the free front page of the paper. The subscription carries
@@ -12,13 +14,23 @@
     membership register, or with site credit; a subscription rides the same OneMind account
     as everything else in the house.</p>
 
-    <% const subPlans = [
-      { slug: 'the_big_one_founding', badge: 'FOUNDING — first ' + foundingCap, note: 'The founding rate, locked for as long as the subscription stays active. ' + foundingLeft + ' of ' + foundingCap + ' founding spots left.' },
-      { slug: 'the_big_one', badge: 'THE SUBSCRIPTION', note: 'Every department, every day, plus the big Sunday edition.' },
-      { slug: 'the_big_one_annual', badge: 'ANNUAL', note: 'A full year — two months free against the monthly rate.' },
-      { slug: 'the_big_one_supporter', badge: 'SUPPORTER', note: 'Everything in the subscription, plus your name in the masthead supporter roll — the readers who keep the desk lit.' },
-      { slug: 'the_big_one_waiting_room', badge: 'FOR BUSINESSES', note: 'The Waiting Room edition for your shop, lobby, or waiting room — see the sponsors page for the business bundle.' },
-    ]; %>
+    <% const foundingCard = { slug: 'the_big_one_founding', badge: 'FOUNDING — first ' + foundingCap, note: 'The founding rate, locked for as long as the subscription stays active. ' + foundingLeft + ' of ' + foundingCap + ' founding spots left.' };
+    const regularCard = { slug: 'the_big_one', badge: 'THE SUBSCRIPTION', note: 'Every department, every day, plus the big Sunday edition.' };
+    const subPlans = foundingLeft > 0
+      ? [
+        foundingCard,
+        regularCard,
+        { slug: 'the_big_one_annual', badge: 'ANNUAL', note: 'A full year — two months free against the monthly rate.' },
+        { slug: 'the_big_one_supporter', badge: 'SUPPORTER', note: 'Everything in the subscription, plus your name in the masthead supporter roll — the readers who keep the desk lit.' },
+        { slug: 'the_big_one_waiting_room', badge: 'FOR BUSINESSES', note: 'The Waiting Room edition for your shop, lobby, or waiting room — see the sponsors page for the business bundle.' },
+      ]
+      : [
+        regularCard,
+        foundingCard,
+        { slug: 'the_big_one_annual', badge: 'ANNUAL', note: 'A full year — two months free against the monthly rate.' },
+        { slug: 'the_big_one_supporter', badge: 'SUPPORTER', note: 'Everything in the subscription, plus your name in the masthead supporter roll — the readers who keep the desk lit.' },
+        { slug: 'the_big_one_waiting_room', badge: 'FOR BUSINESSES', note: 'The Waiting Room edition for your shop, lobby, or waiting room — see the sponsors page for the business bundle.' },
+      ]; %>
     <% for (const sp of subPlans) { const plan = plans[sp.slug]; if (!plan) continue; %>
     <article class="tbo-card">
       <p class="src" style="letter-spacing:2px;"><%= sp.badge %></p>
@@ -98,3 +110,4 @@
 </div>
 
 <script src="/js/thebigone.js"></script>
+<script src="/js/thebigone-local.js"></script>

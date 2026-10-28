@@ -1,0 +1,124 @@
+<%# The Big One — "Your Local" insert (partial, included inside the
+    /the-big-one page). Locals contract (coordinator supplies):
+    local ({label, lat, lon, isHouse}), localWx (getLocalWeather
+    result or null), user (or null), briefs (briefSlots result).
+    Every local is guarded so the partial renders with only
+    { local: HOUSE_LOCALITY-like object } supplied. Honesty rules:
+    no weather numbers when the fetch failed, no invented local
+    news — brief slots read as the open founding slots they are,
+    and no location is ever taken without the reader's tap. %>
+<%
+  var _local = (typeof local !== 'undefined' && local && typeof local === 'object')
+    ? local
+    : { label: 'Abbeville, Louisiana', name: 'Abbeville', region: 'Louisiana', country: 'United States', lat: 29.9746, lon: -92.1553, isHouse: true };
+  var _label = (typeof _local.label === 'string' && _local.label.trim()) ? _local.label.trim() : 'Abbeville, Louisiana';
+  var _name = (typeof _local.name === 'string' && _local.name.trim()) ? _local.name.trim() : _label;
+  var _lat = (typeof _local.lat === 'number' && isFinite(_local.lat)) ? _local.lat : null;
+  var _lon = (typeof _local.lon === 'number' && isFinite(_local.lon)) ? _local.lon : null;
+  var _isHouse = !!_local.isHouse;
+  var _wx = (typeof localWx !== 'undefined' && localWx && typeof localWx === 'object') ? localWx : null;
+  var _user = (typeof user !== 'undefined' && user) ? user : null;
+  var _briefs = (typeof briefs !== 'undefined' && Array.isArray(briefs) && briefs.length) ? briefs : null;
+  if (!_briefs) {
+    _briefs = [
+      { kind: 'weather', title: _name + ' weather', state: 'live', note: 'Live weather for ' + _label + ' rides at the top of this insert — fetched fresh from Open-Meteo on each edition refresh.' },
+      { kind: 'sky', title: 'Sky over ' + _name, state: 'live', note: 'Sunrise and sunset for ' + _label + ' ride with the weather line above, so the day here is planned by the light here.' },
+      { kind: 'briefs', title: _name + ' briefs', state: 'open', note: 'A founding slot — open. The desk fills ' + _name + ' briefs as local coverage opens here; until then this space stays honestly open, with no invented local news.' }
+    ];
+  }
+  var _num = function (v) { return (typeof v === 'number' && isFinite(v)) ? Math.round(v) : null; };
+  var _deg = function (v) { var n = _num(v); return n === null ? null : n + '°'; };
+  var _metaParts = [];
+  var _desk = '';
+  if (_wx) {
+    if (_num(_wx.todayHighF) !== null || _num(_wx.todayLowF) !== null) {
+      _metaParts.push('Today ' + (_deg(_wx.todayHighF) || '—') + ' / ' + (_deg(_wx.todayLowF) || '—')
+        + (typeof _wx.todayText === 'string' && _wx.todayText ? ' — ' + _wx.todayText : ''));
+    }
+    if (_wx.sunrise) _metaParts.push('Sunrise ' + _wx.sunrise);
+    if (_wx.sunset) _metaParts.push('Sunset ' + _wx.sunset);
+    if (_num(_wx.rainChancePct) !== null) _metaParts.push('Rain chance ' + _num(_wx.rainChancePct) + '%');
+    if (_num(_wx.tomorrowHighF) !== null || _num(_wx.tomorrowLowF) !== null) {
+      _metaParts.push('Tomorrow ' + (_deg(_wx.tomorrowHighF) || '—') + ' / ' + (_deg(_wx.tomorrowLowF) || '—')
+        + (typeof _wx.tomorrowText === 'string' && _wx.tomorrowText ? ' — ' + _wx.tomorrowText : ''));
+    }
+    if (_num(_wx.rainChancePct) !== null && _num(_wx.rainChancePct) >= 50) {
+      _desk = 'Rain is more likely than not today (' + _num(_wx.rainChancePct) + '%) — take the rain gear and give yourself a few extra minutes on wet roads.';
+    } else if (_num(_wx.todayHighF) !== null && _num(_wx.todayHighF) >= 90) {
+      _desk = 'A ' + _num(_wx.todayHighF) + '° high — summer rules: water close, shade at midday, and the heavy work early or late.';
+    } else if (_num(_wx.todayLowF) !== null && _num(_wx.todayLowF) <= 32) {
+      _desk = 'Down to ' + _num(_wx.todayLowF) + '° tonight — a freeze line: cover the plants and check on anyone whose heat is iffy.';
+    } else if (_num(_wx.todayHighF) !== null && _num(_wx.todayLowF) !== null) {
+      _desk = 'High ' + _num(_wx.todayHighF) + '°, low ' + _num(_wx.todayLowF) + '° — a ' + Math.abs(_num(_wx.todayHighF) - _num(_wx.todayLowF)) + '° swing across the day, so dress in layers and plan by the hour you are out in.';
+    } else if (typeof _wx.todayText === 'string' && _wx.todayText) {
+      _desk = 'Today reads ' + _wx.todayText + ' over ' + _name + ' — the full line is in the table above.';
+    }
+  }
+%>
+<section class="dept" id="your-local" data-dept="your-local" data-logged-in="<%= _user ? '1' : '0' %>">
+  <h3 class="dept-name">📍 Your Local — <span id="tboLocalLabel"><%= _label %></span></h3>
+  <% if (_isHouse) { %>
+  <p class="dept-sub">The house hometown — set your own town below and this page of the paper becomes yours.</p>
+  <% } else { %>
+  <p class="dept-sub">Your town, in your paper — weather and briefs for where you actually are.</p>
+  <% } %>
+
+  <div id="tboLocalWeather">
+    <div class="wx-now">
+      <span class="wx-now-temp" id="tboLocalNowTemp"><%= _wx && _deg(_wx.nowTempF) !== null ? _deg(_wx.nowTempF) : '—' %></span>
+      <span class="wx-now-cond" id="tboLocalNowCond"><%= _wx ? ((typeof _wx.nowText === 'string' && _wx.nowText ? _wx.nowText : 'fair') + ', right now') : 'weather unavailable just now' %></span>
+      <span class="wx-now-note" id="tboLocalNote"><%= _wx ? 'live from Open-Meteo' : '' %></span>
+    </div>
+    <% if (_wx) { %>
+    <table class="wx-table">
+      <tr><th>Today</th><td><% if (_num(_wx.todayHighF) !== null || _num(_wx.todayLowF) !== null) { %><b><%= _deg(_wx.todayHighF) || '—' %> / <%= _deg(_wx.todayLowF) || '—' %></b><% } %><% if (typeof _wx.todayText === 'string' && _wx.todayText) { %> — <%= _wx.todayText %><% } %></td></tr>
+      <tr><th>Tomorrow</th><td><% if (_num(_wx.tomorrowHighF) !== null || _num(_wx.tomorrowLowF) !== null) { %><b><%= _deg(_wx.tomorrowHighF) || '—' %> / <%= _deg(_wx.tomorrowLowF) || '—' %></b><% } %><% if (typeof _wx.tomorrowText === 'string' && _wx.tomorrowText) { %> — <%= _wx.tomorrowText %><% } %></td></tr>
+    </table>
+    <p class="wx-meta" id="tboLocalMeta"><%= _metaParts.join(' · ') %></p>
+    <% if (_desk) { %>
+    <p class="desk-line" id="tboLocalDesk"><b>What it means:</b> <%= _desk %></p>
+    <% } %>
+    <% } else { %>
+    <p class="wx-meta" id="tboLocalMeta">Your local weather couldn't be fetched just now — the rest of your insert is below, and the weather line returns with the next edition refresh.</p>
+    <p class="desk-line" id="tboLocalDesk" hidden></p>
+    <% } %>
+  </div>
+
+  <% for (var _i = 0; _i < _briefs.length; _i++) { var _slot = _briefs[_i] || {}; %>
+  <article class="tbo-card">
+    <h4><%= (typeof _slot.title === 'string' && _slot.title) ? _slot.title : 'Local briefs' %></h4>
+    <% if (typeof _slot.note === 'string' && _slot.note) { %><p><%= _slot.note %></p><% } %>
+    <% if (_slot.state === 'open') { %><p class="tbo-note">Founding slot — open</p><% } %>
+  </article>
+  <% } %>
+
+  <div class="tbo-card">
+    <h4>Set your town</h4>
+    <p>Type your town and pick it from the list, or tap the location button — your location is only ever asked for on that tap, never on its own.</p>
+    <p>
+      <label for="tboLocalQuery">Your town</label>
+      <input id="tboLocalQuery" type="text" autocomplete="off" autocapitalize="words" placeholder="e.g. Lafayette, Louisiana">
+      <button class="tbo-btn" id="tboLocalFind" type="button">Find my town</button>
+      <button class="tbo-btn" id="tboLocalGeo" type="button">📍 Use my location</button>
+    </p>
+    <div id="tboLocalResults"></div>
+    <p class="tbo-note" id="tboLocalStatus" role="status"></p>
+    <% if (_user) { %>
+    <p class="tbo-note">Saved to your OneMind account — it follows you to every device.</p>
+    <% } else { %>
+    <p class="tbo-note">Stored on this device only — sign in and it follows you everywhere.</p>
+    <% } %>
+    <% if (_user) { %>
+    <form method="post" action="/the-big-one/locality" id="tboLocalForm">
+      <input type="hidden" name="label" id="tboLocalFormLabel">
+      <input type="hidden" name="name" id="tboLocalFormName">
+      <input type="hidden" name="region" id="tboLocalFormRegion">
+      <input type="hidden" name="country" id="tboLocalFormCountry">
+      <input type="hidden" name="lat" id="tboLocalFormLat">
+      <input type="hidden" name="lon" id="tboLocalFormLon">
+    </form>
+    <% } %>
+  </div>
+
+  <p class="src" id="tboLocalSrc">Weather: Open-Meteo for <%= _label %><%= (_lat !== null && _lon !== null) ? ' (' + _lat + '°, ' + _lon + '°)' : '' %>, fetched live. Places: Open-Meteo geocoding. No location is ever taken without your tap.</p>
+</section>

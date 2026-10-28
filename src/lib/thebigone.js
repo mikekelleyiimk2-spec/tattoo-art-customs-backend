@@ -201,9 +201,37 @@ async function foundingSpotsLeft() {
   return Math.max(0, FOUNDING_CAP - (await foundingClaimed()));
 }
 
+// Founder recognition: the signed-in reader's own place in the
+// Founding 500. A user's rank is the count of founding claims
+// (pending + active, same set foundingClaimed() counts) whose
+// created_at is at or before that user's EARLIEST founding
+// subscription — so a reader who holds more than one founding row
+// is ranked by the first claim they made, and tied timestamps rank
+// together rather than arbitrarily. Returns null for anyone who is
+// not a founder (and on any DB error: a recognition lookup must
+// never break the page it decorates).
+async function founderInfo(userId) {
+  if (!userId) return null;
+  try {
+    const mine = await db.get(
+      `SELECT MIN(s.created_at) AS first_at FROM subscriptions s JOIN plans p ON p.id = s.plan_id
+       WHERE p.slug = 'the_big_one_founding' AND s.status IN ('pending','active') AND s.user_id = ?`,
+      [userId]);
+    if (!mine || mine.first_at === null || mine.first_at === undefined) return null;
+    const rank = await db.get(
+      `SELECT COUNT(*) AS n FROM subscriptions s JOIN plans p ON p.id = s.plan_id
+       WHERE p.slug = 'the_big_one_founding' AND s.status IN ('pending','active') AND s.created_at <= ?`,
+      [mine.first_at]);
+    const ordinal = rank ? Number(rank.n) || 0 : 0;
+    return ordinal > 0 ? { ordinal } : null;
+  } catch (e) {
+    return null;
+  }
+}
+
 module.exports = {
   TIP_JAR_URL, FOUNDING_CAP, PLAN_SLUGS, PLAN_DESCRIPTIONS,
   LISTINGS, listingPriceCents, SPONSORS,
   ensurePlans, getPlans, paypalReadyFor, anyPaypalReady,
-  foundingClaimed, foundingSpotsLeft,
+  foundingClaimed, foundingSpotsLeft, founderInfo,
 };

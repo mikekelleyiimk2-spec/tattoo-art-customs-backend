@@ -1,0 +1,56 @@
+<%#
+  The Big One — FOUNDING 500 push section.
+  Locals (all guarded — this partial must never throw):
+    plans, money, foundingLeft, foundingCap, paypalReady, user, founder.
+  Seats remaining comes ONLY from foundingLeft (the live count the
+  route passes); no number is invented here.
+%><%
+  const _plans = (typeof plans !== 'undefined' && plans) ? plans : {};
+  const _money = (typeof money !== 'undefined' && typeof money === 'function') ? money : function (c) { return ''; };
+  const _foundingLeft = (typeof foundingLeft !== 'undefined' && foundingLeft !== null) ? foundingLeft : 0;
+  const _foundingCap = (typeof foundingCap !== 'undefined' && foundingCap) ? foundingCap : 500;
+  const _paypalReady = (typeof paypalReady !== 'undefined' && paypalReady) ? paypalReady : {};
+  const _user = (typeof user !== 'undefined') ? user : null;
+  const _founder = (typeof founder !== 'undefined') ? founder : null;
+  const _plan = _plans.the_big_one_founding || null;
+%>
+<section id="founding">
+  <h3>★ Founding 500</h3>
+  <article class="tbo-card">
+    <p class="src" style="letter-spacing:2px;">FOUNDING 500 — FIRST <%= _foundingCap %> ONLY</p>
+    <h4>Founding Member — the rate that never rises</h4>
+    <% if (_plan) { %>
+    <p class="tbo-price"><%= _money(_plan.price_cents) %><span class="tbo-note"> / <%= _plan.interval === 'year' ? 'year' : 'month' %></span></p>
+    <% } %>
+    <p>The founding rate — <b>$2.99/mo base</b><% if (_plan) { %> (<%= _money(_plan.price_cents) %> at the register, with the house fee pass-through)<% } %> — is
+    <b>locked for as long as the subscription stays active</b>. It belongs to the first 500 founding
+    members only: when those spots are gone, this rate is gone, and the regular subscription is the door.</p>
+    <p><b><%= _foundingLeft %> of <%= _foundingCap %> founding spots left</b></p>
+    <% if (_founder) { %>
+    <p class="tbo-note">★ You hold founding spot No. <%= _founder.ordinal %></p>
+    <% } %>
+    <% if (_foundingLeft > 0) { %>
+    <% if (_user) { %>
+    <form method="post" action="/membership/subscribe/the_big_one_founding" style="display:inline;">
+      <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button class="tbo-btn gold" type="submit">Subscribe with PayPal</button>
+    </form>
+    <form method="post" action="/membership/credit/the_big_one_founding" style="display:inline;">
+      <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button class="tbo-btn" type="submit">Pay with site credit</button>
+    </form>
+    <% } else { %>
+    <p><a class="tbo-btn gold" href="/the-big-one/signin">Sign in to subscribe</a></p>
+    <p class="tbo-note">Subscribing rides your OneMind account — sign in (or create it in one tap) and you're back here to finish.</p>
+    <% } %>
+    <% if (!_paypalReady.the_big_one_founding) { %>
+    <p class="tbo-note">Honest state of this door: this plan's PayPal checkout is still being set up at the register — the button will tell you so, plainly, and the site-credit path works today. No charge is ever taken by a door that isn't ready.</p>
+    <% } %>
+    <% } else { %>
+    <p><b>The founding 500 are full.</b></p>
+    <p>The founding rate is closed — every one of the first <%= _foundingCap %> spots is held.
+    The regular subscription carries the same edition, every department, every day:</p>
+    <p><a class="tbo-btn gold" href="#subscribe">Subscribe to The Big One</a></p>
+    <% } %>
+  </article>
+</section>

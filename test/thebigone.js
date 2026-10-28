@@ -137,4 +137,129 @@ async function runHttpTests(ok, req) {
     'codex price entries for The Big One are in and settled');
 }
 
-module.exports = { runDbTests, runHttpTests };
+// ---- Bundle A (2026-10-28): Founding-500 push + Your Local insert ----
+async function runBundleADb(ok) {
+  console.log('the big one (bundle A: founding push + local insert):');
+  const li = require('../src/lib/localinsert');
+  ok(li.HOUSE_LOCALITY.lat === 29.9746 && li.HOUSE_LOCALITY.lon === -92.1553, 'house locality is Abbeville (bundled default)');
+  ok(/Abbeville/.test(li.HOUSE_LOCALITY.label), 'house locality label names Abbeville');
+  const slots = li.briefSlots(li.HOUSE_LOCALITY);
+  ok(Array.isArray(slots) && slots.some((s) => s.kind === 'briefs'), 'brief slots include an honest open briefs slot');
+
+  const uid = await db.insert('users', {
+    email: 'tbo-local@test.local', password_hash: 'x', role: 'customer',
+    display_name: 'Local', created_at: db.now(), email_verified: 1,
+  });
+  ok((await li.getUserLocality(uid)) === null, 'no saved locality reads null (house default applies)');
+  const saved = await li.saveUserLocality(uid, {
+    label: 'Lafayette, Louisiana', name: 'Lafayette', region: 'Louisiana',
+    country: 'United States', lat: 30.2241, lon: -92.0198,
+  });
+  ok(saved && Math.abs(saved.lat - 30.2241) < 1e-9, 'saveUserLocality returns the saved pick');
+  const back = await li.getUserLocality(uid);
+  ok(back && back.label === 'Lafayette, Louisiana', 'saved locality reads back from the account');
+  const bad = await li.saveUserLocality(uid, { label: 'Nowhere', lat: 999, lon: 0 });
+  ok(bad === null, 'out-of-range coordinates are refused, never stored');
+  const back2 = await li.getUserLocality(uid);
+  ok(back2 && back2.label === 'Lafayette, Louisiana', 'refused save leaves the good locality intact');
+
+  // founderInfo: the ordinal ranks founding claims by created_at.
+  const plans = await tbo.getPlans();
+  const f1 = await db.insert('users', {
+    email: 'tbo-founder1@test.local', password_hash: 'x', role: 'customer',
+    display_name: 'F1', created_at: db.now(), email_verified: 1,
+  });
+  ok((await tbo.founderInfo(f1)) === null, 'founderInfo null before any founding subscription');
+  await db.insert('subscriptions', {
+    user_id: f1, plan_id: plans.the_big_one_founding.id, status: 'active',
+    paypal_subscription_id: '', created_at: db.now(),
+  });
+  const info1 = await tbo.founderInfo(f1);
+  ok(info1 && info1.ordinal >= 1, 'founderInfo returns an ordinal for a founding subscriber');
+  const f2 = await db.insert('users', {
+    email: 'tbo-founder2@test.local', password_hash: 'x', role: 'customer',
+    display_name: 'F2', created_at: db.now(), email_verified: 1,
+  });
+  await db.insert('subscriptions', {
+    user_id: f2, plan_id: plans.the_big_one_founding.id, status: 'active',
+    paypal_subscription_id: '', created_at: db.now() + 1000,
+  });
+  const info2 = await tbo.founderInfo(f2);
+  ok(info2 && info1 && info2.ordinal === info1.ordinal + 1, 'a later founding claim takes the next ordinal');
+
+  // HTTP-phase fixture: a seated founder with a real password and the
+  // house locality saved, exercised over HTTP in runBundleAHttp.
+  const bcrypt = require('bcryptjs');
+  const seated = await db.insert('users', {
+    email: 'tbo-seated@test.local', password_hash: await bcrypt.hash('BundleA123!', 10),
+    role: 'customer', display_name: 'Seated', created_at: db.now(), email_verified: 1,
+  });
+  await db.insert('subscriptions', {
+    user_id: seated, plan_id: plans.the_big_one_founding.id, status: 'active',
+    paypal_subscription_id: '', created_at: db.now(),
+  });
+  const fixtureLocal = await li.saveUserLocality(seated, {
+    label: 'Abbeville, Louisiana', name: 'Abbeville', region: 'Louisiana',
+    country: 'United States', lat: 29.9746, lon: -92.1553,
+  });
+  ok(!!fixtureLocal, 'seated founder fixture carries a saved locality');
+}
+
+async function runBundleAHttp(ok, req) {
+  console.log('the big one (bundle A web: founding push + your local):');
+  const anon = async (p, opts = {}) => {
+    const r = await fetch(`http://localhost:4137${p}`, { redirect: 'manual', ...opts });
+    return { status: r.status, text: await r.text(), location: r.headers.get('location') };
+  };
+
+  const home = await anon('/the-big-one');
+  ok(home.status === 200, '/the-big-one serves 200 (bundle A)');
+  ok(home.text.includes('id="your-local"'), 'Your Local insert section is in the page');
+  ok(home.text.includes('id="tboLocalLabel">Abbeville, Louisiana</span>'),
+    'anon readers get the house locality (Abbeville) in the insert masthead');
+  ok(/of 500 founding spots left/.test(home.text), 'founding push shows the real seats-left count from the register');
+  ok(home.text.includes('id="founding"'), 'founding push section is in the page');
+
+  const badWx = await anon('/the-big-one/local/weather?lat=999&lon=0');
+  ok(badWx.status === 400, 'local weather door rejects bad coordinates');
+  const search = await anon('/the-big-one/local/search?q=abbeville');
+  ok(search.status === 200 && Array.isArray(JSON.parse(search.text).places),
+    'local search door answers a JSON places array (empty offline — never fabricated)');
+
+  const guestPost = await anon('/the-big-one/locality', {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ label: 'Lafayette, Louisiana', lat: '30.2241', lon: '-92.0198' }),
+  });
+  ok(guestPost.status === 302, 'guest locality POST redirects (device pick is client-side; account save needs the seat)');
+
+  // Seated flow: the founder fixture logs in, moves their town over
+  // HTTP, and their edition carries the new locality + the badge.
+  const jar = {};
+  const jarReq = async (method, p, body) => {
+    const headers = {};
+    const cookies = Object.entries(jar).map(([k, v]) => `${k}=${v}`).join('; ');
+    if (cookies) headers.cookie = cookies;
+    let payload;
+    if (body) { payload = new URLSearchParams(body); headers['content-type'] = 'application/x-www-form-urlencoded'; }
+    const res = await fetch(`http://localhost:4137${p}`, { method, headers, body: payload, redirect: 'manual' });
+    for (const c of (res.headers.getSetCookie ? res.headers.getSetCookie() : [])) {
+      const [pair] = c.split(';'); const [k, v] = pair.split('='); jar[k.trim()] = (v || '').trim();
+    }
+    return { status: res.status, text: await res.text(), location: res.headers.get('location') };
+  };
+  const login = await jarReq('POST', '/login', { email: 'tbo-seated@test.local', password: 'BundleA123!' });
+  ok(login.status === 302 || login.status === 200, 'seated founder login works');
+  const save = await jarReq('POST', '/the-big-one/locality', {
+    label: 'Lafayette, Louisiana', name: 'Lafayette', region: 'Louisiana',
+    country: 'United States', lat: '30.2241', lon: '-92.0198',
+  });
+  ok(save.status === 302, 'seated locality save accepted (302 back to the insert)');
+  const mine = await jarReq('GET', '/the-big-one');
+  ok(mine.status === 200 && mine.text.includes('id="tboLocalLabel">Lafayette, Louisiana</span>'),
+    'seated reader’s edition carries their own locality in the insert');
+  ok(mine.text.includes('FOUNDING MEMBER'), 'seated founder sees the founding recognition in the edition');
+  ok(mine.text.includes('You hold founding spot No.'), 'seated founder sees their spot number at the register');
+}
+
+module.exports = { runDbTests, runHttpTests, runBundleADb, runBundleAHttp };
