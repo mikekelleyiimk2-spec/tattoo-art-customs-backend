@@ -86,7 +86,12 @@ async function runHttpTests(ok, req) {
   const apps = (feed.json && feed.json.apps) || [];
   ok(feed.status === 200 && feed.json && feed.json.ok === true
     && feed.json.pool_count === baseCount + 1, 'app feed responds with the live pool count');
-  ok(apps.length === 21 && apps.every((a) => a.source === 'fleet'),
+  // Count the fleet seed relatively: other suites (Bundle B's
+  // devtools wiring, run earlier) legitimately add their own rows to
+  // the public feed before this file runs, so absolute feed lengths
+  // are not this test's to assert — the 21 fleet rows are.
+  const fleetRows = apps.filter((a) => a.source === 'fleet');
+  ok(fleetRows.length === 21,
     'app feed is seeded with the fleet\'s 21 apps');
   const tac = apps.find((a) => a.package === 'com.tattooartcustoms.app');
   ok(!!tac && tac.optin_url === 'https://play.google.com/apps/testing/com.tattooartcustoms.app',
@@ -114,7 +119,7 @@ async function runHttpTests(ok, req) {
     'the added app records the pool snapshot — testers it instantly has');
   const feedAfter = await call('GET', '/api/testers/apps');
   const feedApps = (feedAfter.json && feedAfter.json.apps) || [];
-  ok(feedApps.length === 22 && feedApps.some((a) => a.package === 'com.example.pooltest'
+  ok(feedApps.length === apps.length + 1 && feedApps.some((a) => a.package === 'com.example.pooltest'
     && a.pool_snapshot === baseCount + 1), 'the added app appears in the feed with its snapshot');
   ok(!feedAfter.text.includes(DEV_GMAIL), 'the feed never leaks the developer Gmail');
 
@@ -127,7 +132,7 @@ async function runHttpTests(ok, req) {
     && addAgain.json.app.pool_snapshot === baseCount + 1,
     're-adding the same package is idempotent and keeps the original snapshot');
   const feedFinal = await call('GET', '/api/testers/apps');
-  ok(((feedFinal.json && feedFinal.json.apps) || []).length === 22, 'no duplicate app row was created');
+  ok(((feedFinal.json && feedFinal.json.apps) || []).length === apps.length + 1, 'no duplicate app row was created');
 
   // Fleet inserts ("Link coming"): a null opt-in URL is accepted
   // ONLY under the Muse service token. The public intake — no
