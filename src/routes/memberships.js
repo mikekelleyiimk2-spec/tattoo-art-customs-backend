@@ -32,6 +32,25 @@ router.get('/shops', async (req, res) => {
   });
 });
 
+// Healed Wall shop add-on (Bundle C Build 3, 2026-10-28): the offer
+// page for the paid add-on defined in src/lib/healedWall.js. Public —
+// shops considering the membership should see the add-on too. NO
+// checkout exists for it: the price is ASSESSED — PENDING OWNER STRIKE
+// (lib pricesLive:false), so the page shows the founding-rate notice
+// instead of a figure, and the start path is an inquiry through
+// POST /contact (topic 'shop', marker in lib). When the price is
+// struck, fulfillment follows lib's FULFILLMENT_CHECKLIST.
+router.get('/healed-wall', (req, res) => {
+  const healedWall = require('../lib/healedWall');
+  res.render('shop/healed-wall', {
+    title: 'Healed Wall Add-On for Tattoo Shops — Tattoo Art Customs',
+    healedWall,
+    price: healedWall.pricePresentation(),
+    loggedIn: !!req.user,
+    metaDescription: 'The Healed Wall add-on for Tattoo Shop members: a moderated healed-work wall and the house aftercare pack on your shop\u2019s storefront.',
+  });
+});
+
 router.get('/', requireLogin, async (req, res) => {
   const plans = await db.all('SELECT * FROM plans WHERE active = 1 ORDER BY price_cents');
   const subs = await db.all(

@@ -1,0 +1,30 @@
+<%# Sponsor chair — the labeled sponsor seat on one Library shelf.
+    Why a new partial: src/views/partials/sponsor-slot.ejs already
+    exists, but it is the generic Penny Sweeper open spot (no shelf,
+    no chair, points at /advertise) — it cannot carry a shelf. The
+    Big One's Sponsor Chair is inline markup in thebigone-edition.ejs,
+    not a partial. This partial mirrors that chair's house markup
+    (.sponsor-slot / .house-label / .house-title / .house-text /
+    .house-cta, the classes layout-thebigone.ejs styles) so it reads
+    the same in the edition and, with its inline fallback styles, on
+    the main site layout too.
+    Locals: shelf {key, name} (or shelfName string); optional
+    sponsorName — when set, the chair is carried by that sponsor;
+    when absent, the chair renders in its honest unsold state.
+    The label always says SPONSOR: a chair is never dressed up as
+    editorial content. %>
+<% const _chairShelf = (typeof shelf !== 'undefined' && shelf) ? shelf : null; %>
+<% const _chairName = _chairShelf ? (_chairShelf.name || '') : (typeof shelfName !== 'undefined' ? shelfName : 'This shelf'); %>
+<% const _chairKey = _chairShelf ? (_chairShelf.key || '') : ''; %>
+<% const _chairSponsor = (typeof sponsorName !== 'undefined' && sponsorName) ? sponsorName : null; %>
+<div class="sponsor-slot sponsor-chair" role="complementary" aria-label="Sponsor" style="border:1px dashed #9db8a4;border-radius:12px;padding:1rem;margin:1.5rem 0;text-align:left;">
+  <p class="house-label fineprint" style="margin:.2rem 0;">🤝 SPONSOR</p>
+  <% if (_chairSponsor) { %>
+  <p class="house-title" style="margin:.2rem 0;"><strong><%= _chairName %> is carried by <%= _chairSponsor %></strong></p>
+  <p class="house-text" style="margin:.2rem 0;">A labeled sponsor chair — this shelf's sponsor, named on the shelf.</p>
+  <% } else { %>
+  <p class="house-title" style="margin:.2rem 0;"><strong>The Sponsor Chair — <%= _chairName %></strong></p>
+  <p class="house-text" style="margin:.2rem 0;">This shelf is carried by — <b>founding sponsor chair open</b>. Until a sponsor takes it, this chair keeps the shelf warm.</p>
+  <p style="margin:.2rem 0;"><a class="house-cta" href="/library/sponsors<% if (_chairKey) { %>#shelf-<%= _chairKey %><% } %>">Sponsor this shelf — Library shelf sponsorships</a></p>
+  <% } %>
+</div>

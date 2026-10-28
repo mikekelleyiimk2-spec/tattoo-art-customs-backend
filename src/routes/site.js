@@ -1329,6 +1329,27 @@ router.get('/privacy/the-big-one', (req, res) => res.render('site/privacy-thebig
   metaDescription: 'Privacy policy for The Big One. A daily edition you read offline — no accounts, no data collected, and a weather line that never asks where you are.',
 }));
 
+// Library shelf sponsorships (Bundle C Build 2, 2026-10-28): the
+// offer surface for The Library's own shelves, mirroring the house
+// pattern at GET /the-big-one/sponsors — prices shown as register
+// prices (lib/pricing.withFeeCents over the assessed base in
+// lib/librarySponsors.js, flagged pending owner strike there),
+// honest availability, no invented reach numbers, and inquiries
+// through the existing POST /contact machinery (the form on the
+// page preselects the shelf in its message).
+router.get('/library/sponsors', (req, res) => {
+  const libSponsors = require('../lib/librarySponsors');
+  const pricingLib = require('../lib/pricing');
+  res.render('site/library-sponsors', {
+    title: 'Sponsor a Library Shelf — The Library | Usefulappz',
+    metaDescription: 'Sponsor a shelf of The Library: a named, labeled sponsor chair on the Verne Shelf, Classics, Adventure & the Sea, Mystery & Detectives, Sci-Fi & the Strange, the Listening Shelf, or the Documentary Shelf — at founding rates.',
+    shelves: libSponsors.SHELVES.map((s) => ({ ...s, priceCents: libSponsors.shelfPriceCents(s) })),
+    wholeLibrary: { ...libSponsors.WHOLE_LIBRARY, priceCents: libSponsors.shelfPriceCents(libSponsors.WHOLE_LIBRARY) },
+    money: pricingLib.money,
+    priceStatus: libSponsors.PRICE_STATUS,
+  });
+});
+
 // Per-app policy for the CannaDash Android app (demo build; zero
 // permissions, zero network, bundled demo data only, no data
 // collected; Play requires a public privacy-policy URL).

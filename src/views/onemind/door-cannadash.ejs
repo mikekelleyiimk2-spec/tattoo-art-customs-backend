@@ -45,6 +45,16 @@
   .cddoor .door-meta { position:relative; z-index:1; margin-top:-64px; padding:0 18px 20px; text-align:center; }
   .cddoor .door-meta h2 { font-size:27px; margin:0 0 5px; font-weight:800; letter-spacing:1px; }
   .cddoor .door-meta p { margin:0; color:#8df35a; font-size:16px; font-weight:600; }
+  /* Founding partners offer (Bundle C Build 1, 2026-10-28). */
+  .cddoor .founding { margin:34px auto 0; background:#0a0f08; border:1px solid #33511f;
+    border-radius:16px; padding:24px 26px; display:flex; align-items:center;
+    justify-content:space-between; gap:1.2rem; flex-wrap:wrap; }
+  .cddoor .founding h2 { font-size:24px; margin:0 0 6px; font-weight:800; }
+  .cddoor .founding p { margin:0; color:#c7d2bd; font-size:15.5px; line-height:1.55; max-width:640px; }
+  .cddoor .founding p strong { color:#8df35a; }
+  .cddoor .founding a.cta { flex:0 0 auto; background:#58d61e; color:#0a1206; text-decoration:none;
+    font-size:16px; font-weight:800; padding:13px 26px; border-radius:11px; }
+  .cddoor .founding a.cta:hover { background:#6ee63a; }
   /* Founding-list intake. */
   .cddoor .join { max-width:720px; margin:46px auto 0; background:#0a0f08;
     border:1px solid #26331f; border-radius:16px; padding:26px 26px 28px; }
@@ -146,6 +156,16 @@
         <div class="door-meta"><h2>PARTNER</h2><p>Reach more patients</p></div>
       </a>
     </div>
+
+    <section class="founding" aria-labelledby="cd-founding">
+      <div>
+        <h2 id="cd-founding">Founding partners</h2>
+        <p>Licensed dispensaries: join the first cohort and your <strong>founding rate is
+          locked at joining</strong> — the structure, the lock, and how to apply are on the
+          founding partner page. The full rate sheet goes to founding partners first.</p>
+      </div>
+      <a class="cta" href="/cannadash/founding">Founding partners</a>
+    </section>
 
     <section class="join" id="join">
       <% const roleMeta = {

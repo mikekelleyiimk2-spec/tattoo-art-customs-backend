@@ -1,0 +1,78 @@
+<h1>Merch drops — hearts queue</h1>
+<p><a href="/admin">← Dashboard</a></p>
+<p class="muted">
+  A design becomes a merch-drop <strong>candidate</strong> at
+  <strong><%= threshold %> signed-in hearts</strong> (♥ from signed-in accounts only — guest hearts do not move this signal).
+  Designs at <%= nearThreshold %>+ are <em>climbing</em>. Candidates are a queue, not a launch:
+  nothing publishes without the owner mockup-approval gate in the checklist below.
+</p>
+
+<h2>Candidates</h2>
+<% if (!candidates.length) { %>
+  <p class="muted">No candidates yet — no design is at <%= threshold %> signed-in hearts. The top-hearted designs below show the real distance.</p>
+<% } else { %>
+<table>
+  <thead><tr><th>Art</th><th>Design</th><th>Signed-in ♥</th><th>Total ♥ (all voters)</th><th>Status</th><th>First flagged</th><th>Owner note</th><th></th></tr></thead>
+  <tbody>
+  <% candidates.forEach(function(c) { %>
+    <tr>
+      <td>
+        <% const artFile = String(c.color_path || c.linework_path || '').split('/').pop(); %>
+        <% if (artFile) { %>
+          <img src="/img/designs/<%= artFile %>" alt="Artwork for <%= c.title || c.design_id %>" style="width:80px;height:auto;display:block;border:1px solid #ccc;">
+        <% } else { %><span class="muted">no image</span><% } %>
+      </td>
+      <td><%= c.title || '(untitled)' %><br><span class="muted"><%= c.design_id %></span></td>
+      <td><strong><%= c.signed_in_hearts %></strong> / <%= threshold %></td>
+      <td><%= c.total_hearts %></td>
+      <td><span class="badge <%= c.status === 'approved' ? 'ok' : (c.status === 'dismissed' ? 'bad' : 'warn') %>"><%= c.status %></span></td>
+      <td><%= c.first_flagged_at ? new Date(c.first_flagged_at).toLocaleString() : '' %></td>
+      <td><%= c.owner_note || '' %></td>
+      <td>
+        <% if (c.status === 'candidate') { %>
+        <form method="post" action="/admin/merch-drops/<%= c.id %>/approve" style="display:inline">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn" type="submit">Approve</button>
+        </form>
+        <form method="post" action="/admin/merch-drops/<%= c.id %>/dismiss" style="display:inline">
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn btn-secondary" type="submit">Dismiss</button>
+        </form>
+        <% } %>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="8">
+        <strong>Printful-prep handoff checklist</strong> — in order, nothing skipped, nothing auto-publishes:
+        <ol style="margin:0.25em 0 0.75em 1.25em;">
+          <% checklist.forEach(function(step) { %>
+            <li><% if (step.gate) { %><strong><%= step.label %></strong><% } else { %><%= step.label %><% } %></li>
+          <% }); %>
+        </ol>
+      </td>
+    </tr>
+  <% }); %>
+  </tbody>
+</table>
+<% } %>
+
+<h2>Top hearted designs (signed-in ♥)</h2>
+<p class="muted">Top 10 by signed-in heart count, whatever band they sit in — the real landscape, not just the threshold.</p>
+<% if (!top.length) { %>
+  <p class="muted">No signed-in hearts recorded yet.</p>
+<% } else { %>
+<table>
+  <thead><tr><th>Design</th><th>Signed-in ♥</th><th>Total ♥ (all voters)</th><th>Band</th><th>To go</th></tr></thead>
+  <tbody>
+  <% top.forEach(function(t) { %>
+    <tr>
+      <td><%= t.title || '(untitled)' %><br><span class="muted"><%= t.design_id %></span></td>
+      <td><strong><%= t.signed_in_hearts %></strong></td>
+      <td><%= t.total_hearts %></td>
+      <td><span class="badge <%= t.band === 'candidate' ? 'ok' : (t.band === 'climbing' ? 'warn' : '') %>"><%= t.band %></span></td>
+      <td><%= t.signed_in_hearts >= threshold ? '— at the yardstick —' : (threshold - t.signed_in_hearts) + ' signed-in hearts to the yardstick' %></td>
+    </tr>
+  <% }); %>
+  </tbody>
+</table>
+<% } %>

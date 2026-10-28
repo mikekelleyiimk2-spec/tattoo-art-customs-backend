@@ -1,0 +1,63 @@
+<%# Healed Wall add-on offer page (Bundle C Build 3, 2026-10-28).
+    GET /membership/healed-wall. The add-on definition lives in
+    src/lib/healedWall.js — this view renders from it only.
+    Price state is honest: the add-on price is assessed but NOT yet
+    struck by the owner (pricesLive:false), so NO dollar figure for
+    the add-on appears here — the founding-rate notice stands in its
+    place. There is no buy button and no checkout for this add-on;
+    the start path is the inquiry form below, which posts to the
+    house contact desk (POST /contact, topic "shop") with the
+    "Healed Wall add-on: <shop>" marker the desk sorts by. %>
+<h1>The Healed Wall — a Tattoo Shop add-on</h1>
+<p class="muted">An optional add-on for Tattoo Shop members. Not included in the shop membership, never bundled in silently — shops add it because they want it.</p>
+
+<p>Fresh work sells the appointment. <strong>Healed work sells the shop.</strong> The Healed Wall puts your clients' finished, healed results on your Tattoo Art Customs storefront — the proof a new client scrolls for before they book — with your shop's aftercare instructions carried right alongside it.</p>
+
+<h2>What your shop gets</h2>
+<div class="grid">
+  <% healedWall.INCLUDES.forEach(function (item) { %>
+  <div class="card">
+    <h3><%= item.title %></h3>
+    <p><%= item.detail %></p>
+  </div>
+  <% }); %>
+</div>
+
+<h2>Who can add it</h2>
+<div class="card">
+  <p><%= healedWall.ELIGIBILITY.rule %></p>
+  <p>It rides on the same yearly cycle as your shop membership, and if the shop membership lapses, the wall comes down with the storefront — one subscription to keep track of, not two.</p>
+  <p>Not a shop member yet? The shop membership comes first — see <a href="/membership/shops">Tattoo Shop membership</a>.</p>
+</div>
+
+<h2>Price</h2>
+<div class="card">
+  <p><strong><%= price.label %></strong></p>
+  <p>The founding add-on rate is being finalized now, and member shops hear it first — before it is ever posted publicly. There is no charge today and nothing is billed from this page: registering your interest below costs nothing and commits you to nothing.</p>
+</div>
+
+<h2>How it turns on</h2>
+<ol>
+  <% healedWall.FULFILLMENT_CHECKLIST.forEach(function (s) { %>
+  <li><strong><%= s.label %>.</strong> <%= s.detail %></li>
+  <% }); %>
+</ol>
+
+<h2>Register your shop's interest</h2>
+<p>Send this to the desk and we will bring the founding rate to your shop first, as soon as it is set. Start the message with your shop's name so we can match it to your storefront.</p>
+<form method="post" action="/contact" class="stack">
+  <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <input type="hidden" name="topic" value="<%= healedWall.CONTACT_TOPIC %>">
+  <label>Your name
+    <input type="text" name="name" maxlength="120" required<% if (typeof currentUser !== 'undefined' && currentUser && currentUser.display_name) { %> value="<%= currentUser.display_name %>"<% } %>>
+  </label>
+  <label>Your email
+    <input type="email" name="email" maxlength="120" required<% if (typeof currentUser !== 'undefined' && currentUser && currentUser.email) { %> value="<%= currentUser.email %>"<% } %>>
+  </label>
+  <label>Message
+    <textarea name="message" rows="5" maxlength="2000" required><%= healedWall.CONTACT_MARKER %></textarea>
+  </label>
+  <button class="btn" type="submit">Send to the desk</button>
+</form>
+
+<p class="muted">Curious what the aftercare pack carries? Read <a href="/guides/aftercare">the complete tattoo aftercare guide</a> and the <a href="/aftercare">aftercare product picks</a> — that is the content your storefront would carry under your shop's name.</p>

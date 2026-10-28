@@ -1449,4 +1449,43 @@ router.post('/admins/remove', requireHeadAdmin, formLimiter, checkHoneypot, asyn
   res.redirect('/admin/admins');
 });
 
+// --- Merch drops: hearts -> merch-drop candidates (owner queue) ---
+// Designs cross into this queue ONLY by signed-in hearts (lib/merchDrops:
+// voter_key 'user:%' in design_likes, threshold 2000). This surface is
+// the owner's queue — read + approve/dismiss. Nothing here publishes
+// anything: a candidate still runs the Printful-prep handoff checklist,
+// and the owner mockup-approval step in it is the absolute gate.
+router.get('/merch-drops', async (req, res) => {
+  const merchDrops = require('../lib/merchDrops');
+  // Keep the queue current on view: the scan is idempotent and never
+  // touches a row already queued/approved/dismissed/prepped.
+  try { await merchDrops.scanForCandidates(); } catch (e) { console.error('merch drops scan failed:', e.message); }
+  const candidates = await merchDrops.listCandidates();
+  const top = await merchDrops.topSignedInDesigns(10);
+  res.render('admin/merch-drops', {
+    title: 'Merch drops — Admin', candidates, top,
+    threshold: merchDrops.CANDIDATE_THRESHOLD,
+    nearThreshold: merchDrops.NEAR_THRESHOLD,
+    checklist: merchDrops.HANDOFF_CHECKLIST,
+  });
+});
+
+router.post('/merch-drops/:id/approve', formLimiter, checkHoneypot, async (req, res) => {
+  const merchDrops = require('../lib/merchDrops');
+  const changed = await merchDrops.setCandidateStatus(req.params.id, 'approved');
+  req.session.flash = changed
+    ? 'Merch-drop candidate approved — it still needs the full handoff checklist, starting with clean print file prep. Nothing publishes without owner mockup approval.'
+    : 'Merch-drop candidate not found.';
+  res.redirect('/admin/merch-drops');
+});
+
+router.post('/merch-drops/:id/dismiss', formLimiter, checkHoneypot, async (req, res) => {
+  const merchDrops = require('../lib/merchDrops');
+  const changed = await merchDrops.setCandidateStatus(req.params.id, 'dismissed');
+  req.session.flash = changed
+    ? 'Merch-drop candidate dismissed — the watcher will not re-flag it.'
+    : 'Merch-drop candidate not found.';
+  res.redirect('/admin/merch-drops');
+});
+
 module.exports = router;

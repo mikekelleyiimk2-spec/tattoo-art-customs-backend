@@ -37,6 +37,7 @@
 const express = require('express');
 const config = require('../config');
 const rolodex = require('../lib/rolodex');
+const cannadashFounding = require('../lib/cannadashFounding');
 const db = require('../db');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 
@@ -156,6 +157,30 @@ function cannadashDoorHandler(req, res) {
 }
 router.get('/cannadash', cannadashDoorHandler);
 
+// --- The CannaDash founding partner offer -------------------------------
+// GET /cannadash/founding: the founding partner offer for dispensaries
+// (Bundle C Build 1, 2026-10-28). Structure, lock promise, and cohort
+// cap render from src/lib/cannadashFounding.js; while that config's
+// pricesLive flag is false (status PENDING OWNER STRIKE) every price
+// cell carries the withheld label and NO assessed dollar figure
+// renders — the running dispensary campaign promised a founding rate
+// locked with no figure quoted, and this page keeps that promise.
+// Applications reuse the door's founding-list intake below
+// (POST /cannadash/join, role=partner) — no second intake is built.
+function cannadashFoundingHandler(req, res) {
+  res.render('onemind/cannadash-founding', {
+    layout: 'layout-onemind',
+    title: 'CannaDash Founding Partners — Rate Locked at Joining | OneMind',
+    metaDescription: 'CannaDash founding partners: licensed dispensaries join the first cohort with their founding rate locked at joining for 12 months. The full rate sheet goes to founding partners first.',
+    canonical: `${base()}/cannadash/founding`,
+    founding: cannadashFounding.publicFoundingOffer(),
+    offer: cannadashFounding.publicFoundingOffer(),
+    feeRows: cannadashFounding.publicFeeRows(),
+    pricesLive: cannadashFounding.pricesLive,
+  });
+}
+router.get('/cannadash/founding', cannadashFoundingHandler);
+
 function cannadashCheckHandler(req, res) {
   const area = String((req.body || {}).area || '').trim().slice(0, 80);
   if (!area) return res.redirect(302, '/cannadash#check');
@@ -199,6 +224,6 @@ module.exports = router;
 module.exports.standaloneEnabled = standaloneEnabled;
 module.exports.handlers = {
   rootHandler, tacDoorHandler, poppyHandler, littleInkersHandler, portsHandler, toolboxHandler,
-  cannadashDoorHandler, cannadashCheckHandler, cannadashJoinHandler,
+  cannadashDoorHandler, cannadashCheckHandler, cannadashJoinHandler, cannadashFoundingHandler,
 };
 module.exports.WAITLIST_ROLES = WAITLIST_ROLES;

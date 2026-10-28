@@ -558,6 +558,11 @@ async function main() {
   await require('./guestBridge').runDbTests(ok); // guest bridge (design claims on buy; sideload pending ties fire at store go-live)
   await require('./moneyWatch').runDbTests(ok); // Money Watch watcher (baseline, exactly-once, kinds, CT windows)
   await require('./thebigone').runDbTests(ok); // The Big One register (plans, prices, founding cap)
+  await require('./cannadashFounding').runDbTests(ok); // Bundle C B1: CannaDash founding fee config (prices withheld pre-strike)
+  await require('./cannadashFounding').runUnitTests(ok);
+  await require('./librarySponsors').runDbTests(ok); // Bundle C B2: Library shelf sponsorship config
+  await require('./healedWall').runDbTests(ok); // Bundle C B3: Healed Wall shop add-on config
+  await require('./merchDrops').runDbTests(ok); // Bundle C B4: hearts -> merch drop candidates (signed-in only)
 
   // Mail retry (unit-level, no live SMTP): a transient failure is retried
   // with backoff and eventually delivered; a permanent failure exhausts all
@@ -1541,6 +1546,10 @@ async function main() {
   r = await areq('GET', '/admin');
   ok(r.status === 200, 'admin dashboard loads');
   await require('./founding').runHttpTests(ok, req, areq);
+  await require('./cannadashFounding').runHttpTests(ok, req, areq); // Bundle C B1
+  await require('./librarySponsors').runHttpTests(ok, req, areq); // Bundle C B2
+  await require('./healedWall').runHttpTests(ok, req, areq); // Bundle C B3
+  await require('./merchDrops').runHttpTests(ok, req, areq); // Bundle C B4
   await require('./shoptools-phase2').runHttpTests(ok, req);
   await require('./shoptools-phase3').runHttpTests(ok, req);
   await require('./shoptools-phase4').runHttpTests(ok, req);

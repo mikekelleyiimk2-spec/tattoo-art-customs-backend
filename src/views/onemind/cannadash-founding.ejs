@@ -1,0 +1,139 @@
+<style>
+  body { background:#000; }
+  .cdfound { color:#f4f7f1; background:#000; }
+  .cdfound .wrap { max-width:1060px; margin:0 auto; padding:0 20px; }
+  .cdfound .hero { text-align:center; padding:44px 20px 6px; position:relative; }
+  .cdfound .halo { position:absolute; left:50%; top:38px; transform:translateX(-50%);
+    width:min(460px,88vw); height:min(460px,88vw); border-radius:50%;
+    background:radial-gradient(circle, rgba(88,214,30,.38) 0%, rgba(88,214,30,.12) 46%, rgba(88,214,30,0) 70%);
+    pointer-events:none; }
+  .cdfound .mark { position:relative; width:min(340px,72vw); height:auto; display:inline-block;
+    filter:drop-shadow(0 0 26px rgba(88,214,30,.45)); }
+  .cdfound h1 { position:relative; font-size:46px; line-height:1.08; margin:20px 0 14px; font-weight:800; letter-spacing:-.5px; }
+  .cdfound .lede { position:relative; max-width:720px; margin:0 auto; color:#c7d2bd; font-size:17px; line-height:1.6; }
+  .cdfound .lede strong { color:#8df35a; }
+  .cdfound section.card { max-width:820px; margin:34px auto 0; background:#0a0f08;
+    border:1px solid #26331f; border-radius:16px; padding:26px 26px 28px; }
+  .cdfound section.card h2 { font-size:26px; margin:0 0 10px; font-weight:800; }
+  .cdfound section.card p { color:#c7d2bd; font-size:15.5px; line-height:1.6; margin:0 0 12px; }
+  .cdfound section.card p strong, .cdfound li strong { color:#8df35a; }
+  .cdfound ul.includes { margin:6px 0 4px; padding:0 0 0 20px; color:#f4f7f1; font-size:16px; line-height:1.65; }
+  .cdfound table.fees { width:100%; border-collapse:collapse; margin:14px 0 6px; font-size:15px; }
+  .cdfound table.fees th { text-align:left; color:#8fa184; font-size:12.5px; letter-spacing:.06em;
+    text-transform:uppercase; padding:10px 12px; border-bottom:1px solid #2c3d22; }
+  .cdfound table.fees td { padding:14px 12px; border-bottom:1px solid #1c2815; vertical-align:top; line-height:1.5; }
+  .cdfound table.fees td.charge { font-weight:700; color:#f4f7f1; white-space:nowrap; }
+  .cdfound table.fees td.how { color:#c7d2bd; }
+  .cdfound table.fees td.rate { color:#8df35a; font-weight:600; }
+  .cdfound .cta { display:inline-block; background:#58d61e; color:#0a1206; text-decoration:none;
+    font-size:18px; font-weight:800; padding:15px 30px; border-radius:11px; margin-top:8px; }
+  .cdfound .cta:hover { background:#6ee63a; }
+  .cdfound form.apply label { display:block; font-size:13px; font-weight:700; letter-spacing:.06em;
+    text-transform:uppercase; color:#8fa184; margin:14px 0 6px; }
+  .cdfound form.apply input[type=text], .cdfound form.apply input[type=email] { width:100%; box-sizing:border-box;
+    background:#0d120c; border:1px solid #2c3d22; border-radius:10px; color:#f4f7f1;
+    font-size:17px; padding:13px 14px; outline:0; }
+  .cdfound form.apply input:focus { border-color:#58d61e; }
+  .cdfound .age { display:flex; gap:10px; align-items:flex-start; margin:18px 0 4px;
+    font-size:15px; color:#c7d2bd; line-height:1.45; }
+  .cdfound .age input { margin-top:3px; width:18px; height:18px; accent-color:#58d61e; }
+  .cdfound form.apply button { margin-top:18px; width:100%; background:#58d61e; color:#0a1206; border:0;
+    cursor:pointer; font-size:18px; font-weight:800; padding:15px; border-radius:11px; }
+  .cdfound form.apply button:hover { background:#6ee63a; }
+  .cdfound .hp { position:absolute; left:-9999px; width:1px; height:1px; opacity:0; }
+  .cdfound .back { text-align:center; margin:30px 0 0; }
+  .cdfound .back a { color:#8df35a; }
+  .cdfound .foot { text-align:center; color:#77876c; font-size:13.5px; line-height:1.6;
+    max-width:720px; margin:26px auto 60px; padding:0 20px; }
+  @media (max-width:760px){
+    .cdfound h1{ font-size:34px; }
+    .cdfound table.fees td.charge{ white-space:normal; }
+  }
+</style>
+<main class="cdfound">
+  <div class="hero">
+    <div class="halo" aria-hidden="true"></div>
+    <img class="mark" src="/img/logos/cannadash-logo.jpg" alt="CannaDash — legal cannabis delivery" width="800" height="800">
+    <h1>Founding partners. Rate locked.</h1>
+    <p class="lede">CannaDash plugs <strong>licensed dispensaries</strong> into local delivery —
+      ordering, dispatch, sealed-bag custody, and ID checked at the door — the way a delivery
+      platform should work, built market by market, only where legal. The dispensaries who
+      join first join as <strong>Founding Partners</strong>.</p>
+  </div>
+
+  <div class="wrap">
+    <section class="card" aria-labelledby="cdf-offer">
+      <h2 id="cdf-offer">The founding partner offer</h2>
+      <p><strong><%= offer.lockPromise %></strong></p>
+      <p>The founding cohort is capped at <strong><%= offer.cohortCapLocations %> partner
+        locations</strong>. When the cohort fills, the founding offer closes and new partners
+        join at standard partner terms.</p>
+      <p>What founding partners get:</p>
+      <ul class="includes">
+        <% for (const item of offer.includes) { %>
+        <li><%= item %></li>
+        <% } %>
+      </ul>
+      <p>CannaDash is not live in any market yet. A market opens only where cannabis delivery
+        is legal, only after counsel clears that market, and only with a licensed partner
+        signed. Licensed dispensaries only — no license, no listing, no exceptions.</p>
+    </section>
+
+    <section class="card" aria-labelledby="cdf-fees">
+      <h2 id="cdf-fees">Founding partner fees — the structure</h2>
+      <p>Every charge is on the table, in plain sight. CannaDash charges for the platform
+        the way the spec was written: a platform subscription per location and a per-order
+        toll, both billed to the retailer as business software and dispatch fees. Money for
+        an order always flows to the retailer — never through CannaDash.</p>
+      <table class="fees">
+        <thead>
+          <tr><th scope="col">Charge</th><th scope="col">How it works</th><th scope="col">Founding rate</th></tr>
+        </thead>
+        <tbody>
+          <% for (const row of feeRows) { %>
+          <tr>
+            <td class="charge"><%= row.charge %></td>
+            <td class="how"><%= row.howItWorks %></td>
+            <td class="rate"><%= row.priceCell %></td>
+          </tr>
+          <% } %>
+        </tbody>
+      </table>
+      <p>That withheld rate is deliberate, and it is the promise from our first email:
+        the founding rate is <strong>locked at joining</strong>, and the full rate sheet
+        goes to founding partners first — before it is published anywhere else.</p>
+    </section>
+
+    <section class="card" aria-labelledby="cdf-apply">
+      <h2 id="cdf-apply">Apply as a founding partner</h2>
+      <p>Applications join the founding dispensary list — the same list the CannaDash door
+        keeps. No payment is taken on this page, and joining promises exactly one thing
+        today: you are in line as a founding partner, and we email you the rate sheet
+        first and a launch notice the day your market opens.</p>
+      <p><a class="cta" href="/cannadash?join=partner#join">Apply on the founding dispensary list</a></p>
+      <form class="apply" method="post" action="/cannadash/join">
+        <input type="hidden" name="role" value="partner">
+        <label for="cdf-name">Your name</label>
+        <input type="text" id="cdf-name" name="name" maxlength="80" autocomplete="name" required>
+        <label for="cdf-email">Email</label>
+        <input type="email" id="cdf-email" name="email" maxlength="120" autocomplete="email" required>
+        <label for="cdf-area">Dispensary city &amp; state</label>
+        <input type="text" id="cdf-area" name="area" maxlength="120" autocomplete="address-level2">
+        <label for="cdf-detail">Dispensary / business name</label>
+        <input type="text" id="cdf-detail" name="detail" maxlength="200">
+        <div class="age">
+          <input type="checkbox" id="cdf-age" name="age_ok" value="1" required>
+          <label for="cdf-age" style="display:inline;font-size:15px;font-weight:400;letter-spacing:0;text-transform:none;color:#c7d2bd;margin:0;">I confirm I am 21 or older.</label>
+        </div>
+        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button type="submit">Join the founding partner list</button>
+      </form>
+    </section>
+
+    <p class="back"><a href="/cannadash">Back to the CannaDash door</a></p>
+  </div>
+
+  <p class="foot">CannaDash is a delivery platform for licensed cannabis retailers — the retailer is
+    always the seller of record. Adults 21+ only. Not live in any market yet; joining the
+    founding partner list promises the rate sheet first and a launch notice, and nothing more.</p>
+</main>

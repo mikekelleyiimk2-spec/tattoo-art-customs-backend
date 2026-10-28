@@ -17,4 +17,31 @@
     <% }); %>
   </div>
 <% } %>
+<%# Healed Wall add-on section (Bundle C Build 3, 2026-10-28; add-on
+    defined in src/lib/healedWall.js). Renders ONLY when the route
+    hands this view a healedWall local with enabled:true — that flag
+    is fulfillment step 2 of the add-on checklist. No per-shop flag
+    column exists yet (no migration in this build), and
+    routes-storefront passes no healedWall local today, so for every
+    shop without the add-on this block is a complete no-op: no
+    section, no empty state, byte-identical storefront. When enabled,
+    healedWall.photos carries MODERATED healed photos only
+    ({ src, alt }) from the shop's toolkit aftercare queue. %>
+<% if (typeof healedWall !== 'undefined' && healedWall && healedWall.enabled) { %>
+<section class="card healed-wall">
+  <h2>Healed work at <%= healedWall.shopName %></h2>
+  <p class="muted">Finished, healed results from this shop's own clients — moderated before anything posts.</p>
+  <% if (healedWall.photos && healedWall.photos.length) { %>
+  <div class="design-grid">
+    <% healedWall.photos.forEach(function (p) { %>
+      <div class="design-card">
+        <img src="<%= p.src %>" alt="<%= p.alt || 'Healed tattoo work' %>" loading="lazy">
+      </div>
+    <% }); %>
+  </div>
+  <% } %>
+  <h3>Aftercare, the <%= healedWall.shopName %> way</h3>
+  <p>Healing is half the tattoo. Follow <a href="<%= healedWall.aftercareGuideUrl %>">the complete aftercare guide</a> and the <a href="<%= healedWall.aftercarePicksUrl %>">aftercare picks this shop stands behind</a> — and send your healed photo back through your aftercare check-in to join this wall.</p>
+</section>
+<% } %>
 <p><a class="btn secondary" href="/bookings/shop/<%= shop.id %>"><%= t('shop.storefront_book') %></a></p>
