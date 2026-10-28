@@ -557,6 +557,7 @@ async function main() {
   await require('./onemindWeb').runDbTests(ok); // OneMind web structure (front-door flag truth table, kid-safe rolodex pull, link registry)
   await require('./guestBridge').runDbTests(ok); // guest bridge (design claims on buy; sideload pending ties fire at store go-live)
   await require('./moneyWatch').runDbTests(ok); // Money Watch watcher (baseline, exactly-once, kinds, CT windows)
+  await require('./thebigone').runDbTests(ok); // The Big One register (plans, prices, founding cap)
 
   // Mail retry (unit-level, no live SMTP): a transient failure is retried
   // with backoff and eventually delivered; a permanent failure exhausts all
@@ -1568,6 +1569,7 @@ async function main() {
   await require('./emailKeeper').runHttpTests(ok, req); // email keeper live status (whitelist + service-token ingest)
   await require('./folderScan').runHttpTests(ok, req); // folder scan phone-home (whitelist POST + service-token GET, latest per device)
   await require('./codex').runHttpTests(ok, req); // codex for OneMind (registry projection — public fields only)
+  await require('./thebigone').runHttpTests(ok, req); // The Big One web edition + money doors (own face, register, classifieds intake)
   await require('./servicePlug').runHttpTests(ok, req); // AI API Service Plug (write-only vault + play operation)
   await require('./rootApi').runHttpTests(ok, req);
   await require('./onemindRoot').runHttpTests(ok, req); // OneMind Root (table root: seats registry, plug points + plug-in charges, fingerprint-only seat credentials, op log)

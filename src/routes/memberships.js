@@ -10,7 +10,11 @@ const { requireLogin } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 
 const router = express.Router();
-const PLAN_KEY_BY_SLUG = { customer: 'customer', customer_annual: 'customer_annual', customer_6month: 'customer_6month', design_artist: 'artist', tattoo_shop: 'shop' };
+const PLAN_KEY_BY_SLUG = { customer: 'customer', customer_annual: 'customer_annual', customer_6month: 'customer_6month', design_artist: 'artist', tattoo_shop: 'shop',
+  // The Big One publication plans (lib/thebigone): plan key = slug.
+  the_big_one: 'the_big_one', the_big_one_annual: 'the_big_one_annual',
+  the_big_one_founding: 'the_big_one_founding', the_big_one_supporter: 'the_big_one_supporter',
+  the_big_one_waiting_room: 'the_big_one_waiting_room' };
 const { isAdminRole } = require('../middleware/auth');
 const { ensureReferralCode, firstMonthDiscountEligible, markFirstMonthUsed, grantReferralReward } = require('../lib/referrals');
 const { recordPaypalActivation, recordPaypalSale } = require('../lib/subscriptionRevenue');
@@ -83,6 +87,18 @@ router.post('/credit/:slug', requireLogin, formLimiter, checkHoneypot, async (re
   } catch (e) {
     req.session.flash = 'Population-admin accounts are never billed for memberships — your access is already covered.';
     return res.redirect('/membership');
+  }
+  // The Big One Founding Member cap applies on the credit path too:
+  // first 500 founding subscriptions, counted on subscription rows.
+  if (plan.slug === 'the_big_one_founding') {
+    const tbo = require('../lib/thebigone');
+    const mine = await db.get(
+      `SELECT s.id FROM subscriptions s WHERE s.user_id = ? AND s.plan_id = ?
+       AND s.status IN ('pending','active')`, [req.user.id, plan.id]);
+    if (!mine && (await tbo.foundingSpotsLeft()) <= 0) {
+      req.session.flash = 'The Founding Member rate is full — all 500 founding spots are claimed. The regular subscription is open.';
+      return res.redirect('/the-big-one');
+    }
   }
   // Pro-app perk gate (owner directive 2026-10-05): the 6-month customer
   // plan is purchasable ONLY by verified Pro-app owners, on any payment path.
@@ -195,6 +211,24 @@ router.post('/subscribe/:slug', requireLogin, formLimiter, checkHoneypot, async 
   if (plan.slug === 'customer_annual' && !config.paypalAnnualPlanConfigured()) {
     req.session.flash = 'The annual plan is not available yet — the monthly plan is ready now.';
     return res.redirect('/membership');
+  }
+  // The Big One plans (owner order 2026-10-27): PayPal plan IDs are
+  // created in the PayPal dashboard (parked owner-side step, same as
+  // the annual plan was). Until a plan's ID lands, its PayPal checkout
+  // refuses with the house-standard notice — the plan is still real in
+  // the register and payable with site credit below. The Founding
+  // Member rate is capped at the first 500 (lib/thebigone).
+  if (plan.slug.startsWith('the_big_one')) {
+    const tbo = require('../lib/thebigone');
+    await tbo.ensurePlans();
+    if (plan.slug === 'the_big_one_founding' && (await tbo.foundingSpotsLeft()) <= 0) {
+      req.session.flash = 'The Founding Member rate is full — all 500 founding spots are claimed. The regular subscription is open.';
+      return res.redirect('/the-big-one');
+    }
+    if (!config.paypalBigOnePlanConfigured(plan.slug)) {
+      req.session.flash = `${plan.name} checkout is being set up — its PayPal plan is still being created. You can start it today with site credit on this page, or from The Big One's own page.`;
+      return res.redirect('/membership');
+    }
   }
   // Pro-app perk gate (owner directive 2026-10-05): verified Pro purchase
   // required, AND no active customer-plan membership — the free month is a

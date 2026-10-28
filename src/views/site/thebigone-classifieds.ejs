@@ -1,0 +1,70 @@
+<%# The Big One — Classifieds & Notices board + submission form.
+    Nothing auto-publishes: submissions land in orders as
+    pending_review for the desk; the board below shows only listings
+    the desk has published, and says so honestly while it's empty. %>
+<header class="masthead">
+  <div class="mast-top">
+    <span>VOL. I — NO. 1</span>
+    <span class="mast-open">★ CLASSIFIEDS &amp; NOTICES ★</span>
+    <span>ABBEVILLE, LOUISIANA</span>
+  </div>
+  <h1 class="mast-name" style="font-size:38px;">Classifieds</h1>
+  <p class="mast-tag">The small print at the back of the paper — where the town talks.</p>
+  <p class="mast-date"><a href="/the-big-one">← Read today's edition</a> · <a href="/the-big-one/sponsors">Sponsor rate card</a></p>
+</header>
+
+<div class="tbo-doors">
+  <section>
+    <h3>📣 The Board</h3>
+    <% if (listings && listings.length) { %>
+      <% for (const l of listings) { %>
+      <article class="tbo-card">
+        <p class="src" style="letter-spacing:2px;"><%= l.kind === 'notices' ? 'NOTICE' : 'CLASSIFIED' %></p>
+        <h4><%= l.business %></h4>
+        <p><%= l.text %></p>
+      </article>
+      <% } %>
+    <% } else { %>
+    <div class="tbo-card">
+      <p><b>Founding listings open.</b> The board is new — the first classifieds and notices
+      are being taken now, at founding prices, and the first ones in get the whole board to
+      themselves. Every listing is read by the desk before it runs; nothing publishes automatically.</p>
+    </div>
+    <% } %>
+  </section>
+
+  <section>
+    <h3>📝 Place a Listing</h3>
+    <div class="tbo-card">
+      <p>A listing runs <b>30 days</b> once the desk approves it:
+      <b>Classifieds <%= money(prices.classifieds) %></b> · <b>Notices <%= money(prices.notices) %></b>
+      (register prices, fee included). How it works, plainly:</p>
+      <ol>
+        <li>Send the listing with the form below — it lands on the desk's review queue, unpublished.</li>
+        <li>Pay the listing price through the Business PayPal link (note your business name so the desk can match it).</li>
+        <li>The desk reviews the text, confirms payment, and your listing runs for 30 days.</li>
+      </ol>
+      <form method="post" action="/the-big-one/classifieds" class="tbo-form">
+        <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <label for="clBiz">Business name</label>
+        <input id="clBiz" type="text" name="business_name" required maxlength="120">
+        <label for="clEmail">Contact email</label>
+        <input id="clEmail" type="email" name="contact_email" required maxlength="160">
+        <label for="clDept">Department</label>
+        <select id="clDept" name="department">
+          <option value="classifieds">Classifieds — <%= money(prices.classifieds) %> / 30 days</option>
+          <option value="notices">Notices — <%= money(prices.notices) %> / 30 days</option>
+        </select>
+        <label for="clText">Listing text</label>
+        <textarea id="clText" name="listing_text" required maxlength="600" rows="4" placeholder="What you're offering, where, and how to reach you — in your own words."></textarea>
+        <p><button class="tbo-btn gold" type="submit">Send for review</button></p>
+      </form>
+      <p><a class="tbo-btn" href="https://www.paypal.com/ncp/payment/WA9DS6J8ERSHW" target="_blank" rel="noopener">Pay the listing price via Business PayPal</a></p>
+      <p class="tbo-note">The desk may decline a listing that doesn't fit the paper (no spam, no misleading claims) — a declined listing's payment is returned. Questions? <a href="/the-big-one/sponsors">The sponsors page</a> reaches the same desk.</p>
+    </div>
+    <%- include('../partials/ad-slot', {slot: 'home_inline'}) %>
+    <div class="tbo-card">
+      <p class="tbo-note">From the same house: <a href="/onemind">OneMind</a> · <a href="/">Tattoo Art Customs</a> · <a href="/apps">Every app</a> · <a href="/the-big-one">Today's edition</a></p>
+    </div>
+  </section>
+</div>

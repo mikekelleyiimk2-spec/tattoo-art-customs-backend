@@ -138,6 +138,10 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/poppy-and-ziggy`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/worlds`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/cannadash`, changefreq: 'weekly', priority: '0.6' },
+    // The Big One — the publication's own doors (owner order 2026-10-27).
+    { loc: `${base}/the-big-one`, changefreq: 'daily', priority: '0.8', lastmod: new Date().toISOString().slice(0, 10) },
+    { loc: `${base}/the-big-one/sponsors`, changefreq: 'weekly', priority: '0.6' },
+    { loc: `${base}/the-big-one/classifieds`, changefreq: 'weekly', priority: '0.6' },
     { loc: `${base}/onemind`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/tester-hub`, changefreq: 'weekly', priority: '0.7' },
     // /folder is NOT listed: it 302s straight to the Folder app's APK

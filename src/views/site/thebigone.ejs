@@ -1,0 +1,100 @@
+<%# The Big One — web edition face. Edition body first (ported from
+    the app), then the register: every money door for the publication
+    on its own page, in its own grammar. %>
+<%- include('thebigone-edition') %>
+
+<div class="tbo-doors">
+  <section id="subscribe">
+    <h3>🗞️ The Register — Subscribe</h3>
+    <p>The edition above is the free front page of the paper. The subscription carries
+    <b>every department, every day</b> — the full edition, the big Sunday edition, and the
+    Library shelves behind the Documentary page. Subscribe with PayPal through the site's
+    membership register, or with site credit; a subscription rides the same OneMind account
+    as everything else in the house.</p>
+
+    <% const subPlans = [
+      { slug: 'the_big_one_founding', badge: 'FOUNDING — first ' + foundingCap, note: 'The founding rate, locked for as long as the subscription stays active. ' + foundingLeft + ' of ' + foundingCap + ' founding spots left.' },
+      { slug: 'the_big_one', badge: 'THE SUBSCRIPTION', note: 'Every department, every day, plus the big Sunday edition.' },
+      { slug: 'the_big_one_annual', badge: 'ANNUAL', note: 'A full year — two months free against the monthly rate.' },
+      { slug: 'the_big_one_supporter', badge: 'SUPPORTER', note: 'Everything in the subscription, plus your name in the masthead supporter roll — the readers who keep the desk lit.' },
+      { slug: 'the_big_one_waiting_room', badge: 'FOR BUSINESSES', note: 'The Waiting Room edition for your shop, lobby, or waiting room — see the sponsors page for the business bundle.' },
+    ]; %>
+    <% for (const sp of subPlans) { const plan = plans[sp.slug]; if (!plan) continue; %>
+    <article class="tbo-card">
+      <p class="src" style="letter-spacing:2px;"><%= sp.badge %></p>
+      <h4><%= plan.name.replace('The Big One — ', '') %></h4>
+      <p class="tbo-price"><%= money(plan.price_cents) %><span class="tbo-note"> / <%= plan.interval === 'year' ? 'year' : 'month' %></span></p>
+      <p><%= sp.note %></p>
+      <% if (sp.slug === 'the_big_one_founding' && foundingLeft <= 0) { %>
+      <p><button class="tbo-btn" disabled>Founding spots are full</button></p>
+      <% } else if (user) { %>
+      <form method="post" action="/membership/subscribe/<%= sp.slug %>" style="display:inline;">
+        <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="tbo-btn gold" type="submit">Subscribe with PayPal</button>
+      </form>
+      <form method="post" action="/membership/credit/<%= sp.slug %>" style="display:inline;">
+        <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="tbo-btn" type="submit">Pay with site credit</button>
+      </form>
+      <% if (!paypalReady[sp.slug]) { %>
+      <p class="tbo-note">Honest state of this door: this plan's PayPal checkout is still being set up at the register — the button will tell you so, plainly, and the site-credit path works today. No charge is ever taken by a door that isn't ready.</p>
+      <% } %>
+      <% } else { %>
+      <p><a class="tbo-btn gold" href="/the-big-one/signin">Sign in to subscribe</a></p>
+      <p class="tbo-note">Subscribing rides your OneMind account — sign in (or create it in one tap) and you're back here to finish.</p>
+      <% } %>
+    </article>
+    <% } %>
+
+    <article class="tbo-card">
+      <h4>🎁 Give The Big One</h4>
+      <p>Gift a subscription — monthly or annual. The recipient gets a one-tap claim link by email:
+      their tap seats their OneMind account and attaches your gift, the house's guest-commerce bridge.</p>
+      <% if (user) { %>
+      <form method="post" action="/the-big-one/gift" class="tbo-form">
+        <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <label for="giftPlan">Which subscription?</label>
+        <select id="giftPlan" name="plan">
+          <option value="the_big_one">Monthly — <%= plans.the_big_one ? money(plans.the_big_one.price_cents) : '' %>/mo</option>
+          <option value="the_big_one_annual">Annual — <%= plans.the_big_one_annual ? money(plans.the_big_one_annual.price_cents) : '' %>/yr</option>
+        </select>
+        <label for="giftEmail">Recipient's email</label>
+        <input id="giftEmail" type="email" name="recipient_email" required maxlength="160" placeholder="them@example.com">
+        <p><button class="tbo-btn gold" type="submit">Record the gift</button></p>
+        <p class="tbo-note">The desk confirms gift payments at the register (PayPal, like everything in the house) — the gift is recorded the moment you submit, and the claim link goes out with it.</p>
+      </form>
+      <% } else { %>
+      <p><a class="tbo-btn" href="/the-big-one/signin">Sign in to give a gift</a></p>
+      <% } %>
+    </article>
+  </section>
+
+  <section>
+    <h3>🤝 The Sponsor Chair &amp; the Classifieds</h3>
+    <div class="tbo-card">
+      <p>The Sponsor Chair sits at the back of every edition, seen by every finisher.
+      Founding rates are open — audience growing, no invented numbers.</p>
+      <p><a class="tbo-btn" href="/the-big-one/sponsors">See the sponsor rate card</a>
+         <a class="tbo-btn" href="/the-big-one/classifieds">Classifieds &amp; notices</a></p>
+    </div>
+    <div class="tbo-card">
+      <h4>☕ Tip the Desk</h4>
+      <p>Tips land in the Business PayPal (mk4) — they keep the presses warm.</p>
+      <p><a class="tbo-btn gold" href="<%= tipJarUrl %>" target="_blank" rel="noopener">Tip the desk via PayPal</a></p>
+    </div>
+    <%- include('../partials/ad-slot', {slot: 'home_inline'}) %>
+    <div class="tbo-card">
+      <h4>From the Same House — Useful Appz</h4>
+      <p>
+        <a href="/onemind">OneMind</a> ·
+        <a href="/">Tattoo Art Customs</a> ·
+        <a href="/apps">Every app</a> ·
+        <a href="/apps">The Library &amp; World Weather</a> ·
+        <a href="/privacy/the-big-one">Privacy — The Big One</a>
+      </p>
+      <p class="tbo-note">Every door in this house signs in with the same OneMind account — the tie attaches at the sitting, wherever you sit down.</p>
+    </div>
+  </section>
+</div>
+
+<script src="/js/thebigone.js"></script>

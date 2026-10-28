@@ -1,0 +1,394 @@
+<%# Edition No. 1 body — ported verbatim from the app bundle
+    (~/workspace/app/thebigone/app/src/main/assets/www/index.html):
+    all seven departments, sources and colophon intact. The cover
+    photo file ships in the app; on the web the gold frame carries
+    the caption with a plate mark instead of an invented URL. %>
+
+
+<!-- ============ PROGRESS (the living strip) ============ -->
+<div id="progressBar" aria-hidden="true"><div id="progressFill"></div></div>
+<div id="finishBanner" hidden>🎉 <b>YOU FINISHED THE BIG ONE.</b> Whole edition, front to back. Tomorrow's lands in the morning — Sunday's is the big one.</div>
+
+<!-- ============ MASTHEAD ============ -->
+<header class="masthead">
+  <div class="mast-top">
+    <span>VOL. I — NO. 1</span>
+    <span class="mast-open">★ OPENING EDITION ★</span>
+    <span>ABBEVILLE, LOUISIANA</span>
+  </div>
+  <h1 class="mast-name">The Big One</h1>
+  <div class="account-row">
+    <span class="acct-state" id="acctState">👤 Not signed in</span>
+    <a class="acct-door" id="acctDoor" href="#signin">Sign in</a>
+  </div>
+  <p class="mast-tag">The whole day, in one sitting — <b>and you can finish it.</b></p>
+  <p class="mast-date">Wednesday, October 28, 2026</p>
+  <div class="nowstrip">
+    <span class="live-dot" aria-hidden="true"></span>
+    <span>ABBEVILLE RIGHT NOW: <b id="nowTemp">69°</b> <span id="nowCond">overcast</span></span>
+    <span class="now-sep">·</span>
+    <span>TODAY: fog early, <b>82°</b> by afternoon</span>
+    <span class="now-sep">·</span>
+    <span>YOUR EDITION: <b id="progressLabel">0% read</b></span>
+  </div>
+  <p class="now-note" id="nowNote">Now-line as printed Tuesday 9:15 PM from Open-Meteo; it refreshes live when you're online.</p>
+  <div class="listen-bar">
+    <span class="listen-label">🎧 LISTEN TO THIS EDITION</span>
+    <audio id="editionAudio" controls preload="none" src="/audio/the-big-one/edition-1.mp3"></audio>
+    <span class="listen-note">The whole edition, read aloud — streams when you're online. The printed edition below works anywhere.</span>
+  </div>
+</header>
+
+<!-- ============ THE COVER ============ -->
+<section class="cover" data-dept="spotlight">
+  <figure class="cover-frame">
+    <div class="cover-img" role="img" aria-label="The Statue of Liberty above her pedestal on Liberty Island" style="display:flex;align-items:center;justify-content:center;font-size:120px;background:#16130C;">🗽</div>
+    <figcaption>THE COVER · SPOTLIGHT FEATURE — The Lady in the Harbor, 140 years lit today. Public-domain photograph, Wikimedia Commons.</figcaption>
+  </figure>
+  <p class="kicker">TODAY'S COVER STORY</p>
+  <h2 class="cover-head">140 Years Ago Today, They Lit the Lady</h2>
+  <p class="cover-deck">On October 28, 1886, President Grover Cleveland dedicated a copper giant
+  in New York Harbor — a gift from France that arrived in 214 crates and had to be
+  bolted together on an island. She has been holding the light ever since.
+  <a href="#spotlight">Read the Spotlight ↓</a></p>
+</section>
+
+<!-- ============ DEPARTMENT INDEX (departments, not feeds) ============ -->
+<nav class="dept-index" aria-label="Departments">
+  <p class="dept-index-title">TODAY'S DEPARTMENTS — TAP TO GO</p>
+  <div class="dept-chips">
+    <a href="#news">📰 The News in Two Frames</a>
+    <a href="#world">🌎 World Events</a>
+    <a href="#spotlight">🗽 Spotlight Feature</a>
+    <a href="#weather">🌤️ Weather</a>
+    <a href="#money">💵 Money in Plain Words</a>
+    <a href="#today">📅 Today In…</a>
+    <a href="#doc">🎬 The Documentary Shelf</a>
+    <a href="#back">📖 The Back of the Book</a>
+    <a href="#ritual">🧩 The Ritual — Daily Puzzle</a>
+    <a href="/the-big-one/classifieds">📣 Classifieds</a>
+  </div>
+</nav>
+
+<!-- ============ YOUR ONEMIND ACCOUNT — the sign-in door (web) ============ -->
+<section class="dept" id="account" data-dept="account">
+  <h3 class="dept-name">👤 Your OneMind Account</h3>
+  <p class="dept-sub">One account for everything Useful Appz makes. Signing in here is your
+  OneMind sign-in — the tie attaches at the sitting, and your subscription rides the same account.
+  The edition above stays free to read either way; this door is never a gate.</p>
+
+  <% if (user) { %>
+  <div>
+    <p class="seat-line">You're seated as <b><%= user.display_name || user.email %></b>.</p>
+    <p class="seat-sub">This same account is your OneMind seat — it signs you in on every Useful Appz surface.</p>
+    <div class="acct-actions">
+      <a class="acct-btn" href="/account">My account at the website</a>
+      <a class="acct-btn acct-btn-quiet" href="/logout">Sign out</a>
+    </div>
+  </div>
+  <% } else { %>
+  <div>
+    <p><a class="google-btn" href="/the-big-one/signin">Continue with Google</a></p>
+    <p class="src">Door #1: the Google/Gmail account you already have — the same account, the same seat.</p>
+    <p><a class="acct-btn" href="/the-big-one/signin">Sign in with email + password</a>
+       <a class="acct-btn acct-btn-quiet" href="/the-big-one/signin">Create your account</a></p>
+    <form method="post" action="/the-big-one/link" class="tbo-form" style="margin-top:14px;">
+      <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <label for="tboLinkEmail">Or the one-tap door — email me a sign-in link</label>
+      <input id="tboLinkEmail" type="email" name="email" required autocomplete="email" placeholder="you@example.com">
+      <p><button class="tbo-btn gold" type="submit">Email me a sign-in link</button></p>
+    </form>
+    <p class="src">New here? The email link creates your account in the same tap — no password to invent.
+    Already have a Tattoo Art Customs account? It's the same account; its password signs you in here.</p>
+  </div>
+  <% } %>
+</section>
+
+<!-- ============ NEWS — ORIENT ============ -->
+<section class="dept" id="news" data-dept="news">
+  <h3 class="dept-name">📰 The News in Two Frames</h3>
+  <p class="dept-sub">One story, more than one front page. We show you the frames — you keep the opinion.</p>
+
+  <article class="story">
+    <h4>Brazil Voted. Now Watch How the Story Changes Costumes.</h4>
+    <p>Luiz Inácio Lula da Silva won Brazil's presidential runoff on Sunday,
+    October 25 — a <b>historic fourth term</b>, non-consecutive, beating Senator
+    Flávio Bolsonaro with about <b>51.8% of the vote</b>. That much, every
+    briefing agrees on. After that, pick your movie:</p>
+    <div class="frame frame-a">
+      <p class="frame-label">FRAME A — "THE MILESTONE" · Breaking News Roundup, Oct 27</p>
+      <p>Leads with history: the fourth term, the defeated challenger named,
+      and Lula's victory speech in São Paulo — a pledge to defend democratic
+      institutions. The story here is <i>what happened</i>.</p>
+    </div>
+    <div class="frame frame-b">
+      <p class="frame-label">FRAME B — "THE FIGHT AFTER" · America News Briefing, Oct 27</p>
+      <p>Leads with the argument: Bolsonaro first called for the result to be
+      annulled over a court decision that extended voting hours; his party then
+      recognized the result while keeping its complaints; President Trump
+      publicly questioned the election — in the briefing's words, "without
+      presenting evidence of fraud." The story here is <i>what's disputed</i>.</p>
+    </div>
+    <p class="desk-line"><b>The desk's note:</b> Same count, two movies. One
+    briefing sells the history, the other sells the fight after. When a story
+    matters to you, read the frame, not just the facts — the facts were the
+    only part both sides shared.</p>
+  </article>
+
+  <aside class="blindspot">
+    <p class="blindspot-title">◐ THE BLINDSPOT — big in one briefing, missing in the others we read</p>
+    <ul>
+      <li><b>Ethiopia:</b> an attack in the Oromia region that church officials say killed more than 60 Christians <i>led</i> one world briefing — and didn't make the top items of the others.</li>
+      <li><b>Washington:</b> a $1 million reward offered for voter-fraud tips leading to convictions led a U.S. briefing — and appeared in none of the world roundups.</li>
+      <li><b>Kenya:</b> the first 20 contacts of an Ebola cluster walked out of quarantine healthy after 21 days — it led a good-news digest and nobody else's.</li>
+    </ul>
+    <p class="src">From the briefings the desk fetched Tuesday evening, Oct 27: Horizon, Zark News, The Bright Side, Breaking News Roundup, America News Briefing.</p>
+  </aside>
+</section>
+
+<!-- ============ WORLD EVENTS — ORIENT/CONDENSE ============ -->
+<section class="dept" id="world" data-dept="world">
+  <h3 class="dept-name">🌎 World Events, Condensed</h3>
+  <p class="dept-sub">The whole planet in four short stops. Long stories, cut to the part you'd repeat at supper.</p>
+  <article class="brief"><h4>Israel Votes</h4>
+    <p>Israelis voted Tuesday for the 120 seats of the Knesset. Prime Minister Benjamin Netanyahu faces one of his toughest re-election fights, against former military chief Gadi Eisenkot and his centrist Yashar party; about 7.3 million people were registered. <span class="src">(Breaking News Roundup, Oct 27)</span></p></article>
+  <article class="brief"><h4>A Platform Sinks off Gabon</h4>
+    <p>A massive offshore drilling platform sank off Gabon's southern coast. Five people are missing. A serious industrial accident, with lives still unaccounted for. <span class="src">(Horizon, Oct 27)</span></p></article>
+  <article class="brief"><h4>A Cyclone Bears Down on India</h4>
+    <p>Cyclone Arnab is bearing down on India's east coast, with 50,000 people already evacuated ahead of it. <span class="src">(Zark News briefing, Oct 27)</span></p></article>
+  <article class="brief"><h4>Sudan Goes Dark</h4>
+    <p>Drone strikes hit five power plants across three Sudanese states, leaving large areas without power — in a country already warned of famine risk. <span class="src">(Horizon, Oct 27)</span></p></article>
+</section>
+
+<!-- ============ SPOTLIGHT — WONDER ============ -->
+<section class="dept" id="spotlight" data-dept="spotlight">
+  <h3 class="dept-name">🗽 Spotlight Feature</h3>
+  <p class="dept-sub">One story a day gets the cover treatment. Today, she's 140.</p>
+  <article class="spotlight-body">
+    <h4>The Lady in the Harbor</h4>
+    <p>She was late, she arrived in pieces, and nobody was sure the money
+    would hold out to put her together. The Statue of Liberty — sculptor
+    <b>Frédéric Auguste Bartholdi's</b> copper giant, her skin stretched over
+    an iron frame engineered by <b>Gustave Eiffel</b> — crossed the Atlantic
+    in <b>214 crates</b> aboard the French ship <i>Isère</i> in 1885, a gift
+    from the people of France that America then had to raise the money to
+    stand up.</p>
+    <p>On <b>October 28, 1886 — 140 years ago today</b> — President Grover
+    Cleveland dedicated her on Bedloe's Island in New York Harbor. She stands
+    <b>305 feet from the ground to the tip of the torch</b>. The copper started
+    the color of a new penny; the sea air spent forty years turning her the
+    green the whole world now knows.</p>
+    <p>Three years before she sailed, a poet named <b>Emma Lazarus</b> wrote
+    her a sonnet for a fundraiser — <i>The New Colossus</i> — and gave the
+    statue her voice: <i>"Give me your tired, your poor, your huddled masses
+    yearning to breathe free."</i> The plaque went up inside the pedestal in
+    1903, and the words outlived everyone who argued about them.</p>
+    <p class="desk-line"><b>Why she leads today:</b> she turns 140 on our
+    birthday — The Big One's first edition — and she is still the first thing
+    America says to anyone arriving by water. Some covers choose themselves.</p>
+    <p class="src">Dedication date and President Cleveland: Wikipedia, "October 28." Photograph: public domain, via Wikimedia Commons.</p>
+  </article>
+</section>
+
+<!-- ============ WEATHER — DECIDE ============ -->
+<section class="dept" id="weather" data-dept="weather">
+  <h3 class="dept-name">🌤️ Weather — Abbeville, Louisiana</h3>
+  <p class="dept-sub">The forecast that helps you dress, drive, and plan — not just numbers in a grid.</p>
+  <div class="wx-now">
+    <span class="wx-now-temp" id="wxNowTemp">69°</span>
+    <span class="wx-now-cond" id="wxNowCond">overcast, right now</span>
+    <span class="wx-now-note" id="wxNowNote">as printed Tue 9:15 PM</span>
+  </div>
+  <table class="wx-table">
+    <tr><th>Wed Oct 28</th><th></th></tr>
+    <tr><td>Early</td><td><b>Patchy fog</b> before breakfast, 59° at dawn</td></tr>
+    <tr><td>9 AM</td><td>Clearing, 66°</td></tr>
+    <tr><td>Noon</td><td>Clear and warm, 78°</td></tr>
+    <tr><td>3 PM</td><td>The day's top: <b>82°</b></td></tr>
+    <tr><td>6 PM</td><td>Still pleasant, 79°</td></tr>
+    <tr><td>9 PM</td><td>Cooling off, 68°</td></tr>
+  </table>
+  <p class="wx-meta">Sunrise <b>7:19 AM</b> · Sunset <b>6:24 PM</b> · Rain chance about <b>1%</b> · Wind light, up to 7 mph.
+  Tomorrow: fog early again, then 82°/56°.</p>
+  <p class="desk-line"><b>What it means:</b> fog before breakfast, summer by lunch.
+  Light jacket at dawn, sleeves up by noon, leave the rain gear home.</p>
+  <p class="src">Open-Meteo live forecast for Abbeville (29.97°N, 92.16°W), fetched Tuesday evening, Oct 27. The now-line at the top refreshes live in the app when you're online.</p>
+</section>
+
+<!-- ============ FINANCIAL — DECIDE ============ -->
+<section class="dept" id="money" data-dept="money">
+  <h3 class="dept-name">💵 Money in Plain Words</h3>
+  <p class="dept-sub">Tuesday's close, translated. Every number gets its "what it means" line — that's the deal.</p>
+  <div class="money-row"><span class="money-name">S&amp;P 500</span><span class="money-val">7,722.60</span><span class="money-chg up">▲ 0.6%</span>
+    <p class="money-means">The whole U.S. market in one number: a good day, not a wild one.</p></div>
+  <div class="money-row"><span class="money-name">Dow Jones</span><span class="money-val">52,377.57</span><span class="money-chg up">▲ 0.03%</span>
+    <p class="money-means">The thirty old giants barely moved — a flat day for the blue chips.</p></div>
+  <div class="money-row"><span class="money-name">Nasdaq</span><span class="money-val">26,477.81</span><span class="money-chg up">▲ 1.2%</span>
+    <p class="money-means">Tech did the lifting today; the Nasdaq rose four times faster than the Dow.</p></div>
+  <div class="money-row"><span class="money-name">Gold</span><span class="money-val">$4,059.70 / oz</span><span class="money-chg down">▼ 0.4%</span>
+    <p class="money-means">The fear gauge eased off a little — when gold slips, worry usually slipped first.</p></div>
+  <div class="money-row"><span class="money-name">Bitcoin</span><span class="money-val">$80,859</span><span class="money-chg up">▲ 1.3% / 24h</span>
+    <p class="money-means">Crypto climbed steadily while nobody was watching the clock.</p></div>
+  <p class="src">Prices fetched Tuesday, Oct 27, ~9:20 PM CT — indexes and gold: Yahoo Finance; Bitcoin: CoinGecko. What happened is history; what it means is judgment — ours is labeled as ours.</p>
+</section>
+
+<!-- ============ TODAY IN ___ — RITUAL ============ -->
+<section class="dept" id="today" data-dept="today">
+  <h3 class="dept-name">📅 Today In…</h3>
+  <p class="dept-sub">The almanac page. Same date, every year, brand-new.</p>
+  <h4 class="almanac-head">…History — October 28</h4>
+  <ul class="almanac">
+    <li><b>312</b> — Constantine defeats Maxentius at the Milvian Bridge and becomes sole emperor in the West.</li>
+    <li><b>1492</b> — Columbus lands in Cuba on his first voyage, convinced he's reached Japan. He had not.</li>
+    <li><b>1636</b> — Massachusetts votes a college into being. It becomes Harvard.</li>
+    <li><b>1726</b> — <i>Gulliver's Travels</i> is published. Satire hasn't recovered since.</li>
+    <li><b>1886</b> — The Statue of Liberty is dedicated. (See today's Spotlight — she leads the edition.)</li>
+    <li><b>1919</b> — Congress passes the Volstead Act over President Wilson's veto. Prohibition's starting gun.</li>
+    <li><b>1962</b> — The Cuban Missile Crisis ends: Khrushchev orders the missiles out. The world exhales.</li>
+    <li><b>Born today:</b> Jonas Salk (1914), whose polio vaccine saved a generation — and Evelyn Waugh (1903), who wrote the funniest sad novels in English.</li>
+  </ul>
+  <h4 class="almanac-head">…the Sky — over Abbeville</h4>
+  <p>The sun comes up at <b>7:19 AM</b> and sets at <b>6:24 PM</b>. Enjoy the
+  late light while it lasts: this <b>Sunday, November 1, Daylight Saving Time
+  ends</b> and the clocks fall back an hour.</p>
+  <h4 class="almanac-head">…Money</h4>
+  <p>Harvard got founded on this date in 1636 with a few hundred pounds and a
+  library. The S&amp;P 500 closed Tuesday at 7,722.60. Some endowments do fine.
+  Full numbers in Money in Plain Words, above.</p>
+  <p class="src">History: Wikipedia, "October 28," fetched Oct 27. Sky: Open-Meteo for Abbeville.</p>
+</section>
+
+<!-- ============ DOCUMENTARY — WONDER shelf ============ -->
+<section class="dept" id="doc" data-dept="doc">
+  <h3 class="dept-name">🎬 The Documentary Shelf</h3>
+  <p class="dept-sub">From the Library's public-domain shelves — real films, free forever, one at a time.</p>
+  <article class="doc-card">
+    <h4>Duck and Cover (1951) — about 9 minutes</h4>
+    <p>Bert the Turtle sings the strangest lesson of the Cold War: when the
+    flash comes, duck and cover. This civil-defense film played to a
+    generation of American schoolkids, and it sits in the
+    <b>Prelinger Collection</b> at the Internet Archive — public domain,
+    free to watch, free to keep.</p>
+    <p class="desk-line"><b>Why today:</b> it's Halloween week. Before the
+    slasher movies, America's scariest monster was a mushroom cloud — and
+    this is the film that taught children to hide from it under their desks.
+    History that fits inside a coffee break.</p>
+    <p><a class="doc-link" href="https://archive.org/details/DuckandC1951">▶ Watch it free at the Internet Archive</a></p>
+    <p class="src">Prelinger Collection, Internet Archive (archive.org/details/DuckandC1951).</p>
+  </article>
+</section>
+
+<!-- ============ BACK OF THE BOOK — CONDENSE ============ -->
+<section class="dept" id="back" data-dept="back">
+  <h3 class="dept-name">📖 The Back of the Book</h3>
+  <p class="dept-sub">The condensed read, a word worth owning, and the daily chuckle — the Digest arc: interest, learn, chuckle.</p>
+
+  <article class="wordpower">
+    <h4>WORD POWER — today's word: <span class="wp-word">COLOSSUS</span></h4>
+    <p><i>(col-OSS-us)</i> — a statue of enormous size; anything gigantic.
+    Emma Lazarus named our cover lady "The New Colossus" — the new giant,
+    kinder than the old one. Use it once today and it's yours.</p>
+  </article>
+
+  <article class="read">
+    <h4>The Condensed Read: THE LEGEND OF SLEEPY HOLLOW</h4>
+    <p class="digest-summary"><b>The desk's 30-second version:</b> Washington
+    Irving's schoolmaster Ichabod Crane — lanky, superstitious, hungry —
+    courts heiress Katrina Van Tassel, mostly for her father's table. His
+    rival Brom Bones can't out-court him, so he out-ghosts him: after a
+    party full of headless-horseman tales, Ichabod rides home alone through
+    the haunted hollow… and meets the Horseman himself. A shattered pumpkin
+    is found by the bridge. Ichabod is never seen again — and Brom, who
+    married Katrina, laughs a little too knowingly at the telling. Perfect
+    for the week of Halloween, and it's been scaring readers for 200 years.</p>
+    <p class="read-intro">Irving's own opening, word for word:</p>
+    <blockquote class="verbatim">
+      <p>In the bosom of one of those spacious coves which indent the eastern shore of the Hudson, at that broad expansion of the river denominated by the ancient Dutch navigators the Tappan Zee, and where they always prudently shortened sail and implored the protection of St. Nicholas when they crossed, there lies a small market town or rural port, which by some is called Greensburgh, but which is more generally and properly known by the name of Tarry Town. This name was given, we are told, in former days, by the good housewives of the adjacent country, from the inveterate propensity of their husbands to linger about the village tavern on market days. Be that as it may, I do not vouch for the fact, but merely advert to it, for the sake of being precise and authentic. Not far from this village, perhaps about two miles, there is a little valley or rather lap of land among high hills, which is one of the quietest places in the whole world. A small brook glides through it, with just murmur enough to lull one to repose; and the occasional whistle of a quail or tapping of a woodpecker is almost the only sound that ever breaks in upon the uniform tranquillity. I recollect that, when a stripling, my first exploit in squirrel-shooting was in a grove of tall walnut-trees that shades one side of the valley. I had wandered into it at noontime, when all nature was peculiarly quiet, and was startled by the roar of my own gun, as it broke the Sabbath stillness around and was prolonged and reverberated by the angry echoes. If ever I should wish for a retreat whither I might steal from the world and its distractions, and dream quietly away the remnant of a troubled life, I know of none more promising than this little valley. From the listless repose of the place, and the peculiar character of its inhabitants, who are descendants from the original Dutch settlers, this sequestered glen has long been known by the name of SLEEPY HOLLOW, and its rustic lads are called the Sleepy Hollow Boys throughout all the neighboring country. A drowsy, dreamy influence seems to hang over the land, and to pervade the very atmosphere. Some say that the place was bewitched by a High German doctor, during the early days of the settlement; others, that an old Indian chief, the prophet or wizard of his tribe, held his powwows there before the country was discovered by Master Hendrick Hudson. Certain it is, the place still continues under the sway of some witching power, that holds a spell over the minds of the good people, causing them to walk in a continual reverie. They are given to all kinds of marvellous beliefs, are subject to trances and visions, and frequently see strange sights, and hear music and voices in the air. The whole neighborhood abounds with local tales, haunted spots, and twilight superstitions; stars shoot and meteors glare oftener across the valley than in any other part of the country, and the nightmare, with her whole ninefold, seems to make it the favorite scene of her gambols.</p>
+      <p>The dominant spirit, however, that haunts this enchanted region, and seems to be commander-in-chief of all the powers of the air, is the apparition of a figure on horseback, without a head.</p>
+    </blockquote>
+    <p class="src">Washington Irving, <i>The Legend of Sleepy Hollow</i> (1820) — public domain. Full text free at Project Gutenberg, ebook #41.</p>
+  </article>
+
+  <aside class="chuckle">
+    <p class="chuckle-title">☺ THE DAILY CHUCKLE</p>
+    <p>Today's puzzle asks you to put 1,650 years of history in order.
+    Professional historians have been working on the same problem for
+    centuries. You'll finish before your coffee cools.</p>
+  </aside>
+</section>
+
+<!-- ============ THE RITUAL — flagship puzzle ============ -->
+<section class="dept" id="ritual" data-dept="ritual">
+  <h3 class="dept-name">🧩 The Ritual — IN ORDER!</h3>
+  <p class="dept-sub">The Big One's daily puzzle. Not hard. <b>Fun.</b> That's the whole design.</p>
+  <div class="puzzle" id="puzzle">
+    <p class="puzzle-how">All five of these happened on <b>October 28</b> — in five
+    different centuries. <b>Tap them oldest first.</b> No timer, no lives:
+    a wrong tap costs you nothing but a wiggle.</p>
+    <div class="puzzle-cards" id="puzzleCards"></div>
+    <p class="puzzle-status" id="puzzleStatus">0 of 5 in order</p>
+    <div class="puzzle-done" id="puzzleDone" hidden>
+      <p class="puzzle-bang">🎉 IN ORDER!</p>
+      <p>You just sorted <b>1,650 years</b> before breakfast. That's the Ritual —
+      small, finished, and yours. Come back tomorrow for five more.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ THE LAST PAGE ============ -->
+<footer class="lastpage">
+  <h3 class="lastpage-title">📕 THE LAST PAGE</h3>
+  <p class="finish-line" id="finishLine">That's the whole edition — it ends, on purpose.
+  No infinite feed lives here. Tomorrow's edition lands in the morning; <b>Sunday's is the big one.</b></p>
+
+  <div class="sub-door">
+    <p class="sub-kicker">THE SUBSCRIPTION</p>
+    <h4>The Big One, Every Morning</h4>
+    <p>The subscription carries <b>every department, every day</b> — the full
+    edition, the big Sunday edition with the week's flagship puzzle, and the
+    Library shelves behind the Documentary page. One subscription. No feed,
+    nothing infinite, something to finish with your coffee.</p>
+    <p><a class="sub-btn" href="/the-big-one#subscribe">Subscribe to The Big One →</a></p>
+    <p class="src">Subscriptions are handled at this page’s register, like everything else in the house — the doors are at the bottom of this page.</p>
+  </div>
+
+  <div class="house-slot" id="houseSlot">
+    <p class="house-label">📺 HOUSE PROMO</p>
+    <p class="house-title" id="houseTitle"></p>
+    <p class="house-text" id="houseText"></p>
+    <p><a class="house-cta" id="houseCta" href="#"></a></p>
+  </div>
+
+  <div class="sponsor-slot">
+    <p class="house-label">🤝 SPONSOR</p>
+    <p class="house-title">The Sponsor Chair</p>
+    <p class="house-text">This chair sits at the back of every edition, seen by every finisher. It belongs to a sponsor soon — until then, it keeps the page warm.</p>
+    <p><a class="house-cta" href="/the-big-one/sponsors">Sponsor this edition — the Sponsor Chair page</a></p>
+    <p><a class="house-cta" href="/the-big-one/classifieds">📣 The Big One Classifieds — place or browse a listing</a></p>
+  </div>
+
+  <div class="sisters">
+    <p class="house-label">FROM THE SAME HOUSE — USEFUL APPZ</p>
+    <div class="sister-links">
+      <a href="/">Tattoo Art Customs</a>
+      <a href="https://onemind.onrender.com/">OneMind</a>
+      <a href="/apps">World Weather · The Library · every app</a>
+      <a href="https://www.paypal.com/ncp/payment/WA9DS6J8ERSHW">☕ Tip the desk</a>
+    </div>
+  </div>
+
+  <p class="root-line">Root Checker: <span id="rootStatus">checking…</span></p>
+
+  <div class="colophon">
+    <p><b>COLOPHON &amp; SOURCES — nothing in this edition was invented.</b>
+    Weather: Open-Meteo, fetched Tue Oct 27 evening (now-line refreshes live).
+    Money: Yahoo Finance &amp; CoinGecko, fetched Tue Oct 27 ~9:20 PM CT.
+    Brazil framing &amp; Blindspot: the briefings named in the text, fetched Tue Oct 27.
+    History &amp; Spotlight dates: Wikipedia, "October 28." Cover photograph: public domain, Wikimedia Commons.
+    Documentary: Prelinger Collection, Internet Archive. Back-of-book text: Project Gutenberg #41.
+    If a number isn't in this edition, it's because the desk couldn't verify it before press time.</p>
+    <p>The Big One · Vol. I, No. 1 · Opening Edition · Useful Appz Development Studios ·
+    Edited by the desk, checked twice. See you tomorrow morning.</p>
+  </div>
+</footer>
+
