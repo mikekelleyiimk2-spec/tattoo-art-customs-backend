@@ -320,6 +320,36 @@
    "name": "The Big One — classifieds & notices (/the-big-one/classifieds)",
    "notes": "Small register products: Classifieds $5.67 / Notices $3.60 (register prices incl. fee pass-through; base $5 / $3), 30-day run. Submissions insert orders rows (order_type 'the_big_one_listing', status 'pending_review', payload in orders.guest_note per migration 115) + an admin notification; NOTHING auto-publishes — the desk reviews, confirms payment by hand (Business PayPal mk4 link, the gift-card manual pattern), then flips to 'published'. Board renders only published rows; empty state honestly reads 'Founding listings open'.",
    "state": "live — founding listings open, desk-reviewed, nothing auto-published"
+  },
+  {
+   "kind": "door",
+   "liveness": {
+    "how_checked": "Backend suite (test/devtools.js) + live curl verification of both Render hosts, 2026-10-28",
+    "last_verified": "2026-10-28"
+   },
+   "name": "Fill My List — standalone service (/fill-my-list)",
+   "notes": "Bundle B (owner approved all 12 month-end brainstorm ideas, Oct 28 2026): the Tester Hub Fill-My-List packaged as a service an outside developer buys without adopting the whole Hub. Own face (layout-devtools, fill variant). The page wires the REAL fill machinery: order form posts to POST /api/testers/fill/order (born awaiting_payment), status form reads GET /api/testers/fill/status, pool count + light board read live from lib/fillCycle. Honest checkout state printed on the face: web checkout being set up, desk confirms payment (Business PayPal mk4) and grants the entitlement; an unpaid app never cycles. Copy states Google's rule plainly — sign-up IS the opt-in to the pool; each tester still taps the app's own Play opt-in themselves.",
+   "state": "live"
+  },
+  {
+   "kind": "door",
+   "liveness": {
+    "how_checked": "Backend suite (test/devtools.js) + live curl verification of both Render hosts, 2026-10-28",
+    "last_verified": "2026-10-28"
+   },
+   "name": "Affiliate Rolodex — public demo (/rolodex-demo)",
+   "notes": "Bundle B (Oct 28 2026): public no-signup demo of the Affiliate Rolodex. The visitor pastes scattered affiliate links (or loads a sample mess) and watches them organize into the one-book shape — program, link, code, rate, cookie, disclosure line, kid-safe flag, placements. Runs entirely in the browser on invented sample data; never touches the house rolodex (src/data/rolodex.json). Ends at the settled doors: Affiliate Rolodex $4.99 / Master Rolodex $7.99.",
+   "state": "live"
+  },
+  {
+   "kind": "door",
+   "liveness": {
+    "how_checked": "Backend suite (test/devtools.js) + live curl verification of both Render hosts, 2026-10-28",
+    "last_verified": "2026-10-28"
+   },
+   "name": "Money Watch for developers — offer + interest (/money-watch)",
+   "notes": "Bundle B (Oct 28 2026): Money Watch productized for other developers — the house payout map as an offer: their sources watched, every landing flashed (you made X in Y time), their own split map drawn on every landing. Settled-shape spec: ~/workspace/your_files/money-watch-for-developers-spec-2026-10-28.md. Read-only-first law on the face — moving money rides a licensed rail in its own phase, never faked. Not on sale yet: the page collects interest through the register (orders rows, order_type money_watch_dev_interest) at the settled $4.99. No payment is taken.",
+   "state": "live"
   }
  ],
  "law": "The Codex is the written registry of the table — the Directory + every tie, seat, price, and result. A plug, price, or tie that isn't in the codex isn't real. Every entry carries its liveness: how it was checked and when it was last actually verified. A date in this file means somebody ran the check that day — never a guess, never a hope.",
@@ -611,6 +641,26 @@
     "name": "The Big One — sponsors, classifieds & feed licensing",
     "notes": "Founding rate card (src/lib/thebigone.js SPONSORS/LISTINGS, fee pass-through at display): edition Presented-by $75/mo, department sponsorship $25/mo, sponsored IN ORDER! contest $50 per Sunday edition, Acadiana local bundle $99/mo, classifieds listing $5/30 days (register $5.67), notices $3/30 days (register $3.60). Feed licensing: departments / IN ORDER! as licensed feeds at $49/mo per feed plus the toll on the flow across the plug (Price of the Plug — never a second charge on the door). No invented reach numbers anywhere on the rate card.",
     "state": "SETTLED — founding rate card set 2026-10-27: Presented-by $75/mo · department $25/mo · puzzle $50 · bundle $99/mo · classifieds $5 · notices $3 · feeds $49/mo per feed + flow toll"
+   },
+   {
+    "kind": "price",
+    "liveness": {
+     "how_checked": "Owner strike 2026-10-26 (the X Rule settlement for the Tester Hub developer door); page + machine verified in the backend suite, 2026-10-28",
+     "last_verified": "2026-10-28"
+    },
+    "name": "Tester Hub — Fill My List",
+    "notes": "Settled: $24.99 per app per fill until FULL (12 confirmed opt-ins). One charge per app per run; top-up waves inside the app's 14-day closed-test run are free — full stays full. The price lives in src/lib/fillCycle.js (PRICE_CENTS 2499) and src/lib/devtools.js (FILL) — the two must never disagree. Sold in the Tester app (the Fill IAP lives only there) and as the standalone web service at /fill-my-list.",
+    "state": "SETTLED — owner strike 2026-10-26: $24.99 per app per fill until FULL"
+   },
+   {
+    "kind": "price",
+    "liveness": {
+     "how_checked": "Owner-settled rolodex tier law (three tiers, never combined); demo doors verified in the backend suite, 2026-10-28",
+     "last_verified": "2026-10-28"
+    },
+    "name": "Social Link Rolodex + Master Rolodex",
+    "notes": "The other two settled Rolodex tiers (the Affiliate Rolodex $4.99 entry rides with the Profile Plug price entry): Social Link Rolodex $4.99 — every social link in one book; Master Rolodex (All My Links) $7.99 — affiliate + social + every link, all three tiers sold separately, never combined into one product.",
+    "state": "SETTLED — Social Link Rolodex $4.99 · Master Rolodex $7.99 (Affiliate Rolodex $4.99 — three tiers, never combined)"
    }
   ],
   "law": "THE PRICE OF THE PLUG (Codex law, owner-confirmed Oct 25): (1) an outside app/AI plugs in for its own subscription price, carried in the bundle — no second, invented plug fee, ever; (2) our cut is the toll on the flow across the plug, never a charge on the door (door + flow both charged = double-gating = empty room); (3) his own fleet plugs in for zero — house into house; (4) a maker with no subscription pays in people — plugging in ties his users to the table. CHARGE FOR ALL OF IT (owner, Oct 25): every layer is chargeable — the tool, the window (the guided opening), the door (keeping it propped — the watch), the plumbing (the toll on the flow). PLUGGING INTO THE TABLE COSTS (owner law, Oct 26 10:34 — 'OneMind plug ins the tools plug into the table and adding them cost duh'): adding a tool to the table is itself a chargeable event — never free, never implied. Every plug in this book carries its charge as an explicit written entry (each plug's plug_in_charge), priced by the Price of the Plug above: an outside tool plugs in for its own subscription price carried in the bundle (no invented plug fee), our cut is the toll on the flow across the plug, the owner's own fleet plugs in for zero (house into house), and a maker with no subscription pays in people.",
@@ -798,6 +848,6 @@
    "state": "unconfigured — lesser table (understudy seat)"
   }
  ],
- "updated": "2026-10-27",
+ "updated": "2026-10-28",
  "version": 1
 }

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><%= typeof title !== 'undefined' ? title : 'Developer Tools — Useful Appz' %></title>
+<% if (typeof metaDescription !== 'undefined' && metaDescription) { %>
+<meta name="description" content="<%= metaDescription %>">
+<% } %>
+<% if (typeof canonical !== 'undefined' && canonical) { %>
+<link rel="canonical" href="<%= canonical %>">
+<% } %>
+<%
+  // Face variants: one layout, three faces. Each developer tool keeps
+  // its own wordmark + accent system (owner law: every part gets its
+  // own face); the shared grammar is the established dev-tool page —
+  // dark slate, mono details, one job startable in one tap.
+  const _face = (typeof face !== 'undefined' && face) || { key: 'fill', name: 'Developer Tools' };
+  const _accents = {
+    fill:       { a: '#35d07f', a2: '#1d9e5f', glow: 'rgba(53,208,127,.14)' },
+    rolodex:    { a: '#e9a319', a2: '#b97e0e', glow: 'rgba(233,163,25,.13)' },
+    moneywatch: { a: '#57b6ff', a2: '#2f7fd1', glow: 'rgba(87,182,255,.13)' },
+  };
+  const _ac = _accents[_face.key] || _accents.fill;
+%>
+<style>
+:root{
+  --bg:#0d1117; --bg2:#12181f; --panel:#161d26; --line:#26303d;
+  --ink:#e8eef4; --ink-soft:#9fb0c0; --ink-dim:#6d7f92;
+  --accent:<%= _ac.a %>; --accent-deep:<%= _ac.a2 %>; --glow:<%= _ac.glow %>;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --sans: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); font-size:16.5px; line-height:1.6; -webkit-text-size-adjust:100%;}
+a{color:var(--accent);}
+.wrap{max-width:1060px; margin:0 auto; padding:0 18px 48px;}
+.mono{font-family:var(--mono);}
+.muted{color:var(--ink-soft);}
+.fineprint{font-size:13px; color:var(--ink-dim); line-height:1.5;}
+.flash{background:var(--glow); border:1px solid var(--accent); color:var(--ink); border-radius:10px; padding:12px 16px; margin:18px 0 0; font-size:15.5px;}
+
+/* header */
+.dt-head{border-bottom:1px solid var(--line); background:var(--bg2);}
+.dt-head-in{max-width:1060px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+.dt-brand{font-family:var(--mono); font-size:12.5px; letter-spacing:.14em; color:var(--ink-dim); text-transform:uppercase;}
+.dt-face-name{font-weight:800; font-size:19px; color:var(--ink);}
+.dt-face-name .dot{color:var(--accent);}
+.dt-nav{margin-left:auto; display:flex; gap:16px; flex-wrap:wrap; font-size:14.5px;}
+.dt-nav a{color:var(--ink-soft); text-decoration:none;}
+.dt-nav a:hover{color:var(--accent);}
+.dt-nav a.here{color:var(--accent); font-weight:700;}
+
+/* hero */
+.hero{padding:44px 0 8px; text-align:left;}
+.hero .kicker{font-family:var(--mono); font-size:12.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); margin:0 0 10px;}
+.hero h1{font-size:clamp(30px, 5.4vw, 46px); line-height:1.12; margin:0 0 14px; letter-spacing:-.01em;}
+.hero .lede{font-size:19px; color:var(--ink-soft); max-width:44em; margin:0 0 22px;}
+.price-tag{font-family:var(--mono); font-weight:700; color:var(--accent);}
+
+/* components */
+.btn{display:inline-block; background:var(--accent); color:#0b0f14; font-weight:700; padding:12px 22px; border-radius:9px; text-decoration:none; border:1px solid var(--accent); cursor:pointer; font-size:16px;}
+.btn:hover{background:var(--accent-deep); border-color:var(--accent-deep); color:#fff;}
+.btn-ghost{display:inline-block; background:transparent; color:var(--accent); font-weight:600; padding:12px 22px; border-radius:9px; text-decoration:none; border:1px solid var(--line); cursor:pointer; font-size:16px;}
+.btn-ghost:hover{border-color:var(--accent);}
+.card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:20px;}
+.grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:16px; margin:18px 0;}
+.steps{display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin:18px 0; counter-reset:step;}
+.steps .card{position:relative;}
+.steps .card::before{counter-increment:step; content:counter(step); position:absolute; top:-13px; left:16px; background:var(--accent); color:#0b0f14; font-family:var(--mono); font-weight:700; width:26px; height:26px; border-radius:50%; text-align:center; line-height:26px; font-size:14px;}
+.band{border:1px solid var(--line); border-left:5px solid var(--accent); background:var(--bg2); border-radius:0 10px 10px 0; padding:16px 18px; margin:22px 0;}
+.door-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px; margin:18px 0;}
+.door-card{background:var(--panel); border:1px solid var(--accent); border-radius:12px; padding:22px; box-shadow:0 0 0 4px var(--glow);}
+.door-card .price-tag{font-size:30px;}
+section{margin:34px 0;}
+h2{font-size:26px; margin:0 0 10px; letter-spacing:-.01em;}
+h3{margin:0 0 8px; font-size:18px;}
+input[type=text], input[type=email], textarea{width:100%; background:var(--bg); border:1px solid var(--line); border-radius:9px; color:var(--ink); padding:12px 14px; font-size:16px; font-family:var(--sans);}
+input:focus, textarea:focus{outline:2px solid var(--accent); border-color:var(--accent);}
+label{display:block; font-size:14px; color:var(--ink-soft); margin:14px 0 6px;}
+table.book{width:100%; border-collapse:collapse; font-size:14.5px; margin:14px 0;}
+table.book th{font-family:var(--mono); font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); text-align:left; padding:8px 10px; border-bottom:2px solid var(--accent);}
+table.book td{padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:top;}
+.state-chip{font-family:var(--mono); font-size:12px; border:1px solid var(--accent); color:var(--accent); border-radius:20px; padding:2px 10px; white-space:nowrap;}
+.result-panel{display:none; margin-top:16px;}
+.result-panel.show{display:block;}
+
+/* footer */
+.dt-foot{border-top:1px solid var(--line); background:var(--bg2); margin-top:20px;}
+.dt-foot-in{max-width:1060px; margin:0 auto; padding:22px 18px 30px; font-size:14.5px; color:var(--ink-soft);}
+.dt-foot a{color:var(--ink-soft);}
+.dt-foot .row{display:flex; gap:18px; flex-wrap:wrap; margin:6px 0;}
+</style>
+</head>
+<body>
+<header class="dt-head">
+  <div class="dt-head-in">
+    <div>
+      <div class="dt-brand">Useful Appz · Developer Tools</div>
+      <div class="dt-face-name"><%= _face.name %><span class="dot">.</span></div>
+    </div>
+    <nav class="dt-nav">
+      <a href="/fill-my-list"<% if (_face.key === 'fill') { %> class="here"<% } %>>Fill My List</a>
+      <a href="/rolodex-demo"<% if (_face.key === 'rolodex') { %> class="here"<% } %>>Rolodex Demo</a>
+      <a href="/money-watch"<% if (_face.key === 'moneywatch') { %> class="here"<% } %>>Money Watch</a>
+      <a href="/tester-hub">Tester Hub</a>
+      <a href="/onemind">OneMind</a>
+      <% if (typeof user !== 'undefined' && user) { %>
+      <a href="/account">Your account</a>
+      <% } else { %>
+      <a href="/login">Sign in</a>
+      <% } %>
+    </nav>
+  </div>
+</header>
+<div class="wrap">
+  <% if (typeof flash !== 'undefined' && flash) { %>
+  <div class="flash" role="status"><%= flash %></div>
+  <% } %>
+  <%- body %>
+</div>
+<footer class="dt-foot">
+  <div class="dt-foot-in">
+    <div class="row">
+      <strong style="color:var(--ink);">The toolbox, linked:</strong>
+      <a href="/fill-my-list">Fill My List</a>
+      <a href="/rolodex-demo">Affiliate Rolodex demo</a>
+      <a href="/money-watch">Money Watch for developers</a>
+      <a href="/tester-hub">Tester Hub</a>
+      <a href="/apps">All the apps</a>
+      <a href="/onemind">OneMind</a>
+    </div>
+    <div class="row">
+      <span>Built by Useful Appz Development Studios, Abbeville, Louisiana — a developer tool born from a wall we hit ourselves, fixed, and now sold as the fix.</span>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

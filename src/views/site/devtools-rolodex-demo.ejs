@@ -1,0 +1,423 @@
+<%# Affiliate Rolodex — public demo. No signup. Runs entirely in the
+    visitor's browser on invented sample data or whatever the visitor
+    pastes in. Nothing is sent, saved, or stored. %>
+<style>
+  .rolodex-demo textarea{width:100%;min-height:180px;box-sizing:border-box;padding:.9rem;border:1px solid #c9d4cc;border-radius:10px;font:inherit;font-size:.95rem;line-height:1.5;resize:vertical}
+  .rolodex-demo .demo-actions{display:flex;flex-wrap:wrap;gap:.5rem;margin:.75rem 0}
+  .rolodex-demo .table-scroll{overflow-x:auto;margin:1rem 0}
+  table.book{border-collapse:collapse;width:100%;min-width:880px;font-size:.92rem}
+  table.book caption{text-align:left;font-weight:700;padding:.5rem 0}
+  table.book th,table.book td{border:1px solid #d7dfd9;padding:.55rem .65rem;text-align:left;vertical-align:top}
+  table.book thead th{background:#f2f6f3}
+  table.book td a{word-break:break-all}
+  .rolodex-demo .summary{font-weight:600;margin:1rem 0 .25rem}
+  .rolodex-demo .empty-note{margin:1rem 0}
+</style>
+
+<div class="wrap rolodex-demo">
+  <section class="hero">
+    <p class="muted" style="margin-bottom:.25rem;">Affiliate Rolodex — the demo</p>
+    <h1>Affiliate Rolodex — the demo</h1>
+    <p>Every affiliate link you own, in one book, with its code, rate, cookie, and disclosure attached — forever.</p>
+    <p>No signup. Paste a mess below and watch it become a book — right here, in your browser.</p>
+    <p><a class="btn" href="#demo">Try the demo</a></p>
+    <p class="fineprint muted">Demo only. All sample data on this page is invented and labeled as sample.</p>
+  </section>
+
+  <section id="demo" class="card" aria-label="Affiliate Rolodex demo">
+    <h2 style="margin-top:0;">Paste your mess. Get your book.</h2>
+    <p class="muted">Links from emails, notes, spreadsheets, anywhere — prose, codes, and all. The demo sorts out what it can find and leaves a dash where a field is missing.</p>
+
+    <label for="rolodex-input"><strong>Paste your mess — links from emails, notes, spreadsheets, anywhere</strong></label>
+    <textarea id="rolodex-input" placeholder="Paste your mess — links from emails, notes, spreadsheets, anywhere" spellcheck="false"></textarea>
+
+    <div class="demo-actions">
+      <button class="btn" type="button" id="rolodex-organize">Organize it</button>
+      <button class="btn btn-ghost" type="button" data-sample="email">Sample: the email pile</button>
+      <button class="btn btn-ghost" type="button" data-sample="spreadsheet">Sample: the spreadsheet paste</button>
+      <button class="btn btn-ghost" type="button" data-sample="notes">Sample: the notes-app dump</button>
+      <button class="btn btn-ghost" type="button" id="rolodex-clear">Clear</button>
+    </div>
+    <p class="fineprint muted">Sample buttons load invented sample text only. Nothing you paste leaves this page, and nothing is saved.</p>
+
+    <div id="rolodex-output" aria-live="polite">
+      <p class="empty-note muted" id="rolodex-empty">Your book will appear here. Try a sample if you do not have a mess handy.</p>
+      <p class="summary" id="rolodex-summary" hidden></p>
+      <div class="table-scroll" id="rolodex-table-wrap" hidden>
+        <table class="book">
+          <caption>Your book — one row per program (sample-shaped demo output)</caption>
+          <thead>
+            <tr>
+              <th scope="col">Program</th>
+              <th scope="col">Link</th>
+              <th scope="col">Code</th>
+              <th scope="col">Rate</th>
+              <th scope="col">Cookie</th>
+              <th scope="col">Disclosure line</th>
+              <th scope="col">Kid-safe flag</th>
+              <th scope="col">Placements</th>
+            </tr>
+          </thead>
+          <tbody id="rolodex-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <p class="fineprint">This demo runs in your browser on sample-shaped data — nothing you paste leaves this page, and nothing is saved. The real Rolodex holds your book, fills the fields you don&rsquo;t have handy, and keeps every link attached to its disclosure everywhere it is placed.</p>
+  </section>
+
+  <% if (typeof partners !== 'undefined' && partners && partners.length) { %>
+    <%- include('../partials/rolodex-placements', { partners }) %>
+  <% } %>
+  <% if (typeof disclosureStandard !== 'undefined' && disclosureStandard) { %>
+    <p class="fineprint muted"><%= disclosureStandard %></p>
+  <% } %>
+
+  <section aria-label="How the real book works">
+    <h2>How the real book works</h2>
+    <div class="steps">
+      <div class="card">
+        <h3>1. Your links land once, in one book.</h3>
+        <p>One row per program — link, code, rate, cookie, disclosure line, kid-safe flag, and placements, together in one place.</p>
+      </div>
+      <div class="card">
+        <h3>2. Every surface pulls from the book.</h3>
+        <p>Link, code, and disclosure travel together, always — on pages, in apps, and anywhere a link is placed.</p>
+      </div>
+      <div class="card">
+        <h3>3. A link changes once and lights up everywhere.</h3>
+        <p>Update the row in the book and every placement that pulls from it is current. No hunting through old posts and pages.</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-label="Get the Rolodex">
+    <h2>Get the book</h2>
+    <div class="door-grid">
+      <article class="door-card card">
+        <h3>Affiliate Rolodex</h3>
+        <p class="price-tag"><%= money(doors.affiliateCents) %></p>
+        <p>Your affiliate book, every program in one place — link, code, rate, cookie, and disclosure attached to every row.</p>
+        <p><a class="btn" href="<%= doors.appsUrl %>">Get Affiliate Rolodex</a></p>
+      </article>
+      <article class="door-card card">
+        <h3>Master Rolodex &ldquo;All My Links&rdquo;</h3>
+        <p class="price-tag"><%= money(doors.masterCents) %></p>
+        <p>Affiliate + social + every link you own, in one book — the full set, not just the affiliate rows.</p>
+        <p><a class="btn" href="<%= doors.appsUrl %>">Get Master Rolodex</a></p>
+      </article>
+    </div>
+    <p class="fineprint muted">Prices shown are the current prices. No discounts are applied on this page and there is no countdown or limited-time offer.</p>
+  </section>
+
+  <section class="band" aria-label="Sponsor">
+    <%- include('../partials/sponsor-slot') %>
+  </section>
+
+  <section class="band" aria-label="More from Useful Appz">
+    <div class="grid">
+      <article class="card">
+        <h3>OneMind Team</h3>
+        <p class="price-tag">$9.99/mo</p>
+        <p>All your AIs, one team — the house slot.</p>
+        <p><a class="btn btn-ghost" href="/onemind">Visit OneMind</a></p>
+      </article>
+      <article class="card">
+        <h3>Tip jar</h3>
+        <p>If this demo saved you a spreadsheet headache, the tip jar is open.</p>
+        <p><a class="btn btn-ghost" href="<%= tipJarUrl %>">Tip jar — Business PayPal</a></p>
+      </article>
+    </div>
+    <div class="grid" style="margin-top:1rem;">
+      <article class="card">
+        <h3>Fill My List</h3>
+        <p class="muted">For developers who need testers on their list.</p>
+        <p><a href="/fill-my-list">Fill My List</a></p>
+      </article>
+      <article class="card">
+        <h3>Money Watch</h3>
+        <p class="muted">Watch for money you are owed, in one place.</p>
+        <p><a href="/money-watch">Money Watch</a></p>
+      </article>
+      <article class="card">
+        <h3>Tester Hub</h3>
+        <p class="muted">The pool and the place new apps meet their first testers.</p>
+        <p><a href="<%= doors.hubUrl %>">Tester Hub</a></p>
+      </article>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var DISCLOSURE = 'Affiliate link: if you buy through it, we may earn a commission at no extra cost to you.';
+  var DASH = '\u2014';
+
+  var SAMPLES = {
+    email: [
+      'Sample data \u2014 invented for this demo',
+      'Northstar Ink Supply: https://inksupply.example/go?tag=INK20 \u2014 use code INK20, pays 12% per sale, 30 day cookie',
+      'fwd: Canvas Club prints https://canvasclub.example/partners?ref=studio7 (coupon PRINTS10 for 10% back)',
+      'BalmLab aftercare \u2014 https://balmlab.example/affiliates?ref=care22 \u2014 15% commission, cookie: 45 days',
+      'Northstar again (same link from a second email): https://inksupply.example/go?tag=INK20',
+      'PaperTrail stationery https://papertrail.example/join?tag=paper5 pays 8%',
+      'studio-gear.example \u2014 my bare domain note, no code yet, 60-day cookie mentioned in the thread',
+      'KidsCraft Kits (family / kids range): https://kidscraft.example/partners?ref=family1 use code FAMILY1, 10%, 30-day cookie',
+      'LensLights photo gear: https://lenslights.example/aff?tag=light9 \u2014 code: LIGHT9',
+      'random note to self: update the old spreadsheet, these are a mess'
+    ].join('\n'),
+    spreadsheet: [
+      'Sample data \u2014 invented for this demo',
+      'Program\tLink\tNotes',
+      'Thread & Needle Co\thttps://threadneedle.example/affiliates?ref=sew4\tuse code SEW4, 11% per sale, 30-day cookie',
+      'Thread & Needle Co\thttps://threadneedle.example/affiliates?ref=sew4\tduplicate row pasted twice',
+      'GardenTool Direct\thttps://gardentool.example/partner?tag=dig15\tcoupon DIG15, pays 9%, cookie: 90 days',
+      'BakeBox Kits\thttps://bakebox.example/join?ref=bake3\tcode: BAKE3 \u2014 family baking kits for kids and parents',
+      'OfficePaper Co\tofficepaper.example/affiliates\tno code on file, 7%',
+      'TrailBoot Supply\thttps://trailboot.example/go?tag=trail6\t20% commission, 45 day cookie',
+      'TrailBoot Supply (old link)\thttps://trailboot.example/go?tag=trail6\tuse code TRAIL6',
+      'PetTreat Club\thttps://pettreat.example/partners?ref=paws2\tcode PAWS2, 13%'
+    ].join('\n'),
+    notes: [
+      'Sample data \u2014 invented for this demo',
+      'links dump \u2014 sort later!!',
+      'music books one: https://sheetmusic.example/aff?tag=notes8 use code NOTES8 pays 10% 30-day cookie',
+      'https://plantcare.example/partners?ref=leaf4 \u2014 PlantCare, coupon LEAF4, 14% per sale',
+      'coffee sub \u2014 beanbox.example/subscribe (ask them about a code)',
+      'Kids reading app \u2014 family pick: https://storytime.example/join?ref=read5 code: READ5, kids / family, 12%',
+      'same plantcare again https://plantcare.example/partners?ref=leaf4',
+      'yoga mats https://flexmat.example/go?tag=mat7 \u2014 18%, cookie: 60 days',
+      'art brushes \u2014 https://brushworks.example/affiliates?tag=brush2 use code BRUSH2',
+      'todo: check cookie lengths + rates before posting any of these'
+    ].join('\n')
+  };
+
+  var input = document.getElementById('rolodex-input');
+  var organizeBtn = document.getElementById('rolodex-organize');
+  var clearBtn = document.getElementById('rolodex-clear');
+  var emptyNote = document.getElementById('rolodex-empty');
+  var summaryEl = document.getElementById('rolodex-summary');
+  var tableWrap = document.getElementById('rolodex-table-wrap');
+  var tbody = document.getElementById('rolodex-tbody');
+  if (!input || !organizeBtn || !tbody) return;
+
+  var sampleButtons = document.querySelectorAll('[data-sample]');
+  for (var s = 0; s < sampleButtons.length; s++) {
+    sampleButtons[s].addEventListener('click', function () {
+      var key = this.getAttribute('data-sample');
+      if (SAMPLES[key]) {
+        input.value = SAMPLES[key];
+        organize();
+        input.focus();
+      }
+    });
+  }
+
+  organizeBtn.addEventListener('click', organize);
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function () {
+      input.value = '';
+      tbody.textContent = '';
+      summaryEl.hidden = true;
+      tableWrap.hidden = true;
+      emptyNote.hidden = false;
+      emptyNote.textContent = 'Your book will appear here. Try a sample if you do not have a mess handy.';
+      input.focus();
+    });
+  }
+
+  function cleanUrl(raw) {
+    return raw.replace(/[.,;:!?)\]}'"]+$/, '');
+  }
+
+  function withScheme(url) {
+    return /^https?:\/\//i.test(url) ? url : 'https://' + url;
+  }
+
+  function normalizeUrl(url) {
+    try {
+      var u = new URL(withScheme(url));
+      var host = u.hostname.toLowerCase().replace(/^www\./, '');
+      var pathname = u.pathname.replace(/\/+$/, '') || '/';
+      return (host + pathname + u.search).toLowerCase();
+    } catch (e) {
+      return url.toLowerCase().replace(/^www\./, '').replace(/\/+$/, '');
+    }
+  }
+
+  function domainOf(url) {
+    try {
+      return new URL(withScheme(url)).hostname.toLowerCase().replace(/^www\./, '');
+    } catch (e) {
+      return url.split('/')[0].toLowerCase().replace(/^www\./, '');
+    }
+  }
+
+  function titleCaseDomain(domain) {
+    var base = domain.split('.')[0] || domain;
+    return base.split(/[-_]+/).filter(Boolean).map(function (part) {
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    }).join(' ') || domain;
+  }
+
+  function labelFromContext(context, url) {
+    var before = context.split(url)[0] || '';
+    var colon = before.match(/([A-Za-z][A-Za-z0-9 &'.\/-]{1,40})\s*:\s*$/);
+    if (colon) return colon[1].trim();
+    var dash = before.match(/([A-Za-z][A-Za-z0-9 &'.\/-]{1,40})\s*[-\u2014]\s*$/);
+    if (dash) return dash[1].trim();
+    var tabbed = before.match(/([A-Za-z][A-Za-z0-9 &'.\/-]{1,40})\t\s*$/);
+    if (tabbed) return tabbed[1].trim();
+    var words = before.replace(/^(fwd:|re:|sample data.*|program|notes?|todo:.*)$/i, '').trim();
+    var named = context.match(new RegExp('^\\s*([A-Z][A-Za-z0-9 &\'./-]{2,40})\\s*(?:\\t|\\s{2,}|[-\\u2014:])'));
+    if (named && !/^(https?|www|sample|links|random|todo)/i.test(named[1])) return named[1].trim();
+    if (words && words.length <= 40 && /^[A-Z]/.test(words) && !/^(https?|www)/i.test(words)) return words;
+    return '';
+  }
+
+  function codeFrom(context, url) {
+    var m = context.match(/(?:use\s+code|code|coupon)\s*[:#]?\s*([A-Z0-9][A-Z0-9_-]{1,})\b/i);
+    if (m) return m[1].toUpperCase();
+    try {
+      var u = new URL(withScheme(url));
+      var param = u.searchParams.get('tag') || u.searchParams.get('ref') || u.searchParams.get('code') || u.searchParams.get('coupon');
+      if (param) return param;
+    } catch (e) {
+      var q = url.match(/[?&](?:tag|ref|code|coupon)=([A-Za-z0-9_-]+)/i);
+      if (q) return q[1];
+    }
+    return '';
+  }
+
+  function rateFrom(context) {
+    var pct = context.match(/(\d+(?:\.\d+)?\s*%\s*(?:commission|per sale|off|back)?)/i);
+    if (pct) return pct[1].replace(/\s+/g, ' ').trim();
+    var perSale = context.match(/(\$\s*\d+(?:\.\d+)?\s*per sale)/i);
+    if (perSale) return perSale[1].replace(/\s+/g, ' ').trim();
+    return '';
+  }
+
+  function cookieFrom(context) {
+    var a = context.match(/(\d+)[-\s]?day\s+cookie/i);
+    if (a) return a[1] + ' days';
+    var b = context.match(/cookie\s*[:=]?\s*(\d+)\s*days?/i);
+    if (b) return b[1] + ' days';
+    return '';
+  }
+
+  function parse(text) {
+    var lines = String(text || '').split(/\r?\n/);
+    var urlRe = /((?:https?:\/\/|www\.)[^\s<>"')\]]+|[a-z0-9-]+\.[a-z]{2,}(?:\.[a-z]{2,})?(?:\/[^\s<>"')\]]*)?)/gi;
+    var found = [];
+    lines.forEach(function (line, idx) {
+      var matches = line.match(urlRe) || [];
+      matches.forEach(function (raw) {
+        var url = cleanUrl(raw);
+        if (!url || /sample data/i.test(url)) return;
+        var next = (idx + 1 < lines.length && !urlRe.test(lines[idx + 1])) ? lines[idx + 1] : '';
+        urlRe.lastIndex = 0;
+        var context = (line + ' ' + next).trim();
+        found.push({ url: url, context: context });
+      });
+    });
+
+    var byNormalized = {};
+    var order = [];
+    found.forEach(function (item) {
+      var key = normalizeUrl(item.url);
+      if (!byNormalized[key]) {
+        byNormalized[key] = {
+          url: withScheme(item.url),
+          contexts: [item.context],
+          label: labelFromContext(item.context, item.url)
+        };
+        order.push(key);
+      } else {
+        byNormalized[key].contexts.push(item.context);
+        if (!byNormalized[key].label) byNormalized[key].label = labelFromContext(item.context, item.url);
+      }
+    });
+
+    var byProgram = {};
+    var programOrder = [];
+    order.forEach(function (key) {
+      var entry = byNormalized[key];
+      var joined = entry.contexts.join(' ');
+      var program = entry.label || titleCaseDomain(domainOf(entry.url));
+      var pKey = program.toLowerCase();
+      if (!byProgram[pKey]) {
+        byProgram[pKey] = {
+          program: program,
+          url: entry.url,
+          code: codeFrom(joined, entry.url),
+          rate: rateFrom(joined),
+          cookie: cookieFrom(joined),
+          kidSafe: /(kid|kids|family|children|child)/i.test(joined)
+            ? 'flagged kid-safe (your call in the real book)'
+            : 'not flagged'
+        };
+        programOrder.push(pKey);
+      } else {
+        var row = byProgram[pKey];
+        if (!row.code) row.code = codeFrom(joined, entry.url);
+        if (!row.rate) row.rate = rateFrom(joined);
+        if (!row.cookie) row.cookie = cookieFrom(joined);
+        if (/(kid|kids|family|children|child)/i.test(joined)) row.kidSafe = 'flagged kid-safe (your call in the real book)';
+      }
+    });
+
+    var rows = programOrder.map(function (k) { return byProgram[k]; });
+    return { total: found.length, rows: rows, merged: Math.max(0, found.length - rows.length) };
+  }
+
+  function addCell(tr, text, isLink, href) {
+    var td = document.createElement('td');
+    if (isLink) {
+      var a = document.createElement('a');
+      a.href = href;
+      a.textContent = text;
+      a.rel = 'sponsored noopener nofollow';
+      td.appendChild(a);
+    } else {
+      td.textContent = text;
+    }
+    tr.appendChild(td);
+    return td;
+  }
+
+  function organize() {
+    var result = parse(input.value);
+    tbody.textContent = '';
+
+    if (!result.total || !result.rows.length) {
+      summaryEl.hidden = true;
+      tableWrap.hidden = true;
+      emptyNote.hidden = false;
+      emptyNote.textContent = 'No links found yet. Paste a few lines with URLs in them, or load one of the samples above.';
+      return;
+    }
+
+    result.rows.forEach(function (row) {
+      var tr = document.createElement('tr');
+      addCell(tr, row.program || DASH);
+      addCell(tr, row.url, true, row.url);
+      addCell(tr, row.code || DASH);
+      addCell(tr, row.rate || DASH);
+      addCell(tr, row.cookie || DASH);
+      addCell(tr, DISCLOSURE);
+      addCell(tr, row.kidSafe || 'not flagged');
+      addCell(tr, 'not placed yet');
+      tbody.appendChild(tr);
+    });
+
+    summaryEl.textContent = result.total + ' links in \u2192 ' + result.rows.length +
+      ' program' + (result.rows.length === 1 ? '' : 's') + ' in your book \u00b7 ' +
+      result.merged + ' duplicate' + (result.merged === 1 ? '' : 's') + ' merged \u00b7 every row carries its disclosure';
+    summaryEl.hidden = false;
+    tableWrap.hidden = false;
+    emptyNote.hidden = true;
+  }
+})();
+</script>

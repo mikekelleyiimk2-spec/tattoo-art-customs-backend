@@ -282,6 +282,7 @@ if (String(process.env.ONEMIND_STANDALONE || '').trim().toLowerCase() === 'on') 
 }
 app.use('/', require('./routes/onemindWeb'));
 app.use('/', require('./routes/thebigone'));
+app.use('/', require('./routes/devtools'));
 app.use('/', require('./routes/site'));
 app.use('/', require('./routes/auth'));
 app.use('/membership', require('./routes/memberships'));

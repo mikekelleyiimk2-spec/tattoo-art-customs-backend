@@ -1,0 +1,142 @@
+<%#
+  Money Watch — for developers (public offer page).
+  Body fragment only: the layout provides <html>/<head>/<body>, the
+  page CSS classes (.wrap, .hero, .card, .grid, .btn, .btn-ghost,
+  .price-tag, .fineprint, .muted, .steps, .band, .door-grid,
+  .door-card), and the money() cents formatter.
+  Honest states only: source doors render from the sourceDoors local
+  (this view holds no second list), the one flash shown is a labeled
+  EXAMPLE, and no checkout is live — the form below joins an interest
+  list and takes no payment.
+%>
+<style>
+  .mw-state { display:inline-block; padding:.15rem .6rem; border-radius:999px; border:1px solid currentColor; font-size:.8rem; font-weight:700; letter-spacing:.02em; }
+  .mw-example { border:2px solid currentColor; }
+  .mw-example-tag { display:inline-block; padding:.15rem .6rem; border-radius:999px; border:1px solid currentColor; font-size:.8rem; font-weight:700; letter-spacing:.08em; }
+  .mw-flash-amount { font-size:2rem; font-weight:800; line-height:1.15; margin:.4rem 0; }
+  .mw-form label { display:block; font-weight:700; margin:.9rem 0 .3rem; }
+  .mw-form input[type="text"], .mw-form input[type="email"] { width:100%; max-width:34rem; padding:.6rem .7rem; font:inherit; }
+  .mw-house-price { font-size:1.25rem; font-weight:800; }
+</style>
+
+<div class="wrap">
+
+  <% if (flash) { %>
+  <div class="band" role="status"><p style="margin:0;"><%= flash %></p></div>
+  <% } %>
+
+  <%# 1. Hero %>
+  <section class="hero">
+    <p class="muted" style="margin-bottom:.3rem;"><%= face.name %> · Useful Appz · For developers</p>
+    <h1>Money Watch — for developers.</h1>
+    <p>Every payout source you have, watched. The moment money lands, you see it: <strong>&ldquo;you made X in Y time&rdquo;</strong> — and your own split map, drawn on every landing, so you can see where each payout is meant to go before you touch your banking.</p>
+    <p>No more hunting through store dashboards, PayPal, affiliate balances, and bank deposits to answer one question: <em>did I get paid?</em></p>
+    <p><a class="btn" href="#interest">Join the interest list</a> <a class="btn-ghost" href="#watches">What it watches</a></p>
+    <% if (user) { %>
+    <p class="fineprint">You are signed in — the interest form below still applies; joining the list is separate from your site account.</p>
+    <% } %>
+  </section>
+
+  <%# Sponsor slot (Penny Sweeper) %>
+  <%- include('../partials/sponsor-slot') %>
+
+  <%# 2. What it watches — rendered from the sourceDoors local, states as supplied %>
+  <section id="watches">
+    <h2>What it watches</h2>
+    <p>Your watch list is the set of sources you plug in. Each one reports in its own honest state — a source that is not plugged in yet reads as exactly that, never as a reading.</p>
+    <div class="door-grid">
+      <% (sourceDoors || []).forEach(function (door) { %>
+      <div class="door-card">
+        <h3><%= door.name %></h3>
+        <p><span class="mw-state"><%= door.state %></span></p>
+        <p><%= door.note %></p>
+      </div>
+      <% }); %>
+    </div>
+    <p class="fineprint">States on this page: <strong>watching</strong> — plugged in and reporting. <strong>built — plug seats at signup</strong> — the read lane exists and starts when your own credential is seated, by you, server-side. <strong>named — phase 2</strong> — named on the watch list, not yet wired; it reads &ldquo;not reported&rdquo; until it is.</p>
+  </section>
+
+  <%# 3. The flash — one static example, labeled as an example %>
+  <section>
+    <h2>The flash</h2>
+    <div class="card mw-example">
+      <p style="margin-top:0;"><span class="mw-example-tag">EXAMPLE</span></p>
+      <p class="mw-flash-amount">You made $212.40 in the last 24 hours</p>
+      <p style="margin-bottom:0;">That is what a landing looks like the moment it is detected — hour, day, and week windows, revenue only. This card is an example of the format, not a real reading.</p>
+    </div>
+    <p><strong>The honesty line:</strong> totals count revenue only — your own transfers, settlements, and refunds are shown as themselves, never counted as money made.</p>
+    <p class="muted">And no history ever flashes as fresh money: the first run on any estate is a baseline that absorbs what is already there and fires nothing, and every landing fires exactly once.</p>
+  </section>
+
+  <%# 4. Your map, drawn on every landing + the read-only law %>
+  <section>
+    <h2>Your map, drawn on every landing</h2>
+    <div class="steps">
+      <div class="card">
+        <h3>1. You draw the map</h3>
+        <p>Name your accounts, set your percentages, add per-source overrides — for example, a standing slice of every revenue landing to overhead, the rest down your business lanes.</p>
+      </div>
+      <div class="card">
+        <h3>2. Every landing gets drawn</h3>
+        <p>Each time money lands, Money Watch computes your split for that landing and shows it — amounts per destination, on the landing itself.</p>
+      </div>
+      <div class="card">
+        <h3>3. You move it yourself</h3>
+        <p>The split is a plan, shown in full. Acting on it stays in your own banking, in seconds, with the arithmetic already done.</p>
+      </div>
+    </div>
+    <div class="band">
+      <p style="margin:0;"><strong>Money Watch never moves your money.</strong> Watching, reporting and the split plan are read-only. Moving money arrives only on a licensed transfer rail, in its own phase, signed off separately.</p>
+    </div>
+    <p class="fineprint">Read-only credentials only, no custody of funds, and you can disconnect any source at any time. In reports, account identifiers are shown as role labels — never printed raw.</p>
+  </section>
+
+  <%# 5. Price + interest %>
+  <section id="interest">
+    <h2>Price</h2>
+    <div class="card">
+      <p class="price-tag"><%= money(priceCents) %></p>
+      <p><strong>One-time.</strong> The settled Money Watch price — pay once, no subscription.</p>
+      <p>First sales run through the interest list — join it and you're in line for unit pricing at launch; no payment is taken today.</p>
+      <form class="mw-form" method="post" action="/money-watch/interest">
+        <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <p style="margin:0;">
+          <label for="mw-name">Your name</label>
+          <input id="mw-name" type="text" name="name" maxlength="80" autocomplete="name">
+        </p>
+        <p style="margin:0;">
+          <label for="mw-email">Your email</label>
+          <input id="mw-email" type="email" name="email" required maxlength="120" autocomplete="email" placeholder="you@example.com">
+        </p>
+        <p style="margin:0;">
+          <label for="mw-sources">What should it watch for you?</label>
+          <input id="mw-sources" type="text" name="sources" maxlength="300" placeholder="Play payouts, PayPal, my store backend, affiliates…">
+        </p>
+        <p><button class="btn" type="submit">Join the interest list</button></p>
+      </form>
+      <p class="fineprint" style="margin-bottom:0;">Joining the list is not a purchase and takes no payment. When sales open, people on the list are in line first, at the price above.</p>
+    </div>
+  </section>
+
+  <%# 6. Penny Sweeper bands: house card, tip jar, cross-links %>
+  <section>
+    <div class="grid">
+      <div class="card">
+        <h3>OneMind Team</h3>
+        <p class="mw-house-price">$9.99/mo</p>
+        <p>All your AIs, one team — one seat, one sign-in, your whole bench working as one staff.</p>
+        <p style="margin-bottom:0;"><a class="btn" href="/onemind">See OneMind</a></p>
+      </div>
+      <div class="card">
+        <h3>Tip jar</h3>
+        <p>Money Watch is built by Useful Appz, a one-person studio. Tips keep the free tools free and the lights on.</p>
+        <p style="margin-bottom:0;"><a class="btn-ghost" href="<%= tipJarUrl %>">Leave a tip</a></p>
+      </div>
+    </div>
+
+    <div class="band">
+      <p style="margin:0;">More from the toolbox: <a href="/fill-my-list">Fill My List</a> — a full tester list for your app · <a href="/rolodex-demo">Rolodex demo</a> — every affiliate link you own, in one rolodex · <a href="<%= doors.hubUrl %>">Tester Hub</a> — first in line for the newest apps · <a href="<%= doors.appsUrl %>">All Useful Appz apps</a></p>
+    </div>
+  </section>
+
+</div>

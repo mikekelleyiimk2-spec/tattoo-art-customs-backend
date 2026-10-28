@@ -1,0 +1,176 @@
+<div class="hero">
+  <p class="kicker">Tester Hub · the developer door, on its own</p>
+  <h1>Fill My List — your 12 testers, handled.</h1>
+  <p class="lede">Google wants 12 opted-in testers before your app can ship. Fill My List is that fix, sold on its own: one charge per app, and the Tester Hub pool — people who already signed up to test — gets routed to your app in waves until its list is <strong>FULL</strong>.</p>
+  <p>
+    <span class="price-tag" style="font-size:30px;"><%= money(fill.baseCents) %></span>
+    <span class="muted">per app, per fill — until FULL</span>
+  </p>
+  <p>
+    <a class="btn" href="#start">Start a fill</a>
+    <a class="btn-ghost" href="#how">How a fill works</a>
+  </p>
+  <% if (poolCount !== null && poolCount !== undefined) { %>
+  <p class="fineprint">The pool right now: <strong style="color:var(--ink);"><%= poolCount %></strong> opted-in tester<%= poolCount === 1 ? '' : 's' %> standing in the Hub. Sign-up <em>is</em> the opt-in — the pool exists before your app arrives.</p>
+  <% } else { %>
+  <p class="fineprint">The Hub pool is in its founding state — the first developers in are the ones the founding testers meet first.</p>
+  <% } %>
+</div>
+
+<section id="how">
+  <h2>How a fill works</h2>
+  <div class="steps">
+    <div class="card">
+      <h3>Add your app to the Hub</h3>
+      <p>Free, once. Your app joins the Hub feed and instantly has the standing pool as its tester list — the roster is routed to developers from the pool, never sold or shared anywhere else.</p>
+    </div>
+    <div class="card">
+      <h3>Start the fill — <%= money(fill.baseCents) %></h3>
+      <p>One charge, one app. Your order is recorded in the fill cycle and holds your app's place at the settled price. An unpaid app never enters the cycle — no fake paid states, ever.</p>
+    </div>
+    <div class="card">
+      <h3>Waves roll out</h3>
+      <p>The pool is routed to your app in waves of <%= fill.waveSize %>. Each tester sees your app in their Hub feed with its Play opt-in link — the moment your app is added, the asking is already done.</p>
+    </div>
+    <div class="card">
+      <h3>Testers tap, we count</h3>
+      <p>Google's own rule, stated plainly: a tester counts toward your 12 only when <em>they</em> tap your app's Play opt-in link themselves. Nobody here fakes, proxies, or describes that tap away — testers confirm after Google accepts them, and confirmations are counted live.</p>
+    </div>
+    <div class="card">
+      <h3>FULL means full</h3>
+      <p>At <%= fill.target %> confirmed opt-ins your list is FULL. If a confirmed tester drops during your 14-day closed-test run, top-up waves run <strong>free</strong> until the run ends — full stays full is part of what the <%= money(fill.baseCents) %> bought.</p>
+    </div>
+  </div>
+</section>
+
+<section id="start">
+  <h2>Start a fill</h2>
+  <div class="card">
+    <p style="margin-top:0;">Your app must be on the Hub first (that's the free step above — the <a href="/tester-hub">Tester Hub page</a> and the Hub app both add apps). Then record the fill order here:</p>
+    <form id="fill-order-form">
+      <label for="fill-package">Your app's package name</label>
+      <input type="text" id="fill-package" placeholder="com.yourstudio.yourapp" autocomplete="off" required>
+      <label for="fill-gmail">The developer Gmail on the app's Hub listing</label>
+      <input type="email" id="fill-gmail" placeholder="you@gmail.com" autocomplete="email" required>
+      <p style="margin:18px 0 0;"><button type="submit" class="btn">Record my fill order — <%= money(fill.baseCents) %></button></p>
+    </form>
+    <div class="card result-panel" id="fill-order-result" role="status"></div>
+    <div class="band" style="margin-bottom:0;">
+      <strong>The honest checkout state:</strong> web checkout for Fill My List is being set up. Recording the order holds your app's place at <%= money(fill.baseCents) %> (<%= money(fillRegisterCents) %> at the register with the processing fee passed through, like every price on this site). The desk confirms payment through the Business PayPal link and grants the entitlement by hand — your fill starts the moment that lands, and the order says <span class="mono">awaiting_payment</span> until it does. Nothing about that is dressed up.
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <h3>Already ordered? Check your fill</h3>
+    <form id="fill-status-form">
+      <label for="status-package">Package name</label>
+      <input type="text" id="status-package" placeholder="com.yourstudio.yourapp" autocomplete="off" required>
+      <label for="status-gmail">Developer Gmail (optional — must match the fill)</label>
+      <input type="email" id="status-gmail" placeholder="you@gmail.com" autocomplete="email">
+      <p style="margin:18px 0 0;"><button type="submit" class="btn-ghost">Check the count</button></p>
+    </form>
+    <div class="card result-panel" id="fill-status-result" role="status"></div>
+  </div>
+</section>
+
+<% if (board && !board.founding && board.developer && board.developer.length) { %>
+<section>
+  <h2>The light board — real fills only</h2>
+  <div class="grid">
+    <% board.developer.slice(0, 6).forEach(function (e) { %>
+    <div class="card">
+      <p class="mono" style="margin:0; color:var(--accent); font-size:13px;"><%= e.kind.replace(/_/g, ' ').toUpperCase() %></p>
+      <h3 style="margin:6px 0;"><%= e.app_name || 'An app' %></h3>
+      <% if (e.confirmed_count !== null && e.confirmed_count !== undefined) { %>
+      <p class="muted" style="margin:0;"><%= e.confirmed_count %> of <%= e.target %> testers confirmed</p>
+      <% } %>
+    </div>
+    <% }); %>
+  </div>
+  <p class="fineprint">Every light on this board is a real fill-cycle event. When nothing has happened, the board says so — it never seeds numbers.</p>
+</section>
+<% } %>
+
+<section>
+  <h2>One service, no Hub adoption required</h2>
+  <p class="muted" style="max-width:46em;">Fill My List works for a developer who never installs anything else of ours: add the app, record the order, watch the count. Developers who do run the Hub get the same fill from inside it — same price, same cycle, same FULL. And testers are never charged: the tester side of the Hub is free, always. Developers pay; testers tap. For testers, sign-up IS the opt-in — one signup puts them in the pool for every fill that routes their way.</p>
+</section>
+
+<section>
+  <%- include('../partials/sponsor-slot') %>
+  <div class="door-grid">
+    <div class="door-card">
+      <h3>OneMind Team</h3>
+      <p class="muted">All your AIs, one team — the table this toolbox plugs into.</p>
+      <p><span class="price-tag">$9.99/mo</span></p>
+      <p><a class="btn" href="/onemind">Meet the table</a></p>
+    </div>
+    <div class="door-card">
+      <h3>Affiliate Rolodex</h3>
+      <p class="muted">Your other scattered problem: every affiliate link you own, in one book. Try the free demo.</p>
+      <p><span class="price-tag"><%= money(rolodexTiers.affiliate.baseCents) %></span></p>
+      <p><a class="btn" href="/rolodex-demo">Run the demo</a></p>
+    </div>
+    <div class="door-card">
+      <h3>Money Watch</h3>
+      <p class="muted">Never search for a payout again — every landing watched and flashed.</p>
+      <p><span class="price-tag"><%= money(moneyWatchPriceCents) %></span></p>
+      <p><a class="btn" href="/money-watch">See the offer</a></p>
+    </div>
+  </div>
+  <div class="band">
+    <strong>Tip jar.</strong> <span class="muted">The free tools stay free because the jar exists — it lands in the Business PayPal (mk4).</span>
+    <a href="<%= tipJarUrl %>" target="_blank" rel="noopener">Drop a penny in</a>
+  </div>
+</section>
+
+<script>
+(function () {
+  function show(id, html) {
+    var el = document.getElementById(id);
+    el.innerHTML = html;
+    el.classList.add('show');
+    el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function orderHtml(o) {
+    var stateLine = o.status === 'awaiting_payment'
+      ? 'Recorded as <span class="mono">awaiting_payment</span> — the desk confirms payment and your fill starts the moment the entitlement lands.'
+      : 'Status: <span class="mono">' + esc(o.status) + '</span>';
+    return '<h3 style="margin-top:0;">Fill order — ' + esc(o.package) + '</h3>'
+      + '<p style="margin:4px 0;">' + stateLine + '</p>'
+      + '<p class="muted" style="margin:4px 0;">Confirmed testers: <strong style="color:var(--ink);">' + esc(o.confirmed) + ' of ' + esc(o.target) + '</strong> · Wave ' + esc(o.wave) + '</p>';
+  }
+  document.getElementById('fill-order-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var pkg = document.getElementById('fill-package').value.trim();
+    var gmail = document.getElementById('fill-gmail').value.trim();
+    fetch('/api/testers/fill/order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ package: pkg, developer_gmail: gmail }),
+    }).then(function (r) { return r.json(); }).then(function (j) {
+      if (!j.ok) { show('fill-order-result', '<p style="margin:0;">' + esc(j.error || 'That order could not be recorded.') + '</p>'); return; }
+      show('fill-order-result', orderHtml(j.order) + '<p class="fineprint">Order ' + (j.created ? 'created' : 'already on record') + ' — the price on the order is the settled $24.99.</p>');
+    }).catch(function () {
+      show('fill-order-result', '<p style="margin:0;">The order door did not answer just now — try once more in a moment.</p>');
+    });
+  });
+  document.getElementById('fill-status-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var pkg = document.getElementById('status-package').value.trim();
+    var gmail = document.getElementById('status-gmail').value.trim();
+    var url = '/api/testers/fill/status?package=' + encodeURIComponent(pkg) + (gmail ? '&gmail=' + encodeURIComponent(gmail) : '');
+    fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+      if (!j.ok) { show('fill-status-result', '<p style="margin:0;">' + esc(j.error || 'No fill found for that app yet.') + '</p>'); return; }
+      show('fill-status-result', orderHtml(j.order));
+    }).catch(function () {
+      show('fill-status-result', '<p style="margin:0;">The status door did not answer just now — try once more in a moment.</p>');
+    });
+  });
+})();
+</script>
