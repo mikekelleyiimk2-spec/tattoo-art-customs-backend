@@ -1579,6 +1579,7 @@ async function main() {
   await require('./rolodex').runHttpTests(ok, req); // affiliate rolodex plug (live-only + disclosure lock)
   await require('./links').runHttpTests(ok, req); // per-family link rolodexes + master index (internal entries never served)
   await require('./linkrolodex').runHttpTests(ok, req); // Link Rolodex line: privacy pages for the Social + Master rolodex apps
+  await require('./privacyPages').runHttpTests(ok, req); // console prep: per-app privacy pages + package-name alias slugs (Ghost Box, Ciphers, Tester Hub, Kids' Wing, Library, Habit Dot)
   await require('./emailKeeper').runHttpTests(ok, req); // email keeper live status (whitelist + service-token ingest)
   await require('./folderScan').runHttpTests(ok, req); // folder scan phone-home (whitelist POST + service-token GET, latest per device)
   await require('./codex').runHttpTests(ok, req); // codex for OneMind (registry projection — public fields only)

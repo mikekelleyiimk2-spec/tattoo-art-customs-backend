@@ -112,12 +112,17 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/privacy/onemind`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/screenqr`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/habit-dot`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/habitdot`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/world-weather`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/loophole-ciphers`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/ciphertoy`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/ghost-box`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/ghostbox`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/tester-hub`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/testerhub`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/library`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/kids-wing`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/librarykids`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/email-keeper`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/rolodex`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/social-rolodex`, changefreq: 'monthly', priority: '0.3' },
@@ -1232,6 +1237,14 @@ router.get('/privacy/habit-dot', (req, res) => res.render('site/privacy-habitdot
   metaDescription: 'Privacy policy for Habit Dot. Your habits stay on your device; the free version shows Google AdMob ads, and Premium ($2.99 via Google Play Billing) removes them.',
 }));
 
+// Package-name alias for the Habit Dot policy above (same page, same
+// policy — the /privacy/onemind alias for the AI Bar page is the house
+// precedent for serving one policy at both its slugs).
+router.get('/privacy/habitdot', (req, res) => res.render('site/privacy-habitdot', {
+  title: 'Habit Dot Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for Habit Dot. Your habits stay on your device; the free version shows Google AdMob ads, and Premium ($2.99 via Google Play Billing) removes them.',
+}));
+
 // Per-app policy for the World Weather Android app (Google Play requires
 // a public privacy-policy URL; the app uses device location only on tap
 // and sends the requested place to public weather/geocoding services).
@@ -1247,9 +1260,23 @@ router.get('/privacy/loophole-ciphers', (req, res) => res.render('site/privacy-c
   metaDescription: 'Privacy policy for Loophole Ciphers. Zero permissions and no internet — every cipher is solved on your device and nothing is collected.',
 }));
 
+// Package-name alias for the Loophole Ciphers policy above (the app's
+// package is com.usefulappz.ciphertoy; same page, same policy).
+router.get('/privacy/ciphertoy', (req, res) => res.render('site/privacy-ciphers', {
+  title: 'Loophole Ciphers Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for Loophole Ciphers. Zero permissions and no internet — every cipher is solved on your device and nothing is collected.',
+}));
+
 // Per-app policy for the Ghost Box Android app (zero permissions — no
 // microphone, no internet; all sound is generated on the device).
 router.get('/privacy/ghost-box', (req, res) => res.render('site/privacy-ghostbox', {
+  title: 'Ghost Box Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for Ghost Box — Spirit Radio. No microphone, no internet permission, nothing recorded or collected — an entertainment novelty that runs entirely on your device.',
+}));
+
+// Package-name alias for the Ghost Box policy above (the app's package
+// is com.usefulappz.ghostbox; same page, same policy).
+router.get('/privacy/ghostbox', (req, res) => res.render('site/privacy-ghostbox', {
   title: 'Ghost Box Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for Ghost Box — Spirit Radio. No microphone, no internet permission, nothing recorded or collected — an entertainment novelty that runs entirely on your device.',
 }));
@@ -1258,6 +1285,13 @@ router.get('/privacy/ghost-box', (req, res) => res.render('site/privacy-ghostbox
 // AdMob ads; sends only what the user types into its forms to the Hub
 // API; the tester checklist is stored on-device only).
 router.get('/privacy/tester-hub', (req, res) => res.render('site/privacy-testerhub', {
+  title: 'Tester Hub Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for Tester Hub. Free with ads (Google AdMob). Sends only what you type into its forms — your testing checklist never leaves your phone.',
+}));
+
+// Package-name alias for the Tester Hub policy above (the app's package
+// is com.usefulappz.testerhub; same page, same policy).
+router.get('/privacy/testerhub', (req, res) => res.render('site/privacy-testerhub', {
   title: 'Tester Hub Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for Tester Hub. Free with ads (Google AdMob). Sends only what you type into its forms — your testing checklist never leaves your phone.',
 }));
@@ -1272,6 +1306,13 @@ router.get('/privacy/library', (req, res) => res.render('site/privacy-library', 
 // Per-app policy for the Kids' Wing Android app (child-directed, zero
 // permissions, no internet permission; collects nothing from anyone).
 router.get('/privacy/kids-wing', (req, res) => res.render('site/privacy-kidswing', {
+  title: "Kids' Wing Privacy Policy — Usefulappz",
+  metaDescription: "Privacy policy for Kids' Wing. No internet permission, no ads, no purchases, nothing collected from children or anyone — stories and coloring that work entirely offline.",
+}));
+
+// Package-name alias for the Kids' Wing policy above (the app's package
+// is com.usefulappz.librarykids; same page, same policy).
+router.get('/privacy/librarykids', (req, res) => res.render('site/privacy-kidswing', {
   title: "Kids' Wing Privacy Policy — Usefulappz",
   metaDescription: "Privacy policy for Kids' Wing. No internet permission, no ads, no purchases, nothing collected from children or anyone — stories and coloring that work entirely offline.",
 }));
