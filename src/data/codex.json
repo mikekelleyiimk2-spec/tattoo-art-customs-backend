@@ -665,8 +665,58 @@
    "name": "Legal/Provenance Gate (Sign-off)",
    "notes": "Named, not built.",
    "state": "named \u2014 not built"
+  },
+  {
+   "kind": "seat",
+   "liveness": {
+    "how_checked": "Worker lane live in deployed code (src/worker/apiLane.js LESSER_ROSTER + direct-ask path, commit e6805e6); key reality checked 2026-10-27 \u2014 no Render API credential is held on this machine and dashboard-set env values are not readable from here, so key presence could not be read directly; state follows the table's standing verified record (Gemini is the only configured API-lane seat) and render.yaml, which declares no lesser-table key",
+    "last_verified": "2026-10-27"
+   },
+   "name": "Groq",
+   "notes": "Lesser table (owner-approved 2026-10-23, from the 2026-10-22 secondary-AI research): an understudy seat under its own name \u2014 it answers only as itself, is never dressed up as, swapped in for, or failed over to/from a primary, and sits outside the primary roster on purpose (in the worker it is reachable by direct ask only). Key GROQ_API_KEY is not seated \u2014 no key is held anywhere we can read; the seat lights when the owner creates a Groq key and it is seated in Render (the 2026-10-22 research runs the lesser seats on free tiers).",
+   "state": "unconfigured \u2014 lesser table (understudy seat)"
+  },
+  {
+   "kind": "seat",
+   "liveness": {
+    "how_checked": "Worker lane live in deployed code (src/worker/apiLane.js LESSER_ROSTER + direct-ask path, commit e6805e6); key reality checked 2026-10-27 \u2014 no Render API credential is held on this machine and dashboard-set env values are not readable from here, so key presence could not be read directly; state follows the table's standing verified record (Gemini is the only configured API-lane seat) and render.yaml, which declares no lesser-table key",
+    "last_verified": "2026-10-27"
+   },
+   "name": "OpenRouter",
+   "notes": "Lesser table (owner-approved 2026-10-23, from the 2026-10-22 secondary-AI research): an understudy seat under its own name \u2014 it answers only as itself, is never dressed up as, swapped in for, or failed over to/from a primary, and sits outside the primary roster on purpose (in the worker it is reachable by direct ask only). Key OPENROUTER_API_KEY is not seated \u2014 no key is held anywhere we can read; the seat lights when the owner creates an OpenRouter key and it is seated in Render (the 2026-10-22 research runs the lesser seats on free tiers).",
+   "state": "unconfigured \u2014 lesser table (understudy seat)"
+  },
+  {
+   "kind": "seat",
+   "liveness": {
+    "how_checked": "Worker lane live in deployed code (src/worker/apiLane.js LESSER_ROSTER + direct-ask path, commit e6805e6); key reality checked 2026-10-27 \u2014 no Render API credential is held on this machine and dashboard-set env values are not readable from here, so key presence could not be read directly; state follows the table's standing verified record (Gemini is the only configured API-lane seat) and render.yaml, which declares no lesser-table key",
+    "last_verified": "2026-10-27"
+   },
+   "name": "Cloudflare",
+   "notes": "Lesser table (owner-approved 2026-10-23, from the 2026-10-22 secondary-AI research): an understudy seat under its own name \u2014 it answers only as itself, is never dressed up as, swapped in for, or failed over to/from a primary, and sits outside the primary roster on purpose (in the worker it is reachable by direct ask only). Keys CLOUDFLARE_API_KEY + CLOUDFLARE_ACCOUNT_ID are not seated \u2014 neither value is held anywhere we can read; the worker needs both. The seat lights when the owner creates a Cloudflare Workers AI token and both values are seated in Render.",
+   "state": "unconfigured \u2014 lesser table (understudy seat)"
+  },
+  {
+   "kind": "seat",
+   "liveness": {
+    "how_checked": "Worker lane live in deployed code (src/worker/apiLane.js LESSER_ROSTER + direct-ask path, commit e6805e6); key reality checked 2026-10-27 \u2014 no Render API credential is held on this machine and dashboard-set env values are not readable from here, so key presence could not be read directly; state follows the table's standing verified record (Gemini is the only configured API-lane seat) and render.yaml, which declares no lesser-table key",
+    "last_verified": "2026-10-27"
+   },
+   "name": "NVIDIA",
+   "notes": "Lesser table (owner-approved 2026-10-23, from the 2026-10-22 secondary-AI research): an understudy seat under its own name \u2014 it answers only as itself, is never dressed up as, swapped in for, or failed over to/from a primary, and sits outside the primary roster on purpose (in the worker it is reachable by direct ask only). Key NVIDIA_API_KEY is not seated \u2014 no key is held anywhere we can read; the seat lights when the owner creates an NVIDIA key and it is seated in Render (the 2026-10-22 research runs the lesser seats on free tiers).",
+   "state": "unconfigured \u2014 lesser table (understudy seat)"
+  },
+  {
+   "kind": "seat",
+   "liveness": {
+    "how_checked": "Worker lane live in deployed code (src/worker/apiLane.js LESSER_ROSTER + direct-ask path, commit e6805e6); key reality checked 2026-10-27 \u2014 no Render API credential is held on this machine and dashboard-set env values are not readable from here, so key presence could not be read directly; state follows the table's standing verified record (Gemini is the only configured API-lane seat) and render.yaml, which declares no lesser-table key",
+    "last_verified": "2026-10-27"
+   },
+   "name": "Mistral",
+   "notes": "Lesser table (owner-approved 2026-10-23, from the 2026-10-22 secondary-AI research): an understudy seat under its own name \u2014 it answers only as itself, is never dressed up as, swapped in for, or failed over to/from a primary, and sits outside the primary roster on purpose (in the worker it is reachable by direct ask only). Key MISTRAL_API_KEY is not seated \u2014 no key is held anywhere we can read; the seat lights when the owner creates a Mistral key and it is seated in Render (the 2026-10-22 research runs the lesser seats on free tiers).",
+   "state": "unconfigured \u2014 lesser table (understudy seat)"
   }
  ],
- "updated": "2026-10-26",
+ "updated": "2026-10-27",
  "version": 1
 }

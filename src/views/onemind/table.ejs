@@ -131,6 +131,7 @@
   .omt-dot { width: 8px; height: 8px; border-radius: 50%; background: #3a4f74; flex: 0 0 auto; }
   .omt-dot.is-on { background: #34d399; box-shadow: 0 0 8px rgba(52, 211, 153, .75); }
   .omt-person-you-row { border-top: 1px solid #16263f; margin-top: .45rem; padding-top: .45rem; }
+  .omt-lesser-note { margin: 0 .4rem .45rem; color: #7f95b5; font-size: .8rem; line-height: 1.45; }
 
   @media (max-width: 1180px) {
     .omt { grid-template-columns: 208px minmax(0, 1fr); }
@@ -320,6 +321,21 @@
         <% } %>
       </li>
     </ul>
+    <% if (typeof lesser !== 'undefined' && lesser.length) { %>
+    <div class="omt-side-label">Lesser Table</div>
+    <p class="omt-lesser-note">The understudies — secondary seats under their own names, a bench of their own outside the main roster.</p>
+    <ul class="omt-people-list">
+      <% lesser.forEach(function (b) { %>
+      <li>
+        <% if (b.url) { %><a class="omt-person" href="<%= b.url %>"><% } else { %><span class="omt-person"><% } %>
+          <span class="omt-avatar"><% if (b.favicon) { %><img alt="" src="https://www.google.com/s2/favicons?domain=<%= b.favicon %>&sz=128"><% } else { %><%= b.name.charAt(0) %><% } %></span>
+          <span class="omt-person-meta"><strong><%= b.name %></strong><small><%= b.chip %></small></span>
+          <span class="omt-dot<%= b.configured ? ' is-on' : '' %>"></span>
+        <% if (b.url) { %></a><% } else { %></span><% } %>
+      </li>
+      <% }); %>
+    </ul>
+    <% } %>
     <div class="omt-side-label">Quick Tools</div>
     <div class="omt-actions">
       <a href="#omt-omnibox"><span class="omt-ic">🔍</span>Search Any Topic</a>

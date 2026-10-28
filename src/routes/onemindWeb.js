@@ -61,6 +61,7 @@ const db = require('../db');
 const codex = require('../lib/codex');
 const rolodex = require('../lib/rolodex');
 const googleSeat = require('../lib/googleSeat');
+const { LESSER_ROSTER } = require('../worker/apiLane');
 
 const router = express.Router();
 
@@ -175,10 +176,14 @@ router.get('/onemind', async (req, res) => {
 // bar's live state comes from the Codex book (tableBook's seat
 // chips) — the rail tells the same truth as the seat board on
 // page 1, never a dressed-up one. `url` is the AI's own home (the
-// same doors the shortcut tiles opened); Muse is the house AI and
-// has no outside door, so its row is present but not a link out.
+// same doors the shortcut tiles opened). Muse is the house AI: it
+// has no outside door, so its row links INTO the table's own ask
+// stage (#omt-composer — the ask/send lane on this face) instead of
+// dead-ending as an untappable row (owner report 2026-10-27 21:40
+// CDT: "I can't even tap on Muse to see it"). The chip stays
+// whatever the book says — the row simply stops being a dead end.
 const AI_BARS = [
-  { name: 'Muse', url: null, favicon: null },
+  { name: 'Muse', url: '#omt-composer', favicon: null },
   { name: 'ChatGPT', url: 'https://chatgpt.com', favicon: 'chatgpt.com' },
   { name: 'Claude', url: 'https://claude.ai', favicon: 'claude.ai' },
   { name: 'Gemini', url: 'https://gemini.google.com', favicon: 'gemini.google.com' },
@@ -187,6 +192,23 @@ const AI_BARS = [
   { name: 'DeepSeek', url: 'https://chat.deepseek.com', favicon: 'deepseek.com' },
   { name: 'Copilot', url: 'https://copilot.microsoft.com', favicon: 'copilot.microsoft.com' },
 ];
+
+// The LESSER TABLE — the understudy bench (owner-approved
+// 2026-10-23): secondary providers seated under their own names,
+// OUTSIDE the primary roster above, never merged into its rail
+// (labeling law in src/worker/apiLane.js: a lesser seat answers
+// only as itself and is never dressed up as, swapped in for, or
+// failed over to/from a primary). The roster order and names come
+// from the worker's LESSER_ROSTER — the one code truth; the chips
+// come from the Codex book, the same seatChip truth as the primary
+// rail. `url` is each provider's own home.
+const LESSER_DOORS = {
+  Groq: { url: 'https://groq.com', favicon: 'groq.com' },
+  OpenRouter: { url: 'https://openrouter.ai', favicon: 'openrouter.ai' },
+  Cloudflare: { url: 'https://www.cloudflare.com', favicon: 'cloudflare.com' },
+  NVIDIA: { url: 'https://www.nvidia.com', favicon: 'nvidia.com' },
+  Mistral: { url: 'https://mistral.ai', favicon: 'mistral.ai' },
+};
 
 // The table face's data — ONE builder for both doors that serve the
 // face (GET /onemind for unseated visitors, GET /onemind/table for
@@ -206,12 +228,23 @@ async function tableLocals() {
       lastVerified: seat ? seat.lastVerified : null,
     };
   });
+  const lesser = LESSER_ROSTER.map((name) => {
+    const seat = seatByName.get(name);
+    return {
+      name,
+      ...(LESSER_DOORS[name] || { url: null, favicon: null }),
+      chip: seat ? seat.chip : 'Not configured yet',
+      configured: seat ? seat.configured : false,
+      lastVerified: seat ? seat.lastVerified : null,
+    };
+  });
   return {
     seats: t.seats,
     plugs: t.plugs,
     codexUpdated: t.codexUpdated,
     numbers,
     bars,
+    lesser,
     configuredCount: bars.filter((b) => b.configured).length,
     partners: placementsFor(TABLE_PLACEMENTS),
     disclosureStandard: rolodex.disclosureStandard(),
