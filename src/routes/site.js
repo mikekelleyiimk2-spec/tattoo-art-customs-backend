@@ -124,6 +124,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/privacy/master-rolodex`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/robosweeper`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/money-watch`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/the-big-one`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/discounts`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/aftercare`, changefreq: 'monthly', priority: '0.6' },
     { loc: `${base}/merch`, changefreq: 'weekly', priority: '0.7' },
@@ -1312,6 +1313,14 @@ router.get('/privacy/robosweeper', (req, res) => res.render('site/privacy-robosw
 router.get('/privacy/money-watch', (req, res) => res.render('site/privacy-moneywatch', {
   title: 'Money Watch Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for Money Watch. It displays the moment money lands for our own business — it never connects to your bank, holds no credentials, and moves no money.',
+}));
+
+// Per-app policy for The Big One Android app (the house publication;
+// bundled offline editions, one fixed-place weather refresh, no data
+// collected; Play requires a public privacy-policy URL).
+router.get('/privacy/the-big-one', (req, res) => res.render('site/privacy-thebigone', {
+  title: 'The Big One Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for The Big One. A daily edition you read offline — no accounts, no data collected, and a weather line that never asks where you are.',
 }));
 
 router.get('/about', (req, res) => res.render('site/about', {
