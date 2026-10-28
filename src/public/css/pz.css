@@ -201,6 +201,11 @@ body.pz-body main.container { max-width: 1120px; }
   background-color: #173f3a;
 }
 .pz-friend .pz-friend-art.wide { aspect-ratio: 3 / 3.4; }
+/* The stars get featured tiles: double-wide, gold-rimmed, first in the band
+   (Cayli's note, Oct 27 2026: Poppy & Ziggy weren't in Meet the Characters). */
+.pz-friend.lead { grid-column: span 2; border-color: #ffb703; }
+.pz-friend.lead .pz-friend-art { aspect-ratio: 16 / 9; background-position: center 8%; }
+.pz-friend.lead .pz-friend-name { font-size: 1.3rem; }
 .pz-friend .pz-friend-name {
   font-family: 'PZ Marker', 'Arial Black', Arial, sans-serif;
   color: #0d2f77; padding: .5rem .3rem .65rem; font-size: 1rem; line-height: 1.1;
