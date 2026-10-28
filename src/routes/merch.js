@@ -239,7 +239,7 @@ router.post('/catalog', requireLogin, formLimiter, checkHoneypot, async (req, re
       : 'OS';
     const color = 'black';
     const qty = Math.min(10, Math.max(1, parseInt(req.body.quantity, 10) || 1));
-    // CannaDash sticker 3-pack (2026-10-28): the pack is ONE catalog size
+    // HerbHaul sticker 3-pack (2026-10-28): the pack is ONE catalog size
     // option priced as a bundle, but Printful fulfills per sticker — the
     // print quantity must carry the 3x so a paid 3-pack prints 3 stickers.
     const printQty = (product.id === 'cannadash-sticker' && size === '3-PACK') ? qty * 3 : qty;

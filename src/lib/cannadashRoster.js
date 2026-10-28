@@ -1,4 +1,4 @@
-// CannaDash — founding driver roster (counts only, never identities).
+// HerbHaul — founding driver roster (counts only, never identities).
 //
 // WHAT THIS IS: the aggregate picture of the founding DRIVER list
 // (cannadash_waitlist rows with role = 'drive', migration 114) behind
@@ -7,7 +7,7 @@
 // it never needs a name or an email, so this module's outputs carry
 // counts and cities only. Emails are read for exactly one purpose:
 // counting how many waitlist drivers are already recorded as app
-// holders (added to / invited from the CannaDash Driver tester list).
+// holders (added to / invited from the HerbHaul Driver tester list).
 // They are never returned, logged, or rendered.
 //
 // THE APP LINK: the founding driver build ships through the house

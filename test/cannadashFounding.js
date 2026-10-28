@@ -70,8 +70,8 @@ async function checkAll(ok) {
   ok(typeof standalone.handlers.cannadashFoundingHandler === 'function',
     'standalone router exports the founding handler');
   const routerSrc = fs.readFileSync(path.join(__dirname, '../src/routes/onemindStandalone.js'), 'utf8');
-  ok(routerSrc.includes("router.get('/cannadash/founding', cannadashFoundingHandler)"),
-    "standalone router mounts GET /cannadash/founding");
+  ok(routerSrc.includes("router.get('/herbhaul/founding', cannadashFoundingHandler)"),
+    "standalone router mounts GET /herbhaul/founding");
   // --- Main host: the shop's site router mounts the SAME handlers ---
   // (Regression pin for the 2026-10-28 money-sweep find: the founding
   // page was registered only on the standalone router, which index.js
@@ -79,10 +79,17 @@ async function checkAll(ok) {
   // 404'd on tattoo-art-customs.onrender.com while serving on the
   // OneMind host.)
   const siteSrc = fs.readFileSync(path.join(__dirname, '../src/routes/site.js'), 'utf8');
-  ok(siteSrc.includes("router.get('/cannadash/founding', cannadashStandalone.handlers.cannadashFoundingHandler)"),
-    'site router mounts GET /cannadash/founding with the shared standalone handler');
-  ok(siteSrc.includes("router.post('/cannadash/join', formLimiter, checkHoneypot, cannadashStandalone.handlers.cannadashJoinHandler)"),
-    'site router mounts POST /cannadash/join with the shared standalone handler (founding form works on the main host)');
+  ok(siteSrc.includes("router.get('/herbhaul/founding', cannadashStandalone.handlers.cannadashFoundingHandler)"),
+    'site router mounts GET /herbhaul/founding with the shared standalone handler');
+  ok(siteSrc.includes("router.post('/herbhaul/join', formLimiter, checkHoneypot, cannadashStandalone.handlers.cannadashJoinHandler)"),
+    'site router mounts POST /herbhaul/join with the shared standalone handler (founding form works on the main host)');
+  // Rename pins (2026-10-28): pre-rename addresses redirect, never 404.
+  ok(routerSrc.includes("router.get('/cannadash'") && routerSrc.includes('res.redirect(301, `/herbhaul${qs}`)'),
+    'standalone router 301-redirects GET /cannadash to /herbhaul');
+  ok(routerSrc.includes("router.get('/cannadash/founding'") && routerSrc.includes('res.redirect(301, `/herbhaul/founding${qs}`)'),
+    'standalone router 301-redirects GET /cannadash/founding to /herbhaul/founding');
+  ok(siteSrc.includes("router.get('/privacy/herbhaul'") && siteSrc.includes("router.get('/privacy/cannadash'"),
+    'site router serves /privacy/herbhaul and redirects the pre-rename privacy slug');
 
   const mr = mockRes();
   standalone.handlers.cannadashFoundingHandler({}, mr);
@@ -107,17 +114,17 @@ async function checkAll(ok) {
     'founding page contains NO dollar figure while pricesLive is false');
   ok(!/\d+(?:\.\d+)?\s?% of order/.test(html),
     'founding page contains NO per-order percentage figure while pricesLive is false');
-  ok(html.includes('action="/cannadash/join"') && html.includes('name="role" value="partner"'),
-    'founding page application reuses POST /cannadash/join with role=partner (no second intake)');
-  ok(html.includes('/cannadash?join=partner#join'),
+  ok(html.includes('action="/herbhaul/join"') && html.includes('name="role" value="partner"'),
+    'founding page application reuses POST /herbhaul/join with role=partner (no second intake)');
+  ok(html.includes('/herbhaul?join=partner#join'),
     'founding page links the existing door join with role=partner');
   ok(/not live in any market/i.test(html) && /Licensed dispensaries only/i.test(html),
     'founding page stays honest: not live yet, licensed dispensaries only');
 
   // --- The door links the founding page ---
   const doorView = fs.readFileSync(path.join(__dirname, '../src/views/onemind/door-cannadash.ejs'), 'utf8');
-  ok(doorView.includes('href="/cannadash/founding"') && doorView.includes('Founding partners'),
-    'cannadash door carries a Founding partners section linking /cannadash/founding');
+  ok(doorView.includes('href="/herbhaul/founding"') && doorView.includes('Founding partners'),
+    'herbhaul door carries a Founding partners section linking /herbhaul/founding');
 }
 
 // House wiring: the DB phase runs the checks pre-close (they need no DB

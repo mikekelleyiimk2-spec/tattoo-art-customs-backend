@@ -71,21 +71,21 @@ async function runDbTests(ok) {
   standalone.handlers.cannadashDoorHandler({}, mr);
   ok(mr.rendered && mr.rendered.v === 'onemind/door-cannadash'
     && mr.rendered.l.layout === 'layout-onemind' && mr.rendered.l.joinRole === 'order',
-  'standalone /cannadash renders the CannaDash door (order list by default)');
+  'standalone /herbhaul renders the HerbHaul door (order list by default)');
   mr = mockRes();
   standalone.handlers.cannadashDoorHandler({ query: { join: 'partner' } }, mr);
   ok(mr.rendered && mr.rendered.l.joinRole === 'partner', 'cannadash door preselects the partner list from ?join=');
   mr = mockRes();
   standalone.handlers.cannadashCheckHandler({ body: { area: 'Lafayette, LA' } }, mr);
-  ok(mr.redirected && mr.redirected.u.startsWith('/cannadash?checked=')
-    && mr.redirected.u.includes('Lafayette'), 'cannadash area check redirects back with the area (honest not-live answer renders)');
+  ok(mr.redirected && mr.redirected.u.startsWith('/herbhaul?checked=')
+    && mr.redirected.u.includes('Lafayette'), 'herbhaul area check redirects back with the area (honest not-live answer renders)');
   const joinRes = () => ({ locals: {}, redirected: null, redirect(c, u) { this.redirected = { c, u }; } });
   let jr = joinRes();
   await standalone.handlers.cannadashJoinHandler({ body: {
     role: 'order', name: 'TEST Cannadash', email: 'TEST-Cannadash@test.local',
     area: 'Lafayette, LA', detail: '', age_ok: '1', website: '',
   } }, jr);
-  ok(jr.redirected && jr.redirected.u === '/cannadash?joined=order#join', 'cannadash join accepts a valid founding-list signup');
+  ok(jr.redirected && jr.redirected.u === '/herbhaul?joined=order#join', 'herbhaul join accepts a valid founding-list signup');
   const cdRow = await db.get('SELECT * FROM cannadash_waitlist WHERE role = ? AND email = ?',
     ['order', 'test-cannadash@test.local']);
   ok(!!cdRow && cdRow.name === 'TEST Cannadash' && cdRow.area === 'Lafayette, LA',
@@ -115,7 +115,7 @@ async function runDbTests(ok) {
     require('path').join(__dirname, '../src/views/onemind/door-cannadash.ejs'), 'utf8');
   for (const marker of ['Legal cannabis. Delivered.', 'Licensed dispensaries only',
     'From licensed shops.', 'Earn on your schedule', 'Reach more patients',
-    '/img/logos/cannadash-logo.jpg', 'action="/cannadash/check"', 'action="/cannadash/join"',
+    '/img/logos/cannadash-logo.jpg', 'action="/herbhaul/check"', 'action="/herbhaul/join"',
     "include('../partials/tip-jar')", "include('../partials/sponsor-slot')",
     "include('../partials/house-ad', {slot: 'door_cannadash'})"]) {
     ok(cdView.includes(marker), `cannadash door face carries ${marker}`);

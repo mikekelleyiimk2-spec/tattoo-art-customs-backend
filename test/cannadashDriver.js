@@ -146,7 +146,7 @@ async function checkAll(ok) {
     role: 'drive', name: 'TEST Driver', email: noDriverEmail,
     area: 'Lafayette, LA', detail: '', age_ok: '1', website: '',
   } }, jr);
-  ok(jr.redirected && jr.redirected.u === '/cannadash?join=drive&error=driver#join',
+  ok(jr.redirected && jr.redirected.u === '/herbhaul?join=drive&error=driver#join',
     'drive signup WITHOUT driver_ok redirects with error=driver');
   ok(!(await db.get('SELECT id FROM cannadash_waitlist WHERE email = ?', [noDriverEmail])),
     'drive signup WITHOUT driver_ok persists NO row');
@@ -157,7 +157,7 @@ async function checkAll(ok) {
     role: 'drive', name: 'TEST Driver', email: driverEmail,
     area: 'Lafayette, LA', detail: 'TEST car', age_ok: '1', driver_ok: '1', website: '',
   } }, jr);
-  ok(jr.redirected && jr.redirected.u === '/cannadash?joined=drive#join',
+  ok(jr.redirected && jr.redirected.u === '/herbhaul?joined=drive#join',
     'drive signup WITH age_ok + driver_ok joins the drive list');
   const driverRow = await db.get('SELECT * FROM cannadash_waitlist WHERE role = ? AND email = ?',
     ['drive', driverEmail]);
@@ -169,7 +169,7 @@ async function checkAll(ok) {
     role: 'order', name: 'TEST Customer', email: orderEmail,
     area: 'Lafayette, LA', detail: '', age_ok: '1', website: '',
   } }, jr);
-  ok(jr.redirected && jr.redirected.u === '/cannadash?joined=order#join',
+  ok(jr.redirected && jr.redirected.u === '/herbhaul?joined=order#join',
     'order signup is unaffected by the driver_ok gate (no driver_ok needed)');
 
   // --- roster(): drive rows only, relative to whatever the DB holds ---
@@ -200,7 +200,7 @@ async function checkAll(ok) {
   const doorView = fs.readFileSync(path.join(__dirname, '../src/views/onemind/door-cannadash.ejs'), 'utf8');
   for (const marker of ['Install the driver app now', 'name="driver_ok"', "valid driver's license",
     'Drivers need all three boxes checked', 'Development build (v1.0.2)',
-    'CannaDash Driver tester list', "joined === 'drive'"]) {
+    'HerbHaul Driver tester list', "joined === 'drive'"]) {
     ok(doorView.includes(marker), `cannadash door face carries ${marker}`);
   }
   const adminViewPath = path.join(__dirname, '../src/views/admin/cannadash-drivers.ejs');

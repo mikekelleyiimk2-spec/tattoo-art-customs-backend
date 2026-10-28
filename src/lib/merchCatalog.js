@@ -1123,7 +1123,7 @@ const CATALOG = [
     priceCents: 1599,
     open: true,
   },
-  // --- CannaDash logo merch (live 2026-10-28) ---
+  // --- HerbHaul logo merch (live 2026-10-28) ---
   // Printful content clearance: support reply 2026-10-28 (Claire Simmons) —
   // no blanket prohibition on stylized cannabis leaves / original brand
   // logos on standard merchandise; artwork generally permissible provided

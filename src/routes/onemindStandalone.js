@@ -29,8 +29,10 @@
 //   GET /ports         → the KillinTime ports shelf.
 //   GET /toolbox       → the Toolbox & Plugs branch face.
 //   GET /little-inkers → the Little Inkers branch face (kid-safe).
-//   GET /cannadash     → the CannaDash DOOR: its own black/neon face,
+//   GET /herbhaul      → the HerbHaul DOOR: its own black/neon face,
 //                        founding-list intake only (not live yet).
+//                        (Renamed from CannaDash 2026-10-28; the old
+//                        /cannadash address 301-redirects here.)
 // Every door is reachable directly, at its own address, wearing its
 // own face — nobody passes through another place to reach it
 // (arrival law, owner 2026-10-27 09:48 CDT).
@@ -120,22 +122,25 @@ function toolboxHandler(req, res) {
 }
 router.get('/toolbox', toolboxHandler);
 
-// --- The CannaDash door -------------------------------------------------
-// CannaDash's own address + own face on this host (owner order
+// --- The HerbHaul door --------------------------------------------------
+// HerbHaul's own address + own face on this host (owner order
 // 2026-10-27; visual anchor = the owner's Grok-fetched candidate:
 // black field, the approved ring mark big, "Legal cannabis.
 // Delivered.", area-check pill, quiet 21+ trust line, three doors).
+// RENAMED 2026-10-28: the platform was CannaDash until the owner's
+// HerbHaul strike; the mark carries no name, so only words moved.
 // This router mounts BEFORE the site router, so on THIS host the
-// door wins /cannadash; the main host never loads this router and
-// keeps its informational site/cannadash page untouched.
+// door wins /herbhaul; the main host never loads this router and
+// keeps its informational site/cannadash page untouched (served at
+// /herbhaul there; /cannadash redirects on both hosts).
 //
 // FUNCTION IS INTAKE ONLY (legality gate, money audit gap 8):
-// CannaDash is not live in any market yet and no market opens until
+// HerbHaul is not live in any market yet and no market opens until
 // counsel clears it and a licensed partner signs. The area check
 // answers honestly (not live anywhere yet), and the three doors lead
 // to founding-list (waitlist) applications that persist to
-// cannadash_waitlist. NO payments, NO ordering — the face never
-// implies otherwise.
+// cannadash_waitlist (table name kept — internal, pre-rename). NO
+// payments, NO ordering — the face never implies otherwise.
 function waitlistRole(v) {
   const r = String(v || '').trim().toLowerCase();
   return WAITLIST_ROLES.includes(r) ? r : 'order';
@@ -146,9 +151,9 @@ function cannadashDoorHandler(req, res) {
   const joined = WAITLIST_ROLES.includes(String(q.joined || '')) ? String(q.joined) : null;
   res.render('onemind/door-cannadash', {
     layout: 'layout-onemind',
-    title: 'CannaDash — Legal Cannabis. Delivered. | OneMind',
-    metaDescription: 'CannaDash: legal cannabis delivery from licensed dispensaries — order, drive, or partner. Not live in any market yet; join the founding list. 21+ only.',
-    canonical: `${base()}/cannadash`,
+    title: 'HerbHaul — Legal Cannabis. Delivered. | OneMind',
+    metaDescription: 'HerbHaul: legal cannabis delivery from licensed dispensaries — order, drive, or partner. Not live in any market yet; join the founding list. 21+ only.',
+    canonical: `${base()}/herbhaul`,
     joinRole: waitlistRole(q.join || joined),
     joined,
     joinedAgain: joined && q.again === '1',
@@ -157,10 +162,16 @@ function cannadashDoorHandler(req, res) {
     driverApkUrl: cannadashRoster.driverApkReady() ? cannadashRoster.DRIVER_APK_URL : null,
   });
 }
-router.get('/cannadash', cannadashDoorHandler);
+router.get('/herbhaul', cannadashDoorHandler);
+// Pre-rename address (retired 2026-10-28): never break a live link —
+// the old door 301s to /herbhaul, query string carried along.
+router.get('/cannadash', (req, res) => {
+  const qs = String(req.originalUrl || '').slice('/cannadash'.length);
+  return res.redirect(301, `/herbhaul${qs}`);
+});
 
-// --- The CannaDash founding partner offer -------------------------------
-// GET /cannadash/founding: the founding partner offer for dispensaries
+// --- The HerbHaul founding partner offer --------------------------------
+// GET /herbhaul/founding: the founding partner offer for dispensaries
 // (Bundle C Build 1, 2026-10-28). Structure, lock promise, and cohort
 // cap render from src/lib/cannadashFounding.js; while that config's
 // pricesLive flag is false (status PENDING OWNER STRIKE) every price
@@ -168,26 +179,34 @@ router.get('/cannadash', cannadashDoorHandler);
 // renders — the running dispensary campaign promised a founding rate
 // locked with no figure quoted, and this page keeps that promise.
 // Applications reuse the door's founding-list intake below
-// (POST /cannadash/join, role=partner) — no second intake is built.
+// (POST /herbhaul/join, role=partner) — no second intake is built.
 function cannadashFoundingHandler(req, res) {
   res.render('onemind/cannadash-founding', {
     layout: 'layout-onemind',
-    title: 'CannaDash Founding Partners — Rate Locked at Joining | OneMind',
-    metaDescription: 'CannaDash founding partners: licensed dispensaries join the first cohort with their founding rate locked at joining for 12 months. The full rate sheet goes to founding partners first.',
-    canonical: `${base()}/cannadash/founding`,
+    title: 'HerbHaul Founding Partners — Rate Locked at Joining | OneMind',
+    metaDescription: 'HerbHaul founding partners: licensed dispensaries join the first cohort with their founding rate locked at joining for 12 months. The full rate sheet goes to founding partners first.',
+    canonical: `${base()}/herbhaul/founding`,
     founding: cannadashFounding.publicFoundingOffer(),
     offer: cannadashFounding.publicFoundingOffer(),
     feeRows: cannadashFounding.publicFeeRows(),
     pricesLive: cannadashFounding.pricesLive,
   });
 }
-router.get('/cannadash/founding', cannadashFoundingHandler);
+router.get('/herbhaul/founding', cannadashFoundingHandler);
+router.get('/cannadash/founding', (req, res) => {
+  const qs = String(req.originalUrl || '').slice('/cannadash/founding'.length);
+  return res.redirect(301, `/herbhaul/founding${qs}`);
+});
 
 function cannadashCheckHandler(req, res) {
   const area = String((req.body || {}).area || '').trim().slice(0, 80);
-  if (!area) return res.redirect(302, '/cannadash#check');
-  return res.redirect(302, `/cannadash?checked=${encodeURIComponent(area)}#check`);
+  if (!area) return res.redirect(302, '/herbhaul#check');
+  return res.redirect(302, `/herbhaul?checked=${encodeURIComponent(area)}#check`);
 }
+router.post('/herbhaul/check', formLimiter, checkHoneypot, cannadashCheckHandler);
+// Legacy POST kept mounted: a redirect cannot carry a form post, so
+// pre-rename forms still land in the same handler (which now answers
+// back to /herbhaul).
 router.post('/cannadash/check', formLimiter, checkHoneypot, cannadashCheckHandler);
 
 async function cannadashJoinHandler(req, res) {
@@ -197,7 +216,7 @@ async function cannadashJoinHandler(req, res) {
   const email = String(body.email || '').trim().toLowerCase().slice(0, 120);
   const area = String(body.area || '').trim().slice(0, 120);
   const detail = String(body.detail || '').trim().slice(0, 200);
-  const back = (qs) => res.redirect(302, `/cannadash?${qs}#join`);
+  const back = (qs) => res.redirect(302, `/herbhaul?${qs}#join`);
   if (!name) return back(`join=${role}&error=name`);
   if (!EMAIL_RE.test(email)) return back(`join=${role}&error=email`);
   if (!body.age_ok) return back(`join=${role}&error=age`);
@@ -221,6 +240,9 @@ async function cannadashJoinHandler(req, res) {
     return back(`join=${role}&error=email`);
   }
 }
+router.post('/herbhaul/join', formLimiter, checkHoneypot, cannadashJoinHandler);
+// Legacy POST kept mounted (see /check above): same handler, same
+// cannadash_waitlist intake, answers back to /herbhaul.
 router.post('/cannadash/join', formLimiter, checkHoneypot, cannadashJoinHandler);
 
 module.exports = router;

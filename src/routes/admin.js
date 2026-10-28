@@ -1488,7 +1488,7 @@ router.post('/merch-drops/:id/dismiss', formLimiter, checkHoneypot, async (req, 
   res.redirect('/admin/merch-drops');
 });
 
-// --- CannaDash founding drivers: the roster (counts only) ---------------
+// --- HerbHaul founding drivers: the roster (counts only) ---------------
 // Aggregate view of the founding DRIVER list (lib/cannadashRoster):
 // totals + by-state / by-city counts. COUNTS AND CITIES ONLY — no
 // driver names or emails ever appear here or in any dispensary-facing
@@ -1501,7 +1501,7 @@ router.get('/cannadash-drivers', async (req, res) => {
   const cannadashRoster = require('../lib/cannadashRoster');
   const roster = await cannadashRoster.roster([]);
   res.render('admin/cannadash-drivers', {
-    title: 'CannaDash drivers — Admin', roster,
+    title: 'HerbHaul drivers — Admin', roster,
   });
 });
 

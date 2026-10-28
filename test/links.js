@@ -42,8 +42,8 @@ async function runHttpTests(ok, req) {
   const web = await get('/api/web-links');
   ok(web.status === 200 && web.json.count === 45, 'web-links returns 45 public pages');
   ok(!(web.json.entries || []).some((e) => String(e.url || '').includes('github.com')), 'web-links never serves the internal repo entry');
-  const cd = (web.json.entries || []).find((e) => String(e.url || '').endsWith('/cannadash'));
-  ok(cd && cd.state === 'live', 'web-links carries /cannadash with its live state (split deploy landed 2026-10-26)');
+  const cd = (web.json.entries || []).find((e) => String(e.url || '').endsWith('/herbhaul'));
+  ok(cd && cd.state === 'live', 'web-links carries /herbhaul with its live state (renamed from /cannadash 2026-10-28)');
   const wl = (web.json.entries || []).find((e) => String(e.url || '').endsWith('/worlds'));
   ok(wl && wl.state === 'live', 'web-links carries /worlds with its live state (split deploy landed 2026-10-26)');
 

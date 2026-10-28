@@ -218,7 +218,7 @@ router.get('/the-big-one/link/verify', async (req, res) => {
 
 // Sponsors — the rate card, in the publication's face. Every offer's
 // inquiry runs through the site's existing contact machinery
-// (POST /contact, the form pattern the CannaDash partner door uses).
+// (POST /contact, the form pattern the HerbHaul partner door uses).
 router.get('/the-big-one/sponsors', async (req, res) => {
   face(res, 'site/thebigone-sponsors', {
     path: '/the-big-one/sponsors',

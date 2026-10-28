@@ -130,8 +130,8 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/privacy/robosweeper`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/money-watch`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/the-big-one`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/cannadash`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/cannadash-driver`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/herbhaul`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/herbhaul-driver`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/discounts`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/aftercare`, changefreq: 'monthly', priority: '0.6' },
     { loc: `${base}/merch`, changefreq: 'weekly', priority: '0.7' },
@@ -144,8 +144,8 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/show-designs`, changefreq: 'daily', priority: '0.8', lastmod: new Date().toISOString().slice(0, 10) },
     { loc: `${base}/poppy-and-ziggy`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/worlds`, changefreq: 'weekly', priority: '0.7' },
-    { loc: `${base}/cannadash`, changefreq: 'weekly', priority: '0.6' },
-    { loc: `${base}/cannadash/founding`, changefreq: 'weekly', priority: '0.6' },
+    { loc: `${base}/herbhaul`, changefreq: 'weekly', priority: '0.6' },
+    { loc: `${base}/herbhaul/founding`, changefreq: 'weekly', priority: '0.6' },
     // The Big One — the publication's own doors (owner order 2026-10-27).
     { loc: `${base}/the-big-one`, changefreq: 'daily', priority: '0.8', lastmod: new Date().toISOString().slice(0, 10) },
     { loc: `${base}/the-big-one/sponsors`, changefreq: 'weekly', priority: '0.6' },
@@ -488,34 +488,40 @@ router.get('/poppy-and-ziggy', async (req, res) => {
 // roof with separate rooms. Each world gets its own one-line description
 // and its own link, so no world bleeds into another. This hub is a
 // grown-up / studio-level surface (it links onward to TAC and to the 21+
-// CannaDash page), so it is linked only from adult/studio surfaces —
+// HerbHaul page), so it is linked only from adult/studio surfaces —
 // never from a kid page.
 router.get('/worlds', (req, res) => {
   const base = config.baseUrl.replace(/\/$/, '');
   res.render('site/worlds', {
     title: 'Our Worlds — Useful Appz | Tattoo Art Customs',
-    metaDescription: 'One roof, separate rooms: Tattoo Art Customs, Little Inkers, Poppy & Ziggy, CannaDash (21+), OneMind, the Library, and the Useful Appz studio — each world on its own page.',
+    metaDescription: 'One roof, separate rooms: Tattoo Art Customs, Little Inkers, Poppy & Ziggy, HerbHaul (21+), OneMind, the Library, and the Useful Appz studio — each world on its own page.',
     canonical: `${base}/worlds`,
   });
 });
 
-// CannaDash — its OWN page (owner order 2026-10-26; website-restricted
+// HerbHaul — its OWN page (owner order 2026-10-26; website-restricted
 // brand: it lives ONLY here, never on tattoo or kid surfaces). Content
-// stays inside the 2026-10-26 legality memo: CannaDash is software
+// stays inside the 2026-10-26 legality memo: HerbHaul is software
 // licensed to licensed retailers (the plumbing play) — the retailer is
-// the seller of record, CannaDash never takes title to product and never
+// the seller of record, HerbHaul never takes title to product and never
 // touches product money. No live ordering; no market opens until counsel
 // clears it and a licensed partner signs. 21+ framing throughout.
-router.get('/cannadash', (req, res) => {
+// RENAMED 2026-10-28 (owner strike): the platform was CannaDash; the
+// page moved to /herbhaul and /cannadash 301-redirects below.
+router.get('/herbhaul', (req, res) => {
   const base = config.baseUrl.replace(/\/$/, '');
   res.render('site/cannadash', {
-    title: 'CannaDash — Cannabis Delivery, Run by Licensed Retailers | Useful Appz',
-    metaDescription: 'CannaDash is the delivery platform licensed retailers plug into: ordering, dispatch, chain-of-custody and proof-of-delivery software. Two apps — CannaDash for customers, CannaDash Driver for drivers. 21+. Not live yet.',
-    canonical: `${base}/cannadash`,
+    title: 'HerbHaul — Cannabis Delivery, Run by Licensed Retailers | Useful Appz',
+    metaDescription: 'HerbHaul is the delivery platform licensed retailers plug into: ordering, dispatch, chain-of-custody and proof-of-delivery software. Two apps — HerbHaul for customers, HerbHaul Driver for drivers. 21+. Not live yet.',
+    canonical: `${base}/herbhaul`,
   });
 });
+router.get('/cannadash', (req, res) => {
+  const qs = String(req.originalUrl || '').slice('/cannadash'.length);
+  return res.redirect(301, `/herbhaul${qs}`);
+});
 
-// CannaDash founding partner offer (Bundle C Build 1, 2026-10-28) —
+// HerbHaul founding partner offer (Bundle C Build 1, 2026-10-28) —
 // on THIS host too. The founding page was originally registered only
 // on the OneMind standalone router (routes/onemindStandalone.js),
 // which src/index.js mounts ONLY when ONEMIND_STANDALONE=on — so the
@@ -524,12 +530,20 @@ router.get('/cannadash', (req, res) => {
 // mounts the standalone module's exported handlers on this router:
 // one source of truth, identical render + gated fee rows on both
 // hosts. pricesLive stays false in lib/cannadashFounding.js — zero
-// prices render until the owner strikes. POST /cannadash/join rides
+// prices render until the owner strikes. POST /herbhaul/join rides
 // along so the founding page's application form actually takes the
 // application on this host instead of posting into a 404; it is the
 // same handler, writing the same cannadash_waitlist intake.
+// RENAMED 2026-10-28: mounts moved to /herbhaul*; the pre-rename
+// /cannadash/founding GET 301-redirects and POST /cannadash/join stays
+// mounted (a redirect cannot carry a form post).
 const cannadashStandalone = require('./onemindStandalone');
-router.get('/cannadash/founding', cannadashStandalone.handlers.cannadashFoundingHandler);
+router.get('/herbhaul/founding', cannadashStandalone.handlers.cannadashFoundingHandler);
+router.get('/cannadash/founding', (req, res) => {
+  const qs = String(req.originalUrl || '').slice('/cannadash/founding'.length);
+  return res.redirect(301, `/herbhaul/founding${qs}`);
+});
+router.post('/herbhaul/join', formLimiter, checkHoneypot, cannadashStandalone.handlers.cannadashJoinHandler);
 router.post('/cannadash/join', formLimiter, checkHoneypot, cannadashStandalone.handlers.cannadashJoinHandler);
 
 // OneMind — its OWN page (website split follow-up, 2026-10-26): the
@@ -1412,22 +1426,25 @@ router.get('/library/sponsors', (req, res) => {
   });
 });
 
-// Per-app policy for the CannaDash Android app (demo build; zero
+// Per-app policy for the HerbHaul Android app (demo build; zero
 // permissions, zero network, bundled demo data only, no data
-// collected; Play requires a public privacy-policy URL).
-router.get('/privacy/cannadash', (req, res) => res.render('site/privacy-cannadash', {
-  title: 'CannaDash Privacy Policy — Usefulappz',
-  metaDescription: 'Privacy policy for CannaDash. A demo build with no permissions and no network — no accounts, no data collected, nothing leaves your phone.',
+// collected; Play requires a public privacy-policy URL). Renamed
+// 2026-10-28 (was CannaDash): the pre-rename slugs 301-redirect below.
+router.get('/privacy/herbhaul', (req, res) => res.render('site/privacy-cannadash', {
+  title: 'HerbHaul Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for HerbHaul. A demo build with no permissions and no network — no accounts, no data collected, nothing leaves your phone.',
 }));
+router.get('/privacy/cannadash', (req, res) => res.redirect(301, '/privacy/herbhaul'));
 
-// Per-app policy for the CannaDash Driver Android app (demo build;
+// Per-app policy for the HerbHaul Driver Android app (demo build;
 // zero permissions, bundled demo data only, no in-app network — the
 // only exits are the driver-tapped nav handoff and browser links;
 // Play requires a public privacy-policy URL).
-router.get('/privacy/cannadash-driver', (req, res) => res.render('site/privacy-cannadashdriver', {
-  title: 'CannaDash Driver Privacy Policy — Usefulappz',
-  metaDescription: 'Privacy policy for CannaDash Driver. A demo build with no permissions and no network — no data collected; directions go to your own nav app only when you tap.',
+router.get('/privacy/herbhaul-driver', (req, res) => res.render('site/privacy-cannadashdriver', {
+  title: 'HerbHaul Driver Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for HerbHaul Driver. A demo build with no permissions and no network — no data collected; directions go to your own nav app only when you tap.',
 }));
+router.get('/privacy/cannadash-driver', (req, res) => res.redirect(301, '/privacy/herbhaul-driver'));
 
 router.get('/about', (req, res) => res.render('site/about', {
   title: 'About — Tattoo Art Customs',

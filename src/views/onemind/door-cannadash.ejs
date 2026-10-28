@@ -114,18 +114,18 @@
 <main class="cddoor">
   <div class="hero">
     <div class="halo" aria-hidden="true"></div>
-    <img class="mark" src="/img/logos/cannadash-logo.jpg" alt="CannaDash — legal cannabis delivery" width="800" height="800">
+    <img class="mark" src="/img/logos/cannadash-logo.jpg" alt="HerbHaul — legal cannabis delivery" width="800" height="800">
     <h1>Legal cannabis. Delivered.</h1>
     <div class="check" id="check">
       <% if (checkedArea) { %>
       <div class="answer" role="status">
         <strong>Not in <%= checkedArea %> yet.</strong>
-        CannaDash is not live in any market yet — no area is open today. Join the founding
+        HerbHaul is not live in any market yet — no area is open today. Join the founding
         list below and we will email you the day your area opens. That is the whole promise:
         a launch notice, nothing more.
       </div>
       <% } %>
-      <form class="pill" method="post" action="/cannadash/check">
+      <form class="pill" method="post" action="/herbhaul/check">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s-7-5.6-7-11a7 7 0 1 1 14 0c0 5.4-7 11-7 11z" fill="#58d61e"/><circle cx="12" cy="10" r="2.8" fill="#0a1206"/></svg>
         <input type="text" name="area" maxlength="80" autocomplete="address-level2"
           placeholder="Enter your area to check availability" aria-label="Enter your area to check availability">
@@ -141,19 +141,19 @@
 
   <div class="wrap">
     <div class="doors">
-      <a class="door" href="/cannadash?join=order#join">
+      <a class="door" href="/herbhaul?join=order#join">
         <div class="scene order" aria-hidden="true">
           <svg width="120" height="120" viewBox="0 0 24 24" fill="none"><path d="M3 11.5L12 4l9 7.5" stroke="#b9ff8f" stroke-width="1.6" stroke-linecap="round"/><path d="M5.5 10.5V20h13v-9.5" stroke="#b9ff8f" stroke-width="1.6" stroke-linejoin="round"/><path d="M9.2 15.2l2.8-1.2 2.8 1.2v3.3l-2.8 1.2-2.8-1.2v-3.3z" fill="#58d61e"/><path d="M9.2 15.2L12 16.4l2.8-1.2M12 16.4v3.3" stroke="#0a1206" stroke-width="1.1"/></svg>
         </div>
         <div class="door-meta"><h2>ORDER</h2><p>From licensed shops.</p></div>
       </a>
-      <a class="door" href="/cannadash?join=drive#join">
+      <a class="door" href="/herbhaul?join=drive#join">
         <div class="scene drive" aria-hidden="true">
           <svg width="130" height="120" viewBox="0 0 24 24" fill="none"><path d="M3 15.5l1.6-5.2A2 2 0 0 1 6.5 8.8h6.9a2 2 0 0 1 1.7 1l2.5 3.4a2 2 0 0 1 .3 1.2v1.1" stroke="#b9ff8f" stroke-width="1.6" stroke-linejoin="round"/><path d="M3 15.5h15.5M6 18.2a1.9 1.9 0 1 0 0-.01M15.4 18.2a1.9 1.9 0 1 0 0-.01M7.9 18.2h5.6" stroke="#b9ff8f" stroke-width="1.6"/><path d="M12.2 5.2c.5-1.2 1.7-1.9 2.9-1.7.3 1.2-.4 2.4-1.5 2.8.9-.1 1.9.3 2.4 1.1-.7.9-2 1.2-3 .7.7.6.9 1.6.6 2.5-1.1-.3-1.9-1.2-2-2.3-.7.6-1.7.8-2.6.4.3-1.1 1.2-1.9 2.3-2-.8-.4-1.3-1.2-1.3-2.1 1-.2 2 .2 2.6.9.1-.9.7-1.7 1.6-2.1z" fill="#58d61e"/></svg>
         </div>
         <div class="door-meta"><h2>DRIVE</h2><p>Earn on your schedule</p></div>
       </a>
-      <a class="door" href="/cannadash?join=partner#join">
+      <a class="door" href="/herbhaul?join=partner#join">
         <div class="scene partner" aria-hidden="true">
           <svg width="120" height="120" viewBox="0 0 24 24" fill="none"><path d="M4 9.5l1.2-4h13.6l1.2 4a2.6 2.6 0 0 1-5 .6 2.6 2.6 0 0 1-5.2 0A2.6 2.6 0 0 1 4 9.5z" stroke="#ffe9a8" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.5 12v7.5h13V12M9.5 19.5v-4.5h5v4.5" stroke="#ffe9a8" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 5.9c.3-.7 1-1.1 1.7-1 .2.7-.2 1.4-.9 1.6.5-.1 1.1.2 1.4.6-.4.5-1.1.7-1.7.4.4.3.5.9.3 1.4-.6-.2-1.1-.7-1.1-1.3-.4.3-1 .4-1.5.2.2-.6.7-1.1 1.3-1.1-.4-.2-.7-.7-.7-1.2.6-.1 1.1.1 1.5.5 0-.5.4-1 1-1.2z" fill="#58d61e" transform="translate(0,-1.4)"/></svg>
         </div>
@@ -168,7 +168,7 @@
           locked at joining</strong> — the structure, the lock, and how to apply are on the
           founding partner page. The full rate sheet goes to founding partners first.</p>
       </div>
-      <a class="cta" href="/cannadash/founding">Founding partners</a>
+      <a class="cta" href="/herbhaul/founding">Founding partners</a>
     </section>
 
     <section class="join" id="join">
@@ -181,31 +181,31 @@
       <div class="ok" role="status">
         <strong>You are on the list.</strong>
         <% if (joinedAgain) { %>That email was already on the <%= joined %> founding list — we refreshed your details.<% } else { %>You joined the <%= joined %> founding list.<% } %>
-        CannaDash is not live in any market yet, so there is nothing to pay and nothing to
+        HerbHaul is not live in any market yet, so there is nothing to pay and nothing to
         order today — joining means one thing: we email you the day your market opens.
         <% if (joined === 'drive') { %>
         <% if (typeof driverApkUrl !== 'undefined' && driverApkUrl) { %>
         <a class="driver-dl" href="<%= driverApkUrl %>">Install the driver app now</a>
         <p class="driver-note">Development build (v1.0.2) — Android will ask you to allow installs from your browser; that's expected for a pre-release build.</p>
         <% } %>
-        <p class="driver-note">Prefer Google Play? The Play invite goes to the email you just signed up with — we add founding-driver Gmails to the CannaDash Driver tester list in batches, so watch that inbox.</p>
+        <p class="driver-note">Prefer Google Play? The Play invite goes to the email you just signed up with — we add founding-driver Gmails to the HerbHaul Driver tester list in batches, so watch that inbox.</p>
         <% } %>
       </div>
       <% } %>
       <h2><%= meta.head %></h2>
-      <p class="honest">CannaDash is being built to plug licensed dispensaries into delivery —
+      <p class="honest">HerbHaul is being built to plug licensed dispensaries into delivery —
         ordering, driving and partnering open market by market, only where legal, only after
         counsel clears it and a licensed partner signs. Until then this list is the front door:
         no payment is taken, ever, on this page.</p>
       <div class="tabs" role="navigation" aria-label="Choose your list">
         <% for (const r of ['order','drive','partner']) { %>
-        <a href="/cannadash?join=<%= r %>#join" class="<%= joinRole === r ? 'on' : '' %>"><%= roleMeta[r].tab %></a>
+        <a href="/herbhaul?join=<%= r %>#join" class="<%= joinRole === r ? 'on' : '' %>"><%= roleMeta[r].tab %></a>
         <% } %>
       </div>
       <% if (joinError) { %>
       <p class="err" role="alert"><%= joinError === 'email' ? 'That email does not look right — check it and try again.' : joinError === 'name' ? 'We need a name for the list — add yours and try again.' : joinError === 'driver' ? 'Drivers need all three boxes checked — license, insured vehicle, and work authorization.' : 'Please confirm you are 21 or older to join the list.' %></p>
       <% } %>
-      <form method="post" action="/cannadash/join">
+      <form method="post" action="/herbhaul/join">
         <input type="hidden" name="role" value="<%= joinRole %>">
         <label for="cd-name">Your name</label>
         <input type="text" id="cd-name" name="name" maxlength="80" autocomplete="name" required>
@@ -237,7 +237,7 @@
     <div class="sweep-jar"><%- include('../partials/tip-jar') %></div>
   </div>
 
-  <p class="foot">CannaDash is a delivery platform for licensed cannabis retailers — the retailer is
+  <p class="foot">HerbHaul is a delivery platform for licensed cannabis retailers — the retailer is
     always the seller of record. Adults 21+ only. Not live in any market yet; joining the
     founding list promises a launch notice and nothing more.</p>
 </main>

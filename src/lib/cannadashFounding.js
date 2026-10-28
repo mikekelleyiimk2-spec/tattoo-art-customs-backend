@@ -1,4 +1,4 @@
-// CannaDash — founding dispensary partner fee structure (config only).
+// HerbHaul — founding dispensary partner fee structure (config only).
 //
 // BUILD: Bundle C Build 1, 2026-10-28. The dispensary email campaign
 // already running promised a founding rate LOCKED with NO dollar
@@ -32,7 +32,7 @@
 //     toll stack and §11 records those assessed numbers as standing
 //     unless the owner strikes them.
 //   - Drafting (§3 note, §12b): money flows to the retailer, never
-//     through CannaDash. The subscription and the toll are billed to
+//     through HerbHaul. The subscription and the toll are billed to
 //     the retailer separately as B2B software / dispatch fees, never
 //     drafted as a share of cannabis sales.
 //   - Cohort cap: 30 partner locations. §7 counts Louisiana's whole
@@ -72,7 +72,7 @@ const TIERS = Object.freeze([
     lockPromise: LOCK_PROMISE,
     cohortCapLocations: 30,
     includes: Object.freeze([
-      'Listing on the CannaDash platform at launch, in your licensed market',
+      'Listing on the HerbHaul platform at launch, in your licensed market',
       'Founding Partner badge on your listing',
       'Locked per-order economics for the full lock period (see the fee table)',
       'The dispensary order board: accept, pack, seal, hand to driver',
@@ -94,7 +94,7 @@ const TIERS = Object.freeze([
     lockPromise: null,
     cohortCapLocations: null,
     includes: Object.freeze([
-      'Listing on the CannaDash platform, in your licensed market',
+      'Listing on the HerbHaul platform, in your licensed market',
       'The dispensary order board: accept, pack, seal, hand to driver',
       'Delivery dispatch under the retailer-staff model (Gear A, spec §5)',
       'Chain-of-custody records: seal numbers, timestamps, ID attestations',
