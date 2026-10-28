@@ -3,7 +3,7 @@
 // Each tool gets its OWN address and its own face (layout-devtools
 // face variants), never the TAC skin:
 //
-//   GET  /fill-my-list        Fill-My-List as a standalone service
+//   GET  /fill-my-list        FillMyList as a standalone service
 //   GET  /rolodex-demo        Affiliate Rolodex public demo (no signup)
 //   GET  /money-watch         Money Watch for developers — offer
 //   POST /money-watch/interest  interest -> orders (pending_review)
@@ -30,7 +30,7 @@ const router = express.Router();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const FACES = {
-  fill: { key: 'fill', name: 'Fill My List' },
+  fill: { key: 'fill', name: 'FillMyList' },
   rolodex: { key: 'rolodex', name: 'Affiliate Rolodex' },
   moneywatch: { key: 'moneywatch', name: 'Money Watch' },
 };
@@ -48,15 +48,15 @@ function face(res, view, locals) {
   });
 }
 
-// ---- Fill My List — the standalone service face ---------------------
+// ---- FillMyList — the standalone service face ---------------------
 router.get('/fill-my-list', async (req, res) => {
   let board = null;
   try { board = await fillCycle.lightBoard(6); } catch (e) { board = null; }
   face(res, 'site/devtools-fill', {
     path: '/fill-my-list',
     face: FACES.fill,
-    title: 'Fill My List — your 12 testers, handled | Useful Appz Developer Tools',
-    metaDescription: 'Fill My List: the Tester Hub fill, sold on its own. $24.99 per app per fill until FULL — the opted-in pool routed to your app in waves; testers tap their own Play opt-in; confirmations counted live.',
+    title: 'FillMyList — your 12 testers, handled | Useful Appz Developer Tools',
+    metaDescription: 'FillMyList: the tester fill, sold on its own. $24.99 per app per fill until FULL — the opted-in pool routed to your app in waves; testers tap their own Play opt-in; confirmations counted live.',
     user: req.user || null,
     fill: devtools.FILL,
     fillRegisterCents: devtools.fillRegisterCents(),

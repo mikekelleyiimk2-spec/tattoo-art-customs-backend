@@ -318,7 +318,7 @@ async function runHttpTests(ok) {
 
   const tools = await call('GET', '/onemind/tools');
   ok(tools.status === 200, '/onemind/tools serves 200');
-  for (const name of ['Affiliate Rolodex', 'RoboSweeper', 'Money Watch', 'Connection Doctor', 'Tester Hub']) {
+  for (const name of ['Affiliate Rolodex', 'RoboSweeper', 'Money Watch', 'Connection Doctor', 'FillMyList']) {
     ok(tools.text.includes(name), `/onemind/tools carries ${name}`);
   }
   ok(tools.text.includes('$4.99') && tools.text.includes('$13.99'), '/onemind/tools states settled tool prices');

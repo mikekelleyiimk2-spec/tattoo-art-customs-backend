@@ -337,7 +337,7 @@ router.get('/onemind/tools', async (req, res) => {
   });
 });
 
-// The Tester Hub stands on its own page; the branch link routes to it.
+// FillMyList stands on its own page; the branch link routes to it.
 router.get('/onemind/tester-hub', (req, res) => res.redirect(302, '/tester-hub'));
 
 module.exports = router;

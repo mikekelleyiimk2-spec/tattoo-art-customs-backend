@@ -14,7 +14,7 @@ const pricing = require('../src/lib/pricing');
 async function runDbTests(ok) {
   console.log('developer tools (bundle B config + register):');
   // Settled prices, exactly once, never re-priced.
-  ok(devtools.FILL.baseCents === 2499, 'Fill-My-List settled at $24.99');
+  ok(devtools.FILL.baseCents === 2499, 'FillMyList settled at $24.99');
   ok(devtools.FILL.baseCents === fillCycle.PRICE_CENTS, 'the service page price and the fill machine price can never disagree');
   ok(devtools.FILL.target === 12, 'a fill runs until FULL = 12 confirmed opt-ins');
   ok(devtools.fillRegisterCents() === pricing.withFeeCents(2499), 'register total applies the house fee pass-through');
@@ -51,10 +51,10 @@ async function runHttpTests(ok, req) {
     return { status: r.status, text: await r.text(), location: r.headers.get('location') };
   };
 
-  // ---- Fill My List ----
+  // ---- FillMyList ----
   const fill = await anon('/fill-my-list');
   ok(fill.status === 200, '/fill-my-list serves 200');
-  ok(fill.text.includes('Fill My List') && fill.text.includes('Developer Tools'), 'fill page carries its own face (dev-tools layout)');
+  ok(fill.text.includes('FillMyList') && fill.text.includes('Developer Tools'), 'fill page carries its own face (dev-tools layout)');
   ok(fill.text.includes('$24.99'), 'fill price shown at the settled $24.99');
   ok(fill.text.includes('awaiting_payment'), 'the honest checkout state is printed on the face');
   ok(/tap your app’s Play opt-in link themselves|tap.*opt-in link themselves/.test(fill.text), 'the tester tap is stated plainly — never described away');
@@ -130,7 +130,7 @@ async function runHttpTests(ok, req) {
 
   // ---- Codex carries the new doors + prices ----
   const codexRes = await anon('/api/codex');
-  ok(codexRes.status === 200 && codexRes.text.includes('Fill My List'), 'codex serves the Fill My List entries');
+  ok(codexRes.status === 200 && codexRes.text.includes('FillMyList'), 'codex serves the FillMyList entries');
   ok(codexRes.text.includes('Money Watch for developers'), 'codex serves the Money Watch developer door');
   ok(codexRes.text.includes('/rolodex-demo'), 'codex serves the Rolodex demo door');
 }

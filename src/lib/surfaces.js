@@ -26,7 +26,7 @@ const SURFACES = [
   // pattern — its sign-in seats the tie at the sitting, same as every
   // other app surface here.
   { id: 'thebigone-app', name: 'Dawnfold app', kind: 'app' },
-  { id: 'tester-hub', name: 'Tester Hub', kind: 'app' },
+  { id: 'tester-hub', name: 'FillMyList', kind: 'app' },
   { id: 'killintime-console', name: 'KillinTime Console', kind: 'app' },
   { id: 'folder-app', name: 'UsefulAppz Folder', kind: 'app' },
   { id: 'onemind-web-plug', name: 'OneMind web plug (browser extension)', kind: 'web' },

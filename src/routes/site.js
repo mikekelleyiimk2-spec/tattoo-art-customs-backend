@@ -118,8 +118,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/privacy/ciphertoy`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/ghost-box`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/ghostbox`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/tester-hub`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/testerhub`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/privacy/fill-my-list`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/library`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/kids-wing`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/librarykids`, changefreq: 'monthly', priority: '0.3' },
@@ -1313,20 +1312,17 @@ router.get('/privacy/ghostbox', (req, res) => res.render('site/privacy-ghostbox'
   metaDescription: 'Privacy policy for Ghost Box — Spirit Radio. No microphone, no internet permission, nothing recorded or collected — an entertainment novelty that runs entirely on your device.',
 }));
 
-// Per-app policy for the Tester Hub Android app (v1.2.3: free with
-// AdMob ads; sends only what the user types into its forms to the Hub
-// API; the tester checklist is stored on-device only).
-router.get('/privacy/tester-hub', (req, res) => res.render('site/privacy-testerhub', {
-  title: 'Tester Hub Privacy Policy — Usefulappz',
-  metaDescription: 'Privacy policy for Tester Hub. Free with ads (Google AdMob). Sends only what you type into its forms — your testing checklist never leaves your phone.',
+// Per-app policy for the FillMyList Android app (v1.2.3: free with
+// AdMob ads; sends only what the user types into its forms to the
+// FillMyList API; the tester checklist is stored on-device only).
+// RENAMED 2026-10-28 (was "Tester Hub", owner strike): the canonical
+// slug is /privacy/fill-my-list; the pre-rename slugs 301-redirect.
+router.get('/privacy/fill-my-list', (req, res) => res.render('site/privacy-testerhub', {
+  title: 'FillMyList Privacy Policy — Usefulappz',
+  metaDescription: 'Privacy policy for FillMyList. Free with ads (Google AdMob). Sends only what you type into its forms — your testing checklist never leaves your phone.',
 }));
-
-// Package-name alias for the Tester Hub policy above (the app's package
-// is com.usefulappz.testerhub; same page, same policy).
-router.get('/privacy/testerhub', (req, res) => res.render('site/privacy-testerhub', {
-  title: 'Tester Hub Privacy Policy — Usefulappz',
-  metaDescription: 'Privacy policy for Tester Hub. Free with ads (Google AdMob). Sends only what you type into its forms — your testing checklist never leaves your phone.',
-}));
+router.get('/privacy/tester-hub', (req, res) => res.redirect(301, '/privacy/fill-my-list'));
+router.get('/privacy/testerhub', (req, res) => res.redirect(301, '/privacy/fill-my-list'));
 
 // Per-app policy for The Library Android app (no permissions, books
 // bundled and read fully offline; outside links open in the browser).

@@ -252,7 +252,7 @@
     "threads": "Threads",
     "x": "X",
     "pinterest": "Pinterest",
-    "tester_hub": "🧪 Seja um testador — Tester Hub"
+    "tester_hub": "🧪 Seja um testador — FillMyList"
   },
   "gallery": {
     "all_categories": "Todas as categorias",
@@ -458,9 +458,9 @@
         "btn3": "Little Inkers"
       },
       "testerhub": {
-        "title": "🧪 Tester Hub",
+        "title": "🧪 FillMyList",
         "text": "SEJA UM TESTADOR — O PRIMEIRO A TESTAR OS APPS MAIS NOVOS. Instale o Hub e, com um único cadastro, você entra no grupo de todos os nossos apps — os lançamentos aparecem no Hub assim que abrem.",
-        "btn": "Baixar o Tester Hub"
+        "btn": "Baixar o FillMyList"
       }
     },
     "showcase": {
@@ -1225,10 +1225,10 @@
     "draw_text": "Aulas de desenho passo a passo que guiam os pequenos artistas.",
     "contests_text": "As páginas coloridas viram concursos familiares amigáveis.",
     "hub_headline": "SEJA UM TESTADOR — O PRIMEIRO A TESTAR OS APPS MAIS NOVOS.",
-    "hub_text": "O app Tester Hub coloca todo o grupo no seu bolso: os apps novos aparecem no Hub assim que abrem, e você é o primeiro da fila para cada um.",
-    "hub_btn": "Baixar o app Tester Hub (Android)",
+    "hub_text": "O app FillMyList coloca todo o grupo no seu bolso: os apps novos aparecem no Hub assim que abrem, e você é o primeiro da fila para cada um.",
+    "hub_btn": "Baixar o app FillMyList (Android)",
     "hub_dev_h": "CANSADO DE PROCURAR TESTADORES?",
-    "hub_dev_text": "Desenvolvedores: dentro do app Tester Hub, um único pagamento enche sua lista de testadores até COMPLETA — $24.99 por app, testadores em ondas até 12 confirmados, e a lista fica cheia durante seus 14 dias.",
+    "hub_dev_text": "Desenvolvedores: dentro do app FillMyList, um único pagamento enche sua lista de testadores até COMPLETA — $24.99 por app, testadores em ondas até 12 confirmados, e a lista fica cheia durante seus 14 dias.",
     "hub_dev_link": "Abra o Hub e inicie um preenchimento"
   },
   "byrequest": {
@@ -1339,7 +1339,7 @@
     "subscribe_tac": "📺 Inscrever-se — Tattoo Art Customs",
     "subscribe_rook": "📺 Inscrever-se — Rook 98",
     "subscribe_note": "Inscrever-se é grátis e é a melhor forma de apoiar os canais — cada inscrito nos ajuda a alcançar mais artistas, estúdios e colecionadores.",
-    "testerhub_line": "🧪 Quer os apps antes de todo mundo? Seja um testador — baixe o Tester Hub"
+    "testerhub_line": "🧪 Quer os apps antes de todo mundo? Seja um testador — baixe o FillMyList"
   },
   "show": {
     "badge": "Visto no Color With Us!",

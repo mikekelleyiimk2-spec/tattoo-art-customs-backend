@@ -259,7 +259,8 @@ function tacAndroidProRouter() {
   return router;
 }
 
-// ---- Tester Hub (canonical public URL) ----
+// ---- FillMyList (canonical public URL; RENAMED 2026-10-28, was
+// "Tester Hub" — the /tester-hub address itself stays, owner strike) ----
 // Owner order 2026-10-26: ONE memorable address every surface can
 // link — "Wanna be a tester? Here, join our tester app." The APK
 // bytes live in the app-updates store (uploaded via
@@ -294,8 +295,8 @@ function testerHubRouter() {
     const errCode = ['gmail', 'name', 'other'].includes(req.query.error) ? req.query.error : null;
     res.render('site/tester-hub', {
       homeFace: true, darkFace: true, thFace: true, bodyClass: 'page-dark',
-      title: 'Become a Tester — First in Line | Tester Hub by Useful Appz',
-      metaDescription: 'BECOME A TESTER — FIRST IN LINE TO TRY THE NEWEST APPS. One signup puts you first in line for every new app in the Tester Hub.',
+      title: 'Become a Tester — First in Line | FillMyList by Useful Appz',
+      metaDescription: 'BECOME A TESTER — FIRST IN LINE TO TRY THE NEWEST APPS. One signup puts you first in line for every new app in FillMyList.',
       poolCount, board, apps, partners,
       disclosureStandard: rolodex.disclosureStandard(),
       joined: req.query.joined === '1',
@@ -336,7 +337,7 @@ function testerHubRouter() {
 
 // ---- UsefulAppz Folder (free sideload, canonical public URL) ----
 // Same pattern as /tester-hub (owner order 2026-10-26: the Folder
-// goes out side by side with the Tester Hub): the memorable front
+// goes out side by side with FillMyList): the memorable front
 // door redirects to the app-updates store bytes for
 // com.usefulappz.folder, uploaded via POST /api/muse/upload-sideload.
 function folderRouter() {

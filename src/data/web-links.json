@@ -280,8 +280,8 @@
       "placed": []
     },
     {
-      "name": "Privacy — tester-hub",
-      "url": "https://tattoo-art-customs.onrender.com/privacy/tester-hub",
+      "name": "Privacy — FillMyList",
+      "url": "https://tattoo-art-customs.onrender.com/privacy/fill-my-list",
       "kind": "web-page",
       "world": "studio",
       "kid_safe": false,
@@ -458,7 +458,7 @@
       "placed": []
     },
     {
-      "name": "OneMind branch — Tester Hub (routes to /tester-hub)",
+      "name": "OneMind branch — FillMyList (routes to /tester-hub)",
       "url": "https://tattoo-art-customs.onrender.com/onemind/tester-hub",
       "kind": "web-page",
       "world": "studio",
@@ -480,7 +480,7 @@
       "placed": []
     },
     {
-      "name": "Tester Hub",
+      "name": "FillMyList",
       "url": "https://tattoo-art-customs.onrender.com/tester-hub",
       "kind": "web-page",
       "world": "studio",

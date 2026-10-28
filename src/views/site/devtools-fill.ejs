@@ -1,7 +1,7 @@
 <div class="hero">
-  <p class="kicker">Tester Hub · the developer door, on its own</p>
-  <h1>Fill My List — your 12 testers, handled.</h1>
-  <p class="lede">Google wants 12 opted-in testers before your app can ship. Fill My List is that fix, sold on its own: one charge per app, and the Tester Hub pool — people who already signed up to test — gets routed to your app in waves until its list is <strong>FULL</strong>.</p>
+  <p class="kicker">FillMyList · the developer door, on its own</p>
+  <h1>FillMyList — your 12 testers, handled.</h1>
+  <p class="lede">Google wants 12 opted-in testers before your app can ship. FillMyList is that fix, sold on its own: one charge per app, and the FillMyList pool — people who already signed up to test — gets routed to your app in waves until its list is <strong>FULL</strong>.</p>
   <p>
     <span class="price-tag" style="font-size:30px;"><%= money(fill.baseCents) %></span>
     <span class="muted">per app, per fill — until FULL</span>
@@ -11,9 +11,9 @@
     <a class="btn-ghost" href="#how">How a fill works</a>
   </p>
   <% if (poolCount !== null && poolCount !== undefined) { %>
-  <p class="fineprint">The pool right now: <strong style="color:var(--ink);"><%= poolCount %></strong> opted-in tester<%= poolCount === 1 ? '' : 's' %> standing in the Hub. Sign-up <em>is</em> the opt-in — the pool exists before your app arrives.</p>
+  <p class="fineprint">The pool right now: <strong style="color:var(--ink);"><%= poolCount %></strong> opted-in tester<%= poolCount === 1 ? '' : 's' %> standing in FillMyList. Sign-up <em>is</em> the opt-in — the pool exists before your app arrives.</p>
   <% } else { %>
-  <p class="fineprint">The Hub pool is in its founding state — the first developers in are the ones the founding testers meet first.</p>
+  <p class="fineprint">The FillMyList pool is in its founding state — the first developers in are the ones the founding testers meet first.</p>
   <% } %>
 </div>
 
@@ -21,8 +21,8 @@
   <h2>How a fill works</h2>
   <div class="steps">
     <div class="card">
-      <h3>Add your app to the Hub</h3>
-      <p>Free, once. Your app joins the Hub feed and instantly has the standing pool as its tester list — the roster is routed to developers from the pool, never sold or shared anywhere else.</p>
+      <h3>Add your app to FillMyList</h3>
+      <p>Free, once. Your app joins the FillMyList feed and instantly has the standing pool as its tester list — the roster is routed to developers from the pool, never sold or shared anywhere else.</p>
     </div>
     <div class="card">
       <h3>Start the fill — <%= money(fill.baseCents) %></h3>
@@ -30,7 +30,7 @@
     </div>
     <div class="card">
       <h3>Waves roll out</h3>
-      <p>The pool is routed to your app in waves of <%= fill.waveSize %>. Each tester sees your app in their Hub feed with its Play opt-in link — the moment your app is added, the asking is already done.</p>
+      <p>The pool is routed to your app in waves of <%= fill.waveSize %>. Each tester sees your app in their FillMyList feed with its Play opt-in link — the moment your app is added, the asking is already done.</p>
     </div>
     <div class="card">
       <h3>Testers tap, we count</h3>
@@ -46,17 +46,17 @@
 <section id="start">
   <h2>Start a fill</h2>
   <div class="card">
-    <p style="margin-top:0;">Your app must be on the Hub first (that's the free step above — the <a href="/tester-hub">Tester Hub page</a> and the Hub app both add apps). Then record the fill order here:</p>
+    <p style="margin-top:0;">Your app must be in FillMyList first (that's the free step above — the <a href="/tester-hub">FillMyList page</a> and the FillMyList app both add apps). Then record the fill order here:</p>
     <form id="fill-order-form">
       <label for="fill-package">Your app's package name</label>
       <input type="text" id="fill-package" placeholder="com.yourstudio.yourapp" autocomplete="off" required>
-      <label for="fill-gmail">The developer Gmail on the app's Hub listing</label>
+      <label for="fill-gmail">The developer Gmail on the app's FillMyList listing</label>
       <input type="email" id="fill-gmail" placeholder="you@gmail.com" autocomplete="email" required>
       <p style="margin:18px 0 0;"><button type="submit" class="btn">Record my fill order — <%= money(fill.baseCents) %></button></p>
     </form>
     <div class="card result-panel" id="fill-order-result" role="status"></div>
     <div class="band" style="margin-bottom:0;">
-      <strong>The honest checkout state:</strong> web checkout for Fill My List is being set up. Recording the order holds your app's place at <%= money(fill.baseCents) %> (<%= money(fillRegisterCents) %> at the register with the processing fee passed through, like every price on this site). The desk confirms payment through the Business PayPal link and grants the entitlement by hand — your fill starts the moment that lands, and the order says <span class="mono">awaiting_payment</span> until it does. Nothing about that is dressed up.
+      <strong>The honest checkout state:</strong> web checkout for FillMyList is being set up. Recording the order holds your app's place at <%= money(fill.baseCents) %> (<%= money(fillRegisterCents) %> at the register with the processing fee passed through, like every price on this site). The desk confirms payment through the Business PayPal link and grants the entitlement by hand — your fill starts the moment that lands, and the order says <span class="mono">awaiting_payment</span> until it does. Nothing about that is dressed up.
     </div>
   </div>
 
@@ -92,8 +92,8 @@
 <% } %>
 
 <section>
-  <h2>One service, no Hub adoption required</h2>
-  <p class="muted" style="max-width:46em;">Fill My List works for a developer who never installs anything else of ours: add the app, record the order, watch the count. Developers who do run the Hub get the same fill from inside it — same price, same cycle, same FULL. And testers are never charged: the tester side of the Hub is free, always. Developers pay; testers tap. For testers, sign-up IS the opt-in — one signup puts them in the pool for every fill that routes their way.</p>
+  <h2>One service, no FillMyList adoption required</h2>
+  <p class="muted" style="max-width:46em;">FillMyList works for a developer who never installs anything else of ours: add the app, record the order, watch the count. Developers who do run FillMyList get the same fill from inside it — same price, same cycle, same FULL. And testers are never charged: the tester side of FillMyList is free, always. Developers pay; testers tap. For testers, sign-up IS the opt-in — one signup puts them in the pool for every fill that routes their way.</p>
 </section>
 
 <section>

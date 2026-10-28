@@ -71,7 +71,7 @@ async function runHttpTests(ok, req) {
   const tac = (b.doors || []).find((e) => /TAC/.test(e.name));
   ok(!!tac && tac.state === 'down', 'TAC door is on record as down (damage, not hidden)');
   const plugNames = (b.plugs || []).map((e) => e.name);
-  ok(plugNames.includes('Affiliate Rolodex plug') && plugNames.includes('Tester Hub pool')
+  ok(plugNames.includes('Affiliate Rolodex plug') && plugNames.includes('FillMyList pool')
     && plugNames.includes('Email Keeper'), 'rolodex, tester pool, and keeper plugs are written in');
   const profilePlug = (b.plugs || []).find((e) => e.name === 'Profile Plug');
   ok(!!profilePlug && /live/.test(profilePlug.state), 'the Profile Plug is written in as a live plug (slice 4)');

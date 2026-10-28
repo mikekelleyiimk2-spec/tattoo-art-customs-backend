@@ -1,10 +1,10 @@
-// Tester Hub pool machine (owner ruling 2026-10-26).
+// FillMyList pool machine (owner ruling 2026-10-26; renamed from Tester Hub 2026-10-28).
 //
-// Tester Hub is NOT test-for-test trading. It fixes the 12-tester
+// FillMyList is NOT test-for-test trading. It fixes the 12-tester
 // problem for EVERY developer with ONE standing pool:
 //   - A person signs up ONCE with the Gmail they use for apps.
-//     Sign-up IS the opt-in: the Hub holds that Gmail and routes it
-//     into the tester lists of apps in the Hub (the roster leaves only
+//     Sign-up IS the opt-in: FillMyList holds that Gmail and routes it
+//     into the tester lists of apps in FillMyList (the roster leaves only
 //     through the service-token-guarded GET /api/testers/pool).
 //   - A developer adds an app once; the pool that already exists is
 //     its tester list — 12+ people already opted in, in one go. The
@@ -43,7 +43,7 @@ function isGmail(v) {
 }
 
 // The fleet's 21 apps, seeded into the feed on first use. Opt-in URLs
-// are the real Play testing links from the Tester Hub app / console
+// are the real Play testing links from the FillMyList app / console
 // records; OneMind's track is not live yet, so its optin_url is null —
 // "Link coming", never a fabricated link.
 const PLAY_TESTING = 'https://play.google.com/apps/testing/';

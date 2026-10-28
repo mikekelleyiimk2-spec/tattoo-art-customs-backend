@@ -1,9 +1,9 @@
-// Tester Hub slice 4 — the Profile Plug machine (owner strike
+// FillMyList slice 4 — the Profile Plug machine (owner strike
 // 2026-10-26 07:07: the Rolodex/Profile Plug numbers are SETTLED).
 //
 // ONE product, ONE price: a developer's links live in their own
 // Rolodex (developer edition) and the Rolodex plugs them into their
-// Tester Hub developer profile — the Hub surface is named the
+// FillMyList developer profile — the FillMyList surface is named the
 // "Profile Plug". There is no separate plug fee and no subscription.
 //
 // SETTLED numbers (the model doc is
@@ -15,7 +15,7 @@
 //     that link's Hub-attributed earnings (band 10-20%, zero floor).
 //     Flat or ride, per link — never both on the same link.
 //   - THE PENNY SPLIT on every paid flat $0.99 link: ~15c Google /
-//     1c referrer / 1c Tester Hub prize pot / 1c buyer back as plug
+//     1c referrer / 1c FillMyList prize pot / 1c buyer back as plug
 //     credit / ~81c house. 15+1+1+1+81 = 99. Referrer pennies pay
 //     out at a $5 balance (the payout rail itself rides a later
 //     slice; balances accrue here, visibly).

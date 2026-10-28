@@ -1,7 +1,7 @@
 // Console-session prep — per-app privacy pages (2026-10-28).
 // The coordinator (test/run.js) wires this in; do not run from here.
 // Covers the privacy-policy pages the Play Console App-content step
-// points at for Ghost Box, Loophole Ciphers, Tester Hub, Kids' Wing,
+// points at for Ghost Box, Loophole Ciphers, FillMyList, Kids' Wing,
 // The Library, and Habit Dot — each at BOTH its canonical slug and its
 // package-name alias slug (same page, same policy, house precedent:
 // /privacy/onemind aliasing the AI Bar page). Assertions check the page
@@ -29,9 +29,15 @@ async function runHttpTests(ok, req) {
   await check('loophole-ciphers', 'Loophole Ciphers', 'com.usefulappz.ciphertoy', 'no internet permission', 'states the no-internet rule');
   await check('ciphertoy', 'Loophole Ciphers', 'com.usefulappz.ciphertoy', 'no internet permission', 'states the no-internet rule');
 
-  // Tester Hub — free with AdMob ads; sends only what its forms carry.
-  await check('tester-hub', 'Tester Hub', 'com.usefulappz.testerhub', 'AdMob', 'discloses AdMob ads');
-  await check('testerhub', 'Tester Hub', 'com.usefulappz.testerhub', 'AdMob', 'discloses AdMob ads');
+  // FillMyList — free with AdMob ads; sends only what its forms carry.
+  // RENAMED 2026-10-28 (was Tester Hub): canonical slug is fill-my-list;
+  // the pre-rename slugs (brand + package-name alias) 301 to it.
+  await check('fill-my-list', 'FillMyList', 'com.usefulappz.testerhub', 'AdMob', 'discloses AdMob ads');
+  for (const old of ['tester-hub', 'testerhub']) {
+    const r = await req('GET', `/privacy/${old}`, { follow: false });
+    ok(r.status === 301 && r.location === '/privacy/fill-my-list',
+      `privacy page /privacy/${old} 301-redirects to /privacy/fill-my-list`);
+  }
 
   // Kids' Wing — child-directed; collects no data from children or anyone.
   await check('kids-wing', "Kids' Wing", 'com.usefulappz.librarykids', 'no data at all', 'states nothing is collected');

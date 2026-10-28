@@ -1,7 +1,7 @@
 // Developer Tools for other developers — Bundle B (owner approved all
 // 12 month-end brainstorm ideas, Oct 28 2026; builds 2, 9, 10):
 //
-//   /fill-my-list   Tester Hub Fill-My-List as a standalone service
+//   /fill-my-list   FillMyList as a standalone service
 //   /rolodex-demo   Affiliate Rolodex public demo (no signup)
 //   /money-watch    Money Watch for developers — spec + offer + interest
 //
@@ -10,7 +10,7 @@
 // route/view reads them from this module.
 //
 // SETTLED PRICES (never re-priced here):
-// - Fill-My-List: $24.99 per app per fill until FULL (owner strike
+// - FillMyList: $24.99 per app per fill until FULL (owner strike
 //   2026-10-26; the fill machine's own PRICE_CENTS in lib/fillCycle.js
 //   is the same 2499 — the two must never disagree).
 // - Affiliate Rolodex $4.99 · Social Link Rolodex $4.99 · Master

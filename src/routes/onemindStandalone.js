@@ -116,7 +116,7 @@ function toolboxHandler(req, res) {
   res.render('onemind/door-toolbox', {
     layout: 'layout-onemind',
     title: 'Toolbox & Plugs | OneMind',
-    metaDescription: 'The Useful Appz toolbox: the Affiliate Rolodex, Tester Hub, Money Watch, AI to AI, Connection Doctor, Service Plug — tools built from real wounds.',
+    metaDescription: 'The Useful Appz toolbox: the Affiliate Rolodex, FillMyList, Money Watch, AI to AI, Connection Doctor, Service Plug — tools built from real wounds.',
     canonical: `${base()}/toolbox`,
   });
 }

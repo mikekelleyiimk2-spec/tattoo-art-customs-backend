@@ -252,7 +252,7 @@
     "threads": "Threads",
     "x": "X",
     "pinterest": "Pinterest",
-    "tester_hub": "🧪 テスターになる — Tester Hub"
+    "tester_hub": "🧪 テスターになる — FillMyList"
   },
   "gallery": {
     "all_categories": "すべてのカテゴリー",
@@ -458,9 +458,9 @@
         "btn3": "Little Inkers"
       },
       "testerhub": {
-        "title": "🧪 Tester Hub",
+        "title": "🧪 FillMyList",
         "text": "テスターになろう — 最新アプリを誰より先に体験。Hubをインストールして一度登録すれば、当社の全アプリのプールに入れます。新作は公開と同時にHubに表示されます。",
-        "btn": "Tester Hubをダウンロード"
+        "btn": "FillMyListをダウンロード"
       }
     },
     "showcase": {
@@ -1225,10 +1225,10 @@
     "draw_text": "小さなアーティストを導くステップバイステップのお絵かきレッスン。",
     "contests_text": "完成したぬりえが家族の楽しいコンテストになります。",
     "hub_headline": "テスターになろう — 最新アプリを誰より先に体験。",
-    "hub_text": "Tester Hubアプリでプール全体がポケットに。新作アプリは公開と同時にHubに表示され、どれも真っ先に手に入ります。",
-    "hub_btn": "Tester Hubアプリをダウンロード（Android）",
+    "hub_text": "FillMyListアプリでプール全体がポケットに。新作アプリは公開と同時にHubに表示され、どれも真っ先に手に入ります。",
+    "hub_btn": "FillMyListアプリをダウンロード（Android）",
     "hub_dev_h": "テスター探しにうんざりしていませんか？",
-    "hub_dev_text": "開発者の方へ：Tester Hubアプリ内では、1回の支払いでテスターリストが満員になります — 1アプリ $24.99、12人の確定まで波状にテスターを送り込み、14日間ずっと満員を維持します。",
+    "hub_dev_text": "開発者の方へ：FillMyListアプリ内では、1回の支払いでテスターリストが満員になります — 1アプリ $24.99、12人の確定まで波状にテスターを送り込み、14日間ずっと満員を維持します。",
     "hub_dev_link": "Hubを開いて補充を開始"
   },
   "byrequest": {
@@ -1339,7 +1339,7 @@
     "subscribe_tac": "📺 登録する — Tattoo Art Customs",
     "subscribe_rook": "📺 登録する — Rook 98",
     "subscribe_note": "チャンネル登録は無料で、チャンネルを応援する一番の方法です。登録者が増えるほど、より多くのアーティスト、ショップ、コレクターに届けられます。",
-    "testerhub_line": "🧪 誰より先にアプリを使いたい？テスターになってTester Hubを手に入れよう"
+    "testerhub_line": "🧪 誰より先にアプリを使いたい？テスターになってFillMyListを手に入れよう"
   },
   "show": {
     "badge": "「Color With Us!」で紹介",

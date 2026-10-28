@@ -1,4 +1,4 @@
-// Tester Hub "Fill My Tester List" (owner design + price, 2026-10-26).
+// FillMyList "Fill My Tester List" (owner design + price, 2026-10-26; renamed from Tester Hub 2026-10-28).
 //
 // The developer crowd's paid door. TWO-CROWD MODEL: testers never pay
 // (their side is free + ad-supported); a developer pays ONE charge —
@@ -160,7 +160,7 @@ async function advance(order) {
 // can do NOTHING else until the entitlement grant lands.
 async function createFillOrder({ package: pkg, developer_gmail }) {
   const app = await appRow(pkg);
-  if (!app) return { ok: false, error: 'add the app to the Hub first, then start its fill' };
+  if (!app) return { ok: false, error: 'add the app to FillMyList first, then start its fill' };
   const devGmail = normalizeGmail(developer_gmail);
   if (!isGmail(devGmail)) return { ok: false, error: 'a developer Gmail is required' };
   if (!app.developer_gmail || app.developer_gmail !== devGmail) {

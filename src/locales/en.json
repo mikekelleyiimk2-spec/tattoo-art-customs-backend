@@ -253,7 +253,7 @@
     "threads": "Threads",
     "x": "X",
     "pinterest": "Pinterest",
-    "tester_hub": "🧪 Become a tester — Tester Hub"
+    "tester_hub": "🧪 Become a tester — FillMyList"
   },
   "gallery": {
     "all_categories": "All categories",
@@ -478,9 +478,9 @@
         "btn3": "Little Inkers"
       },
       "testerhub": {
-        "title": "🧪 Tester Hub",
+        "title": "🧪 FillMyList",
         "text": "BECOME A TESTER — FIRST IN LINE TO TRY THE NEWEST APPS. Install the Hub and one sign-up puts you in the pool for every app we make — new apps appear in the Hub the moment they open.",
-        "btn": "Download the Tester Hub"
+        "btn": "Download FillMyList"
       }
     },
     "showcase": {
@@ -1248,10 +1248,10 @@
     "draw_text": "Step-by-step drawing lessons that guide little artists.",
     "contests_text": "Finished coloring pages become friendly family contests.",
     "hub_headline": "BECOME A TESTER — FIRST IN LINE TO TRY THE NEWEST APPS.",
-    "hub_text": "The Tester Hub app puts the whole pool in your pocket: new apps appear in the Hub the moment they open, and you're first in line for every one.",
-    "hub_btn": "Download the Tester Hub app (Android)",
+    "hub_text": "The FillMyList app puts the whole pool in your pocket: new apps appear in FillMyList the moment they open, and you're first in line for every one.",
+    "hub_btn": "Download the FillMyList app (Android)",
     "hub_dev_h": "TIRED OF LOOKING FOR TESTERS?",
-    "hub_dev_text": "Developers: inside the Tester Hub app, one payment fills your tester list to FULL — $24.99, one app, testers cycled in waves until 12 confirmed, and kept full through your 14 days.",
+    "hub_dev_text": "Developers: inside the FillMyList app, one payment fills your tester list to FULL — $24.99, one app, testers cycled in waves until 12 confirmed, and kept full through your 14 days.",
     "hub_dev_link": "Get the Hub and start a fill"
   },
   "byrequest": {
@@ -1419,7 +1419,7 @@
     "subscribe_tac": "📺 Subscribe — Tattoo Art Customs",
     "subscribe_rook": "📺 Subscribe — Rook 98",
     "subscribe_note": "Subscribing is free, and it's the best way to support the channels — every subscriber helps us reach more artists, shops, and collectors.",
-    "testerhub_line": "🧪 Want the apps before everyone else? Become a tester — get the Tester Hub"
+    "testerhub_line": "🧪 Want the apps before everyone else? Become a tester — get the FillMyList"
   },
   "show": {
     "badge": "As seen on Color With Us!",

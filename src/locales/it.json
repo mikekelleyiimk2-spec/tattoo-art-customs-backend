@@ -252,7 +252,7 @@
     "threads": "Threads",
     "x": "X",
     "pinterest": "Pinterest",
-    "tester_hub": "🧪 Diventa tester — Tester Hub"
+    "tester_hub": "🧪 Diventa tester — FillMyList"
   },
   "gallery": {
     "all_categories": "Tutte le categorie",
@@ -458,9 +458,9 @@
         "btn3": "Little Inkers"
       },
       "testerhub": {
-        "title": "🧪 Tester Hub",
+        "title": "🧪 FillMyList",
         "text": "DIVENTA TESTER — IL PRIMO A PROVARE LE APP PIÙ NUOVE. Installa l'Hub: con una sola iscrizione entri nel pool di tutte le nostre app — le novità appaiono nell'Hub appena escono.",
-        "btn": "Scarica il Tester Hub"
+        "btn": "Scarica il FillMyList"
       }
     },
     "showcase": {
@@ -1225,10 +1225,10 @@
     "draw_text": "Lezioni di disegno passo passo che guidano i piccoli artisti.",
     "contests_text": "Le pagine colorate diventano gare familiari amichevoli.",
     "hub_headline": "DIVENTA TESTER — IL PRIMO A PROVARE LE APP PIÙ NUOVE.",
-    "hub_text": "L'app Tester Hub mette tutto il pool in tasca: le nuove app appaiono nell'Hub appena escono, e tu sei il primo in fila per ognuna.",
-    "hub_btn": "Scarica l'app Tester Hub (Android)",
+    "hub_text": "L'app FillMyList mette tutto il pool in tasca: le nuove app appaiono nell'Hub appena escono, e tu sei il primo in fila per ognuna.",
+    "hub_btn": "Scarica l'app FillMyList (Android)",
     "hub_dev_h": "STANCO DI CERCARE TESTER?",
-    "hub_dev_text": "Sviluppatori: dentro l'app Tester Hub, un solo pagamento riempie la tua lista tester fino a COMPLETA — $24.99 per app, tester a ondate fino a 12 confermati, e lista mantenuta piena per i tuoi 14 giorni.",
+    "hub_dev_text": "Sviluppatori: dentro l'app FillMyList, un solo pagamento riempie la tua lista tester fino a COMPLETA — $24.99 per app, tester a ondate fino a 12 confermati, e lista mantenuta piena per i tuoi 14 giorni.",
     "hub_dev_link": "Apri l'Hub e avvia un riempimento"
   },
   "byrequest": {
@@ -1339,7 +1339,7 @@
     "subscribe_tac": "📺 Iscriviti — Tattoo Art Customs",
     "subscribe_rook": "📺 Iscriviti — Rook 98",
     "subscribe_note": "Iscriversi è gratuito ed è il modo migliore per sostenere i canali — ogni iscritto ci aiuta a raggiungere più artisti, studi e collezionisti.",
-    "testerhub_line": "🧪 Vuoi le app prima di tutti? Diventa tester: prendi il Tester Hub"
+    "testerhub_line": "🧪 Vuoi le app prima di tutti? Diventa tester: prendi il FillMyList"
   },
   "show": {
     "badge": "Visto in Color With Us!",

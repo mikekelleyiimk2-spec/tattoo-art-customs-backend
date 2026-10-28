@@ -140,10 +140,10 @@ function codexPrices(book) {
 // charge text always comes from the price entry's own state string,
 // never from a figure restated in this file.
 const PLUG_PRICE_ENTRY = {
-  'Affiliate Rolodex plug': 'Affiliate Rolodex + Tester Hub Profile Plug',
-  'Tester Hub pool': 'Affiliate Rolodex + Tester Hub Profile Plug',
-  'Universal Affiliate Plug contract': 'Affiliate Rolodex + Tester Hub Profile Plug',
-  'Profile Plug': 'Affiliate Rolodex + Tester Hub Profile Plug',
+  'Affiliate Rolodex plug': 'Affiliate Rolodex + FillMyList Profile Plug',
+  'FillMyList pool': 'Affiliate Rolodex + FillMyList Profile Plug',
+  'Universal Affiliate Plug contract': 'Affiliate Rolodex + FillMyList Profile Plug',
+  'Profile Plug': 'Affiliate Rolodex + FillMyList Profile Plug',
   'Email Keeper': 'Connection Doctor / Email Keeper watch',
   'AI API Service Plug': 'AI API Service Plug (standard tier)',
   'Root AI API': 'Root AI API (root tier)',

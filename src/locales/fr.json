@@ -252,7 +252,7 @@
     "threads": "Threads",
     "x": "X",
     "pinterest": "Pinterest",
-    "tester_hub": "🧪 Devenez testeur — Tester Hub"
+    "tester_hub": "🧪 Devenez testeur — FillMyList"
   },
   "gallery": {
     "all_categories": "Toutes catégories",
@@ -458,9 +458,9 @@
         "btn3": "Little Inkers"
       },
       "testerhub": {
-        "title": "🧪 Tester Hub",
+        "title": "🧪 FillMyList",
         "text": "DEVENEZ TESTEUR — LE PREMIER À ESSAYER LES NOUVELLES APPS. Installez le Hub : une seule inscription vous place dans le vivier de toutes nos apps — les nouveautés apparaissent dans le Hub dès leur sortie.",
-        "btn": "Télécharger le Tester Hub"
+        "btn": "Télécharger le FillMyList"
       }
     },
     "showcase": {
@@ -1225,10 +1225,10 @@
     "draw_text": "Des leçons de dessin pas à pas pour guider les petits artistes.",
     "contests_text": "Les pages coloriées deviennent des concours familiaux amicaux.",
     "hub_headline": "DEVENEZ TESTEUR — LE PREMIER À ESSAYER LES NOUVELLES APPS.",
-    "hub_text": "L'app Tester Hub met tout le vivier dans votre poche : les nouvelles apps apparaissent dans le Hub dès leur sortie, et vous êtes le premier servi pour chacune.",
-    "hub_btn": "Télécharger l'app Tester Hub (Android)",
+    "hub_text": "L'app FillMyList met tout le vivier dans votre poche : les nouvelles apps apparaissent dans le Hub dès leur sortie, et vous êtes le premier servi pour chacune.",
+    "hub_btn": "Télécharger l'app FillMyList (Android)",
     "hub_dev_h": "FATIGUÉ DE CHERCHER DES TESTEURS ?",
-    "hub_dev_text": "Développeurs : dans l'app Tester Hub, un seul paiement remplit votre liste de testeurs jusqu'à COMPLÈTE — $24.99, une app, des testeurs par vagues jusqu'à 12 confirmés, et la liste reste pleine pendant vos 14 jours.",
+    "hub_dev_text": "Développeurs : dans l'app FillMyList, un seul paiement remplit votre liste de testeurs jusqu'à COMPLÈTE — $24.99, une app, des testeurs par vagues jusqu'à 12 confirmés, et la liste reste pleine pendant vos 14 jours.",
     "hub_dev_link": "Ouvrez le Hub et lancez un remplissage"
   },
   "byrequest": {
@@ -1339,7 +1339,7 @@
     "subscribe_tac": "📺 S'abonner — Tattoo Art Customs",
     "subscribe_rook": "📺 S'abonner — Rook 98",
     "subscribe_note": "S'abonner est gratuit, et c'est le meilleur moyen de soutenir les chaînes — chaque abonné nous aide à toucher plus d'artistes, de salons et de collectionneurs.",
-    "testerhub_line": "🧪 Vous voulez les apps avant tout le monde ? Devenez testeur — prenez le Tester Hub"
+    "testerhub_line": "🧪 Vous voulez les apps avant tout le monde ? Devenez testeur — prenez le FillMyList"
   },
   "show": {
     "badge": "Vu dans Color With Us !",

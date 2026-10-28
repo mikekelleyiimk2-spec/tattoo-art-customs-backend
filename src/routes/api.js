@@ -852,7 +852,7 @@ router.get('/founding-status', async (req, res) => {
   });
 });
 
-// ---- Tester Hub pool machine (owner ruling 2026-10-26) ----
+// ---- FillMyList pool machine (owner ruling 2026-10-26; renamed from Tester Hub 2026-10-28) ----
 // ONE standing pool that fixes the 12-tester problem for every
 // developer — NOT test-for-test trading. A person signs up once with
 // their Gmail; sign-up IS the opt-in, and the Hub routes that Gmail
@@ -989,7 +989,7 @@ router.post('/testers/apps', formLimiter, express.json(), async (req, res) => {
   }
 });
 
-// ---- Tester Hub: Fill My Tester List (owner design 2026-10-26) ----
+// ---- FillMyList: Fill My Tester List (owner design 2026-10-26) ----
 // The developer crowd's paid door: $24.99, one app, one charge. The
 // app enters the fill cycle ONLY through the entitlement grant (an
 // unpaid app never cycles — no fake paid state); testers opt in
@@ -1087,7 +1087,7 @@ router.get('/testers/board', async (req, res) => {
   }
 });
 
-// ---- Tester Hub slice 4: the Profile Plug (owner strike 2026-10-26) ----
+// ---- FillMyList slice 4: the Profile Plug (owner strike 2026-10-26) ----
 // A developer's links live in their own Rolodex (developer edition)
 // and plug into their Hub developer profile + app cards — the Hub
 // surface is named the "Profile Plug". Settled price: first link

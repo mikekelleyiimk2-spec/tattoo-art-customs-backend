@@ -327,8 +327,8 @@
     "how_checked": "Backend suite (test/devtools.js) + live curl verification of both Render hosts, 2026-10-28",
     "last_verified": "2026-10-28"
    },
-   "name": "Fill My List — standalone service (/fill-my-list)",
-   "notes": "Bundle B (owner approved all 12 month-end brainstorm ideas, Oct 28 2026): the Tester Hub Fill-My-List packaged as a service an outside developer buys without adopting the whole Hub. Own face (layout-devtools, fill variant). The page wires the REAL fill machinery: order form posts to POST /api/testers/fill/order (born awaiting_payment), status form reads GET /api/testers/fill/status, pool count + light board read live from lib/fillCycle. Honest checkout state printed on the face: web checkout being set up, desk confirms payment (Business PayPal mk4) and grants the entitlement; an unpaid app never cycles. Copy states Google's rule plainly — sign-up IS the opt-in to the pool; each tester still taps the app's own Play opt-in themselves.",
+   "name": "FillMyList — standalone service (/fill-my-list)",
+   "notes": "Bundle B (owner approved all 12 month-end brainstorm ideas, Oct 28 2026): the FillMyList fill packaged as a service an outside developer buys without adopting the whole app. Own face (layout-devtools, fill variant). The page wires the REAL fill machinery: order form posts to POST /api/testers/fill/order (born awaiting_payment), status form reads GET /api/testers/fill/status, pool count + light board read live from lib/fillCycle. Honest checkout state printed on the face: web checkout being set up, desk confirms payment (Business PayPal mk4) and grants the entitlement; an unpaid app never cycles. Copy states Google's rule plainly — sign-up IS the opt-in to the pool; each tester still taps the app's own Play opt-in themselves.",
    "state": "live"
   },
   {
@@ -371,9 +371,9 @@
     "how_checked": "Live GET https://tattoo-art-customs.onrender.com/api/testers/count — {ok:true, count:0}; backend migration 104 deployed",
     "last_verified": "2026-10-26"
    },
-   "name": "Tester Hub pool",
-   "notes": "The tester-problem fixer (owner ruling Oct 26): NOT test-for-test trading — one pool; developers + beta customers sign up, sign-up IS the opt-in; the Hub holds the pool's Gmail accounts and populates a developer's tester list the moment an app is added — 12+ already opted in, in one go. Pool count is honestly 0 today: the machine is live and verified (signup/leave/roster/feed test cycle passed), and sign-ups are now the work. Hub app vc2 built with the pool machine; slice 3 (notification-first feed, discovery copy, invite hooks) in flight.",
-   "plug_in_charge": "zero — the owner's own fleet (house into house). Developers plugging their links into Hub profiles ride the Profile Plug's settled charge (first link free · $0.99 per link or a 15% ride).",
+   "name": "FillMyList pool",
+   "notes": "The tester-problem fixer (owner ruling Oct 26): NOT test-for-test trading — one pool; developers + beta customers sign up, sign-up IS the opt-in; FillMyList holds the pool's Gmail accounts and populates a developer's tester list the moment an app is added — 12+ already opted in, in one go. Pool count is honestly 0 today: the machine is live and verified (signup/leave/roster/feed test cycle passed), and sign-ups are now the work. FillMyList app vc2 built with the pool machine; slice 3 (notification-first feed, discovery copy, invite hooks) in flight. RENAMED 2026-10-28: was \"Tester Hub\" (owner strike).",
+   "plug_in_charge": "zero — the owner's own fleet (house into house). Developers plugging their links into FillMyList profiles ride the Profile Plug's settled charge (first link free · $0.99 per link or a 15% ride).",
    "state": "live"
   },
   {
@@ -427,7 +427,7 @@
     "last_verified": "2026-10-26"
    },
    "name": "Profile Plug",
-   "notes": "Tester Hub slice 4 (migration 105, src/lib/profilePlug.js). A developer profile (keyed to their intake Gmail) holds their own Rolodex in the house entry shape; links render on their profile + app cards only when status=live AND an entitlement is active AND the per-network allow-check passed. Price SETTLED Oct 26 07:07: first link FREE per profile; further links $0.99 flat (penny split: ~15c Google / 1c referrer / 1c prize pot / 1c buyer credit / ~81c house, append-only penny_ledger) or a 15% ride. Redirect /api/testers/go/:id counts clicks both sides can read. Plugging never changes feed order or pool counts. This slice: service-token admin management; Play IAP rail + self-serve Hub profile UI are recorded follow-ups. Public: GET /api/testers/profiles (no Gmails; pot total published).",
+   "notes": "FillMyList slice 4 (migration 105, src/lib/profilePlug.js). A developer profile (keyed to their intake Gmail) holds their own Rolodex in the house entry shape; links render on their profile + app cards only when status=live AND an entitlement is active AND the per-network allow-check passed. Price SETTLED Oct 26 07:07: first link FREE per profile; further links $0.99 flat (penny split: ~15c Google / 1c referrer / 1c prize pot / 1c buyer credit / ~81c house, append-only penny_ledger) or a 15% ride. Redirect /api/testers/go/:id counts clicks both sides can read. Plugging never changes feed order or pool counts. This slice: service-token admin management; Play IAP rail + self-serve FillMyList profile UI are recorded follow-ups. Public: GET /api/testers/profiles (no Gmails; pot total published).",
    "plug_in_charge": "SETTLED (owner strike Oct 26 07:07): first link FREE per profile; further links $0.99 flat or a 15% ride of Hub-attributed earnings — flat or ride per link, never both; the penny split on every paid link stands in prices.",
    "state": "live — backend (slice 4)"
   },
@@ -538,9 +538,9 @@
      "how_checked": "Owner strike in chat, Oct 26 07:07 (\"Yes on all\") on the six numbers served from the model doc",
      "last_verified": "2026-10-26"
     },
-    "name": "Affiliate Rolodex + Tester Hub Profile Plug",
-    "notes": "SETTLED numbers (owner strike Oct 26 07:07): (1) Rolodex app $4.99 one-time on Google Play (Google keeps 15%, net ~$4.24); (2) per link $0.99 one-time via Play IAP, first link FREE; (3) or the link rides at 15% of its Hub-attributed earnings (band 10-20%, zero floor) — flat or ride per link, never both; (4) PENNY SPLIT on every paid $0.99 link: ~15c Google / 1c referrer / 1c Tester Hub prize pot / 1c buyer back as plug credit (auto-applies at $0.99) / ~81c house; (5) referrer pennies pay out at a $5 balance; (6) the Hub surface is named Profile Plug. One product, one price: the Rolodex price IS the profile-plug price — no separate plug fee. Full model: ~/workspace/your_files/tester-hub-profile-plug-model-2026-10-26.md (numbers settled). The rest of the pricing draft (Service Plug, Root AI API, Connection Doctor/Keeper) was struck owner-approved Oct 26 (Batch #1) — every figure in the pricing doc is now SETTLED. Our house rolodex rides free per Codex law (3).",
-    "state": "SETTLED — owner strike 2026-10-26: app $4.99 one-time · links $0.99 each · ride 15% (band 10-20%) · referrer payout at $5 · first link FREE · Hub surface named Profile Plug"
+    "name": "Affiliate Rolodex + FillMyList Profile Plug",
+    "notes": "SETTLED numbers (owner strike Oct 26 07:07): (1) Rolodex app $4.99 one-time on Google Play (Google keeps 15%, net ~$4.24); (2) per link $0.99 one-time via Play IAP, first link FREE; (3) or the link rides at 15% of its Hub-attributed earnings (band 10-20%, zero floor) — flat or ride per link, never both; (4) PENNY SPLIT on every paid $0.99 link: ~15c Google / 1c referrer / 1c FillMyList prize pot / 1c buyer back as plug credit (auto-applies at $0.99) / ~81c house; (5) referrer pennies pay out at a $5 balance; (6) the FillMyList surface is named Profile Plug. One product, one price: the Rolodex price IS the profile-plug price — no separate plug fee. Full model: ~/workspace/your_files/tester-hub-profile-plug-model-2026-10-26.md (numbers settled). The rest of the pricing draft (Service Plug, Root AI API, Connection Doctor/Keeper) was struck owner-approved Oct 26 (Batch #1) — every figure in the pricing doc is now SETTLED. Our house rolodex rides free per Codex law (3).",
+    "state": "SETTLED — owner strike 2026-10-26: app $4.99 one-time · links $0.99 each · ride 15% (band 10-20%) · referrer payout at $5 · first link FREE · FillMyList surface named Profile Plug"
    },
    {
     "kind": "price",
@@ -645,11 +645,11 @@
    {
     "kind": "price",
     "liveness": {
-     "how_checked": "Owner strike 2026-10-26 (the X Rule settlement for the Tester Hub developer door); page + machine verified in the backend suite, 2026-10-28",
+     "how_checked": "Owner strike 2026-10-26 (the X Rule settlement for the FillMyList developer door); page + machine verified in the backend suite, 2026-10-28",
      "last_verified": "2026-10-28"
     },
-    "name": "Tester Hub — Fill My List",
-    "notes": "Settled: $24.99 per app per fill until FULL (12 confirmed opt-ins). One charge per app per run; top-up waves inside the app's 14-day closed-test run are free — full stays full. The price lives in src/lib/fillCycle.js (PRICE_CENTS 2499) and src/lib/devtools.js (FILL) — the two must never disagree. Sold in the Tester app (the Fill IAP lives only there) and as the standalone web service at /fill-my-list.",
+    "name": "FillMyList",
+    "notes": "Settled: $24.99 per app per fill until FULL (12 confirmed opt-ins). One charge per app per run; top-up waves inside the app's 14-day closed-test run are free — full stays full. The price lives in src/lib/fillCycle.js (PRICE_CENTS 2499) and src/lib/devtools.js (FILL) — the two must never disagree. Sold in the FillMyList app (the Fill IAP lives only there) and as the standalone web service at /fill-my-list.",
     "state": "SETTLED — owner strike 2026-10-26: $24.99 per app per fill until FULL"
    },
    {
