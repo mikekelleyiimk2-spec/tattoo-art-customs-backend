@@ -8,8 +8,8 @@
 //    (totals, by-state / by-city grouping + sort, withApp counted
 //    from the app-holder email set, NO name/email strings anywhere
 //    in the output), roster() counting drive rows only, and
-//    driverApkReady() tracking the store file (absent -> false,
-//    present -> true);
+//    driverApkReady() tracking the registry entry (the bytes live in
+//    the canonical host's store — entry absent -> false, present -> true);
 //  - the door's new driver gate: drive signups need driver_ok AFTER
 //    the name/email/age checks (the pre-existing drive error paths
 //    keep their errors), and a gated signup persists NOTHING;
@@ -45,15 +45,15 @@ async function checkAll(ok) {
     path.join(__dirname, '../src/data/app-updates.json'), 'utf8'));
   const entry = prodRegistry[roster.DRIVER_PACKAGE];
   ok(roster.DRIVER_PACKAGE === 'com.usefulappz.cannadashdriver', 'driver package id is com.usefulappz.cannadashdriver');
-  ok(roster.DRIVER_APK_URL === '/api/apps/com.usefulappz.cannadashdriver/apk', 'driver apk URL is the app-updates store route');
+  ok(roster.DRIVER_APK_URL === 'https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.cannadashdriver/apk', 'driver apk URL is the canonical host app-updates store route');
   ok(!!entry, 'production registry carries the CannaDash Driver entry');
   ok(entry && entry.versionCode === 3 && entry.versionName === '1.0.2',
     'driver registry entry is vc3 / 1.0.2');
   ok(entry && entry.sha256 === DRIVER_SHA && entry.sizeBytes === 386835,
     'driver registry entry carries the shipped sha256 + size');
-  ok(entry && entry.apkUrl === 'https://onemind.onrender.com/api/apps/com.usefulappz.cannadashdriver/apk'
+  ok(entry && entry.apkUrl === 'https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.cannadashdriver/apk'
     && entry.publishedAt === '2026-10-28T13:45:00Z' && !entry.gated,
-  'driver registry entry points at the onemind apk route and is FREE (no gated flag)');
+  'driver registry entry points at the canonical-host apk route and is FREE (no gated flag)');
 
   // --- parseArea ---
   const pa = roster.parseArea;
@@ -94,27 +94,24 @@ async function checkAll(ok) {
   ok(empty.total === 0 && empty.withApp === 0 && empty.byState.length === 0 && empty.byCity.length === 0,
     'summarize: empty input -> zeroed roster');
 
-  // --- driverApkReady: registry + store-file pair ---
+  // --- driverApkReady: registry-entry gate (bytes live in the
+  // canonical host's app-updates store; see lib/cannadashRoster.js) ---
   const savedReg = process.env.APP_UPDATES_REGISTRY;
   const tmpReg = path.join(os.tmpdir(), `cd-driver-registry-${uniq}.json`);
-  const apkPath = path.join(config.uploadDir, 'app-updates', `${roster.DRIVER_PACKAGE}.apk`);
   try {
-    fs.writeFileSync(tmpReg, JSON.stringify({ [roster.DRIVER_PACKAGE]: entry }, null, 2));
+    fs.writeFileSync(tmpReg, JSON.stringify({ 'com.example.other': { versionCode: 1 } }, null, 2));
     process.env.APP_UPDATES_REGISTRY = tmpReg;
-    try { fs.unlinkSync(apkPath); } catch (e) { /* absent is the starting state */ }
     ok(roster.driverApkReady() === false,
-      'driverApkReady: false when the store file is absent (default test env)');
-    fs.mkdirSync(path.dirname(apkPath), { recursive: true });
-    fs.writeFileSync(apkPath, Buffer.from('fake-driver-apk-bytes'));
+      'driverApkReady: false when the registry has no driver entry');
+    fs.writeFileSync(tmpReg, JSON.stringify({ [roster.DRIVER_PACKAGE]: entry }, null, 2));
     ok(roster.driverApkReady() === true,
-      'driverApkReady: true once registry entry AND store file are both present');
-    fs.unlinkSync(apkPath);
-    ok(roster.driverApkReady() === false, 'driverApkReady: false again when the store file goes away');
+      'driverApkReady: true once the registry entry is present');
+    fs.writeFileSync(tmpReg, JSON.stringify({}, null, 2));
+    ok(roster.driverApkReady() === false, 'driverApkReady: false again when the entry goes away');
   } finally {
     if (savedReg === undefined) delete process.env.APP_UPDATES_REGISTRY;
     else process.env.APP_UPDATES_REGISTRY = savedReg;
     try { fs.unlinkSync(tmpReg); } catch (e) { /* already gone */ }
-    try { fs.unlinkSync(apkPath); } catch (e) { /* already gone */ }
   }
 
   // --- Door handler: 'driver' is an allowed join error, apk local wired ---
