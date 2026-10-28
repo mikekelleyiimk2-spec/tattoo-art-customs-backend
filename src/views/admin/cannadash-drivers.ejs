@@ -1,0 +1,43 @@
+<h1>CannaDash drivers — founding roster</h1>
+<p><a href="/admin">← Dashboard</a></p>
+<p class="muted">
+  Counts and cities only — <strong>no driver names or emails ever appear here or in any
+  dispensary-facing export.</strong> This page aggregates the founding driver list
+  (waitlist signups with the drive role) so coverage by market can be planned without
+  exposing anyone's identity.
+</p>
+<p class="muted">
+  <strong>With-app count note:</strong> founding-driver Gmails added to the CannaDash Driver
+  tester list are tracked in the house ledger in the goal workspace, not in this database —
+  so this page currently passes an empty app-holder set and the with-app count reads
+  <strong>0</strong> even after tester invites go out. It becomes real when the ledger is wired in.
+</p>
+
+<h2>Founding drivers</h2>
+<% if (!roster.total) { %>
+  <p class="muted">No founding drivers yet — nobody has joined the drive list.</p>
+<% } else { %>
+  <p>Total founding drivers: <strong><%= roster.total %></strong><br>
+  Already holding the driver app: <strong><%= roster.withApp %></strong></p>
+
+  <h3>By state</h3>
+  <table>
+    <thead><tr><th>State</th><th>Drivers</th></tr></thead>
+    <tbody>
+    <% roster.byState.forEach(function(s) { %>
+      <tr><td><%= s.state %></td><td><strong><%= s.count %></strong></td></tr>
+    <% }); %>
+    </tbody>
+  </table>
+
+  <h3>By city</h3>
+  <table>
+    <thead><tr><th>City</th><th>State</th><th>Drivers</th></tr></thead>
+    <tbody>
+    <% roster.byCity.forEach(function(c) { %>
+      <tr><td><%= c.city %></td><td><%= c.state %></td><td><strong><%= c.count %></strong></td></tr>
+    <% }); %>
+    </tbody>
+  </table>
+  <p class="muted">Machine-readable counts: <a href="/admin/cannadash-drivers.json">/admin/cannadash-drivers.json</a> (same counts, no identities).</p>
+<% } %>

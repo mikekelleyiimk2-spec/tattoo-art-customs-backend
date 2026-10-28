@@ -1488,4 +1488,27 @@ router.post('/merch-drops/:id/dismiss', formLimiter, checkHoneypot, async (req, 
   res.redirect('/admin/merch-drops');
 });
 
+// --- CannaDash founding drivers: the roster (counts only) ---------------
+// Aggregate view of the founding DRIVER list (lib/cannadashRoster):
+// totals + by-state / by-city counts. COUNTS AND CITIES ONLY — no
+// driver names or emails ever appear here or in any dispensary-facing
+// export; emails are read inside the lib solely to count how many
+// drivers already hold the app. The app-holder set is passed EMPTY
+// for now: tester-list adds are tracked in the house ledger in the
+// goal workspace, not in this database, so withApp reads 0 until that
+// ledger is wired in — the view says so plainly.
+router.get('/cannadash-drivers', async (req, res) => {
+  const cannadashRoster = require('../lib/cannadashRoster');
+  const roster = await cannadashRoster.roster([]);
+  res.render('admin/cannadash-drivers', {
+    title: 'CannaDash drivers — Admin', roster,
+  });
+});
+
+router.get('/cannadash-drivers.json', async (req, res) => {
+  const cannadashRoster = require('../lib/cannadashRoster');
+  const roster = await cannadashRoster.roster([]);
+  res.json({ ok: true, ...roster });
+});
+
 module.exports = router;

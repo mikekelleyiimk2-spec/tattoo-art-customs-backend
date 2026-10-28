@@ -563,6 +563,8 @@ async function main() {
   await require('./librarySponsors').runDbTests(ok); // Bundle C B2: Library shelf sponsorship config
   await require('./healedWall').runDbTests(ok); // Bundle C B3: Healed Wall shop add-on config
   await require('./merchDrops').runDbTests(ok); // Bundle C B4: hearts -> merch drop candidates (signed-in only)
+  await require('./cannadashDriver').runDbTests(ok); // CannaDash Driver outreach: roster counts, driver_ok gate, driver APK readiness
+  await require('./cannadashDriver').runUnitTests(ok);
   await require('./thebigone').runBundleADb(ok); // Bundle A: founding push (founderInfo) + Your Local insert (locality store)
   await require('./devtools').runDbTests(ok); // Developer Tools bundle B (settled prices, interest register)
 

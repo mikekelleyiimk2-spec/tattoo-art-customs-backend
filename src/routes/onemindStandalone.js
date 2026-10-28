@@ -38,6 +38,7 @@ const express = require('express');
 const config = require('../config');
 const rolodex = require('../lib/rolodex');
 const cannadashFounding = require('../lib/cannadashFounding');
+const cannadashRoster = require('../lib/cannadashRoster');
 const db = require('../db');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 
@@ -151,8 +152,9 @@ function cannadashDoorHandler(req, res) {
     joinRole: waitlistRole(q.join || joined),
     joined,
     joinedAgain: joined && q.again === '1',
-    joinError: ['email', 'name', 'age'].includes(String(q.error || '')) ? String(q.error) : null,
+    joinError: ['email', 'name', 'age', 'driver'].includes(String(q.error || '')) ? String(q.error) : null,
     checkedArea: q.checked ? String(q.checked).slice(0, 80) : null,
+    driverApkUrl: cannadashRoster.driverApkReady() ? cannadashRoster.DRIVER_APK_URL : null,
   });
 }
 router.get('/cannadash', cannadashDoorHandler);
@@ -199,6 +201,7 @@ async function cannadashJoinHandler(req, res) {
   if (!name) return back(`join=${role}&error=name`);
   if (!EMAIL_RE.test(email)) return back(`join=${role}&error=email`);
   if (!body.age_ok) return back(`join=${role}&error=age`);
+  if (role === 'drive' && !body.driver_ok) return back(`join=${role}&error=driver`);
   try {
     const existing = await db.get(
       'SELECT id FROM cannadash_waitlist WHERE role = ? AND email = ?', [role, email]);

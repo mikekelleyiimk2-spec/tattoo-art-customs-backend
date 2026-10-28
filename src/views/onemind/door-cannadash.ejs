@@ -79,6 +79,10 @@
   .cddoor .ok { background:#0d1a0a; border:1px solid #33511f; border-radius:12px;
     padding:16px 18px; font-size:16px; line-height:1.55; margin:0 0 18px; }
   .cddoor .ok strong { color:#8df35a; }
+  .cddoor .ok .driver-dl { display:block; text-align:center; background:#58d61e; color:#0a1206;
+    text-decoration:none; font-size:18px; font-weight:800; padding:15px; border-radius:11px; margin:14px 0 10px; }
+  .cddoor .ok .driver-dl:hover { background:#6ee63a; }
+  .cddoor .ok .driver-note { margin:8px 0 0; }
   .cddoor .err { background:#1d0f0a; border:1px solid #5a2c17; border-radius:12px;
     padding:13px 16px; font-size:15.5px; margin:0 0 16px; color:#ffb59d; }
   /* Penny-sweeper stack (shared partials, door-native dress — same
@@ -179,6 +183,13 @@
         <% if (joinedAgain) { %>That email was already on the <%= joined %> founding list — we refreshed your details.<% } else { %>You joined the <%= joined %> founding list.<% } %>
         CannaDash is not live in any market yet, so there is nothing to pay and nothing to
         order today — joining means one thing: we email you the day your market opens.
+        <% if (joined === 'drive') { %>
+        <% if (typeof driverApkUrl !== 'undefined' && driverApkUrl) { %>
+        <a class="driver-dl" href="<%= driverApkUrl %>">Install the driver app now</a>
+        <p class="driver-note">Development build (v1.0.2) — Android will ask you to allow installs from your browser; that's expected for a pre-release build.</p>
+        <% } %>
+        <p class="driver-note">Prefer Google Play? The Play invite goes to the email you just signed up with — we add founding-driver Gmails to the CannaDash Driver tester list in batches, so watch that inbox.</p>
+        <% } %>
       </div>
       <% } %>
       <h2><%= meta.head %></h2>
@@ -192,7 +203,7 @@
         <% } %>
       </div>
       <% if (joinError) { %>
-      <p class="err" role="alert"><%= joinError === 'email' ? 'That email does not look right — check it and try again.' : joinError === 'name' ? 'We need a name for the list — add yours and try again.' : 'Please confirm you are 21 or older to join the list.' %></p>
+      <p class="err" role="alert"><%= joinError === 'email' ? 'That email does not look right — check it and try again.' : joinError === 'name' ? 'We need a name for the list — add yours and try again.' : joinError === 'driver' ? 'Drivers need all three boxes checked — license, insured vehicle, and work authorization.' : 'Please confirm you are 21 or older to join the list.' %></p>
       <% } %>
       <form method="post" action="/cannadash/join">
         <input type="hidden" name="role" value="<%= joinRole %>">
@@ -208,6 +219,12 @@
           <input type="checkbox" id="cd-age" name="age_ok" value="1" required>
           <label for="cd-age" style="display:inline;font-size:15px;font-weight:400;letter-spacing:0;text-transform:none;color:#c7d2bd;margin:0;">I confirm I am 21 or older.</label>
         </div>
+        <% if (joinRole === 'drive') { %>
+        <div class="age">
+          <input type="checkbox" id="cd-driver" name="driver_ok" value="1" required>
+          <label for="cd-driver" style="display:inline;font-size:15px;font-weight:400;letter-spacing:0;text-transform:none;color:#c7d2bd;margin:0;">I hold a valid driver's license, my vehicle is insured, and I am authorized to work in the United States.</label>
+        </div>
+        <% } %>
         <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
         <button type="submit"><%= meta.btn %></button>
       </form>
