@@ -454,10 +454,11 @@
       },
       "watch": {
         "title": "Regarder et s'abonner",
-        "text": "Trois chaînes YouTube : Rook 98 pour l'art du tatouage, Tattoo Art Customs pour le shop et Little Inkers pour le coloriage des enfants.",
+        "text": "Quatre chaînes YouTube : Rook 98 pour l'art du tatouage, Tattoo Art Customs pour le shop, Little Inkers pour le coloriage des enfants et Poppy & Ziggy, le dessin animé pour enfants.",
         "btn1": "Rook 98",
         "btn2": "Tattoo Art Customs",
-        "btn3": "Little Inkers"
+        "btn3": "Little Inkers",
+        "btn4": "Poppy & Ziggy"
       },
       "testerhub": {
         "title": "🧪 FillMyList",
