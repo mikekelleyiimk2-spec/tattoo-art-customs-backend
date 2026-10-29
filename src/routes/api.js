@@ -48,6 +48,8 @@ const APP_LINK_AFFILIATES = [
   { id: 'leda', name: 'Leda Art Supply', program: 'Leda Art Supply' },
   { id: 'amazon', name: 'Amazon', program: 'Amazon Associates', urlFromTag: true },
   { id: 'monstersink', name: 'Monsters Ink', program: 'Monsters Ink' },
+  { id: 'printful', name: 'Printful — Sell Your Own Merch', program: 'Printful' },
+  { id: 'shopmy', name: 'ShopMy — Our Curated Picks', program: 'ShopMy' },
 ];
 
 function appLinkSet(config) {

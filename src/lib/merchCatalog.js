@@ -300,6 +300,21 @@ const CATALOG = [
     url: 'https://www.printful.com/a/15336743:69c9790aca714659403c1efc4041d4a4',
     ctaKey: 'merch.aff_printful_cta',
   },
+  // --- ShopMy storefront (live in the Rolodex 2026-10-26) ---
+  // Curated-picks storefront card for the /merch affiliate rail, placed
+  // 2026-10-28 (Printful+ShopMy placement pass). Copy reuses the fully
+  // translated discounts.shopmy_* keys. The rail renders the section
+  // affiliate disclosure above every card. Rolodex surfaces_placed
+  // records /merch for this program.
+  {
+    id: 'shopmy-storefront',
+    kind: 'affiliate',
+    status: 'live',
+    nameKey: 'discounts.shopmy_h',
+    blurbKey: 'discounts.shopmy_text',
+    url: 'https://shopmy.us/shop/tattooartcustoms',
+    ctaKey: 'discounts.shopmy_cta',
+  },
   {
     id: 'tee-music-genres',
     kind: 'pod',
