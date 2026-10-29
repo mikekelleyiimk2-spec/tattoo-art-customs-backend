@@ -52,6 +52,21 @@ const APP_LINK_AFFILIATES = [
   { id: 'shopmy', name: 'ShopMy — Our Curated Picks', program: 'ShopMy' },
 ];
 
+// YouTube subscribe doors (owner order 2026-10-28: "does anything lead back
+// to the YouTube channels? That's our sponsorship"). The channels ARE the
+// growth target — Partner Program / sponsorship rides on subscribers — so
+// every app client pulling /api/app-links now receives one-tap subscribe
+// links (sub_confirmation=1, same form as the house-ads funnels) for all
+// four channels. kid_safe mirrors the Rolodex flag: kids' apps render ONLY
+// the kid_safe channels (Color With Us + Poppy & Ziggy); tattoo channels
+// never appear on a kid surface.
+const APP_LINK_YOUTUBE = [
+  { id: 'rook98', name: 'Rook 98 on YouTube', url: 'https://www.youtube.com/@rook9860?sub_confirmation=1', kid_safe: false },
+  { id: 'tac', name: 'Tattoo Art Customs on YouTube', url: 'https://www.youtube.com/@tattooartcustoms-s8f?sub_confirmation=1', kid_safe: false },
+  { id: 'colorwithus', name: 'Color With Us on YouTube', url: 'https://www.youtube.com/@littleinkersapp?sub_confirmation=1', kid_safe: true },
+  { id: 'poppyziggy', name: 'Poppy & Ziggy on YouTube', url: 'https://www.youtube.com/@ZiggyPoppy-l3b?sub_confirmation=1', kid_safe: true },
+];
+
 function appLinkSet(config) {
   const base = config.baseUrl;
   const affiliates = [];
@@ -68,6 +83,7 @@ function appLinkSet(config) {
     aftercare: `${base}/aftercare`,
     giftCards: `${base}/gift-cards/buy`,
     affiliates,
+    youtube: APP_LINK_YOUTUBE,
   };
 }
 

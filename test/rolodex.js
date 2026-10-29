@@ -80,12 +80,23 @@ async function runHttpTests(ok, req) {
   // URLs now derived from the rolodex.
   const appLinks = await get('/api/app-links');
   const affs = appLinks.json && appLinks.json.links && appLinks.json.links.affiliates;
-  ok(Array.isArray(affs) && affs.length === 7, 'app-links still carries the 7-entry affiliate set');
+  ok(Array.isArray(affs) && affs.length === 9, 'app-links still carries the 9-entry affiliate set');
   ok(!!affs && affs.every((a) => a.id && a.name && a.url),
     'app-links affiliate entries keep the {id, name, url} shape');
   ok(!!affs && affs.map((a) => a.id).join(',')
-    === 'baselabs,electrum,drtattooskin,recovery,leda,amazon,monstersink',
+    === 'baselabs,electrum,drtattooskin,recovery,leda,amazon,monstersink,printful,shopmy',
     'app-links affiliate ids and order unchanged');
+  const yt = appLinks.json && appLinks.json.links && appLinks.json.links.youtube;
+  ok(Array.isArray(yt) && yt.length === 4
+    && yt.map((c) => c.id).join(',') === 'rook98,tac,colorwithus,poppyziggy',
+    'app-links carries the 4 YouTube subscribe doors');
+  ok(!!yt && yt.every((c) => /sub_confirmation=1/.test(c.url)),
+    'app-links YouTube doors are one-tap subscribe links');
+  ok(!!yt && yt.find((c) => c.id === 'colorwithus').kid_safe === true
+    && yt.find((c) => c.id === 'poppyziggy').kid_safe === true
+    && yt.find((c) => c.id === 'rook98').kid_safe === false
+    && yt.find((c) => c.id === 'tac').kid_safe === false,
+    'app-links YouTube kid_safe flags keep tattoo channels off kid surfaces');
   const base = affs && affs.find((a) => a.id === 'baselabs');
   ok(!!base && base.url === 'https://baselabs.is/?coupon=TAC20',
     'app-links Base Labs URL derives from the rolodex');
