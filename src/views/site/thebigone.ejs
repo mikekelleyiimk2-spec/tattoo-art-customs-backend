@@ -13,6 +13,13 @@
     Library shelves behind the Documentary page. Subscribe with PayPal through the site's
     membership register, or with site credit; a subscription rides the same Chorvix account
     as everything else in the house.</p>
+    <% if (!user) { %>
+    <article class="tbo-card" style="text-align:center;">
+      <p style="margin:0 0 .5rem;">One door for every plan below:</p>
+      <p style="margin:0;"><a class="tbo-btn gold" href="/dawnfold/signin">Sign in to subscribe</a></p>
+      <p class="tbo-note">Subscribing rides your Chorvix account — sign in (or create it in one tap) and you're back here to finish.</p>
+    </article>
+    <% } %>
 
     <% const foundingCard = { slug: 'the_big_one_founding', badge: 'FOUNDING — first ' + foundingCap, note: 'The founding rate, locked for as long as the subscription stays active. ' + foundingLeft + ' of ' + foundingCap + ' founding spots left.' };
     const regularCard = { slug: 'the_big_one', badge: 'THE SUBSCRIPTION', note: 'Every department, every day, plus the big Sunday edition.' };
@@ -52,8 +59,7 @@
       <p class="tbo-note">Honest state of this door: this plan's PayPal checkout is still being set up at the register — the button will tell you so, plainly, and the site-credit path works today. No charge is ever taken by a door that isn't ready.</p>
       <% } %>
       <% } else { %>
-      <p><a class="tbo-btn gold" href="/dawnfold/signin">Sign in to subscribe</a></p>
-      <p class="tbo-note">Subscribing rides your Chorvix account — sign in (or create it in one tap) and you're back here to finish.</p>
+      <p><a href="/dawnfold/signin">Sign in to subscribe →</a></p>
       <% } %>
     </article>
     <% } %>
@@ -76,7 +82,7 @@
         <p class="tbo-note">The desk confirms gift payments at the register (PayPal, like everything in the house) — the gift is recorded the moment you submit, and the claim link goes out with it.</p>
       </form>
       <% } else { %>
-      <p><a class="tbo-btn" href="/dawnfold/signin">Sign in to give a gift</a></p>
+      <p><a href="/dawnfold/signin">Sign in to give a gift →</a></p>
       <% } %>
     </article>
   </section>

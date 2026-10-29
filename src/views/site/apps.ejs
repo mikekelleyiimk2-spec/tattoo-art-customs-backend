@@ -1,11 +1,6 @@
 <h1>Apps by Usefulappz™</h1>
-<img src="/img/logos/usefulappz-hero.webp" alt="Usefulappz™ logo" style="max-width:320px;width:100%;height:auto;display:block;margin:0 auto 1.5rem;" />
+<img src="/img/logos/usefulappz-hero.webp" alt="Usefulappz™ logo" style="max-width:180px;width:100%;height:auto;display:block;margin:0 auto 1rem;" />
 <p>Usefulappz™ builds the apps behind our businesses. More apps are on the way.</p>
-
-<h2>One studio, every app built in-house</h2>
-<p>Useful Appz Development Studios is an independent software studio in Abbeville, Louisiana. We do not white-label other people's software: every app on this page was designed, built and is maintained by the studio — the same team behind the Tattoo Art Customs design gallery, the Little Inkers kids' coloring app and our two shows, Color With Us and Poppy & Ziggy.</p>
-<p>The apps exist because the businesses needed them. The gallery needed a real storefront in your pocket, artists needed working tools, parents needed a coloring app they could trust, and developers everywhere needed a way to find testers — so we built each one, and every one of them is a tool we rely on in our own business first. When you buy an app here, you are buying from the people who use it every day.</p>
-<p style="text-align:center;margin:1rem 0;"><a class="btn" href="/testers"><%= t('testers.apps_link') %></a></p>
 
 <div style="border:2px solid #b8860b;background:#221a10;border-radius:8px;padding:1.25rem;text-align:center;margin:1.5rem 0;">
   <p style="font-size:1.15rem;margin-top:0;"><strong><%= t('apps.hub_headline') %></strong></p>
@@ -39,13 +34,7 @@
     <% } else { %>
       <p class="muted"><%= t('apps.tac_direct_note') %></p>
     <% } %>
-    <p><a class="btn" href="/tac-android"><%= t('apps.get_android_free') %></a></p>
-    <p><a class="btn btn-secondary" href="/tac-android-pro"><%= t('apps.get_android_pro') %></a></p>
-    <% if (appStoreUrl) { %>
-      <p><a class="btn" href="<%= appStoreUrl %>">Download on the App Store</a></p>
-    <% } else { %>
-      <p><a class="btn" href="/ios-app">Get the iPhone app — sideload edition ($1.67)</a></p>
-    <% } %>
+    <p class="fineprint">Also direct: <a href="/tac-android"><%= t('apps.get_android_free') %></a> · <a href="/tac-android-pro"><%= t('apps.get_android_pro') %></a> · <% if (appStoreUrl) { %><a href="<%= appStoreUrl %>">Download on the App Store</a><% } else { %><a href="/ios-app">Get the iPhone app — sideload edition ($1.67)</a><% } %></p>
   </div>
   <div id="little-inkers" style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1.5rem;">
     <p style="font-size:2rem;">🖍️</p>
@@ -95,6 +84,10 @@
 </div>
 
 <p class="muted">New apps from Usefulappz™ will appear here as they launch.</p>
+
+<h2>One studio, every app built in-house</h2>
+<p>Useful Appz Development Studios is an independent software studio in Abbeville, Louisiana. We do not white-label other people's software: every app on this page was designed, built and is maintained by the studio — the same team behind the Tattoo Art Customs design gallery, the Little Inkers kids' coloring app and our two shows, Color With Us and Poppy & Ziggy.</p>
+<p>The apps exist because the businesses needed them. The gallery needed a real storefront in your pocket, artists needed working tools, parents needed a coloring app they could trust, and developers everywhere needed a way to find testers — so we built each one, and every one of them is a tool we rely on in our own business first. When you buy an app here, you are buying from the people who use it every day.</p>
 
 <% /* Ad placement (Polish Day 2026-10-27): one in-content unit between the
      flagship lineup and the widget bars — never above the first app. */ %>
