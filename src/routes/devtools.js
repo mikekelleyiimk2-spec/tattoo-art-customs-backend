@@ -77,6 +77,7 @@ router.get('/rolodex-demo', (req, res) => {
     user: req.user || null,
     doors: {
       affiliateCents: devtools.ROLODEX_TIERS.affiliate.baseCents,
+      socialCents: devtools.ROLODEX_TIERS.social.baseCents,
       masterCents: devtools.ROLODEX_TIERS.master.baseCents,
       appsUrl: '/apps',
       hubUrl: '/tester-hub',

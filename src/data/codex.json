@@ -334,11 +334,11 @@
   {
    "kind": "door",
    "liveness": {
-    "how_checked": "Backend suite (test/devtools.js) + live curl verification of both Render hosts, 2026-10-28",
-    "last_verified": "2026-10-28"
+    "how_checked": "Backend suite (test/devtools.js) + live curl verification of the production host, 2026-10-29",
+    "last_verified": "2026-10-29"
    },
    "name": "Affiliate Rolodex — public demo (/rolodex-demo)",
-   "notes": "Bundle B (Oct 28 2026): public no-signup demo of the Affiliate Rolodex. The visitor pastes scattered affiliate links (or loads a sample mess) and watches them organize into the one-book shape — program, link, code, rate, cookie, disclosure line, kid-safe flag, placements. Runs entirely in the browser on invented sample data; never touches the house rolodex (src/data/rolodex.json). Ends at the settled doors: Affiliate Rolodex $4.99 / Master Rolodex $7.99.",
+   "notes": "Bundle B (Oct 28 2026): public no-signup demo of the Affiliate Rolodex. The visitor pastes scattered affiliate links (or loads a sample mess) and watches them organize into the one-book shape — program, link, code, rate, cookie, disclosure line, kid-safe flag, placements. Runs entirely in the browser on invented sample data; never touches the house rolodex (src/data/rolodex.json). Ends at the settled doors: Affiliate Rolodex $4.99 / Social Link Rolodex $4.99 / Master Rolodex $7.99 (all three tiers; the Social door was missing until 2026-10-29 — dead revenue door, fixed).",
    "state": "live"
   },
   {
@@ -848,6 +848,6 @@
    "state": "unconfigured — lesser table (understudy seat)"
   }
  ],
- "updated": "2026-10-28",
+ "updated": "2026-10-29",
  "version": 1
 }

@@ -94,6 +94,7 @@ async function runHttpTests(ok, req) {
   ok(demo.text.includes('Affiliate Rolodex') && demo.text.includes('Organize it'), 'demo page carries the live demo');
   ok(demo.text.includes('Sample:'), 'demo ships sample messes');
   ok(demo.text.includes('$4.99') && demo.text.includes('$7.99'), 'demo ends at the settled doors ($4.99 / $7.99)');
+  ok(demo.text.includes('Social Link Rolodex') && demo.text.includes('Get Social Link Rolodex'), 'demo sells all three tiers — the Social Link Rolodex $4.99 door is present (dead-door fix 2026-10-29)');
   ok(/in your browser/i.test(demo.text) && /nothing you paste leaves this page/i.test(demo.text), 'demo states its in-browser honesty');
   // The guarantee: no house rolodex link leaks into the demo page.
   let houseLinks = [];
