@@ -65,7 +65,7 @@
     <p><strong>Odometer</strong></p>
     <p class="muted"><%= t('apps.odometer_text') %></p>
     <p><span class="badge"><%= t('apps.odometer_badge') %></span></p>
-    <% if (dl && dl['com.usefulappz.odometer']) { %><p><a class="btn" href="/api/apps/com.usefulappz.odometer/apk"><%= t('apps.dl_now', {price: '$1.99'}) %></a></p><% } %>
+    <% if (dl && dl['com.usefulappz.odometer']) { %><p><a class="btn" href="/buy-app/odometer"><%= t('apps.dl_now', {price: '$1.99'}) %></a></p><% } %>
   </div>
   <div id="aibutton" style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1.5rem;">
     <p style="font-size:2rem;">🎙️</p>
@@ -100,49 +100,49 @@
     <p style="font-size:1.75rem;">🤖</p>
     <p><strong>Muse Bar</strong></p>
     <p class="muted fineprint">Mic + type bar for the Muse app.</p>
-    <% if (dl && dl['com.usefulappz.musebar']) { %><p><a class="btn" href="/api/apps/com.usefulappz.musebar/apk"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge">Coming soon — $0.99</span></p><% } %>
+    <% if (dl && dl['com.usefulappz.musebar']) { %><p><a class="btn" href="/buy-app/muse-button"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge">Coming soon — $0.99</span></p><% } %>
   </div>
   <div style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1rem;">
     <p style="font-size:1.75rem;">💬</p>
     <p><strong>ChatGPT Bar</strong></p>
     <p class="muted fineprint">Mic + type bar for the ChatGPT app.</p>
-    <% if (dl && dl['com.usefulappz.chatgptbar']) { %><p><a class="btn" href="/api/apps/com.usefulappz.chatgptbar/apk"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge">Coming soon — $0.99</span></p><% } %>
+    <% if (dl && dl['com.usefulappz.chatgptbar']) { %><p><a class="btn" href="/buy-app/chatgpt-button"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge">Coming soon — $0.99</span></p><% } %>
   </div>
   <div style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1rem;">
     <p style="font-size:1.75rem;">✨</p>
     <p><strong>Gemini Bar</strong></p>
     <p class="muted fineprint">Mic + type bar for the Gemini app.</p>
-    <% if (dl && dl['com.usefulappz.geminibar']) { %><p><a class="btn" href="/api/apps/com.usefulappz.geminibar/apk"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge">Coming soon — $0.99</span></p><% } %>
+    <% if (dl && dl['com.usefulappz.geminibar']) { %><p><a class="btn" href="/buy-app/gemini-button"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge">Coming soon — $0.99</span></p><% } %>
   </div>
   <div style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1rem;">
     <p style="font-size:1.75rem;">🧠</p>
     <p><strong>Claude Bar</strong></p>
     <p class="muted fineprint">Mic + type bar for the Claude app.</p>
-    <% if (dl && dl['com.usefulappz.claudebar']) { %><p><a class="btn" href="/api/apps/com.usefulappz.claudebar/apk"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge">Coming soon — $0.99</span></p><% } %>
+    <% if (dl && dl['com.usefulappz.claudebar']) { %><p><a class="btn" href="/buy-app/claude-button"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge">Coming soon — $0.99</span></p><% } %>
   </div>
   <div style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1rem;">
     <p style="font-size:1.75rem;">🪟</p>
     <p><strong>Copilot Bar</strong></p>
     <p class="muted fineprint">Mic + type bar for the Copilot app.</p>
-    <% if (dl && dl['com.usefulappz.copilotbar']) { %><p><a class="btn" href="/api/apps/com.usefulappz.copilotbar/apk"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge">Coming soon — $0.99</span></p><% } %>
+    <% if (dl && dl['com.usefulappz.copilotbar']) { %><p><a class="btn" href="/buy-app/copilot-button"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge">Coming soon — $0.99</span></p><% } %>
   </div>
   <div style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1rem;">
     <p style="font-size:1.75rem;">🔍</p>
     <p><strong>Perplexity Bar</strong></p>
     <p class="muted fineprint">Mic + type bar for the Perplexity app.</p>
-    <% if (dl && dl['com.usefulappz.perplexitybar']) { %><p><a class="btn" href="/api/apps/com.usefulappz.perplexitybar/apk"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge">Coming soon — $0.99</span></p><% } %>
+    <% if (dl && dl['com.usefulappz.perplexitybar']) { %><p><a class="btn" href="/buy-app/perplexity-button"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge">Coming soon — $0.99</span></p><% } %>
   </div>
   <div style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1rem;">
     <p style="font-size:1.75rem;">❌</p>
     <p><strong>Grok Bar</strong></p>
     <p class="muted fineprint">Mic + type bar for the Grok app.</p>
-    <% if (dl && dl['com.usefulappz.grokbar']) { %><p><a class="btn" href="/api/apps/com.usefulappz.grokbar/apk"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge">Coming soon — $0.99</span></p><% } %>
+    <% if (dl && dl['com.usefulappz.grokbar']) { %><p><a class="btn" href="/buy-app/grok-button"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge">Coming soon — $0.99</span></p><% } %>
   </div>
   <div style="text-align:center;border:1px solid #2b241c;border-radius:8px;background:#171310;padding:1rem;">
     <p style="font-size:1.75rem;">🌊</p>
     <p><strong>DeepSeek Bar</strong></p>
     <p class="muted fineprint">Mic + type bar for the DeepSeek app.</p>
-    <% if (dl && dl['com.usefulappz.deepseekbar']) { %><p><a class="btn" href="/api/apps/com.usefulappz.deepseekbar/apk"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge">Coming soon — $0.99</span></p><% } %>
+    <% if (dl && dl['com.usefulappz.deepseekbar']) { %><p><a class="btn" href="/buy-app/deepseek-button"><%= t('apps.dl_now', {price: '$0.99'}) %></a></p><% } else { %><p><span class="badge">Coming soon — $0.99</span></p><% } %>
   </div>
 </div>
 
