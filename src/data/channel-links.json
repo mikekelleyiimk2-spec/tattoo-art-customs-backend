@@ -2,7 +2,7 @@
   "family": "channels",
   "rolodex": "Channel Links (Master Rolodex section)",
   "version": 1,
-  "updated": "2026-10-26",
+  "updated": "2026-10-28",
   "entries": [
     {
       "name": "YouTube \u2014 Rook 98",
@@ -15,7 +15,9 @@
       "verified": "live-checked 200 (2026-10-26)",
       "placed": [
         "Video descriptions",
-        "site /watch"
+        "site /watch",
+        "Instagram bio links (@mikeyii.mk2_)",
+        "site footer"
       ]
     },
     {
@@ -28,7 +30,8 @@
       "state": "live",
       "verified": "live-checked 200 (2026-10-26)",
       "placed": [
-        "Video descriptions"
+        "Video descriptions",
+        "site footer"
       ]
     },
     {
@@ -42,7 +45,9 @@
       "verified": "live-checked 200 (2026-10-26)",
       "placed": [
         "Little Inkers app Parent Zone",
-        "video descriptions (kids' channel only)"
+        "video descriptions (kids' channel only)",
+        "Little Inkers Instagram bio links (@littleinkersapp)",
+        "site footer"
       ]
     },
     {
@@ -55,7 +60,8 @@
       "state": "live",
       "verified": "live-checked 200 (2026-10-26)",
       "placed": [
-        "/poppy-and-ziggy page"
+        "/poppy-and-ziggy page",
+        "Little Inkers Instagram bio links (@littleinkersapp)"
       ]
     }
   ]

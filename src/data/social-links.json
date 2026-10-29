@@ -2,7 +2,7 @@
   "family": "socials",
   "rolodex": "Social Link Rolodex",
   "version": 1,
-  "updated": "2026-10-26",
+  "updated": "2026-10-28",
   "entries": [
     {
       "name": "Instagram \u2014 @mikeyii.mk2_ (main)",
@@ -16,7 +16,8 @@
       "placed": [
         "YouTube Rook 98 channel links",
         "Facebook Page bio",
-        "Threads bio"
+        "Threads bio",
+        "site footer"
       ]
     },
     {
@@ -45,7 +46,9 @@
       "verified": "live-checked 200 (2026-10-26)",
       "placed": [
         "Instagram bio cross-link",
-        "Facebook Page bio"
+        "Facebook Page bio",
+        "Instagram bio links (@mikeyii.mk2_)",
+        "site footer"
       ]
     },
     {
@@ -72,7 +75,8 @@
       "verified": "live-checked 200 (2026-10-26)",
       "placed": [
         "Rook 98 channel links",
-        "site cross-links"
+        "site cross-links",
+        "Instagram bio links (@mikeyii.mk2_)"
       ]
     },
     {
@@ -84,7 +88,9 @@
       "visibility": "public",
       "state": "live",
       "verified": "live-checked 200 (2026-10-26)",
-      "placed": [],
+      "placed": [
+        "Little Inkers Instagram bio links (@littleinkersapp)"
+      ],
       "note": "App page, kid-safe bio."
     },
     {
@@ -96,7 +102,9 @@
       "visibility": "public",
       "state": "live",
       "verified": "live-checked 200 (2026-10-26)",
-      "placed": []
+      "placed": [
+        "site footer"
+      ]
     },
     {
       "name": "X \u2014 @tattooartcustom",
@@ -109,7 +117,8 @@
       "verified": "live-checked 200 (2026-10-26)",
       "placed": [
         "Rook 98 channel links",
-        "Facebook Page bio"
+        "Facebook Page bio",
+        "site footer"
       ]
     },
     {
@@ -121,7 +130,9 @@
       "visibility": "public",
       "state": "live",
       "verified": "live-checked 200 (2026-10-26)",
-      "placed": [],
+      "placed": [
+        "site footer"
+      ],
       "note": "Account live; bio/link unverified (no connector \u2014 social-queue record)."
     },
     {
@@ -133,7 +144,9 @@
       "visibility": "public",
       "state": "live",
       "verified": "live-checked 200 (2026-10-26)",
-      "placed": [],
+      "placed": [
+        "site footer"
+      ],
       "note": "No connector; bio/website unverified (social-queue record)."
     }
   ]
