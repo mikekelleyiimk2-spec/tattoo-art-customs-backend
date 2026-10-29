@@ -36,6 +36,10 @@ process.env.MUSE_SERVICE_TOKEN = 'test-muse-pipe-token';
 // App auto-update service: point the spawned app at a temp registry (the
 // route reads it per request, so tests can seed it after server start).
 process.env.APP_UPDATES_REGISTRY = path.join(TMP, 'app-updates.json');
+// Little Inkers sideload hosted fallback (the route reads it per
+// request): a known test URL so test/sideload.js can assert the
+// download door redirects instead of 404ing.
+process.env.LITTLE_INKERS_APK_URL = 'https://example.test/little-inkers.apk';
 
 const PORT = 4137;
 let failures = 0;
@@ -1574,6 +1578,8 @@ async function main() {
   await require('./guestBridge').runHttpTests(ok); // guest bridge route wiring (design claim row; sideload pending tie; go-live endpoint)
   await require('./transfers').runHttpTests(ok, req); // [transfers] customer<->shop art pipeline
   await require('./appUpdates').runHttpTests(ok); // app auto-update service
+  await require('./sideload').runUnitTests(ok); // LI sideload hostedUrl (pure env logic)
+  await require('./sideload').runHttpTests(ok, req); // LI sideload door (hosted download repair)
   await require('./apiLane').runHttpTests(ok); // AI Master Button API lane enqueue contract
   await require('./messenger').runHttpTests(ok); // AI-to-AI Messenger slice 1 (registry, AI-code connect, 1:1 record, refusals)
   await require('./rolodex').runHttpTests(ok, req); // affiliate rolodex plug (live-only + disclosure lock)

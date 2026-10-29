@@ -24,6 +24,7 @@ const FREE_APPS = {
     filename: 'little-inkers.ipa',
     envVar: 'LITTLE_INKERS_IPA_PATH',
     defaultRel: 'uploads/sideload/little-inkers.ipa',
+    urlEnv: 'LITTLE_INKERS_IPA_URL',
     appName: 'Little Inkers',
     platform: 'ios',
     kidSafe: true,
@@ -32,6 +33,7 @@ const FREE_APPS = {
     filename: 'little-inkers.apk',
     envVar: 'LITTLE_INKERS_APK_PATH',
     defaultRel: 'uploads/sideload/little-inkers.apk',
+    urlEnv: 'LITTLE_INKERS_APK_URL',
     appName: 'Little Inkers',
     platform: 'android',
     kidSafe: true,
@@ -46,17 +48,36 @@ const FREE_APPS = {
   },
 };
 
+// Hosted fallback (repair 2026-10-29): a free app's build can also live
+// on the house public file host (R2) instead of the local uploads disk.
+// The production disk filled to 0 free bytes, which is why the verified
+// Little Inkers APK could never be stored locally and its download door
+// 404'd while the page promised "early November". When the app's
+// urlEnv names an https URL, the door redirects there; the local file,
+// when present, still wins so a stored build always takes precedence.
+function hostedUrl(cfg) {
+  const u = cfg && cfg.urlEnv ? process.env[cfg.urlEnv] : null;
+  return u && /^https:\/\//i.test(u) ? u : null;
+}
+
+// True when the download door can actually serve bytes: a stored local
+// file OR a configured hosted URL.
+function freeFileReady(cfg) {
+  const rel = process.env[cfg.envVar] || cfg.defaultRel;
+  return Boolean(resolveStoredPath(rel)) || Boolean(hostedUrl(cfg));
+}
+
 function serveFreeFile(appKey, res) {
   const cfg = FREE_APPS[appKey];
   const rel = process.env[cfg.envVar] || cfg.defaultRel;
   const absPath = resolveStoredPath(rel);
-  if (!absPath) {
-    return res.status(404).render('error', {
-      title: 'Not ready',
-      message: `The ${cfg.appName} app file is being prepared — check back soon.`,
-    });
-  }
-  return res.download(absPath, cfg.filename);
+  if (absPath) return res.download(absPath, cfg.filename);
+  const url = hostedUrl(cfg);
+  if (url) return res.redirect(302, url);
+  return res.status(404).render('error', {
+    title: 'Not ready',
+    message: `The ${cfg.appName} app file is being prepared — check back soon.`,
+  });
 }
 
 // ---- Little Inkers free sideload (kid-safe layout, zero tattoo links) ----
@@ -66,7 +87,6 @@ function liSideloadRouter(kind) {
   const cfg = FREE_APPS[appKey];
 
   router.get('/', (req, res) => {
-    const rel = process.env[cfg.envVar] || cfg.defaultRel;
     res.render('site/little-inkers-sideload', {
       layout: 'layout-li',
       liFace: true,
@@ -74,10 +94,11 @@ function liSideloadRouter(kind) {
       metaDescription: 'Download the free Little Inkers coloring app for kids.',
       kind,
       appName: cfg.appName,
-      // Show the real download button only when the build file is
-      // actually in storage — otherwise the page keeps its honest
-      // "coming soon" card instead of promising a download that 404s.
-      downloadReady: Boolean(resolveStoredPath(rel)),
+      // Show the real download button only when the build can actually
+      // be served (stored file or hosted URL) — otherwise the page
+      // keeps its honest "coming soon" card instead of promising a
+      // download that 404s.
+      downloadReady: freeFileReady(cfg),
       downloadUrl: `/little-inkers-${kind}/download`,
     });
   });
@@ -348,4 +369,4 @@ function folderRouter() {
   return router;
 }
 
-module.exports = { liSideloadRouter, tacAndroidFreeRouter, tacAndroidProRouter, testerHubRouter, folderRouter, FREE_APPS };
+module.exports = { liSideloadRouter, tacAndroidFreeRouter, tacAndroidProRouter, testerHubRouter, folderRouter, FREE_APPS, hostedUrl, freeFileReady };
