@@ -284,6 +284,20 @@ const CATALOG = [
     url: 'https://monstersink.com/michael',
     ctaKey: 'merch.aff_monstersink_cta',
   },
+  // --- DragonHawk (Awin, joined + accepted 2026-10-30) ---
+  // Tattoo machines, cartridges & kits; ≥10% commission via Awin
+  // (merchant 97687, publisher 3118446), 30-day cookie. The direct
+  // application stalled in review since 2026-10-08 — the Awin join
+  // supersedes it. Tattoo surfaces only — never kids' surfaces.
+  {
+    id: 'dragonhawk-supplies',
+    kind: 'affiliate',
+    status: 'live',
+    nameKey: 'merch.aff_dragonhawk_name',
+    blurbKey: 'merch.aff_dragonhawk_blurb',
+    url: 'https://www.awin1.com/cread.php?awinmid=97687&awinaffid=3118446&ued=https%3A%2F%2Fdragonhawkofficial.com',
+    ctaKey: 'merch.aff_dragonhawk_cta',
+  },
   // --- Printful AFFILIATE program (live 2026-10-26) ---
   // This is the referral/affiliate URL (10% of fulfillment, 30-day
   // cookie) placed as a partner card for artists/shops who want to sell

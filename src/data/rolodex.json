@@ -1,7 +1,7 @@
 {
  "rolodex": "Affiliate Rolodex — Useful Appz",
  "version": 1,
- "updated": "2026-10-28",
+ "updated": "2026-10-30",
  "source": "Converted from ~/workspace/affiliates/affiliate-tracker.md + ~/workspace/your_files/commercial-roster-2026-10-25.md (Section A: 12 live programs) + Printful approval 2026-10-26. No links, rates, or codes invented — unknowns are null.",
  "disclosure_standard": "Affiliate link — we may earn a commission at no extra cost to you.",
  "status_values": [
@@ -274,17 +274,20 @@
   },
   {
    "name": "DragonHawk",
-   "network": "Direct",
-   "status": "pending",
-   "link": null,
+   "network": "Awin (program 97687)",
+   "status": "live",
+   "link": "https://www.awin1.com/cread.php?awinmid=97687&awinaffid=3118446&ued=https%3A%2F%2Fdragonhawkofficial.com",
    "code": null,
-   "rate": "8% starting → 15% as sales grow (site advertises 10%)",
+   "rate": "≥10% via Awin",
    "cookie": "30 days",
    "payout": null,
    "disclosure": "Affiliate link — we may earn a commission at no extra cost to you.",
    "kid_safe": false,
-   "surfaces_placed": [],
-   "notes": "Applied 2026-09-30 under tattoo.art.customs@gmail.com (username TattooArtCustoms). They replied 2026-10-08: application under review. Payout email correction to mikekelleyii.mk4@gmail.com SENT 2026-10-20, never confirmed. Tattoo only."
+   "surfaces_placed": [
+    "/discounts card",
+    "/merch catalog card"
+   ],
+   "notes": "LIVE 2026-10-30 — joined and accepted via Awin (merchant 97687, house publisher 3118446). The direct application (applied 2026-09-30 under tattoo.art.customs@gmail.com, 'under review' since their 2026-10-08 reply) is superseded and moot. Tattoo only — never on kids' surfaces."
   },
   {
    "name": "T&T Tattoo Ambassador",
@@ -386,17 +389,21 @@
   },
   {
    "name": "Green Kid Crafts",
-   "network": "Awin (via ShareASale)",
-   "status": "pending",
-   "link": null,
+   "network": "Awin (program 83693)",
+   "status": "live",
+   "link": "https://www.awin1.com/cread.php?awinmid=83693&awinaffid=3118446&ued=https%3A%2F%2Fwww.greenkidcrafts.com",
    "code": null,
    "rate": "15%",
    "cookie": "60 days",
    "payout": null,
    "disclosure": "Affiliate link — we may earn a commission at no extra cost to you.",
    "kid_safe": true,
-   "surfaces_placed": [],
-   "notes": "Awin join in progress since 2026-10-12. Kids-side; both-sides placement when the link lands."
+   "surfaces_placed": [
+    "promo-video/description-little-inkers.txt",
+    "CWU gen_descriptions.py grown-ups block",
+    "LI app Parent Zone ART_SUPPLIES"
+   ],
+   "notes": "LIVE via Awin — joined 2026-10-22, confirmed joined in Awin 'Your Programs' 2026-10-30. Kids-side ONLY (parent-facing LI surfaces) — never on tattoo surfaces."
   },
   {
    "name": "AcuRite",
