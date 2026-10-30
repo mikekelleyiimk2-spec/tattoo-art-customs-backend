@@ -7,7 +7,7 @@ const db = require('../db');
 const config = require('../config');
 const { requireLogin, isActiveMember } = require('../middleware/auth');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
-const { premadePriceCents, customFullCents, isSaleWindow, lineworkOnlyPriceCents, LINEWORK_ONLY_DISCOUNT, salePriceActive, withFeeCents, processingFeeCents, money, premadeQuoteForDesign, SHOW_FEATURED_DISCOUNT_CODE, showFeaturedDiscountRate, showFeaturedPremadeCents, showDiscountLive } = require('../lib/pricing');
+const { premadePriceCents, customFullCents, lineworkOnlyPriceCents, LINEWORK_ONLY_DISCOUNT, salePriceActive, withFeeCents, processingFeeCents, money, premadeQuoteForDesign, SHOW_FEATURED_DISCOUNT_CODE, showFeaturedDiscountRate, showFeaturedPremadeCents, showDiscountLive } = require('../lib/pricing');
 const { viewerFor, displayImgFile, canViewUnblurred } = require('../lib/contentPolicy');
 const { blurbFor: categoryBlurbFor, SITEMAP_CATEGORIES } = require('../lib/categoryContent');
 const { blurbForStyle, nameForStyle, SITEMAP_STYLES } = require('../lib/styleContent');
@@ -640,7 +640,7 @@ router.get('/by-request', async (req, res) => {
 // Claim a character (designer-gated: first come, first served).
 router.post('/by-request/claim', async (req, res) => {
   const { requireLogin } = require('../middleware/auth');
-  const { requireDesignerAccess } = require('./shop/shopDesigner');
+  const { requireDesignerAccess } = require('../shop/shopDesigner');
   // Inline guard chain since router-level middleware differs per route.
   if (!req.user) return res.redirect('/login?next=' + encodeURIComponent('/by-request'));
   try { await new Promise((resolve, reject) => requireDesignerAccess()(req, res, (e) => e ? reject(e) : resolve())); }
@@ -1924,7 +1924,6 @@ router.post('/holiday-raffle/enter', requireLogin, formLimiter, checkHoneypot, a
 
 
 router.get('/notifications', requireLogin, async (req, res) => {
-  const { unreadCount } = require('../lib/notify');
   const notes = await db.all(
     'SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 100', [req.user.id]).catch(() => []);
   res.render('site/notifications', {
