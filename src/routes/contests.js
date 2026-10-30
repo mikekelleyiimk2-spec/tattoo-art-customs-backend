@@ -19,7 +19,7 @@ const { requireDesignerAccess } = require('../shop/shopDesigner');
 const { DESIGN_STYLES } = require('../lib/portfolioUpload');
 const {
   CONTEST_MIN_PRIZE_CENTS, CONTEST_PRIZE_SUGGESTIONS, contestQuote,
-  createPendingContest, openContest, contestEntries, enterContest,
+  createPendingContest, openContest, enterContest,
   pickWinner, timeLeftMs,
 } = require('../lib/contests');
 

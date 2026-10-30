@@ -12,7 +12,6 @@
 // manual review — never silently trusted.
 const express = require('express');
 const db = require('../db');
-const { userFromToken } = require('./api');
 const { verifyPurchase, acknowledgePurchase, MEMBERSHIP_PLAN_BY_PRODUCT } = require('../lib/playverify');
 const { grantPlanRole } = require('../lib/planRoles');
 

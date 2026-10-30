@@ -10,8 +10,6 @@ const config = require('../config');
 const { notifyUser } = require('../lib/notify');
 const { pushToUser } = require('../lib/push');
 const { sendMail } = require('../lib/mail');
-const { getBookingSettings } = require('./bookingFlow');
-
 const DAY_MS = 86400000;
 const BLAST_MAX_CHARS = 280;
 const BLAST_WINDOW_MS = 7 * DAY_MS;

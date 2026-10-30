@@ -12,8 +12,6 @@
 // single seam the PayPal wiring replaces later; today it always refuses.
 const db = require('../db');
 const config = require('../config');
-const { getBookingSettings } = require('./bookingFlow');
-
 // PayPal "live" check: credentials present. Mirrors config.paypalConfigured()
 // but evaluated here so sweeps share one reading.
 const paypalLive = !!(config.paypal && config.paypal.clientId && config.paypal.clientSecret);

@@ -5,7 +5,7 @@ const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const {
   EXPENSE_CATEGORIES,
   addExpense, getExpenses, deleteExpense, getMonthlyTotals, getCategoryTotals,
-  monthKey, monthStartUtc,
+  monthKey,
 } = require('./expenses');
 
 const router = express.Router();

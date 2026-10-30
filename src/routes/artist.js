@@ -19,7 +19,7 @@ const { commissionSuspendedUntil } = require('../lib/commissions');
 const { registerPayoutRoutes, payoutDashboardData } = require('../lib/payoutRoutes');
 const { upsertProfile } = require('../lib/profiles');
 const pricing = require('../lib/pricing');
-const { DESIGN_STYLES, portfolioUploadMulter, batchUploadMulter, BATCH_MAX_ITEMS, ZIP_MAX_IMAGES, ZIP_MAX_FILE_MB, IMAGE_MAX_BYTES, handlePortfolioUpload, uploadOneDesign, extractZipImages, moveFileSync, pairZipImages } = require('../lib/portfolioUpload');
+const { DESIGN_STYLES, portfolioUploadMulter, batchUploadMulter, BATCH_MAX_ITEMS, ZIP_MAX_IMAGES, IMAGE_MAX_BYTES, handlePortfolioUpload, uploadOneDesign, extractZipImages, moveFileSync, pairZipImages } = require('../lib/portfolioUpload');
 // notifyColorizationNeeded/notifyDesignLive are called by the admin-side
 // colorization workflow (src/lib/colorization.js); the designer side only
 // receives informational notifications — there is no approval gate here.

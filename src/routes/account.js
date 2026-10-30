@@ -8,12 +8,12 @@ const db = require('../db');
 const config = require('../config');
 const { resolveStoredPath } = require('../lib/storage');
 const { requireLogin } = require('../middleware/auth');
-const { hasActiveSubscription, isAdminRole } = require('../middleware/auth');
+const { isAdminRole } = require('../middleware/auth');
 const { designerAccess } = require('../shop/shopDesigner');
 const { DESIGN_STYLES, portfolioUploadMulter, handlePortfolioUpload, maybeBookReviewFee } = require('../lib/portfolioUpload');
 const pricing = require('../lib/pricing');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
-const { registerPayoutRoutes, payoutDashboardData } = require('../lib/payoutRoutes');
+const { registerPayoutRoutes } = require('../lib/payoutRoutes');
 const credits = require('../lib/credits');
 const { capForUserId, listSessions, revokeSession, revokeOtherSessions } = require('../lib/sessionLimits');
 

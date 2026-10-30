@@ -24,7 +24,7 @@
 //     (payment or deposit row status 'forfeited'; the shop's ledger credit
 //     stands)
 const db = require('../db');
-const { computeBookingFees, flatBookingFee, formatReceiptLines } = require('./bookingFees');
+const { computeBookingFees, formatReceiptLines } = require('./bookingFees');
 const { isSlotFree } = require('./bookingSlots');
 const { recipientEligible, verifyOrderCommissions } = require('../lib/commissions');
 const { notifyUser } = require('../lib/notify');
