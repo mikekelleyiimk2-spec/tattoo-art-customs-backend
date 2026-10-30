@@ -1407,8 +1407,10 @@ router.get('/privacy/the-big-one', (req, res) => res.redirect(301, '/privacy/daw
 // Library shelf sponsorships (Bundle C Build 2, 2026-10-28): the
 // offer surface for The Library's own shelves, mirroring the house
 // pattern at GET /dawnfold/sponsors — prices shown as register
-// prices (lib/pricing.withFeeCents over the assessed base in
-// lib/librarySponsors.js, flagged pending owner strike there),
+// prices (lib/pricing.withFeeCents over the base in
+// lib/librarySponsors.js; the per-shelf rate was owner-struck
+// 2026-10-30 at a flat $9.99/mo, while the whole-Library
+// "Presented by" offer remains assessed/pending there),
 // honest availability, no invented reach numbers, and inquiries
 // through the existing POST /contact machinery (the form on the
 // page preselects the shelf in its message).

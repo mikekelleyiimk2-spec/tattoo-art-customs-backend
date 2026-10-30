@@ -14,30 +14,32 @@
 // Design Artist membership). The Healed Wall is NOT part of that tier:
 // it is optional, separately priced, and never bundled silently.
 //
-// PRICE — ASSESSED, PENDING OWNER STRIKE:
-//   Assessed add-on price: $24.99/year (2499 cents, yearly — matching
+// PRICE — OWNER-STRUCK 2026-10-30 (was: assessed, pending strike):
+//   Add-on price: $24.99/year (2499 cents, yearly — matching
 //   the base shop plan's yearly cycle so a shop sees one renewal date).
-//   Justification: roughly a quarter of the $103.98 base — priced as a
-//   visibility extra, not a second membership. It covers the real cost
-//   driver, human moderation of healed photos before anything posts
-//   publicly, without approaching the base tier's price. ONE number,
-//   yearly only (no monthly variant — shops already think in the yearly
-//   shop-plan cycle).
-//   Until the owner strikes this price, pricesLive is false and NO
-//   public surface may show a dollar figure for the add-on: every
-//   surface shows PRICE_PENDING_LABEL instead. pricePresentation()
-//   enforces that — it returns a null amount while unstruck, so a view
-//   cannot print the assessed figure by accident.
+//   Assessed justification (2026-10-28): roughly a quarter of the
+//   $103.98 base — priced as a visibility extra, not a second
+//   membership. It covers the real cost driver, human moderation of
+//   healed photos before anything posts publicly, without approaching
+//   the base tier's price. ONE number, yearly only (no monthly
+//   variant — shops already think in the yearly shop-plan cycle).
+//   The owner struck this price on 2026-10-30 at the assessed figure
+//   exactly ("Your picks — set all three"), so pricesLive is true
+//   and public surfaces show the figure through pricePresentation().
+//   (While it was unstruck, pricePresentation() returned a null
+//   amount plus PRICE_PENDING_LABEL, so no view could print the
+//   assessed figure by accident — that gate is why every surface
+//   reads its price from this module only.)
 //
 // PAYMENT STATE — honest, no fakery:
 //   There is no Healed Wall checkout today: no plans-table row, no
 //   PayPal plan, no buy button. The start path is an inquiry through
 //   the house contact desk (POST /contact, topic 'shop', message marker
 //   CONTACT_MARKER) — the same admin-notification machinery every other
-//   desk request rides. When the price is struck, fulfillment follows
-//   FULFILLMENT_CHECKLIST below, starting with payment confirmed through
-//   whatever house checkout/desk pattern the owner approves at strike
-//   time. Nothing in this module charges, bills, or implies a charge.
+//   desk request rides. Fulfillment follows FULFILLMENT_CHECKLIST
+//   below, starting with payment confirmed through that desk pattern
+//   (the pattern in place when the owner struck the price).
+//   Nothing in this module charges, bills, or implies a charge.
 //
 // STOREFRONT FLAG — no schema yet, on purpose:
 //   A real per-shop on/off flag needs a column (e.g.
@@ -56,15 +58,17 @@ const NAME = 'Healed Wall';
 const BASE_PLAN_SLUG = 'tattoo_shop';
 const BASE_PLAN_PRICE_CENTS = 10398; // $103.98/year, includes Design Artist
 
-// ASSESSED — PENDING OWNER STRIKE (see header). Do not surface
-// amountCents on any public page while pricesLive is false.
+// The struck price (see header): assessed 2026-10-28, struck
+// as-is by the owner 2026-10-30. Surface amountCents on public
+// pages ONLY through pricePresentation(), which gates on
+// pricesLive.
 const ASSESSED_PRICE = {
   amountCents: 2499, // $24.99
   interval: 'year',
   label: '$24.99/year',
 };
-const pricesLive = false;
-const PRICE_STATUS = 'assessed_pending_owner_strike';
+const pricesLive = true;
+const PRICE_STATUS = 'owner_struck_live';
 const PRICE_PENDING_LABEL = 'Founding add-on rate — announced to member shops first';
 
 // What a shop gets. Grounded in what exists today: the storefront
@@ -109,14 +113,15 @@ function isEligible({ hasActiveShopSubscription } = {}) {
 }
 
 // Fulfillment, in order. Honest states only: every step is a desk /
-// manual step today (states say so); step 1 cannot complete until the
-// owner strikes the price and a real payment path exists.
+// manual step today (states say so). The price was struck
+// 2026-10-30; step 1 runs through the house contact desk — there
+// is no self-serve checkout for this add-on.
 const FULFILLMENT_CHECKLIST = [
   {
     step: 1, key: 'payment_confirmed',
     label: 'Payment confirmed',
-    detail: 'Payment confirmed via the house checkout/desk pattern. NOT LIVE while the price is unstruck: today the only intake is the /contact inquiry (marker below) and no charge is made or promised.',
-    state: 'not_live_pending_price_strike',
+    detail: 'Payment confirmed via the house contact desk: the shop sends the /contact inquiry (marker below) and the desk confirms payment of the struck $24.99/year (PayPal, like everything in the house). No self-serve checkout exists for this add-on — nothing is charged from the page itself.',
+    state: 'live_via_contact_desk',
   },
   {
     step: 2, key: 'wall_enabled',
@@ -157,9 +162,9 @@ const CONTACT_TOPIC = 'shop';
 const DEMO_ENABLED = false;
 
 // pricePresentation(): the ONLY price shape views may render.
-// While unstruck it carries no amount at all — the pending label is the
-// whole price presentation. When the owner strikes the price and
-// pricesLive flips true, amountCents/label become the real figures.
+// While unstruck it carried no amount at all — the pending label
+// was the whole price presentation. Since the owner's 2026-10-30
+// strike (pricesLive true), amountCents/label are the real figures.
 function pricePresentation() {
   if (!pricesLive) {
     return { pricesLive: false, status: PRICE_STATUS, label: PRICE_PENDING_LABEL, amountCents: null, interval: ASSESSED_PRICE.interval };

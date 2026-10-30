@@ -173,19 +173,20 @@ router.get('/cannadash', (req, res) => {
 
 // --- The HerbHaul founding partner offer --------------------------------
 // GET /herbhaul/founding: the founding partner offer for dispensaries
-// (Bundle C Build 1, 2026-10-28). Structure, lock promise, and cohort
-// cap render from src/lib/cannadashFounding.js; while that config's
-// pricesLive flag is false (status PENDING OWNER STRIKE) every price
-// cell carries the withheld label and NO assessed dollar figure
-// renders — the running dispensary campaign promised a founding rate
-// locked with no figure quoted, and this page keeps that promise.
+// (Bundle C Build 1, 2026-10-28). Structure, lock promise, cohort
+// cap, and rates render from src/lib/cannadashFounding.js. The
+// owner struck the price 2026-10-30 ($49/mo founding, $99/mo
+// standard) and that config's pricesLive flag is true, so the fee
+// table renders the live struck rates — until the strike, every
+// price cell carried the withheld label and no figure rendered,
+// keeping the campaign's original locked-with-no-figure promise.
 // Applications reuse the door's founding-list intake below
 // (POST /herbhaul/join, role=partner) — no second intake is built.
 function cannadashFoundingHandler(req, res) {
   res.render('onemind/cannadash-founding', {
     layout: 'layout-onemind',
     title: 'HerbHaul Founding Partners — Rate Locked at Joining | Chorvix',
-    metaDescription: 'HerbHaul founding partners: licensed dispensaries join the first cohort with their founding rate locked at joining for 12 months. The full rate sheet goes to founding partners first.',
+    metaDescription: 'HerbHaul founding partners: licensed dispensaries join the first cohort at $49/mo per location, locked at joining for 12 months (standard partner rate $99/mo).',
     canonical: `${base()}/herbhaul/founding`,
     founding: cannadashFounding.publicFoundingOffer(),
     offer: cannadashFounding.publicFoundingOffer(),

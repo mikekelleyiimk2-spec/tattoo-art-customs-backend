@@ -1,10 +1,13 @@
 // Library shelf sponsorships (Bundle C Build 2, 2026-10-28).
 // The coordinator (test/run.js) wires this in; do not run from here.
 // Covers: the shelf config is grounded in the Library app's own
-// shelves, every assessed price is flagged pending owner strike,
-// the offer page renders honestly (availability shown, no invented
-// reach numbers, inquiry rides POST /contact), and the sponsor
-// chair partial renders labelled in its unsold state.
+// shelves; the per-shelf price was OWNER-STRUCK 2026-10-30 at a
+// flat $9.99/mo for every eligible shelf (flagged owner-struck),
+// while the whole-Library "Presented by" offer was NOT struck and
+// stays flagged assessed/pending at its assessed figure; the offer
+// page renders honestly (availability shown, no invented reach
+// numbers, inquiry rides POST /contact), and the sponsor chair
+// partial renders labelled in its unsold state.
 const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
@@ -27,16 +30,20 @@ async function runDbTests(ok) {
   ok(lib.SHELVES.every((s) => s.availability === 'Founding — available' || s.availability === 'Not sponsor-eligible'),
     'availability is honest: every eligible shelf is Founding — available, none marked taken');
 
-  // Assessed pricing: flagged on every entry, scaled off the Big One
-  // card ($25/mo department, $75/mo presented-by — thebigone.js).
-  ok(lib.PRICE_STATUS === 'ASSESSED — PENDING OWNER STRIKE', 'price status flag is ASSESSED — PENDING OWNER STRIKE');
-  ok(lib.SHELVES.every((s) => s.priceStatus === lib.PRICE_STATUS)
-    && lib.WHOLE_LIBRARY.priceStatus === lib.PRICE_STATUS, 'every price entry carries the assessed flag');
+  // Pricing: per-shelf rate OWNER-STRUCK 2026-10-30 at a flat
+  // $9.99/mo (replacing the assessed $20–$30 scale); whole-Library
+  // presented-by NOT struck — still assessed/pending at $75/mo base.
+  ok(lib.PRICE_STATUS === 'OWNER-STRUCK — LIVE (2026-10-30)', 'shelf price status flag is OWNER-STRUCK — LIVE (2026-10-30)');
+  ok(lib.eligibleShelves().every((s) => s.priceStatus === lib.PRICE_STATUS),
+    'every eligible shelf carries the owner-struck flag');
+  ok(lib.WHOLE_LIBRARY.priceStatus === lib.ASSESSED_STATUS
+    && lib.ASSESSED_STATUS === 'ASSESSED — PENDING OWNER STRIKE',
+  'whole-Library offer still carries the assessed — pending owner strike flag (not part of the strike)');
   const verne = lib.shelfByKey('the-verne-shelf');
-  ok(verne && verne.baseCents === 2500, 'Verne Shelf assessed at the Big One department level ($25/mo base)');
-  ok(lib.WHOLE_LIBRARY.baseCents === 7500, 'whole-Library presented-by assessed at the Big One presented-by level ($75/mo base)');
-  ok(lib.shelfPriceCents(verne) === pricing.withFeeCents(2500), 'register price = base + house fee pass-through (same math as /dawnfold/sponsors)');
-  ok(lib.eligibleShelves().every((s) => s.baseCents >= 2000 && s.baseCents <= 3000), 'eligible shelf bases scale sensibly ($20–$30/mo)');
+  ok(verne && verne.baseCents === 999, 'Verne Shelf at the owner-struck flat rate ($9.99/mo base)');
+  ok(lib.eligibleShelves().every((s) => s.baseCents === 999), 'EVERY eligible shelf is the flat struck $9.99/mo base');
+  ok(lib.WHOLE_LIBRARY.baseCents === 7500, 'whole-Library presented-by left exactly as assessed ($75/mo base)');
+  ok(lib.shelfPriceCents(verne) === pricing.withFeeCents(999), 'register price = base + house fee pass-through (same math as /dawnfold/sponsors)');
 
   // Kid-safe rule: the children's shelf sells no chairs.
   const kids = lib.shelfByKey('childrens-classics');
@@ -67,9 +74,11 @@ async function runHttpTests(ok, req) {
   }
   ok(r.text.includes('Founding — available'), 'offer page shows honest founding availability');
   ok(r.text.includes('Not sponsor-eligible'), "offer page marks Children's Classics not sponsor-eligible");
+  ok(r.text.includes('owner-struck — live (2026-10-30)') && r.text.includes('set by the owner'),
+    'struck shelf prices carry the owner-set label (fine print shows the struck status)');
   ok(r.text.includes('founding rate — pending final confirmation') && r.text.includes('assessed — pending owner strike'),
-    'assessed prices carry the pending-final-confirmation label');
-  ok(r.text.includes('$26.37') || r.text.includes('$25'), 'a shelf founding rate is shown (Big One price pattern: prices shown, not hidden)');
+    'the unstruck whole-Library offer still carries the pending-final-confirmation label');
+  ok(r.text.includes('$10.83'), 'the struck shelf rate is shown at register ($9.99 base + fee pass-through = $10.83; Big One price pattern: prices shown, not hidden)');
   ok(r.text.includes('action="/contact"') && r.text.includes('Library shelf sponsorship:'),
     'inquiry form rides POST /contact with the Library shelf marker preselected in the message');
   ok(r.text.includes('name="shelf"'), 'inquiry form carries a shelf selector');

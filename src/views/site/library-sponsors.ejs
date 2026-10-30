@@ -7,9 +7,11 @@
     topic 'other', the shelf preselected in the message), and NO
     reach / traffic / reader numbers are claimed anywhere — the
     Library is growing and no numbers are printed until provable.
-    One difference the honesty rule requires: Dawnfold's rates
-    were owner-ordered; these rates are assessed, so they carry the
-    extra label "founding rate — pending final confirmation". %>
+    One difference the honesty rule requires: the per-shelf rates
+    were owner-struck on 2026-10-30 (flat $9.99/mo in
+    lib/librarySponsors.js), but the whole-Library "Presented by"
+    rate is still assessed, so that one offer keeps the extra
+    label "founding rate — pending final confirmation". %>
 <h1>Sponsor a Library Shelf</h1>
 <p>The Library is the house reading room: public-domain books pulled live from
 Project Gutenberg and Standard Ebooks, listening editions from LibriVox, and the
@@ -27,9 +29,11 @@ print reach numbers we can't prove; when we can prove them, they'll be on this p
   <li><strong>For the Documentary Shelf,</strong> the chair printed in that department of Dawnfold's edition as well — the shelf and the edition carry the same chair.</li>
   <li><strong>A conversation first.</strong> Every sponsorship starts with an inquiry below; payment is arranged (PayPal, like everything in the house) once we've agreed the run. Nothing is charged by this page.</li>
 </ul>
-<p class="fineprint">Rates below are founding rates — <b>pending final confirmation</b>
+<p class="fineprint">Shelf rates below are founding rates — <b>set by the owner</b>
 (<%= priceStatus.toLowerCase() %>). The register price shown includes the house
-processing-fee pass-through, the same way Dawnfold's rate card shows its prices.</p>
+processing-fee pass-through, the same way Dawnfold's rate card shows its prices.
+The whole-Library “Presented by” rate at the bottom is still an assessed rate,
+pending final confirmation.</p>
 
 <h2>The shelves</h2>
 <% for (const s of shelves) { %>
@@ -39,7 +43,7 @@ processing-fee pass-through, the same way Dawnfold's rate card shows its prices.
   <% if (s.sponsorEligible) { %>
   <p><strong><%= money(s.priceCents) %></strong> <span>/ <%= s.per %></span>
      · <strong><%= s.availability %></strong>
-     · <span>founding rate — pending final confirmation</span></p>
+     · <span>founding rate</span></p>
   <%- include('../partials/sponsor-chair', { shelf: s }) %>
   <p><a class="btn" href="#ask" data-shelf="<%= s.name %>">Ask about the <%= s.name %> chair</a></p>
   <% } else { %>
@@ -53,7 +57,7 @@ processing-fee pass-through, the same way Dawnfold's rate card shows its prices.
   <p><%= wholeLibrary.blurb %></p>
   <p><strong><%= money(wholeLibrary.priceCents) %></strong> <span>/ <%= wholeLibrary.per %></span>
      · <strong><%= wholeLibrary.availability %></strong>
-     · <span>founding rate — pending final confirmation</span></p>
+     · <span>founding rate — pending final confirmation (<%= wholeLibrary.priceStatus.toLowerCase() %>)</span></p>
   <p><a class="btn" href="#ask">Ask about the whole-Library chair</a></p>
 </section>
 

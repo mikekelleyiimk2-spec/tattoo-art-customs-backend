@@ -35,11 +35,11 @@ router.get('/shops', async (req, res) => {
 // Healed Wall shop add-on (Bundle C Build 3, 2026-10-28): the offer
 // page for the paid add-on defined in src/lib/healedWall.js. Public —
 // shops considering the membership should see the add-on too. NO
-// checkout exists for it: the price is ASSESSED — PENDING OWNER STRIKE
-// (lib pricesLive:false), so the page shows the founding-rate notice
-// instead of a figure, and the start path is an inquiry through
-// POST /contact (topic 'shop', marker in lib). When the price is
-// struck, fulfillment follows lib's FULFILLMENT_CHECKLIST.
+// checkout exists for it: the price was OWNER-STRUCK 2026-10-30 at
+// $24.99/year (lib pricesLive:true), so the page shows the live
+// figure, and the start path is an inquiry through POST /contact
+// (topic 'shop', marker in lib) — the desk confirms payment and
+// fulfillment follows lib's FULFILLMENT_CHECKLIST.
 router.get('/healed-wall', (req, res) => {
   const healedWall = require('../lib/healedWall');
   res.render('shop/healed-wall', {

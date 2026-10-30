@@ -1,18 +1,20 @@
 // CannaDash founding partner fees (Bundle C Build 1, 2026-10-28).
 // The coordinator (test/run.js) wires this in; it also runs standalone:
 //   node test/cannadashFounding.js
-// Covers the owner-strike gate as executable assertions:
-//  - the fee config exposes tiers + pricesLive:false + the
-//    'PENDING OWNER STRIKE' status;
-//  - the founding tiers carry the assessed terms from spec §3
+// Covers the owner-strike gate as executable assertions. The gate
+// held from 2026-10-28 until the owner struck the price on
+// 2026-10-30 at the assessed figures; these assertions now pin the
+// STRUCK state:
+//  - the fee config exposes tiers + pricesLive:true + the
+//    'OWNER-STRUCK — LIVE (2026-10-30)' status;
+//  - the founding tiers carry the struck terms from spec §3
 //    (founding monthly, standard monthly, per-order toll, 12-month lock);
-//  - the public fee rows withhold EVERY assessed figure while
-//    pricesLive is false — structure visible, numbers withheld;
+//  - the public fee rows render the struck figures ($49/mo founding,
+//    15% per-order toll, $99/mo standard) — no withheld label anywhere;
 //  - the founding page handler renders onemind/cannadash-founding in
 //    layout-onemind, and the rendered page carries the lock language,
-//    the cohort terms, the fee table with withheld price cells, and
-//    the existing POST /cannadash/join partner application path —
-//    and NO dollar figure anywhere;
+//    the cohort terms, the fee table with the live price cells, and
+//    the existing POST /cannadash/join partner application path;
 //  - the CannaDash door links the founding page.
 const fs = require('fs');
 const path = require('path');
@@ -30,10 +32,10 @@ function mockRes() {
 async function checkAll(ok) {
   console.log('cannadash founding fees:');
 
-  // --- Config: the strike gate ---
-  ok(founding.pricesLive === false, 'founding prices are NOT live (pricesLive === false)');
-  ok(founding.status === 'PENDING OWNER STRIKE' && founding.STATUS === 'PENDING OWNER STRIKE',
-    "founding fee status is 'PENDING OWNER STRIKE'");
+  // --- Config: the strike gate (struck 2026-10-30) ---
+  ok(founding.pricesLive === true, 'founding prices are LIVE (pricesLive === true, owner strike 2026-10-30)');
+  ok(founding.status === 'OWNER-STRUCK — LIVE (2026-10-30)' && founding.STATUS === 'OWNER-STRUCK — LIVE (2026-10-30)',
+    "founding fee status is 'OWNER-STRUCK — LIVE (2026-10-30)'");
   ok(Array.isArray(founding.tiers) && founding.tiers.length >= 2, 'config exposes the partner tiers');
 
   // --- Config: assessed terms align to spec §3 ---
@@ -52,18 +54,22 @@ async function checkAll(ok) {
   const st = founding.tier('standard-partner');
   ok(!!st && st.assessedMonthly === 99, 'standard tier is the spec §3 standard rate ($99/mo) the founding rate locks against');
 
-  // --- Public rows: structure visible, numbers withheld ---
+  // --- Public rows: structure AND the struck figures, live ---
   const rows = founding.publicFeeRows();
   ok(rows.length >= 3, 'public fee table has the structure rows (subscription, per-order toll, standard reference)');
-  ok(rows.every((r) => r.priceCell === founding.WITHHELD_LABEL),
-    'every public price cell is the withheld label while pricesLive is false');
-  const rowsText = JSON.stringify(rows);
-  ok(!/\$\s?\d/.test(rowsText), 'public fee rows contain NO dollar figure while pricesLive is false');
-  ok(!/\d+(?:\.\d+)?\s?%/.test(rowsText), 'public fee rows contain NO percentage figure while pricesLive is false');
+  const cell = (k) => (rows.find((r) => r.key === k) || {}).priceCell;
+  ok(cell('platform_subscription') === '$49/mo per location',
+    'founding subscription cell renders the struck $49/mo per location');
+  ok(cell('per_order_toll') === '15% of order subtotal',
+    'per-order toll cell renders the struck 15% of order subtotal');
+  ok(cell('standard_subscription_reference') === '$99/mo per location',
+    'standard reference cell renders the struck $99/mo per location');
+  ok(rows.every((r) => r.priceCell !== founding.WITHHELD_LABEL),
+    'no public price cell carries the withheld label after the strike');
   const offer = founding.publicFoundingOffer();
-  ok(offer.pricesLive === false && offer.lockMonths === 12 && /locked at joining/i.test(offer.lockPromise),
-    'public founding offer carries the lock promise + 12-month term, prices withheld');
-  ok(!/\$\s?\d/.test(JSON.stringify(offer)), 'public founding offer contains NO dollar figure');
+  ok(offer.pricesLive === true && offer.lockMonths === 12 && /locked at joining/i.test(offer.lockPromise),
+    'public founding offer carries the lock promise + 12-month term, prices live');
+  ok(!/\$\s?\d/.test(JSON.stringify(offer)), 'public founding offer itself carries structure only (figures render via the fee rows)');
 
   // --- Handler: renders the founding face on the standalone router ---
   const standalone = require('../src/routes/onemindStandalone');
@@ -97,8 +103,8 @@ async function checkAll(ok) {
     && mr.rendered.l.layout === 'layout-onemind',
   'founding handler renders onemind/cannadash-founding in layout-onemind');
   ok(Array.isArray(mr.rendered.l.feeRows) && mr.rendered.l.feeRows.length === rows.length
-    && mr.rendered.l.pricesLive === false,
-  'founding handler passes the gated fee rows + pricesLive:false to the view');
+    && mr.rendered.l.pricesLive === true,
+  'founding handler passes the live fee rows + pricesLive:true to the view');
 
   // --- Rendered page: lock language, fee table, application path ---
   const ejs = require('ejs');
@@ -107,13 +113,13 @@ async function checkAll(ok) {
   ok(html.includes('Founding partners'), 'founding page carries the founding partner offer');
   ok(/rate is locked at joining/i.test(html) && html.includes('12 months'),
     'founding page carries the lock language (locked at joining, 12 months)');
-  ok(html.includes(founding.WITHHELD_LABEL), 'founding page price cells read the withheld label');
+  ok(!html.includes(founding.WITHHELD_LABEL), 'founding page price cells no longer read the withheld label');
   ok(html.includes('<table') && html.includes('Platform subscription') && html.includes('Per-order toll'),
     'founding page renders the real fee table from config (structure visible)');
-  ok(!/\$\s?\d/.test(html) && !html.includes('$'),
-    'founding page contains NO dollar figure while pricesLive is false');
-  ok(!/\d+(?:\.\d+)?\s?% of order/.test(html),
-    'founding page contains NO per-order percentage figure while pricesLive is false');
+  ok(html.includes('$49/mo per location') && html.includes('$99/mo per location'),
+    'founding page renders the struck rates ($49/mo founding, $99/mo standard)');
+  ok(html.includes('15% of order subtotal'),
+    'founding page renders the struck per-order toll (15% of order subtotal)');
   ok(html.includes('action="/herbhaul/join"') && html.includes('name="role" value="partner"'),
     'founding page application reuses POST /herbhaul/join with role=partner (no second intake)');
   ok(html.includes('/herbhaul?join=partner#join'),

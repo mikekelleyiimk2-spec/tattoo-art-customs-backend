@@ -3,16 +3,18 @@
 // BUILD: Bundle C Build 1, 2026-10-28. The dispensary email campaign
 // already running promised a founding rate LOCKED with NO dollar
 // figure quoted. This module is the rate sheet behind that promise —
-// it is NOT a public price list yet.
+// since the owner strike of 2026-10-30 it is the public price list.
 //
 // OWNER-STRIKE GATE (the whole point of this file):
-//   pricesLive is false and status is 'PENDING OWNER STRIKE'.
-//   While pricesLive is false, NO assessed dollar figure from this
-//   file may render on any public page. Public surfaces render the
-//   structure (what is charged, and how) plus WITHHELD_LABEL in every
-//   price cell. The owner strikes the founding price in the approval
-//   batch; only then does pricesLive flip to true — in this file, in
-//   one place — and the assessed figures below start rendering.
+//   Until the strike, pricesLive was false, status was
+//   'PENDING OWNER STRIKE', and NO assessed dollar figure from this
+//   file could render on any public page — surfaces rendered the
+//   structure plus WITHHELD_LABEL in every price cell.
+//   STRUCK 2026-10-30: the owner struck the founding price at the
+//   assessed figures below — $49/mo founding, $99/mo standard (the
+//   exact numbers presented to him; "Your picks — set all three").
+//   pricesLive flipped to true — in this file, in one place — and
+//   the assessed figures now render as the live rates.
 //
 // ASSESSED FIGURES — justification from the spec
 // (~/workspace/your_files/cannadash-spec-2026-10-26.md):
@@ -44,12 +46,14 @@
 // dispensary. The gate to live in spec §10 still stands: counsel
 // clears the market in writing AND a licensed partner signs.
 
-const STATUS = 'PENDING OWNER STRIKE';
-const pricesLive = false;
+const STATUS = 'OWNER-STRUCK — LIVE (2026-10-30)';
+const pricesLive = true;
 
-// The exact sentence every public price cell carries while the owner
-// strike is pending. It keeps the campaign's promise (a founding rate
-// locked at joining, no figure quoted) intact on the founding page.
+// The exact sentence every public price cell carried while the owner
+// strike was pending (retained for the record; publicFeeRows no
+// longer emits it now that pricesLive is true). It kept the
+// campaign's promise (a founding rate locked at joining, no figure
+// quoted) intact on the founding page.
 const WITHHELD_LABEL =
   'Founding rate locked at joining — rate sheet goes to founding partners first';
 
@@ -147,11 +151,11 @@ function formatAssessedMonthly(t) {
   return `$${t.assessedMonthly}/mo per location`;
 }
 
-// Rows safe to render on a public page. While pricesLive is false,
-// every price cell is WITHHELD_LABEL and no assessed figure (monthly
-// or per-order percent) appears anywhere in the returned rows. When
-// the owner strikes the price and pricesLive flips true, the cells
-// carry the assessed terms from the tier each row belongs to.
+// Rows safe to render on a public page. While pricesLive was false,
+// every price cell was WITHHELD_LABEL and no assessed figure
+// appeared anywhere in the returned rows. The owner struck the
+// price 2026-10-30 and pricesLive is true, so the cells now carry
+// the struck terms from the tier each row belongs to.
 function publicFeeRows() {
   return FEE_ROWS.map((row) => {
     const t = tier(row.tierId);
@@ -171,8 +175,8 @@ function publicFeeRows() {
 }
 
 // What a public page may say about the founding tier: structure,
-// includes, lock term, and cap — never a dollar figure while the
-// strike is pending.
+// includes, lock term, and cap. (The dollar figures themselves
+// render only through publicFeeRows, under the pricesLive gate.)
 function publicFoundingOffer() {
   const t = foundingTier();
   return {
