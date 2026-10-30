@@ -14,9 +14,9 @@
 // "blocked-no-watermark" until linework_wm_path is set, so approval alone
 // could never unblock them. This script is the repair.
 const path = require('path');
-const db = require('../db');
-const { applyWatermarkedLinework } = require('../lib/watermark');
-const { resolveStoredPath } = require('../lib/storage');
+const db = require('../src/db');
+const { applyWatermarkedLinework } = require('../src/lib/watermark');
+const { resolveStoredPath } = require('../src/lib/storage');
 
 const PILOT_BATCH_20261011 = [
   'a5dcc0ac61206ab06b804dac', // Windmill
