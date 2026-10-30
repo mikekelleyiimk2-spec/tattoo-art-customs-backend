@@ -96,6 +96,11 @@ async function localLocals(req) {
   };
 }
 
+// The register is a section of the /dawnfold page, not its own route —
+// /dawnfold/register 404'd for anyone following a register link (sweep,
+// 2026-10-29). Redirect to the page that carries the register.
+router.get('/dawnfold/register', (req, res) => res.redirect(301, '/dawnfold'));
+
 // Edition No. 1 — Wed Oct 28 2026, Vol I No 1. The edition body is
 // ported verbatim from the app's bundled index.html (departments,
 // sources, colophon intact) into views/site/thebigone-edition.ejs.
