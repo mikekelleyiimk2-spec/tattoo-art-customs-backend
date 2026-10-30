@@ -2855,6 +2855,20 @@ async function main() {
     && sixPayload.billing_cycles[0].frequency.interval_count === 6
     && sixPayload.billing_cycles[0].pricing_scheme.fixed_price.value === '26.37'
     && sixPayload.billing_cycles[0].total_cycles === 0, 'PayPal 6-month plan: single REGULAR MONTH x 6 cycle at $26.37, renews forever');
+  // Dawnfold plan-creation machinery (money-holes fix pass 2026-10-30):
+  // the 5 publication plans are plain single-cycle plans at the config
+  // register prices — the payload builder the Render-shell script runs.
+  const dawnPayload = paypal.simplePlanPayload({ productId: 'PROD-TEST', name: 'n', description: 'd', regularCents: cfg6.pricing.plans.the_big_one.priceCents, intervalUnit: 'MONTH', intervalCount: 1 });
+  ok(dawnPayload.billing_cycles.length === 1 && dawnPayload.billing_cycles[0].tenure_type === 'REGULAR'
+    && dawnPayload.billing_cycles[0].frequency.interval_unit === 'MONTH'
+    && dawnPayload.billing_cycles[0].frequency.interval_count === 1
+    && dawnPayload.billing_cycles[0].pricing_scheme.fixed_price.value === '5.65'
+    && dawnPayload.billing_cycles[0].total_cycles === 0
+    && dawnPayload.status === 'ACTIVE', 'Dawnfold plan payload: single REGULAR MONTH cycle at the $5.65 register price');
+  const dawnAnnual = paypal.simplePlanPayload({ productId: 'PROD-TEST', name: 'n', description: 'd', regularCents: cfg6.pricing.plans.the_big_one_annual.priceCents, intervalUnit: 'YEAR', intervalCount: 1 });
+  ok(dawnAnnual.billing_cycles[0].frequency.interval_unit === 'YEAR'
+    && dawnAnnual.billing_cycles[0].pricing_scheme.fixed_price.value === '41.88', 'Dawnfold annual plan payload: YEAR cycle at the $41.88 register price');
+  ok(typeof paypal.createSimpleBillingPlan === 'function' && typeof paypal.createCatalogProduct === 'function', 'PayPal lib exposes the Dawnfold plan-creation calls for scripts/create-dawnfold-plans.js');
   // PayPal plan IDs come from the test env (top of this file, inherited by
   // the spawned server), so the 6-month checkout is exercisable over HTTP.
   ok(cfg6.paypalCustomer6MonthPlanConfigured(), '6-month plan activates once its PayPal plan ID is configured');

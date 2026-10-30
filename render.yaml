@@ -49,6 +49,24 @@ services:
         sync: false
       - key: PAYPAL_PLAN_CUSTOMER_ANNUAL
         sync: false
+      # Dawnfold publication plans (created by
+      # scripts/create-dawnfold-plans.js in the Render shell; the same
+      # 5 IDs also go on the OneMind standalone service).
+      - key: PAYPAL_PLAN_THE_BIG_ONE
+        sync: false
+      - key: PAYPAL_PLAN_THE_BIG_ONE_ANNUAL
+        sync: false
+      - key: PAYPAL_PLAN_THE_BIG_ONE_FOUNDING
+        sync: false
+      - key: PAYPAL_PLAN_THE_BIG_ONE_SUPPORTER
+        sync: false
+      - key: PAYPAL_PLAN_THE_BIG_ONE_WAITING_ROOM
+        sync: false
+      # Muse service pipe token (guards /api/muse/*; endpoints 404
+      # while unset). Value lives only in the dashboard + the VM
+      # secrets store — never in the repo.
+      - key: MUSE_SERVICE_TOKEN
+        sync: false
       - key: FOUNDING_SHOP_WINDOW_END
         value: 2027-03-01
       - key: SMTP_HOST
