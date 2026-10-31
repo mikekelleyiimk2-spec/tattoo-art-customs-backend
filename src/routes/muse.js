@@ -696,6 +696,39 @@ router.get('/all-sales', async (req, res) => {
   return res.json({ ok: true, sales: rows });
 });
 
+// GET /api/muse/orders-recent?since=<ms>&until=<ms>&type=<order_type>&status=<status>
+// Returns orders CREATED in the window (any status, newest last, max
+// 200), including paypal_order_id presence — the diagnostic that tells
+// whether a buyer's tap reached the server and whether PayPal checkout
+// creation completed. Added 2026-10-31 for the Brambleforce buy-button
+// hang: until this existed, a stalled checkout left NO queryable trace
+// (all-sales only ever sees paid orders). Read-only.
+// Same service-token auth as /notify; 404s when MUSE_SERVICE_TOKEN unset.
+router.get('/orders-recent', async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  const since = parseInt(req.query.since, 10) || (Date.now() - 24 * 3600 * 1000);
+  const until = parseInt(req.query.until, 10) || Date.now();
+  const clauses = ['o.created_at >= ?', 'o.created_at <= ?'];
+  const params = [since, until];
+  if (req.query.type) { clauses.push('o.order_type = ?'); params.push(String(req.query.type).slice(0, 80)); }
+  if (req.query.status) { clauses.push('o.status = ?'); params.push(String(req.query.status).slice(0, 32)); }
+  try {
+    const rows = await db.all(
+      `SELECT o.id, o.order_type, o.amount_cents, o.fee_cents, o.status, o.payment_method,
+              o.paypal_order_id, o.guest_email, u.email AS buyer_email, o.created_at, o.paid_at
+       FROM orders o LEFT JOIN users u ON u.id = o.buyer_id
+       WHERE ${clauses.join(' AND ')}
+       ORDER BY o.created_at ASC LIMIT 200`,
+      params
+    );
+    return res.json({ ok: true, since, until, orders: rows });
+  } catch (e) {
+    console.error('[muse/orders-recent] query failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'query failed' });
+  }
+});
+
 // GET /api/muse/money-stats
 // Returns production money totals for the owner's daily sweep: gross revenue,
 // order counts, commissions owed, and signups. Read-only.

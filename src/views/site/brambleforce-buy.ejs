@@ -12,9 +12,9 @@
     iron_garden_expansion: '/img/brambleforce/shot-canopy.webp',
     boss_rush_time_attack: '/img/brambleforce/shot-dreadnought.webp',
     queens_hunt: '/img/brambleforce/shot-orchid.webp',
-    weapon_tracers: '/img/brambleforce/shot-fracture.webp',
-    crt_filter: '/img/brambleforce/shot-kraken.webp',
-    soundtrack: '/img/brambleforce/shot-leviathan.webp',
+    weapon_tracers: '/img/brambleforce/shot-tracers.webp',
+    crt_filter: '/img/brambleforce/shot-crt.webp',
+    soundtrack: '/img/brambleforce/shot-clockheart.webp',
     art_vault: '/img/brambleforce/title.webp',
     war_bond: '/img/brambleforce/hero.webp'
   };
@@ -35,11 +35,13 @@
   <% if (user) { %>
   <form method="post" action="/brambleforce/buy/<%= productId %>/buy" class="form">
     <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <input type="hidden" name="ck" value="<%= checkoutKey %>">
     <p><button class="btn bf-btn-wide" type="submit">Buy for $<%= (price / 100).toFixed(2) %></button></p>
   </form>
   <% } else { %>
   <form method="post" action="/brambleforce/buy/<%= productId %>/buy" class="form">
     <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <input type="hidden" name="ck" value="<%= checkoutKey %>">
     <label><%= t('buyApp.guest_email_label') %>
       <input type="email" name="guest_email" required maxlength="160" placeholder="you@example.com">
     </label>

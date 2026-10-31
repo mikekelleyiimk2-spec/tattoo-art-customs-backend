@@ -16,6 +16,7 @@
 // order_type `sideload:<package>` so the gated app-updates route serves
 // the APK; IAP orders carry `brambleforce:<product>` and mint a
 // single-use unlock code at capture (lib/brambleforce).
+const crypto = require('crypto');
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const db = require('../db');
@@ -29,6 +30,34 @@ const rolodex = require('../lib/rolodex');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 
 const guestScope = (productId) => `brambleforce:${productId}`;
+
+// ---- checkout idempotency (buy-button hang recurrence, 2026-10-31) ----
+// The buy page renders a per-render checkout key (`ck`, hidden field).
+// The first POST with a key records a pending marker in site_kv BEFORE
+// creating anything, and the finished PayPal approve URL when creation
+// succeeds. A twin POST with the same key — the stall watchdog restoring
+// the form at 60s while the original request is still in flight, or a
+// buyer re-tap on a flaky connection — waits for / replays the SAME
+// checkout instead of minting a second order + second PayPal order.
+// Without a key (old cached pages, tests) the flow is unchanged.
+const CK_RE = /^[a-z0-9_-]{8,64}$/i;
+async function ckGet(key) {
+  try {
+    const row = await db.get('SELECT val FROM site_kv WHERE name = ?', [`bfck:${key}`]);
+    return row ? JSON.parse(row.val) : null;
+  } catch (e) { return null; }
+}
+async function ckSet(key, obj) {
+  try {
+    await db.query(
+      `INSERT INTO site_kv (name, val, updated_at) VALUES (?, ?, ?)
+       ON CONFLICT(name) DO UPDATE SET val = excluded.val, updated_at = excluded.updated_at`,
+      [`bfck:${key}`, JSON.stringify(obj), db.now()]);
+  } catch (e) { /* best-effort: a lost marker only loses dedupe */ }
+}
+async function ckDel(key) {
+  try { await db.query('DELETE FROM site_kv WHERE name = ?', [`bfck:${key}`]); } catch (e) { /* best-effort */ }
+}
 
 function partners() {
   // Penny Sweeper affiliate door: placements pulled LIVE from the
@@ -125,6 +154,7 @@ function pageRouter() {
       product: p,
       productId: req.bfProductId,
       price: p.priceCents,
+      checkoutKey: crypto.randomBytes(12).toString('hex'),
       partners: partners(),
       disclosureStandard: rolodex.disclosureStandard(),
       user: req.user || null,
@@ -132,6 +162,7 @@ function pageRouter() {
   });
 
   router.post('/buy/:productId/buy', resolveProduct, formLimiter, checkHoneypot, async (req, res) => {
+    const t0 = Date.now();
     const p = req.bfProduct;
     const productId = req.bfProductId;
     const guest = !req.user;
@@ -143,6 +174,30 @@ function pageRouter() {
         return res.redirect(`/brambleforce/buy/${productId}`);
       }
     }
+    // Idempotent checkout: replay / wait on a twin submission carrying
+    // the same per-render checkout key (see ckGet above).
+    const ck = typeof (req.body && req.body.ck) === 'string' && CK_RE.test(req.body.ck) ? req.body.ck : null;
+    if (ck) {
+      const rec = await ckGet(ck);
+      const age = rec ? Date.now() - (rec.ts || 0) : Infinity;
+      if (rec && rec.approve && age < 30 * 60 * 1000) {
+        console.log(`[bf-buy] ${productId} idempotent replay order=${rec.orderId} key=${ck}`);
+        return res.redirect(rec.approve);
+      }
+      if (rec && rec.pending && age < 45000) {
+        const deadline = Date.now() + 30000;
+        while (Date.now() < deadline) {
+          await new Promise((r) => setTimeout(r, 400));
+          const again = await ckGet(ck);
+          if (again && again.approve) return res.redirect(again.approve);
+          if (!again) break; // creator failed and cleared the marker
+        }
+        const final = await ckGet(ck);
+        if (final && final.approve) return res.redirect(final.approve);
+        // Creator is stale/dead — take over below.
+      }
+      await ckSet(ck, { pending: true, ts: Date.now() });
+    }
     const price = p.priceCents;
     const fee = pricing.processingFeeCents(price);
     const orderId = await db.insert('orders', {
@@ -151,6 +206,7 @@ function pageRouter() {
       guest_email: guestEmail,
       created_at: db.now(),
     });
+    const tDb = Date.now();
     try {
       const pp = await paypal.createCheckoutOrder({
         amountCents: price + fee,
@@ -162,9 +218,14 @@ function pageRouter() {
       });
       await db.update('orders', orderId, { paypal_order_id: pp.id });
       const approve = pp.links.find((l) => l.rel === 'approve');
+      if (ck) await ckSet(ck, { orderId, approve: approve.href, ts: Date.now() });
+      // Segment timings: the next "hang" report should be diagnosable
+      // from Render logs alone (db leg vs PayPal leg vs total).
+      console.log(`[bf-buy] ${productId} order=${orderId} db=${tDb - t0}ms paypal=${Date.now() - tDb}ms total=${Date.now() - t0}ms ${guest ? 'guest' : 'member'}`);
       res.redirect(approve.href);
     } catch (e) {
-      console.error(`brambleforce ${productId} PayPal order create failed:`, e.message);
+      if (ck) await ckDel(ck);
+      console.error(`brambleforce ${productId} PayPal order create failed after ${Date.now() - t0}ms:`, e.message);
       req.session.flash = 'PayPal checkout is unavailable right now — try again later.';
       res.redirect(`/brambleforce/buy/${productId}`);
     }

@@ -76,6 +76,27 @@ async function runHttpTests(ok, req, areq) {
   ok(pending && pending.buyer_id === '' && pending.order_type === 'brambleforce:crt_filter' && pending.status === 'pending',
     'bf: IAP order is a pending brambleforce order with the guest sentinel buyer');
 
+  // 2b. Checkout idempotency (buy-button hang recurrence, 2026-10-31):
+  // the buy page carries a per-render checkout key; a POST replaying a
+  // key whose checkout already completed redirects to the SAME PayPal
+  // approve URL and mints NO second order; a key whose create failed
+  // leaves no marker behind, so a genuine retry starts fresh.
+  a = await anon('GET', '/brambleforce/buy/crt_filter');
+  ok(a.text.includes('name="ck"'), 'bf: buy page carries the checkout idempotency key');
+  const ordersBefore = tdb.prepare('SELECT COUNT(*) AS n FROM orders').get().n;
+  tdb.prepare('INSERT INTO site_kv (name, val, updated_at) VALUES (?,?,?)')
+    .run('bfck:testkey0001', JSON.stringify({ orderId: 'ord-seeded', approve: 'https://www.paypal.com/checkoutnow?token=SEEDED', ts: Date.now() }), Date.now());
+  a = await anon('POST', '/brambleforce/buy/crt_filter/buy', { guest_email: 'bfdupe@test.local', ck: 'testkey0001' });
+  ok(a.status === 302 && a.location === 'https://www.paypal.com/checkoutnow?token=SEEDED',
+    'bf: replayed checkout key redirects to the original PayPal checkout');
+  ok(tdb.prepare('SELECT COUNT(*) AS n FROM orders').get().n === ordersBefore,
+    'bf: replayed checkout key mints no second order');
+  a = await anon('POST', '/brambleforce/buy/crt_filter/buy', { guest_email: 'bfdupe@test.local', ck: 'testkey0002' });
+  ok(a.status === 302 && a.location.includes('/brambleforce/buy/crt_filter'),
+    'bf: fresh key with PayPal down still falls back to the buy page');
+  ok(!tdb.prepare('SELECT name FROM site_kv WHERE name = ?').get('bfck:testkey0002'),
+    'bf: failed checkout clears its idempotency marker (retry starts fresh)');
+
   const seedGuest = (id, type, email) => tdb.prepare(`INSERT INTO orders
     (id, buyer_id, design_id, order_type, amount_cents, fee_cents, status, payment_method, paypal_order_id, referral_code, guest_email, created_at)
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`).run(id, '', null, type, 0, 0, 'pending', 'paypal', `pp-${id}`, '', email, Date.now());

@@ -28,7 +28,7 @@ function assertPlansConfigured() {
 
 let tokenCache = { token: null, expiresAt: 0 };
 
-async function getAccessToken() {
+async function getAccessToken(timeoutMs) {
   assertConfigured();
   if (tokenCache.token && Date.now() < tokenCache.expiresAt - 60000) return tokenCache.token;
   const creds = Buffer.from(`${config.paypal.clientId}:${config.paypal.clientSecret}`).toString('base64');
@@ -36,7 +36,7 @@ async function getAccessToken() {
     method: 'POST',
     headers: { Authorization: `Basic ${creds}`, 'Content-Type': 'application/x-www-form-urlencoded' },
     body: 'grant_type=client_credentials',
-  });
+  }, timeoutMs);
   if (!res.ok) throw new Error(`PayPal token request failed: ${res.status}`);
   const data = await res.json();
   tokenCache = { token: data.access_token, expiresAt: Date.now() + data.expires_in * 1000 };
@@ -47,14 +47,15 @@ async function getAccessToken() {
 // forever (stalled checkouts during an outage invite double-clicks and
 // retries, which cause duplicate charges and duplicate rows downstream).
 const PAYPAL_TIMEOUT_MS = 25000;
-async function fetchWithTimeout(url, options = {}) {
+async function fetchWithTimeout(url, options = {}, timeoutMs = PAYPAL_TIMEOUT_MS) {
+  const cap = Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : PAYPAL_TIMEOUT_MS;
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), PAYPAL_TIMEOUT_MS);
+  const timer = setTimeout(() => ctrl.abort(), cap);
   try {
     return await fetch(url, { ...options, signal: ctrl.signal });
   } catch (e) {
     if (e && e.name === 'AbortError') {
-      throw new Error(`PayPal request timed out after ${PAYPAL_TIMEOUT_MS / 1000}s: ${url}`);
+      throw new Error(`PayPal request timed out after ${cap / 1000}s: ${url}`);
     }
     throw e;
   } finally {
@@ -70,8 +71,8 @@ function isAlreadyCapturedError(e) {
   return /already.?captured/i.test(String((e && e.message) || ''));
 }
 
-async function api(path, method = 'GET', body = null) {
-  const token = await getAccessToken();
+async function api(path, method = 'GET', body = null, timeoutMs) {
+  const token = await getAccessToken(timeoutMs);
   const res = await fetchWithTimeout(`${config.paypalBaseUrl()}${path}`, {
     method,
     headers: {
@@ -79,7 +80,7 @@ async function api(path, method = 'GET', body = null) {
       'Content-Type': 'application/json',
     },
     body: body ? JSON.stringify(body) : undefined,
-  });
+  }, timeoutMs);
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const detail = data.details?.map((d) => d.description).join('; ') || data.message || res.status;
@@ -89,6 +90,15 @@ async function api(path, method = 'GET', body = null) {
 }
 
 // --- Checkout (one-time payments: premade designs, custom deposits) ---
+// Checkout creation runs inside the buyer's page navigation, under the
+// buy pages' 60s stall watchdog. The generic 25s-per-call cap allows a
+// 50s+ server leg (token fetch + create) before DB/session time — close
+// enough to the watchdog that a slow PayPal minute reads as a hang and
+// invites a duplicate-order retry. The checkout path therefore carries
+// a tighter 15s-per-call budget: worst case ~30s of PayPal time, and a
+// genuinely dead PayPal fails FAST back to the buy page with a flash
+// instead of stranding the buyer on "Working…".
+const CHECKOUT_TIMEOUT_MS = 15000;
 async function createCheckoutOrder({ amountCents, description, returnUrl, cancelUrl }) {
   assertConfigured();
   return api('/v2/checkout/orders', 'POST', {
@@ -98,7 +108,7 @@ async function createCheckoutOrder({ amountCents, description, returnUrl, cancel
       amount: { currency_code: 'USD', value: (amountCents / 100).toFixed(2) },
     }],
     application_context: { return_url: returnUrl, cancel_url: cancelUrl },
-  });
+  }, CHECKOUT_TIMEOUT_MS);
 }
 
 async function captureCheckoutOrder(paypalOrderId) {
