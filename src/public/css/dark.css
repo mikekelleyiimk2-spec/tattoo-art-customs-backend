@@ -29,6 +29,11 @@ body.page-dark {
   --paper-dim: #221c16;
   --muted: #a89a80;
   --surface: #171310;
+  /* Tinted wells go deep on the dark field, keeping their border hues:
+     gold panel -> deep bronze well, join panel -> deep green well. */
+  --panel-gold: #2a2110;
+  --panel-join: #12261a;
+  --well: #221c16;
 }
 
 /* ============================ TYPE ============================ */
@@ -95,3 +100,19 @@ body.page-dark .slot-grid button:hover, body.page-dark .slot-grid button.selecte
    field it takes the home face's deal-strip treatment (.lp2-deal). */
 body.page-dark .deals-strip { background: #171310; border-color: #2b241c; color: #ffb3ab; }
 body.page-dark .deals-strip:hover, body.page-dark .deals-strip:focus { color: #ffb3ab; }
+
+/* ===================== SITE VISUAL AUDIT LIFT (2026-10-30) ===================== */
+/* The rotating linework tile is the old site's wallpaper: on the dark field
+   it sits at .05 — texture, not noise competing with body copy. */
+body.page-dark .site-bg { opacity: .05; }
+/* Muted copy steps up one notch on the dark field for article-length pages
+   (guides, terms, privacy) where .muted carries whole paragraphs. */
+body.page-dark .muted { color: #b3a68c; }
+
+/* ===================== SITE VISUAL AUDIT LIFT (2026-10-30) ===================== */
+/* The rotating linework tile is the old site's wallpaper: on the dark field
+   it sits at .05 — texture, not noise competing with body copy. */
+body.page-dark .site-bg { opacity: .05; }
+/* Muted copy steps up one notch on the dark field for article-length pages
+   (guides, terms, privacy) where .muted carries whole paragraphs. */
+body.page-dark .muted { color: #b3a68c; }

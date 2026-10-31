@@ -19,7 +19,7 @@
   <h2><%= t('raffle.progress_title') %></h2>
   <p><strong><%= t('raffle.entries_so_far', {entries: fmtNum(raffleEntries), target: fmtNum(entryTarget)}) %></strong></p>
   <% const pct = Math.min(100, (raffleEntries / entryTarget) * 100); %>
-  <div style="background:#eee;border-radius:6px;height:14px;overflow:hidden">
+  <div style="background:var(--well);border-radius:6px;height:14px;overflow:hidden">
     <div style="background:#2a7;height:100%;width:<%= pct.toFixed(4) %>%"></div>
   </div>
   <p class="muted"><%= t('raffle.progress_note') %></p>

@@ -6,7 +6,7 @@
 <% } %>
 
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;margin:1.5rem 0;">
-  <div style="border:2px solid #b8860b;background:#fdf6e0;border-radius:8px;padding:1.25rem;text-align:center;">
+  <div style="border:2px solid #b8860b;background:var(--panel-gold);border-radius:8px;padding:1.25rem;text-align:center;">
     <p style="font-size:1.15rem;margin-top:0;"><strong>BECOME A TESTER — FIRST IN LINE TO TRY THE NEWEST APPS.</strong></p>
     <p>The FillMyList app puts the whole pool in your pocket: new apps appear in FillMyList the moment they open, and you're first in line for every one.</p>
     <p style="margin-bottom:0;"><a class="btn" style="display:block;padding:1rem;font-size:1.05rem;" href="/tester-hub">Download the FillMyList app (Android)</a></p>
@@ -19,7 +19,7 @@
 </div>
 <p style="border:1px dashed #b8860b;border-radius:8px;padding:1rem 1.25rem;"><strong>TIRED OF LOOKING FOR TESTERS?</strong> Developers: inside the FillMyList app, one payment fills your tester list to FULL — $24.99, one app, testers cycled in waves until 12 confirmed, and kept full through your 14 days. <a href="/tester-hub">Get FillMyList and start a fill</a>.</p>
 
-<div id="join" style="border:2px solid #2e7d32;background:#eef7ee;border-radius:8px;padding:1.25rem;margin:1.5rem 0;">
+<div id="join" style="border:2px solid #2e7d32;background:var(--panel-join);border-radius:8px;padding:1.25rem;margin:1.5rem 0;">
   <h2 style="margin-top:0;"><%= t('testers.form_title') %></h2>
   <form method="post" action="/testers">
     <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">

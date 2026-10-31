@@ -11,6 +11,12 @@
   --ok: #2e7d32;
   --warn: #b26a00;
   --radius: 10px;
+  /* Tinted panel wells (testers gold/join panels, raffle progress trough).
+     Light values here = the classic face; dark.css re-points them on
+     body.page-dark so the panels read as deep tinted wells there. */
+  --panel-gold: #fdf6e0;
+  --panel-join: #eef7ee;
+  --well: #eee;
 }
 * { box-sizing: border-box; }
 img { max-width: 100%; height: auto; }
