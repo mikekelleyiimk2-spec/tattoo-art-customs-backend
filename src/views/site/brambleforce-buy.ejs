@@ -51,7 +51,7 @@
     <%# Extras deliver an unlock CODE by email, not a download link — the
         house guest_email_note string promises a download link (true for
         the game and the app doors), so extras pages say code here. %>
-    <p class="muted fineprint">No account needed — after PayPal checkout, your unlock code is emailed to this address.</p>
+    <p class="muted fineprint">No account needed — after PayPal checkout, your unlock code appears on screen, and a copy is sent to this address too. Save the code when you see it.</p>
     <% } %>
     <p><button class="btn bf-btn-wide" type="submit">Buy for $<%= (price / 100).toFixed(2) %></button></p>
     <p class="muted fineprint"><%= t('buyApp.guest_or_login') %> <a href="/login?next=/brambleforce/buy/<%= productId %>"><%= t('buyApp.guest_login_link') %></a> <%= t('buyApp.guest_login_tail') %></p>
@@ -66,14 +66,14 @@
   <% if (bfIsGame) { %>
   <ol class="bf-steps">
     <li><strong>Buy here with PayPal</strong>One-time $<%= (price / 100).toFixed(2) %>. Guest checkout — just an email for delivery.</li>
-    <li><strong>Download the APK</strong>Your purchase page has the download — the link is emailed to you too, and it can be re-issued from that page anytime.</li>
+    <li><strong>Download the APK</strong>Your purchase page has the download, and it can be re-issued from that page anytime — bookmark it after checkout.</li>
     <li><strong>Install &amp; play</strong>Open the APK, allow installs from this source if asked, tap Install. Zero ads — it's a paid game.</li>
   </ol>
   <p class="muted fineprint" style="margin-top:.8rem;">Android 8+. Built for controllers (gamepad out of the box), keyboard, and touch.</p>
   <% } else { %>
   <ol class="bf-steps">
     <li><strong>Buy here with PayPal</strong>One-time $<%= (price / 100).toFixed(2) %>. Guest checkout — just an email for delivery.</li>
-    <li><strong>Get your unlock code</strong>The code appears on the next page — and is emailed to you. Keep the email; the code is shown once.</li>
+    <li><strong>Get your unlock code</strong>The code appears on the page right after checkout, and a copy is emailed to you as a backup. Copy it down and keep it safe.</li>
     <li><strong>Redeem it in the game</strong>Open Brambleforce → EXTRAS (B on the title screen) → REDEEM CODE → type the code. Done — it's yours for good.</li>
   </ol>
   <p class="muted fineprint" style="margin-top:.8rem;">Codes are single-use. You need the Brambleforce game (Android) to use this extra — <a href="/brambleforce/buy/game">get the game first</a> if you don't have it.</p>

@@ -43,7 +43,7 @@
 const crypto = require('crypto');
 const db = require('../db');
 const config = require('../config');
-const { sendMail } = require('./mail');
+const { sendMail, transportReady } = require('./mail');
 
 const PACKAGE = 'com.usefulappz.game2runandgun';
 
@@ -377,7 +377,8 @@ function hashCode(code) {
 // code only when it was minted in this call — the raw code is never
 // stored, so a re-issue after the fact cannot recover it; in that case
 // this returns { code: null, alreadyIssued: true } and the caller
-// points the buyer at their email copy.
+// falls back to the buyer's session copy (routes/brambleforce.js) and
+// the durable page's honest support path.
 async function issueCodeForOrder(order, productId) {
   const existing = await db.get('SELECT * FROM brambleforce_codes WHERE order_id = ?', [order.id]);
   if (existing) return { code: null, alreadyIssued: true, row: existing };
@@ -425,13 +426,35 @@ async function redeemCode(rawCode) {
   return { product: row.product };
 }
 
-// Email the unlock code to the buyer (success page shows it too; mail
-// is the durable copy). Best-effort like the guest receipts: payment is
-// already captured when this runs, a mail failure never breaks the
-// buyer's flow — it is logged, and the success page carries the code.
-async function sendCodeEmail({ to, productId, code, successUrl }) {
-  if (!to || !code) return false;
+// Email the unlock code to the buyer (the one-time success page shows
+// it too; mail is the durable copy WHEN it truly sends).
+//
+// TRUTH CONTRACT (2026-10-31, owner-caught live: a buyer paid, the
+// code email never arrived, and the pages kept telling him the emailed
+// copy was the one to keep): the resolved value is the ACTUAL delivery
+// result — { sent: true } only when the mailer really delivered.
+//   - No recipient / no code: logged loudly, { sent: false }.
+//   - Mail transport not configured (SMTP unset on the server):
+//     sendMail would take its dev fallback — log the message, deliver
+//     NOTHING, resolve {dev:true} — so the send is not even attempted
+//     (the raw code must never land in server logs via that fallback)
+//     and the result is { sent: false, error: 'mail_not_configured' }.
+//   - Mailer throws after its retries: logged loudly with order +
+//     product + error (NEVER the code), { sent: false, error }.
+// A mail failure never breaks the buyer's flow (payment is already
+// captured); the caller MUST render copy from this result, so the
+// buyer is told the truth about which copy of the code they have.
+async function sendCodeEmail({ to, productId, code, successUrl, orderId }) {
   const p = product(productId);
+  const where = `order=${orderId || '?'} product=${productId}`;
+  if (!to || !code) {
+    console.error(`brambleforce code email NOT sent (${where}): ${!to ? 'no buyer email on the order' : 'no code was issued'}`);
+    return { sent: false, error: !to ? 'no_recipient' : 'no_code' };
+  }
+  if (!transportReady()) {
+    console.error(`brambleforce code email NOT sent (${where}): mail transport is not configured on this server`);
+    return { sent: false, error: 'mail_not_configured' };
+  }
   const lines = [
     'Hi there,',
     '',
@@ -451,22 +474,40 @@ async function sendCodeEmail({ to, productId, code, successUrl }) {
     '— Useful Appz / Tattoo Art Customs',
   ];
   try {
-    await sendMail({
+    const info = await sendMail({
       to,
       subject: `Your Brambleforce unlock code — ${p ? p.name : productId}`,
       text: lines.join('\n'),
     });
-    return true;
+    if (!info || info.dev) {
+      // Defensive: a resolved dev-fallback result is not a delivery.
+      console.error(`brambleforce code email NOT delivered (${where}): the mailer took the dev fallback`);
+      return { sent: false, error: 'mail_not_delivered' };
+    }
+    return { sent: true };
   } catch (e) {
-    console.error('brambleforce code email failed:', e.message);
-    return false;
+    console.error(`brambleforce code email FAILED (${where}):`, e.message);
+    return { sent: false, error: e.message };
   }
 }
 
 // Email the game buyer their download page (the fleet paid-download
 // pattern: the page link is durable, the APK itself stays gated).
-async function sendGameEmail({ to, successUrl }) {
-  if (!to) return false;
+// Same truth contract as sendCodeEmail: the resolved value is the
+// ACTUAL delivery result ({ sent: true } only on real delivery), and
+// every failure is logged loudly with the order id. Callers render
+// copy from this result — no page may promise this email as a fact
+// when it did not send.
+async function sendGameEmail({ to, successUrl, orderId }) {
+  const where = `order=${orderId || '?'} product=game`;
+  if (!to) {
+    console.error(`brambleforce game email NOT sent (${where}): no buyer email on the order`);
+    return { sent: false, error: 'no_recipient' };
+  }
+  if (!transportReady()) {
+    console.error(`brambleforce game email NOT sent (${where}): mail transport is not configured on this server`);
+    return { sent: false, error: 'mail_not_configured' };
+  }
   const lines = [
     'Hi there,',
     '',
@@ -484,15 +525,19 @@ async function sendGameEmail({ to, successUrl }) {
     '— Useful Appz / Tattoo Art Customs',
   ];
   try {
-    await sendMail({
+    const info = await sendMail({
       to,
       subject: 'Your download is ready — Brambleforce (Android)',
       text: lines.join('\n'),
     });
-    return true;
+    if (!info || info.dev) {
+      console.error(`brambleforce game email NOT delivered (${where}): the mailer took the dev fallback`);
+      return { sent: false, error: 'mail_not_delivered' };
+    }
+    return { sent: true };
   } catch (e) {
-    console.error('brambleforce game email failed:', e.message);
-    return false;
+    console.error(`brambleforce game email FAILED (${where}):`, e.message);
+    return { sent: false, error: e.message };
   }
 }
 

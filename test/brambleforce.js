@@ -118,6 +118,13 @@ async function runHttpTests(ok, req, areq) {
   ok(!!codeRow && codeRow.product === 'crt_filter' && Number(codeRow.spent) === 0,
     'bf: exactly one unspent code row minted for the order');
   ok(codeRow && !JSON.stringify(codeRow).includes(code), 'bf: the raw code is never stored (hash only)');
+  // Mail truth on the fresh render: the test server has NO mail
+  // transport, so this capture is the email-failure case — the page
+  // must warn, never claim (2026-10-31 owner-caught defect).
+  ok(!a.text.includes('was also emailed to you'),
+    'bf-mail: fresh capture page never claims an email that did not send');
+  ok(a.text.includes('only copy there is'),
+    'bf-mail: fresh capture page warns the shown code is the only copy when the email did not send');
 
   // 4. The redeem contract, exactly as the game calls it.
   let r = await anon('POST', '/api/brambleforce/redeem', { __json: { code } }, { origin: 'null' });
@@ -156,6 +163,10 @@ async function runHttpTests(ok, req, areq) {
   a = await anon('GET', `/brambleforce/buy/game/success/ord-bf-game-1?gt=${encodeURIComponent(gameGt)}`);
   ok(a.status === 200 && a.text.includes('/api/apps/com.usefulappz.game2runandgun/apk?t='),
     'bf: game success page serves the gated APK download token link');
+  ok(!a.text.includes('Keep your purchase email'),
+    'bf-mail: game success page never promises a purchase email');
+  ok(a.text.includes('/contact'),
+    'bf-mail: game success page carries the support recovery path');
   a = await anon('GET', '/brambleforce/buy/game/success/ord-bf-game-1');
   ok(a.status === 403, 'bf: game success page without the token is 403');
 
@@ -318,6 +329,62 @@ async function runHttpTests(ok, req, areq) {
   ok(a.status === 404, 'bf-rot: a disabled product buy POST is refused (404)');
   ok(tdb.prepare('SELECT COUNT(*) AS n FROM orders').get().n === ordersBeforeRot,
     'bf-rot: a refused buy POST mints no order (checkout cannot mint an unpurchasable product)');
+
+  // 11. Session-sticky code + durable-page truth (2026-10-31,
+  // owner-caught live): the one-time code render is the response body
+  // of the FIRST approve GET; any reload of that URL hits the
+  // already-paid branch and redirects to the durable page — which is
+  // how a buyer who never saw the render lost the code for good. The
+  // code now also lives in the buyer's server-side session, so the
+  // durable page re-shows it in that session until it is redeemed.
+  // The test server has no mail transport, so this is simultaneously
+  // the email-failure case end to end.
+  const jarFetch = async (method, p, cookie) => {
+    const res = await fetch(`http://localhost:4137${p}`, {
+      method, redirect: 'manual',
+      headers: { ...(cookie ? { cookie } : {}) },
+    });
+    const text = await res.text();
+    const setCookies = (res.headers.getSetCookie ? res.headers.getSetCookie() : [res.headers.get('set-cookie')]).filter(Boolean);
+    return { status: res.status, text, location: res.headers.get('location') || '', setCookies };
+  };
+  const jarOf = (setCookies) => setCookies.map((c) => c.split(';')[0]).join('; ');
+  seedGuest('ord-bf-sticky-1', 'brambleforce:crt_filter', 'bfsticky@test.local');
+  const stickyGt = guestCheckout.guestToken('ord-bf-sticky-1', 'brambleforce:crt_filter');
+  let s = await jarFetch('GET', `/brambleforce/buy/crt_filter/approve/ord-bf-sticky-1?gt=${encodeURIComponent(stickyGt)}`, null);
+  ok(s.status === 200, 'bf-sticky: fresh capture renders the one-time success page');
+  const stickyMatch = s.text.match(/[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}/);
+  ok(!!stickyMatch, 'bf-sticky: fresh capture shows the unlock code');
+  const stickyCode = stickyMatch && stickyMatch[0];
+  const jar = jarOf(s.setCookies);
+  ok(!!jar, 'bf-sticky: the capture response starts the buyer session (cookie set)');
+  // The old code-eating path, pinned: re-hitting approve now redirects.
+  s = await jarFetch('GET', `/brambleforce/buy/crt_filter/approve/ord-bf-sticky-1?gt=${encodeURIComponent(stickyGt)}`, jar);
+  ok(s.status === 302 && s.location.includes('/success/ord-bf-sticky-1'),
+    'bf-sticky: re-hitting approve after capture redirects to the durable page');
+  // With the buyer's session, the durable page still shows the code.
+  s = await jarFetch('GET', `/brambleforce/buy/crt_filter/success/ord-bf-sticky-1?gt=${encodeURIComponent(stickyGt)}`, jar);
+  ok(s.status === 200 && !!stickyCode && s.text.includes(stickyCode),
+    'bf-sticky: durable page re-shows the code in the buyer session (refresh-proof)');
+  ok(!s.text.includes('was also emailed to you') && !s.text.includes("couldn't email"),
+    'bf-sticky: the session re-show claims neither email success nor email failure');
+  s = await jarFetch('GET', `/brambleforce/buy/crt_filter/success/ord-bf-sticky-1?gt=${encodeURIComponent(stickyGt)}`, jar);
+  ok(!!stickyCode && s.text.includes(stickyCode), 'bf-sticky: refreshing the durable page keeps the code');
+  // A new session never sees it — the honest durable page instead.
+  s = await jarFetch('GET', `/brambleforce/buy/crt_filter/success/ord-bf-sticky-1?gt=${encodeURIComponent(stickyGt)}`, null);
+  ok(s.status === 200 && !!stickyCode && !s.text.includes(stickyCode),
+    'bf-sticky: a new session never sees the code');
+  ok(s.text.includes('If our code email reached you') && s.text.includes('/contact'),
+    'bf-mail: durable page (no session copy) checks for the email and gives the support path');
+  ok(!s.text.includes('emailed to you — that emailed copy'),
+    'bf-mail: durable page never asserts the code was emailed');
+  // Redeem it: the session copy dies with the code.
+  r = await anon('POST', '/api/brambleforce/redeem', { __json: { code: stickyCode } });
+  j = null; try { j = JSON.parse(r.text); } catch (e) { /* asserted below */ }
+  ok(j && j.product === 'crt_filter', 'bf-sticky: the session-kept code redeems normally');
+  s = await jarFetch('GET', `/brambleforce/buy/crt_filter/success/ord-bf-sticky-1?gt=${encodeURIComponent(stickyGt)}`, jar);
+  ok(!!stickyCode && !s.text.includes(stickyCode),
+    'bf-sticky: once redeemed, the session copy is gone');
   // -- redemption is never window-gated: the crt_filter code redeemed
   // in section 4 was spent on first use; a fresh paid code for a
   // launch product still redeems — and bundle grants stayed the
@@ -325,4 +392,106 @@ async function runHttpTests(ok, req, areq) {
   // against the same code path; the grant set is pinned there too).
 }
 
-module.exports = { runHttpTests };
+// Mail-truth unit tests (in-process): sendCodeEmail / sendGameEmail
+// must report the ACTUAL delivery result, and the success view must
+// word itself from that result in all three states (emailed / not
+// emailed / session re-show). Runs in the coordinator process; the
+// mail transport is stubbed via lib/mail's __setTransporter seam.
+async function runUnitTests(ok) {
+  console.log('brambleforce mail truth (unit):');
+  const fs = require('fs');
+  const path = require('path');
+  const ejs = require('ejs');
+  const mail = require('../src/lib/mail');
+  const bfLib = require('../src/lib/brambleforce');
+  const CODE = 'ABCD-EFGH-JKMN-PQRS';
+
+  // 1. Mailer delivers -> sent:true, and the code email carries the code.
+  let captured = null;
+  mail.__setTransporter({
+    sendMail: async (msg) => { captured = msg; return { messageId: 'unit-1', accepted: [msg.to] }; },
+  });
+  try {
+    const r1 = await bfLib.sendCodeEmail({
+      to: 'unit@test.local', productId: 'crt_filter', code: CODE,
+      successUrl: 'https://example.test/success', orderId: 'ord-unit-1',
+    });
+    ok(r1 && r1.sent === true, 'bf-mail: sendCodeEmail reports sent:true when the mailer delivers');
+    ok(!!captured && captured.to === 'unit@test.local' && captured.text.includes(CODE),
+      'bf-mail: the code email carries the code to the buyer');
+    const g1 = await bfLib.sendGameEmail({
+      to: 'unit@test.local', successUrl: 'https://example.test/success', orderId: 'ord-unit-2',
+    });
+    ok(g1 && g1.sent === true, 'bf-mail: sendGameEmail reports sent:true when the mailer delivers');
+
+    // 2. Mailer permanently fails -> sent:false with the error; the
+    // send functions themselves never throw into the checkout flow.
+    mail.__setTransporter({ sendMail: async () => { throw new Error('550 mailbox unavailable'); } });
+    const r2 = await bfLib.sendCodeEmail({
+      to: 'unit@test.local', productId: 'crt_filter', code: CODE,
+      successUrl: 'https://example.test/success', orderId: 'ord-unit-3',
+    });
+    ok(r2 && r2.sent === false && /550/.test(r2.error || ''),
+      'bf-mail: sendCodeEmail reports sent:false with the mailer error when delivery fails');
+    const g2 = await bfLib.sendGameEmail({
+      to: 'unit@test.local', successUrl: 'https://example.test/success', orderId: 'ord-unit-4',
+    });
+    ok(g2 && g2.sent === false, 'bf-mail: sendGameEmail reports sent:false when delivery fails');
+  } finally {
+    mail.__setTransporter(null);
+  }
+
+  // 3. No mail transport configured (the live 2026-10-31 defect: SMTP
+  // unset on the server) -> sent:false, never a claim. (Assumes the
+  // test env has no SMTP_* configured — the same assumption the
+  // coordinator's own mail dev-mode check makes.)
+  const r3 = await bfLib.sendCodeEmail({
+    to: 'unit@test.local', productId: 'crt_filter', code: CODE,
+    successUrl: 'https://example.test/success', orderId: 'ord-unit-5',
+  });
+  ok(r3 && r3.sent === false && r3.error === 'mail_not_configured',
+    'bf-mail: with no mail transport, sendCodeEmail reports sent:false (mail_not_configured)');
+  const g3 = await bfLib.sendGameEmail({
+    to: 'unit@test.local', successUrl: 'https://example.test/success', orderId: 'ord-unit-6',
+  });
+  ok(g3 && g3.sent === false && g3.error === 'mail_not_configured',
+    'bf-mail: with no mail transport, sendGameEmail reports sent:false (mail_not_configured)');
+
+  // 4. No recipient on the order -> sent:false.
+  const r4 = await bfLib.sendCodeEmail({
+    to: null, productId: 'crt_filter', code: CODE,
+    successUrl: 'https://example.test/success', orderId: 'ord-unit-7',
+  });
+  ok(r4 && r4.sent === false, 'bf-mail: no buyer email on the order reports sent:false');
+
+  // 5. The success view in all three email states + the durable and
+  // game branches.
+  const viewSrc = fs.readFileSync(
+    path.join(__dirname, '..', 'src', 'views', 'site', 'brambleforce-success.ejs'), 'utf8');
+  const render = (locals) => ejs.render(viewSrc, locals);
+  const crt = bfLib.product('crt_filter');
+  const sent = render({ product: crt, productId: 'crt_filter', code: CODE, codeEmailed: true, downloadUrl: null, token: null, order: {}, user: null });
+  ok(sent.includes('this code was also emailed to you') && sent.includes('Your emailed copy is the one to keep'),
+    'bf-mail: emailed render may point at the emailed durable copy');
+  ok(!sent.includes('only copy'), 'bf-mail: emailed render carries no only-copy warning');
+  const notSent = render({ product: crt, productId: 'crt_filter', code: CODE, codeEmailed: false, downloadUrl: null, token: null, order: {}, user: null });
+  ok(!notSent.includes('also emailed to you') && !notSent.includes('emailed copy is the one to keep'),
+    'bf-mail: not-emailed render never claims an email was sent');
+  ok(notSent.includes('only copy there is') && notSent.includes('/contact'),
+    'bf-mail: not-emailed render warns the page is the only copy and gives the support path');
+  const sessionShow = render({ product: crt, productId: 'crt_filter', code: CODE, codeEmailed: null, downloadUrl: null, token: null, order: {}, user: null });
+  ok(sessionShow.includes(CODE) && sessionShow.includes("Here's your code again"),
+    'bf-mail: session re-show render carries the code with the neutral wording');
+  ok(!sessionShow.includes('was also emailed to you') && !sessionShow.includes("couldn't email"),
+    'bf-mail: session re-show render claims neither email success nor failure');
+  const durable = render({ product: crt, productId: 'crt_filter', code: null, codeEmailed: false, downloadUrl: null, token: null, order: {}, user: null });
+  ok(!durable.includes('emailed to you — that emailed copy'),
+    'bf-mail: durable render does not assert the code was emailed');
+  ok(durable.includes('If our code email reached you') && durable.includes('/contact'),
+    'bf-mail: durable render checks for the email and gives a working recovery path');
+  const game = render({ product: bfLib.product('game'), productId: 'game', code: null, codeEmailed: false, downloadUrl: '/api/apps/x/apk?t=tok', token: 'tok', order: {}, user: null });
+  ok(!game.includes('Keep your purchase email'), 'bf-mail: game render does not promise a purchase email');
+  ok(game.includes('/contact'), 'bf-mail: game render gives the support recovery path');
+}
+
+module.exports = { runHttpTests, runUnitTests };

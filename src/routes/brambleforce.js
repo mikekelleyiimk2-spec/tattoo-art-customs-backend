@@ -122,7 +122,7 @@ async function loadBfOrder(req, res, { paidOnly }) {
     if (guestCheckout.verifyGuestToken(req.query.gt, guestScope(req.bfProductId)) !== String(order.id)) {
       res.status(403).render('error', {
         title: 'Invalid checkout link',
-        message: 'This guest checkout link is not valid. Your purchase link is also emailed to you when payment completes.',
+        message: 'This guest checkout link is not valid. If you completed payment and cannot reach your purchase page, contact us through the contact page with your PayPal receipt and we will sort you out.',
       });
       return null;
     }
@@ -305,7 +305,10 @@ function pageRouter() {
       const email = await buyerEmail(order);
       const successUrl = `${config.baseUrl}${successPath(req, order)}`;
       if (p.kind === 'game') {
-        await bf.sendGameEmail({ to: email, successUrl });
+        // Result logged loudly inside sendGameEmail; the redirect +
+        // flash below promise only the download page itself, never
+        // the email, so nothing here depends on whether it sent.
+        await bf.sendGameEmail({ to: email, successUrl, orderId: order.id });
         if (guestCheckout.isGuestOrder(order)) {
           // Guest bridge (owner ruling 2026-10-26, contract section 10):
           // sideload buyers stay guests until the app is live on the
@@ -316,12 +319,30 @@ function pageRouter() {
         return res.redirect(successPath(req, order));
       }
       // IAP: mint the single-use unlock code and render the success
-      // page WITH the code in this response — the raw code is shown
-      // exactly once here (hash-only at rest) and emailed as the
-      // durable copy.
+      // page WITH the code in this response (hash-only at rest in the
+      // DB, as designed). Two delivery truths are carried honestly:
+      //   - codeEmailed is the ACTUAL sendCodeEmail result — the page
+      //     may only call the email a durable copy when it truly sent
+      //     (2026-10-31: a buyer was told his code was emailed while
+      //     the server's mail door was unconfigured and nothing sent).
+      //   - the raw code is ALSO kept in the buyer's server-side
+      //     session (session-only, never persisted, never logged) so
+      //     the success page keeps showing it across refreshes and
+      //     the paid-branch redirect below — a reload of this approve
+      //     URL used to eat the only showing and strand the buyer on
+      //     the code-less durable page, which is exactly what the
+      //     owner hit on 2026-10-31.
       const issued = await bf.issueCodeForOrder(order, productId);
+      let codeEmailed = false;
       if (issued.code) {
-        await bf.sendCodeEmail({ to: email, productId, code: issued.code, successUrl });
+        try {
+          if (req.session) {
+            req.session.bfCodes = req.session.bfCodes || {};
+            req.session.bfCodes[order.id] = issued.code;
+          }
+        } catch (e) { /* the one-time render below still carries the code */ }
+        const mailResult = await bf.sendCodeEmail({ to: email, productId, code: issued.code, successUrl, orderId: order.id });
+        codeEmailed = !!(mailResult && mailResult.sent);
       }
       return res.render('site/brambleforce-success', {
         layout: 'layout-brambleforce',
@@ -329,7 +350,7 @@ function pageRouter() {
         product: p,
         productId,
         code: issued.code || null,
-        codeEmailed: Boolean(issued.code && email),
+        codeEmailed: issued.code ? codeEmailed : false,
         order,
         user: req.user || null,
       });
@@ -342,21 +363,42 @@ function pageRouter() {
 
   // Durable purchase page. Game: re-mints the gated APK token on every
   // visit (the APK bytes are never on a public URL). IAP: the raw code
-  // is hash-only at rest and cannot be re-shown — the page points the
-  // buyer at their emailed copy.
+  // is hash-only at rest in the DB and cannot be re-shown from there —
+  // BUT the buyer who just paid carries a session copy (stored at
+  // issuance, server-side session only): while that session lives and
+  // the code is still unspent, this page shows the code again, so a
+  // refresh, a back-button trip, or the approve route's paid-branch
+  // redirect can never eat the buyer's only showing. Once the code is
+  // redeemed the session copy is dropped. With no session copy, the
+  // page is honest about the email (it may or may not have arrived)
+  // and gives the support path. Access stays gated by loadBfOrder
+  // (guest HMAC token or the buyer's own login) either way.
   router.get('/buy/:productId/success/:orderId', resolveProduct, async (req, res) => {
     const p = req.bfProduct;
     const order = await loadBfOrder(req, res, { paidOnly: true });
     if (!order) return;
     const isGame = p.kind === 'game';
     const token = isGame ? updateTokens.issue(order.id, bf.PACKAGE) : null;
+    let sessionCode = null;
+    if (!isGame && req.session && req.session.bfCodes && req.session.bfCodes[order.id]) {
+      const row = await db.get('SELECT spent FROM brambleforce_codes WHERE order_id = ?', [order.id]);
+      if (row && !Number(row.spent)) {
+        sessionCode = req.session.bfCodes[order.id];
+      } else {
+        // Redeemed (or the row is gone): the session copy dies with it.
+        try { delete req.session.bfCodes[order.id]; } catch (e) { /* best-effort */ }
+      }
+    }
     res.render('site/brambleforce-success', {
       layout: 'layout-brambleforce',
       title: isGame ? 'Download Brambleforce' : `Your purchase — ${p.name}`,
       product: p,
       productId: req.bfProductId,
-      code: null,
-      codeEmailed: false,
+      code: sessionCode,
+      // null = "showing the session copy; whether the email arrived is
+      // not something this later page-load can claim" — the view has a
+      // distinct neutral wording for it.
+      codeEmailed: sessionCode ? null : false,
       downloadUrl: isGame ? `/api/apps/${bf.PACKAGE}/apk?t=${token}` : null,
       token,
       order,

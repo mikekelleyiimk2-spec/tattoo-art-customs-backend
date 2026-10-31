@@ -53,7 +53,17 @@ async function sendMail({ to, subject, text, html }) {
   throw lastErr;
 }
 
+// Whether a send can actually reach a mailbox right now: an injected
+// transporter (tests) or a configured SMTP transport. When this is
+// false, sendMail takes the dev fallback above (logs the message,
+// returns {dev:true}) — which is NOT a delivery. Callers whose buyer-
+// facing copy depends on delivery (e.g. the Brambleforce unlock-code
+// email) must check this first and report honestly when it is false.
+function transportReady() {
+  return !!(transporter || config.smtpConfigured());
+}
+
 // Test seam: inject (or clear, with null) a fake transporter for unit tests.
 function __setTransporter(t) { transporter = t || null; }
 
-module.exports = { sendMail, __setTransporter };
+module.exports = { sendMail, __setTransporter, transportReady };

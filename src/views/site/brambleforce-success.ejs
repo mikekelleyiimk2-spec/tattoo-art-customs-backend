@@ -1,8 +1,14 @@
 <%#
   Brambleforce purchase pages — same deliveries as the old skin (the
-  gated APK download URL, the one-time unlock code shown exactly once),
-  wearing the game's own face. The code stays a single plain text node:
-  buyers copy it, and nothing may split its characters.
+  gated APK download URL, the unlock code), wearing the game's own
+  face. The code stays a single plain text node: buyers copy it, and
+  nothing may split its characters.
+  Copy truth (2026-10-31): codeEmailed is tri-state — true only when
+  the code email really sent (the fresh post-capture render), false
+  when it was attempted and did NOT send, null when this is a later
+  page-load showing the buyer's session copy (delivery unknown here,
+  so the wording claims neither). No branch may promise an email that
+  did not verifiably send.
 %>
 <% if (productId === 'game') { %>
 <h1 class="bf-title" style="font-size:clamp(1.55rem,4.6vw,2.3rem);">Your Brambleforce Download</h1>
@@ -16,11 +22,16 @@
     <li><strong>Allow installs</strong>If your phone asks, allow installs from this source.</li>
     <li><strong>Tap Install</strong>Then open Brambleforce — enjoy zero ads.</li>
   </ol>
-  <p class="muted fineprint" style="margin-top:.8rem;">Keep your purchase email — it links back to this page, and your download can be re-issued from here anytime. Optional extras (modes, skins, the expansion) live in the in-game Supply Store — they check out here and unlock with a code.</p>
+  <p class="muted fineprint" style="margin-top:.8rem;">Your download can be re-issued from this page anytime — bookmark it. If a purchase email reached you, it links back here too. Lost this page? <a href="/contact">Contact support</a> with your PayPal receipt and we'll sort you out. Optional extras (modes, skins, the expansion) live in the in-game Supply Store — they check out here and unlock with a code.</p>
 </section>
 <% } else if (code) { %>
 <h1 class="bf-title" style="font-size:clamp(1.55rem,4.6vw,2.3rem);">Your Unlock Code</h1>
-<p class="bf-lede">Thanks for your purchase! Payment is complete<% if (codeEmailed) { %> — this code was also emailed to you<% } %>.</p>
+<p class="bf-lede">Thanks for your purchase! Payment is complete<% if (codeEmailed === true) { %> — this code was also emailed to you<% } %>.</p>
+<% if (codeEmailed === false) { %>
+<p class="bf-mail-warning" role="alert"><strong>We couldn't email this code</strong> — our mail didn't go out, so the code on this page is the only copy there is. Copy it now and keep it somewhere safe: it stays visible on this purchase page while you're in this session, and once the session ends it can't be shown again.</p>
+<% } else if (codeEmailed === null) { %>
+<p class="muted">Here's your code again — it's still yours and hasn't been redeemed. Copy it and keep it somewhere safe: it's shown only while you're in this session.</p>
+<% } %>
 
 <div class="bf-code-panel">
   <p class="bf-kicker" style="margin-bottom:.4rem;"><%= product.name %></p>
@@ -35,7 +46,7 @@
     <li><strong>Open EXTRAS</strong>The B button on the title screen.</li>
     <li><strong>Pick REDEEM CODE</strong>Type the code above — the unlock is yours for good.</li>
   </ol>
-  <p class="muted fineprint" style="margin-top:.8rem;">Codes are single-use — once redeemed, the unlock lives in your game for good. This page will not show the code again; your emailed copy is the one to keep.</p>
+  <p class="muted fineprint" style="margin-top:.8rem;">Codes are single-use — once redeemed, the unlock lives in your game for good.<% if (codeEmailed === true) { %> Your emailed copy is the one to keep for good.<% } else if (codeEmailed === false) { %> If you lose it, <a href="/contact">contact support</a> with your PayPal receipt and we'll sort you out.<% } else { %> If a code email reached you, that email is a second copy. If you lose the code entirely, <a href="/contact">contact support</a> with your PayPal receipt and we'll sort you out.<% } %></p>
 </section>
 <script>
 (function () {
@@ -61,13 +72,13 @@
 
 <section class="bf-buy-panel" style="margin-top:1.1rem;">
   <h2 style="margin:0 0 .4rem;"><%= product.name %></h2>
-  <p>Your unlock code was shown at checkout and emailed to you — that emailed copy is the one to keep (codes are stored hashed, so this page can't show it again).</p>
+  <p>Your unlock code was shown once at checkout, right after payment. If our code email reached you, that email is your durable copy — codes are stored hashed, so this page can't show the code again.</p>
   <ol class="bf-steps" style="margin-top:1rem;">
     <li><strong>Open Brambleforce</strong>On the phone where the game lives.</li>
     <li><strong>Open EXTRAS</strong>The B button on the title screen.</li>
-    <li><strong>Pick REDEEM CODE</strong>Type the code from your email.</li>
+    <li><strong>Pick REDEEM CODE</strong>Type the code from your checkout page or your email copy.</li>
   </ol>
-  <p class="muted fineprint" style="margin-top:.8rem;">Can't find the email? Check spam for "Your Brambleforce unlock code" — or reply to it and we'll sort you out.</p>
+  <p class="muted fineprint" style="margin-top:.8rem;">Can't find the email — or it never arrived? Check spam for "Your Brambleforce unlock code" first. If the code isn't saved anywhere, <a href="/contact">contact support</a> with your PayPal receipt and we'll sort you out.</p>
 </section>
 <% } %>
 
