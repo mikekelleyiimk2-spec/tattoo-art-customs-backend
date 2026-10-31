@@ -317,7 +317,7 @@ router.get('/onemind/little-inkers', (req, res) => {
 router.get('/onemind/killintime', async (req, res) => {
   const t = tableBook();
   const numbers = await liveNumbers(t.book);
-  res.render('onemind/branch-killintime', {
+  res.render('onemind/branch-killintime', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'Neon Tombstone — the Ports Shelf | Useful Appz',
     metaDescription: 'Neon Tombstone is the Useful Appz ports console: classic games, licensed properly, brought to phones. Ports carry no ads, ever. A Chorvix plug — reachable here directly or through the table.',
     canonical: `${base()}/onemind/killintime`,
@@ -328,7 +328,7 @@ router.get('/onemind/killintime', async (req, res) => {
 router.get('/onemind/tools', async (req, res) => {
   const t = tableBook();
   const numbers = await liveNumbers(t.book);
-  res.render('onemind/branch-tools', {
+  res.render('onemind/branch-tools', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'The Tools — the Useful Appz Toolbox | Chorvix Branch',
     metaDescription: 'The tool apps of Useful Appz: the Affiliate Rolodex, RoboSweeper, RoboScraper, Money Watch, Email Keeper, Connection Doctor, Service Plug and more — every one tied to Chorvix, every one at its own link.',
     canonical: `${base()}/onemind/tools`,

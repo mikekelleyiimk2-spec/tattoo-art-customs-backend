@@ -111,7 +111,7 @@ router.get('/tee/:designId', requireLogin, formLimiter, async (req, res) => {
     req.session.flash = 'Tees are available for designs you have purchased.';
     return res.redirect(`/design/${design.id}`);
   }
-  res.render('merch/tee-order', {
+  res.render('merch/tee-order', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: `Mike's Custom Tees — ${design.title}`,
     design,
     sizes: pricing.TEE_SIZES,
@@ -212,7 +212,7 @@ router.get('/catalog/:productId', formLimiter, async (req, res) => {
   };
   // [merchhearts] Public ♥ count for this product's heart button.
   const likeRow = await db.get('SELECT like_count FROM merch_like_counts WHERE merch_id = ?', [product.id]).catch(() => null);
-  res.render('merch/catalog-order', {
+  res.render('merch/catalog-order', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: `Mike's Custom Tees — ${product.id}`,
     product,
     likeCount: Number((likeRow && likeRow.like_count) || 0),

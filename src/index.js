@@ -354,13 +354,13 @@ app.use('/journal', require('./routes/journal'));
 if (process.env.TAC_TEST_ROUTES === '1') {
   app.get('/__test_async_crash', async () => { throw new Error('intentional test crash'); });
 }
-app.use((req, res) => res.status(404).render('error', {
+app.use((req, res) => res.status(404).render('error', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Not found', message: 'That page does not exist.',
 }));
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   console.error(err);
-  res.status(500).render('error', {
+  res.status(500).render('error', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'Something went wrong',
     message: 'Please try again. If this keeps happening, contact support.',
   });

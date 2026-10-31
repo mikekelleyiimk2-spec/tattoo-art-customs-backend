@@ -27,7 +27,7 @@ router.get('/', async (req, res, next) => {
     if (req.user && (isAdminRole(req.user.role)
       || await hasActiveSubscription(req.user.id, 'tattoo_shop'))) return next();
   } catch (e) { /* fall through to the landing on any check error */ }
-  return res.render('shop/landing', {
+  return res.render('shop/landing', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'For Tattoo Shops — Tattoo Art Customs',
     metaDescription: 'Tattoo Art Customs for shops: a verified listing, 20% on every verified referral sale, booking tools, and member-only supply perks. One plan, everything included.',
     canonical: `${config.baseUrl.replace(/\/$/, '')}/shop`,

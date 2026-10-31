@@ -43,13 +43,13 @@ router.get('/:shopId', async (req, res) => {
   const shop = await db.get(
     "SELECT id, display_name FROM users WHERE id = ? AND role = 'tattoo_shop'",
     [req.params.shopId]);
-  if (!shop) return res.status(404).render('error', { title: 'Not found', message: 'Shop not found.' });
+  if (!shop) return res.status(404).render('error', {homeFace: true, darkFace: true, bodyClass: 'page-dark',  title: 'Not found', message: 'Shop not found.' });
   if (!(await hasActiveSubscription(shop.id, 'tattoo_shop'))) {
-    return res.status(404).render('error', { title: 'Not found', message: 'Shop not found.' });
+    return res.status(404).render('error', {homeFace: true, darkFace: true, bodyClass: 'page-dark',  title: 'Not found', message: 'Shop not found.' });
   }
   const settings = await storefront.getSettings(shop.id);
   if (!settings || Number(settings.enabled) !== 1) {
-    return res.status(404).render('error', { title: 'Not found', message: 'This shop has not opened its store yet.' });
+    return res.status(404).render('error', {homeFace: true, darkFace: true, bodyClass: 'page-dark',  title: 'Not found', message: 'This shop has not opened its store yet.' });
   }
   const designs = await storefront.getShopDesigns(shop.id);
   const refCode = await storefront.getShopReferralCode(shop.id);
@@ -57,7 +57,7 @@ router.get('/:shopId', async (req, res) => {
   // precedence as transfers.js: business_name first, account name fallback).
   const profile = await db.get('SELECT business_name FROM shop_profiles WHERE user_id = ?', [shop.id]);
   const publicShop = { ...shop, display_name: (profile && String(profile.business_name || '').trim()) || shop.display_name };
-  res.render('shop/storefront', {
+  res.render('shop/storefront', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: `${settings.headline || publicShop.display_name + ' — Shop Store'} — Tattoo Art Customs`,
     shop: publicShop, settings, designs, money, refCode,
   });

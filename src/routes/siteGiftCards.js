@@ -68,7 +68,7 @@ router.get('/capture/:pendingId', requireLogin, async (req, res) => {
       purchaserUserId: req.user.id,
       paypalOrderId: req.query.token,
     });
-    res.render('site-giftcards/success', {
+    res.render('site-giftcards/success', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
       title: 'Gift Card Ready — Tattoo Art Customs',
       card, code: card.code, money,
     });
@@ -83,7 +83,7 @@ router.get('/manual/:pendingId', requireLogin, async (req, res) => {
   const card = await db.get('SELECT * FROM site_gift_cards WHERE id = ? AND purchaser_user_id = ?',
     [req.params.pendingId, req.user.id]);
   if (!card || card.status !== 'pending') return res.redirect('/gift-cards/buy');
-  res.render('site-giftcards/manual', {
+  res.render('site-giftcards/manual', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'Pay for gift card manually — Tattoo Art Customs', card, money,
   });
 });
@@ -108,7 +108,7 @@ router.post('/manual/:pendingId', requireLogin, formLimiter, checkHoneypot, asyn
 
 // --- Redeem: code -> site credit ---
 router.get('/redeem', requireLogin, async (req, res) => {
-  res.render('site-giftcards/redeem', {
+  res.render('site-giftcards/redeem', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'Redeem a Gift Card — Tattoo Art Customs', money,
     metaDescription: 'Redeem your Tattoo Art Customs gift card as site credit for designs and memberships.',
   });

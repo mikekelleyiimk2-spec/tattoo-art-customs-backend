@@ -113,7 +113,7 @@ function tacAndroidFreeRouter() {
   const router = express.Router();
 
   router.get('/', (req, res) => {
-    res.render('site/tac-android-sideload', {
+    res.render('site/tac-android-sideload', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
       title: 'Tattoo Art Customs for Android — Free Download',
       metaDescription: 'Get Tattoo Art Customs for Android free — sideload the APK. No Play Store needed.',
       user: req.user || null,
@@ -133,7 +133,7 @@ function tacAndroidProRouter() {
   const router = express.Router();
 
   router.get('/', (req, res) => {
-    res.render('site/tac-android-pro', {
+    res.render('site/tac-android-pro', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
       title: 'Get Tattoo Art Customs Pro for Android',
       metaDescription: 'Tattoo Art Customs Pro for Android — $1.99, no ads, sideload the APK.',
       price: PRO_PRICE_CENTS,
@@ -270,7 +270,7 @@ function tacAndroidProRouter() {
     if (!order) return;
     const { issueDownloadToken } = require('../lib/fulfillment');
     const dl = await issueDownloadToken(order.id);
-    res.render('site/tac-android-pro-download', {
+    res.render('site/tac-android-pro-download', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
       title: 'Download Pro APK — Tattoo Art Customs',
       downloadUrl: `/orders/download/${dl.token}?file=apk`,
       order,

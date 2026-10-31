@@ -64,7 +64,7 @@ async function loadIosOrder(req, res, { paidOnly }) {
 
 // Purchase page for the iOS app ($1.67 via website, sideload IPA).
 router.get('/', async (req, res) => {
-  res.render('site/ios-app', {
+  res.render('site/ios-app', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'Get the iOS App — Tattoo Art Customs',
     price: IOS_APP_PRICE_CENTS,
     user: req.user || null,
@@ -164,7 +164,7 @@ router.get('/download/:orderId', async (req, res) => {
   if (!order) return;
   const { issueDownloadToken } = require('../lib/fulfillment');
   const dl = await issueDownloadToken(order.id);
-  res.render('site/ios-app-download', {
+  res.render('site/ios-app-download', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'Download iOS App — Tattoo Art Customs',
     downloadUrl: `/orders/download/${dl.token}?file=ipa`,
     order,
