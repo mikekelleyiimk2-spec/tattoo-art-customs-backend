@@ -28,6 +28,12 @@ const COMMERCIALS = [
   { id: 'k58RUFJ0jhc', title: 'Artists: Your Art, Your Prices, Weekly PayPal Payouts 💸 Join Tattoo Art Customs #Shorts', vertical: true },
   { id: 'yiU67irWyvY', title: 'Color It BEFORE You Ink It 🎨➡️🖋️ Little Inkers × Tattoo Art Customs #Shorts', vertical: true },
   { id: 'wLwViSpWdDg', title: 'TESTERS WANTED 📱 Get Our New Apps FREE Before They Launch #Shorts', vertical: true },
+  // OCU96rNBnZ4 — the current weekly ad on the TAC channel, appended
+  // LAST on purpose: LANDING_FEATURE/LANDING_SHORTS index into this
+  // array, so new commercials go at the end to leave the landing
+  // strip's picks untouched. Verified Public via oEmbed 2026-10-30
+  // (video distribution pass).
+  { id: 'OCU96rNBnZ4', title: 'Your Custom Tattoo in 48 Hours | Tattoo Art Customs', vertical: false },
 ];
 
 // Design showcase Shorts on the Tattoo Art Customs channel — uploaded
@@ -41,9 +47,14 @@ const DESIGN_SHORTS = [
 ];
 
 // The same commercial on the Rook 98 channel — live + Public per
-// memory/2026-10-07.md.
+// memory/2026-10-07.md. o_7ptgidZ7E is the Rook 98 copy of the current
+// weekly ad and yRRV_xFnsrs is Brambleforce Episode 1 (the Rook 98
+// Friday-evening show) — both verified Public via oEmbed 2026-10-30
+// (video distribution pass).
 const ROOK_VIDEOS = [
   { id: 'uX-gjIuzcLY', title: 'Color It Before You Ink It — Tattoo Art Customs x Little Inkers', vertical: false },
+  { id: 'o_7ptgidZ7E', title: 'Your Custom Tattoo in 48 Hours | Tattoo Art Customs', vertical: false },
+  { id: 'yRRV_xFnsrs', title: 'BRAMBLEFORCE — Episode 1: Verdant Fracture | The Thornwall Wakes', vertical: false },
 ];
 
 // Landing page strip: the feature commercial + three ad Shorts.
