@@ -34,6 +34,10 @@ const COMMERCIALS = [
   // strip's picks untouched. Verified Public via oEmbed 2026-10-30
   // (video distribution pass).
   { id: 'OCU96rNBnZ4', title: 'Your Custom Tattoo in 48 Hours | Tattoo Art Customs', vertical: false },
+  // -OMUba68YB0 — the weekly Little Inkers ad as published on the TAC
+  // channel (the LI ad runs on all three channels), verified Public
+  // via oEmbed 2026-10-30 (video distribution pass, Lane B re-audit catch).
+  { id: '-OMUba68YB0', title: 'Your Drawing on a REAL Shirt?! | Little Inkers', vertical: false },
 ];
 
 // Design showcase Shorts on the Tattoo Art Customs channel — uploaded
@@ -55,6 +59,9 @@ const ROOK_VIDEOS = [
   { id: 'uX-gjIuzcLY', title: 'Color It Before You Ink It — Tattoo Art Customs x Little Inkers', vertical: false },
   { id: 'o_7ptgidZ7E', title: 'Your Custom Tattoo in 48 Hours | Tattoo Art Customs', vertical: false },
   { id: 'yRRV_xFnsrs', title: 'BRAMBLEFORCE — Episode 1: Verdant Fracture | The Thornwall Wakes', vertical: false },
+  // VerY8_y0Rk4 — the weekly Little Inkers ad as published on Rook 98,
+  // verified Public via oEmbed 2026-10-30 (video distribution pass).
+  { id: 'VerY8_y0Rk4', title: 'Your Drawing on a REAL Shirt?! | Little Inkers', vertical: false },
 ];
 
 // Landing page strip: the feature commercial + three ad Shorts.
