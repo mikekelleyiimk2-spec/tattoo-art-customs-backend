@@ -80,6 +80,19 @@ app.use(helmet({
       imgSrc: ["'self'", 'data:', 'https:'],
       styleSrc: ["'self'", "'unsafe-inline'"],
       connectSrc: ["'self'", 'https://api-m.paypal.com', 'https://api-m.sandbox.paypal.com'],
+      // PayPal is the REDIRECT target of every checkout form on the
+      // site: the buy POST answers 302 -> paypal.com/checkoutnow.
+      // Chrome and Safari enforce form-action across redirect hops
+      // (Firefox checks only the initial URL), so helmet's default
+      // form-action 'self' silently killed the handoff in exactly the
+      // browsers buyers use: the POST landed server-side (order +
+      // PayPal checkout created), the browser refused the redirect,
+      // and the page sat on "Working…" forever — while curl-class
+      // probes (no CSP engine) sailed through. Root cause of the
+      // recurring buy-button hang, confirmed 2026-10-31. Every other
+      // PayPal directive (script/frame/connect) was already allowed;
+      // form-action was the one that was never extended.
+      formAction: ["'self'", 'https://www.paypal.com', 'https://www.sandbox.paypal.com'],
     },
   },
 }));

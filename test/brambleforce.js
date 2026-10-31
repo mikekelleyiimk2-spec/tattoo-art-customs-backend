@@ -87,8 +87,8 @@ async function runHttpTests(ok, req, areq) {
   tdb.prepare('INSERT INTO site_kv (name, val, updated_at) VALUES (?,?,?)')
     .run('bfck:testkey0001', JSON.stringify({ orderId: 'ord-seeded', approve: 'https://www.paypal.com/checkoutnow?token=SEEDED', ts: Date.now() }), Date.now());
   a = await anon('POST', '/brambleforce/buy/crt_filter/buy', { guest_email: 'bfdupe@test.local', ck: 'testkey0001' });
-  ok(a.status === 302 && a.location === 'https://www.paypal.com/checkoutnow?token=SEEDED',
-    'bf: replayed checkout key redirects to the original PayPal checkout');
+  ok(a.status === 200 && a.text.includes('https://www.paypal.com/checkoutnow?token=SEEDED'),
+    'bf: replayed checkout key hands off to the original PayPal checkout');
   ok(tdb.prepare('SELECT COUNT(*) AS n FROM orders').get().n === ordersBefore,
     'bf: replayed checkout key mints no second order');
   a = await anon('POST', '/brambleforce/buy/crt_filter/buy', { guest_email: 'bfdupe@test.local', ck: 'testkey0002' });

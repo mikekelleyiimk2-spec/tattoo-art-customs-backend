@@ -645,6 +645,13 @@ async function main() {
     const m = csp.match(/script-src[^;]*/);
     ok(!!m && m[0].includes("'unsafe-inline'"), 'CSP script-src allows inline handlers (mobile nav + cookie banner work)');
     ok(!/script-src-attr/.test(csp), 'CSP has no script-src-attr directive (helmet default would block inline onclick)');
+    // Checkout forms POST to us and answer 302 -> paypal.com. Chrome and
+    // Safari enforce form-action across that redirect; with helmet's
+    // default 'self' the buyer's browser silently refused to leave the
+    // buy page ("Working…" forever) — the 2026-10-31 buy-button hang.
+    const fa = csp.match(/form-action[^;]*/);
+    ok(!!fa && fa[0].includes("'self'") && fa[0].includes('https://www.paypal.com'),
+      'CSP form-action allows the PayPal checkout redirect target');
     await raw.text();
   }
 

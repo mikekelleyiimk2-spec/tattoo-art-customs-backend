@@ -1,0 +1,18 @@
+<div class="bf-product-head">
+  <h1 class="bf-title">Taking you to PayPal…</h1>
+  <p class="bf-lede">Your checkout for <strong><%= product.name %></strong> is ready. PayPal opens in a moment — no account needed to pay.</p>
+</div>
+
+<section class="bf-buy-panel" aria-label="Continue to PayPal">
+  <p><a class="btn bf-btn-wide" href="<%= approveUrl %>" target="_top" rel="noopener">Continue to PayPal — $<%= (price / 100).toFixed(2) %></a></p>
+  <p class="muted fineprint">If PayPal doesn't open on its own within a few seconds, tap the button above. This checkout is already created and waiting for you — no need to go back and tap Buy again.</p>
+</section>
+
+<script>
+(function () {
+  var url = <%- JSON.stringify(approveUrl) %>;
+  setTimeout(function () {
+    try { window.location.replace(url); } catch (e) { window.location.href = url; }
+  }, 700);
+})();
+</script>

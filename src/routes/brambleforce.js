@@ -146,6 +146,10 @@ function pageRouter() {
   });
 
   router.get('/buy/:productId', resolveProduct, (req, res) => {
+    // Never let a browser pin a stale copy of a buy page: the checkout
+    // key, watchdog and form all ship with this document, and a cached
+    // pre-fix page on a buyer's phone must not outlive its fix.
+    res.set('Cache-Control', 'no-store');
     const p = req.bfProduct;
     res.render('site/brambleforce-buy', {
       layout: 'layout-brambleforce',
@@ -162,10 +166,29 @@ function pageRouter() {
   });
 
   router.post('/buy/:productId/buy', resolveProduct, formLimiter, checkHoneypot, async (req, res) => {
+    res.set('Cache-Control', 'no-store');
     const t0 = Date.now();
     const p = req.bfProduct;
     const productId = req.bfProductId;
     const guest = !req.user;
+    // Handoff page, not a bare 302: the success response is a small
+    // page that navigates itself to PayPal and carries a manual
+    // "Continue to PayPal" button. A form POST's 302 is subject to CSP
+    // form-action in Chrome/Safari (the 2026-10-31 hang — see the
+    // formAction note in src/index.js), and a buyer must never be
+    // stranded on "Working…" with no visible way forward. The CSP fix
+    // makes the old 302 legal again; this page makes the flow robust
+    // even where a client swallows a redirect (embedded browsers,
+    // custom tabs), and its button IS the fallback.
+    const handoff = (approveUrl) => res.render('site/brambleforce-handoff', {
+      layout: 'layout-brambleforce',
+      title: `Taking you to PayPal — ${p.name}`,
+      product: p,
+      productId,
+      price: p.priceCents,
+      approveUrl,
+      user: req.user || null,
+    });
     let guestEmail = null;
     if (guest) {
       guestEmail = guestCheckout.parseGuestEmail(req.body.guest_email);
@@ -182,18 +205,18 @@ function pageRouter() {
       const age = rec ? Date.now() - (rec.ts || 0) : Infinity;
       if (rec && rec.approve && age < 30 * 60 * 1000) {
         console.log(`[bf-buy] ${productId} idempotent replay order=${rec.orderId} key=${ck}`);
-        return res.redirect(rec.approve);
+        return handoff(rec.approve);
       }
       if (rec && rec.pending && age < 45000) {
         const deadline = Date.now() + 30000;
         while (Date.now() < deadline) {
           await new Promise((r) => setTimeout(r, 400));
           const again = await ckGet(ck);
-          if (again && again.approve) return res.redirect(again.approve);
+          if (again && again.approve) return handoff(again.approve);
           if (!again) break; // creator failed and cleared the marker
         }
         const final = await ckGet(ck);
-        if (final && final.approve) return res.redirect(final.approve);
+        if (final && final.approve) return handoff(final.approve);
         // Creator is stale/dead — take over below.
       }
       await ckSet(ck, { pending: true, ts: Date.now() });
@@ -222,7 +245,7 @@ function pageRouter() {
       // Segment timings: the next "hang" report should be diagnosable
       // from Render logs alone (db leg vs PayPal leg vs total).
       console.log(`[bf-buy] ${productId} order=${orderId} db=${tDb - t0}ms paypal=${Date.now() - tDb}ms total=${Date.now() - t0}ms ${guest ? 'guest' : 'member'}`);
-      res.redirect(approve.href);
+      handoff(approve.href);
     } catch (e) {
       if (ck) await ckDel(ck);
       console.error(`brambleforce ${productId} PayPal order create failed after ${Date.now() - t0}ms:`, e.message);
