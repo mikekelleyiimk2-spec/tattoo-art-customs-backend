@@ -1577,7 +1577,7 @@ router.get('/perks', (req, res) => res.redirect(302, '/shop/perks'));
 // Aftercare, Amazon picks.
 router.get('/discounts', (req, res) => res.render('site/discounts', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Tattoo Discounts & Deals — Tattoo Art Customs',
-  metaDescription: 'Real tattoo discounts: 10% off Electrum Supply with code TATART20, Base Labs TAC20, Recovery Aftercare, and our Amazon picks.',
+  metaDescription: 'Real tattoo discounts: Electrum Supply with code TATART20, Base Labs TAC20, Recovery Aftercare, and our Amazon picks.',
   canonical: `${config.baseUrl.replace(/\/$/, '')}/discounts`,
 }));
 

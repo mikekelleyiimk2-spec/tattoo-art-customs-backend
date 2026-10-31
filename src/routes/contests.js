@@ -147,7 +147,7 @@ router.get('/:id', async (req, res) => {
      LEFT JOIN users u ON u.id = c.customer_id WHERE c.id = ?`,
     [req.params.id]
   );
-  if (!c) return res.status(404).render('error', { title: 'Not found', message: 'Contest not found.' });
+  if (!c) return res.status(404).render('error', {homeFace: true, darkFace: true, bodyClass: 'page-dark', title: 'Not found', message: 'Contest not found.' });
   const me = req.session && req.session.userId
     ? await db.get('SELECT id, role FROM users WHERE id = ?', [req.session.userId]).catch(() => null)
     : null;
