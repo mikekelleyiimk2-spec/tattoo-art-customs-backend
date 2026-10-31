@@ -78,6 +78,7 @@
     "search": "Search",
     "vat_note": "Prices include VAT where applicable.",
     "working": "Working…",
+    "stall": "This is taking too long — it may not have gone through. Please try again.",
     "cancel": "Cancel"
   },
   "contact": {

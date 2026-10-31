@@ -31,8 +31,8 @@ const PRODUCTS = {
   },
   everything_bundle: {
     name: 'Everything Bundle — All Of It',
-    priceCents: 1699,
-    blurb: 'Every mode, skin and extra below, plus the expansion. One price.',
+    priceCents: 2799,
+    blurb: 'Everything: every mode, skin, extra and fighter below, plus the expansion. One price.',
     kind: 'iap',
   },
   iron_garden_expansion: {
@@ -129,6 +129,14 @@ const PRODUCTS = {
 
 const PRODUCT_IDS = Object.keys(PRODUCTS);
 
+// The Everything Bundle's grant set (owner ruling 2026-10-30): a bundle
+// unlock code grants EVERY extra — the original 12 plus the three
+// fighters (fighter_zola / fighter_otto / fighter_yusuf), 15 in all.
+// Derived from the catalogue so it can never drift from what's on sale:
+// every IAP except the bundle itself. Extras bought separately total
+// $28.85; the bundle is struck at $27.99.
+const BUNDLE_GRANTS = PRODUCT_IDS.filter((id) => id !== 'game' && id !== 'everything_bundle');
+
 function product(id) {
   return Object.prototype.hasOwnProperty.call(PRODUCTS, id) ? PRODUCTS[id] : null;
 }
@@ -191,7 +199,11 @@ async function issueCodeForOrder(order, productId) {
 }
 
 // Redeem per the game contract. Returns exactly one of:
-//   { product: '<id>' }  — code found + unspent (now marked spent)
+//   { product: '<id>' }  — code found + unspent (now marked spent).
+//     A bundle code additionally carries `grants`: the full grant set
+//     (BUNDLE_GRANTS, all 15 extras) so the game grants everything the
+//     bundle promises from the server's own mapping, not a hardcoded
+//     list that can age out when the catalogue grows.
 //   { error: 'spent' }   — code found but already redeemed
 //   { error: 'unknown' } — no such code (incl. malformed input)
 async function redeemCode(rawCode) {
@@ -208,6 +220,7 @@ async function redeemCode(rawCode) {
     [db.now(), row.id]
   );
   if (!changes) return { error: 'spent' };
+  if (row.product === 'everything_bundle') return { product: row.product, grants: BUNDLE_GRANTS.slice() };
   return { product: row.product };
 }
 
@@ -287,7 +300,7 @@ function baseUrl() {
 }
 
 module.exports = {
-  PACKAGE, PRODUCTS, PRODUCT_IDS, product, orderType,
+  PACKAGE, PRODUCTS, PRODUCT_IDS, BUNDLE_GRANTS, product, orderType,
   generateCode, normalizeCode, hashCode, issueCodeForOrder, redeemCode,
   sendCodeEmail, sendGameEmail, baseUrl,
 };

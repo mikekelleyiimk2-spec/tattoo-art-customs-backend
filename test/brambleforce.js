@@ -45,6 +45,24 @@ async function runHttpTests(ok, req, areq) {
   a = await anon('GET', '/brambleforce/buy/not_a_product');
   ok(a.status === 404, 'bf: unknown product 404s');
 
+  // 1b. Stall watchdog (regression for the 2026-10-30 owner hang): a
+  // submission whose navigation never completes (deploy restart,
+  // dropped connection) must restore the form instead of sitting on
+  // "Working…" forever. The house layout carries it with a visible
+  // stall notice (asserted on the homepage, a house-layout page); the
+  // buy page must carry a restore watchdog in whichever skin serves
+  // it (house layout's tacRestoreForm, or the Brambleforce layout's
+  // bfRestoreForm when that skin is active).
+  a = await anon('GET', '/');
+  ok(a.text.includes('TAC_STALL_LABEL') && a.text.includes('may not have gone through'),
+    'bf: house layout carries the stall-recovery label + notice');
+  ok(a.text.includes('function tacRestoreForm') && a.text.includes("addEventListener('pageshow'"),
+    'bf: house layout carries the form-restore watchdog + pageshow restore');
+  a = await anon('GET', '/brambleforce/buy/crt_filter');
+  ok((a.text.includes('function tacRestoreForm') || a.text.includes('function bfRestoreForm'))
+    && a.text.includes("addEventListener('submit'"),
+    'bf: buy page carries a stall-restore watchdog');
+
   // 2. Guest buy: no email bounces to the buy page (never /login);
   // with an email the order row exists (PayPal create is unconfigured
   // in the harness, so the handoff falls back — same invariant as the
@@ -179,6 +197,37 @@ async function runHttpTests(ok, req, areq) {
   r = await anon('POST', '/api/brambleforce/redeem', { __json: { code: zolaCode } });
   j = null; try { j = JSON.parse(r.text); } catch (e) { /* asserted below */ }
   ok(j && j.error === 'spent', 'bf: a second fighter_zola redeem answers {error:"spent"}');
+
+  // 9. Everything Bundle ruling (owner, 2026-10-30): price $27.99, and
+  // a bundle code grants ALL 15 extras — the original 12 plus the three
+  // fighters — via the redeem-side grant mapping. (bfLib is required
+  // once in section 7 above and reused here.)
+  ok(bfLib.product('everything_bundle').priceCents === 2799, 'bf: everything_bundle is struck at $27.99');
+  ok(bfLib.BUNDLE_GRANTS.length === 15
+    && ['fighter_zola', 'fighter_otto', 'fighter_yusuf', 'iron_garden_expansion', 'war_bond']
+      .every((id) => bfLib.BUNDLE_GRANTS.includes(id))
+    && !bfLib.BUNDLE_GRANTS.includes('game') && !bfLib.BUNDLE_GRANTS.includes('everything_bundle'),
+    'bf: bundle grant set is exactly the 15 extras (12 + 3 fighters)');
+  const extrasTotal = bfLib.BUNDLE_GRANTS.reduce((sum, id) => sum + bfLib.product(id).priceCents, 0);
+  ok(extrasTotal === 2885, 'bf: the 15 extras total $28.85 bought separately (bundle sits ~$1 under)');
+  a = await anon('GET', '/brambleforce/buy/everything_bundle');
+  ok(a.status === 200 && a.text.includes('$27.99'), 'bf: bundle buy page shows $27.99');
+  seedGuest('ord-bf-bundle-1', 'brambleforce:everything_bundle', 'bfbundle@test.local');
+  const bundleGt = guestCheckout.guestToken('ord-bf-bundle-1', 'brambleforce:everything_bundle');
+  a = await anon('GET', `/brambleforce/buy/everything_bundle/approve/ord-bf-bundle-1?gt=${encodeURIComponent(bundleGt)}`);
+  ok(a.status === 200, 'bf: bundle approve with the real token renders the success page');
+  const bundleCodeMatch = a.text.match(/[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}/);
+  ok(!!bundleCodeMatch, 'bf: bundle success page shows the unlock code');
+  const bundleCode = bundleCodeMatch && bundleCodeMatch[0];
+  r = await anon('POST', '/api/brambleforce/redeem', { __json: { code: bundleCode } });
+  j = null; try { j = JSON.parse(r.text); } catch (e) { /* asserted below */ }
+  ok(r.status === 200 && j && j.product === 'everything_bundle', 'bf: bundle redeem returns {product:"everything_bundle"}');
+  ok(j && Array.isArray(j.grants) && j.grants.length === 15
+    && ['fighter_zola', 'fighter_otto', 'fighter_yusuf'].every((id) => j.grants.includes(id)),
+    'bf: bundle redeem carries the full 15-extra grant set incl. all three fighters');
+  r = await anon('POST', '/api/brambleforce/redeem', { __json: { code: bundleCode } });
+  j = null; try { j = JSON.parse(r.text); } catch (e) { /* asserted below */ }
+  ok(j && j.error === 'spent', 'bf: a second bundle redeem answers {error:"spent"}');
 }
 
 module.exports = { runHttpTests };

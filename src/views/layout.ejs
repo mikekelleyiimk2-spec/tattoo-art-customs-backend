@@ -256,9 +256,30 @@ gtag('config', 'G-9N1QECNMWL');
   });
 })();
 var TAC_WORKING_LABEL = <%- JSON.stringify(t('common.working')) %>;
+var TAC_STALL_LABEL = <%- JSON.stringify(t('common.stall')) %>;
+// Restore a form locked by the submit handler below: buttons enabled,
+// labels restored, form submittable again.
+function tacRestoreForm(f) {
+  if (!f) return;
+  delete f.dataset.submitted;
+  Array.prototype.forEach.call(f.querySelectorAll('button[type="submit"], input[type="submit"]'), function (el) {
+    el.disabled = false;
+    if (el.tagName === 'BUTTON' && el.dataset.label) el.textContent = el.dataset.label;
+  });
+}
 // Double-submit protection + feedback: every POST form disables its submit
 // buttons on submit so rapid clicks can't stack duplicate orders or
 // subscriptions, and the user sees that something is happening.
+// Stall watchdog: if the submission's navigation never completes — the
+// server restarted mid-request (a deploy), the connection dropped, the
+// response was lost — the page would otherwise sit on "Working…" forever
+// with a dead button and no error. (Owner hit exactly this on the
+// Brambleforce buy button, 2026-10-30: his tap landed in a deploy window,
+// the POST died with the old instance, and the button never recovered.)
+// 60s is beyond the server's worst-case PayPal budget (two 25s-capped
+// calls), so a submission still unanswered then is genuinely lost: the
+// watchdog restores the form and says so, in the open. A submission that
+// does complete unloads the page, so this never fires on the happy path.
 document.addEventListener('submit', function (ev) {
   var f = ev.target;
   if (!f || f.tagName !== 'FORM') return;
@@ -272,6 +293,22 @@ document.addEventListener('submit', function (ev) {
       el.textContent = TAC_WORKING_LABEL;
     }
   });
+  setTimeout(function () {
+    if (!f.isConnected || !f.dataset.submitted) return;
+    tacRestoreForm(f);
+    var note = document.createElement('div');
+    note.className = 'flash';
+    note.setAttribute('role', 'alert');
+    note.textContent = TAC_STALL_LABEL;
+    if (f.parentNode) f.parentNode.insertBefore(note, f);
+    if (note.scrollIntoView) note.scrollIntoView({ block: 'nearest' });
+  }, 60000);
+});
+// Back/forward-cache restore: a page revived from bfcache keeps the
+// disabled "Working…" state it was frozen with — unlock any form still
+// marked submitted so the buttons work again.
+window.addEventListener('pageshow', function () {
+  Array.prototype.forEach.call(document.querySelectorAll('form[data-submitted]'), tacRestoreForm);
 });
 // Give every table cell a data-label from its column header, so the
 // small-screen stacked-card table CSS can label each value.
