@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><%= typeof title !== 'undefined' ? title : 'Brambleforce — Run-and-Gun Through a Killer Garden' %></title>
+<% if (typeof metaDescription !== 'undefined' && metaDescription) { %>
+<meta name="description" content="<%= metaDescription %>">
+<meta property="og:description" content="<%= metaDescription %>">
+<% } %>
+<meta property="og:type" content="website">
+<meta property="og:title" content="<%= typeof title !== 'undefined' ? title : 'Brambleforce' %>">
+<meta property="og:image" content="/img/brambleforce/hero.webp">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#040b07">
+<link rel="icon" href="/img/brambleforce/icon.png">
+<link rel="apple-touch-icon" href="/img/brambleforce/icon.png">
+<link rel="stylesheet" href="/css/brambleforce.css">
+<!-- Google Analytics 4 — same property as the house site (G-9N1QECNMWL) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-9N1QECNMWL"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-9N1QECNMWL');
+</script>
+</head>
+<body class="bf-body">
+<!-- Plant growth over the garden-night ground (owner order 2026-10-30):
+     decorative only, fixed frame layers behind all content. The far
+     layer textures the ground; the near layer creeps vines in from the
+     corners and hangs strands from the top edge. Pure CSS/SVG, no JS. -->
+<div class="bf-growth bf-growth-far" aria-hidden="true"></div>
+<div class="bf-growth bf-growth-near" aria-hidden="true">
+  <span class="bf-vine bf-vine-tl"><b></b></span>
+  <span class="bf-vine bf-vine-tr"><b></b></span>
+  <span class="bf-vine bf-vine-bl"><b></b></span>
+  <span class="bf-vine bf-vine-br"><b></b></span>
+  <span class="bf-vine-hang bf-vine-hang-a"><b></b></span>
+  <span class="bf-vine-hang bf-vine-hang-b"><b></b></span>
+</div>
+<header class="bf-header">
+  <div class="bf-wrap bf-header-in">
+    <a class="bf-wordmark" href="/brambleforce">Brambleforce<small>A Neon Tombstone Run-and-Gun</small></a>
+    <nav class="bf-nav">
+      <a href="/brambleforce#extras">Extras</a>
+      <a href="/watch">Watch</a>
+      <a href="/contact">Support</a>
+    </nav>
+  </div>
+</header>
+
+<% if (typeof flash !== 'undefined' && flash) { %>
+<div class="bf-wrap"><div class="flash" role="alert" style="margin-left:0;margin-right:0;"><%= flash %></div></div>
+<% } %>
+
+<main class="bf-main">
+  <div class="bf-wrap">
+    <%- body %>
+  </div>
+</main>
+
+<footer class="bf-footer">
+  <div class="bf-wrap">
+    <span class="bf-foot-brand">BRAMBLEFORCE</span>
+    <nav>
+      <a href="/brambleforce">All of Brambleforce</a>
+      <a href="/watch">Watch Episode 1</a>
+      <a href="/contact">Support</a>
+      <a href="/terms">Terms</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+    <p>Brambleforce is a Neon Tombstone game from Useful Appz, sold direct by Tattoo Art Customs™.</p>
+    <p class="fineprint">Direct sideload edition for Android — no Play Store needed. Extras unlock in the game with a single-use code. Purchases are covered by the <a href="/terms">Terms</a>; stuck on anything, <a href="/contact">contact support</a> or reply to your purchase email.</p>
+  </div>
+</footer>
+
+<script>
+var BF_WORKING_LABEL = <%- JSON.stringify(t('common.working')) %>;
+var BF_STALL_LABEL = <%- JSON.stringify(t('common.stall')) %>;
+// Double-submit protection + feedback with the house guard's stall
+// semantics VERBATIM (table-grade correction, 2026-10-30): a stuck
+// "Working…" button with a dead request behind it is how the owner
+// found this page's old skin wanting — but the restore must NOT fire
+// at 25s: a slow-but-legitimate checkout can run ~50s (two 25s-capped
+// PayPal calls server-side), and re-enabling mid-flight invites
+// duplicate orders. So: 60s, and never silent — restoring shows the
+// stall notice (role="alert") so the buyer knows it didn't go through
+// and can safely retry. The POST itself is untouched.
+function bfRestoreForm(f) {
+  if (!f) return;
+  delete f.dataset.submitted;
+  Array.prototype.forEach.call(f.querySelectorAll('button[type="submit"], input[type="submit"]'), function (el) {
+    el.disabled = false;
+    if (el.tagName === 'BUTTON' && el.dataset.label) el.textContent = el.dataset.label;
+  });
+}
+document.addEventListener('submit', function (ev) {
+  var f = ev.target;
+  if (!f || f.tagName !== 'FORM') return;
+  if ((f.getAttribute('method') || 'get').toLowerCase() !== 'post') return;
+  if (f.dataset.submitted) { ev.preventDefault(); return; }
+  f.dataset.submitted = '1';
+  Array.prototype.forEach.call(f.querySelectorAll('button[type="submit"], input[type="submit"]'), function (el) {
+    el.disabled = true;
+    if (el.tagName === 'BUTTON' && !el.dataset.label) {
+      el.dataset.label = el.textContent;
+      el.textContent = BF_WORKING_LABEL;
+    }
+  });
+  setTimeout(function () {
+    if (!f.isConnected || !f.dataset.submitted) return;
+    bfRestoreForm(f);
+    var note = document.createElement('div');
+    note.className = 'flash';
+    note.setAttribute('role', 'alert');
+    note.textContent = BF_STALL_LABEL;
+    if (f.parentNode) f.parentNode.insertBefore(note, f);
+    if (note.scrollIntoView) note.scrollIntoView({ block: 'nearest' });
+  }, 60000);
+});
+window.addEventListener('pageshow', function () {
+  document.querySelectorAll('form[data-submitted]').forEach(function (f) { bfRestoreForm(f); });
+});
+</script>
+</body>
+</html>

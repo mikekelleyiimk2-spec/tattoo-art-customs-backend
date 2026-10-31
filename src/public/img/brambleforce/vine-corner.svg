@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" fill="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="bf-lg1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#477e55"/>
+      <stop offset="1" stop-color="#1e4028"/>
+    </linearGradient>
+    <g id="bf-lf">
+      <path d="M1,0 C12,-14 30,-17 45,-6 C33,8 15,10 1,0 Z"/>
+      <path d="M4,-.5 C16,-4 30,-5.5 41,-5" fill="none" stroke="#b9e356" stroke-opacity=".25" stroke-width="1.6"/>
+    </g>
+  </defs>
+
+  <!-- far leaves: darker, larger, behind the stems (depth layer) -->
+  <g fill="#122619" opacity=".85">
+    <use href="#bf-lf" transform="translate(88,46) rotate(42) scale(1.55)"/>
+    <use href="#bf-lf" transform="translate(298,48) rotate(-48) scale(1.65)"/>
+    <use href="#bf-lf" transform="translate(46,252) rotate(122) scale(1.5)"/>
+    <use href="#bf-lf" transform="translate(52,92) rotate(82) scale(1.3)"/>
+    <use href="#bf-lf" transform="translate(208,44) rotate(12) scale(1.35)"/>
+    <use href="#bf-lf" transform="translate(44,352) rotate(96) scale(1.4)"/>
+  </g>
+
+  <!-- main stems: one sweeps the top edge, one the side edge -->
+  <path d="M-8,30 C80,-2 170,52 280,26 C350,10 410,34 452,14" stroke="#2f5a3a" stroke-width="7" stroke-linecap="round"/>
+  <path d="M30,-8 C-2,80 52,170 26,280 C10,350 34,410 14,452" stroke="#2f5a3a" stroke-width="7" stroke-linecap="round"/>
+  <!-- stem light-lines -->
+  <path d="M-8,23 C86,-8 176,44 284,18 C352,3 408,26 446,8" stroke="#527f5e" stroke-width="2" opacity=".5" stroke-linecap="round"/>
+  <path d="M23,-8 C-8,86 44,176 19,282 C4,348 26,404 8,444" stroke="#527f5e" stroke-width="2" opacity=".5" stroke-linecap="round"/>
+  <!-- branches -->
+  <path d="M150,30 C168,74 148,112 172,152" stroke="#26452e" stroke-width="4" stroke-linecap="round"/>
+  <path d="M28,150 C74,162 108,142 148,158" stroke="#26452e" stroke-width="4" stroke-linecap="round"/>
+  <!-- tendril curls at the stem tips -->
+  <path d="M452,14 c16,-6 24,6 16,15 c-6,8 -19,5 -17,-5 c1,-7 10,-8 12,-2" stroke="#2f5a3a" stroke-width="3" stroke-linecap="round"/>
+  <path d="M14,452 c-8,14 4,24 14,17 c8,-6 4,-18 -4,-16" stroke="#2f5a3a" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- near leaves along the top stem -->
+  <g fill="url(#bf-lg1)">
+    <use href="#bf-lf" transform="translate(58,16) rotate(-18) scale(1.05)"/>
+    <use href="#bf-lf" transform="translate(118,32) rotate(24) scale(.9)"/>
+    <use href="#bf-lf" transform="translate(184,28) rotate(-30) scale(1.15)"/>
+    <use href="#bf-lf" transform="translate(248,24) rotate(16) scale(.85)"/>
+    <use href="#bf-lf" transform="translate(314,18) rotate(-14) scale(1)"/>
+    <use href="#bf-lf" transform="translate(384,24) rotate(20) scale(.8)"/>
+    <!-- branch leaves -->
+    <use href="#bf-lf" transform="translate(161,86) rotate(58) scale(.8)"/>
+    <use href="#bf-lf" transform="translate(168,128) rotate(142) scale(.7)"/>
+    <use href="#bf-lf" transform="translate(84,153) rotate(-8) scale(.75)"/>
+    <use href="#bf-lf" transform="translate(126,153) rotate(28) scale(.65)"/>
+    <!-- side stem leaves -->
+    <use href="#bf-lf" transform="translate(15,68) rotate(96) scale(1)"/>
+    <use href="#bf-lf" transform="translate(31,118) rotate(62) scale(.85)"/>
+    <use href="#bf-lf" transform="translate(21,214) rotate(104) scale(1.1)"/>
+    <use href="#bf-lf" transform="translate(27,298) rotate(70) scale(.9)"/>
+    <use href="#bf-lf" transform="translate(17,374) rotate(98) scale(.8)"/>
+  </g>
+
+  <!-- thorns -->
+  <g fill="#1c3524">
+    <path d="M104,22 l11,-4 -4,10 z"/>
+    <path d="M228,20 l11,3 -8,7 z"/>
+    <path d="M342,14 l10,4 -8,6 z"/>
+    <path d="M20,180 l4,11 -10,-4 z"/>
+    <path d="M24,318 l3,11 -9,-5 z"/>
+  </g>
+
+  <!-- ember + spore glints -->
+  <circle cx="430" cy="62" r="11" fill="#ff9a3c" opacity=".10"/>
+  <circle cx="430" cy="62" r="4" fill="#ff9a3c" opacity=".5"/>
+  <circle cx="70" cy="428" r="11" fill="#ff9a3c" opacity=".10"/>
+  <circle cx="70" cy="428" r="4" fill="#ff9a3c" opacity=".5"/>
+  <circle cx="252" cy="66" r="3" fill="#ff9a3c" opacity=".4"/>
+  <circle cx="350" cy="54" r="2.5" fill="#b9e356" opacity=".35"/>
+  <circle cx="66" cy="330" r="2.5" fill="#b9e356" opacity=".3"/>
+</svg>

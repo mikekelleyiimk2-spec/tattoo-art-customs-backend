@@ -1,29 +1,41 @@
-<h1><%= product.name %></h1>
-<p class="muted"><%= product.blurb %></p>
+<%#
+  Brambleforce buy page — inherits the game's own storefront identity
+  (layout-brambleforce). The checkout FORM below is the fleet door:
+  action, field names (guest_email, website honeypot) and the guest /
+  member branches are byte-identical to the old skin — presentation
+  only, the money mechanics do not live in this file.
+%>
+<%
+  var bfArt = {
+    game: '/img/brambleforce/hero.webp',
+    everything_bundle: '/img/brambleforce/shot-store.webp',
+    iron_garden_expansion: '/img/brambleforce/shot-canopy.webp',
+    boss_rush_time_attack: '/img/brambleforce/shot-dreadnought.webp',
+    queens_hunt: '/img/brambleforce/shot-orchid.webp',
+    weapon_tracers: '/img/brambleforce/shot-fracture.webp',
+    crt_filter: '/img/brambleforce/shot-kraken.webp',
+    soundtrack: '/img/brambleforce/shot-leviathan.webp',
+    art_vault: '/img/brambleforce/title.webp',
+    war_bond: '/img/brambleforce/hero.webp'
+  };
+  var bfHero = bfArt[productId] || '/img/brambleforce/title.webp';
+  var bfIsGame = productId === 'game';
+%>
+<div class="bf-product-head">
+  <div class="bf-hero-art banner"><img src="<%= bfHero %>" alt="Brambleforce — <%= product.name %>" fetchpriority="high"></div>
+  <h1 class="bf-title" style="font-size:clamp(1.55rem,4.6vw,2.3rem);"><%= product.name %></h1>
+  <p class="bf-lede"><%= product.blurb %></p>
+</div>
 
-<div class="card">
-  <h2>$<%= (price / 100).toFixed(2) %> one-time</h2>
-  <% if (productId === 'game') { %>
-  <h3>How it works</h3>
-  <ol>
-    <li>Buy here with PayPal ($6.99).</li>
-    <li>Download the Android APK from your purchase page — the link is emailed to you too.</li>
-    <li>Open it — allow installs from this source if asked — and tap Install.</li>
-  </ol>
-  <p class="muted fineprint">Android 8+. Zero ads. Built for controllers, keyboard, and touch.</p>
-  <% } else { %>
-  <h3>How it works</h3>
-  <ol>
-    <li>Buy here with PayPal.</li>
-    <li>Your unlock code appears on the next page — and is emailed to you.</li>
-    <li>In Brambleforce: EXTRAS (B on the title screen) → REDEEM CODE → type the code. Done — it's yours for good.</li>
-  </ol>
-  <p class="muted fineprint">Codes are single-use. You need the Brambleforce game (Android) to use this extra.</p>
-  <% } %>
+<section class="bf-buy-panel" aria-label="Buy <%= product.name %>" style="margin-top:1.1rem;">
+  <div class="bf-price-row">
+    <span class="bf-price">$<%= (price / 100).toFixed(2) %></span>
+    <span class="bf-once">one-time · yours for good</span>
+  </div>
   <% if (user) { %>
   <form method="post" action="/brambleforce/buy/<%= productId %>/buy" class="form">
     <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-    <p><button class="btn" type="submit">Buy for $<%= (price / 100).toFixed(2) %></button></p>
+    <p><button class="btn bf-btn-wide" type="submit">Buy for $<%= (price / 100).toFixed(2) %></button></p>
   </form>
   <% } else { %>
   <form method="post" action="/brambleforce/buy/<%= productId %>/buy" class="form">
@@ -31,13 +43,61 @@
     <label><%= t('buyApp.guest_email_label') %>
       <input type="email" name="guest_email" required maxlength="160" placeholder="you@example.com">
     </label>
+    <% if (bfIsGame) { %>
     <p class="muted fineprint"><%= t('buyApp.guest_email_note') %></p>
-    <p><button class="btn" type="submit">Buy for $<%= (price / 100).toFixed(2) %></button></p>
+    <% } else { %>
+    <%# Extras deliver an unlock CODE by email, not a download link — the
+        house guest_email_note string promises a download link (true for
+        the game and the app doors), so extras pages say code here. %>
+    <p class="muted fineprint">No account needed — after PayPal checkout, your unlock code is emailed to this address.</p>
+    <% } %>
+    <p><button class="btn bf-btn-wide" type="submit">Buy for $<%= (price / 100).toFixed(2) %></button></p>
     <p class="muted fineprint"><%= t('buyApp.guest_or_login') %> <a href="/login?next=/brambleforce/buy/<%= productId %>"><%= t('buyApp.guest_login_link') %></a> <%= t('buyApp.guest_login_tail') %></p>
   </form>
   <% } %>
-</div>
+  <p class="bf-secure">Secure checkout by PayPal — no account needed to pay.</p>
+</section>
+
+<section class="bf-section" aria-label="How it works">
+  <p class="bf-kicker">After you pay</p>
+  <h2>How it works</h2>
+  <% if (bfIsGame) { %>
+  <ol class="bf-steps">
+    <li><strong>Buy here with PayPal</strong>One-time $<%= (price / 100).toFixed(2) %>. Guest checkout — just an email for delivery.</li>
+    <li><strong>Download the APK</strong>Your purchase page has the download — the link is emailed to you too, and it can be re-issued from that page anytime.</li>
+    <li><strong>Install &amp; play</strong>Open the APK, allow installs from this source if asked, tap Install. Zero ads — it's a paid game.</li>
+  </ol>
+  <p class="muted fineprint" style="margin-top:.8rem;">Android 8+. Built for controllers (gamepad out of the box), keyboard, and touch.</p>
+  <% } else { %>
+  <ol class="bf-steps">
+    <li><strong>Buy here with PayPal</strong>One-time $<%= (price / 100).toFixed(2) %>. Guest checkout — just an email for delivery.</li>
+    <li><strong>Get your unlock code</strong>The code appears on the next page — and is emailed to you. Keep the email; the code is shown once.</li>
+    <li><strong>Redeem it in the game</strong>Open Brambleforce → EXTRAS (B on the title screen) → REDEEM CODE → type the code. Done — it's yours for good.</li>
+  </ol>
+  <p class="muted fineprint" style="margin-top:.8rem;">Codes are single-use. You need the Brambleforce game (Android) to use this extra — <a href="/brambleforce/buy/game">get the game first</a> if you don't have it.</p>
+  <% } %>
+</section>
+
+<% if (bfIsGame) { %>
+<section class="bf-section" aria-label="Inside the game">
+  <p class="bf-kicker">What's inside</p>
+  <h2>One price. The whole garden.</h2>
+  <ul class="bf-inside">
+    <li><strong>10 missions, two views</strong> — side-scroll + top-down</li>
+    <li><strong>4 fighters</strong> — routes change with who you bring</li>
+    <li><strong>11 bosses</strong> — plus Mother Orchid — the Queen</li>
+    <li><strong>Hardcore + Standard</strong> modes</li>
+    <li><strong>Fully voiced</strong> — lives are earned, never sold</li>
+    <li><strong>Zero ads</strong> — paid game, acts like one</li>
+  </ul>
+  <div class="bf-gallery" style="margin-top:1rem;">
+    <figure><img src="/img/brambleforce/shot-dreadnought.webp" alt="The Dreadnought boss fight" loading="lazy"><figcaption>The Dreadnought</figcaption></figure>
+    <figure><img src="/img/brambleforce/shot-orchid.webp" alt="Mother Orchid" loading="lazy"><figcaption>Mother Orchid — the Queen</figcaption></figure>
+    <figure><img src="/img/brambleforce/shot-canopy.webp" alt="Top-down canopy sweep" loading="lazy"><figcaption>Canopy sweeps</figcaption></figure>
+  </div>
+</section>
+<% } %>
 
 <%- include('../partials/rolodex-placements') %>
 
-<p class="muted fineprint"><a href="/brambleforce">← All of Brambleforce</a> · <a href="/watch">Watch the shows</a></p>
+<p class="muted fineprint" style="margin-top:2rem;"><a href="/brambleforce">← All of Brambleforce</a> · <a href="/watch">Watch the shows</a></p>

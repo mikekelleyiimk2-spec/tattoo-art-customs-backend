@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360" fill="none" aria-hidden="true">
+  <!-- Far ground texture: faint leaf silhouettes + ember specks, tiled.
+       Alphas are baked in low on purpose — this is ground, not content. -->
+  <g fill="#000" fill-opacity=".16">
+    <path d="M1,0 C12,-14 30,-17 45,-6 C33,8 15,10 1,0 Z" transform="translate(112,108) rotate(24) scale(.85)"/>
+    <path d="M1,0 C12,-14 30,-17 45,-6 C33,8 15,10 1,0 Z" transform="translate(272,218) rotate(-52) scale(.8)"/>
+    <path d="M1,0 C12,-14 30,-17 45,-6 C33,8 15,10 1,0 Z" transform="translate(28,224) rotate(118) scale(.75)"/>
+  </g>
+  <g fill="#b9e356">
+    <path d="M1,0 C12,-14 30,-17 45,-6 C33,8 15,10 1,0 Z" fill-opacity=".05" transform="translate(38,58) rotate(20) scale(.5)"/>
+    <path d="M1,0 C12,-14 30,-17 45,-6 C33,8 15,10 1,0 Z" fill-opacity=".06" transform="translate(148,28) rotate(-30) scale(.4)"/>
+    <path d="M1,0 C12,-14 30,-17 45,-6 C33,8 15,10 1,0 Z" fill-opacity=".05" transform="translate(258,78) rotate(70) scale(.55)"/>
+    <path d="M1,0 C12,-14 30,-17 45,-6 C33,8 15,10 1,0 Z" fill-opacity=".06" transform="translate(318,178) rotate(10) scale(.45)"/>
+    <path d="M1,0 C12,-14 30,-17 45,-6 C33,8 15,10 1,0 Z" fill-opacity=".05" transform="translate(88,168) rotate(120) scale(.5)"/>
+    <path d="M1,0 C12,-14 30,-17 45,-6 C33,8 15,10 1,0 Z" fill-opacity=".06" transform="translate(198,148) rotate(-60) scale(.38)"/>
+    <path d="M1,0 C12,-14 30,-17 45,-6 C33,8 15,10 1,0 Z" fill-opacity=".05" transform="translate(298,298) rotate(40) scale(.5)"/>
+    <path d="M1,0 C12,-14 30,-17 45,-6 C33,8 15,10 1,0 Z" fill-opacity=".06" transform="translate(58,288) rotate(-100) scale(.42)"/>
+    <path d="M1,0 C12,-14 30,-17 45,-6 C33,8 15,10 1,0 Z" fill-opacity=".05" transform="translate(168,248) rotate(90) scale(.36)"/>
+    <path d="M1,0 C12,-14 30,-17 45,-6 C33,8 15,10 1,0 Z" fill-opacity=".06" transform="translate(238,328) rotate(-15) scale(.4)"/>
+  </g>
+  <g fill="#ff9a3c">
+    <circle cx="180" cy="90" r="2" fill-opacity=".06"/>
+    <circle cx="90" cy="320" r="2" fill-opacity=".05"/>
+    <circle cx="330" cy="40" r="2" fill-opacity=".06"/>
+  </g>
+</svg>

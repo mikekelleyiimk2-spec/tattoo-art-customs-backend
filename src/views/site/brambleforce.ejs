@@ -1,38 +1,143 @@
-<h1>Brambleforce</h1>
-<p class="muted">Run-and-gun through a killer garden. A Neon Tombstone game from Useful Appz.</p>
+<%#
+  Brambleforce storefront — the game's own page (owner, 2026-10-30):
+  its artwork is the substance, not decoration on the tattoo site.
+  Data: products/productIds arrive whole from lib/brambleforce via the
+  router; every product in the catalogue gets a door from this page.
+%>
+<figure class="bf-hero">
+  <div class="bf-hero-art tall"><img src="/img/brambleforce/hero.webp" alt="Brambleforce — a Vinebreaker faces the Dreadnought in the killer garden" fetchpriority="high"></div>
+</figure>
 
-<div class="card">
-  <h2>$6.99 — the full game, zero ads</h2>
-  <p>The Crownless Court is growing over the world, and Dr. Sylvan Crowe's machines are doing the gardening. You're the Vinebreakers — the crew that prunes back.</p>
-  <p>10 missions in two views — side-scroll assaults and top-down canopy sweeps. Four fighters who genuinely play differently. Eleven bosses — and Mother Orchid, who roams, hunts you, and cannot be killed. Damage only slows her down. The correct play is to run.</p>
-  <p>Built for controllers (gamepad supported out of the box), keyboard, and touch. Fully voiced banter. Extra lives are earned, never sold.</p>
-  <h3>How it works</h3>
-  <ol>
-    <li>Buy here with PayPal ($6.99).</li>
-    <li>Download the Android APK from your purchase page (the link is emailed too).</li>
-    <li>Open it — allow installs from this source if asked — and tap Install.</li>
-  </ol>
-  <p><a class="btn" href="/brambleforce/buy/game">Get Brambleforce — $6.99</a></p>
-  <p class="muted fineprint">Android 8+. This is the direct sideload edition — no Play Store needed. Optional extras below are bought right here and unlocked in the game with a code.</p>
+<%# Launch trailer in the hero position (audit D7, 2026-10-31): the page
+    selling the game must show it moving. Same youtube-nocookie player
+    pattern as /watch; Rook 98 is the game's channel. %>
+<div class="bf-trailer" style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;margin:1rem 0 0;">
+  <iframe style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" src="https://www.youtube-nocookie.com/embed/VgLc5yPtMEs" title="BRAMBLEFORCE — Official Launch Trailer | Neon Tombstone Games" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
 </div>
 
-<h2>Optional extras</h2>
-<p class="muted">All cosmetic or content — never difficulty. Lives and continues are never sold. Ever. Bought extras unlock with a single-use code: open Brambleforce → EXTRAS (B) → REDEEM CODE.</p>
-<div class="grid">
-  <% productIds.filter(function (id) { return id !== 'game'; }).forEach(function (id) { var p = products[id]; %>
-  <article class="card" style="padding:1rem;">
-    <h3 style="margin-top:0;"><%= p.name %></h3>
-    <p class="muted" style="margin:.25rem 0;"><%= p.blurb %></p>
-    <p><a class="btn" href="/brambleforce/buy/<%= id %>">Buy — $<%= (p.priceCents / 100).toFixed(2) %></a></p>
+<h1 class="bf-title">Brambleforce</h1>
+<p class="bf-tagline">Run-and-gun through a killer garden.</p>
+<p class="bf-lede">The Crownless Court is growing over the world, and Dr. Sylvan Crowe's machines are doing the gardening. You're the Vinebreakers — the crew that prunes back.</p>
+
+<section class="bf-buybox" aria-label="Buy Brambleforce">
+  <div class="bf-pitch">
+    <h2>The full game — zero ads</h2>
+    <p><%= products.game.blurb %></p>
+    <ul class="bf-chips">
+      <li><strong>10</strong> missions</li>
+      <li><strong>4</strong> fighters</li>
+      <li><strong>11</strong> bosses</li>
+      <li>Gamepad · keyboard · touch</li>
+      <li>Android 8+</li>
+    </ul>
+  </div>
+  <div class="bf-buyact">
+    <div class="bf-price">$<%= (products.game.priceCents / 100).toFixed(2) %><small>one-time · yours for good</small></div>
+    <p><a class="btn" href="/brambleforce/buy/game">Get Brambleforce — $<%= (products.game.priceCents / 100).toFixed(2) %></a></p>
+    <p class="bf-secure" style="text-align:right;">Secure checkout by PayPal</p>
+  </div>
+</section>
+
+<section class="bf-section" aria-label="Screenshots">
+  <p class="bf-kicker">From the garden</p>
+  <h2>Screenshots</h2>
+  <div class="bf-gallery">
+    <figure class="wide"><img src="/img/brambleforce/title.webp" alt="Choose your fighter — Tor, Selene, Dane and Mara" loading="lazy"><figcaption>Four fighters. Four different games.</figcaption></figure>
+    <figure><img src="/img/brambleforce/shot-fracture.webp" alt="Mission 1 — Verdant Fracture" loading="lazy"><figcaption>Mission 1 · Verdant Fracture</figcaption></figure>
+    <figure><img src="/img/brambleforce/shot-dreadnought.webp" alt="The Dreadnought boss fight" loading="lazy"><figcaption>The Dreadnought</figcaption></figure>
+    <figure><img src="/img/brambleforce/shot-orchid.webp" alt="Mother Orchid appears in the garden" loading="lazy"><figcaption>Mother Orchid — the Queen.</figcaption></figure>
+    <figure><img src="/img/brambleforce/shot-canopy.webp" alt="Top-down canopy sweep" loading="lazy"><figcaption>Top-down canopy sweeps</figcaption></figure>
+    <figure><img src="/img/brambleforce/shot-leviathan.webp" alt="The Dredge Leviathan" loading="lazy"><figcaption>The Dredge Leviathan</figcaption></figure>
+    <figure><img src="/img/brambleforce/shot-kraken.webp" alt="The Sunken Kraken" loading="lazy"><figcaption>The Sunken Kraken</figcaption></figure>
+  </div>
+</section>
+
+<section class="bf-section" aria-label="About the game">
+  <p class="bf-kicker">The game</p>
+  <h2>Prune back the Crownless Court</h2>
+  <p>10 missions in two views — side-scroll assaults and top-down canopy sweeps. Four fighters who genuinely play differently: the heavy charges through the barricade, the light slips the gap, and routes change with the fighter you bring. Eleven bosses — and <strong>Mother Orchid — the Queen.</strong></p>
+  <ul class="bf-inside">
+    <li><strong>10 missions, two views</strong> — side-scroll + top-down</li>
+    <li><strong>4 fighters</strong> — Tor, Selene, Dane, Mara</li>
+    <li><strong>11 bosses</strong> — plus the Queen</li>
+    <li><strong>Hardcore + Standard</strong> — one stock for the run, or retry the mission</li>
+    <li><strong>Built for controllers</strong> — gamepad out of the box, keyboard, touch</li>
+    <li><strong>Fully voiced</strong> banter — extra lives are earned, never sold</li>
+  </ul>
+</section>
+
+<section class="bf-section" aria-label="The cast">
+  <p class="bf-kicker">The crew</p>
+  <h2>Meet the Vinebreakers</h2>
+  <div class="bf-cast">
+    <figure><img src="/img/brambleforce/cast-tor.webp" alt="Tor Halvorsen — Hammer. Heavy: armor + charge" loading="lazy"></figure>
+    <figure><img src="/img/brambleforce/cast-selene.webp" alt="Selene Marroquín — Teardrop. Light: roll + wall-jump" loading="lazy"></figure>
+    <figure><img src="/img/brambleforce/cast-dane.webp" alt="Dane Mercer — Hatchet. Middle: anchor-dash" loading="lazy"></figure>
+    <figure><img src="/img/brambleforce/cast-mara.webp" alt="Mara Voss — Machete. Flanker: dash-chain" loading="lazy"></figure>
+  </div>
+  <p class="fineprint" style="margin-top:.5rem;">Straight off the game's fighter-select screen. Full-size cast cards live in the Cast Art Vault extra.</p>
+</section>
+
+<section class="bf-section" id="extras" aria-label="Optional extras">
+  <p class="bf-kicker">Optional extras</p>
+  <h2>Extras — never difficulty</h2>
+  <p>All cosmetic or content — <strong>lives and continues are never sold. Ever.</strong> Bought extras unlock with a single-use code: open Brambleforce → EXTRAS (B) → REDEEM CODE.</p>
+  <%
+    var bfIds = productIds.filter(function (id) { return id !== 'game'; });
+    var bfUsed = {};
+    function bfTake(list) {
+      var out = [];
+      list.forEach(function (id) { if (bfIds.indexOf(id) !== -1 && !bfUsed[id]) { bfUsed[id] = 1; out.push(id); } });
+      return out;
+    }
+    var bfFeatured = bfTake(['everything_bundle']);
+    var bfGroups = [
+      { title: 'Campaign & modes', items: bfTake(['iron_garden_expansion', 'boss_rush_time_attack', 'queens_hunt']) },
+      { title: 'New fighters', items: bfTake(bfIds.filter(function (id) { return id.indexOf('fighter_') === 0; })) },
+      { title: 'Skins & visual', items: bfTake(bfIds.filter(function (id) { return id.indexOf('skin_') === 0 || id === 'weapon_tracers' || id === 'crt_filter'; })) },
+      { title: 'Sound, art & support', items: bfTake(['soundtrack', 'art_vault', 'war_bond']) },
+      { title: 'More extras', items: bfTake(bfIds.slice()) },
+    ];
+  %>
+  <% bfFeatured.forEach(function (id) { var p = products[id]; %>
+  <article class="bf-card featured">
+    <div class="bf-card-main">
+      <span class="bf-badge">Best value</span>
+      <h3><%= p.name %></h3>
+      <p><%= p.blurb %></p>
+    </div>
+    <div class="bf-card-foot" style="margin-top:0;padding-top:0;">
+      <span class="bf-card-price">$<%= (p.priceCents / 100).toFixed(2) %></span>
+      <a class="btn" href="/brambleforce/buy/<%= id %>">Buy — $<%= (p.priceCents / 100).toFixed(2) %></a>
+    </div>
   </article>
   <% }); %>
-</div>
+  <% bfGroups.forEach(function (g) { if (!g.items.length) return; %>
+  <h3 style="margin:1.4rem 0 0;font-size:1.08rem;color:var(--bf-text);"><%= g.title %></h3>
+  <div class="bf-grid">
+    <% g.items.forEach(function (id) { var p = products[id]; %>
+    <article class="bf-card">
+      <h3><%= p.name %></h3>
+      <p><%= p.blurb %></p>
+      <div class="bf-card-foot">
+        <span class="bf-card-price">$<%= (p.priceCents / 100).toFixed(2) %></span>
+        <a class="btn" href="/brambleforce/buy/<%= id %>">Buy — $<%= (p.priceCents / 100).toFixed(2) %></a>
+      </div>
+    </article>
+    <% }); %>
+  </div>
+  <% }); %>
+</section>
+
+<section class="bf-section" aria-label="How buying works">
+  <p class="bf-kicker">No Play Store needed</p>
+  <h2>How it works</h2>
+  <ol class="bf-steps">
+    <li><strong>Buy here with PayPal</strong>One-time payment. Guest checkout — just an email for delivery.</li>
+    <li><strong>Get your download or code</strong>The game's APK waits on your purchase page (and in your email). Extras arrive as a single-use unlock code.</li>
+    <li><strong>Install — or redeem in the game</strong>Open the APK and tap Install. For extras: EXTRAS (B) → REDEEM CODE → it's yours for good.</li>
+  </ol>
+  <p class="fineprint" style="margin-top:.8rem;">This is the direct sideload edition — the full game today, no Play Store needed. Android 8+.</p>
+</section>
 
 <%- include('../partials/rolodex-placements') %>
-
-<div class="card">
-  <h2>More from the house</h2>
-  <p><a href="/watch">Watch the shows</a> — Brambleforce Episode 1 and the weekly ads, free.<br>
-  <a href="/tac-android">Tattoo Art Customs for Android</a> — the free app.<br>
-  <a href="/tester-hub">Become a tester</a> — first in line for every new app.</p>
-</div>

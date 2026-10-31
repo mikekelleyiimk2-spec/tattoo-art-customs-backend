@@ -1,0 +1,409 @@
+/* Brambleforce store pages — the game's own face (owner verdict
+   2026-10-30: the sale pages must not wear the tattoo shop's skin).
+   Self-contained on purpose: layout-brambleforce.ejs loads ONLY this
+   file, so nothing from the TAC theme (nav, linework background,
+   footer) can leak onto the game's store. Palette + type are pulled
+   from the game's passed key art: deep garden-night greens, the
+   title-screen gold, canopy lime, boss-core ember. */
+
+:root {
+  --bf-bg0: #040b07;
+  --bf-bg1: #08160e;
+  --bf-panel: #0c1f13;
+  --bf-panel2: #0a1a10;
+  --bf-edge: #2a4a33;
+  --bf-edge-soft: #1b3324;
+  --bf-gold: #ffc93c;
+  --bf-gold-deep: #f0a92e;
+  --bf-lime: #b9e356;
+  --bf-ember: #ff9a3c;
+  --bf-text: #edf4e8;
+  --bf-muted: #a9bfa9;
+  --bf-faint: #7e957f;
+  --bf-btn-text: #1c1204;
+  --bf-serif: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+  --bf-sans: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body.bf-body {
+  margin: 0;
+  background:
+    radial-gradient(1100px 480px at 85% -80px, rgba(255, 154, 60, .10), rgba(255, 154, 60, 0) 60%),
+    radial-gradient(900px 520px at 8% 0, rgba(185, 227, 86, .06), rgba(185, 227, 86, 0) 55%),
+    linear-gradient(180deg, var(--bf-bg1), var(--bf-bg0) 340px);
+  background-color: var(--bf-bg0);
+  color: var(--bf-text);
+  font-family: var(--bf-sans);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.bf-wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+
+a { color: var(--bf-lime); }
+a:hover { color: var(--bf-gold); }
+
+/* ---- header ------------------------------------------------------ */
+.bf-header {
+  border-bottom: 1px solid var(--bf-edge-soft);
+  background: rgba(4, 11, 7, .82);
+}
+.bf-header-in {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: .5rem 1rem; padding: .65rem 0; flex-wrap: wrap;
+}
+.bf-wordmark {
+  font-family: var(--bf-serif); font-weight: 700; letter-spacing: .14em;
+  font-size: 1.28rem; color: var(--bf-gold); text-decoration: none;
+  text-transform: uppercase; white-space: nowrap;
+}
+.bf-wordmark small {
+  display: block; font-family: var(--bf-sans); font-weight: 600;
+  letter-spacing: .22em; font-size: .58rem; color: var(--bf-lime);
+}
+.bf-nav { display: flex; gap: 1.1rem; font-size: .92rem; font-weight: 600; flex-wrap: wrap; }
+.bf-nav a { color: var(--bf-muted); text-decoration: none; }
+.bf-nav a:hover { color: var(--bf-gold); }
+
+/* ---- flash (session messages ride the checkout flow) ------------- */
+.flash {
+  max-width: 1120px; margin: 1rem auto 0; padding: .8rem 1rem;
+  background: #2a1e05; border: 1px solid var(--bf-gold-deep);
+  border-radius: 10px; color: #ffe1a1; font-weight: 600;
+}
+.bf-main .flash { margin-left: 20px; margin-right: 20px; }
+
+/* ---- hero --------------------------------------------------------- */
+.bf-hero { margin: 1.1rem 0 0; }
+.bf-hero img {
+  display: block; width: 100%; height: auto;
+  border: 1px solid var(--bf-edge); border-radius: 14px;
+}
+.bf-hero-art {
+  position: relative; overflow: hidden; border: 1px solid var(--bf-edge);
+  border-radius: 14px; line-height: 0;
+}
+.bf-hero-art img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.bf-hero-art.tall { aspect-ratio: 1024 / 500; }
+.bf-hero-art.banner { aspect-ratio: 21 / 9; }
+
+.bf-title {
+  font-family: var(--bf-serif); font-weight: 700; color: var(--bf-gold);
+  letter-spacing: .04em; margin: 1.2rem 0 .2rem; line-height: 1.08;
+  font-size: clamp(1.9rem, 5.2vw, 3rem); text-transform: uppercase;
+}
+.bf-tagline { color: var(--bf-lime); font-weight: 600; margin: 0 0 .4rem; font-size: 1.05rem; }
+.bf-lede { color: var(--bf-muted); max-width: 62ch; margin: .3rem 0 0; }
+
+/* ---- buy box ------------------------------------------------------ */
+.bf-buybox {
+  margin: 1.2rem 0; padding: 1.2rem 1.25rem;
+  background: linear-gradient(180deg, var(--bf-panel), var(--bf-panel2));
+  border: 1px solid var(--bf-edge); border-radius: 14px;
+  display: flex; gap: 1.5rem; align-items: center; justify-content: space-between;
+  flex-wrap: wrap;
+}
+.bf-buybox .bf-pitch { flex: 1 1 320px; min-width: 0; }
+.bf-buybox h2 { margin: 0 0 .35rem; font-size: 1.25rem; }
+.bf-buybox p { margin: .25rem 0; color: var(--bf-muted); }
+.bf-buyact { flex: 0 0 auto; text-align: right; }
+.bf-price {
+  font-size: 2.3rem; font-weight: 800; color: var(--bf-text);
+  line-height: 1; letter-spacing: -.01em;
+}
+.bf-price small { display: block; font-size: .8rem; font-weight: 600; color: var(--bf-faint); margin-top: .3rem; letter-spacing: .04em; }
+
+.btn, .bf-btn {
+  display: inline-block; border: 0; cursor: pointer; text-decoration: none;
+  background: linear-gradient(180deg, var(--bf-gold), var(--bf-gold-deep));
+  color: var(--bf-btn-text); font-weight: 800; font-size: 1.02rem;
+  padding: .8rem 1.4rem; border-radius: 10px; line-height: 1.2;
+  box-shadow: 0 2px 0 #8a5c10, 0 6px 18px rgba(240, 169, 46, .18);
+  transition: transform .06s ease, filter .12s ease;
+}
+.btn:hover, .bf-btn:hover { filter: brightness(1.06); color: var(--bf-btn-text); }
+.btn:active, .bf-btn:active { transform: translateY(1px); }
+.btn[disabled], .bf-btn[disabled] { opacity: .65; cursor: wait; }
+.bf-btn-wide { display: block; text-align: center; width: 100%; }
+.bf-secure { color: var(--bf-faint); font-size: .82rem; margin-top: .5rem; text-align: center; }
+
+/* fact chips */
+.bf-chips { list-style: none; display: flex; flex-wrap: wrap; gap: .45rem; padding: 0; margin: .7rem 0 0; }
+.bf-chips li {
+  border: 1px solid var(--bf-edge); border-radius: 999px; padding: .22rem .7rem;
+  font-size: .83rem; font-weight: 600; color: var(--bf-text); background: rgba(185, 227, 86, .05);
+}
+.bf-chips li strong { color: var(--bf-lime); font-weight: 800; }
+
+/* ---- sections ------------------------------------------------------ */
+.bf-section { margin: 2.4rem 0 0; }
+.bf-kicker {
+  color: var(--bf-lime); font-size: .78rem; font-weight: 800;
+  letter-spacing: .24em; text-transform: uppercase; margin: 0 0 .2rem;
+}
+.bf-section h2, .bf-h2 {
+  font-family: var(--bf-serif); color: var(--bf-gold); font-weight: 700;
+  font-size: 1.55rem; margin: 0 0 .6rem; letter-spacing: .02em;
+}
+.bf-section p { color: var(--bf-muted); max-width: 68ch; }
+.bf-section p strong, .bf-card p strong { color: var(--bf-text); }
+
+/* screenshot gallery */
+.bf-gallery {
+  display: grid; gap: .8rem; margin-top: .8rem;
+  grid-template-columns: repeat(3, 1fr);
+}
+.bf-gallery figure { margin: 0; }
+.bf-gallery img {
+  display: block; width: 100%; height: auto; border-radius: 10px;
+  border: 1px solid var(--bf-edge-soft);
+}
+.bf-gallery figcaption { color: var(--bf-faint); font-size: .83rem; margin-top: .35rem; }
+
+/* cast tiles — cropped from the game's own fighter-select screen */
+.bf-cast { display: grid; gap: .8rem; grid-template-columns: repeat(4, 1fr); margin-top: .8rem; }
+.bf-cast figure { margin: 0; }
+.bf-cast img {
+  display: block; width: 100%; height: auto; border-radius: 10px;
+  border: 1px solid var(--bf-edge-soft);
+}
+
+/* what's-inside list */
+.bf-inside { list-style: none; padding: 0; margin: .6rem 0 0; display: grid; grid-template-columns: 1fr 1fr; gap: .45rem 1.4rem; }
+.bf-inside li { padding-left: 1.35rem; position: relative; color: var(--bf-muted); }
+.bf-inside li::before { content: '▸'; position: absolute; left: .2rem; color: var(--bf-lime); font-weight: 800; }
+.bf-inside li strong { color: var(--bf-text); }
+
+/* ---- product cards -------------------------------------------------- */
+.grid, .bf-grid { display: grid; gap: .9rem; grid-template-columns: repeat(3, 1fr); margin-top: .8rem; }
+.card, .bf-card {
+  background: linear-gradient(180deg, var(--bf-panel), var(--bf-panel2));
+  border: 1px solid var(--bf-edge-soft); border-radius: 12px;
+  padding: 1.05rem 1.1rem; display: flex; flex-direction: column;
+}
+.card h3, .bf-card h3 { margin: 0 0 .3rem; font-size: 1.04rem; color: var(--bf-text); }
+.card p, .bf-card p { margin: .25rem 0; color: var(--bf-muted); font-size: .94rem; }
+.bf-card .bf-card-foot { margin-top: auto; padding-top: .7rem; display: flex; align-items: center; justify-content: space-between; gap: .8rem; }
+.bf-card-price { font-size: 1.25rem; font-weight: 800; color: var(--bf-text); white-space: nowrap; }
+.bf-card .btn { padding: .55rem 1rem; font-size: .95rem; }
+.bf-card.featured {
+  grid-column: 1 / -1; border-color: var(--bf-gold-deep);
+  background: linear-gradient(180deg, #17270f, var(--bf-panel2));
+  flex-direction: row; gap: 1.4rem; align-items: center; flex-wrap: wrap;
+}
+.bf-card.featured .bf-card-main { flex: 1 1 340px; }
+.bf-card.featured h3 { font-size: 1.3rem; }
+.bf-badge {
+  display: inline-block; background: var(--bf-gold); color: var(--bf-btn-text);
+  font-size: .7rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+  border-radius: 6px; padding: .14rem .5rem; margin-bottom: .45rem;
+}
+.bf-badge.lime { background: var(--bf-lime); }
+
+/* ---- steps ----------------------------------------------------------- */
+.bf-steps { list-style: none; counter-reset: bfstep; padding: 0; margin: .7rem 0 0; display: grid; gap: .7rem; grid-template-columns: repeat(3, 1fr); }
+.bf-steps li {
+  counter-increment: bfstep; background: var(--bf-panel2);
+  border: 1px solid var(--bf-edge-soft); border-radius: 12px; padding: .9rem 1rem;
+  color: var(--bf-muted); font-size: .95rem;
+}
+.bf-steps li::before {
+  content: counter(bfstep); display: inline-block; width: 1.6rem; height: 1.6rem;
+  line-height: 1.6rem; text-align: center; border-radius: 50%;
+  background: var(--bf-gold); color: var(--bf-btn-text); font-weight: 800;
+  margin-bottom: .5rem;
+}
+.bf-steps li strong { color: var(--bf-text); display: block; margin-bottom: .15rem; }
+
+/* ---- forms (buy page — field names/mechanics unchanged) -------------- */
+.form label { display: block; font-weight: 600; margin: .8rem 0 .3rem; }
+.form input[type="email"], .form input[type="text"] {
+  width: 100%; padding: .75rem .85rem; font-size: 16px; color: var(--bf-text);
+  background: #06120b; border: 1px solid var(--bf-edge); border-radius: 10px;
+}
+.form input:focus { outline: 2px solid var(--bf-gold-deep); outline-offset: 1px; }
+.hp { position: absolute !important; left: -9999px !important; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.muted { color: var(--bf-muted); }
+.fineprint { font-size: .83rem; color: var(--bf-faint); }
+
+/* buy-page product panel */
+.bf-product-head { margin-top: 1.1rem; }
+.bf-product-head .bf-hero-art { margin-bottom: 1rem; }
+.bf-buy-panel {
+  background: linear-gradient(180deg, var(--bf-panel), var(--bf-panel2));
+  border: 1px solid var(--bf-gold-deep); border-radius: 14px; padding: 1.2rem 1.25rem;
+}
+.bf-buy-panel .bf-price-row { display: flex; align-items: baseline; gap: .8rem; flex-wrap: wrap; }
+.bf-buy-panel .bf-price { font-size: 2rem; }
+.bf-buy-panel .bf-once { color: var(--bf-lime); font-weight: 700; font-size: .92rem; letter-spacing: .05em; text-transform: uppercase; }
+
+/* cross-sell rows */
+.bf-more { list-style: none; padding: 0; margin: .6rem 0 0; display: grid; gap: .55rem; }
+.bf-more li {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  background: var(--bf-panel2); border: 1px solid var(--bf-edge-soft);
+  border-radius: 10px; padding: .65rem .9rem;
+}
+.bf-more .bf-more-name { font-weight: 700; }
+.bf-more .bf-more-price { color: var(--bf-muted); font-weight: 600; white-space: nowrap; }
+.bf-more a.btn { padding: .45rem .9rem; font-size: .9rem; }
+
+/* ---- success pages ----------------------------------------------------- */
+.bf-code-panel {
+  border: 1.5px dashed var(--bf-gold-deep); border-radius: 14px;
+  background: #0a1408; padding: 1.2rem 1rem; text-align: center; margin: 1rem 0;
+}
+.bf-code {
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: clamp(1.35rem, 6vw, 2rem); letter-spacing: .12em; font-weight: 700;
+  color: var(--bf-gold); word-break: break-all;
+}
+.bf-copy-btn {
+  margin-top: .8rem; background: transparent; color: var(--bf-lime);
+  border: 1px solid var(--bf-edge); border-radius: 8px; padding: .45rem 1rem;
+  font-weight: 700; cursor: pointer; font-size: .9rem;
+}
+.bf-copy-btn:hover { border-color: var(--bf-lime); }
+
+/* partners (Affiliate Rolodex partial rides these classes) */
+.rolodex-placements { margin-top: 2.4rem; }
+.rolodex-placements h2 {
+  font-family: var(--bf-serif); color: var(--bf-gold); font-size: 1.3rem; margin: 0 0 .4rem;
+}
+
+/* ---- footer -------------------------------------------------------------- */
+.bf-footer {
+  margin-top: 3rem; border-top: 1px solid var(--bf-edge-soft);
+  background: #050d08; padding: 1.6rem 0 2rem; color: var(--bf-faint);
+  font-size: .9rem;
+}
+.bf-footer .bf-foot-brand { font-family: var(--bf-serif); color: var(--bf-gold); letter-spacing: .12em; font-weight: 700; }
+.bf-footer nav { display: flex; flex-wrap: wrap; gap: 1rem; margin: .6rem 0; }
+.bf-footer nav a { color: var(--bf-muted); text-decoration: none; font-weight: 600; }
+.bf-footer nav a:hover { color: var(--bf-gold); }
+.bf-footer p { margin: .35rem 0; }
+
+/* ---- phone (the owner's Note9 is the reference screen) -------------------- */
+@media (max-width: 760px) {
+  .bf-wrap { padding: 0 14px; }
+  .bf-wordmark { font-size: 1.08rem; }
+  .bf-nav { gap: .8rem; font-size: .86rem; }
+  .bf-hero { margin-top: .7rem; }
+  .bf-buybox { flex-direction: column; align-items: stretch; justify-content: flex-start; gap: .9rem; padding: 1rem; }
+  .bf-buybox .bf-pitch { flex: 0 1 auto; }
+  .bf-buyact { text-align: left; }
+  .bf-buyact .btn { display: block; text-align: center; width: 100%; font-size: 1.08rem; padding: .95rem 1rem; }
+  .bf-price { font-size: 2rem; }
+  .bf-gallery { grid-template-columns: 1fr 1fr; }
+  .bf-cast { grid-template-columns: 1fr 1fr; }
+  .bf-gallery figure.wide { grid-column: 1 / -1; }
+  .grid, .bf-grid { grid-template-columns: 1fr; }
+  .bf-card.featured { flex-direction: column; align-items: stretch; }
+  .bf-card.featured .bf-card-main { flex: 0 1 auto; }
+  .bf-steps { grid-template-columns: 1fr; }
+  .bf-inside { grid-template-columns: 1fr; }
+  .bf-buy-panel { padding: 1rem; }
+  .bf-buy-panel .btn[type="submit"], .bf-buy-panel button[type="submit"] { width: 100%; font-size: 1.08rem; padding: .95rem 1rem; }
+  .bf-more li { flex-wrap: wrap; }
+}
+
+/* ---- plant growth over the ground (owner order 2026-10-30) ---------------
+   The flat black was dead; the garden grows over it now. Two fixed
+   layers sit BEHIND all content (header/main/footer + the flash wrap
+   are lifted above them): a far layer that textures the ground itself —
+   faint leaf silhouettes, deep shadow leaves, ember specks — and a near
+   layer of vines creeping in from the four corners with two strands
+   hanging from the top edge. The art is three small SVGs in the game's
+   palette (garden-night greens, canopy lime, ember). Panels stay
+   opaque, so growth never sits under body text; it reads in the
+   gutters, the margins, the section gaps, and through the translucent
+   header. Motion is transform-only (compositor-cheap, no layout
+   shift): a slow sway/breath on the vines, desynced per corner, and it
+   all stops for prefers-reduced-motion. */
+
+.bf-growth {
+  position: fixed; inset: 0; pointer-events: none;
+}
+.bf-growth-far {
+  z-index: 0;
+  background-image:
+    radial-gradient(720px 300px at 50% -120px, rgba(20, 46, 28, .5), rgba(20, 46, 28, 0) 70%),
+    radial-gradient(560px 340px at 0% 108%, rgba(24, 54, 32, .38), rgba(24, 54, 32, 0) 70%),
+    radial-gradient(560px 340px at 100% 108%, rgba(24, 54, 32, .38), rgba(24, 54, 32, 0) 70%),
+    url('/img/brambleforce/ground-leaves.svg');
+  background-size: auto, auto, auto, 360px 360px;
+  background-repeat: no-repeat, no-repeat, no-repeat, repeat;
+}
+.bf-growth-near { z-index: 1; opacity: .92; }
+
+/* content rides above the growth */
+.bf-header, .bf-main, .bf-footer { position: relative; z-index: 2; }
+body.bf-body > .bf-wrap { position: relative; z-index: 2; }
+
+/* corner vines — one SVG, mirrored per corner. The mirror lives on the
+   span; the sway lives on the inner <b>, whose transform-origin is the
+   artwork's anchor corner (its local top-left) in every orientation. */
+.bf-vine {
+  position: absolute; display: block;
+  width: min(36vw, 360px); aspect-ratio: 1;
+}
+.bf-vine b {
+  display: block; width: 100%; height: 100%;
+  background: url('/img/brambleforce/vine-corner.svg') no-repeat 0 0;
+  background-size: contain;
+  transform-origin: 0 0;
+  animation: bf-sway 14s ease-in-out infinite alternate;
+  will-change: transform;
+}
+.bf-vine-tl { top: 0; left: 0; }
+.bf-vine-tr { top: 0; right: 0; transform: scaleX(-1); }
+.bf-vine-bl { bottom: 0; left: 0; transform: scaleY(-1); }
+.bf-vine-br { bottom: 0; right: 0; transform: scale(-1, -1); }
+.bf-vine-tr b { animation-duration: 17s; animation-delay: -6s; }
+.bf-vine-bl b { animation-duration: 15s; animation-delay: -3s; }
+.bf-vine-br b { animation-duration: 18.5s; animation-delay: -9s; }
+
+/* hanging strands from the top edge */
+.bf-vine-hang {
+  position: absolute; top: 0; display: block;
+  width: 84px; aspect-ratio: 120 / 260;
+}
+.bf-vine-hang b {
+  display: block; width: 100%; height: 100%;
+  background: url('/img/brambleforce/vine-hang.svg') no-repeat 0 0;
+  background-size: contain;
+  transform-origin: 50% 0;
+  animation: bf-sway-hang 10.5s ease-in-out infinite alternate;
+  will-change: transform;
+}
+.bf-vine-hang-a { left: 17%; }
+.bf-vine-hang-b { right: 21%; transform: scaleX(-1); }
+.bf-vine-hang-b b { animation-duration: 12.5s; animation-delay: -5s; }
+
+@keyframes bf-sway {
+  from { transform: rotate(-.7deg) scale(1); }
+  to   { transform: rotate(.9deg) scale(1.018); }
+}
+@keyframes bf-sway-hang {
+  from { transform: rotate(1.1deg); }
+  to   { transform: rotate(-1.3deg); }
+}
+
+@media (max-width: 760px) {
+  .bf-growth-far { background-size: auto, auto, auto, 300px 300px; }
+  .bf-growth-near { opacity: .85; }
+  .bf-vine { width: 128px; }
+  .bf-vine-hang { width: 50px; }
+  .bf-vine-hang-a { left: 12%; }
+  .bf-vine-hang-b { right: 14%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bf-vine b, .bf-vine-hang b { animation: none; }
+}
+

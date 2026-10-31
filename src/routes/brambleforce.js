@@ -105,6 +105,7 @@ function pageRouter() {
 
   router.get('/', (req, res) => {
     res.render('site/brambleforce', {
+      layout: 'layout-brambleforce',
       title: 'Brambleforce — Run-and-Gun Through a Killer Garden',
       metaDescription: 'Brambleforce for Android — $6.99, 10 missions, 4 fighters, 11 bosses, zero ads. Buy direct and sideload the APK today.',
       products: bf.PRODUCTS,
@@ -118,6 +119,7 @@ function pageRouter() {
   router.get('/buy/:productId', resolveProduct, (req, res) => {
     const p = req.bfProduct;
     res.render('site/brambleforce-buy', {
+      layout: 'layout-brambleforce',
       title: `Get ${p.name} — Brambleforce`,
       metaDescription: `${p.name} — $${(p.priceCents / 100).toFixed(2)}. ${p.blurb}`,
       product: p,
@@ -203,6 +205,7 @@ function pageRouter() {
         await bf.sendCodeEmail({ to: email, productId, code: issued.code, successUrl });
       }
       return res.render('site/brambleforce-success', {
+        layout: 'layout-brambleforce',
         title: `Unlock code — ${p.name}`,
         product: p,
         productId,
@@ -229,6 +232,7 @@ function pageRouter() {
     const isGame = p.kind === 'game';
     const token = isGame ? updateTokens.issue(order.id, bf.PACKAGE) : null;
     res.render('site/brambleforce-success', {
+      layout: 'layout-brambleforce',
       title: isGame ? 'Download Brambleforce' : `Your purchase — ${p.name}`,
       product: p,
       productId: req.bfProductId,

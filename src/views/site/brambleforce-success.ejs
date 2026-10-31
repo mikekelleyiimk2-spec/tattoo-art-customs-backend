@@ -1,48 +1,74 @@
+<%#
+  Brambleforce purchase pages — same deliveries as the old skin (the
+  gated APK download URL, the one-time unlock code shown exactly once),
+  wearing the game's own face. The code stays a single plain text node:
+  buyers copy it, and nothing may split its characters.
+%>
 <% if (productId === 'game') { %>
-<h1>Your Brambleforce Download</h1>
-<p class="muted">Thanks for your purchase! Payment is complete.</p>
+<h1 class="bf-title" style="font-size:clamp(1.55rem,4.6vw,2.3rem);">Your Brambleforce Download</h1>
+<p class="bf-lede">Thanks for your purchase! Payment is complete.</p>
 
-<div class="card">
-  <h2>Brambleforce — Full Game (Android APK)</h2>
-  <p><a class="btn" href="<%= downloadUrl %>">Download Brambleforce APK</a></p>
-  <h3>Install</h3>
-  <ol>
-    <li>Open the downloaded APK file on your Android phone.</li>
-    <li>Allow installs from this source if your phone asks.</li>
-    <li>Tap Install — enjoy zero ads.</li>
+<section class="bf-buy-panel" style="margin-top:1.1rem;">
+  <h2 style="margin:0 0 .4rem;">Brambleforce — Full Game (Android APK)</h2>
+  <p><a class="btn bf-btn-wide" href="<%= downloadUrl %>">Download Brambleforce APK</a></p>
+  <ol class="bf-steps" style="margin-top:1rem;">
+    <li><strong>Open the APK</strong>Find the downloaded file on your Android phone and open it.</li>
+    <li><strong>Allow installs</strong>If your phone asks, allow installs from this source.</li>
+    <li><strong>Tap Install</strong>Then open Brambleforce — enjoy zero ads.</li>
   </ol>
-  <p class="muted fineprint">Keep your purchase email — it links back to this page, and your download can be re-issued from here anytime. Optional extras (modes, skins, the expansion) live in the in-game Supply Store — they check out here and unlock with a code.</p>
-</div>
+  <p class="muted fineprint" style="margin-top:.8rem;">Keep your purchase email — it links back to this page, and your download can be re-issued from here anytime. Optional extras (modes, skins, the expansion) live in the in-game Supply Store — they check out here and unlock with a code.</p>
+</section>
 <% } else if (code) { %>
-<h1>Your Unlock Code</h1>
-<p class="muted">Thanks for your purchase! Payment is complete<% if (codeEmailed) { %> — this code was also emailed to you<% } %>.</p>
+<h1 class="bf-title" style="font-size:clamp(1.55rem,4.6vw,2.3rem);">Your Unlock Code</h1>
+<p class="bf-lede">Thanks for your purchase! Payment is complete<% if (codeEmailed) { %> — this code was also emailed to you<% } %>.</p>
 
-<div class="card">
-  <h2><%= product.name %></h2>
-  <p style="font-size:1.6rem; letter-spacing:.12em;"><strong><%= code %></strong></p>
-  <h3>Redeem it in the game</h3>
-  <ol>
-    <li>Open Brambleforce.</li>
-    <li>On the title screen, open EXTRAS (the B button).</li>
-    <li>Pick REDEEM CODE and type the code above.</li>
-  </ol>
-  <p class="muted fineprint">Codes are single-use — once redeemed, the unlock lives in your game for good. This page will not show the code again; your emailed copy is the one to keep.</p>
+<div class="bf-code-panel">
+  <p class="bf-kicker" style="margin-bottom:.4rem;"><%= product.name %></p>
+  <div class="bf-code" id="bf-code"><%= code %></div>
+  <button type="button" class="bf-copy-btn" id="bf-copy">Copy code</button>
 </div>
+
+<section aria-label="Redeem your code">
+  <h2 class="bf-h2" style="font-size:1.3rem;">Redeem it in the game</h2>
+  <ol class="bf-steps">
+    <li><strong>Open Brambleforce</strong>On the phone where the game lives.</li>
+    <li><strong>Open EXTRAS</strong>The B button on the title screen.</li>
+    <li><strong>Pick REDEEM CODE</strong>Type the code above — the unlock is yours for good.</li>
+  </ol>
+  <p class="muted fineprint" style="margin-top:.8rem;">Codes are single-use — once redeemed, the unlock lives in your game for good. This page will not show the code again; your emailed copy is the one to keep.</p>
+</section>
+<script>
+(function () {
+  var btn = document.getElementById('bf-copy');
+  var el = document.getElementById('bf-code');
+  if (!btn || !el) return;
+  btn.addEventListener('click', function () {
+    var done = function () { btn.textContent = 'Copied ✓'; setTimeout(function () { btn.textContent = 'Copy code'; }, 2000); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(el.textContent.trim()).then(done, done);
+    } else {
+      var r = document.createRange(); r.selectNodeContents(el);
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      try { document.execCommand('copy'); } catch (e) {}
+      done();
+    }
+  });
+})();
+</script>
 <% } else { %>
-<h1>Purchase Complete</h1>
-<p class="muted">Thanks for your purchase! Payment is complete.</p>
+<h1 class="bf-title" style="font-size:clamp(1.55rem,4.6vw,2.3rem);">Purchase Complete</h1>
+<p class="bf-lede">Thanks for your purchase! Payment is complete.</p>
 
-<div class="card">
-  <h2><%= product.name %></h2>
+<section class="bf-buy-panel" style="margin-top:1.1rem;">
+  <h2 style="margin:0 0 .4rem;"><%= product.name %></h2>
   <p>Your unlock code was shown at checkout and emailed to you — that emailed copy is the one to keep (codes are stored hashed, so this page can't show it again).</p>
-  <h3>Redeem it in the game</h3>
-  <ol>
-    <li>Open Brambleforce.</li>
-    <li>On the title screen, open EXTRAS (the B button).</li>
-    <li>Pick REDEEM CODE and type the code from your email.</li>
+  <ol class="bf-steps" style="margin-top:1rem;">
+    <li><strong>Open Brambleforce</strong>On the phone where the game lives.</li>
+    <li><strong>Open EXTRAS</strong>The B button on the title screen.</li>
+    <li><strong>Pick REDEEM CODE</strong>Type the code from your email.</li>
   </ol>
-  <p class="muted fineprint">Can't find the email? Check spam for "Your Brambleforce unlock code" — or reply to it and we'll sort you out.</p>
-</div>
+  <p class="muted fineprint" style="margin-top:.8rem;">Can't find the email? Check spam for "Your Brambleforce unlock code" — or reply to it and we'll sort you out.</p>
+</section>
 <% } %>
 
-<p class="muted fineprint"><a href="/brambleforce">← All of Brambleforce</a> · <a href="/watch">Watch the shows</a></p>
+<p class="muted fineprint" style="margin-top:2rem;"><a href="/brambleforce">← All of Brambleforce</a> · <a href="/watch">Watch the shows</a></p>
