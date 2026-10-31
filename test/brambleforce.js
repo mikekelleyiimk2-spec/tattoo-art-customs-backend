@@ -249,6 +249,80 @@ async function runHttpTests(ok, req, areq) {
   r = await anon('POST', '/api/brambleforce/redeem', { __json: { code: bundleCode } });
   j = null; try { j = JSON.parse(r.text); } catch (e) { /* asserted below */ }
   ok(j && j.error === 'spent', 'bf: a second bundle redeem answers {error:"spent"}');
+
+  // 10. Rotation system (owner order + bundle-boundary ruling,
+  // 2026-10-31): dated availability windows gate PURCHASE only, drops
+  // group limited products on the storefront, and the Everything
+  // Bundle grants the LAUNCH 15 forever — drop/limited products are
+  // excluded by drop membership, never granted, even when they share
+  // a product class with launch items.
+  // -- window state machine (bounds inclusive, America/Chicago dates)
+  const win = { availableFrom: '2026-12-01', availableTo: '2026-12-31' };
+  ok(bfLib.windowState(win, '2026-11-30') === 'before', 'bf-rot: day before the window is "before"');
+  ok(bfLib.windowState(win, '2026-12-01') === 'open', 'bf-rot: first window day is "open" (inclusive start)');
+  ok(bfLib.windowState(win, '2026-12-31') === 'open', 'bf-rot: last window day is "open" (inclusive end)');
+  ok(bfLib.windowState(win, '2027-01-01') === 'after', 'bf-rot: day after the window is "after"');
+  ok(bfLib.windowState({}, '2026-10-31') === 'open', 'bf-rot: a product with no window is always open');
+  ok(bfLib.windowState(bfLib.PRODUCTS.war_bond, '2031-05-05') === 'open',
+    'bf-rot: launch products carry no window and never expire');
+  ok(bfLib.isPurchasable(bfLib.PRODUCTS.game) && bfLib.isPurchasable(bfLib.PRODUCTS.skin_tor),
+    'bf-rot: launch products are purchasable today');
+  ok(bfLib.purchasableIds().length === 17
+    && bfLib.purchasableIds().every((id) => bfLib.LAUNCH_PRODUCT_IDS.includes(id)),
+    'bf-rot: exactly the 17 launch products are purchasable today (seeded drop is dark)');
+  // -- the seeded December proof drop: shape only, never stock
+  const proofIds = ['skin_tor_frostpine', 'skin_mara_holly', 'tracer_snowfall', 'weapon_fx_frostbite'];
+  for (const pid of proofIds) {
+    const pp = bfLib.PRODUCTS[pid];
+    ok(!!pp && pp.disabled === true && pp.drop === '2026-12-winter'
+      && pp.availableFrom === '2026-12-01' && pp.availableTo === '2026-12-31' && pp.priceCents === 99,
+      `bf-rot: seeded drop member ${pid} is disabled, windowed Dec 2026, $0.99-class`);
+    ok(!bfLib.isPurchasable(pp, '2026-12-15'), `bf-rot: ${pid} is not purchasable even inside its window while disabled`);
+  }
+  ok(bfLib.DROPS['2026-12-winter'] && /Kringle/.test(bfLib.DROPS['2026-12-winter'].label),
+    'bf-rot: the proof drop is a named drop in the DROPS registry');
+  // -- bundle boundary: launch 15 only, gated on drop membership
+  ok(bfLib.BUNDLE_GRANTS.length === 15
+    && bfLib.BUNDLE_GRANTS.every((id) => bfLib.LAUNCH_PRODUCT_IDS.includes(id) && !bfLib.PRODUCTS[id].drop),
+    'bf-rot: bundle grants are exactly launch products with no drop member among them');
+  ok(proofIds.every((id) => !bfLib.BUNDLE_GRANTS.includes(id)),
+    'bf-rot: no drop product is in the bundle grant set (limited editions sell separately)');
+  // -- drop lifecycle at the lib level (time travel; the seeded
+  // members are flipped live IN THIS PROCESS ONLY — the HTTP server
+  // is a separate process and keeps them disabled, asserted below)
+  ok(bfLib.dropInfo() === null, 'bf-rot: no drop is active today (the seeded drop is disabled)');
+  ok(bfLib.dropInfo('2026-12-15') === null, 'bf-rot: a fully disabled drop renders nothing even inside its window');
+  const savedDisabled = proofIds.map((id) => bfLib.PRODUCTS[id].disabled);
+  try {
+    proofIds.forEach((id) => { bfLib.PRODUCTS[id].disabled = false; });
+    const active = bfLib.dropInfo('2026-12-15');
+    ok(!!active && active.mode === 'active' && active.id === '2026-12-winter'
+      && active.productIds.length === 4 && active.endsLabel === 'Dec 31',
+      'bf-rot: an enabled in-window drop is active and states its end ("Dec 31")');
+    const ended = bfLib.dropInfo('2027-01-10');
+    ok(!!ended && ended.mode === 'ended' && ended.productIds.length === 4 && ended.endedLabel === 'Dec 31',
+      'bf-rot: a drop whose window passed within 30 days reads as ended/retired');
+    ok(bfLib.dropInfo('2027-03-15') === null, 'bf-rot: the retired section is gone 30+ days after the drop ends');
+  } finally {
+    proofIds.forEach((id, i) => { bfLib.PRODUCTS[id].disabled = savedDisabled[i]; });
+  }
+  // -- HTTP: the dark drop stays dark end to end
+  a = await anon('GET', '/brambleforce');
+  ok(!a.text.includes("This Month's Drop") && !a.text.includes('drop has ended')
+    && !a.text.includes('/brambleforce/buy/skin_tor_frostpine') && !a.text.includes('Frostpine'),
+    'bf-rot: landing shows no drop section and no seeded-drop product while the drop is disabled');
+  a = await anon('GET', '/brambleforce/buy/skin_tor_frostpine');
+  ok(a.status === 404, 'bf-rot: a disabled product buy page 404s');
+  const ordersBeforeRot = tdb.prepare('SELECT COUNT(*) AS n FROM orders').get().n;
+  a = await anon('POST', '/brambleforce/buy/skin_tor_frostpine/buy', { guest_email: 'bfrot@test.local' });
+  ok(a.status === 404, 'bf-rot: a disabled product buy POST is refused (404)');
+  ok(tdb.prepare('SELECT COUNT(*) AS n FROM orders').get().n === ordersBeforeRot,
+    'bf-rot: a refused buy POST mints no order (checkout cannot mint an unpurchasable product)');
+  // -- redemption is never window-gated: the crt_filter code redeemed
+  // in section 4 was spent on first use; a fresh paid code for a
+  // launch product still redeems — and bundle grants stayed the
+  // launch 15 through every catalogue addition above (section 9 ran
+  // against the same code path; the grant set is pinned there too).
 }
 
 module.exports = { runHttpTests };

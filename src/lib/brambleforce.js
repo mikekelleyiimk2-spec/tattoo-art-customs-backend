@@ -12,6 +12,34 @@
 // mirrored in the game's STORE array — keep the two in lockstep).
 // Lives, continues, health and difficulty relief are NEVER sold
 // (fairness law) and are not in this catalogue.
+//
+// ROTATION (owner order 2026-10-31): the storefront is a monthly
+// updated thing — skins / weapon effects / limited editions cycle in
+// dated DROPS. A product may carry:
+//   availableFrom / availableTo — 'YYYY-MM-DD' window bounds, read in
+//     America/Chicago (the house timezone). Outside the window the
+//     product is NOT purchasable: hidden from the storefront, its buy
+//     page refuses, checkout cannot mint it. No window = always on
+//     (every launch product).
+//   drop — the id of a named drop in DROPS below; drop members render
+//     in the storefront's "This Month's Drop" section, not the
+//     permanent grid, while their drop is live.
+//   disabled: true — defined but dark: not visible, not purchasable,
+//     buy page 404s. This is how a future drop is seeded ahead of its
+//     art/content; flipping it off is one step of going live.
+// Windows gate PURCHASE only, never ownership: an unlock code already
+// issued redeems forever, window or no window (redeemCode below never
+// consults the window — by design, do not "fix" that).
+//
+// BUNDLE BOUNDARY (owner ruling 2026-10-31, verbatim sense: "the big
+// buy it all button does not cover limited editions and monthly
+// cycles, just the initial expansions and skins that we offered"):
+// the Everything Bundle grants the LAUNCH catalogue's extras only —
+// permanently. Drop / limited-edition products are NEVER in the grant
+// set, even when they share a product class with launch items (a drop
+// skin is still a skin; it is still not in the bundle). The gate is
+// drop membership, enforced in BUNDLE_GRANTS below — do not widen it
+// without a fresh owner ruling.
 const crypto = require('crypto');
 const db = require('../db');
 const config = require('../config');
@@ -125,17 +153,190 @@ const PRODUCTS = {
     blurb: 'Zero gameplay. Pure support — and our thanks on the title screen.',
     kind: 'iap',
   },
+
+  // ---- SEEDED FUTURE DROP (proof of shape, NOT stock) ----------------
+  // The December 2026 holiday drop, defined ahead of its content.
+  // Every entry is disabled:true — invisible, unpurchasable, buy pages
+  // 404 — until the drop's art + game content exists and a sitting
+  // flips them live (see the go-live checklist in
+  // your_files/brambleforce-rotation-system-2026-10-31.md). Prices
+  // match the launch cosmetic pattern ($0.99 class). These ids are
+  // deliberately NOT mirrored in the game's STORE array or Play yet:
+  // there is nothing to unlock until the content ships.
+  skin_tor_frostpine: {
+    name: 'Skin — Tor: Frostpine',
+    priceCents: 99,
+    blurb: 'Holiday drop. Frosted pine-and-snow palette for Tor. Visual only.',
+    kind: 'iap',
+    drop: '2026-12-winter',
+    availableFrom: '2026-12-01',
+    availableTo: '2026-12-31',
+    disabled: true,
+  },
+  skin_mara_holly: {
+    name: 'Skin — Mara: Hollybright',
+    priceCents: 99,
+    blurb: 'Holiday drop. Holly-red and winter-green palette for Mara. Visual only.',
+    kind: 'iap',
+    drop: '2026-12-winter',
+    availableFrom: '2026-12-01',
+    availableTo: '2026-12-31',
+    disabled: true,
+  },
+  tracer_snowfall: {
+    name: 'Weapon Tracers — Snowfall',
+    priceCents: 99,
+    blurb: 'Holiday drop. Every shot trails drifting snow. Visual only.',
+    kind: 'iap',
+    drop: '2026-12-winter',
+    availableFrom: '2026-12-01',
+    availableTo: '2026-12-31',
+    disabled: true,
+  },
+  weapon_fx_frostbite: {
+    name: 'Weapon Effect — Frostbite Bloom',
+    priceCents: 99,
+    blurb: 'Holiday drop. Hits bloom with frost crystals. Visual only.',
+    kind: 'iap',
+    drop: '2026-12-winter',
+    availableFrom: '2026-12-01',
+    availableTo: '2026-12-31',
+    disabled: true,
+  },
+};
+
+// Named drops. Products point here with their `drop` field; the label
+// is what the storefront section is headed with.
+const DROPS = {
+  '2026-12-winter': {
+    label: "Kringle's Garden — Holiday Drop",
+    blurb: 'Winter in the killer garden: holiday skins and effects, here for December and then retired.',
+  },
 };
 
 const PRODUCT_IDS = Object.keys(PRODUCTS);
 
-// The Everything Bundle's grant set (owner ruling 2026-10-30): a bundle
-// unlock code grants EVERY extra — the original 12 plus the three
-// fighters (fighter_zola / fighter_otto / fighter_yusuf), 15 in all.
-// Derived from the catalogue so it can never drift from what's on sale:
-// every IAP except the bundle itself. Extras bought separately total
-// $28.85; the bundle is struck at $27.99.
-const BUNDLE_GRANTS = PRODUCT_IDS.filter((id) => id !== 'game' && id !== 'everything_bundle');
+// The launch catalogue, frozen by id (owner order 2026-10-30). The
+// bundle boundary is read against THIS list, never against whatever
+// the catalogue happens to hold later — new products (drops, limited
+// editions) join PRODUCTS freely without ever touching it.
+const LAUNCH_PRODUCT_IDS = [
+  'game', 'everything_bundle', 'iron_garden_expansion',
+  'boss_rush_time_attack', 'queens_hunt',
+  'fighter_zola', 'fighter_otto', 'fighter_yusuf',
+  'skin_tor', 'skin_selene', 'skin_dane', 'skin_mara',
+  'weapon_tracers', 'crt_filter', 'soundtrack', 'art_vault', 'war_bond',
+];
+
+// The Everything Bundle's grant set (owner rulings 2026-10-30 +
+// 2026-10-31): a bundle unlock code grants the LAUNCH extras — the
+// original 12 plus the three fighters (fighter_zola / fighter_otto /
+// fighter_yusuf), 15 in all. Extras bought separately total $28.85;
+// the bundle is struck at $27.99.
+//
+// BOUNDARY, enforced three ways so it cannot drift:
+//   1. the set is derived from LAUNCH_PRODUCT_IDS, not PRODUCT_IDS —
+//      a product added to the catalogue later is not granted, period;
+//   2. any product carrying a `drop` is filtered out — drop membership
+//      is the gate, not product class (a drop skin is not granted
+//      even though launch skins are);
+//   3. test/brambleforce.js pins the set at exactly these 15 ids.
+// Limited editions and monthly-cycle products always sell separately.
+const BUNDLE_GRANTS = LAUNCH_PRODUCT_IDS.filter(
+  (id) => id !== 'game' && id !== 'everything_bundle' && !(PRODUCTS[id] && PRODUCTS[id].drop)
+);
+
+// ---- availability windows + drops ------------------------------------
+// Window bounds are calendar dates in America/Chicago. All helpers
+// take an explicit today ('YYYY-MM-DD') so tests can travel in time;
+// the routes call them with chicagoToday().
+const chicagoDateFmt = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit',
+});
+
+function chicagoToday(now = new Date()) {
+  const parts = {};
+  for (const p of chicagoDateFmt.formatToParts(now)) parts[p.type] = p.value;
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+// 'before' | 'open' | 'after' — a product with no window is always
+// 'open'. Bounds are inclusive: availableFrom is the first sale day,
+// availableTo the last.
+function windowState(p, todayStr) {
+  if (!p) return 'after';
+  const t = todayStr || chicagoToday();
+  if (p.availableFrom && t < p.availableFrom) return 'before';
+  if (p.availableTo && t > p.availableTo) return 'after';
+  return 'open';
+}
+
+function isPurchasable(p, todayStr) {
+  return Boolean(p) && !p.disabled && windowState(p, todayStr) === 'open';
+}
+
+function purchasableIds(todayStr) {
+  return PRODUCT_IDS.filter((id) => isPurchasable(PRODUCTS[id], todayStr));
+}
+
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+// '2026-12-31' -> 'Dec 31' (the storefront's plain window language).
+function dayLabel(dateStr) {
+  if (!dateStr) return '';
+  const parts = String(dateStr).split('-').map(Number);
+  return `${MONTH_NAMES[(parts[1] || 1) - 1]} ${parts[2] || ''}`.trim();
+}
+
+function daysBetween(a, b) {
+  return Math.round((Date.parse(`${b}T12:00:00Z`) - Date.parse(`${a}T12:00:00Z`)) / 86400000);
+}
+
+// The drop the storefront section should show, or null:
+//   { mode: 'active', ... } — at least one member is purchasable now;
+//     the section sells those members and states the window end.
+//   { mode: 'ended', ... } — every member's window has passed within
+//     the last 30 days; the section shows them retired, not buyable.
+// A drop whose members are all disabled (a seeded future drop) is in
+// neither mode: it does not exist as far as the storefront is concerned.
+function dropInfo(todayStr) {
+  const t = todayStr || chicagoToday();
+  const byDrop = {};
+  for (const id of PRODUCT_IDS) {
+    const p = PRODUCTS[id];
+    if (p.drop) (byDrop[p.drop] = byDrop[p.drop] || []).push(id);
+  }
+  for (const [dropId, ids] of Object.entries(byDrop)) {
+    const live = ids.filter((id) => isPurchasable(PRODUCTS[id], t));
+    if (!live.length) continue;
+    const ends = ids.map((id) => PRODUCTS[id].availableTo).filter(Boolean).sort().pop() || null;
+    const meta = DROPS[dropId] || {};
+    return {
+      mode: 'active', id: dropId, label: meta.label || dropId, blurb: meta.blurb || '',
+      productIds: live, ends, endsLabel: ends ? dayLabel(ends) : null,
+    };
+  }
+  let best = null;
+  for (const [dropId, ids] of Object.entries(byDrop)) {
+    // Retired display covers only members that were ever live: a
+    // still-disabled member was never sold and is not "retired", it
+    // simply never shipped.
+    const sold = ids.filter((id) => !PRODUCTS[id].disabled);
+    if (!sold.length) continue;
+    if (!sold.every((id) => windowState(PRODUCTS[id], t) === 'after')) continue;
+    const endedOn = sold.map((id) => PRODUCTS[id].availableTo).filter(Boolean).sort().pop();
+    if (!endedOn) continue;
+    const age = daysBetween(endedOn, t);
+    if (age < 1 || age > 30) continue;
+    if (best && endedOn <= best.endedOn) continue;
+    const meta = DROPS[dropId] || {};
+    best = {
+      mode: 'ended', id: dropId, label: meta.label || dropId, blurb: meta.blurb || '',
+      productIds: sold, endedOn, endedLabel: dayLabel(endedOn),
+    };
+  }
+  return best;
+}
 
 function product(id) {
   return Object.prototype.hasOwnProperty.call(PRODUCTS, id) ? PRODUCTS[id] : null;
@@ -300,7 +501,9 @@ function baseUrl() {
 }
 
 module.exports = {
-  PACKAGE, PRODUCTS, PRODUCT_IDS, BUNDLE_GRANTS, product, orderType,
+  PACKAGE, PRODUCTS, PRODUCT_IDS, LAUNCH_PRODUCT_IDS, DROPS, BUNDLE_GRANTS,
+  product, orderType,
+  chicagoToday, windowState, isPurchasable, purchasableIds, dayLabel, dropInfo,
   generateCode, normalizeCode, hashCode, issueCodeForOrder, redeemCode,
   sendCodeEmail, sendGameEmail, baseUrl,
 };

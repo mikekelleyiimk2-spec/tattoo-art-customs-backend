@@ -78,6 +78,49 @@
   <p class="fineprint" style="margin-top:.5rem;">Straight off the game's fighter-select screen. Full-size cast cards live in the Cast Art Vault extra.</p>
 </section>
 
+<%# This Month's Drop (rotation system, 2026-10-31): renders only when
+    the router passes a drop — active (buyable, window end stated) or
+    recently ended (retired, no buy doors). No drop, no section. %>
+<% if (typeof drop !== 'undefined' && drop) { %>
+<section class="bf-section" id="drop" aria-label="This month's drop">
+  <% if (drop.mode === 'active') { %>
+  <p class="bf-kicker">Limited time</p>
+  <h2>This Month's Drop — <%= drop.label %></h2>
+  <% if (drop.blurb) { %><p><%= drop.blurb %></p><% } %>
+  <% if (drop.endsLabel) { %><p><strong>Leaves <%= drop.endsLabel %>.</strong> When it's gone, it's gone — but anything you buy is yours for good. Unlock codes redeem forever.</p><% } %>
+  <div class="bf-grid">
+    <% drop.productIds.forEach(function (id) { var p = products[id]; %>
+    <article class="bf-card">
+      <span class="bf-badge">Limited</span>
+      <h3><%= p.name %></h3>
+      <p><%= p.blurb %></p>
+      <div class="bf-card-foot">
+        <span class="bf-card-price">$<%= (p.priceCents / 100).toFixed(2) %></span>
+        <a class="btn" href="/brambleforce/buy/<%= id %>">Buy — $<%= (p.priceCents / 100).toFixed(2) %></a>
+      </div>
+    </article>
+    <% }); %>
+  </div>
+  <% } else { %>
+  <p class="bf-kicker">Retired</p>
+  <h2><%= drop.label %> — this drop has ended</h2>
+  <p>These were on sale until <%= drop.endedLabel %> and are retired now. If you bought one, it is still yours — unlock codes redeem in the game forever. Ownership never expires.</p>
+  <div class="bf-grid">
+    <% drop.productIds.forEach(function (id) { var p = products[id]; %>
+    <article class="bf-card">
+      <span class="bf-badge">Retired</span>
+      <h3><%= p.name %></h3>
+      <p><%= p.blurb %></p>
+      <div class="bf-card-foot">
+        <span class="bf-card-price">$<%= (p.priceCents / 100).toFixed(2) %></span>
+      </div>
+    </article>
+    <% }); %>
+  </div>
+  <% } %>
+</section>
+<% } %>
+
 <section class="bf-section" id="extras" aria-label="Optional extras">
   <p class="bf-kicker">Optional extras</p>
   <h2>Extras — never difficulty</h2>

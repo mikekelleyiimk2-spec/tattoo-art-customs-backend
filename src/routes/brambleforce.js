@@ -77,6 +77,32 @@ function resolveProduct(req, res, next) {
   return next();
 }
 
+// Purchase gate (rotation system, owner order 2026-10-31): applied to
+// the buy page + the buy POST ONLY — never to approve/success, so a
+// buyer who paid inside a window keeps their durable purchase page
+// after it closes. A disabled product (seeded future stock) is dark:
+// same 404 as an unknown id. An out-of-window product refuses
+// gracefully and says why; redemption is untouched by any of this —
+// an unlock code already issued redeems forever.
+function requirePurchasable(req, res, next) {
+  const p = req.bfProduct;
+  if (p.disabled) {
+    return res.status(404).render('error', { title: 'Not found', message: 'That page does not exist.' });
+  }
+  const state = bf.windowState(p);
+  if (state === 'open') return next();
+  if (state === 'after') {
+    return res.status(410).render('error', {
+      title: 'This drop has ended',
+      message: `${p.name} was part of a limited drop that has ended — it is no longer on sale. If you already bought it, it is still yours: your unlock code redeems in the game forever. Ownership never expires.`,
+    });
+  }
+  return res.status(404).render('error', {
+    title: 'Not on sale yet',
+    message: `${p.name} goes on sale ${bf.dayLabel(p.availableFrom)}. It is not purchasable yet.`,
+  });
+}
+
 // Shared gate for approve + success: guest orders prove ownership with
 // the HMAC checkout token (?gt=); member orders need the buyer's own
 // login. Returns the order, or null after responding.
@@ -133,19 +159,28 @@ function pageRouter() {
   const router = express.Router();
 
   router.get('/', (req, res) => {
+    // Rotation (2026-10-31): the permanent grid carries only what is
+    // purchasable today and not part of a drop; a live drop renders in
+    // its own section (see the view), a recently ended one shows
+    // retired there. With no drop in either state, dropInfo is null
+    // and the page is exactly the launch storefront.
+    const drop = bf.dropInfo();
+    const inDrop = new Set(drop && drop.mode === 'active' ? drop.productIds : []);
+    const permanentIds = bf.purchasableIds().filter((id) => !inDrop.has(id));
     res.render('site/brambleforce', {
       layout: 'layout-brambleforce',
       title: 'Brambleforce — Run-and-Gun Through a Killer Garden',
       metaDescription: 'Brambleforce for Android — $6.99, 10 missions, 4 fighters, 11 bosses, zero ads. Buy direct and sideload the APK today.',
       products: bf.PRODUCTS,
-      productIds: bf.PRODUCT_IDS,
+      productIds: permanentIds,
+      drop,
       partners: partners(),
       disclosureStandard: rolodex.disclosureStandard(),
       user: req.user || null,
     });
   });
 
-  router.get('/buy/:productId', resolveProduct, (req, res) => {
+  router.get('/buy/:productId', resolveProduct, requirePurchasable, (req, res) => {
     // Never let a browser pin a stale copy of a buy page: the checkout
     // key, watchdog and form all ship with this document, and a cached
     // pre-fix page on a buyer's phone must not outlive its fix.
@@ -165,7 +200,7 @@ function pageRouter() {
     });
   });
 
-  router.post('/buy/:productId/buy', resolveProduct, formLimiter, checkHoneypot, async (req, res) => {
+  router.post('/buy/:productId/buy', resolveProduct, requirePurchasable, formLimiter, checkHoneypot, async (req, res) => {
     res.set('Cache-Control', 'no-store');
     const t0 = Date.now();
     const p = req.bfProduct;
