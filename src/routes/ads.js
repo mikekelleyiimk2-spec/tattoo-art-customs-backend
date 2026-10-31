@@ -31,7 +31,7 @@ const uploadAd = multer({
 });
 
 router.get('/advertise', (req, res) => {
-  res.render('site/advertise', {
+  res.render('site/advertise', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'Advertise — Tattoo Art Customs',
     metaDescription: 'Buy ad space on Tattoo Art Customs. Banner placements on every page, the gallery, and design pages.',
     slots: SLOTS,

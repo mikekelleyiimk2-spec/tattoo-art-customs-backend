@@ -23,7 +23,7 @@ const { recordPaypalActivation, recordPaypalSale } = require('../lib/subscriptio
 // benefits on top, the full included marketplace feature set below.
 router.get('/shops', async (req, res) => {
   const shopPlan = await db.get("SELECT * FROM plans WHERE slug = 'tattoo_shop' AND active = 1");
-  res.render('membership/shops', {
+  res.render('membership/shops', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'Tattoo Shop Membership — Tattoo Art Customs',
     shopPlan,
     paypalReady: config.paypalPlansConfigured(),
@@ -42,7 +42,7 @@ router.get('/shops', async (req, res) => {
 // fulfillment follows lib's FULFILLMENT_CHECKLIST.
 router.get('/healed-wall', (req, res) => {
   const healedWall = require('../lib/healedWall');
-  res.render('shop/healed-wall', {
+  res.render('shop/healed-wall', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'Healed Wall Add-On for Tattoo Shops — Tattoo Art Customs',
     healedWall,
     price: healedWall.pricePresentation(),
@@ -62,7 +62,7 @@ router.get('/', requireLogin, async (req, res) => {
     'SELECT * FROM referral_redemptions WHERE referrer_id = ? ORDER BY granted_at DESC', [req.user.id]);
   const foundingShop = config.foundingShopActive();
   const foundingStatus = await require('../lib/founding').getFoundingStatus();
-  res.render('membership/plans', {
+  res.render('membership/plans', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'Membership — Tattoo Art Customs',
     plans, subs, paypalReady: config.paypalPlansConfigured(),
     annualReady: config.paypalAnnualPlanConfigured(),

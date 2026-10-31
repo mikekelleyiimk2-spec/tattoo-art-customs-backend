@@ -440,7 +440,7 @@ router.get('/show-designs', async (req, res) => {
   });
   const customerMember = await require('../middleware/auth').isCustomerMember(req.user);
   const base = config.baseUrl.replace(/\/$/, '');
-  res.render('site/show-designs', {
+  res.render('site/show-designs', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'As Seen on Color With Us! — Show Designs | Tattoo Art Customs',
     designs: thumbs, customerMember,
     anyAired: thumbs.some((d) => d.show_aired),
@@ -491,7 +491,7 @@ router.get('/poppy-and-ziggy', async (req, res) => {
 // never from a kid page.
 router.get('/worlds', (req, res) => {
   const base = config.baseUrl.replace(/\/$/, '');
-  res.render('site/worlds', {
+  res.render('site/worlds', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'Our Worlds — Useful Appz | Tattoo Art Customs',
     metaDescription: 'One roof, separate rooms: Tattoo Art Customs, Little Inkers, Poppy & Ziggy, HerbHaul (21+), Chorvix, the Library, and the Useful Appz studio — each world on its own page.',
     canonical: `${base}/worlds`,
@@ -509,7 +509,7 @@ router.get('/worlds', (req, res) => {
 // page moved to /herbhaul and /cannadash 301-redirects below.
 router.get('/herbhaul', (req, res) => {
   const base = config.baseUrl.replace(/\/$/, '');
-  res.render('site/cannadash', {
+  res.render('site/cannadash', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'HerbHaul — Cannabis Delivery, Run by Licensed Retailers | Useful Appz',
     metaDescription: 'HerbHaul is the delivery platform licensed retailers plug into: ordering, dispatch, chain-of-custody and proof-of-delivery software. Two apps — HerbHaul for customers, HerbHaul Driver for drivers. 21+. Not live yet.',
     canonical: `${base}/herbhaul`,
@@ -594,7 +594,7 @@ router.get('/onemind', (req, res) => {
 router.get('/watch', (req, res) => {
   const base = config.baseUrl.replace(/\/$/, '');
   const watchVideos = require('../lib/watchVideos');
-  res.render('site/watch', {
+  res.render('site/watch', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'Watch — Tattoo Art Customs on YouTube',
     metaDescription: 'Watch Tattoo Art Customs commercials, design Shorts, and Rook 98 videos. Every play counts as a YouTube view — subscribe free.',
     canonical: `${base}/watch`,
@@ -627,7 +627,7 @@ router.get('/by-request', async (req, res) => {
   } catch (e) { /* tables may not exist yet on old deploys */ }
   const { isAdminRole } = require('../middleware/auth');
   const canClaim = !!req.user && (req.user.role === 'design_artist' || req.user.role === 'tattoo_shop' || isAdminRole(req.user.role));
-  res.render('site/by-request', {
+  res.render('site/by-request', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'By-Request Characters — Tattoo Art Customs',
     items, q: req.query.q || '', claimMap, myClaims, board, spotlight, canClaim,
     updated: data.updated ? new Date(data.updated).toLocaleDateString() : '',
@@ -678,7 +678,7 @@ router.post('/by-request/release', async (req, res) => {
 // (owner directive 2026-10-09 — designer enticement systems).
 router.get('/designers/guide', async (req, res) => {
   const base = config.baseUrl.replace(/\/$/, '');
-  res.render('site/designer-guide', {
+  res.render('site/designer-guide', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'Designer Guide — Tattoo Art Customs',
     metaDescription: 'Submission specs, style requirements, and commission details for Tattoo Art Customs designers.',
     canonical: `${base}/designers/guide`,
@@ -737,7 +737,7 @@ router.get('/doodle-to-tattoo', async (req, res) => {
       parentUnlocked = !!(ageRow && ageRow.age_verified);
     } catch (e) { /* gate stays locked on db error */ }
   }
-  res.render('site/doodle-to-tattoo', {
+  res.render('site/doodle-to-tattoo', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'Turn Their Doodle Into Merchandise | Tattoo Art Customs',
     code: (req.query.code || '').trim().toUpperCase(),
     parentUnlocked,
@@ -977,7 +977,7 @@ router.get('/wishlist', async (req, res) => {
       external: p.kind !== 'pod',
     };
   });
-  res.render('site/wishlist', {
+  res.render('site/wishlist', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'My Wishlist — Saved Tattoo Designs | Tattoo Art Customs',
     serverDesigns,
     merchItems,
@@ -1048,7 +1048,7 @@ router.get('/top-loved', async (req, res) => {
   const { fmtMoney } = require('../i18n');
   const locale = res.locals.locale || 'en';
   const priceStr = fmtMoney(locale, withFeeCents(premadePriceCents(new Date(), member)));
-  res.render('site/top-loved', {
+  res.render('site/top-loved', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'Top Loved — Most-Hearted Tattoo Designs | Tattoo Art Customs',
     designs: pageDesigns.map((d) => ({
       id: d.id,
@@ -1075,7 +1075,7 @@ router.get('/design/:id', async (req, res) => {
     "SELECT * FROM designs WHERE id = ? AND status = 'approved'", [req.params.id]));
   const member = await isActiveMember(req.user);
   if (!design || (design.members_only && !member)) {
-    return res.status(404).render('error', { title: 'Not found', message: 'That design is not available.' });
+    return res.status(404).render('error', {homeFace: true, darkFace: true, bodyClass: 'page-dark',  title: 'Not found', message: 'That design is not available.' });
   }
   const artist = design.artist_id
     ? await db.get('SELECT display_name FROM users WHERE id = ?', [design.artist_id])
@@ -1197,7 +1197,7 @@ router.get('/artists/:id', async (req, res) => {
      LEFT JOIN shop_profiles sp ON sp.user_id = u.id
      WHERE u.id = ? AND u.role IN ('design_artist','tattoo_shop','admin','head_admin')`,
     [req.params.id]);
-  if (!artist) return res.status(404).render('error', { title: 'Not found', message: 'That artist portfolio does not exist.' });
+  if (!artist) return res.status(404).render('error', {homeFace: true, darkFace: true, bodyClass: 'page-dark',  title: 'Not found', message: 'That artist portfolio does not exist.' });
   const profile = await db.get("SELECT bio FROM artist_profiles WHERE user_id = ? AND bio_status = 'ok'", [artist.id]);
   const member = await isActiveMember(req.user);
   const rows = await db.all(
@@ -1212,7 +1212,7 @@ router.get('/artists/:id', async (req, res) => {
     const f = displayImgFile(p, artViewer);
     return { ...p, thumb: f ? `thumb/${f}` : '' };
   });
-  res.render('site/artist', {
+  res.render('site/artist', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: `${artist.display_name || 'Artist'} — Tattoo Designs for Sale | Tattoo Art Customs`,
     artist, bio: profile ? profile.bio : '', pieces: piecesWithThumbs, sale: await salePriceActive(req.user),
     metaDescription: `${artist.display_name || 'Artist'} — buy original tattoo designs from this artist's portfolio at Tattoo Art Customs.`,
@@ -1220,33 +1220,33 @@ router.get('/artists/:id', async (req, res) => {
   });
 });
 
-router.get('/terms', (req, res) => res.render('site/terms', {
+router.get('/terms', (req, res) => res.render('site/terms', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Terms of Service — Tattoo Art Customs',
   metaDescription: 'Tattoo Art Customs terms of service.',
 }));
 
-router.get('/privacy', (req, res) => res.render('site/privacy', {
+router.get('/privacy', (req, res) => res.render('site/privacy', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Privacy Policy — Tattoo Art Customs',
   metaDescription: 'Tattoo Art Customs privacy policy.',
 }));
 
 // Per-app policy for the Odometer Android app (Google Play requires a
 // public privacy-policy URL for location foreground-service apps).
-router.get('/privacy/odometer', (req, res) => res.render('site/privacy-odometer', {
+router.get('/privacy/odometer', (req, res) => res.render('site/privacy-odometer', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Odometer Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for Odometer — Mileage & Gas Tracker. Your location is used only to measure trips you start, and it never leaves your device.',
 }));
 
 // Per-app policy for the ScreenQR Android app (Google Play requires a
 // public privacy-policy URL for media-projection apps).
-router.get('/privacy/screenqr', (req, res) => res.render('site/privacy-screenqr', {
+router.get('/privacy/screenqr', (req, res) => res.render('site/privacy-screenqr', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'ScreenQR Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for ScreenQR. No internet permission, no accounts, no ads, no analytics — QR codes are decoded on your device and never leave it.',
 }));
 
 // Per-app policy for the AI Button Android app (voice-loop app:
 // microphone + overlay permissions need a public policy URL for Play).
-router.get('/privacy/ai-bar', (req, res) => res.render('site/privacy-aibar', {
+router.get('/privacy/ai-bar', (req, res) => res.render('site/privacy-aibar', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Chorvix Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for Chorvix. No accounts, no server, no ads, no analytics — your voice and prompts go only to the AI you choose.',
 }));
@@ -1255,7 +1255,7 @@ router.get('/privacy/ai-bar', (req, res) => res.render('site/privacy-aibar', {
 // is OneMind (package com.usefulappz.aibar — the /privacy/ai-bar URL
 // above predates the rename and stays live for existing listings).
 // One policy, one source — this route renders the same view.
-router.get('/privacy/onemind', (req, res) => res.render('site/privacy-aibar', {
+router.get('/privacy/onemind', (req, res) => res.render('site/privacy-aibar', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Chorvix Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for Chorvix. No accounts, no server, no ads, no analytics — your voice and prompts go only to the AI you choose.',
 }));
@@ -1263,7 +1263,7 @@ router.get('/privacy/onemind', (req, res) => res.render('site/privacy-aibar', {
 // Per-app policy for the Habit Dot Android app (Google Play requires a
 // public privacy-policy URL; the app contains AdMob ads, so its policy
 // — unlike Odometer's — discloses Google's ad-related data collection).
-router.get('/privacy/habit-dot', (req, res) => res.render('site/privacy-habitdot', {
+router.get('/privacy/habit-dot', (req, res) => res.render('site/privacy-habitdot', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Habit Dot Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for Habit Dot. Your habits stay on your device; the free version shows Google AdMob ads, and Premium ($2.99 via Google Play Billing) removes them.',
 }));
@@ -1271,7 +1271,7 @@ router.get('/privacy/habit-dot', (req, res) => res.render('site/privacy-habitdot
 // Package-name alias for the Habit Dot policy above (same page, same
 // policy — the /privacy/onemind alias for the AI Bar page is the house
 // precedent for serving one policy at both its slugs).
-router.get('/privacy/habitdot', (req, res) => res.render('site/privacy-habitdot', {
+router.get('/privacy/habitdot', (req, res) => res.render('site/privacy-habitdot', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Habit Dot Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for Habit Dot. Your habits stay on your device; the free version shows Google AdMob ads, and Premium ($2.99 via Google Play Billing) removes them.',
 }));
@@ -1279,35 +1279,35 @@ router.get('/privacy/habitdot', (req, res) => res.render('site/privacy-habitdot'
 // Per-app policy for the World Weather Android app (Google Play requires
 // a public privacy-policy URL; the app uses device location only on tap
 // and sends the requested place to public weather/geocoding services).
-router.get('/privacy/world-weather', (req, res) => res.render('site/privacy-worldweather', {
+router.get('/privacy/world-weather', (req, res) => res.render('site/privacy-worldweather', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'World Weather Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for World Weather. No account, nothing stored by us — location is used only when you tap, and forecasts come straight from public weather services.',
 }));
 
 // Per-app policy for the Loophole Ciphers Android app (zero permissions,
 // no internet permission; Play still requires a public policy URL).
-router.get('/privacy/loophole-ciphers', (req, res) => res.render('site/privacy-ciphers', {
+router.get('/privacy/loophole-ciphers', (req, res) => res.render('site/privacy-ciphers', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Loophole Ciphers Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for Loophole Ciphers. Zero permissions and no internet — every cipher is solved on your device and nothing is collected.',
 }));
 
 // Package-name alias for the Loophole Ciphers policy above (the app's
 // package is com.usefulappz.ciphertoy; same page, same policy).
-router.get('/privacy/ciphertoy', (req, res) => res.render('site/privacy-ciphers', {
+router.get('/privacy/ciphertoy', (req, res) => res.render('site/privacy-ciphers', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Loophole Ciphers Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for Loophole Ciphers. Zero permissions and no internet — every cipher is solved on your device and nothing is collected.',
 }));
 
 // Per-app policy for the Ghost Box Android app (zero permissions — no
 // microphone, no internet; all sound is generated on the device).
-router.get('/privacy/ghost-box', (req, res) => res.render('site/privacy-ghostbox', {
+router.get('/privacy/ghost-box', (req, res) => res.render('site/privacy-ghostbox', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Ghost Box Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for Ghost Box — Spirit Radio. No microphone, no internet permission, nothing recorded or collected — an entertainment novelty that runs entirely on your device.',
 }));
 
 // Package-name alias for the Ghost Box policy above (the app's package
 // is com.usefulappz.ghostbox; same page, same policy).
-router.get('/privacy/ghostbox', (req, res) => res.render('site/privacy-ghostbox', {
+router.get('/privacy/ghostbox', (req, res) => res.render('site/privacy-ghostbox', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Ghost Box Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for Ghost Box — Spirit Radio. No microphone, no internet permission, nothing recorded or collected — an entertainment novelty that runs entirely on your device.',
 }));
@@ -1317,7 +1317,7 @@ router.get('/privacy/ghostbox', (req, res) => res.render('site/privacy-ghostbox'
 // FillMyList API; the tester checklist is stored on-device only).
 // RENAMED 2026-10-28 (was "Tester Hub", owner strike): the canonical
 // slug is /privacy/fill-my-list; the pre-rename slugs 301-redirect.
-router.get('/privacy/fill-my-list', (req, res) => res.render('site/privacy-testerhub', {
+router.get('/privacy/fill-my-list', (req, res) => res.render('site/privacy-testerhub', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'FillMyList Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for FillMyList. Free with ads (Google AdMob). Sends only what you type into its forms — your testing checklist never leaves your phone.',
 }));
@@ -1326,21 +1326,21 @@ router.get('/privacy/testerhub', (req, res) => res.redirect(301, '/privacy/fill-
 
 // Per-app policy for The Library Android app (no permissions, books
 // bundled and read fully offline; outside links open in the browser).
-router.get('/privacy/library', (req, res) => res.render('site/privacy-library', {
+router.get('/privacy/library', (req, res) => res.render('site/privacy-library', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'The Library Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for The Library. No permissions and no data collected — 28 public-domain classics bundled in the app and read fully offline.',
 }));
 
 // Per-app policy for the Kids' Wing Android app (child-directed, zero
 // permissions, no internet permission; collects nothing from anyone).
-router.get('/privacy/kids-wing', (req, res) => res.render('site/privacy-kidswing', {
+router.get('/privacy/kids-wing', (req, res) => res.render('site/privacy-kidswing', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: "Kids' Wing Privacy Policy — Usefulappz",
   metaDescription: "Privacy policy for Kids' Wing. No internet permission, no ads, no purchases, nothing collected from children or anyone — stories and coloring that work entirely offline.",
 }));
 
 // Package-name alias for the Kids' Wing policy above (the app's package
 // is com.usefulappz.librarykids; same page, same policy).
-router.get('/privacy/librarykids', (req, res) => res.render('site/privacy-kidswing', {
+router.get('/privacy/librarykids', (req, res) => res.render('site/privacy-kidswing', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: "Kids' Wing Privacy Policy — Usefulappz",
   metaDescription: "Privacy policy for Kids' Wing. No internet permission, no ads, no purchases, nothing collected from children or anyone — stories and coloring that work entirely offline.",
 }));
@@ -1348,7 +1348,7 @@ router.get('/privacy/librarykids', (req, res) => res.render('site/privacy-kidswi
 // Per-app policy for the Email Keeper Android app (a status board for
 // the developer's own mailboxes; the checks run server-side read-only,
 // the app only displays up/down + last-check and collects nothing).
-router.get('/privacy/email-keeper', (req, res) => res.render('site/privacy-emailkeeper', {
+router.get('/privacy/email-keeper', (req, res) => res.render('site/privacy-emailkeeper', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Email Keeper Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for Email Keeper. A mailbox status board computed by read-only server checks — the app collects no data from you, shows no ads, and sells nothing.',
 }));
@@ -1356,7 +1356,7 @@ router.get('/privacy/email-keeper', (req, res) => res.render('site/privacy-email
 // Per-app policy for the Affiliate Rolodex Android app (stores the
 // developer's affiliate program links/codes server-side and displays
 // them with their disclosures; collects no personal data).
-router.get('/privacy/rolodex', (req, res) => res.render('site/privacy-rolodex', {
+router.get('/privacy/rolodex', (req, res) => res.render('site/privacy-rolodex', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Affiliate Rolodex Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for Affiliate Rolodex. Every affiliate link in one place, always shown with its disclosure — no personal data collected, no ads, nothing sold.',
 }));
@@ -1364,7 +1364,7 @@ router.get('/privacy/rolodex', (req, res) => res.render('site/privacy-rolodex', 
 // Per-app policy for the Social Link Rolodex Android app (the Link
 // Rolodex line, 2026-10-26: stores the developer's social profile links
 // server-side and displays them; collects no personal data, paid/no ads).
-router.get('/privacy/social-rolodex', (req, res) => res.render('site/privacy-socialrolodex', {
+router.get('/privacy/social-rolodex', (req, res) => res.render('site/privacy-socialrolodex', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Social Link Rolodex Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for Social Link Rolodex. Every social account in one place — no personal data collected, no ads, nothing sold.',
 }));
@@ -1372,7 +1372,7 @@ router.get('/privacy/social-rolodex', (req, res) => res.render('site/privacy-soc
 // Per-app policy for the Master Rolodex Android app (All My Links: every
 // link family in one rolodex, affiliate entries always shown whole with
 // their disclosure; collects no personal data, paid/no ads).
-router.get('/privacy/master-rolodex', (req, res) => res.render('site/privacy-masterrolodex', {
+router.get('/privacy/master-rolodex', (req, res) => res.render('site/privacy-masterrolodex', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Master Rolodex Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for Master Rolodex — All My Links. Every link family in one rolodex — no personal data collected, no ads, nothing sold.',
 }));
@@ -1380,7 +1380,7 @@ router.get('/privacy/master-rolodex', (req, res) => res.render('site/privacy-mas
 // Per-app policy for the RoboSweeper Android app (displays the sweep
 // report for the developer's own properties, fetched from our server;
 // the root check runs on-device, displays only, and never blocks).
-router.get('/privacy/robosweeper', (req, res) => res.render('site/privacy-robosweeper', {
+router.get('/privacy/robosweeper', (req, res) => res.render('site/privacy-robosweeper', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'RoboSweeper Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for RoboSweeper. The sweep report covers our own sites and placements, not you — no personal data collected, no ads, nothing sold.',
 }));
@@ -1388,7 +1388,7 @@ router.get('/privacy/robosweeper', (req, res) => res.render('site/privacy-robosw
 // Per-app policy for the Money Watch Android app (displays the watch
 // state for the developer's own business revenue; no bank connection,
 // no credentials, moves no money, collects no personal data).
-router.get('/privacy/money-watch', (req, res) => res.render('site/privacy-moneywatch', {
+router.get('/privacy/money-watch', (req, res) => res.render('site/privacy-moneywatch', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Money Watch Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for Money Watch. It displays the moment money lands for our own business — it never connects to your bank, holds no credentials, and moves no money.',
 }));
@@ -1396,7 +1396,7 @@ router.get('/privacy/money-watch', (req, res) => res.render('site/privacy-moneyw
 // Per-app policy for Dawnfold Android app (the house publication;
 // bundled offline editions, one fixed-place weather refresh, no data
 // collected; Play requires a public privacy-policy URL).
-router.get('/privacy/dawnfold', (req, res) => res.render('site/privacy-thebigone', {
+router.get('/privacy/dawnfold', (req, res) => res.render('site/privacy-thebigone', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Dawnfold Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for Dawnfold. A daily edition you read offline — no accounts, no data collected, and a weather line that never asks where you are.',
 }));
@@ -1417,7 +1417,7 @@ router.get('/privacy/the-big-one', (req, res) => res.redirect(301, '/privacy/daw
 router.get('/library/sponsors', (req, res) => {
   const libSponsors = require('../lib/librarySponsors');
   const pricingLib = require('../lib/pricing');
-  res.render('site/library-sponsors', {
+  res.render('site/library-sponsors', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'Sponsor a Library Shelf — The Library | Usefulappz',
     metaDescription: 'Sponsor a shelf of The Library: a named, labeled sponsor chair on the Verne Shelf, Classics, Adventure & the Sea, Mystery & Detectives, Sci-Fi & the Strange, the Listening Shelf, or the Documentary Shelf — at founding rates.',
     shelves: libSponsors.SHELVES.map((s) => ({ ...s, priceCents: libSponsors.shelfPriceCents(s) })),
@@ -1431,7 +1431,7 @@ router.get('/library/sponsors', (req, res) => {
 // permissions, zero network, bundled demo data only, no data
 // collected; Play requires a public privacy-policy URL). Renamed
 // 2026-10-28 (was CannaDash): the pre-rename slugs 301-redirect below.
-router.get('/privacy/herbhaul', (req, res) => res.render('site/privacy-cannadash', {
+router.get('/privacy/herbhaul', (req, res) => res.render('site/privacy-cannadash', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'HerbHaul Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for HerbHaul. A demo build with no permissions and no network — no accounts, no data collected, nothing leaves your phone.',
 }));
@@ -1441,13 +1441,13 @@ router.get('/privacy/cannadash', (req, res) => res.redirect(301, '/privacy/herbh
 // zero permissions, bundled demo data only, no in-app network — the
 // only exits are the driver-tapped nav handoff and browser links;
 // Play requires a public privacy-policy URL).
-router.get('/privacy/herbhaul-driver', (req, res) => res.render('site/privacy-cannadashdriver', {
+router.get('/privacy/herbhaul-driver', (req, res) => res.render('site/privacy-cannadashdriver', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'HerbHaul Driver Privacy Policy — Usefulappz',
   metaDescription: 'Privacy policy for HerbHaul Driver. A demo build with no permissions and no network — no data collected; directions go to your own nav app only when you tap.',
 }));
 router.get('/privacy/cannadash-driver', (req, res) => res.redirect(301, '/privacy/herbhaul-driver'));
 
-router.get('/about', (req, res) => res.render('site/about', {
+router.get('/about', (req, res) => res.render('site/about', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'About — Tattoo Art Customs',
   metaDescription: 'About Tattoo Art Customs marketplace.',
 }));
@@ -1500,7 +1500,7 @@ router.get('/testers', async (req, res) => {
     const row = await db.get("SELECT COUNT(*) AS n FROM tester_signups WHERE status = 'active'");
     poolCount = (row && row.n) || 0;
   } catch (e) { /* table lands with migration 102; page renders regardless */ }
-  res.render('site/testers', {
+  res.render('site/testers', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'Become a Tester — Help Launch Our Apps | Usefulappz',
     metaDescription: 'Join the Useful Appz tester pool: get our apps before anyone else, help a tiny studio launch, and get tapped the moment a new test opens.',
     testerApps: TESTER_APPS_OPEN,
@@ -1510,7 +1510,7 @@ router.get('/testers', async (req, res) => {
   });
 });
 
-router.get('/tap-to-pay', (req, res) => res.render('site/tap-to-pay', {
+router.get('/tap-to-pay', (req, res) => res.render('site/tap-to-pay', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Tap-to-Pay for Tattoo Shops — Tattoo Art Customs',
   metaDescription: 'Take in-person tap-to-pay in your tattoo shop with PayPal. No reader, no monthly fee until you sell — fair 1% split with Tattoo Art Customs.',
 }));
@@ -1519,7 +1519,7 @@ router.get('/tap-to-pay', (req, res) => res.render('site/tap-to-pay', {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 // Contact page: public form + business email. Emailed straight to the owner.
-router.get('/contact', (req, res) => res.render('site/contact', {
+router.get('/contact', (req, res) => res.render('site/contact', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Contact Us — Tattoo Art Customs',
   metaDescription: 'Contact Tattoo Art Customs — orders, custom designs, artist and shop signups.',
 }));
@@ -1575,13 +1575,13 @@ router.get('/perks', (req, res) => res.redirect(302, '/shop/perks'));
 // Discount campaign landing page (owner-ordered 2026-10-09): all live affiliate
 // discount codes in one place — Electrum TATART20, Base Labs TAC20, Recovery
 // Aftercare, Amazon picks.
-router.get('/discounts', (req, res) => res.render('site/discounts', {
+router.get('/discounts', (req, res) => res.render('site/discounts', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Tattoo Discounts & Deals — Tattoo Art Customs',
   metaDescription: 'Real tattoo discounts: 10% off Electrum Supply with code TATART20, Base Labs TAC20, Recovery Aftercare, and our Amazon picks.',
   canonical: `${config.baseUrl.replace(/\/$/, '')}/discounts`,
 }));
 
-router.get('/aftercare', (req, res) => res.render('site/aftercare', {
+router.get('/aftercare', (req, res) => res.render('site/aftercare', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Tattoo Aftercare Guide — Tattoo Art Customs',
   metaDescription: 'How to heal your new tattoo, plus the aftercare products we recommend.',
   affTag: 'tattooartcust-20',
@@ -1590,31 +1590,31 @@ router.get('/aftercare', (req, res) => res.render('site/aftercare', {
 // Guides hub + long-form guide pages (added 2026-10-12 for AdSense "low value
 // content" fix: substantial unique editorial content, hardcoded English like
 // /terms and /privacy; nav labels live in the footer.* catalog keys).
-router.get('/guides', (req, res) => res.render('site/guides', {
+router.get('/guides', (req, res) => res.render('site/guides', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Tattoo Guides & Resources — Tattoo Art Customs',
   metaDescription: 'Free tattoo guides: complete aftercare instructions, how to choose a design that ages well, how custom tattoo designs work, and resources for tattoo shops.',
   canonical: `${config.baseUrl.replace(/\/$/, '')}/guides`,
 }));
 
-router.get('/guides/aftercare', (req, res) => res.render('site/guide-aftercare', {
+router.get('/guides/aftercare', (req, res) => res.render('site/guide-aftercare', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'The Complete Tattoo Aftercare Guide — Tattoo Art Customs',
   metaDescription: 'Complete tattoo aftercare, day by day: the first wash, the peel and itch phase, moisturizing, sun, swimming and exercise rules, infection warning signs, and long-term care.',
   canonical: `${config.baseUrl.replace(/\/$/, '')}/guides/aftercare`,
 }));
 
-router.get('/guides/choosing-a-design', (req, res) => res.render('site/guide-choosing-design', {
+router.get('/guides/choosing-a-design', (req, res) => res.render('site/guide-choosing-design', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'How to Choose a Tattoo Design That Ages Well — Tattoo Art Customs',
   metaDescription: 'How to choose a tattoo design that still looks good in twenty years: placement, size and detail, how each tattoo style ages, judging linework, color and skin tone, and design licenses.',
   canonical: `${config.baseUrl.replace(/\/$/, '')}/guides/choosing-a-design`,
 }));
 
-router.get('/guides/custom-design-process', (req, res) => res.render('site/guide-custom-process', {
+router.get('/guides/custom-design-process', (req, res) => res.render('site/guide-custom-process', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'How Custom Tattoo Designs Work, Step by Step — Tattoo Art Customs',
   metaDescription: 'How custom tattoo designs work: writing a brief, the 50% deposit, 48-hour drawing, the files and single-use license you receive, plus by-request and doodle-to-tattoo.',
   canonical: `${config.baseUrl.replace(/\/$/, '')}/guides/custom-design-process`,
 }));
 
-router.get('/guides/for-tattoo-shops', (req, res) => res.render('site/guide-for-shops', {
+router.get('/guides/for-tattoo-shops', (req, res) => res.render('site/guide-for-shops', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'For Tattoo Shops: Run Your Business on Tattoo Art Customs',
   metaDescription: 'What a Tattoo Art Customs shop membership includes: verified storefront, bookings and client profiles, tap-to-pay with no card reader, 20% referral earnings, design sales, and back-office tools.',
   canonical: `${config.baseUrl.replace(/\/$/, '')}/guides/for-tattoo-shops`,
@@ -1623,7 +1623,7 @@ router.get('/guides/for-tattoo-shops', (req, res) => res.render('site/guide-for-
 // Tester bug reports: anyone (signed in or not) can file one. Each report is
 // saved and emailed to the owner the moment it lands.
 router.get('/report-bug', (req, res) => {
-  res.render('site/report-bug', {
+  res.render('site/report-bug', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'Report a Bug — Tattoo Art Customs',
     metaDescription: 'Report a bug on Tattoo Art Customs — it goes straight to the site owner.',
   });
@@ -1776,7 +1776,7 @@ router.get('/raffle', async (req, res) => {
       referralCount = (rc && rc.n) || 0;
     }
   }
-  res.render('site/raffle', {
+  res.render('site/raffle', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'Tattoo Art Customs Opening Raffle — Free Entry',
     metaDescription: 'The Tattoo Art Customs Opening Raffle: free entry with a free account. Grand prize is any premade design of your choice plus a free month of membership; two runners-up win a free premade design each.',
     raffleOpen: status.raffleOpen,
@@ -1818,7 +1818,7 @@ router.get('/halloween-flash', async (req, res) => {
         img: `/img/designs/${String(d.linework_wm_path || '').split('/').pop() || (d.id + '.jpg')}`,
       }));
   } catch (e) { console.error('halloween-flash designs failed:', e.message); }
-  res.render('site/halloween-flash', {
+  res.render('site/halloween-flash', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'Halloween Flash-Day Sale — $80 Ready-Made, $120 Custom | Tattoo Art Customs',
     metaDescription: 'Halloween flash-day sale at Tattoo Art Customs: 31 original Halloween flash designs at $80 ready-made, custom designs at $120 (50% deposit, 48-hour delivery). Ends October 31.',
     canonical: `${config.baseUrl.replace(/\/$/, '')}/halloween-flash`,
@@ -1850,7 +1850,7 @@ router.get('/holiday-raffle', async (req, res) => {
          WHERE w.raffle_id = ? ORDER BY w.drawn_at`, [shown.id]);
     }
   }
-  res.render('site/holiday-raffle', {
+  res.render('site/holiday-raffle', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'Holiday Doodle Raffle — Win Free Kids-Art Merchandise | Tattoo Art Customs',
     metaDescription: 'The Holiday Doodle Raffle: win a FREE turn-your-kid\u2019s-art-into-merchandise code. Earn entries with a customer membership, every purchase, or grab an entry pack.',
     canonical: `${base}/holiday-raffle`,
@@ -1871,7 +1871,7 @@ router.get('/holiday-raffle/enter', requireLogin, async (req, res) => {
     ...p, totalCents: withFeeCents(p.baseCents),
   }));
   const mine = await hr.userEntries(raffle.id, req.user.id);
-  res.render('site/holiday-raffle-enter', {
+  res.render('site/holiday-raffle-enter', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'Get Raffle Entries — Holiday Doodle Raffle | Tattoo Art Customs',
     packs, myEntries: mine, raffle,
   });

@@ -66,7 +66,7 @@ router.get('/', async (req, res) => {
      LEFT JOIN contest_entries e ON e.id = c.winner_entry_id
      WHERE c.status = 'awarded' ORDER BY c.awarded_at DESC LIMIT 6`
   );
-  res.render('contests/index', {
+  res.render('contests/index', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: 'Design Contests — Tattoo Art Customs',
     open, recent, money: pricing.money, fmtLeft, timeLeftMs,
     metaDescription: 'Post a tattoo design bounty or win one — design contests with real cash prizes.',
@@ -167,7 +167,7 @@ router.get('/:id', async (req, res) => {
   }));
   const canPick = (isCustomer || isAdmin) && ['open', 'judging'].includes(c.status) && all.length > 0;
   const canEnter = !!(me && c.status === 'open' && me.id !== c.customer_id);
-  res.render('contests/detail', {
+  res.render('contests/detail', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: `${c.title} — Design Contest — Tattoo Art Customs`,
     c, entries, entryCount: all.length, isCustomer, isAdmin, canPick, canEnter, me,
     money: pricing.money, fmtLeft, timeLeftMs, leftMs: timeLeftMs(c),

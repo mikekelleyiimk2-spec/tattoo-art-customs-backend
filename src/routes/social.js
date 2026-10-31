@@ -38,7 +38,7 @@ router.get('/announcements/:shopId', async (req, res) => {
     `SELECT * FROM shop_announcements WHERE shop_user_id = ? ORDER BY created_at DESC LIMIT 50`,
     [shop.id]);
   if (wantsJson(req)) return res.json({ ok: true, shop, announcements: posts });
-  res.render('social/announcements', { title: `${shop.display_name || 'Shop'} announcements`, shop, posts });
+  res.render('social/announcements', {homeFace: true, darkFace: true, bodyClass: 'page-dark',  title: `${shop.display_name || 'Shop'} announcements`, shop, posts });
 });
 
 // Public reviews for a shop or an artist, with averages.
@@ -58,13 +58,13 @@ async function reviewsFor(kind, id) {
 router.get('/reviews/shop/:shopId', async (req, res) => {
   const data = await reviewsFor('shop', req.params.shopId);
   if (wantsJson(req)) return res.json({ ok: true, kind: 'shop', shop_id: req.params.shopId, ...data });
-  res.render('social/reviews', { title: 'Shop reviews', subject: 'shop', subjectId: req.params.shopId, ...data });
+  res.render('social/reviews', {homeFace: true, darkFace: true, bodyClass: 'page-dark',  title: 'Shop reviews', subject: 'shop', subjectId: req.params.shopId, ...data });
 });
 
 router.get('/reviews/artist/:artistId', async (req, res) => {
   const data = await reviewsFor('artist', req.params.artistId);
   if (wantsJson(req)) return res.json({ ok: true, kind: 'artist', artist_id: req.params.artistId, ...data });
-  res.render('social/reviews', { title: 'Artist reviews', subject: 'artist', subjectId: req.params.artistId, ...data });
+  res.render('social/reviews', {homeFace: true, darkFace: true, bodyClass: 'page-dark',  title: 'Artist reviews', subject: 'artist', subjectId: req.params.artistId, ...data });
 });
 
 // Trending artists (public discovery): ranked by healed-post activity in the
@@ -72,7 +72,7 @@ router.get('/reviews/artist/:artistId', async (req, res) => {
 router.get('/trending', async (req, res) => {
   const artists = await core.trendingArtists(20, 30);
   if (wantsJson(req)) return res.json({ ok: true, window_days: 30, artists });
-  res.render('social/trending', { title: 'Trending artists', artists });
+  res.render('social/trending', {homeFace: true, darkFace: true, bodyClass: 'page-dark',  title: 'Trending artists', artists });
 });
 
 // ---- Healed wall (public read; posting needs login) ----
@@ -98,7 +98,7 @@ router.get('/healed', async (req, res) => {
   const { n } = await db.get('SELECT COUNT(*) AS n FROM healed_posts');
   const payload = { ok: true, page, per_page: perPage, total: n, posts };
   if (wantsJson(req)) return res.json(payload);
-  res.render('social/healed', { title: 'Healed results', ...payload });
+  res.render('social/healed', {homeFace: true, darkFace: true, bodyClass: 'page-dark',  title: 'Healed results', ...payload });
 });
 
 router.use((req, res, next) => {
@@ -228,7 +228,7 @@ router.get('/boards', async (req, res) => {
      JOIN users u ON u.id = f.followed_user_id
      WHERE f.follower_user_id = ? ORDER BY u.display_name`, [req.user.id]);
   if (wantsJson(req)) return res.json({ ok: true, boards });
-  res.render('social/boards', { title: 'Your design boards', boards, following });
+  res.render('social/boards', {homeFace: true, darkFace: true, bodyClass: 'page-dark',  title: 'Your design boards', boards, following });
 });
 
 router.post('/boards', formLimiter, async (req, res) => {
@@ -260,7 +260,7 @@ router.get('/boards/:id', async (req, res) => {
   if (!board) return;
   const full = await core.boardWithItems(board.id);
   if (wantsJson(req)) return res.json({ ok: true, board: full });
-  res.render('social/board', { title: board.name, board: full });
+  res.render('social/board', {homeFace: true, darkFace: true, bodyClass: 'page-dark',  title: board.name, board: full });
 });
 
 router.post('/boards/:id/add', formLimiter, async (req, res) => {
