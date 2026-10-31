@@ -124,6 +124,61 @@ async function runHttpTests(ok, req, areq) {
   a = await anon('GET', `/brambleforce/buy/crt_filter/approve/ord-bf-crt-1?gt=${encodeURIComponent(crtGt)}`);
   const codeCount = tdb.prepare('SELECT COUNT(*) AS n FROM brambleforce_codes WHERE order_id = ?').get('ord-bf-crt-1');
   ok(codeCount && codeCount.n === 1, 'bf: re-approve mints no second code (one code per paid order)');
+
+  // 7. Fighter products (added 2026-10-30): three new fighters at the
+  // struck $1.99, same catalogue pattern — IAP kind, orders carry
+  // brambleforce:<id>, capture mints exactly one code, redeem returns
+  // the fighter product.
+  const bfLib = require('../src/lib/brambleforce');
+  const fighters = [
+    ['fighter_zola', 'Zola', 'Adeyemi'],
+    ['fighter_otto', 'Otto', 'Fenn'],
+    ['fighter_yusuf', 'Yusuf', 'Barakat'],
+  ];
+  for (const [fid, first, last] of fighters) {
+    const fp = bfLib.product(fid);
+    ok(!!fp && fp.priceCents === 199 && fp.kind === 'iap', `bf: ${fid} is a $1.99 IAP in the catalogue`);
+    ok(bfLib.orderType(fid) === `brambleforce:${fid}`, `bf: ${fid} orders carry brambleforce:${fid}`);
+    const r = await anon('GET', `/brambleforce/buy/${fid}`);
+    ok(r.status === 200, `bf: /brambleforce/buy/${fid} page 200`);
+    ok(r.text.includes('$1.99') && r.text.includes(first) && r.text.includes(last),
+      `bf: ${fid} page shows the fighter name and the struck $1.99`);
+    ok(r.text.includes('name="guest_email"'), `bf: ${fid} has the guest delivery-email field`);
+  }
+  a = await anon('GET', '/brambleforce');
+  ok(a.text.includes('/brambleforce/buy/fighter_zola') && a.text.includes('/brambleforce/buy/fighter_otto')
+    && a.text.includes('/brambleforce/buy/fighter_yusuf'), 'bf: landing lists the three fighter doors');
+
+  // 8. Fighter stub-capture E2E (PayPal $0.00 stub, no real money):
+  // guest checkout -> capture mints exactly one code -> redeem returns
+  // {product:"fighter_zola"} -> second redeem is spent.
+  a = await anon('POST', '/brambleforce/buy/fighter_zola/buy', { guest_email: 'bfzola-buyer@test.local' });
+  ok(a.status === 302 && !a.location.includes('/login'), 'bf: fighter_zola buy with email never bounces to /login');
+  const zolaPending = tdb.prepare('SELECT * FROM orders WHERE guest_email = ? ORDER BY created_at DESC').get('bfzola-buyer@test.local');
+  ok(zolaPending && zolaPending.buyer_id === '' && zolaPending.order_type === 'brambleforce:fighter_zola'
+    && zolaPending.status === 'pending',
+    'bf: fighter_zola order is a pending brambleforce:fighter_zola order with the guest sentinel buyer');
+  seedGuest('ord-bf-zola-1', 'brambleforce:fighter_zola', 'bfzola@test.local');
+  a = await anon('GET', '/brambleforce/buy/fighter_zola/approve/ord-bf-zola-1');
+  ok(a.status === 403, 'bf: fighter_zola approve without the checkout token is 403');
+  const zolaGt = guestCheckout.guestToken('ord-bf-zola-1', 'brambleforce:fighter_zola');
+  a = await anon('GET', `/brambleforce/buy/fighter_zola/approve/ord-bf-zola-1?gt=${encodeURIComponent(zolaGt)}`);
+  ok(a.status === 200, 'bf: fighter_zola approve with the real token renders the success page');
+  const zolaCodeMatch = a.text.match(/[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}/);
+  ok(!!zolaCodeMatch, 'bf: fighter_zola success page shows the unlock code, grouped XXXX-XXXX-XXXX-XXXX');
+  const zolaCode = zolaCodeMatch && zolaCodeMatch[0];
+  row = tdb.prepare('SELECT status FROM orders WHERE id = ?').get('ord-bf-zola-1');
+  ok(row && row.status === 'paid', 'bf: fighter_zola order is paid after capture');
+  const zolaRows = tdb.prepare('SELECT * FROM brambleforce_codes WHERE order_id = ?').all('ord-bf-zola-1');
+  ok(zolaRows.length === 1 && zolaRows[0].product === 'fighter_zola' && Number(zolaRows[0].spent) === 0,
+    'bf: capture mints exactly one unspent code for fighter_zola');
+  ok(zolaRows[0] && !JSON.stringify(zolaRows[0]).includes(zolaCode), 'bf: fighter_zola raw code is never stored (hash only)');
+  r = await anon('POST', '/api/brambleforce/redeem', { __json: { code: zolaCode } });
+  j = null; try { j = JSON.parse(r.text); } catch (e) { /* asserted below */ }
+  ok(r.status === 200 && j && j.product === 'fighter_zola', 'bf: redeem returns {product:"fighter_zola"} for the fighter code');
+  r = await anon('POST', '/api/brambleforce/redeem', { __json: { code: zolaCode } });
+  j = null; try { j = JSON.parse(r.text); } catch (e) { /* asserted below */ }
+  ok(j && j.error === 'spent', 'bf: a second fighter_zola redeem answers {error:"spent"}');
 }
 
 module.exports = { runHttpTests };

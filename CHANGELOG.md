@@ -13,6 +13,10 @@ website's version — package.json stays 1.0.0 between releases.
 - The public sideload APK was rebuilt from a patched staging tree (`~/workspace/app/game2-runandgun-public`): BFTEST test-code branch removed and the three baked `usefulappz.com` store constants repointed at this backend (`tattoo-art-customs.onrender.com` — usefulappz.com is a separate static host where /brambleforce/* 404s, and the tattooartcustoms.com DNS does not resolve). The internal BFTEST build is kept under a clearly internal name only.
 - Verified: 33 new suite tests (test/brambleforce.js) pass; store proof re-run on the public build 17/17; local payment-TEST-mode end-to-end (stub capture → code issued → redeemed in the public APK's own page → CRT unlock granted/persisted; spent + BFTEST codes refused). The one remaining step to the first real sale is the owner-approved live $0.99 test purchase.
 
+### Added — Brambleforce: three new fighters on the website sale door
+- Catalogue (`src/lib/brambleforce.js`) gains three $1.99 fighter IAPs, same pattern as the existing entries (kind `iap`, orders carry `brambleforce:<id>`, one unlock code minted at capture): `fighter_zola` — Fighter — Zola "Sickle" Adeyemi (pendulum grapple-swing physics, full voice + kit); `fighter_otto` — Fighter — Otto "Auger" Fenn (committed drill-dash physics); `fighter_yusuf` — Fighter — Yusuf "Trowel" Barakat (planter/setup kit — turrets, decoy, snare). Buy pages live at `/brambleforce/buy/<id>`; existing products, prices, and the Everything Bundle are unchanged. Pages are live but unannounced — nothing links or promotes them beyond the store landing's catalogue list.
+- Tests (`test/brambleforce.js`): per-fighter catalogue/order-type checks, buy pages render 200 with name + $1.99, and a stub-capture E2E for fighter_zola (guest checkout → capture mints exactly one code → redeem returns `{product:"fighter_zola"}` → second redeem `spent`). No real money moved.
+
 ## 2026-10-09
 
 ### Added — automatic ZIP delivery for paid request orders

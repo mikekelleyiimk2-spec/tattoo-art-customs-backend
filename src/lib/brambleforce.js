@@ -53,6 +53,24 @@ const PRODUCTS = {
     blurb: 'She hunts you in her garden. Last as long as you can.',
     kind: 'iap',
   },
+  fighter_zola: {
+    name: 'Fighter — Zola "Sickle" Adeyemi',
+    priceCents: 199,
+    blurb: 'New fighter. Pendulum grapple-swing physics — hook, swing, release — with full voice and her full kit.',
+    kind: 'iap',
+  },
+  fighter_otto: {
+    name: 'Fighter — Otto "Auger" Fenn',
+    priceCents: 199,
+    blurb: 'New fighter. Committed drill-dash physics — point the auger, pull the trigger, ride it through.',
+    kind: 'iap',
+  },
+  fighter_yusuf: {
+    name: 'Fighter — Yusuf "Trowel" Barakat',
+    priceCents: 199,
+    blurb: 'New fighter. Planter/setup kit — turrets, decoy and snare, laid before the fight starts.',
+    kind: 'iap',
+  },
   skin_tor: {
     name: 'Skin — Tor: Neon Spectre',
     priceCents: 99,
