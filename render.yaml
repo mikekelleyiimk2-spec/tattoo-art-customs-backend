@@ -118,6 +118,30 @@ services:
       - key: META_MODEL_API_KEY
         sync: false
 
+  # Brambleforce online co-op relay (design doc 2026-10-31 §2):
+  # dedicated always-on Starter ($7/mo, owner-approved 2026-10-31) so
+  # co-op sessions never share a fate with the store's deploys. Code
+  # lives in relay/ in this repo. Can also be created by hand in the
+  # dashboard as a Web Service on this repo with Root Directory
+  # "relay" — same build/start commands and plan.
+  - type: web
+    name: brambleforce-relay
+    runtime: node
+    plan: starter
+    rootDir: relay
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Seat validation for the player pool: full URL of the store
+      # backend's seat check (GET, x-api-token header). Set in the
+      # dashboard to https://tattoo-art-customs.onrender.com/api/onemind/seat
+      # — while unset the relay runs safe: pool CLOSED, code-join only.
+      - key: RELAY_SEAT_CHECK_URL
+        sync: false
+
 databases:
   - name: tattoo-art-customs-db
     plan: basic-256mb
