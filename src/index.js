@@ -333,6 +333,13 @@ app.use('/folder', folderRouter());
 // 2026-10-14): /buy-app/:slug for Odometer, AI Button + the 8 per-AI Buttons.
 const { buyAppRouter } = require('./routes/buyApp');
 app.use('/buy-app', buyAppRouter());
+// Brambleforce website sale door (owner orders 2026-10-30): the game +
+// its 13 in-app extras sell here first — buy pages at
+// /brambleforce/buy/<product_id> (the exact doors the sideload build
+// opens) and the unlock-code redeem endpoint the game calls.
+const { pageRouter: brambleforcePages, apiRouter: brambleforceApi } = require('./routes/brambleforce');
+app.use('/brambleforce', brambleforcePages());
+app.use('/api', brambleforceApi());
 app.use('/intake', require('./shop/routes-intake'));
 app.use('/waitlist', require('./shop/routes-waitlist'));
 app.use('/toolkit', require('./shop/routes-toolkit'));

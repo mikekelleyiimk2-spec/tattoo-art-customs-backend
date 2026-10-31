@@ -5,6 +5,14 @@ https://tattoo-art-customs.onrender.com.
 **Versioning:** the deployed git commit (reported by `/health`) is the
 website's version — package.json stays 1.0.0 between releases.
 
+## 2026-10-30
+
+### Added — Brambleforce website sale door (the game's first live door)
+- New `src/routes/brambleforce.js` + `src/lib/brambleforce.js`: the completed game sells HERE first (owner orders 2026-10-30 — full price, every in-app purchase available; Google's door joins when Google catches up). Landing at `/brambleforce`; buy pages at `/brambleforce/buy/<product_id>` for the game ($6.99) + all 13 struck IAPs — the exact URLs the sideload build's Supply Store opens. Fleet guest/member PayPal checkout (business PayPal = mk4); the game order carries `sideload:com.usefulappz.game2runandgun` so the gated app-updates route delivers the APK (registered in `src/data/app-updates.json`, gated, vc10/1.0.0 public build — BFTEST-free, sha256 2514b6d1…).
+- Unlock codes: a paid IAP order mints ONE single-use code (migration 118, `brambleforce_codes`, SHA-256 hash only at rest), shown once on the success page and emailed. `POST /api/brambleforce/redeem` implements the game's contract — 200 `{product}` / `{error:"spent"}` / `{error:"unknown"}` — with its own scoped CORS (the game page posts cross-origin from a file:// origin) and a per-IP rate limit. Race-safe spent flip via conditional UPDATE.
+- The public sideload APK was rebuilt from a patched staging tree (`~/workspace/app/game2-runandgun-public`): BFTEST test-code branch removed and the three baked `usefulappz.com` store constants repointed at this backend (`tattoo-art-customs.onrender.com` — usefulappz.com is a separate static host where /brambleforce/* 404s, and the tattooartcustoms.com DNS does not resolve). The internal BFTEST build is kept under a clearly internal name only.
+- Verified: 33 new suite tests (test/brambleforce.js) pass; store proof re-run on the public build 17/17; local payment-TEST-mode end-to-end (stub capture → code issued → redeemed in the public APK's own page → CRT unlock granted/persisted; spent + BFTEST codes refused). The one remaining step to the first real sale is the owner-approved live $0.99 test purchase.
+
 ## 2026-10-09
 
 ### Added — automatic ZIP delivery for paid request orders

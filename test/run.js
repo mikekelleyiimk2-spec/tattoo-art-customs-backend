@@ -1575,6 +1575,7 @@ async function main() {
   await require('./merchCatalog').runHttpTests(ok, req, areq); // merch catalog (POD + affiliate)
   await require('./guestCheckout').runHttpTests(ok, req, areq); // guest design checkout (no account wall)
   await require('./guestAppCheckout').runHttpTests(ok, req, areq); // guest paid-app checkout (buy-app + TAC Pro + ios-app, no account wall)
+  await require('./brambleforce').runHttpTests(ok, req, areq); // Brambleforce sale door (buy pages, unlock codes, redeem contract)
   await require('./guestBridge').runHttpTests(ok); // guest bridge route wiring (design claim row; sideload pending tie; go-live endpoint)
   await require('./transfers').runHttpTests(ok, req); // [transfers] customer<->shop art pipeline
   await require('./appUpdates').runHttpTests(ok); // app auto-update service

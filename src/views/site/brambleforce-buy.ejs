@@ -1,0 +1,43 @@
+<h1><%= product.name %></h1>
+<p class="muted"><%= product.blurb %></p>
+
+<div class="card">
+  <h2>$<%= (price / 100).toFixed(2) %> one-time</h2>
+  <% if (productId === 'game') { %>
+  <h3>How it works</h3>
+  <ol>
+    <li>Buy here with PayPal ($6.99).</li>
+    <li>Download the Android APK from your purchase page — the link is emailed to you too.</li>
+    <li>Open it — allow installs from this source if asked — and tap Install.</li>
+  </ol>
+  <p class="muted fineprint">Android 8+. Zero ads. Built for controllers, keyboard, and touch.</p>
+  <% } else { %>
+  <h3>How it works</h3>
+  <ol>
+    <li>Buy here with PayPal.</li>
+    <li>Your unlock code appears on the next page — and is emailed to you.</li>
+    <li>In Brambleforce: EXTRAS (B on the title screen) → REDEEM CODE → type the code. Done — it's yours for good.</li>
+  </ol>
+  <p class="muted fineprint">Codes are single-use. You need the Brambleforce game (Android) to use this extra.</p>
+  <% } %>
+  <% if (user) { %>
+  <form method="post" action="/brambleforce/buy/<%= productId %>/buy" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p><button class="btn" type="submit">Buy for $<%= (price / 100).toFixed(2) %></button></p>
+  </form>
+  <% } else { %>
+  <form method="post" action="/brambleforce/buy/<%= productId %>/buy" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <label><%= t('buyApp.guest_email_label') %>
+      <input type="email" name="guest_email" required maxlength="160" placeholder="you@example.com">
+    </label>
+    <p class="muted fineprint"><%= t('buyApp.guest_email_note') %></p>
+    <p><button class="btn" type="submit">Buy for $<%= (price / 100).toFixed(2) %></button></p>
+    <p class="muted fineprint"><%= t('buyApp.guest_or_login') %> <a href="/login?next=/brambleforce/buy/<%= productId %>"><%= t('buyApp.guest_login_link') %></a> <%= t('buyApp.guest_login_tail') %></p>
+  </form>
+  <% } %>
+</div>
+
+<%- include('../partials/rolodex-placements') %>
+
+<p class="muted fineprint"><a href="/brambleforce">← All of Brambleforce</a> · <a href="/watch">Watch the shows</a></p>

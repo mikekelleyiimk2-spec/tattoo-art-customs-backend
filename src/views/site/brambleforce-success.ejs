@@ -1,0 +1,48 @@
+<% if (productId === 'game') { %>
+<h1>Your Brambleforce Download</h1>
+<p class="muted">Thanks for your purchase! Payment is complete.</p>
+
+<div class="card">
+  <h2>Brambleforce — Full Game (Android APK)</h2>
+  <p><a class="btn" href="<%= downloadUrl %>">Download Brambleforce APK</a></p>
+  <h3>Install</h3>
+  <ol>
+    <li>Open the downloaded APK file on your Android phone.</li>
+    <li>Allow installs from this source if your phone asks.</li>
+    <li>Tap Install — enjoy zero ads.</li>
+  </ol>
+  <p class="muted fineprint">Keep your purchase email — it links back to this page, and your download can be re-issued from here anytime. Optional extras (modes, skins, the expansion) live in the in-game Supply Store — they check out here and unlock with a code.</p>
+</div>
+<% } else if (code) { %>
+<h1>Your Unlock Code</h1>
+<p class="muted">Thanks for your purchase! Payment is complete<% if (codeEmailed) { %> — this code was also emailed to you<% } %>.</p>
+
+<div class="card">
+  <h2><%= product.name %></h2>
+  <p style="font-size:1.6rem; letter-spacing:.12em;"><strong><%= code %></strong></p>
+  <h3>Redeem it in the game</h3>
+  <ol>
+    <li>Open Brambleforce.</li>
+    <li>On the title screen, open EXTRAS (the B button).</li>
+    <li>Pick REDEEM CODE and type the code above.</li>
+  </ol>
+  <p class="muted fineprint">Codes are single-use — once redeemed, the unlock lives in your game for good. This page will not show the code again; your emailed copy is the one to keep.</p>
+</div>
+<% } else { %>
+<h1>Purchase Complete</h1>
+<p class="muted">Thanks for your purchase! Payment is complete.</p>
+
+<div class="card">
+  <h2><%= product.name %></h2>
+  <p>Your unlock code was shown at checkout and emailed to you — that emailed copy is the one to keep (codes are stored hashed, so this page can't show it again).</p>
+  <h3>Redeem it in the game</h3>
+  <ol>
+    <li>Open Brambleforce.</li>
+    <li>On the title screen, open EXTRAS (the B button).</li>
+    <li>Pick REDEEM CODE and type the code from your email.</li>
+  </ol>
+  <p class="muted fineprint">Can't find the email? Check spam for "Your Brambleforce unlock code" — or reply to it and we'll sort you out.</p>
+</div>
+<% } %>
+
+<p class="muted fineprint"><a href="/brambleforce">← All of Brambleforce</a> · <a href="/watch">Watch the shows</a></p>

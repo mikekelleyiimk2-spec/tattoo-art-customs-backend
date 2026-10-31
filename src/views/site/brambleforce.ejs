@@ -1,0 +1,38 @@
+<h1>Brambleforce</h1>
+<p class="muted">Run-and-gun through a killer garden. A Neon Tombstone game from Useful Appz.</p>
+
+<div class="card">
+  <h2>$6.99 — the full game, zero ads</h2>
+  <p>The Crownless Court is growing over the world, and Dr. Sylvan Crowe's machines are doing the gardening. You're the Vinebreakers — the crew that prunes back.</p>
+  <p>10 missions in two views — side-scroll assaults and top-down canopy sweeps. Four fighters who genuinely play differently. Eleven bosses — and Mother Orchid, who roams, hunts you, and cannot be killed. Damage only slows her down. The correct play is to run.</p>
+  <p>Built for controllers (gamepad supported out of the box), keyboard, and touch. Fully voiced banter. Extra lives are earned, never sold.</p>
+  <h3>How it works</h3>
+  <ol>
+    <li>Buy here with PayPal ($6.99).</li>
+    <li>Download the Android APK from your purchase page (the link is emailed too).</li>
+    <li>Open it — allow installs from this source if asked — and tap Install.</li>
+  </ol>
+  <p><a class="btn" href="/brambleforce/buy/game">Get Brambleforce — $6.99</a></p>
+  <p class="muted fineprint">Android 8+. This is the direct sideload edition — no Play Store needed. Optional extras below are bought right here and unlocked in the game with a code.</p>
+</div>
+
+<h2>Optional extras</h2>
+<p class="muted">All cosmetic or content — never difficulty. Lives and continues are never sold. Ever. Bought extras unlock with a single-use code: open Brambleforce → EXTRAS (B) → REDEEM CODE.</p>
+<div class="grid">
+  <% productIds.filter(function (id) { return id !== 'game'; }).forEach(function (id) { var p = products[id]; %>
+  <article class="card" style="padding:1rem;">
+    <h3 style="margin-top:0;"><%= p.name %></h3>
+    <p class="muted" style="margin:.25rem 0;"><%= p.blurb %></p>
+    <p><a class="btn" href="/brambleforce/buy/<%= id %>">Buy — $<%= (p.priceCents / 100).toFixed(2) %></a></p>
+  </article>
+  <% }); %>
+</div>
+
+<%- include('../partials/rolodex-placements') %>
+
+<div class="card">
+  <h2>More from the house</h2>
+  <p><a href="/watch">Watch the shows</a> — Brambleforce Episode 1 and the weekly ads, free.<br>
+  <a href="/tac-android">Tattoo Art Customs for Android</a> — the free app.<br>
+  <a href="/tester-hub">Become a tester</a> — first in line for every new app.</p>
+</div>
