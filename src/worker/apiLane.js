@@ -48,6 +48,10 @@
 // older than WATCHDOG_MS with no completion is re-queued by the
 // watchdog; after MAX_ATTEMPTS the command lands failed with the
 // reason in plain words on the row — visible, never silent limbo.
+// Every stall ALSO raises an alert (Brief #39, owner accepted
+// 2026-10-25): lib/commandWatchdog notifies the admins through the
+// house route and writes logs/onemind-command-watchdog.log, and the
+// recent alerts are served at GET /api/onemind/watchdog.
 const crypto = require('crypto');
 const db = require('../db');
 
@@ -1811,6 +1815,10 @@ function createWorker(opts = {}) {
     adapters: opts.adapters || buildAdapters(env, fetchImpl),
     retryDelayMs: opts.retryDelayMs !== undefined ? opts.retryDelayMs : 1000,
     workerId: opts.workerId || `api-lane-${crypto.randomBytes(4).toString('hex')}`,
+    // Stall alert hook (Brief #39): opts.onStall replaces the default
+    // alert route; the default is lib/commandWatchdog.raiseStallAlert
+    // (admin notify + the onemind-command-watchdog log + status ring).
+    onStall: typeof opts.onStall === 'function' ? opts.onStall : null,
   };
 
   // Race-safe claim: the conditional UPDATE only lands while the row
@@ -1838,7 +1846,8 @@ function createWorker(opts = {}) {
       [cutoff]
     );
     for (const cmd of stuck) {
-      if ((cmd.attempts || 0) >= MAX_ATTEMPTS) {
+      const outOfAttempts = (cmd.attempts || 0) >= MAX_ATTEMPTS;
+      if (outOfAttempts) {
         await db.query(
           "UPDATE ai_commands SET status = 'failed', completed_at = ?, answer = ? WHERE id = ? AND status IN ('claimed', 'running')",
           [nowMs, `This command was interrupted ${cmd.attempts} times and never finished, so it has been marked failed instead of sitting in limbo.`, cmd.id]
@@ -1848,6 +1857,22 @@ function createWorker(opts = {}) {
           "UPDATE ai_commands SET status = 'queued', claimed_by = NULL, claimed_at = NULL WHERE id = ? AND status IN ('claimed', 'running')",
           [cmd.id]
         );
+      }
+      // Brief #39 (owner accepted 2026-10-25): a stall RAISES AN ALERT
+      // instead of dying silently. Best-effort by construction — an
+      // alert failure never blocks the re-queue/fail above.
+      try {
+        const alert = {
+          command_id: cmd.id, lane: cmd.lane || 'api', status: cmd.status,
+          attempts: cmd.attempts || 0, claimed_by: cmd.claimed_by || null,
+          stalled_for_ms: cmd.claimed_at ? nowMs - Number(cmd.claimed_at) : null,
+          action: outOfAttempts ? 'failed' : 'requeued',
+          text: cmd.text || '',
+        };
+        if (ctx.onStall) await ctx.onStall(alert);
+        else await require('../lib/commandWatchdog').raiseStallAlert(alert);
+      } catch (e) {
+        console.error('[api-lane] watchdog stall alert failed:', e.message);
       }
     }
     return stuck.length;

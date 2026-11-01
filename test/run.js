@@ -562,6 +562,7 @@ async function main() {
   await require('./guestBridge').runDbTests(ok); // guest bridge (design claims on buy; sideload pending ties fire at store go-live)
   await require('./moneyWatch').runDbTests(ok); // Money Watch watcher (baseline, exactly-once, kinds, CT windows)
   await require('./thebigone').runDbTests(ok); // Dawnfold register (plans, prices, founding cap)
+  await require('./libraryShelf').runDbTests(ok); // Brief #40: First Library Shelf catalog
   await require('./cannadashFounding').runDbTests(ok); // Bundle C B1: CannaDash founding fee config (prices withheld pre-strike)
   await require('./cannadashFounding').runUnitTests(ok);
   await require('./librarySponsors').runDbTests(ok); // Bundle C B2: Library shelf sponsorship config
@@ -1563,6 +1564,7 @@ async function main() {
   await require('./founding').runHttpTests(ok, req, areq);
   await require('./cannadashFounding').runHttpTests(ok, req, areq); // Bundle C B1
   await require('./librarySponsors').runHttpTests(ok, req, areq); // Bundle C B2
+  await require('./libraryShelf').runHttpTests(ok, req); // Briefs #39/#40: First Library Shelf pages + watchdog status door
   await require('./healedWall').runHttpTests(ok, req, areq); // Bundle C B3
   await require('./merchDrops').runHttpTests(ok, req, areq); // Bundle C B4
   await require('./shoptools-phase2').runHttpTests(ok, req);

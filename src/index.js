@@ -296,6 +296,8 @@ if (String(process.env.ONEMIND_STANDALONE || '').trim().toLowerCase() === 'on') 
 app.use('/', require('./routes/cayliOpinion'));
 app.use('/', require('./routes/onemindWeb'));
 app.use('/', require('./routes/thebigone'));
+app.use('/api', require('./routes/watchdogStatus'));
+app.use('/', require('./routes/libraryShelf'));
 app.use('/', require('./routes/devtools'));
 app.use('/', require('./routes/site'));
 app.use('/', require('./routes/auth'));

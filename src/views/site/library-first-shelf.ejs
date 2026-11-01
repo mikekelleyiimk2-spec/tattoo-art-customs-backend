@@ -1,0 +1,33 @@
+<%# Dawnfold — the First Library Shelf (Brief #40). Titles come from
+    src/lib/firstShelf.js — the shelf's one config place. Every title
+    is public domain in the United States and reads free in full at
+    Project Gutenberg; the shelf links out, it never hosts a copy it
+    cannot prove. %>
+<header class="masthead">
+  <div class="mast-top">
+    <span>VOL. I — NO. 1</span>
+    <span class="mast-open">★ THE LIBRARY ★</span>
+    <span>DAWNFOLD</span>
+  </div>
+  <h1 class="mast-name" style="font-size:38px;">The First Library Shelf</h1>
+  <p class="mast-tag">Eight classics, <b>free to read, free forever</b>.</p>
+  <p class="mast-date"><a href="/dawnfold/library">← The Library front door</a> · <a href="/dawnfold">Today's edition</a></p>
+</header>
+
+<div class="tbo-doors">
+  <p>These are the first books seated in Dawnfold's Library — the shelf the
+  paper was promised with. Each one is public domain in the United States;
+  tap a title to read the whole book free at Project Gutenberg.</p>
+
+  <section>
+    <h3>📚 On the Shelf</h3>
+    <% for (const t of titles) { %>
+    <article class="tbo-card">
+      <h4><a href="<%= t.readUrl %>"><%= t.title %></a></h4>
+      <p class="tbo-note"><%= t.author %> · <%= t.year %> · Public domain</p>
+      <p><%= t.note %></p>
+      <p><a class="tbo-btn" href="<%= t.readUrl %>">Read it free at Project Gutenberg →</a></p>
+    </article>
+    <% } %>
+  </section>
+</div>

@@ -1,0 +1,32 @@
+<%# Dawnfold — the Library front door (Brief #40). The publication's
+    masthead promised "the Library shelves behind the Documentary
+    page"; this door is where a reader walks into them. First shelf
+    first; later shelves arrive as they are seated. %>
+<header class="masthead">
+  <div class="mast-top">
+    <span>VOL. I — NO. 1</span>
+    <span class="mast-open">★ THE LIBRARY ★</span>
+    <span>DAWNFOLD</span>
+  </div>
+  <h1 class="mast-name" style="font-size:38px;">The Library</h1>
+  <p class="mast-tag">Free books behind the paper — <b>public domain, free forever</b>.</p>
+  <p class="mast-date"><a href="/dawnfold">← Read today's edition</a></p>
+</header>
+
+<div class="tbo-doors">
+  <p>Every Dawnfold subscription talks about the Library shelves behind the
+  Documentary page. Here they are. A shelf is a small, finished set of books —
+  no infinite stacks, nothing you can't finish. Every book on every shelf is
+  public domain in the United States and free to read in full.</p>
+
+  <section>
+    <h3>📚 The Shelves</h3>
+    <article class="tbo-card">
+      <h4><a href="/dawnfold/library/first-shelf">The First Library Shelf</a></h4>
+      <p><%= firstShelfCount %> classics, seated and ready:
+      <% for (const t of firstShelfPreview) { %><b><%= t.title %></b> by <%= t.author %> · <% } %>
+      and more on the shelf itself.</p>
+      <p><a class="tbo-btn gold" href="/dawnfold/library/first-shelf">Walk to the First Shelf →</a></p>
+    </article>
+  </section>
+</div>

@@ -468,6 +468,39 @@ async function runDbTests(ok) {
   const devRow = await db.get('SELECT * FROM ai_commands WHERE id = ?', [devId]);
   ok(devRow.status === 'queued', 'lifecycle: the device-lane row was left untouched throughout');
 
+  console.log('watchdog stall alert (Brief #39):');
+  const stallAlerts = [];
+  const alerting = apiLane.createWorker({
+    env: {}, fetchImpl: mockFetch([]), retryDelayMs: 0, workerId: 'test-watchdog-alert',
+    onStall: async (a) => { stallAlerts.push(a); },
+  });
+  const alertStuckId = await insertCmd('Have Gemini say the word ready', 'api', {
+    status: 'running', claimed_by: 'dead-worker', claimed_at: Date.now() - 10 * 60 * 1000, attempts: 3,
+  });
+  await alerting.watchdog();
+  ok(stallAlerts.length === 1 && stallAlerts[0].command_id === alertStuckId
+    && stallAlerts[0].action === 'failed' && stallAlerts[0].stalled_for_ms >= 10 * 60 * 1000 - 5000,
+    'watchdog alert: a deliberately stalled command raises exactly one alert (failed action, stall duration carried)');
+  const alertRequeueId = await insertCmd('Have Gemini say the word ready', 'api', {
+    status: 'claimed', claimed_by: 'hung-worker', claimed_at: Date.now() - 10 * 60 * 1000, attempts: 1,
+  });
+  await alerting.watchdog();
+  ok(stallAlerts.length === 2 && stallAlerts[1].command_id === alertRequeueId
+    && stallAlerts[1].action === 'requeued',
+    'watchdog alert: a stalled claim under the cap alerts with the requeued action');
+  // The default alert route (no onStall hook): log line + in-memory ring.
+  const commandWatchdog = require('../src/lib/commandWatchdog');
+  const before = commandWatchdog.stallAlertCount();
+  const entry = await commandWatchdog.raiseStallAlert({
+    command_id: alertStuckId, lane: 'api', status: 'running', attempts: 3,
+    claimed_by: 'dead-worker', stalled_for_ms: 600000, action: 'failed',
+    text: 'Have Gemini say the word ready',
+  });
+  ok(commandWatchdog.stallAlertCount() === before + 1
+    && commandWatchdog.recentStallAlerts(1)[0].command_id === alertStuckId
+    && entry.kind === 'onemind_command_stalled',
+    'watchdog alert: the default route records the alert in the status ring');
+
   console.log('copilot phone-lane bridge (child spawn, linkage, honest failure):');
   const bridge = apiLane.createWorker({ env: {}, fetchImpl: mockFetch([]), retryDelayMs: 0, workerId: 'test-bridge' });
 
