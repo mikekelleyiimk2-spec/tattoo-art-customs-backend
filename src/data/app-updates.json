@@ -209,5 +209,16 @@
     "publishedAt": "2026-11-01T19:34:33Z",
     "gated": true,
     "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.game2runandgun-1.1.9.apk"
+  },
+  "com.usefulappz.game2runandgun.ios": {
+    "versionCode": 20,
+    "versionName": "1.1.9",
+    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.game2runandgun-1.1.9.ipa",
+    "sha256": "1b1db4b33d2743821a8e8ae8c4afba98884243635be4327f3e5b27a99677f88c",
+    "sizeBytes": 637726919,
+    "publishedAt": "2026-11-01T19:56:50.000Z",
+    "gated": true,
+    "ipaFile": "Brambleforce-1.1.9.ipa",
+    "notes": "Brambleforce iOS sideload edition \u2014 vc20/1.1.9 unsigned IPA (SideStore/AltStore re-sign on the buyer's own free Apple ID; no Apple IAP \u2014 extras are website unlock codes). Queen ending + owner-passed M9 oak inside."
   }
 }
