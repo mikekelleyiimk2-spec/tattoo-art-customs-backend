@@ -1023,6 +1023,92 @@ router.post('/upload-sideload', (req, res) => {
   });
 });
 
+// POST /api/muse/upload-app-update
+// Publishes a big app-update APK (the Brambleforce game build, ~394 MB)
+// that can NEVER live on this service's 1 GB persistent disk: the file
+// stages on the ephemeral tmp filesystem, streams straight into the
+// private R2 bucket at app-updates/<package>.apk via the storage lib's
+// putPrivateObject (the service's own seated R2 creds — no disk copy is
+// kept), and the /api/apps/:package/apk route serves it from there via
+// a presigned redirect once the registry entry carries the storageRef.
+// Body: `app` (any com.usefulappz.* package) + single `file` field;
+// optional versionCode / versionName / notes. Computes sha256 + size
+// itself and returns them with the storageRef so the registry flip is
+// a one-line commit; when APP_UPDATES_REGISTRY points at a writable
+// registry (the test harness, or a future disk-backed registry), the
+// entry is updated in place too. Same service-token auth as /notify;
+// 404s when MUSE_SERVICE_TOKEN unset; 503 when R2 is not configured.
+router.post('/upload-app-update', (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  appUpdateUpload(req, res, async (err) => {
+    if (err) return res.status(400).json({ ok: false, error: err.message });
+    if (!req.file) return res.status(400).json({ ok: false, error: 'no file' });
+    const staged = req.file.path;
+    const done = (code, obj) => {
+      try { fs.unlinkSync(staged); } catch { /* already gone */ }
+      return res.status(code).json(obj);
+    };
+    try {
+      const pkg = String(req.body.app || '');
+      if (!/^com\.usefulappz\.[a-z0-9.]+$/.test(pkg)) {
+        return done(400, { ok: false, error: 'unknown app key' });
+      }
+      if (!req.file.originalname.toLowerCase().endsWith('.apk')) {
+        return done(400, { ok: false, error: 'expected an .apk file' });
+      }
+      const fd = fs.openSync(staged, 'r');
+      const head = Buffer.alloc(4);
+      fs.readSync(fd, head, 0, 4, 0);
+      fs.closeSync(fd);
+      if (head[0] !== 0x50 || head[1] !== 0x4b || head[2] !== 0x03 || head[3] !== 0x04) {
+        return done(400, { ok: false, error: 'not a valid apk (zip) file' });
+      }
+      const sha256 = await new Promise((resolve, reject) => {
+        const h = crypto.createHash('sha256');
+        const s = fs.createReadStream(staged);
+        s.on('data', (d) => h.update(d));
+        s.on('end', () => resolve(h.digest('hex')));
+        s.on('error', reject);
+      });
+      const sizeBytes = fs.statSync(staged).size;
+      const storage = require('../lib/storage');
+      let storageRef;
+      try {
+        storageRef = await storage.putPrivateObject(
+          staged, `app-updates/${pkg}.apk`, 'application/vnd.android.package-archive');
+      } catch (e) {
+        if (e && e.code === 'r2_not_configured') {
+          return done(503, { ok: false, error: 'r2_not_configured' });
+        }
+        throw e;
+      }
+      let registryUpdated = false;
+      const regPath = process.env.APP_UPDATES_REGISTRY;
+      if (regPath) {
+        let reg = {};
+        try { reg = JSON.parse(fs.readFileSync(regPath, 'utf8')); } catch { /* start fresh */ }
+        if (!reg || typeof reg !== 'object' || Array.isArray(reg)) reg = {};
+        const prev = reg[pkg] && typeof reg[pkg] === 'object' ? reg[pkg] : {};
+        const vc = parseInt(req.body.versionCode, 10);
+        const next = { ...prev, sha256, sizeBytes, publishedAt: new Date().toISOString(), storageRef };
+        if (Number.isFinite(vc)) next.versionCode = vc;
+        if (req.body.versionName) next.versionName = String(req.body.versionName);
+        if (req.body.notes) next.notes = String(req.body.notes);
+        reg[pkg] = next;
+        const tmp = `${regPath}.tmp-${process.pid}`;
+        fs.writeFileSync(tmp, JSON.stringify(reg, null, 2));
+        fs.renameSync(tmp, regPath);
+        registryUpdated = true;
+      }
+      return done(200, { ok: true, package: pkg, storageRef, sha256, sizeBytes, registryUpdated });
+    } catch (e) {
+      console.error('[muse/upload-app-update] failed:', e.message);
+      return done(500, { ok: false, error: 'store failed' });
+    }
+  });
+});
+
 // POST /api/muse/pro-apk-download-link
 // Mints a direct-install download link for the TAC Android Pro sideload APK
 // (uploaded via /upload-sideload, app=tac-android-pro) so the owner can
@@ -1540,6 +1626,23 @@ const sideloadUpload = multer({
   fileFilter: (req, file, cb) => {
     if (/\.(ipa|apk)$/i.test(file.originalname)) cb(null, true);
     else cb(new Error('Only .ipa or .apk files are allowed.'));
+  },
+}).single('file');
+
+// App-update R2 upload middleware (used by POST /upload-app-update
+// defined above; kept here next to sideloadUpload). Stages on the same
+// ephemeral tmp dir; the cap is 900 MB because the payload is a full
+// game build (~394 MB today, ~850 MB at the masters target) — the file
+// never touches the 1 GB persistent disk.
+const appUpdateUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, ipaStageDir),
+    filename: (req, file, cb) => cb(null, `stg-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.apk`),
+  }),
+  limits: { fileSize: 900 * 1024 * 1024, files: 1 },
+  fileFilter: (req, file, cb) => {
+    if (/\.apk$/i.test(file.originalname)) cb(null, true);
+    else cb(new Error('Only .apk files are allowed.'));
   },
 }).single('file');
 

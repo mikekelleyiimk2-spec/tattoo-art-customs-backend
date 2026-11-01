@@ -7,7 +7,10 @@
 // with the APP_UPDATES_REGISTRY env var — an absolute path, used by tests)
 // keyed by package name. Each entry:
 //   { versionCode, versionName, notes, sha256, sizeBytes, publishedAt,
-//     apkFile?: "<package>.apk", gated?: true }
+//     apkFile?: "<package>.apk", gated?: true,
+//     storageRef?: "r2://<bucket>/<key>" — externally stored build for
+//     APKs too big for the Render disk; served via presigned redirect
+//     after the gate, see the /apk handler }
 // It is read on every request so a new release is just a registry edit plus
 // an APK upload (POST /api/muse/upload-sideload accepts any
 // com.usefulappz.* package and stores its APK under app-updates/).
@@ -30,7 +33,7 @@ const fs = require('fs');
 const path = require('path');
 const config = require('../config');
 const db = require('../db');
-const { resolveStoredPath } = require('../lib/storage');
+const { resolveStoredPath, servePrivateFile } = require('../lib/storage');
 const updateTokens = require('../lib/updateTokens');
 
 const router = express.Router();
@@ -106,6 +109,16 @@ router.get('/apps/:package/apk', async (req, res) => {
   if (!APK_FILE_RE.test(apkFile) || apkFile === '.' || apkFile === '..'
       || path.basename(apkFile) !== apkFile) {
     return res.status(404).json({ ok: false, error: 'apk not found' });
+  }
+  // Externally stored build (2026-11-01): an entry may carry a
+  // `storageRef` (an r2:// ref into the private bucket) for builds too
+  // big for the 1 GB Render disk — the ~394 MB Brambleforce APK can
+  // never sit in uploadDir. The purchase gate above has already passed
+  // at this point; servePrivateFile 302s to a short-lived presigned
+  // URL, so the bytes stream from R2, never through this service's
+  // disk. Local-file entries (no storageRef) are unchanged.
+  if (entry.storageRef) {
+    return servePrivateFile(res, String(entry.storageRef), { downloadName: apkFile });
   }
   const absPath = resolveStoredPath(path.join('app-updates', apkFile));
   if (!absPath) {

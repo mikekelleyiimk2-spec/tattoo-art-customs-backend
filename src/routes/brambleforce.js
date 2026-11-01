@@ -170,7 +170,7 @@ function pageRouter() {
     res.render('site/brambleforce', {
       layout: 'layout-brambleforce',
       title: 'Brambleforce — Run-and-Gun Through a Killer Garden',
-      metaDescription: 'Brambleforce for Android — $6.99, 10 missions, 4 fighters, 11 bosses, zero ads. Buy direct and sideload the APK today.',
+      metaDescription: 'Brambleforce for Android — $6.99, 11 missions, 4 fighters, 11 bosses, zero ads. Buy direct and sideload the APK today.',
       products: bf.PRODUCTS,
       productIds: permanentIds,
       drop,
@@ -429,6 +429,27 @@ function redeemCors(req, res, next) {
   return next();
 }
 
+// ---- support reissue (service-token only) ------------------------------
+// POST /api/brambleforce/support-reissue { orderId }
+// For a PAID IAP order whose unlock code never reached the buyer (the
+// 2026-10-31 CRT purchase: payment captured, code email never sent, the
+// one-time page never seen; the original code is hash-only at rest and
+// unrecoverable by design). Revokes the lost code and mints a fresh one
+// (lib reissueCodeForOrder), returns the raw code ONCE to the token
+// holder — house ops — and also fires the site's own code email as a
+// second delivery leg. Auth is the house Muse service-token convention
+// (same as /api/muse/*): the route 404s when MUSE_SERVICE_TOKEN is
+// unset, 401s on a bad bearer. Never reachable by buyers.
+function supportAuthorized(req) {
+  const expected = process.env.MUSE_SERVICE_TOKEN || '';
+  if (!expected) return false;
+  const m = /^Bearer (.+)$/.exec(req.headers.authorization || '');
+  if (!m) return false;
+  const a = Buffer.from(m[1], 'utf8');
+  const b = Buffer.from(expected, 'utf8');
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
 function apiRouter() {
   const router = express.Router();
   router.use('/brambleforce/redeem', redeemCors, redeemLimiter);
@@ -436,6 +457,46 @@ function apiRouter() {
     const code = req.body && typeof req.body.code === 'string' ? req.body.code : '';
     const result = await bf.redeemCode(code);
     return res.status(200).json(result);
+  });
+  router.use('/brambleforce/support-reissue', redeemLimiter);
+  router.post('/brambleforce/support-reissue', async (req, res) => {
+    if (!process.env.MUSE_SERVICE_TOKEN) return res.status(404).json({ ok: false });
+    if (!supportAuthorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+    const orderId = req.body && typeof req.body.orderId === 'string' ? req.body.orderId : '';
+    if (!orderId) return res.status(400).json({ ok: false, error: 'orderId required' });
+    const order = await db.get('SELECT * FROM orders WHERE id = ?', [orderId]);
+    if (!order || !String(order.order_type || '').startsWith('brambleforce:')) {
+      return res.status(404).json({ ok: false, error: 'order not found' });
+    }
+    const productId = String(order.order_type).slice('brambleforce:'.length);
+    const p = bf.product(productId);
+    if (!p) return res.status(404).json({ ok: false, error: 'order not found' });
+    if (p.kind !== 'iap') {
+      return res.status(400).json({ ok: false, error: 'not a code product' });
+    }
+    if (order.status !== 'paid') {
+      return res.status(409).json({ ok: false, error: 'order is not paid' });
+    }
+    const issued = await bf.reissueCodeForOrder(order, productId);
+    const email = await buyerEmail(order);
+    let siteEmail = { sent: false, error: 'no_recipient' };
+    if (email) {
+      const base = `${bf.baseUrl()}/brambleforce/buy/${productId}/success/${order.id}`;
+      const successUrl = guestCheckout.isGuestOrder(order)
+        ? `${base}?gt=${encodeURIComponent(guestCheckout.guestToken(order.id, guestScope(productId)))}`
+        : base;
+      siteEmail = await bf.sendCodeEmail({
+        to: email,
+        productId,
+        code: issued.code,
+        successUrl,
+        orderId: order.id,
+      });
+    }
+    return res.status(200).json({
+      ok: true, orderId: order.id, product: productId, code: issued.code,
+      revoked: issued.revoked, buyerEmail: email, siteEmail,
+    });
   });
   return router;
 }

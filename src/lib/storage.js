@@ -158,6 +158,32 @@ async function storeFile(absPath, { localRef, kind = 'private', filename, visibi
   }
 }
 
+// Upload a local file straight to the PRIVATE R2 bucket at an explicit
+// key, regardless of the active provider mode (the storefront provider
+// stays 'local' for gallery-era files, but big deliverables — e.g. the
+// ~394 MB Brambleforce APK — can never live on the 1 GB Render disk, so
+// the app-updates store serves them from R2 via presigned redirects).
+// Streams the file (never loads it into memory). Returns the storable
+// 'r2://<bucket>/<key>' ref. THROWS on failure (unlike storeFile, whose
+// callers need a local fallback; this one's callers must know the bytes
+// did not land). Guarded by r2Configured(): the R2_* env must be seated.
+async function putPrivateObject(absPath, key, contentType) {
+  if (!r2Configured()) {
+    const e = new Error('r2_not_configured');
+    e.code = 'r2_not_configured';
+    throw e;
+  }
+  const { PutObjectCommand } = require('@aws-sdk/client-s3');
+  const bucket = process.env.R2_PRIVATE_BUCKET;
+  await r2Client().send(new PutObjectCommand({
+    Bucket: bucket,
+    Key: key,
+    Body: fs.createReadStream(absPath),
+    ContentType: contentType || 'application/octet-stream',
+  }));
+  return `${R2_REF_PREFIX}${bucket}/${key}`;
+}
+
 // Delete a stored file, whatever form its DB reference takes:
 //   r2://bucket/key → DeleteObject
 //   https URL under R2_PUBLIC_URL → DeleteObject from the public bucket
@@ -323,6 +349,7 @@ module.exports = {
   designImgUrl,
   resolveStoredPath,
   storeFile,
+  putPrivateObject,
   removeStored,
   servePrivateFile,
   presignGet,

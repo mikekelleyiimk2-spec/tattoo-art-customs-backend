@@ -390,6 +390,51 @@ async function runHttpTests(ok, req, areq) {
   // launch product still redeems — and bundle grants stayed the
   // launch 15 through every catalogue addition above (section 9 ran
   // against the same code path; the grant set is pinned there too).
+
+  // 11. Support reissue (2026-11-01, the owner's own CRT purchase):
+  // a PAID order whose code never reached the buyer gets a fresh code
+  // via the service-token endpoint; the lost code is revoked (redeems
+  // as spent), the fresh code redeems for the product, and the route
+  // is unreachable without the token.
+  const PIPE = process.env.MUSE_SERVICE_TOKEN;
+  const lostCode = 'GHJK-MNPQ-RSTV-WXYZ';
+  seedGuest('ord-bf-reissue-1', 'brambleforce:crt_filter', 'bfreissue@test.local');
+  tdb.prepare("UPDATE orders SET status = 'paid' WHERE id = ?").run('ord-bf-reissue-1');
+  tdb.prepare(`INSERT INTO brambleforce_codes (code_hash, product, order_id, spent, spent_at, created_at)
+    VALUES (?,?,?,?,?,?)`).run(bfLib.hashCode(lostCode), 'crt_filter', 'ord-bf-reissue-1', 0, null, Date.now());
+  let rr = await anon('POST', '/api/brambleforce/support-reissue', { __json: { orderId: 'ord-bf-reissue-1' } });
+  ok(rr.status === 401, 'bf-reissue: no bearer token -> 401');
+  rr = await anon('POST', '/api/brambleforce/support-reissue', { __json: { orderId: 'ord-bf-reissue-1' } },
+    { authorization: 'Bearer wrong-token' });
+  ok(rr.status === 401, 'bf-reissue: wrong bearer token -> 401');
+  rr = await anon('POST', '/api/brambleforce/support-reissue', { __json: { orderId: 'ord-bf-nope' } },
+    { authorization: `Bearer ${PIPE}` });
+  ok(rr.status === 404, 'bf-reissue: unknown order -> 404');
+  seedGuest('ord-bf-reissue-pending', 'brambleforce:crt_filter', 'bfpending@test.local');
+  rr = await anon('POST', '/api/brambleforce/support-reissue', { __json: { orderId: 'ord-bf-reissue-pending' } },
+    { authorization: `Bearer ${PIPE}` });
+  ok(rr.status === 409, 'bf-reissue: unpaid order -> 409 (no code for unpaid orders)');
+  rr = await anon('POST', '/api/brambleforce/support-reissue', { __json: { orderId: 'ord-bf-reissue-1' } },
+    { authorization: `Bearer ${PIPE}` });
+  let rj = null; try { rj = JSON.parse(rr.text); } catch (e) { /* asserted below */ }
+  ok(rr.status === 200 && rj && rj.ok === true && rj.product === 'crt_filter',
+    'bf-reissue: paid order reissues ok');
+  ok(rj && rj.revoked === 1, 'bf-reissue: the lost code was revoked');
+  ok(rj && typeof rj.code === 'string' && rj.code !== lostCode
+    && /^[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/.test(rj.code),
+    'bf-reissue: a fresh grouped code is returned exactly once');
+  ok(rj && rj.buyerEmail === 'bfreissue@test.local', 'bf-reissue: buyer email resolved from the order');
+  ok(rj && rj.siteEmail && rj.siteEmail.sent === false,
+    'bf-reissue: site mail leg reports its real result (no transport in the harness)');
+  r = await anon('POST', '/api/brambleforce/redeem', { __json: { code: lostCode } });
+  j = null; try { j = JSON.parse(r.text); } catch (e) { /* asserted below */ }
+  ok(j && j.error === 'spent', 'bf-reissue: the revoked lost code redeems as spent, never grants');
+  r = await anon('POST', '/api/brambleforce/redeem', { __json: { code: rj.code } });
+  j = null; try { j = JSON.parse(r.text); } catch (e) { /* asserted below */ }
+  ok(j && j.product === 'crt_filter', 'bf-reissue: the fresh code redeems for the product');
+  const reissueRows = tdb.prepare('SELECT spent FROM brambleforce_codes WHERE order_id = ?').all('ord-bf-reissue-1');
+  ok(reissueRows.length === 2 && reissueRows.every((x) => Number(x.spent) === 1),
+    'bf-reissue: order ends with both code rows spent (lost revoked, fresh redeemed)');
 }
 
 // Mail-truth unit tests (in-process): sendCodeEmail / sendGameEmail

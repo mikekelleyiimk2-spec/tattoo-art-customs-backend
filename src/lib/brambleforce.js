@@ -54,7 +54,7 @@ const PRODUCTS = {
   game: {
     name: 'Brambleforce — Full Game (Android APK)',
     priceCents: 699,
-    blurb: 'Run-and-gun through a killer garden. 10 missions, 4 fighters, 11 bosses. Zero ads — it is a paid game, it acts like one.',
+    blurb: 'Run-and-gun through a killer garden. 11 missions, 4 fighters, 11 bosses. Zero ads — it is a paid game, it acts like one.',
     kind: 'game',
   },
   everything_bundle: {
@@ -379,9 +379,7 @@ function hashCode(code) {
 // this returns { code: null, alreadyIssued: true } and the caller
 // falls back to the buyer's session copy (routes/brambleforce.js) and
 // the durable page's honest support path.
-async function issueCodeForOrder(order, productId) {
-  const existing = await db.get('SELECT * FROM brambleforce_codes WHERE order_id = ?', [order.id]);
-  if (existing) return { code: null, alreadyIssued: true, row: existing };
+async function mintCodeRow(order, productId) {
   // A hash collision on a fresh random code is astronomically unlikely;
   // retry a couple of times rather than failing a paid order.
   for (let attempt = 0; attempt < 3; attempt += 1) {
@@ -392,12 +390,36 @@ async function issueCodeForOrder(order, productId) {
         spent: 0, spent_at: null, created_at: db.now(),
       });
       const row = await db.get('SELECT * FROM brambleforce_codes WHERE id = ?', [id]);
-      return { code, alreadyIssued: false, row };
+      return { code, row };
     } catch (e) {
       if (!/unique|duplicate/i.test(String(e && e.message))) throw e;
     }
   }
   throw new Error('could not mint a unique unlock code');
+}
+
+async function issueCodeForOrder(order, productId) {
+  const existing = await db.get('SELECT * FROM brambleforce_codes WHERE order_id = ?', [order.id]);
+  if (existing) return { code: null, alreadyIssued: true, row: existing };
+  const { code, row } = await mintCodeRow(order, productId);
+  return { code, alreadyIssued: false, row };
+}
+
+// Support reissue for a PAID order whose issued code never reached the
+// buyer (the 2026-10-31 case: payment captured, the code email never
+// sent, the one-time page never seen — and the raw code is hash-only at
+// rest, so the original is unrecoverable BY DESIGN). Revokes every
+// unspent code previously minted for the order (the lost code dies, so
+// exactly one live code exists per order), then mints one fresh code
+// and returns its raw value exactly once, to the caller. Route-gated:
+// service-token support endpoint only (routes/brambleforce.js).
+async function reissueCodeForOrder(order, productId) {
+  const { changes } = await db.query(
+    'UPDATE brambleforce_codes SET spent = 1, spent_at = ? WHERE order_id = ? AND spent = 0',
+    [db.now(), order.id]
+  );
+  const { code, row } = await mintCodeRow(order, productId);
+  return { code, revoked: changes, row };
 }
 
 // Redeem per the game contract. Returns exactly one of:
@@ -549,6 +571,6 @@ module.exports = {
   PACKAGE, PRODUCTS, PRODUCT_IDS, LAUNCH_PRODUCT_IDS, DROPS, BUNDLE_GRANTS,
   product, orderType,
   chicagoToday, windowState, isPurchasable, purchasableIds, dayLabel, dropInfo,
-  generateCode, normalizeCode, hashCode, issueCodeForOrder, redeemCode,
+  generateCode, normalizeCode, hashCode, issueCodeForOrder, reissueCodeForOrder, redeemCode,
   sendCodeEmail, sendGameEmail, baseUrl,
 };

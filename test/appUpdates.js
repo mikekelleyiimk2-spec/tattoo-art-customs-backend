@@ -194,6 +194,87 @@ async function runHttpTests(ok) {
   const freeBody = Buffer.from(await res.arrayBuffer());
   ok(res.status === 200 && freeBody.equals(apkBytes),
     'free package: /apk still 200 without a token');
+
+  // --- Externally stored builds (storageRef, 2026-11-01) ---
+  // Builds too big for the 1 GB Render disk (the ~394 MB game APK)
+  // live in the private R2 bucket; the registry entry carries an
+  // r2:// storageRef and /apk serves via servePrivateFile AFTER the
+  // purchase gate. The harness exercises the same branch with a local
+  // stored ref (servePrivateFile resolves plain refs from the store);
+  // the r2 presign leg is the storage lib's existing production path.
+  const extPkg = 'com.usefulappz.extapp';
+  const extBytes = Buffer.concat([
+    Buffer.from([0x50, 0x4b, 0x03, 0x04]),
+    Buffer.from('fake-apk-bytes-for-the-external-test'),
+  ]);
+  fs.writeFileSync(path.join(apkDir, `${extPkg}.apk`), extBytes);
+  const extEntry = {
+    versionCode: 7,
+    versionName: '9.9.9',
+    notes: 'External build',
+    sha256: crypto.createHash('sha256').update(extBytes).digest('hex'),
+    sizeBytes: extBytes.length,
+    publishedAt: 1760000000000,
+    gated: true,
+    storageRef: `app-updates/${extPkg}.apk`,
+  };
+  fs.writeFileSync(process.env.APP_UPDATES_REGISTRY, JSON.stringify({
+    [pkg]: entry, [defPkg]: defEntry, [gatedPkg]: gatedEntry, [extPkg]: extEntry,
+  }, null, 2));
+
+  // The gate still applies before any serving.
+  res = await fetch(`${BASE}/api/apps/${extPkg}/apk`);
+  json = await res.json();
+  ok(res.status === 401 && json.error === 'purchase token required',
+    'external package: /apk without token -> 401 (gate precedes storage serving)');
+
+  // A paid-order token for THIS package serves the stored bytes.
+  const sdb2 = new Database(process.env.SQLITE_PATH);
+  const anyUser2 = sdb2.prepare('SELECT id FROM users ORDER BY created_at ASC LIMIT 1').get();
+  sdb2.prepare(`INSERT INTO orders
+    (id, buyer_id, order_type, amount_cents, fee_cents, status, payment_method, created_at)
+    VALUES (?,?,?,?,?,?,?,?)`)
+    .run('test-ext-order-1', anyUser2.id, `sideload:${extPkg}`, 699, 52, 'paid', 'paypal', Date.now());
+  sdb2.close();
+  const extToken = updateTokens.issue('test-ext-order-1', extPkg);
+  res = await fetch(`${BASE}/api/apps/${extPkg}/apk?t=${extToken}`);
+  const extBody = Buffer.from(await res.arrayBuffer());
+  ok(res.status === 200 && extBody.equals(extBytes),
+    'external package: /apk with a paid-order token serves the storageRef bytes');
+
+  // --- upload-app-update endpoint (2026-11-01) ---
+  // The publish leg for external builds. The harness server has no R2
+  // env seated, so the store leg must fail HONESTLY (503
+  // r2_not_configured) and leave the registry untouched; auth and
+  // validation fire before it.
+  const PIPE = process.env.MUSE_SERVICE_TOKEN;
+  const regBefore = fs.readFileSync(process.env.APP_UPDATES_REGISTRY, 'utf8');
+  const mkForm = (appKey, bytes) => {
+    const fd = new FormData();
+    fd.append('app', appKey);
+    fd.append('file', new Blob([bytes], { type: 'application/octet-stream' }), 'build.apk');
+    return fd;
+  };
+  res = await fetch(`${BASE}/api/muse/upload-app-update`, { method: 'POST', body: mkForm(extPkg, extBytes) });
+  json = await res.json();
+  ok(res.status === 401 && json.ok === false,
+    'upload-app-update: no bearer token -> 401');
+  res = await fetch(`${BASE}/api/muse/upload-app-update`, {
+    method: 'POST', body: mkForm('not-a-package', extBytes),
+    headers: { authorization: `Bearer ${PIPE}` },
+  });
+  json = await res.json();
+  ok(res.status === 400 && json.ok === false,
+    'upload-app-update: bad package key -> 400');
+  res = await fetch(`${BASE}/api/muse/upload-app-update`, {
+    method: 'POST', body: mkForm(extPkg, extBytes),
+    headers: { authorization: `Bearer ${PIPE}` },
+  });
+  json = await res.json();
+  ok(res.status === 503 && json.error === 'r2_not_configured',
+    'upload-app-update: no R2 configured -> 503 honest failure (no fake publish)');
+  ok(fs.readFileSync(process.env.APP_UPDATES_REGISTRY, 'utf8') === regBefore,
+    'upload-app-update: a failed store leaves the registry untouched');
 }
 
 module.exports = { runHttpTests };
