@@ -1073,10 +1073,18 @@ router.post('/upload-app-update', (req, res) => {
       });
       const sizeBytes = fs.statSync(staged).size;
       const storage = require('../lib/storage');
+      // Versioned object key (owner gate 2026-11-01): each build lands
+      // as its own R2 object (app-updates/<pkg>-<versionName>.apk), so
+      // swapping the live build is a registry re-point (storageRef +
+      // sha256 + sizeBytes), never an overwrite — the previous build
+      // stays in the bucket for rollback, and buyers' order-bound
+      // download tokens transparently serve the new build.
+      const vn = String(req.body.versionName || '').replace(/[^a-zA-Z0-9._-]/g, '');
+      const key = vn ? `app-updates/${pkg}-${vn}.apk` : `app-updates/${pkg}.apk`;
       let storageRef;
       try {
         storageRef = await storage.putPrivateObject(
-          staged, `app-updates/${pkg}.apk`, 'application/vnd.android.package-archive');
+          staged, key, 'application/vnd.android.package-archive');
       } catch (e) {
         if (e && e.code === 'r2_not_configured') {
           return done(503, { ok: false, error: 'r2_not_configured' });
