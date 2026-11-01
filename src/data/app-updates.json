@@ -200,14 +200,14 @@
     "publishedAt": "2026-10-28T13:45:00Z"
   },
   "com.usefulappz.game2runandgun": {
-    "versionCode": 20,
-    "versionName": "1.1.9",
+    "versionCode": 19,
+    "versionName": "1.1.8",
     "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.game2runandgun/apk",
     "notes": "Brambleforce \u2014 the full game. 11 missions, 4 fighters, 11 bosses. Zero ads.",
-    "sha256": "38f8f4843dabd19fe66a238bd23e6acc03d56e7a358eb0aec509154639b2b40e",
-    "sizeBytes": 634573273,
-    "publishedAt": "2026-11-01T18:26:36Z",
+    "sha256": "e309d59ee22d6b08feea41bd993cedd094bb3a875bab7b383d769f7c38157bf0",
+    "sizeBytes": 397280467,
+    "publishedAt": "2026-11-01T13:15:00Z",
     "gated": true,
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.game2runandgun-1.1.9.apk"
+    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.game2runandgun-1.1.8.apk"
   }
 }
