@@ -1,0 +1,44 @@
+<h1>Brambleforce for iPhone</h1>
+<p class="muted">The full game — sideload edition. Install with SideStore. No App Store needed.</p>
+
+<div class="card">
+  <h2>$6.99 one-time</h2>
+  <p>The complete Brambleforce: 11 missions, 11 bosses, online co-op, zero ads — the same game as every other edition, at the same price. Works on iPhones running iOS 14 or later.</p>
+  <h3>How it works</h3>
+  <ol>
+    <li>Buy here with PayPal ($6.99 plus the standard processing fee).</li>
+    <li>Download the game file (IPA) from your purchase page.</li>
+    <li>Install SideStore on your iPhone (free) if you don't have it yet.</li>
+    <li>Open the IPA in SideStore — it signs and installs the game with your own Apple ID.</li>
+  </ol>
+  <h3>Before you buy — the honest sideload facts</h3>
+  <ul>
+    <li><strong>Free space:</strong> have about 1 GB free on your iPhone. The download is big (it's the whole game), and the phone needs room to install it.</li>
+    <li><strong>7-day refresh:</strong> apps signed with a free Apple ID expire after 7 days. SideStore refreshes them automatically in the background — just open SideStore now and then. If a signature ever lapses, the game won't launch until refreshed; your game and saves are never deleted.</li>
+    <li><strong>3-app cap:</strong> a free Apple ID can hold at most 3 sideloaded apps at once (SideStore itself takes one slot). Brambleforce would take one of the others.</li>
+    <li><strong>Install time:</strong> sideloading a game this size takes a few minutes on Wi-Fi. Keep the phone awake and plugged in while it installs.</li>
+    <li><strong>No Apple in-app purchases:</strong> this edition has none, on purpose. The game's extra content (extra fighters, modes, skins) is bought in the Brambleforce store on this website and unlocked in the game with the code you're issued — exactly like the Android sideload edition.</li>
+  </ul>
+  <% if (user) { %>
+  <form method="post" action="/brambleforce/ios/buy" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p><button class="btn" type="submit">Buy for $6.99</button></p>
+  </form>
+  <% } else { %>
+  <form method="post" action="/brambleforce/ios/buy" class="form">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <label><%= t('buyApp.guest_email_label') %>
+      <input type="email" name="guest_email" required maxlength="160" placeholder="you@example.com">
+    </label>
+    <p class="muted fineprint"><%= t('buyApp.guest_email_note') %></p>
+    <p><button class="btn" type="submit">Buy for $6.99</button></p>
+    <p class="muted fineprint"><%= t('buyApp.guest_or_login') %> <a href="/login?next=/brambleforce/ios"><%= t('buyApp.guest_login_link') %></a> <%= t('buyApp.guest_login_tail') %></p>
+  </form>
+  <% } %>
+</div>
+
+<div class="card" style="margin-top:1rem;border:2px dashed #e0a800;">
+  <h2>Get SideStore</h2>
+  <p>You need the free SideStore app to install the game on your iPhone — it's the installer for this edition.</p>
+  <p><a class="btn" href="https://sidestore.io" target="_blank" rel="noopener">Get SideStore (free)</a></p>
+</div>

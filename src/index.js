@@ -347,6 +347,11 @@ app.use('/folder', folderRouter());
 // 2026-10-14): /buy-app/:slug for Odometer, AI Button + the 8 per-AI Buttons.
 const { buyAppRouter } = require('./routes/buyApp');
 app.use('/buy-app', buyAppRouter());
+// Brambleforce iOS sideload sale door (owner orders 2026-11-01):
+// /brambleforce/ios — the $6.99 iPhone edition on the proven /ios-app
+// pattern, IPA served from the private R2 bucket. Mounted BEFORE the
+// /brambleforce pages so the ios family resolves first.
+app.use('/brambleforce/ios', require('./routes/brambleforceIos'));
 // Brambleforce website sale door (owner orders 2026-10-30): the game +
 // its 13 in-app extras sell here first — buy pages at
 // /brambleforce/buy/<product_id> (the exact doors the sideload build
