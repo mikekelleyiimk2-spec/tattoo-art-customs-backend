@@ -1117,6 +1117,98 @@ router.post('/upload-app-update', (req, res) => {
   });
 });
 
+// POST /api/muse/upload-ios-update
+// The iOS twin of /upload-app-update: publishes a big sideload IPA
+// (Brambleforce, ~635 MB) that can NEVER live on this service's 1 GB
+// persistent disk. Same shape, same auth: the file stages on the
+// ephemeral tmp filesystem, streams straight into the private R2
+// bucket at app-updates/<package>-<versionName>.ipa via the storage
+// lib's putPrivateObject, and the /brambleforce/ios download leg
+// serves it from there via a presigned redirect once the registry
+// entry (src/data/app-updates.json, key "<package>.ios") carries the
+// storageRef. Body: `app` (a com.usefulappz.* package; the route file
+// registers the entry under "<app>.ios") + single `file` field;
+// optional versionCode / versionName / notes. Computes sha256 + size
+// itself and returns them with the storageRef so the registry flip is
+// a one-line commit. 404s when MUSE_SERVICE_TOKEN unset; 503 when R2
+// is not configured.
+router.post('/upload-ios-update', (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  iosUpdateUpload(req, res, async (err) => {
+    if (err) return res.status(400).json({ ok: false, error: err.message });
+    if (!req.file) return res.status(400).json({ ok: false, error: 'no file' });
+    const staged = req.file.path;
+    const done = (code, obj) => {
+      try { fs.unlinkSync(staged); } catch { /* already gone */ }
+      return res.status(code).json(obj);
+    };
+    try {
+      const pkg = String(req.body.app || '');
+      if (!/^com\.usefulappz\.[a-z0-9.]+$/.test(pkg)) {
+        return done(400, { ok: false, error: 'unknown app key' });
+      }
+      if (!req.file.originalname.toLowerCase().endsWith('.ipa')) {
+        return done(400, { ok: false, error: 'expected an .ipa file' });
+      }
+      const fd = fs.openSync(staged, 'r');
+      const head = Buffer.alloc(4);
+      fs.readSync(fd, head, 0, 4, 0);
+      fs.closeSync(fd);
+      if (head[0] !== 0x50 || head[1] !== 0x4b || head[2] !== 0x03 || head[3] !== 0x04) {
+        return done(400, { ok: false, error: 'not a valid ipa (zip) file' });
+      }
+      const sha256 = await new Promise((resolve, reject) => {
+        const h = crypto.createHash('sha256');
+        const s = fs.createReadStream(staged);
+        s.on('data', (d) => h.update(d));
+        s.on('end', () => resolve(h.digest('hex')));
+        s.on('error', reject);
+      });
+      const sizeBytes = fs.statSync(staged).size;
+      const storage = require('../lib/storage');
+      // Versioned object key, same discipline as the APK route: each
+      // build is its own R2 object, so a swap is a registry re-point,
+      // never an overwrite — the previous build stays for rollback.
+      const vn = String(req.body.versionName || '').replace(/[^a-zA-Z0-9._-]/g, '');
+      const key = vn ? `app-updates/${pkg}-${vn}.ipa` : `app-updates/${pkg}.ipa`;
+      let storageRef;
+      try {
+        storageRef = await storage.putPrivateObject(
+          staged, key, 'application/octet-stream');
+      } catch (e) {
+        if (e && e.code === 'r2_not_configured') {
+          return done(503, { ok: false, error: 'r2_not_configured' });
+        }
+        throw e;
+      }
+      let registryUpdated = false;
+      const regPath = process.env.APP_UPDATES_REGISTRY;
+      if (regPath) {
+        let reg = {};
+        try { reg = JSON.parse(fs.readFileSync(regPath, 'utf8')); } catch { /* start fresh */ }
+        if (!reg || typeof reg !== 'object' || Array.isArray(reg)) reg = {};
+        const regKey = `${pkg}.ios`;
+        const prev = reg[regKey] && typeof reg[regKey] === 'object' ? reg[regKey] : {};
+        const vc = parseInt(req.body.versionCode, 10);
+        const next = { ...prev, sha256, sizeBytes, publishedAt: new Date().toISOString(), storageRef };
+        if (Number.isFinite(vc)) next.versionCode = vc;
+        if (req.body.versionName) next.versionName = String(req.body.versionName);
+        if (req.body.notes) next.notes = String(req.body.notes);
+        reg[regKey] = next;
+        const tmp = `${regPath}.tmp-${process.pid}`;
+        fs.writeFileSync(tmp, JSON.stringify(reg, null, 2));
+        fs.renameSync(tmp, regPath);
+        registryUpdated = true;
+      }
+      return done(200, { ok: true, package: pkg, storageRef, sha256, sizeBytes, registryUpdated });
+    } catch (e) {
+      console.error('[muse/upload-ios-update] failed:', e.message);
+      return done(500, { ok: false, error: 'store failed' });
+    }
+  });
+});
+
 // POST /api/muse/pro-apk-download-link
 // Mints a direct-install download link for the TAC Android Pro sideload APK
 // (uploaded via /upload-sideload, app=tac-android-pro) so the owner can
@@ -1651,6 +1743,21 @@ const appUpdateUpload = multer({
   fileFilter: (req, file, cb) => {
     if (/\.apk$/i.test(file.originalname)) cb(null, true);
     else cb(new Error('Only .apk files are allowed.'));
+  },
+}).single('file');
+
+// iOS-update R2 upload middleware (used by POST /upload-ios-update
+// defined above; the .ipa twin of appUpdateUpload — same staging dir,
+// same 900 MB cap, .ipa filter and staging suffix).
+const iosUpdateUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, ipaStageDir),
+    filename: (req, file, cb) => cb(null, `stg-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.ipa`),
+  }),
+  limits: { fileSize: 900 * 1024 * 1024, files: 1 },
+  fileFilter: (req, file, cb) => {
+    if (/\.ipa$/i.test(file.originalname)) cb(null, true);
+    else cb(new Error('Only .ipa files are allowed.'));
   },
 }).single('file');
 
