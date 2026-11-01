@@ -24,7 +24,7 @@ function getTransporter() {
 
 function sleep(ms) { return new Promise((res) => setTimeout(res, ms)); }
 
-async function sendMail({ to, subject, text, html }) {
+async function sendMail({ to, subject, text, html, replyTo }) {
   // An injected test transporter wins over the configured one.
   const t = transporter || getTransporter();
   if (!t) {
@@ -36,7 +36,7 @@ async function sendMail({ to, subject, text, html }) {
   while (attempt < MAX_ATTEMPTS) {
     attempt += 1;
     try {
-      const info = await t.sendMail({ from: config.smtp.from, to, subject, text, html });
+      const info = await t.sendMail({ from: config.smtp.from, to, subject, text, html, ...(replyTo ? { replyTo } : {}) });
       if (attempt > 1) console.log(`[mail] delivered after ${attempt} attempts`, { to, subject });
       return info;
     } catch (e) {

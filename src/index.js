@@ -293,6 +293,7 @@ app.get('/health', (req, res) => res.json({ ok: true, time: Date.now(), commit: 
 if (String(process.env.ONEMIND_STANDALONE || '').trim().toLowerCase() === 'on') {
   app.use('/', require('./routes/onemindStandalone'));
 }
+app.use('/', require('./routes/cayliOpinion'));
 app.use('/', require('./routes/onemindWeb'));
 app.use('/', require('./routes/thebigone'));
 app.use('/', require('./routes/devtools'));
