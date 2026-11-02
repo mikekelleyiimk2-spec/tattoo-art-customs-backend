@@ -200,25 +200,25 @@
     "publishedAt": "2026-10-28T13:45:00Z"
   },
   "com.usefulappz.game2runandgun": {
-    "versionCode": 22,
-    "versionName": "1.3.0",
+    "versionCode": 23,
+    "versionName": "1.3.1",
     "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.game2runandgun/apk",
     "notes": "Brambleforce \u2014 the full game. 11 missions, 11 sealed boss arenas, online co-op. Zero ads.",
-    "sha256": "77e0ac19e1b41b92101f502c49665af7e64e1c3b7d3786d6bb8724b8dfa0ceed",
-    "sizeBytes": 899890016,
-    "publishedAt": "2026-11-02T07:08:42Z",
+    "sha256": "7942bba2c0dba5509f7a0e0eafd82a08ff2c4f9f9f74e2139a146cd24aa1172a",
+    "sizeBytes": 899898208,
+    "publishedAt": "2026-11-02T14:08:00Z",
     "gated": true,
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.game2runandgun-1.3.0.apk"
+    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.game2runandgun-1.3.1.apk"
   },
   "com.usefulappz.game2runandgun.ios": {
-    "versionCode": 22,
-    "versionName": "1.3.0",
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.game2runandgun-1.3.0.ipa",
-    "sha256": "b871c1e77c16e75619bafa31ab652a65ce07838557d5072105df8ef1329d4e35",
-    "sizeBytes": 903121261,
-    "publishedAt": "2026-11-02T07:08:42Z",
+    "versionCode": 23,
+    "versionName": "1.3.1",
+    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.game2runandgun-1.3.1.ipa",
+    "sha256": "de9db519b6a9e82be2b9f7a5af3c6b43c9b06631d45608404e42612fa83d0d14",
+    "sizeBytes": 903128543,
+    "publishedAt": "2026-11-02T14:08:00Z",
     "gated": true,
-    "ipaFile": "Brambleforce-1.3.0.ipa",
-    "notes": "Brambleforce iOS sideload edition \u2014 vc22/1.3.0 unsigned IPA (SideStore/AltStore re-sign on the buyer's own free Apple ID; no Apple IAP \u2014 extras are website unlock codes). Boss-arena build: 11 sealed arenas, three-phase Crowe finale, Queen ending inside."
+    "ipaFile": "Brambleforce-1.3.1.ipa",
+    "notes": "Brambleforce iOS sideload edition \u2014 vc23/1.3.1 unsigned IPA (SideStore/AltStore re-sign on the buyer's own free Apple ID; no Apple IAP \u2014 extras are website unlock codes). The 1.3.1 owner patch: store + menu scroll fixed, double jump, ledge grab, ground/floating fixes, shield hit-zones fixed."
   }
 }
