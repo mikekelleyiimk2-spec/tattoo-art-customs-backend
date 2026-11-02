@@ -28,6 +28,22 @@ const SURFACES = [
   { id: 'thebigone-app', name: 'Dawnfold app', kind: 'app' },
   { id: 'tester-hub', name: 'FillMyList', kind: 'app' },
   { id: 'killintime-console', name: 'Neon Tombstone Console', kind: 'app' },
+  // Brambleforce game (2026-10-31): the Neon Tombstone run-and-gun
+  // shipped without any sign-in — an island, caught by the owner
+  // ("I see no log in to Bramble Force. I thought all of our stuff
+  // tied you back to our net."). Its native seat bridge (BFSeat,
+  // copied from the Dawnfold/OneMind-app pattern) seats this id at
+  // the sitting, same as every other app surface here. Adult-shelf
+  // game; the kids'-surface exclusion is untouched.
+  { id: 'brambleforce-game', name: 'Brambleforce game', kind: 'app' },
+  // ThemeVine app (2026-10-31): the theme-builder music app's
+  // production build (v1.1) wires the same native seat bridge
+  // (TVSeat, copied from the BFSeat/Dawnfold pattern) — its
+  // sign-in seats this id at the sitting, same as every other
+  // app surface here. Adult/creator shelf; the kids'-surface
+  // exclusion is untouched. NOTE: working-tree registration —
+  // takes effect when the backend next deploys.
+  { id: 'themevine-app', name: 'ThemeVine app', kind: 'app' },
   { id: 'folder-app', name: 'UsefulAppz Folder', kind: 'app' },
   { id: 'onemind-web-plug', name: 'Chorvix web plug (browser extension)', kind: 'web' },
 ];
