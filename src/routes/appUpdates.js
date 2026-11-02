@@ -35,6 +35,7 @@ const config = require('../config');
 const db = require('../db');
 const { resolveStoredPath, servePrivateFile } = require('../lib/storage');
 const updateTokens = require('../lib/updateTokens');
+const seatVerify = require('../lib/seatVerify');
 
 const router = express.Router();
 
@@ -90,6 +91,12 @@ function purchaseTokenRequired(res) {
   return res.status(401).json({ ok: false, error: 'purchase token required' });
 }
 
+// The gated download verifies at EVERY attempt (HMAC + live order
+// re-check in the handler below) — and a refused attempt is
+// behavior, so it lands in the verify watch (cadence pass
+// 2026-11-01): a forged token, a token replayed after its order was
+// refunded, a token minted for another package — each is rejected
+// at the moment of the attempt AND recorded.
 router.get('/apps/:package/apk', async (req, res) => {
   const entry = entryFor(req.params.package);
   if (!entry) return unknownPackage(res);
@@ -97,9 +104,21 @@ router.get('/apps/:package/apk', async (req, res) => {
   if (entry.gated) {
     const token = req.get('x-update-token') || req.query.t;
     const orderId = updateTokens.verify(token, pkg);
-    if (!orderId) return purchaseTokenRequired(res);
+    if (!orderId) {
+      await seatVerify.logEvent({
+        kind: 'download_gate_rejected', detail: `${pkg}:bad_token`, surface: 'app-updates', req,
+      });
+      return purchaseTokenRequired(res);
+    }
     const order = await db.get('SELECT * FROM orders WHERE id = ?', [orderId]);
     if (!order || order.status !== 'paid' || order.order_type !== `sideload:${pkg}`) {
+      const reason = !order ? 'order_gone'
+        : order.status !== 'paid' ? `order_${order.status}`
+        : 'order_type_mismatch';
+      await seatVerify.logEvent({
+        kind: 'download_gate_rejected', detail: `${pkg}:${reason}`, surface: 'app-updates',
+        userId: order && order.buyer_id ? order.buyer_id : null, req,
+      });
       return purchaseTokenRequired(res);
     }
   }

@@ -23,6 +23,7 @@ const pricing = require('../lib/pricing');
 const paypal = require('../lib/paypal');
 const updateTokens = require('../lib/updateTokens');
 const guestCheckout = require('../lib/guestCheckout');
+const seatVerify = require('../lib/seatVerify');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 
 // slug -> { package, name, priceCents }
@@ -171,7 +172,15 @@ function buyAppRouter() {
       const capture = await captureFn(order.paypal_order_id);
       const expectedTotal = order.amount_cents + order.fee_cents;
       const captured = Math.round(parseFloat(capture.purchase_units[0].payments.captures[0].amount.value) * 100);
-      if (captured !== expectedTotal) throw new Error('Amount mismatch');
+      if (captured !== expectedTotal) {
+        // Refused at the attempt AND recorded (cadence pass 2026-11-01).
+        await seatVerify.logEvent({
+          kind: 'fulfillment_mismatch',
+          detail: `${slug}: captured ${captured} != expected ${expectedTotal} (order ${order.id})`,
+          userId: order.buyer_id || null, req,
+        });
+        throw new Error('Amount mismatch');
+      }
       await db.update('orders', order.id, { status: 'paid', paid_at: db.now() });
       if (guestCheckout.isGuestOrder(order)) {
         await guestCheckout.sendGuestAppReceipt({

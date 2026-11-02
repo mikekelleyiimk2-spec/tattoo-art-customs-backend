@@ -45,6 +45,24 @@ function startScheduler() {
   // Shop toolkit jobs: aftercare, autofill expiry, waiver ID purge,
   // reactivation, forfeiture + plan-charge sweeps (charge-free until live).
   for (const t of require('../shop/toolkitJobs').registerToolkitJobs()) tasks.push(t);
+  // Entitlement reconciliation sweep (verification cadence, owner
+  // directive 2026-11-01 20:34): hourly — granted entitlements are
+  // re-checked against their sources (orders behind code bindings;
+  // Google for verified Play purchases), dead sources pull their
+  // entitlements, and every pull lands in the verify watch.
+  // Registered BEFORE the payouts toggle below on purpose:
+  // verification never takes a week off.
+  schedule('37 * * * *', async () => {
+    try {
+      const { runSweep } = require('./entitlementSweep');
+      const s = await runSweep();
+      if (s.bindings_pulled || s.play_revoked) {
+        console.log(`[scheduler] Entitlement sweep: pulled ${s.bindings_pulled} binding(s), revoked ${s.play_revoked} Play purchase(s)`);
+      }
+    } catch (e) {
+      console.error('[scheduler] Entitlement sweep crashed:', e.message);
+    }
+  }, { timezone: 'America/Chicago' });
   if (process.env.WEEKLY_PAYOUTS_ENABLED === 'false') {
     console.log('Weekly payouts disabled (WEEKLY_PAYOUTS_ENABLED=false).');
     return;
@@ -122,6 +140,7 @@ function startScheduler() {
   console.log('Referral subscription resumes scheduled: daily ~6:00 AM CT.');
   console.log('1-hour design auto-approval scheduled: every 10 minutes.');
   console.log('Play acknowledge retry scheduled: hourly.');
+  console.log('Entitlement reconciliation sweep scheduled: hourly.');
 }
 
 module.exports = { startScheduler, stopScheduler };

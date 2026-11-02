@@ -14,6 +14,7 @@ const express = require('express');
 const db = require('../db');
 const { verifyPurchase, acknowledgePurchase, MEMBERSHIP_PLAN_BY_PRODUCT } = require('../lib/playverify');
 const { grantPlanRole } = require('../lib/planRoles');
+const seatVerify = require('../lib/seatVerify');
 
 const router = express.Router();
 
@@ -86,6 +87,16 @@ router.post('/verify', express.json(), async (req, res) => {
     await db.update('play_purchases', purchaseId, {
       status: verified ? 'verified' : 'pending',
       verified_at: verified ? db.now() : null,
+    });
+  }
+  if (!verified) {
+    // A purchase claim Google would not stand behind is a refused
+    // claim at a value door — recorded in the verify watch (cadence
+    // pass 2026-11-01). The row itself stays 'pending' for manual
+    // review, as designed; the watch is the behavior record.
+    await seatVerify.logEvent({
+      user, userId: user ? user.id : null, kind: 'play_claim_unverified',
+      detail: `${productId}:${verification.reason || 'unverified'}`, req,
     });
   }
 
@@ -179,6 +190,10 @@ router.post('/verify-pro', express.json(), async (req, res) => {
     verification = { verified: false, reason: e.message };
   }
   if (!verification.verified) {
+    await seatVerify.logEvent({
+      user, kind: 'play_claim_unverified',
+      detail: `${PRO_PACKAGE}:${verification.reason || 'unverified'}`, req,
+    });
     return res.status(402).json({ ok: false, error: 'unverified', reason: verification.reason });
   }
   const { recordProPurchase } = require('../lib/proPurchases');

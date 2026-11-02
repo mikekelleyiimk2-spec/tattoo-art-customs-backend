@@ -40,6 +40,7 @@ const pricing = require('../lib/pricing');
 const paypal = require('../lib/paypal');
 const guestCheckout = require('../lib/guestCheckout');
 const storage = require('../lib/storage');
+const seatVerify = require('../lib/seatVerify');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 
 const BF_IOS_PRICE_CENTS = 699;
@@ -56,6 +57,18 @@ const guestDownloadPath = (order) =>
 const downloadPath = (order) =>
   guestCheckout.isGuestOrder(order) ? guestDownloadPath(order) : `/brambleforce/ios/download/${order.id}`;
 
+// Paid-download refusals land in the verify watch (cadence pass
+// 2026-11-01): the gate verifies at every attempt, and a refused
+// attempt is recorded behavior. Only the paidOnly (byte-serving)
+// path logs — the checkout-return path shares this loader and its
+// refusals are ordinary navigation, not download attempts.
+async function iosGateRejected(req, reason) {
+  await seatVerify.logEvent({
+    kind: 'download_gate_rejected', detail: `brambleforce_ios:${reason}`,
+    surface: 'brambleforce-ios', req,
+  });
+}
+
 // Guest orders prove ownership with the HMAC token; member orders need
 // the buyer's own login. Returns the order, or null after responding.
 // (Same shape as routes/iosApp.js loadIosOrder.)
@@ -65,6 +78,7 @@ async function loadBfIosOrder(req, res, { paidOnly }) {
     [req.params.orderId]
   );
   if (!order) {
+    if (paidOnly) await iosGateRejected(req, 'order_not_paid_or_gone');
     res.status(paidOnly ? 403 : 404).render('error', {
       title: paidOnly ? 'Not available' : 'Not found',
       message: paidOnly ? 'This download is not available.' : 'Order not found.',
@@ -73,6 +87,7 @@ async function loadBfIosOrder(req, res, { paidOnly }) {
   }
   if (guestCheckout.isGuestOrder(order)) {
     if (guestCheckout.verifyGuestToken(req.query.gt, GUEST_SCOPE) !== String(order.id)) {
+      if (paidOnly) await iosGateRejected(req, 'guest_token_mismatch');
       res.status(403).render('error', {
         title: 'Invalid checkout link',
         message: 'This guest checkout link is not valid. Your download link is also emailed to you when payment completes.',
@@ -86,6 +101,7 @@ async function loadBfIosOrder(req, res, { paidOnly }) {
     return null;
   }
   if (order.buyer_id !== req.user.id) {
+    if (paidOnly) await iosGateRejected(req, 'buyer_mismatch');
     res.status(paidOnly ? 403 : 404).render('error', {
       title: paidOnly ? 'Not available' : 'Not found',
       message: paidOnly ? 'This download is not available.' : 'Order not found.',
@@ -171,7 +187,15 @@ router.get('/approve/:orderId', async (req, res) => {
     const capture = await paypal.captureCheckoutOrder(order.paypal_order_id);
     const expectedTotal = order.amount_cents + order.fee_cents;
     const captured = Math.round(parseFloat(capture.purchase_units[0].payments.captures[0].amount.value) * 100);
-    if (captured !== expectedTotal) throw new Error('Amount mismatch');
+    if (captured !== expectedTotal) {
+      // Refused at the attempt AND recorded (cadence pass 2026-11-01).
+      await seatVerify.logEvent({
+        kind: 'fulfillment_mismatch',
+        detail: `brambleforce_ios: captured ${captured} != expected ${expectedTotal} (order ${order.id})`,
+        userId: order.buyer_id || null, req,
+      });
+      throw new Error('Amount mismatch');
+    }
     await db.update('orders', order.id, { status: 'paid', paid_at: db.now() });
     try {
       await require('../lib/holidayRaffle').awardPurchaseEntries(

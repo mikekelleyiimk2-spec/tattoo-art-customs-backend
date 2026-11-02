@@ -149,7 +149,16 @@ router.post('/onemind/session', authLimiter, express.json(), async (req, res) =>
   if (!user && req.user && req.user.id) {
     user = await db.get('SELECT * FROM users WHERE id = ?', [req.user.id]);
   }
-  if (!user) return res.status(401).json({ ok: false, error: 'not linked' });
+  if (!user) {
+    // A session open refused is a refused claim at a value door —
+    // it lands in the watch like every other refusal (cadence pass).
+    if (apiToken) {
+      await seatVerify.logEvent({ kind: 'session_open_rejected', detail: 'api_token_unknown', req });
+    } else {
+      await seatVerify.logEvent({ kind: 'session_open_rejected', detail: 'no_proof', req });
+    }
+    return res.status(401).json({ ok: false, error: 'not linked' });
+  }
   const client = (body.client && typeof body.client === 'object') ? body.client : {};
   const opened = await seatVerify.openSession(user, {
     surface: body.surface || null,
@@ -166,6 +175,11 @@ router.post('/onemind/session', authLimiter, express.json(), async (req, res) =>
     expires_at: opened.expires_at,
     refresh_expires_at: opened.refresh_expires_at,
     seat: await seatOf(user),
+    // The thief trap (migration 124): the client reads this on the
+    // doors it already consumes and applies the effects itself.
+    // { active:false, reason:null } is the honest default — a root
+    // declaration NEVER moves this field; only theft behavior does.
+    trap: await seatVerify.trapStateFor(user.id),
   });
 });
 
@@ -180,6 +194,7 @@ router.post('/onemind/verify', verifyLimiter, express.json(), async (req, res) =
   return res.json({
     ok: true,
     seat: await seatOf(v.user),
+    trap: await seatVerify.trapStateFor(v.user.id),
     session: {
       id: v.session.id,
       surface: v.session.surface,
@@ -206,6 +221,7 @@ router.post('/onemind/session/refresh', authLimiter, express.json(), async (req,
     expires_at: out.expires_at,
     refresh_expires_at: out.refresh_expires_at,
     seat: out.user ? await seatOf(out.user) : null,
+    trap: out.user ? await seatVerify.trapStateFor(out.user.id) : { active: false, reason: null, set_at: null },
   });
 });
 
@@ -255,6 +271,17 @@ router.get('/onemind/watch', async (req, res) => {
   if (!serviceAuthorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
   const summary = await seatVerify.watchSummary(req.query.limit);
   return res.json({ ok: true, ...summary });
+});
+
+// Run the reconciliation sweep NOW (same house-token gate as the
+// watch; the hourly scheduler run is the cadence, this door is the
+// house pulling the cord early — e.g. right after a refund lands).
+router.post('/onemind/sweep', async (req, res) => {
+  if (!process.env.MUSE_SERVICE_TOKEN) return res.status(404).json({ ok: false });
+  if (!serviceAuthorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  const { runSweep } = require('../lib/entitlementSweep');
+  const summary = await runSweep();
+  return res.json({ ok: true, sweep: summary });
 });
 
 module.exports = router;

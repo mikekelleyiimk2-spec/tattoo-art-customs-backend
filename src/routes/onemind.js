@@ -101,9 +101,30 @@ router.post('/onemind/signin', authLimiter, express.json(), async (req, res) => 
 
 router.get('/onemind/seat', async (req, res) => {
   const user = await userFromToken(req);
-  if (!user) return res.status(401).json({ ok: false, error: 'not linked' });
+  if (!user) {
+    // This door is the co-op relay's seat check (verification
+    // cadence, 2026-11-01): a refused check is a refused claim at a
+    // value door, and refusals land in the verify watch — a forged
+    // seat token presented to the relay is caught HERE, at the
+    // attempt, with a record. Best-effort: logging never blocks the
+    // 401 the caller is owed.
+    try {
+      await require('../lib/seatVerify').logEvent({
+        kind: 'seat_check_fail', detail: 'not linked', surface: 'seat-door', req,
+      });
+    } catch (e) { /* the watch is best-effort by design */ }
+    return res.status(401).json({ ok: false, error: 'not linked' });
+  }
   const seat = await onemind.seatSummary(user);
-  return res.json({ ok: true, ...seat });
+  // entitled_products (additive, cadence pass): the callers that
+  // forward client claims — the co-op relay forwarding hello skins —
+  // intersect those claims with this server truth, so an unproven
+  // skin claim is stripped at the join, at the attempt.
+  let entitledProducts = [];
+  try {
+    entitledProducts = (await require('../lib/seatVerify').entitlementsFor(user)).products;
+  } catch (e) { /* recognition payload must not fail on the truth read */ }
+  return res.json({ ok: true, ...seat, entitled_products: entitledProducts });
 });
 
 router.post('/onemind/tie', express.json(), async (req, res) => {

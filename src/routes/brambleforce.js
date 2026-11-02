@@ -301,7 +301,17 @@ function pageRouter() {
       const capture = await captureFn(order.paypal_order_id);
       const expectedTotal = order.amount_cents + order.fee_cents;
       const captured = Math.round(parseFloat(capture.purchase_units[0].payments.captures[0].amount.value) * 100);
-      if (captured !== expectedTotal) throw new Error('Amount mismatch');
+      if (captured !== expectedTotal) {
+        // Fulfillment verifies the captured amount against the order
+        // at the moment of capture — a mismatch is refused AND
+        // recorded in the verify watch (cadence pass 2026-11-01).
+        await seatVerify.logEvent({
+          kind: 'fulfillment_mismatch',
+          detail: `${productId}: captured ${captured} != expected ${expectedTotal} (order ${order.id})`,
+          userId: order.buyer_id || null, req,
+        });
+        throw new Error('Amount mismatch');
+      }
       await db.update('orders', order.id, { status: 'paid', paid_at: db.now() });
       const email = await buyerEmail(order);
       const successUrl = `${config.baseUrl}${successPath(req, order)}`;
@@ -474,6 +484,7 @@ async function bindRedeemSeat(req, code, result) {
   const apiToken = String(req.get('x-api-token') || body.api_token || '').slice(0, 128) || null;
   const presented = !!(sessionToken || apiToken);
   let bound = false;
+  let trap = null;
   try {
     if (presented) {
       const proof = await seatVerify.resolveSeatProof({ apiToken, sessionToken, req });
@@ -492,7 +503,20 @@ async function bindRedeemSeat(req, code, result) {
           await seatVerify.logEvent({
             user: proof.user, kind: 'redeem_rejected', detail: result.error || 'unknown', req,
           });
+          // THIEF TRAP (owner design 2026-11-01 20:40): a REPLAYED
+          // unlock presented by a proven seat springs the trap on
+          // the spot — no ban, the game turns on them. A forged
+          // (unknown) code is a strike; repeated strikes spring it
+          // too (lib/seatVerify strikeOrTrap). A proof-less replay
+          // identifies no seat — it is recorded above, and there is
+          // nobody to trap.
+          if (result.error === 'spent') {
+            await seatVerify.setTrap(proof.user, 'replayed_unlock', 'redeem_rejected', 'spent', { req });
+          } else if (result.error === 'unknown') {
+            await seatVerify.strikeOrTrap(proof.user, 'redeem_rejected', 'unknown', { req });
+          }
         }
+        trap = await seatVerify.trapStateFor(proof.user.id);
       } else {
         await seatVerify.logEvent({
           kind: 'redeem_seat_proof_invalid',
@@ -512,7 +536,7 @@ async function bindRedeemSeat(req, code, result) {
   } catch (e) {
     console.error('brambleforce redeem seat binding failed:', e.message);
   }
-  return { presented, bound };
+  return { presented, bound, trap };
 }
 
 function apiRouter() {
@@ -521,10 +545,12 @@ function apiRouter() {
   router.post('/brambleforce/redeem', async (req, res) => {
     const code = req.body && typeof req.body.code === 'string' ? req.body.code : '';
     const result = await bf.redeemCode(code);
-    const { presented, bound } = await bindRedeemSeat(req, code, result);
+    const { presented, bound, trap } = await bindRedeemSeat(req, code, result);
     // Proof-less calls keep the exact legacy response; a caller that
-    // presented a seat proof additionally learns whether it bound.
-    return res.status(200).json(presented ? { ...result, bound } : result);
+    // presented a seat proof additionally learns whether it bound —
+    // and its thief-trap state (migration 124), so a trapped seat
+    // hears it on the redeem door too.
+    return res.status(200).json(presented ? { ...result, bound, trap } : result);
   });
   router.use('/brambleforce/support-reissue', redeemLimiter);
   router.post('/brambleforce/support-reissue', async (req, res) => {

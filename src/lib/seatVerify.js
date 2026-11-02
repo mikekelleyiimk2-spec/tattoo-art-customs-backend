@@ -178,6 +178,10 @@ async function resolveSeatProof({ apiToken = null, sessionToken = null, req = nu
       await onemind.ensureOneMindId(user);
       return { user, via: 'api_token' };
     }
+    // A presented-but-worthless seat key is behavior, and behavior is
+    // what the watch records (cadence pass 2026-11-01: every rejected
+    // claim at every door lands here, not just session-token doors).
+    await logEvent({ kind: 'proof_invalid', detail: 'api_token_unknown', req });
     return { invalid: true, reason: 'api_token_unknown' };
   }
   return null;
@@ -364,6 +368,15 @@ async function checkClaims(user, claims, ctx = {}) {
     user, kind: 'claim_check', detail: `${list.length} claimed, ${mismatches.length} unproven`,
     surface: ctx.surface, platform: ctx.platform, req: ctx.req,
   });
+  // Thief-trap bookkeeping (migration 124): an unproven claim is a
+  // strike — REPEATED forged claims spring the trap. A fully clean
+  // claim check is the seat demonstrating its state matches server
+  // truth, which is one of the trap's automatic lift paths.
+  if (mismatches.length) {
+    await strikeOrTrap(user, 'claim_mismatch', mismatches.join(','), ctx);
+  } else if (list.length) {
+    await reconcileTrapFor(user, 'clean_claim_check');
+  }
   return { results, mismatches };
 }
 
@@ -386,7 +399,139 @@ async function bindCodeRedemption(user, codeRow, product, grants) {
   }
 }
 
+// ---- the thief trap (migration 124, owner design 2026-11-01 20:40) --------
+// No bans. A seat caught at THEFT behavior — a replayed unlock, a
+// run of forged claims, an entitlement with no living source — gets
+// flagged server-side, and the game clients that already talk to
+// this layer read the flag on session open / verify / redeem and
+// turn the game on the thief themselves (rubber bullets at 0.1
+// strength, enemies in constant frenzy: impossible to BEAT, not
+// impossible to play). The trap LIFTS automatically the moment the
+// seat's state reconciles clean against server truth — clean claim
+// check, or a reconciliation sweep that finds every entitlement
+// backed. Nothing here is permanent, and NOTHING here reads client
+// configuration: a root declaration never springs this trap; only
+// theft behavior does.
+const TRAP_STRIKE_LIMIT = 3;
+const TRAP_STRIKE_WINDOW_MS = 24 * 3600 * 1000;
+
+async function trapRowFor(userId) {
+  return db.get('SELECT * FROM seat_traps WHERE user_id = ?', [userId]);
+}
+
+// The client-facing shape: { active, reason, set_at } — reason is a
+// CLASS ('replayed_unlock' | 'repeated_forged_claims' |
+// 'unbacked_entitlement'), never the raw evidence.
+async function trapStateFor(userId) {
+  const row = await trapRowFor(userId);
+  if (!row || row.lifted_at) return { active: false, reason: null, set_at: null };
+  return { active: true, reason: row.reason, set_at: Number(row.set_at) };
+}
+
+async function setTrap(user, reason, triggerKind, detail, ctx = {}) {
+  const existing = await trapRowFor(user.id);
+  const now = db.now();
+  if (existing) {
+    await db.update('seat_traps', existing.id, {
+      reason, trigger_kind: triggerKind, detail: detail ? String(detail).slice(0, 300) : null,
+      set_at: now, lifted_at: null,
+    });
+  } else {
+    await db.insert('seat_traps', {
+      user_id: user.id, reason, trigger_kind: triggerKind,
+      detail: detail ? String(detail).slice(0, 300) : null,
+      set_at: now, lifted_at: null,
+    });
+  }
+  // Log the transition (and a reason change), not every re-affirm —
+  // the watch shows when the trap SPRANG, not a heartbeat of it.
+  if (!existing || existing.lifted_at || existing.reason !== reason) {
+    await logEvent({
+      user, kind: 'trap_set', detail: `${reason} via ${triggerKind}`,
+      surface: ctx.surface, platform: ctx.platform, req: ctx.req,
+    });
+  }
+  return trapStateFor(user.id);
+}
+
+async function liftTrap(user, via, ctx = {}) {
+  const existing = await trapRowFor(user.id);
+  if (!existing || existing.lifted_at) return { active: false, reason: null, set_at: null };
+  await db.update('seat_traps', existing.id, { lifted_at: db.now() });
+  await logEvent({
+    user, kind: 'trap_lifted', detail: `${existing.reason} lifted via ${via}`,
+    surface: ctx.surface, platform: ctx.platform, req: ctx.req,
+  });
+  return { active: false, reason: null, set_at: null };
+}
+
+// Theft strikes in the rolling window: unproven entitlement claims
+// + forged (unknown) unlock codes presented by the seat. A replayed
+// code ('spent') is NOT a strike — it springs the trap outright at
+// the redeem door.
+async function strikeCountFor(userId) {
+  const since = db.now() - TRAP_STRIKE_WINDOW_MS;
+  const claims = await db.get(
+    "SELECT COUNT(*) AS n FROM verify_events WHERE user_id = ? AND ts >= ? AND kind = 'claim_mismatch'",
+    [userId, since]);
+  const codes = await db.get(
+    "SELECT COUNT(*) AS n FROM verify_events WHERE user_id = ? AND ts >= ? AND kind = 'redeem_rejected' AND detail = 'unknown'",
+    [userId, since]);
+  return Number((claims && claims.n) || 0) + Number((codes && codes.n) || 0);
+}
+
+async function strikeOrTrap(user, triggerKind, detail, ctx = {}) {
+  const strikes = await strikeCountFor(user.id);
+  if (strikes >= TRAP_STRIKE_LIMIT) {
+    return setTrap(user, 'repeated_forged_claims', triggerKind, `${strikes} strikes in 24h: ${detail || ''}`, ctx);
+  }
+  return trapStateFor(user.id);
+}
+
+// The reconciliation audit behind every lift: does everything this
+// seat currently HOLDS trace to a living source? Bindings must
+// reach a code whose order is still 'paid'; order and Play truth is
+// read live by entitlementsFor, so a stored binding is the only
+// place an unbacked holding can persist.
+async function seatBackingClean(userId) {
+  const bindings = await db.all(
+    'SELECT * FROM seat_entitlements WHERE user_id = ? AND revoked_at IS NULL', [userId]);
+  for (const b of bindings) {
+    if (b.source !== 'code') continue;
+    const codeRow = b.ref
+      ? await db.get('SELECT * FROM brambleforce_codes WHERE id = ?', [b.ref])
+      : null;
+    if (!codeRow) return false;
+    const order = codeRow.order_id
+      ? await db.get('SELECT status FROM orders WHERE id = ?', [codeRow.order_id])
+      : null;
+    if (!order || order.status !== 'paid') return false;
+  }
+  return true;
+}
+
+// Lift the trap if — and only if — the seat's state reconciles
+// clean right now. Called on a clean claim check and by the
+// reconciliation sweep's lift pass.
+async function reconcileTrapFor(user, via, ctx = {}) {
+  const state = await trapStateFor(user.id);
+  if (!state.active) return state;
+  if (!(await seatBackingClean(user.id))) return state;
+  return liftTrap(user, via, ctx);
+}
+
 // ---- the audit read ---------------------------------------------------------
+// Rejection-class kinds: attempts the server refused. A seat stacking
+// these up is the anomaly the owner wants SEEN, not buried in the
+// event stream — watchSummary promotes them into `flagged_seats`.
+const REJECTION_KINDS = [
+  'verify_fail', 'claim_mismatch', 'redeem_rejected', 'refresh_fail',
+  'refresh_reuse', 'proof_invalid', 'seat_check_fail',
+  'download_gate_rejected', 'fulfillment_mismatch',
+  'play_claim_unverified', 'session_open_rejected',
+];
+const FLAG_THRESHOLD = 5;
+
 async function watchSummary(limit = 100) {
   const lim = Math.max(1, Math.min(500, Number(limit) || 100));
   const events = await db.all('SELECT * FROM verify_events ORDER BY ts DESC LIMIT ?', [lim]);
@@ -399,6 +544,32 @@ async function watchSummary(limit = 100) {
     'SELECT platform, COUNT(*) AS n FROM seat_sessions WHERE revoked_at IS NULL AND expires_at > ? GROUP BY platform ORDER BY n DESC', [db.now()]);
   const rooted = await db.get(
     "SELECT COUNT(*) AS n FROM seat_sessions WHERE revoked_at IS NULL AND expires_at > ? AND client_root = 'root'", [db.now()]);
+  // Anomalies, surfaced — never buried (cadence pass, owner directive
+  // 2026-11-01 20:34): what the reconciliation sweep pulled in the
+  // last 24h, and which seats keep getting refused at the doors.
+  const placeholders = REJECTION_KINDS.map(() => '?').join(',');
+  const flagged = await db.all(
+    `SELECT user_id, onemind_id, COUNT(*) AS n FROM verify_events
+     WHERE ts >= ? AND user_id IS NOT NULL AND kind IN (${placeholders})
+     GROUP BY user_id, onemind_id HAVING COUNT(*) >= ? ORDER BY n DESC LIMIT 20`,
+    [since, ...REJECTION_KINDS, FLAG_THRESHOLD]);
+  const pulled = await db.get(
+    "SELECT COUNT(*) AS n FROM verify_events WHERE ts >= ? AND kind = 'entitlement_pulled'", [since]);
+  const playRevoked = await db.get(
+    "SELECT COUNT(*) AS n FROM verify_events WHERE ts >= ? AND kind = 'play_purchase_revoked'", [since]);
+  let sweep = null;
+  try {
+    const row = await db.get('SELECT val FROM site_kv WHERE name = ?', ['chorvix_sweep_last']);
+    if (row) sweep = JSON.parse(row.val);
+  } catch (e) { /* the kv read is best-effort; absence reads as never-run */ }
+  // Active thief traps, named — the consequence layer is part of
+  // the record, on the surface of the watch, never buried.
+  const trapRows = await db.all(
+    'SELECT t.user_id, t.reason, t.trigger_kind, t.set_at, u.onemind_id FROM seat_traps t LEFT JOIN users u ON u.id = t.user_id WHERE t.lifted_at IS NULL ORDER BY t.set_at DESC LIMIT 50');
+  const trappedSeats = trapRows.map((t) => ({
+    user_id: t.user_id, onemind_id: t.onemind_id || null,
+    reason: t.reason, trigger: t.trigger_kind, set_at: Number(t.set_at),
+  }));
   return {
     events: events.map((e) => ({
       ts: Number(e.ts), kind: e.kind, user_id: e.user_id, onemind_id: e.onemind_id,
@@ -410,14 +581,28 @@ async function watchSummary(limit = 100) {
     // The root checker's living record, reported as what it is —
     // a count of honest declarations, not a threat list.
     active_declared_root: Number((rooted && rooted.n) || 0),
+    anomalies: {
+      entitlements_pulled_24h: Number((pulled && pulled.n) || 0),
+      play_purchases_revoked_24h: Number((playRevoked && playRevoked.n) || 0),
+      flagged_seats: flagged.map((f) => ({
+        user_id: f.user_id, onemind_id: f.onemind_id, rejections_24h: Number(f.n || 0),
+      })),
+      trapped_seats: trappedSeats,
+    },
+    // The reconciliation sweep's last run (lib/entitlementSweep.js
+    // writes it); null until the first run lands.
+    sweep,
   };
 }
 
 module.exports = {
-  SESSION_TTL_MS, REFRESH_TTL_MS,
+  SESSION_TTL_MS, REFRESH_TTL_MS, REJECTION_KINDS, FLAG_THRESHOLD,
+  TRAP_STRIKE_LIMIT, TRAP_STRIKE_WINDOW_MS,
   hashToken, rootFlagOf, logEvent,
   userFromApiToken, verifySessionToken, resolveSeatProof,
   openSession, refreshSession, revokeSession,
   entitlementsFor, checkClaims, bindCodeRedemption,
+  trapStateFor, setTrap, liftTrap, strikeCountFor, strikeOrTrap,
+  seatBackingClean, reconcileTrapFor,
   watchSummary,
 };

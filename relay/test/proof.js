@@ -1,10 +1,13 @@
 /* brambleforce-relay local proof battery.
    Stands up: a stub seat-check server (token "good-token" -> 200
-   {ok:true, display_name:"Proof Seat"}, anything else -> 401), relay A
-   with RELAY_SEAT_CHECK_URL pointed at the stub, and relay B with NO
-   seat check configured (safe mode). Then exercises: /health modes,
-   pool-closed in safe mode, pool seat-required / seat-invalid, pool
-   pairing (first waiter hosts, partner info from the seat), build
+   {ok:true, display_name:"Proof Seat", entitled_products:[...]},
+   anything else -> 401), relay A with RELAY_SEAT_CHECK_URL pointed
+   at the stub, and relay B with NO seat check configured (safe
+   mode). Then exercises: /health modes, pool-closed in safe mode,
+   pool seat-required / seat-invalid, pool pairing (first waiter
+   hosts, partner info from the seat), SKIN CLAIM ENFORCEMENT
+   (design §6: only server-proven skins are forwarded; unproven
+   claims stripped at the join, counted in /health), build
    separation in the pool, code-join pairing + input/snapshot
    forwarding + last-snapshot replay on reconnect, the build gate
    (version-mismatch naming both builds), dead-peer termination, and
@@ -75,11 +78,14 @@ class Client {
 }
 
 async function main() {
-  // stub seat check
+  // stub seat check — the good seat owns skin_tor + crt_filter only.
   const stub = http.createServer((req, res) => {
     if (req.headers['x-api-token'] === 'good-token') {
       res.writeHead(200, { 'content-type': 'application/json' });
-      res.end(JSON.stringify({ ok: true, display_name: 'Proof Seat' }));
+      res.end(JSON.stringify({
+        ok: true, display_name: 'Proof Seat',
+        entitled_products: ['skin_tor', 'crt_filter', 'fighter_zola'],
+      }));
     } else {
       res.writeHead(401, { 'content-type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: 'not linked' }));
@@ -118,9 +124,12 @@ async function main() {
     check('pool: bad token -> seat-invalid (fail closed)', btErr.code === 'seat-invalid', btErr.code);
     badTok.close();
 
-    // --- pool pairing: first waiter hosts; input/snap forwarding
+    // --- pool pairing: first waiter hosts; input/snap forwarding.
+    // p1's hello claims FOUR skins in the game's real shape; server
+    // truth proves only skin_tor + crt — skin_zola and the tracers
+    // claim must be stripped at the join (§6 enforcement).
     const p1 = C(PORT_A); await p1.open;
-    p1.send({ k: 'hello', room: 'POOL', role: 'any', build: 'vc15', seatToken: 'good-token', fighter: 'tor', skins: { tor: 'crt' } });
+    p1.send({ k: 'hello', room: 'POOL', role: 'any', build: 'vc15', seatToken: 'good-token', fighter: 'tor', skins: { tor: 'skin_tor', zola: 'skin_zola', crt: 1, tracers: 1 } });
     const wait = await p1.waitFor((m) => m.k === 'pool-waiting', 'pool-waiting');
     check('pool: first validated client waits', wait.k === 'pool-waiting');
     const p2 = C(PORT_A); await p2.open;
@@ -128,7 +137,13 @@ async function main() {
     const pair1 = await p1.waitFor((m) => m.k === 'paired', 'p1 paired');
     const pair2 = await p2.waitFor((m) => m.k === 'paired', 'p2 paired');
     check('pool: paired, first waiter is host', pair1.role === 'host' && pair2.role === 'guest' && pair1.room === pair2.room, pair1.room);
-    check('pool: partner info rides (seat name + fighter + skins)', pair2.partner && pair2.partner.name === 'Proof Seat' && pair2.partner.fighter === 'tor' && pair2.partner.skins && pair2.partner.skins.tor === 'crt', JSON.stringify(pair2.partner));
+    check('pool: partner info rides (seat name + fighter + skins)', pair2.partner && pair2.partner.name === 'Proof Seat' && pair2.partner.fighter === 'tor' && pair2.partner.skins && pair2.partner.skins.tor === 'skin_tor', JSON.stringify(pair2.partner));
+    check('skins: only server-proven claims are forwarded (unproven stripped at the join)',
+      pair2.partner.skins && pair2.partner.skins.crt === 1
+        && !('zola' in pair2.partner.skins) && !('tracers' in pair2.partner.skins),
+      JSON.stringify(pair2.partner.skins));
+    const hA2 = await getJSON(PORT_A, '/health');
+    check('skins: stripped claims are counted on /health', hA2.body.stats.skinsStripped >= 2, JSON.stringify(hA2.body.stats));
     p2.send({ k: 'input', seq: 1, v: { x: 1, fire: true } });
     const inp = await p1.waitFor((m) => m.k === 'input', 'input forwarded');
     check('pool: guest input forwarded to host', inp.seq === 1 && inp.v.x === 1);

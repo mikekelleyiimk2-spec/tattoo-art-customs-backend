@@ -158,6 +158,157 @@ async function runDbTests(ok) {
   const codeOrder2 = await db.get('SELECT * FROM orders WHERE id = ?', [codeOrder2Id]);
   const issued2 = await bf.issueCodeForOrder(codeOrder2, 'crt_filter');
   stash.code2 = issued2.code;
+
+  // === CADENCE PASS fixtures (2026-11-01 20:34 + thief trap 20:40) ==
+  // user2: the trap-proof seat — owns exactly one product by paid
+  // order, nothing else. Its code (code3) is redeemed/replayed over
+  // HTTP to spring the replay trap through the real door.
+  const apiToken2 = 'cadence-test-seat-key';
+  const uid2 = await db.insert('users', {
+    email: 'cadence-trap@test.local', password_hash: 'x', role: 'customer',
+    display_name: 'Cadence', api_token: apiToken2,
+  });
+  stash.uid2 = uid2;
+  stash.apiToken2 = apiToken2;
+  await db.insert('orders', {
+    buyer_id: uid2, order_type: 'brambleforce:fighter_dane', amount_cents: 199,
+    fee_cents: 0, status: 'paid', payment_method: 'paypal', paid_at: db.now(),
+  });
+  const codeOrder3Id = await db.insert('orders', {
+    buyer_id: '', order_type: 'brambleforce:weapon_tracers', amount_cents: 99,
+    fee_cents: 0, status: 'paid', payment_method: 'paypal', paid_at: db.now(),
+    guest_email: 'guest2@test.local',
+  });
+  const codeOrder3 = await db.get('SELECT * FROM orders WHERE id = ?', [codeOrder3Id]);
+  const issued3 = await bf.issueCodeForOrder(codeOrder3, 'weapon_tracers');
+  stash.code3 = issued3.code;
+
+  // user3: the sweep fixture — a code binding whose order is about
+  // to be REFUNDED (source dies after the grant), a verified Play
+  // row Google is about to disown, and one healthy binding that
+  // must survive every sweep untouched.
+  const uid3 = await db.insert('users', {
+    email: 'cadence-sweep@test.local', password_hash: 'x', role: 'customer',
+    display_name: 'Sweep', api_token: 'cadence-sweep-seat-key',
+  });
+  stash.uid3 = uid3;
+  const user3 = await db.get('SELECT * FROM users WHERE id = ?', [uid3]);
+  const refundOrderId = await db.insert('orders', {
+    buyer_id: '', order_type: 'brambleforce:skin_dane', amount_cents: 99,
+    fee_cents: 0, status: 'paid', payment_method: 'paypal', paid_at: db.now(),
+    guest_email: 'guest3@test.local',
+  });
+  const refundOrder = await db.get('SELECT * FROM orders WHERE id = ?', [refundOrderId]);
+  await bf.issueCodeForOrder(refundOrder, 'skin_dane');
+  const refundCodeRow = await db.get('SELECT * FROM brambleforce_codes WHERE order_id = ?', [refundOrderId]);
+  await seatVerify.bindCodeRedemption(user3, refundCodeRow, 'skin_dane', null);
+  const keepOrderId = await db.insert('orders', {
+    buyer_id: '', order_type: 'brambleforce:skin_mara', amount_cents: 99,
+    fee_cents: 0, status: 'paid', payment_method: 'paypal', paid_at: db.now(),
+    guest_email: 'guest3@test.local',
+  });
+  const keepOrder = await db.get('SELECT * FROM orders WHERE id = ?', [keepOrderId]);
+  await bf.issueCodeForOrder(keepOrder, 'skin_mara');
+  const keepCodeRow = await db.get('SELECT * FROM brambleforce_codes WHERE order_id = ?', [keepOrderId]);
+  await seatVerify.bindCodeRedemption(user3, keepCodeRow, 'skin_mara', null);
+  await db.insert('play_purchases', {
+    product_id: 'bf_play_doomed', purchase_token: 'cadence-doomed-token',
+    purchase_type: 'inapp', status: 'verified', email: '', user_id: uid3, verified_at: db.now(),
+  });
+  await db.insert('play_purchases', {
+    product_id: 'bf_play_healthy', purchase_token: 'cadence-healthy-token',
+    purchase_type: 'inapp', status: 'verified', email: '', user_id: uid3, verified_at: db.now(),
+  });
+  const truth3 = await seatVerify.entitlementsFor(user3);
+  ok(truth3.products.includes('skin_dane') && truth3.products.includes('bf_play_doomed'),
+    'sweep fixture: the seat holds the soon-to-die entitlements before the source dies');
+
+  // The refund lands: the source of truth changes underneath the
+  // granted entitlements. Nothing has pulled anything yet.
+  await db.update('orders', refundOrderId, { status: 'refunded' });
+
+  // (c) THE SWEEP catches the source-side change: a stub Google
+  // that stands behind the healthy token and disowns the doomed one.
+  const { runSweep } = require('../src/lib/entitlementSweep');
+  const stubVerify = async ({ purchaseToken }) => (purchaseToken === 'cadence-doomed-token'
+    ? { verified: false, reason: 'product not purchased' }
+    : { verified: true });
+  const sweep1 = await runSweep({ verifyFn: stubVerify });
+  ok(sweep1.bindings_pulled >= 1, 'sweep: a binding whose order was refunded is pulled');
+  ok(sweep1.play_revoked >= 1, 'sweep: a Play purchase Google disowns is revoked');
+  const boundAfter = await db.get(
+    "SELECT * FROM seat_entitlements WHERE user_id = ? AND product = 'skin_dane'", [uid3]);
+  ok(boundAfter && boundAfter.revoked_at && boundAfter.revoke_reason === 'source_refunded',
+    'sweep: the pulled binding records why (source_refunded)');
+  const doomedRow = await db.get(
+    "SELECT * FROM play_purchases WHERE purchase_token = 'cadence-doomed-token'");
+  ok(doomedRow && doomedRow.status === 'revoked', 'sweep: the disowned Play row flips to revoked');
+  const healthyRow = await db.get(
+    "SELECT * FROM play_purchases WHERE purchase_token = 'cadence-healthy-token'");
+  ok(healthyRow && healthyRow.status === 'verified' && healthyRow.recheck_at,
+    'sweep: the healthy Play row stays verified and its recheck cursor moves');
+  const truth3b = await seatVerify.entitlementsFor(user3);
+  ok(!truth3b.products.includes('skin_dane') && !truth3b.products.includes('bf_play_doomed'),
+    'sweep: pulled entitlements no longer verify for the seat');
+  ok(truth3b.products.includes('skin_mara') && truth3b.products.includes('bf_play_healthy'),
+    'sweep: honestly-backed entitlements are untouched');
+  const pullEvents = await db.all(
+    "SELECT * FROM verify_events WHERE user_id = ? AND kind IN ('entitlement_pulled','play_purchase_revoked')", [uid3]);
+  ok(pullEvents.length >= 2, 'sweep: every pull is written to the watch');
+
+  // The pulls spring the thief trap on the seat (entitlement held
+  // with no living source) — and this same run does NOT lift it.
+  const trapAfterPull = await seatVerify.trapStateFor(uid3);
+  ok(trapAfterPull.active === true && trapAfterPull.reason === 'unbacked_entitlement',
+    'trap: a sweep pull springs the thief trap on the seat');
+  const trapSetEvents = await db.all(
+    "SELECT * FROM verify_events WHERE user_id = ? AND kind = 'trap_set'", [uid3]);
+  ok(trapSetEvents.length >= 1, 'trap: the springing is written to the watch with its trigger');
+
+  // A weather failure at Google (not a verdict) revokes NOTHING:
+  // re-run with an erroring stub — statuses and cursors hold. (This
+  // run pulls nothing for the trapped seat either, and everything
+  // it still holds is backed — so this is also the first clean pass
+  // after the pull, and the trap lifts on it: reconciliation, not
+  // the calendar, is what ends a trap.)
+  const sweepErr = await runSweep({ verifyFn: async () => ({ verified: false, reason: 'socket hang up' }) });
+  ok(sweepErr.play_revoked === 0, 'sweep: a transient Google error revokes nothing');
+  const healthyRow2 = await db.get(
+    "SELECT * FROM play_purchases WHERE purchase_token = 'cadence-healthy-token'");
+  ok(healthyRow2 && healthyRow2.status === 'verified', 'sweep: honest purchases survive an outage');
+  ok(sweepErr.traps_lifted >= 1, 'trap: the first clean sweep after the pull lifts the trap');
+
+  // A further clean sweep changes nothing — the seat simply
+  // verifies clean, no ban, no permanent state, resume play.
+  const sweep2 = await runSweep({ verifyFn: stubVerify });
+  const trapAfterClean = await seatVerify.trapStateFor(uid3);
+  ok(trapAfterClean.active === false, 'trap: the seat verifies clean again after reconciliation');
+  const liftEvents = await db.all(
+    "SELECT * FROM verify_events WHERE user_id = ? AND kind = 'trap_lifted'", [uid3]);
+  ok(liftEvents.length >= 1, 'trap: the lift is written to the watch');
+
+  // Strike path at the lib level: a fresh seat, three unproven
+  // claims -> trap; one fully clean claim check -> lifted.
+  const uid4 = await db.insert('users', {
+    email: 'cadence-strikes@test.local', password_hash: 'x', role: 'customer',
+    display_name: 'Strikes', api_token: 'cadence-strikes-seat-key',
+  });
+  const user4 = await db.get('SELECT * FROM users WHERE id = ?', [uid4]);
+  await db.insert('orders', {
+    buyer_id: uid4, order_type: 'brambleforce:fighter_zola', amount_cents: 199,
+    fee_cents: 0, status: 'paid', payment_method: 'paypal', paid_at: db.now(),
+  });
+  await seatVerify.checkClaims(user4, ['skin_nope_a']);
+  await seatVerify.checkClaims(user4, ['skin_nope_b']);
+  const trapBefore3 = await seatVerify.trapStateFor(uid4);
+  ok(trapBefore3.active === false, 'trap: two forged claims are strikes, not yet a trap (asking is recorded, not punished)');
+  await seatVerify.checkClaims(user4, ['skin_nope_c']);
+  const trapAt3 = await seatVerify.trapStateFor(uid4);
+  ok(trapAt3.active === true && trapAt3.reason === 'repeated_forged_claims',
+    'trap: the third forged claim springs the trap');
+  await seatVerify.checkClaims(user4, ['fighter_zola']);
+  const trapAfterCleanCheck = await seatVerify.trapStateFor(uid4);
+  ok(trapAfterCleanCheck.active === false, 'trap: a fully clean claim check lifts the trap');
 }
 
 async function runHttpTests(ok) {
@@ -240,6 +391,136 @@ async function runHttpTests(ok) {
   r = await call('POST', '/api/onemind/verify', {}, { authorization: `Bearer ${ios2.session_token}` });
   ok(r.status === 401 && r.json && r.json.error === 'session_revoked', 'the revoked session stops verifying at once');
 
+  // === CADENCE + THIEF TRAP over HTTP (user2, the trap seat) =======
+  // (d) honest traffic first: a real seat with a root declaration
+  // opens, verifies, reads its truth — and its trap is OFF.
+  r = await call('POST', '/api/onemind/session',
+    { surface: 'brambleforce-game', platform: 'android', client: { root: true, build: '1.3.0' } },
+    { 'x-api-token': stash.apiToken2 });
+  ok(r.status === 200 && r.json && r.json.ok === true, 'cadence: the trap seat opens a session');
+  const u2 = r.json;
+  ok(u2.trap && u2.trap.active === false, 'trap: an honest seat opens with the trap OFF (root declared, never judged)');
+  r = await call('POST', '/api/onemind/verify', {}, { authorization: `Bearer ${u2.session_token}` });
+  ok(r.status === 200 && r.json.trap && r.json.trap.active === false, 'trap: verify shows the trap OFF for honest traffic');
+
+  // (a) MID-SESSION FORGERY: the valid session presents forged
+  // entitlement claims. Each is refused + recorded; the third
+  // springs the trap, visible in the NEXT verify response.
+  r = await call('POST', '/api/onemind/entitlements/check',
+    { claims: ['fighter_zola'] }, { authorization: `Bearer ${u2.session_token}` });
+  ok(r.status === 200 && r.json.results[0].entitled === false, 'cadence: a forged claim mid-session is refused at the claim event');
+  await call('POST', '/api/onemind/entitlements/check',
+    { claims: ['skin_mara'] }, { authorization: `Bearer ${u2.session_token}` });
+  await call('POST', '/api/onemind/entitlements/check',
+    { claims: ['everything_bundle'] }, { authorization: `Bearer ${u2.session_token}` });
+  r = await call('POST', '/api/onemind/verify', {}, { authorization: `Bearer ${u2.session_token}` });
+  ok(r.status === 200 && r.json.trap && r.json.trap.active === true && r.json.trap.reason === 'repeated_forged_claims',
+    'trap: forged claims spring the trap — the next verify response shows it ON with its reason class');
+
+  // Clean reconciliation lifts it: a claim check where everything
+  // claimed is truly owned (fighter_dane, by paid order).
+  r = await call('POST', '/api/onemind/entitlements/check',
+    { claims: ['fighter_dane'] }, { authorization: `Bearer ${u2.session_token}` });
+  ok(r.status === 200 && r.json.results[0].entitled === true, 'cadence: the seat\'s real entitlement still checks out while trapped');
+  r = await call('POST', '/api/onemind/verify', {}, { authorization: `Bearer ${u2.session_token}` });
+  ok(r.status === 200 && r.json.trap && r.json.trap.active === false,
+    'trap: clean reconciliation lifts it — the next verify response shows it OFF');
+
+  // (b) REPLAYED UNLOCK springs the trap through the redeem door
+  // itself: first redeem binds (trap field rides the response),
+  // the replay is rejected AND the response carries the trap.
+  r = await call('POST', '/api/brambleforce/redeem', { code: stash.code3 }, { 'x-api-token': stash.apiToken2 });
+  ok(r.status === 200 && r.json && r.json.product === 'weapon_tracers' && r.json.bound === true
+    && r.json.trap && r.json.trap.active === false,
+    'trap: a first redeem binds, trap OFF in the redeem response');
+  r = await call('POST', '/api/brambleforce/redeem', { code: stash.code3 }, { 'x-api-token': stash.apiToken2 });
+  ok(r.status === 200 && r.json && r.json.error === 'spent' && r.json.trap && r.json.trap.active === true
+    && r.json.trap.reason === 'replayed_unlock',
+    'trap: the replayed unlock is rejected AND the redeem response carries the sprung trap');
+
+  // (b) REPLAY AFTER REVOCATION: the seat's session is revoked,
+  // then the dead session is presented at the claim door — refused
+  // at the event, and the refusal is in the watch.
+  r = await call('POST', '/api/onemind/session/revoke', { session_token: u2.session_token });
+  ok(r.status === 200 && r.json.revoked === true, 'cadence: the trap seat\'s session revokes');
+  r = await call('POST', '/api/onemind/entitlements/check',
+    { claims: ['fighter_dane'] }, { authorization: `Bearer ${u2.session_token}` });
+  ok(r.status === 401, 'cadence: a claim presented with a revoked session is refused at the event');
+
+  // The sweep door (house token) reconciles: user2's holdings are
+  // all backed (the tracers binding traces to a paid order), so
+  // this clean run lifts the replay trap.
+  r = await call('POST', '/api/onemind/sweep', undefined, { authorization: `Bearer ${TOKEN}` });
+  ok(r.status === 200 && r.json && r.json.ok === true && r.json.sweep && typeof r.json.sweep.bindings_checked === 'number',
+    'cadence: the sweep runs on demand for the house token');
+  r = await call('POST', '/api/onemind/session',
+    { surface: 'brambleforce-game', platform: 'android' }, { 'x-api-token': stash.apiToken2 });
+  ok(r.status === 200 && r.json.trap && r.json.trap.active === false,
+    'trap: after the clean sweep the session opens with the trap OFF (lifted, never banned)');
+
+  // (b) DOWNLOAD REPLAY AFTER REFUND: an update token minted for a
+  // paid sideload order works while the order stands; the moment
+  // the order is refunded the same token is refused at the gate —
+  // and the refusal lands in the watch.
+  {
+    const db = require('../src/db');
+    await db.init(); // the unit phase closed the handle (run.js); HTTP fixtures re-open it
+    const fs = require('fs');
+    const path = require('path');
+    const crypto2 = require('crypto');
+    const updateTokens = require('../src/lib/updateTokens');
+    // Seed a dedicated gated package into the test registry (merged
+    // with whatever is already there) + its tiny APK — the same
+    // production flow the appUpdates tests use.
+    const pkg = 'com.usefulappz.cadencegate';
+    const apkBytes = Buffer.concat([
+      Buffer.from([0x50, 0x4b, 0x03, 0x04]),
+      Buffer.from('fake-apk-bytes-for-the-cadence-gate-test'),
+    ]);
+    let registry = {};
+    try { registry = JSON.parse(fs.readFileSync(process.env.APP_UPDATES_REGISTRY, 'utf8')); } catch (e) { /* fresh */ }
+    registry[pkg] = {
+      versionCode: 1, versionName: '1.0.0', notes: 'cadence gate fixture',
+      sha256: crypto2.createHash('sha256').update(apkBytes).digest('hex'),
+      sizeBytes: apkBytes.length, publishedAt: 1760000000000, gated: true,
+    };
+    fs.writeFileSync(process.env.APP_UPDATES_REGISTRY, JSON.stringify(registry, null, 2));
+    const uploadDir = process.env.UPLOAD_DIR || path.join(process.env.ASSET_DIR, 'uploads');
+    const apkDir = path.join(uploadDir, 'app-updates');
+    fs.mkdirSync(apkDir, { recursive: true });
+    fs.writeFileSync(path.join(apkDir, `${pkg}.apk`), apkBytes);
+    const dlOrderId = await db.insert('orders', {
+      buyer_id: stash.uid2, order_type: `sideload:${pkg}`, amount_cents: 699,
+      fee_cents: 0, status: 'paid', payment_method: 'paypal', paid_at: db.now(),
+    });
+    const dlToken = updateTokens.issue(dlOrderId, pkg);
+    r = await call('GET', `/api/apps/${pkg}/apk?t=${encodeURIComponent(dlToken)}`);
+    ok(r.status !== 401, 'cadence: a paid order\'s download token passes the gate while the order stands');
+    await db.update('orders', dlOrderId, { status: 'refunded' });
+    r = await call('GET', `/api/apps/${pkg}/apk?t=${encodeURIComponent(dlToken)}`);
+    ok(r.status === 401, 'cadence: the same token replayed after the refund is refused at the gate');
+    const gateEvents = await db.all(
+      "SELECT * FROM verify_events WHERE kind = 'download_gate_rejected' AND detail LIKE ?", [`${pkg}:%`]);
+    ok(gateEvents.length >= 1, 'cadence: the gate refusal is written to the watch');
+    // A forged token (valid shape, wrong HMAC) is refused + logged.
+    r = await call('GET', `/api/apps/${pkg}/apk?t=${encodeURIComponent(dlOrderId + '.' + '0'.repeat(32))}`);
+    ok(r.status === 401, 'cadence: a forged download token is refused at the gate');
+  }
+
+  // A refused seat check at the relay's door is in the watch too.
+  r = await call('GET', '/api/onemind/seat', undefined, { 'x-api-token': 'forged-relay-token' });
+  ok(r.status === 401, 'cadence: a forged seat token is refused at the relay\'s check door');
+  {
+    const db = require('../src/db');
+    const seatFails = await db.all(
+      "SELECT * FROM verify_events WHERE kind = 'seat_check_fail'");
+    ok(seatFails.length >= 1, 'cadence: the refused seat check is written to the watch');
+    const seatDoor = await call('GET', '/api/onemind/seat', undefined, { 'x-api-token': stash.apiToken2 });
+    ok(seatDoor.status === 200 && Array.isArray(seatDoor.json.entitled_products)
+      && seatDoor.json.entitled_products.includes('fighter_dane'),
+    'cadence: the seat door carries the seat\'s entitled products for the relay\'s claim enforcement');
+  }
+
   // The audit door: service token only, and the record is real.
   r = await call('GET', '/api/onemind/watch');
   ok(r.status === 401, 'the watch refuses anonymous readers');
@@ -250,6 +531,15 @@ async function runHttpTests(ok) {
     'the watch holds the redemption + claim record');
   ok(typeof r.json.active_sessions === 'number' && r.json.active_by_platform.length >= 1,
     'the watch reports live sessions by platform');
+  // Cadence surface: anomalies are ON the watch, not buried — sweep
+  // status, pull counts, flagged + trapped seats.
+  ok(r.json.anomalies && typeof r.json.anomalies.entitlements_pulled_24h === 'number'
+    && Array.isArray(r.json.anomalies.flagged_seats) && Array.isArray(r.json.anomalies.trapped_seats),
+    'cadence: the watch surfaces anomalies (pulls, flagged seats, trapped seats)');
+  ok(r.json.sweep && typeof r.json.sweep.bindings_checked === 'number',
+    'cadence: the watch carries the last sweep\'s summary');
+  ok(kinds.includes('trap_set') && kinds.includes('trap_lifted') && kinds.includes('sweep_run'),
+    'cadence: trap springs, trap lifts, and sweep runs are all in the watch record');
 }
 
 module.exports = { runDbTests, runHttpTests };

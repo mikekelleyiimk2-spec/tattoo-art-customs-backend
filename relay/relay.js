@@ -20,6 +20,15 @@
      to "Player 2", skins to base — design doc §5.4). If a code-join
      hello PRESENTS a seat token and the check is configured, the token
      must validate or the join is refused.
+   - SKINS (design §6, closed 2026-11-01 — verification cadence): a
+     hello's skin claims are CLIENT claims. For a validated seat the
+     seat-check answer carries the seat's server-proven entitled
+     products, and the relay forwards only the claims that truth
+     proves — an unproven skin is stripped at the join (and at every
+     re-join, which is a fresh hello), the player still plays, in
+     base look. A validated answer WITHOUT the entitlement list is
+     not a pass for claims either: base look. Nobody is booted for
+     claiming; the claim simply doesn't travel.
    - BUILD GATE (§5.3, non-negotiable): pool pairs only equal builds;
      a code-join with a different build gets a plain version-mismatch
      naming both builds. One differing physics constant is a desync
@@ -53,7 +62,7 @@ const rooms = new Map(); // code -> {host, guest, lastSnap, build, createdAt}
 const pool = [];         // validated sockets waiting for a partner (FIFO)
 const stats = {
   paired: 0, inputs: 0, snaps: 0, pings: 0, sessions: 0,
-  seatOk: 0, seatRejected: 0, seatCheckDown: 0,
+  seatOk: 0, seatRejected: 0, seatCheckDown: 0, skinsStripped: 0,
   versionMismatch: 0, deadPeers: 0, started: Date.now(),
 };
 
@@ -94,12 +103,45 @@ async function validateSeat(token) {
     if (!body || body.ok !== true) return { ok: false, reason: 'invalid' };
     const s = body.seat || body;
     const name = s.display_name || s.name || s.username || null;
-    return { ok: true, seatName: name };
+    // entitled_products: the seat's server-proven ownership list
+    // (backend seat door, cadence pass). null when the answer
+    // carries none — claims then prove nothing (see filterSkins).
+    const entitled = Array.isArray(body.entitled_products)
+      ? body.entitled_products.map((p) => String(p))
+      : null;
+    return { ok: true, seatName: name, entitledProducts: entitled };
   } catch (e) {
     return { ok: false, reason: 'unavailable' };
   } finally {
     clearTimeout(timer);
   }
+}
+
+/* --- Skin claim enforcement (design §6) ------------------------------
+   The hello's skins object is the game's own shape:
+     { <fighterId>: 'skin_<fighterId>', tracers: 1, crt: 1 }
+   A claim is kept only when server truth proves it:
+     fighter key  -> its value (the skin product id) is entitled
+     tracers      -> 'weapon_tracers' is entitled
+     crt          -> 'crt_filter' is entitled
+   entitledProducts null (the seat answer carried no list) proves
+   NOTHING — every claim is stripped. The socket keeps its seat and
+   its game; only the unproven cosmetics stay behind. */
+function filterSkins(skins, entitledProducts) {
+  if (!skins || typeof skins !== 'object') return null;
+  const held = new Set(entitledProducts || []);
+  const out = {};
+  let stripped = 0;
+  for (const [key, value] of Object.entries(skins)) {
+    let proof = null;
+    if (key === 'tracers') proof = 'weapon_tracers';
+    else if (key === 'crt') proof = 'crt_filter';
+    else if (typeof value === 'string') proof = value;
+    if (proof && held.has(proof)) out[key] = value;
+    else stripped++;
+  }
+  if (stripped) stats.skinsStripped += stripped;
+  return Object.keys(out).length ? out : null;
 }
 
 function seatError(ws, reason) {
@@ -161,6 +203,7 @@ async function handleHello(ws, m) {
     if (!v.ok) return seatError(ws, v.reason);
     stats.seatOk++;
     if (v.seatName) ws._name = v.seatName;
+    ws._skins = filterSkins(ws._skins, v.entitledProducts);
     if (ws.readyState !== WebSocket.OPEN) return; // died while validating
     tryPoolPair(ws);
     return;
@@ -177,6 +220,7 @@ async function handleHello(ws, m) {
     if (!v.ok) return seatError(ws, v.reason);
     stats.seatOk++;
     if (v.seatName) ws._name = v.seatName;
+    ws._skins = filterSkins(ws._skins, v.entitledProducts);
     if (ws.readyState !== WebSocket.OPEN) return;
   }
   if (!seatToken) { ws._name = null; ws._skins = null; } // anonymous: "Player 2", base skins
@@ -247,6 +291,7 @@ const server = http.createServer((req, res) => {
       stats: {
         paired: stats.paired, inputs: stats.inputs, snaps: stats.snaps,
         seatOk: stats.seatOk, seatRejected: stats.seatRejected,
+        skinsStripped: stats.skinsStripped,
         versionMismatch: stats.versionMismatch, deadPeers: stats.deadPeers,
       },
       now: Date.now(),

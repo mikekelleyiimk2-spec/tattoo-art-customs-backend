@@ -11,6 +11,7 @@ const config = require('../config');
 const pricing = require('../lib/pricing');
 const paypal = require('../lib/paypal');
 const guestCheckout = require('../lib/guestCheckout');
+const seatVerify = require('../lib/seatVerify');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const { resolveStoredPath } = require('../lib/storage');
 const testerPool = require('../lib/testerPool');
@@ -235,7 +236,15 @@ function tacAndroidProRouter() {
       const capture = await paypal.captureCheckoutOrder(order.paypal_order_id);
       const expectedTotal = order.amount_cents + order.fee_cents;
       const captured = Math.round(parseFloat(capture.purchase_units[0].payments.captures[0].amount.value) * 100);
-      if (captured !== expectedTotal) throw new Error('Amount mismatch');
+      if (captured !== expectedTotal) {
+        // Refused at the attempt AND recorded (cadence pass 2026-11-01).
+        await seatVerify.logEvent({
+          kind: 'fulfillment_mismatch',
+          detail: `tac_android_pro: captured ${captured} != expected ${expectedTotal} (order ${order.id})`,
+          userId: order.buyer_id || null, req,
+        });
+        throw new Error('Amount mismatch');
+      }
       await db.update('orders', order.id, { status: 'paid', paid_at: db.now() });
       // Pro-app perk registry (same as iOS sideload): record the verified Pro
       // purchase — unlocks the 6-month membership perk. Idempotent on the

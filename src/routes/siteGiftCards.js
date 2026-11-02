@@ -17,6 +17,7 @@ const {
   activateSiteGiftCard, redeemSiteGiftCard, getSiteGiftCardsForPurchaser,
 } = require('../lib/siteGiftCards');
 const db = require('../db');
+const seatVerify = require('../lib/seatVerify');
 
 const router = express.Router();
 
@@ -126,6 +127,14 @@ router.post('/redeem', requireLogin, formLimiter, checkHoneypot, async (req, res
     req.session.flash = `Gift card redeemed — ${money(card.amount_cents)} in site credit added. Spend it on premade designs, customs, or a membership.`;
     res.redirect('/account');
   } catch (e) {
+    // A refused redemption (unknown / already redeemed / expired
+    // code) is a refused claim at a value door — recorded in the
+    // verify watch (cadence pass 2026-11-01). The code itself never
+    // enters the record.
+    await seatVerify.logEvent({
+      userId: req.user.id, kind: 'redeem_rejected',
+      detail: `gift_card: ${String(e.message || 'rejected').slice(0, 120)}`, req,
+    });
     req.session.flash = e.message;
     res.redirect('/gift-cards/redeem');
   }
