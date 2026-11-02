@@ -1731,15 +1731,17 @@ const sideloadUpload = multer({
 
 // App-update R2 upload middleware (used by POST /upload-app-update
 // defined above; kept here next to sideloadUpload). Stages on the same
-// ephemeral tmp dir; the cap is 900 MB because the payload is a full
-// game build (~394 MB today, ~850 MB at the masters target) — the file
-// never touches the 1 GB persistent disk.
+// ephemeral tmp dir; the cap is 1600 MB because the payload is a full
+// game build (945 MB at vc24/1.3.2; the game's own base-size hard cap
+// is 1.5 GB) — the file never touches the 1 GB persistent disk. The
+// previous 900 MB cap rejected the vc24 finals outright (repaired
+// 2026-11-02 by the vc24 distribution-reconciliation lane).
 const appUpdateUpload = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => cb(null, ipaStageDir),
     filename: (req, file, cb) => cb(null, `stg-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.apk`),
   }),
-  limits: { fileSize: 900 * 1024 * 1024, files: 1 },
+  limits: { fileSize: 1600 * 1024 * 1024, files: 1 },
   fileFilter: (req, file, cb) => {
     if (/\.apk$/i.test(file.originalname)) cb(null, true);
     else cb(new Error('Only .apk files are allowed.'));
@@ -1748,13 +1750,13 @@ const appUpdateUpload = multer({
 
 // iOS-update R2 upload middleware (used by POST /upload-ios-update
 // defined above; the .ipa twin of appUpdateUpload — same staging dir,
-// same 900 MB cap, .ipa filter and staging suffix).
+// same 1600 MB cap, .ipa filter and staging suffix).
 const iosUpdateUpload = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => cb(null, ipaStageDir),
     filename: (req, file, cb) => cb(null, `stg-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.ipa`),
   }),
-  limits: { fileSize: 900 * 1024 * 1024, files: 1 },
+  limits: { fileSize: 1600 * 1024 * 1024, files: 1 },
   fileFilter: (req, file, cb) => {
     if (/\.ipa$/i.test(file.originalname)) cb(null, true);
     else cb(new Error('Only .ipa files are allowed.'));
