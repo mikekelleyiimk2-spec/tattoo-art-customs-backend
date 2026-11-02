@@ -200,25 +200,25 @@
     "publishedAt": "2026-10-28T13:45:00Z"
   },
   "com.usefulappz.game2runandgun": {
-    "versionCode": 23,
-    "versionName": "1.3.1",
+    "versionCode": 24,
+    "versionName": "1.3.2",
     "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.game2runandgun/apk",
     "notes": "Brambleforce \u2014 the full game. 11 missions, 11 sealed boss arenas, online co-op. Zero ads.",
-    "sha256": "7942bba2c0dba5509f7a0e0eafd82a08ff2c4f9f9f74e2139a146cd24aa1172a",
-    "sizeBytes": 899898208,
-    "publishedAt": "2026-11-02T14:08:00Z",
+    "sha256": "0842a3f6789d9ea1f332c0b0e66267150c4247f86a76d2be4d115f215bef3f69",
+    "sizeBytes": 945320395,
+    "publishedAt": "2026-11-02T23:09:27Z",
     "gated": true,
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.game2runandgun-1.3.1.apk"
+    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.game2runandgun-1.3.2.apk"
   },
   "com.usefulappz.game2runandgun.ios": {
-    "versionCode": 23,
-    "versionName": "1.3.1",
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.game2runandgun-1.3.1.ipa",
-    "sha256": "de9db519b6a9e82be2b9f7a5af3c6b43c9b06631d45608404e42612fa83d0d14",
-    "sizeBytes": 903128543,
-    "publishedAt": "2026-11-02T14:08:00Z",
+    "versionCode": 24,
+    "versionName": "1.3.2",
+    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.game2runandgun-1.3.2.ipa",
+    "sha256": "c76989c0a4df7bc7a7cae9a1b88daf342c004da392c535bb0e4850e64db07b9e",
+    "sizeBytes": 948493165,
+    "publishedAt": "2026-11-02T23:09:27Z",
     "gated": true,
-    "ipaFile": "Brambleforce-1.3.1.ipa",
-    "notes": "Brambleforce iOS sideload edition \u2014 vc23/1.3.1 unsigned IPA (SideStore/AltStore re-sign on the buyer's own free Apple ID; no Apple IAP \u2014 extras are website unlock codes). The 1.3.1 owner patch: store + menu scroll fixed, double jump, ledge grab, ground/floating fixes, shield hit-zones fixed."
+    "ipaFile": "Brambleforce-1.3.2.ipa",
+    "notes": "Brambleforce iOS sideload edition \u2014 vc24/1.3.2 unsigned IPA (SideStore/AltStore re-sign on the buyer's own free Apple ID; no Apple IAP \u2014 extras are website unlock codes). The 1.3.2 patch: Episode-1 stills wired into title/briefings/boss cards, continue-coin label fix, blood squirts, M9 oak swap, controller + touch-scroll fixes, continuous ground/pit rebuild, ledge polish + drop-through, smooth boss entries, full run cycles for all seven heroes, Mara's current design, dash + Zola fixes, boss sight-gate, knockdown recovery, poisoned-heart color."
   }
 }
