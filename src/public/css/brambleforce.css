@@ -242,6 +242,13 @@ a:hover { color: var(--bf-gold); }
 .bf-buy-panel .bf-price { font-size: 2rem; }
 .bf-buy-panel .bf-once { color: var(--bf-lime); font-weight: 700; font-size: .92rem; letter-spacing: .05em; text-transform: uppercase; }
 
+/* release commercial embed on the game buy page (broad sweep, 2026-11-02) */
+.bf-commercial { margin: 1rem 0 1.1rem; }
+.bf-commercial-title {
+  font-family: var(--bf-serif); color: var(--bf-gold); font-weight: 700;
+  font-size: 1.15rem; letter-spacing: .14em; margin: 0 0 .55rem;
+}
+
 /* cross-sell rows */
 .bf-more { list-style: none; padding: 0; margin: .6rem 0 0; display: grid; gap: .55rem; }
 .bf-more li {

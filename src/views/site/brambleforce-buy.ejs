@@ -32,6 +32,17 @@
     <span class="bf-price">$<%= (price / 100).toFixed(2) %></span>
     <span class="bf-once">one-time · yours for good</span>
   </div>
+  <% if (bfIsGame) { %>
+  <%# Official release commercial (broad sweep item 13, 2026-11-02): the
+      fixed film, live on Rook 98 — same youtube-nocookie player pattern
+      as /watch, seated directly above the buy button per the plan. %>
+  <div class="bf-commercial">
+    <h2 class="bf-commercial-title">WATCH THE COMMERCIAL</h2>
+    <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;">
+      <iframe style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" src="https://www.youtube-nocookie.com/embed/oIwk01bE1CQ" title="BRAMBLEFORCE IS OUT NOW — The Full Game | Official Release Commercial" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    </div>
+  </div>
+  <% } %>
   <% if (user) { %>
   <form method="post" action="/brambleforce/buy/<%= productId %>/buy" class="form">
     <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
