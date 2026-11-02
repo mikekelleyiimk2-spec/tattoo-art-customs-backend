@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="<%= locale %>">
 <head>
+<% const neutralFace = (typeof authFace !== 'undefined' && authFace); const brandName = neutralFace ? 'Useful Appz' : 'Chorvix'; %>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title><%= typeof title !== 'undefined' ? title : 'Tattoo Art Customs™' %></title>
+<title><%= typeof title !== 'undefined' ? title : brandName %></title>
 <% if (typeof metaDescription !== 'undefined' && metaDescription) { %>
 <meta name="description" content="<%= metaDescription %>">
 <% } %>
@@ -16,12 +17,12 @@
 <% supportedLocales.forEach(function(l) { %><link rel="alternate" hreflang="<%= l %>" href="<%= canonical %>?hl=<%= l %>">
 <% }); %><link rel="alternate" hreflang="x-default" href="<%= canonical %>">
 <% } %>
-<meta property="og:site_name" content="Tattoo Art Customs™">
+<meta property="og:site_name" content="<%= brandName %>">
 <meta property="og:type" content="<%= typeof ogType !== 'undefined' ? ogType : 'website' %>">
 <% if (typeof canonical !== 'undefined' && canonical) { %>
 <meta property="og:url" content="<%= canonical %>">
 <% } %>
-<meta property="og:title" content="<%= typeof title !== 'undefined' ? title : 'Tattoo Art Customs™' %>">
+<meta property="og:title" content="<%= typeof title !== 'undefined' ? title : brandName %>">
 <% if (typeof metaDescription !== 'undefined' && metaDescription) { %>
 <meta property="og:description" content="<%= metaDescription %>">
 <% } %>
@@ -35,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="/icon.png">
-<meta name="twitter:title" content="<%= typeof title !== 'undefined' ? title : 'Tattoo Art Customs™' %>">
+<meta name="twitter:title" content="<%= typeof title !== 'undefined' ? title : brandName %>">
 <% if (typeof metaDescription !== 'undefined' && metaDescription) { %>
 <meta name="twitter:description" content="<%= metaDescription %>">
 <% } %>
@@ -83,7 +84,7 @@ gtag('config', 'G-9N1QECNMWL');
     The signed-in user chip keeps its exact classic markup. %>
 <header class="site-header home-header">
   <nav class="nav home-nav" aria-label="<%= t('nav.main') %>">
-    <a class="home-brand" href="/"><img src="/img/logos/tattoo-art-customs-header.webp" alt="" /><span class="wordmark">Tattoo Art Customs<sup>™</sup></span></a>
+    <a class="home-brand" href="/"><span class="wordmark"><%= brandName %></span></a>
     <div class="home-links">
       <a href="/"><%= t('nav.home') %></a>
       <a href="/gallery"><%= t('nav.gallery') %></a>
@@ -117,7 +118,7 @@ gtag('config', 'G-9N1QECNMWL');
 <% } else { %>
 <header class="site-header">
   <nav class="nav" aria-label="<%= t('nav.main') %>">
-    <a class="brand" href="/"><img src="/img/logos/tattoo-art-customs-header.webp" alt="Tattoo Art Customs™ logo" style="height:2rem;width:auto;vertical-align:middle;margin-right:.5rem;border-radius:4px;" />Tattoo Art Customs™</a>
+    <a class="brand" href="/"><%= brandName %></a>
     <button class="nav-toggle" aria-label="<%= t('nav.toggle_menu') %>" aria-expanded="false" onclick="document.querySelector('.nav').classList.toggle('open');this.setAttribute('aria-expanded',document.querySelector('.nav').classList.contains('open'))">☰</button>
     <div class="nav-links">
       <a href="/"><%= t('nav.home') %></a>
@@ -187,8 +188,9 @@ gtag('config', 'G-9N1QECNMWL');
 <footer class="site-footer">
   <div class="container footer-grid">
     <div>
-      <strong>Tattoo Art Customs™</strong>
+      <strong><%= brandName %></strong>
       <p><%= t('footer.tagline') %></p>
+      <% if (!neutralFace) { %><p class="muted">Tattoo Art Customs — the tattoo studio</p><% } %>
     </div>
     <nav aria-label="<%= t('footer.nav') %>">
       <a href="/gallery"><%= t('nav.gallery') %></a>

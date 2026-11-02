@@ -15,7 +15,9 @@ async function runHttpTests(ok, req) {
   ok(idx.status === 200 && idx.json && idx.json.ok === true, 'links index responds ok');
   const fams = (idx.json && idx.json.families) || {};
   ok(fams.affiliates && fams.affiliates.endpoint === '/api/rolodex', 'index keeps affiliates on /api/rolodex (separate product)');
-  ok(fams.affiliates && fams.affiliates.count === 46 && fams.affiliates.live === 15, 'index reports affiliate counts (46 total / 15 live)');
+  // Counts track src/data/rolodex.json — 46 programs, 17 live as of 2026-11-02
+  // (was 15 live; two more programs went live — assertion reconciled to the data).
+  ok(fams.affiliates && fams.affiliates.count === 46 && fams.affiliates.live === 17, 'index reports affiliate counts (46 total / 17 live)');
   ok(fams.socials && fams.socials.endpoint === '/api/social-links' && fams.socials.count === 10, 'index lists the socials family (10)');
   ok(fams.web_pages && fams.web_pages.count === 45, 'index lists web pages (45 public)');
   ok(fams.channels && fams.channels.count === 4, 'index lists channels (4)');

@@ -32,14 +32,14 @@ router.get('/wallet/app', requireLogin, async (req, res) => {
   if (req.user.role === 'design_artist') {
     const payout = await payoutDashboardData(req.user.id, 'artist');
     return res.render('wallet/cashout', {
-      title: 'Cashout — Tattoo Art Customs',
+      title: 'Cashout — Chorvix',
       payoutBase: '/artist', ...payout,
     });
   }
   if (req.user.role === 'tattoo_shop') {
     const payout = await payoutDashboardData(req.user.id, 'shop');
     return res.render('wallet/cashout', {
-      title: 'Cashout — Tattoo Art Customs',
+      title: 'Cashout — Chorvix',
       payoutBase: '/shop', ...payout,
     });
   }
@@ -265,7 +265,7 @@ router.get('/', async (req, res) => {
     // leaderboard slot is suppressed on the homepage only; landing.ejs
     // renders the same slot itself, after the hero.
     noAds: true,
-    title: 'Tattoo Art Customs — Original Tattoo Designs, Custom Art & Verified Shops',
+    title: 'Chorvix — Original Tattoo Designs, Custom Art & Verified Shops',
     metaDescription: 'Tattoo Art Customs: buy original premade tattoo designs, commission custom artwork, find verified tattoo shops, and shop tattoo merch.',
     canonical: `${base}/`,
     ogImage: `${base}/img/landing/hero.webp`,
@@ -357,7 +357,7 @@ router.get('/gallery', async (req, res) => {
   // title/meta/canonical — content depth added 2026-10-12.
   const base = config.baseUrl.replace(/\/$/, '');
   let catIntro = null;
-  let galleryTitle = 'Tattoo Design Gallery — Buy Original Tattoo Designs | Tattoo Art Customs';
+  let galleryTitle = 'Tattoo Design Gallery — Buy Original Tattoo Designs | Chorvix / Tattoo';
   let galleryMeta = `Browse ${totalDesigns.toLocaleString('en-US')} original tattoo designs by style and category. Buy ready-made tattoo designs from independent artists — full color and linework included.`;
   let galleryCanonical = `${base}/gallery`;
   if (cat) {
@@ -365,7 +365,7 @@ router.get('/gallery', async (req, res) => {
     if (canonName && catCount > 0) {
       const blurb = categoryBlurbFor(canonName);
       catIntro = { name: canonName, count: catCount, blurb };
-      galleryTitle = `${canonName} Tattoo Designs — Buy Original ${canonName} Tattoos | Tattoo Art Customs`;
+      galleryTitle = `${canonName} Tattoo Designs — Buy Original ${canonName} Tattoos | Chorvix / Tattoo`;
       galleryMeta = blurb
         ? `${blurb.slice(0, 155)}…`
         : `Browse ${catCount} original ${canonName} tattoo designs from independent artists — full color artwork and linework stencil included with every design.`;
@@ -383,7 +383,7 @@ router.get('/gallery', async (req, res) => {
     if (sBlurb) {
       const sName = nameForStyle(styleQ);
       styleIntro = { name: sName, count: styleCount || 0, blurb: sBlurb };
-      galleryTitle = `${sName} Tattoo Designs — Buy Original ${sName} Tattoos | Tattoo Art Customs`;
+      galleryTitle = `${sName} Tattoo Designs — Buy Original ${sName} Tattoos | Chorvix / Tattoo`;
       galleryMeta = `${sBlurb.slice(0, 155)}…`;
       galleryCanonical = `${base}/gallery?style=${encodeURIComponent(styleQ)}`;
     }
@@ -441,7 +441,7 @@ router.get('/show-designs', async (req, res) => {
   const customerMember = await require('../middleware/auth').isCustomerMember(req.user);
   const base = config.baseUrl.replace(/\/$/, '');
   res.render('site/show-designs', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
-    title: 'As Seen on Color With Us! — Show Designs | Tattoo Art Customs',
+    title: 'As Seen on Color With Us! — Show Designs | Chorvix',
     designs: thumbs, customerMember,
     anyAired: thumbs.some((d) => d.show_aired),
     showDiscountPct: Math.round(showFeaturedDiscountRate() * 100),
@@ -492,7 +492,7 @@ router.get('/poppy-and-ziggy', async (req, res) => {
 router.get('/worlds', (req, res) => {
   const base = config.baseUrl.replace(/\/$/, '');
   res.render('site/worlds', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
-    title: 'Our Worlds — Useful Appz | Tattoo Art Customs',
+    title: 'Our Worlds — Useful Appz | Chorvix',
     metaDescription: 'One roof, separate rooms: Tattoo Art Customs, Little Inkers, Poppy & Ziggy, HerbHaul (21+), Chorvix, the Library, and the Useful Appz studio — each world on its own page.',
     canonical: `${base}/worlds`,
   });
@@ -595,7 +595,7 @@ router.get('/watch', (req, res) => {
   const base = config.baseUrl.replace(/\/$/, '');
   const watchVideos = require('../lib/watchVideos');
   res.render('site/watch', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
-    title: 'Watch — Tattoo Art Customs on YouTube',
+    title: 'Watch — Chorvix / Tattoo on YouTube',
     metaDescription: 'Watch Tattoo Art Customs commercials, design Shorts, and Rook 98 videos. Every play counts as a YouTube view — subscribe free.',
     canonical: `${base}/watch`,
     commercials: watchVideos.COMMERCIALS,
@@ -628,7 +628,7 @@ router.get('/by-request', async (req, res) => {
   const { isAdminRole } = require('../middleware/auth');
   const canClaim = !!req.user && (req.user.role === 'design_artist' || req.user.role === 'tattoo_shop' || isAdminRole(req.user.role));
   res.render('site/by-request', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
-    title: 'By-Request Characters — Tattoo Art Customs',
+    title: 'By-Request Characters — Chorvix / Tattoo',
     items, q: req.query.q || '', claimMap, myClaims, board, spotlight, canClaim,
     updated: data.updated ? new Date(data.updated).toLocaleDateString() : '',
     customPrice: withFeeCents(config.pricing.customFull),
@@ -679,7 +679,7 @@ router.post('/by-request/release', async (req, res) => {
 router.get('/designers/guide', async (req, res) => {
   const base = config.baseUrl.replace(/\/$/, '');
   res.render('site/designer-guide', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
-    title: 'Designer Guide — Tattoo Art Customs',
+    title: 'Designer Guide — Chorvix / Tattoo',
     metaDescription: 'Submission specs, style requirements, and commission details for Tattoo Art Customs designers.',
     canonical: `${base}/designers/guide`,
   });
@@ -738,7 +738,7 @@ router.get('/doodle-to-tattoo', async (req, res) => {
     } catch (e) { /* gate stays locked on db error */ }
   }
   res.render('site/doodle-to-tattoo', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
-    title: 'Turn Their Doodle Into Merchandise | Tattoo Art Customs',
+    title: 'Turn Their Doodle Into Merchandise | Chorvix / Tattoo',
     code: (req.query.code || '').trim().toUpperCase(),
     parentUnlocked,
     lightFull, lightDeposit,
@@ -978,7 +978,7 @@ router.get('/wishlist', async (req, res) => {
     };
   });
   res.render('site/wishlist', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
-    title: 'My Wishlist — Saved Tattoo Designs | Tattoo Art Customs',
+    title: 'My Wishlist — Saved Tattoo Designs | Chorvix / Tattoo',
     serverDesigns,
     merchItems,
     metaDescription: 'Your saved tattoo designs at Tattoo Art Customs — every piece you hearted, in one place. Come back anytime and buy the ones you love.',
@@ -1049,7 +1049,7 @@ router.get('/top-loved', async (req, res) => {
   const locale = res.locals.locale || 'en';
   const priceStr = fmtMoney(locale, withFeeCents(premadePriceCents(new Date(), member)));
   res.render('site/top-loved', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
-    title: 'Top Loved — Most-Hearted Tattoo Designs | Tattoo Art Customs',
+    title: 'Top Loved — Most-Hearted Tattoo Designs | Chorvix / Tattoo',
     designs: pageDesigns.map((d) => ({
       id: d.id,
       title: d.title,
@@ -1145,7 +1145,7 @@ router.get('/design/:id', async (req, res) => {
   };
   res.render('site/design', {
     homeFace: true, darkFace: true, bodyClass: 'page-dark',
-    title: `${design.title} — ${styleBit}Tattoo Design for Sale | Tattoo Art Customs`,
+    title: `${design.title} — ${styleBit}Tattoo Design for Sale | Chorvix / Tattoo`,
     design, artist, price, isCustom, sale: await salePriceActive(req.user), owned,
     imgFile, blurred, prevId, nextId,
     // Video-game backgrounds link to their matching by-request characters
@@ -1213,7 +1213,7 @@ router.get('/artists/:id', async (req, res) => {
     return { ...p, thumb: f ? `thumb/${f}` : '' };
   });
   res.render('site/artist', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
-    title: `${artist.display_name || 'Artist'} — Tattoo Designs for Sale | Tattoo Art Customs`,
+    title: `${artist.display_name || 'Artist'} — Tattoo Designs for Sale | Chorvix / Tattoo`,
     artist, bio: profile ? profile.bio : '', pieces: piecesWithThumbs, sale: await salePriceActive(req.user),
     metaDescription: `${artist.display_name || 'Artist'} — buy original tattoo designs from this artist's portfolio at Tattoo Art Customs.`,
     canonical: `${config.baseUrl.replace(/\/$/, '')}/artists/${artist.id}`,
@@ -1221,12 +1221,12 @@ router.get('/artists/:id', async (req, res) => {
 });
 
 router.get('/terms', (req, res) => res.render('site/terms', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
-  title: 'Terms of Service — Tattoo Art Customs',
+  title: 'Terms of Service — Chorvix',
   metaDescription: 'Tattoo Art Customs terms of service.',
 }));
 
 router.get('/privacy', (req, res) => res.render('site/privacy', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
-  title: 'Privacy Policy — Tattoo Art Customs',
+  title: 'Privacy Policy — Chorvix',
   metaDescription: 'Tattoo Art Customs privacy policy.',
 }));
 
@@ -1448,7 +1448,7 @@ router.get('/privacy/herbhaul-driver', (req, res) => res.render('site/privacy-ca
 router.get('/privacy/cannadash-driver', (req, res) => res.redirect(301, '/privacy/herbhaul-driver'));
 
 router.get('/about', (req, res) => res.render('site/about', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
-  title: 'About — Tattoo Art Customs',
+  title: 'About — Chorvix',
   metaDescription: 'About Tattoo Art Customs marketplace.',
 }));
 
@@ -1511,7 +1511,7 @@ router.get('/testers', async (req, res) => {
 });
 
 router.get('/tap-to-pay', (req, res) => res.render('site/tap-to-pay', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
-  title: 'Tap-to-Pay for Tattoo Shops — Tattoo Art Customs',
+  title: 'Tap-to-Pay for Tattoo Shops — Chorvix / Tattoo',
   metaDescription: 'Take in-person tap-to-pay in your tattoo shop with PayPal. No reader, no monthly fee until you sell — fair 1% split with Tattoo Art Customs.',
 }));
 
@@ -1520,7 +1520,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 // Contact page: public form + business email. Emailed straight to the owner.
 router.get('/contact', (req, res) => res.render('site/contact', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
-  title: 'Contact Us — Tattoo Art Customs',
+  title: 'Contact Us — Chorvix',
   metaDescription: 'Contact Tattoo Art Customs — orders, custom designs, artist and shop signups.',
 }));
 router.post('/contact', formLimiter, checkHoneypot, async (req, res) => {

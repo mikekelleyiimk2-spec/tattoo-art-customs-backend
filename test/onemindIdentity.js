@@ -23,6 +23,7 @@ async function runDbTests(ok) {
   ok(surfaces.isTieable('website') === true, 'website is a tieable surface');
   ok(surfaces.isTieable('onemind-app') === true, 'the OneMind app surface is tieable');
   ok(surfaces.isTieable('killintime-console') === true, 'the Neon Tombstone Console surface is tieable');
+  ok(surfaces.isTieable('brambleforce-game') === true, 'the Brambleforce game surface is tieable (registered 2026-10-31)');
   ok(surfaces.isTieable('poppy-ziggy-game') === false, 'the Poppy & Ziggy game can never write a tie');
   ok(surfaces.isTieable('little-inkers') === false, 'Little Inkers can never write a tie');
   ok(surfaces.isTieable('little-inkers-app') === false, 'the Little Inkers app can never write a tie');
@@ -214,13 +215,15 @@ async function runHttpTests(ok) {
   };
   const cookieOf = (r) => (r.setCookies || []).map((c) => c.split(';')[0]).join('; ');
 
-  // Sign-in / sign-up pages carry the OneMind framing.
+  // Sign-in / sign-up pages carry NO Chorvix/OneMind naming (settled
+  // standard, owner ruling 2026-10-31: the door is a plain sign-in —
+  // Continue with Google — and never names the seat underneath).
   const loginPage = await call('GET', '/login');
-  ok(loginPage.status === 200 && /OneMind sign-in/.test(loginPage.text),
-    'the login page states plainly that it is the OneMind sign-in');
+  ok(loginPage.status === 200 && !/Chorvix/.test(loginPage.text) && !/OneMind/.test(loginPage.text),
+    'the login page names no Chorvix/OneMind — a plain sign-in only (settled standard)');
   const signupPage = await call('GET', '/signup');
-  ok(signupPage.status === 200 && /OneMind account/.test(signupPage.text),
-    'the signup page states plainly that it creates a OneMind account');
+  ok(signupPage.status === 200 && !/Chorvix/.test(signupPage.text) && !/OneMind/.test(signupPage.text),
+    'the signup page names no Chorvix/OneMind — a plain account creation only (settled standard)');
 
   // The Google door while unconfigured: closed honestly — the
   // route 404s and NO page renders a dead button to it.
@@ -243,11 +246,12 @@ async function runHttpTests(ok) {
   ok(!!cookie, 'web signup sets a session cookie');
   const dash = await fetch(`${BASE}/account`, { headers: { cookie }, redirect: 'manual' });
   const dashText = await dash.text();
-  ok(dash.status === 200 && /Your OneMind seat/.test(dashText), 'the account page shows the OneMind seat');
+  ok(dash.status === 200 && /Your account/.test(dashText) && !/Chorvix/.test(dashText) && !/OneMind/.test(dashText),
+    'the account page shows the account plainly — no Chorvix/OneMind seat naming (settled standard)');
   const omMatch = /om_[0-9a-f]{24}/.exec(dashText);
   ok(!!omMatch, 'the account page shows the account\u2019s OneMind ID');
   const webOmId = omMatch && omMatch[0];
-  ok(/Website/.test(dashText) && /seated/.test(dashText), 'the account page lists the website tie');
+  ok(/Website/.test(dashText) && /last seen/.test(dashText), 'the account page lists the website tie');
 
   // The app door: same credentials, a different surface — the SAME
   // seat (same onemind_id), and a second tie appears.

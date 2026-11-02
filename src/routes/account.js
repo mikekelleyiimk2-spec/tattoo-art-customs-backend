@@ -115,7 +115,7 @@ router.get('/', requireLogin, async (req, res) => {
   // the dashboard shows the seat and every surface holding its tie.
   const oneMindSeat = await require('../lib/onemind').seatSummary(req.user).catch(() => null);
   res.render('account/dashboard', {
-    title: 'My Account — Tattoo Art Customs', photos, subs, orders,
+    title: 'My Account', authFace: true, photos, subs, orders,
     metaDescription: 'Your Tattoo Art Customs account.',
     creditBalance, creditTxns, destinations, withdrawals, uploads,
     destTypes: require('../lib/cashout').DEST_TYPES,
@@ -324,14 +324,14 @@ router.get('/upload', requireLogin, async (req, res) => {
   const canBatch = isDesigner || isAdminRole(req.user.role);
   if (isDesigner) {
     return res.render('artist/portfolio-upload', {
-      title: 'Upload a new piece — Tattoo Art Customs',
+      title: 'Upload a new piece', authFace: true,
       styles: DESIGN_STYLES, action: '/account/upload',
       customPrice: pricing.customFullCents(), premadePrice: pricing.premadePriceCents(),
       metaDescription: '',
     });
   }
   return res.render('account/upload', {
-    title: 'Upload your art — Tattoo Art Customs', metaDescription: '',
+    title: 'Upload your art', authFace: true, metaDescription: '',
     canBatch,
   });
 });

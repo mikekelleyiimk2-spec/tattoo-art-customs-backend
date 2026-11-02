@@ -22,8 +22,8 @@ router.get('/signup', async (req, res) => {
   // code in a cookie so the signup POST can credit the referrer.
   const ref = String(req.query.ref || '').slice(0, 16);
   if (ref) res.cookie('ref_code', ref, { maxAge: 30 * 86400000, httpOnly: true, sameSite: 'lax' });
-  res.render('auth/signup', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
-    title: 'Create account — Tattoo Art Customs', metaDescription: 'Create your Tattoo Art Customs account.',
+  res.render('auth/signup', {homeFace: true, darkFace: true, bodyClass: 'page-dark', authFace: true,
+    title: 'Create account', metaDescription: 'Create your account.',
     referralCode: String(ref || req.cookies?.ref_code || '').slice(0, 16),
     googleSignin: googleSeat.enabled(),
   });
@@ -86,8 +86,8 @@ router.post('/signup', authLimiter, checkHoneypot, async (req, res) => {
   res.redirect(req.session.returnTo || '/account');
 });
 
-router.get('/login', (req, res) => res.render('auth/login', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
-  title: 'Log in — Tattoo Art Customs', metaDescription: 'Log in to Tattoo Art Customs.',
+router.get('/login', (req, res) => res.render('auth/login', {homeFace: true, darkFace: true, bodyClass: 'page-dark', authFace: true,
+  title: 'Log in', metaDescription: 'Log in to your account.',
   googleSignin: googleSeat.enabled(),
 }));
 
@@ -166,8 +166,8 @@ router.get('/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/'));
 });
 
-router.get('/forgot', (req, res) => res.render('auth/forgot', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
-  title: 'Reset password — Tattoo Art Customs', metaDescription: 'Reset your password.',
+router.get('/forgot', (req, res) => res.render('auth/forgot', {homeFace: true, darkFace: true, bodyClass: 'page-dark', authFace: true,
+  title: 'Reset password', metaDescription: 'Reset your password.',
 }));
 router.post('/forgot', authLimiter, checkHoneypot, async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
@@ -195,7 +195,7 @@ router.get('/reset/:token', async (req, res) => {
   const user = await db.get(
     'SELECT id FROM users WHERE reset_token = ? AND reset_expires > ?', [req.params.token, Date.now()]);
   if (!user) return res.status(400).render('error', { title: 'Invalid link', message: 'This reset link is invalid or expired.' });
-  res.render('auth/reset', {homeFace: true, darkFace: true, bodyClass: 'page-dark',  title: 'Choose a new password — Tattoo Art Customs', token: req.params.token });
+  res.render('auth/reset', {homeFace: true, darkFace: true, bodyClass: 'page-dark', authFace: true, title: 'Choose a new password', token: req.params.token });
 });
 router.post('/reset/:token', authLimiter, checkHoneypot, async (req, res) => {
   const user = await db.get(
