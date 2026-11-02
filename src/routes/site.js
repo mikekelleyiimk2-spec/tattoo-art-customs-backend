@@ -1,4 +1,4 @@
-// Public pages: home, gallery, design detail, terms, privacy.
+// Public pages: home, gallery, design detail, terms, privacy, delete-account.
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -107,6 +107,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/raffle`, changefreq: 'weekly', priority: '0.6' },
     { loc: `${base}/terms`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy`, changefreq: 'monthly', priority: '0.3' },
+    { loc: `${base}/delete-account`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/odometer`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/ai-bar`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy/onemind`, changefreq: 'monthly', priority: '0.3' },
@@ -1228,6 +1229,13 @@ router.get('/terms', (req, res) => res.render('site/terms', {homeFace: true, dar
 router.get('/privacy', (req, res) => res.render('site/privacy', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Privacy Policy — Chorvix',
   metaDescription: 'Tattoo Art Customs privacy policy.',
+}));
+
+// Public account-deletion page (store listings — Amazon Appstore, Google
+// Play — link this URL for account/data deletion requests).
+router.get('/delete-account', (req, res) => res.render('site/delete-account', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
+  title: 'Delete your account — Chorvix',
+  metaDescription: 'How to delete your Chorvix account and the data associated with it.',
 }));
 
 // Per-app policy for the Odometer Android app (Google Play requires a
