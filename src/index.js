@@ -311,6 +311,7 @@ app.use('/transfers', require('./routes/transfers'));
 app.use('/play', require('./routes/play'));
 app.use('/api', require('./routes/api').router);
 app.use('/api', require('./routes/onemind'));
+app.use('/api', require('./routes/onemindVerify'));
 app.use('/api', require('./routes/appUpdates'));
 app.use('/api/muse', require('./routes/muse'));
 app.use('/api/muse', require('./routes/messenger'));

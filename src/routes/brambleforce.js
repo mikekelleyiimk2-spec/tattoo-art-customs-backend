@@ -26,6 +26,7 @@ const paypal = require('../lib/paypal');
 const updateTokens = require('../lib/updateTokens');
 const guestCheckout = require('../lib/guestCheckout');
 const bf = require('../lib/brambleforce');
+const seatVerify = require('../lib/seatVerify');
 const rolodex = require('../lib/rolodex');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 
@@ -450,13 +451,80 @@ function supportAuthorized(req) {
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
+// Seat binding at redemption (Chorvix verification layer, migration
+// 122): the shipped game redeems with a bare { code } and that
+// contract does not change — possession of the single-use code is
+// the proof, and the response for a proof-less call stays exactly
+// {product} | {error}. A caller that ALSO presents a seat proof
+// (x-api-token, a session token via Authorization/x-session-token,
+// or body seat_token/session_token) gets the unlock BOUND to that
+// seat in seat_entitlements, so the seat owns it on every platform
+// from then on (lib/seatVerify entitlementsFor reads the binding).
+// Every outcome lands in the integrity watch: bound, unbound,
+// rejected (forged / replayed codes are recorded behavior), and a
+// presented-but-invalid seat proof is recorded as such and binds
+// nothing. Binding is best-effort: it can never fail a redemption
+// the code itself earned.
+async function bindRedeemSeat(req, code, result) {
+  const body = req.body || {};
+  const bearer = /^Bearer (.+)$/.exec(req.headers.authorization || '');
+  const sessionToken = (bearer && bearer[1].trim())
+    || String(req.get('x-session-token') || body.session_token || body.seat_token || '').trim()
+    || null;
+  const apiToken = String(req.get('x-api-token') || body.api_token || '').slice(0, 128) || null;
+  const presented = !!(sessionToken || apiToken);
+  let bound = false;
+  try {
+    if (presented) {
+      const proof = await seatVerify.resolveSeatProof({ apiToken, sessionToken, req });
+      if (proof && proof.user) {
+        if (result.product) {
+          const codeRow = await db.get(
+            'SELECT * FROM brambleforce_codes WHERE code_hash = ?', [bf.hashCode(code)]);
+          if (codeRow) {
+            await seatVerify.bindCodeRedemption(proof.user, codeRow, result.product, result.grants);
+            bound = true;
+            await seatVerify.logEvent({
+              user: proof.user, kind: 'redeem_bound', detail: result.product, req,
+            });
+          }
+        } else {
+          await seatVerify.logEvent({
+            user: proof.user, kind: 'redeem_rejected', detail: result.error || 'unknown', req,
+          });
+        }
+      } else {
+        await seatVerify.logEvent({
+          kind: 'redeem_seat_proof_invalid',
+          detail: (proof && proof.reason) || 'unknown_proof', req,
+        });
+        if (result.error) {
+          await seatVerify.logEvent({ kind: 'redeem_rejected', detail: result.error, req });
+        } else {
+          await seatVerify.logEvent({ kind: 'redeem_unbound', detail: result.product, req });
+        }
+      }
+    } else if (result.error) {
+      await seatVerify.logEvent({ kind: 'redeem_rejected', detail: result.error, req });
+    } else {
+      await seatVerify.logEvent({ kind: 'redeem_unbound', detail: result.product, req });
+    }
+  } catch (e) {
+    console.error('brambleforce redeem seat binding failed:', e.message);
+  }
+  return { presented, bound };
+}
+
 function apiRouter() {
   const router = express.Router();
   router.use('/brambleforce/redeem', redeemCors, redeemLimiter);
   router.post('/brambleforce/redeem', async (req, res) => {
     const code = req.body && typeof req.body.code === 'string' ? req.body.code : '';
     const result = await bf.redeemCode(code);
-    return res.status(200).json(result);
+    const { presented, bound } = await bindRedeemSeat(req, code, result);
+    // Proof-less calls keep the exact legacy response; a caller that
+    // presented a seat proof additionally learns whether it bound.
+    return res.status(200).json(presented ? { ...result, bound } : result);
   });
   router.use('/brambleforce/support-reissue', redeemLimiter);
   router.post('/brambleforce/support-reissue', async (req, res) => {
