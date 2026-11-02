@@ -342,6 +342,18 @@ async function entitlementsFor(user) {
   return { products: entitlements.map((e) => e.product), entitlements };
 }
 
+// Is this product something that COSTS MONEY? The thief trap's
+// jurisdiction is exactly the paid catalogue (owner scope lock
+// 2026-11-01 20:58): every Brambleforce catalogue entry carries a
+// price — game, IAPs, skins, modes, fighters, bundle content,
+// monthly drops. A claim reaching for anything else — base/free
+// content, a name that was never sold — is answered honestly and
+// recorded, but it is NOT a theft attempt and never a strike.
+function isPaidProduct(productId) {
+  const p = bf.product(productId);
+  return !!(p && Number(p.priceCents) > 0);
+}
+
 // Check a client's claims against the truth. Every claim is answered
 // individually; the ones the server cannot prove come back
 // entitled:false and are written to the watch as claim_mismatch —
@@ -368,13 +380,25 @@ async function checkClaims(user, claims, ctx = {}) {
     user, kind: 'claim_check', detail: `${list.length} claimed, ${mismatches.length} unproven`,
     surface: ctx.surface, platform: ctx.platform, req: ctx.req,
   });
-  // Thief-trap bookkeeping (migration 124): an unproven claim is a
-  // strike — REPEATED forged claims spring the trap. A fully clean
-  // claim check is the seat demonstrating its state matches server
-  // truth, which is one of the trap's automatic lift paths.
-  if (mismatches.length) {
-    await strikeOrTrap(user, 'claim_mismatch', mismatches.join(','), ctx);
-  } else if (list.length) {
+  // Thief-trap bookkeeping (migration 124 + scope lock): only a
+  // forged claim on a PAID product is a strike ('claim_strike' in
+  // the watch — the audit evidence for any trap it springs).
+  // REPEATED paid strikes spring the trap. Forged claims on free /
+  // base / never-sold items are recorded above and go no further:
+  // if it doesn't reach for something that costs money, the trap
+  // has no opinion on it. A fully clean claim check is the seat
+  // demonstrating its state matches server truth — one of the
+  // trap's automatic lift paths.
+  const paidMismatches = mismatches.filter(isPaidProduct);
+  for (const product of paidMismatches) {
+    await logEvent({
+      user, kind: 'claim_strike', detail: product,
+      surface: ctx.surface, platform: ctx.platform, req: ctx.req,
+    });
+  }
+  if (paidMismatches.length) {
+    await strikeOrTrap(user, 'claim_mismatch', paidMismatches.join(','), ctx);
+  } else if (list.length && !mismatches.length) {
     await reconcileTrapFor(user, 'clean_claim_check');
   }
   return { results, mismatches };
@@ -465,14 +489,19 @@ async function liftTrap(user, via, ctx = {}) {
   return { active: false, reason: null, set_at: null };
 }
 
-// Theft strikes in the rolling window: unproven entitlement claims
-// + forged (unknown) unlock codes presented by the seat. A replayed
-// code ('spent') is NOT a strike — it springs the trap outright at
-// the redeem door.
+// Theft strikes in the rolling window: forged claims on PAID
+// products ('claim_strike', written by checkClaims) + forged
+// (unknown) unlock codes presented by the seat — the redeem door
+// serves only paid unlocks, so a forged code is a reach for paid
+// content by construction. A replayed code ('spent') is NOT a
+// strike — it springs the trap outright at the redeem door.
+// Ambiguous signals are never strikes: network errors, timeouts,
+// version mismatches, expired sessions, root declarations — none
+// of them write either of these kinds for a seat.
 async function strikeCountFor(userId) {
   const since = db.now() - TRAP_STRIKE_WINDOW_MS;
   const claims = await db.get(
-    "SELECT COUNT(*) AS n FROM verify_events WHERE user_id = ? AND ts >= ? AND kind = 'claim_mismatch'",
+    "SELECT COUNT(*) AS n FROM verify_events WHERE user_id = ? AND ts >= ? AND kind = 'claim_strike'",
     [userId, since]);
   const codes = await db.get(
     "SELECT COUNT(*) AS n FROM verify_events WHERE user_id = ? AND ts >= ? AND kind = 'redeem_rejected' AND detail = 'unknown'",
@@ -597,7 +626,7 @@ async function watchSummary(limit = 100) {
 
 module.exports = {
   SESSION_TTL_MS, REFRESH_TTL_MS, REJECTION_KINDS, FLAG_THRESHOLD,
-  TRAP_STRIKE_LIMIT, TRAP_STRIKE_WINDOW_MS,
+  TRAP_STRIKE_LIMIT, TRAP_STRIKE_WINDOW_MS, isPaidProduct,
   hashToken, rootFlagOf, logEvent,
   userFromApiToken, verifySessionToken, resolveSeatProof,
   openSession, refreshSession, revokeSession,

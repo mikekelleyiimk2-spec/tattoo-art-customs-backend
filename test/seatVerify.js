@@ -287,8 +287,12 @@ async function runDbTests(ok) {
     "SELECT * FROM verify_events WHERE user_id = ? AND kind = 'trap_lifted'", [uid3]);
   ok(liftEvents.length >= 1, 'trap: the lift is written to the watch');
 
-  // Strike path at the lib level: a fresh seat, three unproven
-  // claims -> trap; one fully clean claim check -> lifted.
+  // Strike path at the lib level, in the trap's NARROWED class
+  // (owner scope lock 2026-11-01 20:58 — PAID content only):
+  // forged claims on FREE / base / never-sold items are answered
+  // and recorded but are NOT strikes and can never trap; forged
+  // claims on PAID items strike, and the third springs the trap;
+  // one fully clean claim check lifts it.
   const uid4 = await db.insert('users', {
     email: 'cadence-strikes@test.local', password_hash: 'x', role: 'customer',
     display_name: 'Strikes', api_token: 'cadence-strikes-seat-key',
@@ -298,17 +302,79 @@ async function runDbTests(ok) {
     buyer_id: uid4, order_type: 'brambleforce:fighter_zola', amount_cents: 199,
     fee_cents: 0, status: 'paid', payment_method: 'paypal', paid_at: db.now(),
   });
-  await seatVerify.checkClaims(user4, ['skin_nope_a']);
-  await seatVerify.checkClaims(user4, ['skin_nope_b']);
+  ok(seatVerify.isPaidProduct('skin_tor') === true && seatVerify.isPaidProduct('base_skin_tor') === false,
+    'scope lock: the paid catalogue defines the trap\'s jurisdiction');
+  await seatVerify.checkClaims(user4, ['base_skin_tor']);
+  await seatVerify.checkClaims(user4, ['free_emote_wave']);
+  await seatVerify.checkClaims(user4, ['starter_tracer']);
+  const freeStrikes = await seatVerify.strikeCountFor(uid4);
+  ok(freeStrikes === 0, 'scope lock: forged claims on FREE items are not strikes');
+  const trapAfterFree = await seatVerify.trapStateFor(uid4);
+  ok(trapAfterFree.active === false, 'scope lock: a forged claim on a FREE item does NOT trap');
+  const freeMismatchEvents = await db.all(
+    "SELECT * FROM verify_events WHERE user_id = ? AND kind = 'claim_mismatch'", [uid4]);
+  ok(freeMismatchEvents.length === 3, 'scope lock: free claims are still answered + recorded in the watch');
+  await seatVerify.checkClaims(user4, ['skin_tor']);
+  await seatVerify.checkClaims(user4, ['crt_filter']);
   const trapBefore3 = await seatVerify.trapStateFor(uid4);
-  ok(trapBefore3.active === false, 'trap: two forged claims are strikes, not yet a trap (asking is recorded, not punished)');
-  await seatVerify.checkClaims(user4, ['skin_nope_c']);
+  ok(trapBefore3.active === false, 'trap: two forged PAID claims are strikes, not yet a trap (asking is recorded, not punished)');
+  await seatVerify.checkClaims(user4, ['war_bond']);
   const trapAt3 = await seatVerify.trapStateFor(uid4);
   ok(trapAt3.active === true && trapAt3.reason === 'repeated_forged_claims',
-    'trap: the third forged claim springs the trap');
+    'scope lock: a forged claim on a PAID item traps — the third paid strike springs it');
+  const strikeEvents = await db.all(
+    "SELECT * FROM verify_events WHERE user_id = ? AND kind = 'claim_strike'", [uid4]);
+  ok(strikeEvents.length === 3, 'trap audit: every strike is in the watch as evidence (seat, product, time)');
   await seatVerify.checkClaims(user4, ['fighter_zola']);
   const trapAfterCleanCheck = await seatVerify.trapStateFor(uid4);
   ok(trapAfterCleanCheck.active === false, 'trap: a fully clean claim check lifts the trap');
+
+  // === FALSE-POSITIVE GUARD fixtures (owner guardrail 2026-11-01
+  // 20:57): user5 is the honest odd-setup seat — sideload buyer
+  // (paid 'game' via a sideload order), one paid fighter, one
+  // unspent unlock code, an EXPIRED session row (ambiguous signal),
+  // and a root declaration on every session it opens (db phase
+  // mints the code + the expired row; the HTTP phase runs it
+  // through the full event table).
+  const apiToken5 = 'cadence-guard-seat-key';
+  const uid5 = await db.insert('users', {
+    email: 'cadence-guard@test.local', password_hash: 'x', role: 'customer',
+    display_name: 'Guard', api_token: apiToken5,
+  });
+  stash.uid5 = uid5;
+  stash.apiToken5 = apiToken5;
+  await db.insert('orders', {
+    buyer_id: uid5, order_type: 'sideload:com.usefulappz.game2runandgun', amount_cents: 699,
+    fee_cents: 0, status: 'paid', payment_method: 'paypal', paid_at: db.now(),
+  });
+  // A second gated download (the cadence-gate fixture package) for
+  // the guard's download-token leg of the event table.
+  await db.insert('orders', {
+    buyer_id: uid5, order_type: 'sideload:com.usefulappz.cadencegate', amount_cents: 699,
+    fee_cents: 0, status: 'paid', payment_method: 'paypal', paid_at: db.now(),
+  });
+  await db.insert('orders', {
+    buyer_id: uid5, order_type: 'brambleforce:fighter_otto', amount_cents: 199,
+    fee_cents: 0, status: 'paid', payment_method: 'paypal', paid_at: db.now(),
+  });
+  const codeOrder5Id = await db.insert('orders', {
+    buyer_id: '', order_type: 'brambleforce:skin_selene', amount_cents: 99,
+    fee_cents: 0, status: 'paid', payment_method: 'paypal', paid_at: db.now(),
+    guest_email: 'guest5@test.local',
+  });
+  const codeOrder5 = await db.get('SELECT * FROM orders WHERE id = ?', [codeOrder5Id]);
+  const issued5 = await bf.issueCodeForOrder(codeOrder5, 'skin_selene');
+  stash.code5 = issued5.code;
+  const expToken5 = 'cxs_' + crypto.randomBytes(32).toString('hex');
+  const expRefresh5 = 'cxr_' + crypto.randomBytes(32).toString('hex');
+  const past5 = db.now() - 1000;
+  await db.insert('seat_sessions', {
+    user_id: uid5, token_hash: seatVerify.hashToken(expToken5), refresh_hash: seatVerify.hashToken(expRefresh5),
+    surface: null, platform: 'android', client_root: 'root', client_build: 'sideload-1.3.0',
+    created_at: past5 - 10000, expires_at: past5, refresh_expires_at: past5 + 10000, last_seen_at: past5,
+    revoked_at: null, revoke_reason: null,
+  });
+  stash.expiredToken5 = expToken5;
 }
 
 async function runHttpTests(ok) {
@@ -519,6 +585,71 @@ async function runHttpTests(ok) {
     ok(seatDoor.status === 200 && Array.isArray(seatDoor.json.entitled_products)
       && seatDoor.json.entitled_products.includes('fighter_dane'),
     'cadence: the seat door carries the seat\'s entitled products for the relay\'s claim enforcement');
+  }
+
+  // === FALSE-POSITIVE GUARD (owner guardrail 2026-11-01 20:57) ===
+  // User5 is an honest player with an odd-but-legit setup: ROOT
+  // declared on every session, a SIDELOAD install (the game bought
+  // direct, not through a store), a controller-era build string —
+  // and only legitimate claims. It runs the FULL event table. The
+  // trap must NEVER spring: not on its configuration, not on
+  // ambiguous signals (an expired session, a mistyped token), not
+  // on honest use of every door.
+  r = await call('POST', '/api/onemind/session',
+    { surface: 'brambleforce-game', platform: 'android', client: { root: true, build: 'sideload-1.3.0-controller' } },
+    { 'x-api-token': stash.apiToken5 });
+  ok(r.status === 200 && r.json && r.json.ok === true && r.json.trap && r.json.trap.active === false,
+    'false-positive guard: root-declared sideload seat opens a session, trap OFF');
+  const u5 = r.json;
+  r = await call('POST', '/api/onemind/verify', {}, { authorization: `Bearer ${u5.session_token}` });
+  ok(r.status === 200 && r.json.session.client_root === 'root' && r.json.trap.active === false,
+    'false-positive guard: verify records the root declaration and does not judge it');
+  r = await call('POST', '/api/onemind/session/refresh', { refresh_token: u5.refresh_token });
+  ok(r.status === 200 && r.json.trap && r.json.trap.active === false,
+    'false-positive guard: refresh rotates cleanly, trap OFF');
+  const u5b = r.json;
+  r = await call('GET', '/api/onemind/entitlements', undefined, { authorization: `Bearer ${u5b.session_token}` });
+  ok(r.status === 200 && r.json.products.includes('game') && r.json.products.includes('fighter_otto'),
+    'false-positive guard: sideload purchase + paid fighter read back as entitlements');
+  r = await call('POST', '/api/onemind/entitlements/check',
+    { claims: ['game', 'fighter_otto'] }, { authorization: `Bearer ${u5b.session_token}` });
+  ok(r.status === 200 && r.json.results.every((x) => x.entitled),
+    'false-positive guard: claiming only what it owns checks out clean');
+  r = await call('POST', '/api/brambleforce/redeem', { code: stash.code5 }, { 'x-api-token': stash.apiToken5 });
+  ok(r.status === 200 && r.json && r.json.product === 'skin_selene' && r.json.bound === true
+    && r.json.trap && r.json.trap.active === false,
+    'false-positive guard: a first-use unlock code redeems + binds, trap OFF');
+  {
+    const db = require('../src/db');
+    const updateTokens = require('../src/lib/updateTokens');
+    const guardOrder = await db.get(
+      "SELECT * FROM orders WHERE buyer_id = ? AND order_type = 'sideload:com.usefulappz.cadencegate'", [stash.uid5]);
+    const guardToken = updateTokens.issue(guardOrder.id, 'com.usefulappz.cadencegate');
+    r = await call('GET', `/api/apps/com.usefulappz.cadencegate/apk?t=${encodeURIComponent(guardToken)}`);
+    ok(r.status !== 401, 'false-positive guard: the sideload buyer\'s download token passes the gate');
+  }
+  r = await call('GET', '/api/onemind/seat', undefined, { 'x-api-token': stash.apiToken5 });
+  ok(r.status === 200 && r.json.entitled_products.includes('skin_selene'),
+    'false-positive guard: the relay\'s seat check validates the honest seat (bound skin now in its truth)');
+  // Ambiguous signals, thrown at the same seat: an EXPIRED session
+  // and a FORGED token are refused as doors — and spring nothing.
+  r = await call('POST', '/api/onemind/verify', {}, { authorization: `Bearer ${stash.expiredToken5}` });
+  ok(r.status === 401 && r.json.error === 'session_expired',
+    'false-positive guard: an expired session is refused as expired (ambiguous signal, not theft)');
+  r = await call('POST', '/api/onemind/verify', {}, { authorization: `Bearer cxs_${'a'.repeat(64)}` });
+  ok(r.status === 401 && r.json.error === 'session_unknown',
+    'false-positive guard: a forged token is refused as unknown (no seat, no trap)');
+  r = await call('POST', '/api/onemind/verify', {}, { authorization: `Bearer ${u5b.session_token}` });
+  ok(r.status === 200 && r.json.trap && r.json.trap.active === false,
+    'false-positive guard: after the full event table the honest odd-setup seat is STILL untrapped');
+  {
+    const db = require('../src/db');
+    const seatVerify = require('../src/lib/seatVerify');
+    const guardTrapEvents = await db.all(
+      "SELECT * FROM verify_events WHERE user_id = ? AND kind = 'trap_set'", [stash.uid5]);
+    const guardState = await seatVerify.trapStateFor(stash.uid5);
+    ok(guardTrapEvents.length === 0 && guardState.active === false,
+      'false-positive guard: no trap was ever set on the honest seat — zero trap_set events in the watch');
   }
 
   // The audit door: service token only, and the record is real.
