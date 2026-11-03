@@ -1237,6 +1237,13 @@ router.get('/delete-account', (req, res) => res.render('site/delete-account', {h
   title: 'Delete your account — Chorvix',
   metaDescription: 'How to delete your Chorvix account and the data associated with it.',
 }));
+// Landing page after a self-serve account deletion (POST /account/delete):
+// the account and its session are already gone — this is a plain,
+// signed-out confirmation.
+router.get('/account-deleted', (req, res) => res.render('site/account-deleted', {homeFace: true, darkFace: true, bodyClass: 'page-dark',
+  title: 'Account deleted — Chorvix',
+  metaDescription: 'Your Chorvix account has been deleted.',
+}));
 
 // Per-app policy for the Odometer Android app (Google Play requires a
 // public privacy-policy URL for location foreground-service apps).

@@ -1,0 +1,25 @@
+<h1>Delete my account</h1>
+<p class="muted">Signed in as <%= currentUser.email %></p>
+
+<section class="card">
+  <h2>This is permanent</h2>
+  <p>Deleting your account cannot be undone. Here is exactly what happens:</p>
+  <ul>
+    <li>Your account and sign-in are removed, and you are signed out everywhere.</li>
+    <li>Your profile, photos, favorites, messages you sent, and any art you uploaded that has not been sold are deleted.</li>
+    <li>Any active membership is canceled (at PayPal too) and removed.</li>
+    <li>Art you sold stays available to the people who bought it, with your name removed.</li>
+    <li>Order and payment records we must keep for our books stay, with your name and email address removed from them.</li>
+  </ul>
+  <p>If you have site credit or a payout on the way, settle that first — it goes away with the account.</p>
+
+  <form method="post" action="/account/delete" class="form"
+        onsubmit="return confirm('Permanently delete your account? This cannot be undone.')">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <label for="confirm_email">Type your account email to confirm</label>
+    <input type="email" id="confirm_email" name="confirm_email" autocomplete="off" required
+           placeholder="<%= currentUser.email %>">
+    <p><button class="btn danger" type="submit">Permanently delete my account</button></p>
+  </form>
+  <p><a href="/account">Never mind — take me back to my account</a></p>
+</section>

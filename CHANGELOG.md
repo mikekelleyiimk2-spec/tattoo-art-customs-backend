@@ -5,6 +5,13 @@ https://tattoo-art-customs.onrender.com.
 **Versioning:** the deployed git commit (reported by `/health`) is the
 website's version — package.json stays 1.0.0 between releases.
 
+## 2026-11-02
+
+### Added — Self-serve account deletion (the privacy promise, working)
+- The privacy policy promised "delete your account and data at any time from your account page," but the code had no self-serve path — only an email request (the public /delete-account page, commit 3710289). Now real: a **Delete my account** section on /account leads to a confirm page (`GET /account/delete`) where the member types their own account email to confirm; `POST /account/delete` runs `src/lib/accountDeletion.js`.
+- Behavior, following the codebase's own data patterns: the account IS the OneMind seat, so the users row, seat ties/claims/sessions, profiles, photos, favorites, sent messages, credit ledger, payout destinations, and shop configuration are deleted in one transaction; active memberships are canceled at PayPal first (best-effort, same pattern as the membership cancel route). Sold designs stay for their buyers with `artist_id` nulled (the admin rule that a piece with sales cannot be deleted); unsold uploads are deleted with their files. Order/payment records the books must keep stay with the buyer's email scrubbed. Email-keyed seat state (pending claims, guest pending ties) is removed by address so a leftover claim tap cannot resurrect a deleted seat. All sessions are ended and the member lands on a plain public confirmation page (`/account-deleted`). Staff accounts are refused on this page, and an impersonating admin can never delete a member through it.
+- Copy reconciled: /privacy "Retention and deletion" now describes the built behavior exactly, and the public /delete-account page leads with the self-serve route (email request kept as the alternative).
+
 ## 2026-11-01
 
 ### Added — Chorvix verification layer: sessions that keep up + entitlements proven against server truth (migration 122)

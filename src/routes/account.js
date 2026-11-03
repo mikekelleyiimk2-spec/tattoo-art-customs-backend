@@ -215,6 +215,57 @@ router.post('/password', requireLogin, formLimiter, checkHoneypot, async (req, r
   req.session.flash = 'Password changed.';
   res.redirect('/account');
 });
+
+// --- Delete my account (self-serve; the privacy policy promises this) ---
+// Confirm step: the member types their own account email. Staff accounts
+// are refused here (they are removed by the head admin, never self-serve),
+// and a head admin impersonating a member can never delete that member's
+// account through this door.
+router.get('/delete', requireLogin, async (req, res) => {
+  if (isAdminRole(req.user.role)) {
+    req.session.flash = 'Staff accounts can\'t be deleted from this page.';
+    return res.redirect('/account');
+  }
+  res.render('account/delete', {
+    title: 'Delete my account', authFace: true, metaDescription: '',
+  });
+});
+
+router.post('/delete', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
+  if (req.session.impersonatorId) {
+    req.session.flash = 'Accounts can\'t be deleted while an admin is viewing as the member.';
+    return res.redirect('/account');
+  }
+  if (isAdminRole(req.user.role)) {
+    req.session.flash = 'Staff accounts can\'t be deleted from this page.';
+    return res.redirect('/account');
+  }
+  const typed = String(req.body.confirm_email || '').trim().toLowerCase();
+  const mine = String(req.user.email || '').trim().toLowerCase();
+  if (!typed || typed !== mine) {
+    req.session.flash = 'Type your account email exactly to confirm deletion.';
+    return res.redirect('/account/delete');
+  }
+  try {
+    const { deleteAccount } = require('../lib/accountDeletion');
+    const result = await deleteAccount(req.user.id);
+    if (!result.deleted) {
+      req.session.flash = 'That account could not be deleted.';
+      return res.redirect('/account');
+    }
+    console.log(`account deleted (self-serve): user ${req.user.id}, rows: ${JSON.stringify(result.counts)}, paypal subs canceled: ${result.paypalCanceled}, files removed: ${result.filesRemoved}`);
+  } catch (e) {
+    console.error('self-serve account deletion failed:', e.message);
+    req.session.flash = 'Deletion failed — nothing was removed. Please try again or email us.';
+    return res.redirect('/account/delete');
+  }
+  // The account (and every session row) is gone: destroy this session
+  // too and land on the plain public confirmation page, signed out.
+  const done = () => res.redirect('/account-deleted');
+  if (req.session && typeof req.session.destroy === 'function') {
+    req.session.destroy(() => done());
+  } else done();
+});
 router.post('/topup', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
   const dollars = parseFloat(String(req.body.amount || ''));
   if (!isFinite(dollars) || dollars <= 0) {
