@@ -263,6 +263,29 @@ app.use('/videos', (req, res, next) => {
   if (!base || !m) return next();
   return res.redirect(302, `${base}/videos/${m[1]}`);
 });
+// R2 fallback for the other big public media files (bandwidth fix
+// 2026-11-03): the Play Console FGS demo clips and the Dawnfold
+// edition audio were baked into the image and streamed through
+// Render's metered bandwidth (~57 MB of media per full sweep). They
+// now live in the R2 public bucket under the SAME paths (uploaded via
+// POST /api/muse/upload-public-media); the public URLs the Play
+// Console declarations already point at stay byte-identical — only
+// the byte source changes. express.static above serves a baked local
+// copy first when one exists; once the copies leave the image, this
+// 302 takes over.
+const PUBLIC_MEDIA_PATHS = new Set([
+  '/odometer-fgs-demo.mp4',
+  '/screenqr-demo.mp4',
+  '/ai-bar-fgs-demo.mp4',
+  '/audio/the-big-one/edition-1.mp3',
+]);
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  if (!PUBLIC_MEDIA_PATHS.has(req.path)) return next();
+  const base = (process.env.R2_PUBLIC_URL || '').replace(/\/$/, '');
+  if (!base) return next();
+  return res.redirect(302, `${base}${req.path}`);
+});
 app.use('/img/photos', express.static(photosDir));
 app.use('/img/healed', express.static(healedDir));
 app.use('/img/avatars', express.static(avatarsDir));

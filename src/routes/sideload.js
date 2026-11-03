@@ -13,7 +13,7 @@ const paypal = require('../lib/paypal');
 const guestCheckout = require('../lib/guestCheckout');
 const seatVerify = require('../lib/seatVerify');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
-const { resolveStoredPath } = require('../lib/storage');
+const { resolveStoredPath, servePrivateFile, privateRef, r2Configured } = require('../lib/storage');
 const testerPool = require('../lib/testerPool');
 const fillCycle = require('../lib/fillCycle');
 const rolodex = require('../lib/rolodex');
@@ -46,6 +46,12 @@ const FREE_APPS = {
     appName: 'Tattoo Art Customs',
     platform: 'android',
     kidSafe: false,
+    // Bandwidth fix 2026-11-03: this APK is ~230 MB and was streaming
+    // through Render's metered bandwidth on every download. The bytes
+    // now live in the private R2 bucket (migrated server-side via
+    // POST /api/muse/r2-migrate-sideload); serveFreeFile answers with
+    // a presigned redirect whenever R2 is configured.
+    r2Key: 'sideload/tac-android-free.apk',
   },
 };
 
@@ -62,14 +68,21 @@ function hostedUrl(cfg) {
 }
 
 // True when the download door can actually serve bytes: a stored local
-// file OR a configured hosted URL.
+// file OR a configured hosted URL OR an R2-migrated build.
 function freeFileReady(cfg) {
+  if (cfg.r2Key && r2Configured()) return true;
   const rel = process.env[cfg.envVar] || cfg.defaultRel;
   return Boolean(resolveStoredPath(rel)) || Boolean(hostedUrl(cfg));
 }
 
 function serveFreeFile(appKey, res) {
   const cfg = FREE_APPS[appKey];
+  // R2-migrated builds serve from the bucket, never through this
+  // service's bandwidth (see the r2Key note on the TAC entry).
+  if (cfg.r2Key && r2Configured()) {
+    const ref = privateRef(cfg.r2Key);
+    if (ref) return servePrivateFile(res, ref, { downloadName: cfg.filename });
+  }
   const rel = process.env[cfg.envVar] || cfg.defaultRel;
   const absPath = resolveStoredPath(rel);
   if (absPath) return res.download(absPath, cfg.filename);

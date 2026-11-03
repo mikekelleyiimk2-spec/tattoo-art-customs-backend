@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const db = require('../db');
 const config = require('../config');
-const { resolveStoredPath } = require('../lib/storage');
+const { resolveStoredPath, servePrivateFile, privateRef, r2Configured } = require('../lib/storage');
 const paypal = require('../lib/paypal');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 const pricing = require('../lib/pricing');
@@ -616,7 +616,15 @@ router.get('/download/:token', async (req, res) => {
   }
   let absPath = null;
   if (order.order_type === 'ios_app') {
-    // iOS app IPA: served from the configured path.
+    // iOS app IPA (~109 MB): bandwidth fix 2026-11-03 — the bytes were
+    // migrated to the private R2 bucket (POST /api/muse/r2-migrate-
+    // sideload) and now serve via presigned redirect, never through
+    // Render's metered bandwidth. Local path remains the fallback
+    // wherever R2 is not configured.
+    if (r2Configured()) {
+      const ref = privateRef('ios-app/tattoo-art-customs.ipa');
+      if (ref) return servePrivateFile(res, ref, { downloadName: 'tattoo-art-customs.ipa' });
+    }
     const ipaPath = process.env.IOS_APP_IPA_PATH || 'uploads/ios-app/tattoo-art-customs.ipa';
     absPath = resolveStoredPath(ipaPath);
     if (!absPath) {
@@ -625,7 +633,12 @@ router.get('/download/:token', async (req, res) => {
     return res.download(absPath, 'tattoo-art-customs.ipa');
   }
   if (order.order_type === 'tac_android_pro') {
-    // TAC Android Pro APK (paid sideload): served from the configured path.
+    // TAC Android Pro APK (~236 MB): same R2 migration as the IPA —
+    // presigned redirect when R2 is configured, local file otherwise.
+    if (r2Configured()) {
+      const ref = privateRef('sideload/tac-android-pro.apk');
+      if (ref) return servePrivateFile(res, ref, { downloadName: 'tac-android-pro.apk' });
+    }
     const apkPath = process.env.TAC_ANDROID_PRO_APK_PATH || 'uploads/sideload/tac-android-pro.apk';
     absPath = resolveStoredPath(apkPath);
     if (!absPath) {
