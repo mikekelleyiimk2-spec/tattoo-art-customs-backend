@@ -184,6 +184,35 @@ async function putPrivateObject(absPath, key, contentType) {
   return `${R2_REF_PREFIX}${bucket}/${key}`;
 }
 
+// Build the storable 'r2://<bucket>/<key>' ref for a PRIVATE-bucket key
+// from the seated env (the bucket name lives only in the dashboard env,
+// never in the repo). Returns null when R2 is not configured.
+function privateRef(key) {
+  if (!r2Configured()) return null;
+  return `${R2_REF_PREFIX}${process.env.R2_PRIVATE_BUCKET}/${key}`;
+}
+
+// Upload a local file straight to the PUBLIC R2 bucket at an explicit
+// key (the /videos + demo-media pattern: big public files must NOT be
+// baked into the Docker image and streamed through Render's metered
+// bandwidth — R2 public reads are free). Returns the public https URL.
+// THROWS on failure, like putPrivateObject.
+async function putPublicObject(absPath, key, contentType) {
+  if (!r2Configured()) {
+    const e = new Error('r2_not_configured');
+    e.code = 'r2_not_configured';
+    throw e;
+  }
+  const { PutObjectCommand } = require('@aws-sdk/client-s3');
+  await r2Client().send(new PutObjectCommand({
+    Bucket: process.env.R2_PUBLIC_BUCKET,
+    Key: key,
+    Body: fs.createReadStream(absPath),
+    ContentType: contentType || 'application/octet-stream',
+  }));
+  return `${publicBaseUrl()}/${key}`;
+}
+
 // Delete a stored file, whatever form its DB reference takes:
 //   r2://bucket/key → DeleteObject
 //   https URL under R2_PUBLIC_URL → DeleteObject from the public bucket
@@ -350,6 +379,8 @@ module.exports = {
   resolveStoredPath,
   storeFile,
   putPrivateObject,
+  putPublicObject,
+  privateRef,
   removeStored,
   servePrivateFile,
   presignGet,

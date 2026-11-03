@@ -1209,6 +1209,132 @@ router.post('/upload-ios-update', (req, res) => {
   });
 });
 
+// POST /api/muse/upload-public-media
+// Publishes one of the site's big PUBLIC media files (promo videos, the
+// Play Console demo clips, the Dawnfold edition audio) into the public
+// R2 bucket so its bytes stop transiting Render's metered bandwidth
+// (2026-11-03: the 5 GB Hobby allowance burned out; the baked-in promo
+// MP4 alone is ~51 MB per play). The URL never changes: index.js 302s
+// the same public paths to R2_PUBLIC_URL once the baked copies leave
+// the image, exactly like the /videos fallback. Body: `key` (strict
+// allowlist below) + single `file` field. Same service-token auth as
+// the other upload routes; 404s when unset; 503 when R2 is not
+// configured. (Upload middleware defined next to appUpdateUpload.)
+const PUBLIC_MEDIA_KEYS = {
+  'videos/promo.mp4': 'video/mp4',
+  'videos/promo-short.mp4': 'video/mp4',
+  'odometer-fgs-demo.mp4': 'video/mp4',
+  'screenqr-demo.mp4': 'video/mp4',
+  'ai-bar-fgs-demo.mp4': 'video/mp4',
+  'audio/the-big-one/edition-1.mp3': 'audio/mpeg',
+};
+router.post('/upload-public-media', (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  publicMediaUpload(req, res, async (err) => {
+    if (err) return res.status(400).json({ ok: false, error: err.message });
+    if (!req.file) return res.status(400).json({ ok: false, error: 'no file' });
+    const staged = req.file.path;
+    const done = (code, obj) => {
+      try { fs.unlinkSync(staged); } catch { /* already gone */ }
+      return res.status(code).json(obj);
+    };
+    try {
+      const key = String(req.body.key || '');
+      const contentType = PUBLIC_MEDIA_KEYS[key];
+      if (!contentType) {
+        return done(400, { ok: false, error: 'key not on the public-media allowlist' });
+      }
+      const sha256 = await new Promise((resolve, reject) => {
+        const h = crypto.createHash('sha256');
+        const s = fs.createReadStream(staged);
+        s.on('data', (d) => h.update(d));
+        s.on('end', () => resolve(h.digest('hex')));
+        s.on('error', reject);
+      });
+      const sizeBytes = fs.statSync(staged).size;
+      const storage = require('../lib/storage');
+      let url;
+      try {
+        url = await storage.putPublicObject(staged, key, contentType);
+      } catch (e) {
+        if (e && e.code === 'r2_not_configured') {
+          return done(503, { ok: false, error: 'r2_not_configured' });
+        }
+        throw e;
+      }
+      return done(200, { ok: true, key, url, sha256, sizeBytes });
+    } catch (e) {
+      console.error('[muse/upload-public-media] failed:', e.message);
+      return done(500, { ok: false, error: 'store failed' });
+    }
+  });
+});
+
+// POST /api/muse/r2-migrate-sideload
+// Server-side move of the big sideload binaries that still live on the
+// 1 GB Render disk and stream through Render's metered bandwidth on
+// every download (2026-11-03 bandwidth bleed: TAC Android free APK
+// ~230 MB per download, TAC Pro ~236 MB, TAC iOS IPA ~109 MB). Each
+// allowlisted slot's on-disk file streams straight into the private R2
+// bucket at a fixed key; the serving routes (sideload.js serveFreeFile,
+// orders.js /download) then answer via servePrivateFile presigned
+// redirects whenever R2 is configured. Body (JSON): { slots?: [...] }
+// — omitted = all slots. Returns each slot's storageRef + sha256 +
+// sizeBytes computed from the on-disk bytes. Same service-token auth;
+// 404s when unset; 503 when R2 is not configured.
+const SIDELOAD_R2_SLOTS = {
+  'tac-android-free': {
+    rel: 'uploads/sideload/tac-android-free.apk',
+    key: 'sideload/tac-android-free.apk',
+    contentType: 'application/vnd.android.package-archive',
+  },
+  'tac-android-pro': {
+    rel: 'uploads/sideload/tac-android-pro.apk',
+    key: 'sideload/tac-android-pro.apk',
+    contentType: 'application/vnd.android.package-archive',
+  },
+  'tac-ios': {
+    rel: 'uploads/ios-app/tattoo-art-customs.ipa',
+    key: 'ios-app/tattoo-art-customs.ipa',
+    contentType: 'application/octet-stream',
+  },
+};
+router.post('/r2-migrate-sideload', express.json(), async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  const storage = require('../lib/storage');
+  if (!storage.r2Configured()) {
+    return res.status(503).json({ ok: false, error: 'r2_not_configured' });
+  }
+  const wanted = Array.isArray(req.body && req.body.slots) && req.body.slots.length
+    ? req.body.slots.map(String)
+    : Object.keys(SIDELOAD_R2_SLOTS);
+  const results = {};
+  try {
+    for (const slot of wanted) {
+      const cfg = SIDELOAD_R2_SLOTS[slot];
+      if (!cfg) return res.status(400).json({ ok: false, error: `unknown slot: ${slot}` });
+      const abs = storage.resolveStoredPath(cfg.rel);
+      if (!abs) return res.status(404).json({ ok: false, error: `slot file missing on disk: ${slot}` });
+      const sha256 = await new Promise((resolve, reject) => {
+        const h = crypto.createHash('sha256');
+        const s = fs.createReadStream(abs);
+        s.on('data', (d) => h.update(d));
+        s.on('end', () => resolve(h.digest('hex')));
+        s.on('error', reject);
+      });
+      const sizeBytes = fs.statSync(abs).size;
+      const storageRef = await storage.putPrivateObject(abs, cfg.key, cfg.contentType);
+      results[slot] = { storageRef, sha256, sizeBytes };
+    }
+    return res.json({ ok: true, results });
+  } catch (e) {
+    console.error('[muse/r2-migrate-sideload] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'migrate failed' });
+  }
+});
+
 // POST /api/muse/pro-apk-download-link
 // Mints a direct-install download link for the TAC Android Pro sideload APK
 // (uploaded via /upload-sideload, app=tac-android-pro) so the owner can
@@ -1760,6 +1886,21 @@ const iosUpdateUpload = multer({
   fileFilter: (req, file, cb) => {
     if (/\.ipa$/i.test(file.originalname)) cb(null, true);
     else cb(new Error('Only .ipa files are allowed.'));
+  },
+}).single('file');
+
+// Public-media upload middleware (used by POST /upload-public-media
+// defined above; same staging dir as the other big-file pipes, 300 MB
+// cap — the largest allowlisted media file is ~51 MB).
+const publicMediaUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, ipaStageDir),
+    filename: (req, file, cb) => cb(null, `stg-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.media`),
+  }),
+  limits: { fileSize: 300 * 1024 * 1024, files: 1 },
+  fileFilter: (req, file, cb) => {
+    if (/\.(mp4|mp3)$/i.test(file.originalname)) cb(null, true);
+    else cb(new Error('Only .mp4 / .mp3 files are allowed.'));
   },
 }).single('file');
 
