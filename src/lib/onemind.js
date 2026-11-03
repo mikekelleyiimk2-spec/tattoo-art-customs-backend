@@ -22,6 +22,7 @@
 //   Recognition is the default; introduction is the failure mode.
 const crypto = require('crypto');
 const db = require('../db');
+const config = require('../config');
 const surfaces = require('./surfaces');
 
 function mintOneMindId() {
@@ -170,6 +171,55 @@ async function tiesFor(userId) {
   }));
 }
 
+// --- The owner's seat name rotation (owner order 2026-11-03) ---
+// The site administrator's in-game display name cycles through
+// three names — TheWholeDamnGarden, IAmRoot, HeOwnsTheBus — one
+// per calendar day (America/Chicago), so every surface reading his
+// seat sees the same name all day and the next name tomorrow.
+// Applied ONLY here, at seat-payload build time: the pinned
+// account is the bootstrap head administrator (role 'head_admin'
+// AND the configured ADMIN_EMAIL — the account the seed creates,
+// the one whose seat reads as the site administrator). The stored
+// users.display_name NEVER changes, so authorship, admin identity,
+// and every public page that renders the stored name are untouched;
+// every other account's seat name is its stored name, always.
+const OWNER_SEAT_NAMES = ['TheWholeDamnGarden', 'IAmRoot', 'HeOwnsTheBus'];
+const OWNER_SEAT_TZ = 'America/Chicago';
+
+// Days since the epoch of the calendar date in the owner's
+// timezone (a day number, so index % 3 rotates at Chicago midnight
+// and is identical for every reader on the same day).
+function chicagoDayNumber(nowMs) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: OWNER_SEAT_TZ, year: 'numeric', month: 'numeric', day: 'numeric',
+  }).formatToParts(new Date(nowMs));
+  let y = 1970, m = 1, d = 1;
+  for (const p of parts) {
+    if (p.type === 'year') y = Number(p.value);
+    else if (p.type === 'month') m = Number(p.value);
+    else if (p.type === 'day') d = Number(p.value);
+  }
+  return Math.floor(Date.UTC(y, m - 1, d) / 86400000);
+}
+
+function isOwnerSeat(user) {
+  if (!user || user.role !== 'head_admin') return false;
+  const adminEmail = String(config.adminEmail || '').trim().toLowerCase();
+  if (!adminEmail) return false; // no configured admin -> pin nobody (fail closed)
+  return String(user.email || '').trim().toLowerCase() === adminEmail;
+}
+
+// The display name a seat payload carries for this account: the
+// day's rotated name for the owner's seat, the stored name for
+// everyone else. `nowMs` is injectable for tests.
+function seatDisplayName(user, nowMs) {
+  const stored = (user && user.display_name) || '';
+  if (!isOwnerSeat(user)) return stored;
+  const idx = ((chicagoDayNumber(nowMs == null ? Date.now() : nowMs) % OWNER_SEAT_NAMES.length)
+    + OWNER_SEAT_NAMES.length) % OWNER_SEAT_NAMES.length;
+  return OWNER_SEAT_NAMES[idx];
+}
+
 // The recognition payload for one account: who the seat is, when
 // they first sat down ANYWHERE, and every surface holding their tie.
 // Purchases ride along (the guest bridge, 2026-10-26): a buyer
@@ -188,7 +238,7 @@ async function seatSummary(user) {
     user_id: user.id,
     onemind_id: onemindId,
     email: user.email,
-    display_name: user.display_name || '',
+    display_name: seatDisplayName(user),
     role: user.role,
     recognized: ties.length > 0,
     first_seated_at: ties.length ? Math.min(...ties.map((t) => t.first_seated_at)) : null,
@@ -232,4 +282,5 @@ async function tieBook() {
 module.exports = {
   mintOneMindId, ensureOneMindId, backfillOneMindIds, seatMigratedAccounts,
   recordTie, seatQuietly, tiesFor, seatSummary, tieBook,
+  seatDisplayName, isOwnerSeat, chicagoDayNumber, OWNER_SEAT_NAMES,
 };

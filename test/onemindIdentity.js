@@ -70,6 +70,42 @@ async function runDbTests(ok) {
   ok(sum.role === 'customer' && sum.ties[0].role === 'customer',
     'one seat carries its roles — the summary and the tie both expose the role');
 
+  // --- The owner's seat name rotation (owner order 2026-11-03) ---
+  // The bootstrap head administrator's seat-payload name cycles
+  // daily (America/Chicago) through TheWholeDamnGarden, IAmRoot,
+  // HeOwnsTheBus; the stored name never changes and no other
+  // account rotates. 18:00Z is midday in Chicago on these dates,
+  // so each timestamp lands squarely on its Chicago calendar day.
+  const adminUser = await db.get('SELECT * FROM users WHERE email = ?', ['admin@test.local']);
+  ok(!!adminUser && adminUser.role === 'head_admin',
+    'the seeded bootstrap admin is the head administrator');
+  if (adminUser) {
+    ok(onemind.isOwnerSeat(adminUser) === true,
+      'the bootstrap head admin is the pinned owner seat');
+    const noonUtc = (day) => Date.parse(`2026-11-${String(day).padStart(2, '0')}T18:00:00Z`);
+    const cycle = [3, 4, 5].map((d) => onemind.seatDisplayName(adminUser, noonUtc(d)));
+    const start = onemind.OWNER_SEAT_NAMES.indexOf(cycle[0]);
+    ok(start >= 0
+      && cycle[1] === onemind.OWNER_SEAT_NAMES[(start + 1) % 3]
+      && cycle[2] === onemind.OWNER_SEAT_NAMES[(start + 2) % 3],
+      'the owner seat name advances one step per Chicago day through all three names');
+    ok(onemind.seatDisplayName(adminUser, noonUtc(3)) === cycle[0]
+      && onemind.seatDisplayName(adminUser, noonUtc(3) + 3600000) === cycle[0],
+      'the rotated name is stable within the day');
+    const custUser = await db.get('SELECT * FROM users WHERE id = ?', [uid]);
+    ok(onemind.isOwnerSeat(custUser) === false
+      && [3, 4, 5].every((d) => onemind.seatDisplayName(custUser, noonUtc(d)) === 'Pre'),
+      'a non-admin account never rotates — its stored name rides every day');
+    const adminSum = await onemind.seatSummary(adminUser);
+    ok(onemind.OWNER_SEAT_NAMES.includes(adminSum.display_name),
+      'the seat summary carries the rotated name for the owner seat');
+    const custSum = await onemind.seatSummary(custUser);
+    ok(custSum.display_name === 'Pre', 'the seat summary carries the stored name for everyone else');
+    const adminStored = await db.get('SELECT display_name FROM users WHERE id = ?', [adminUser.id]);
+    ok(adminStored.display_name === adminUser.display_name,
+      'the stored display_name is unchanged by the rotation');
+  }
+
   // --- The migration population: EXISTING accounts, every class ---
   // Already-known users with original passwords and true past
   // creation dates. Migration seats them on the website surface at

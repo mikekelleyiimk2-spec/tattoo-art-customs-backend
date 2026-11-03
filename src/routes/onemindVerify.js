@@ -109,7 +109,9 @@ async function seatOf(user) {
     onemind_id: onemindId,
     user_id: user.id,
     email: user.email,
-    display_name: user.display_name || '',
+    // The owner's seat name rotation (lib/onemind.js) applies at
+    // every seat-payload build, this one included.
+    display_name: onemind.seatDisplayName(user),
   };
 }
 
