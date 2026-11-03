@@ -1,0 +1,79 @@
+<%#
+  The Founding Figure — interest page for the first Brambleforce statue
+  (owner approved 2026-11-03, $0 route). HONEST BY DESIGN: no figure is
+  in production, no sculpt exists yet, there is no price, no pre-order
+  and nothing to buy here. The page's one job is the interest list
+  (founding_figure_signups, migration 125): if the figure ever opens,
+  the list hears first. The Queen is never pictured or sold — she does
+  not appear on this page, as on every figure surface.
+%>
+<figure class="bf-hero">
+  <img src="/img/brambleforce/founding-tor.webp" alt="Tor 'Hammer' Halvorsen — the dossier plate for the proposed Founding Figure statue" fetchpriority="high" style="max-width:430px;margin:0 auto;">
+</figure>
+
+<p class="bf-kicker" style="margin-top:1.1rem;">Brambleforce collectibles — Wave 1</p>
+<h1 class="bf-title">The Founding Figure</h1>
+<p class="bf-tagline">Tor "Hammer" Halvorsen — the first Brambleforce statue, if you want it.</p>
+<p class="bf-lede">Every figure line starts with one character. Ours starts with Tor: the heavy, the hammer, the face of the game. This page is how we find out whether a Brambleforce figure should exist at all — before a single dollar is spent making one.</p>
+
+<section class="bf-buybox" aria-label="Where this stands">
+  <div class="bf-pitch">
+    <h2>Where this stands — honestly</h2>
+    <p><strong>The figure is not in production.</strong> No sculpt exists yet, no price has been set, and there is no pre-order — there is nothing to buy on this page, and we will not pretend otherwise.</p>
+    <p>What this page <em>is</em>: an interest list. If enough players say they want Tor standing on their shelf, the figure gets made — and the people on this list hear about it first, by email, the day it opens. If the demand isn't there, no figure happens and nobody was charged for a promise.</p>
+  </div>
+  <div class="bf-buyact">
+    <p><a class="btn" href="#figure-list">Join the interest list</a></p>
+    <p class="bf-secure" style="text-align:right;">Free. One email if it opens. That's it.</p>
+  </div>
+</section>
+
+<section class="bf-section" aria-label="The figure as planned">
+  <p class="bf-kicker">The plan</p>
+  <h2>The figure, as planned</h2>
+  <p>Drawn straight from Tor's dossier plate above — the same art the game's fighter-select screen runs on:</p>
+  <ul class="bf-inside">
+    <li><strong>6-inch display statue</strong> (1:12 scale) — a statue, not an articulated toy</li>
+    <li><strong>The plate's pose</strong> — standing, war hammer raised in the right hand, belt seax at his side</li>
+    <li><strong>The details that make him Tor</strong> — long red beard with its two front braids, braided red hair, blue tunic with gold knotwork trim, fur-trimmed cloak and boots</li>
+    <li><strong>His war hammer</strong> — knotwork-etched head, leather-wrapped grip, sculpted in-hand</li>
+    <li><strong>A real display base</strong> — round, forest-floor textured, with a TOR nameplate</li>
+    <li><strong>Full color</strong> — the dossier palette: blue and gold, red hair and beard, brown furs and leathers</li>
+  </ul>
+</section>
+
+<section class="bf-section" id="figure-list" aria-label="Join the interest list">
+  <p class="bf-kicker">First access</p>
+  <h2>Join the interest list</h2>
+  <p>One email address, one promise: if the Founding Figure opens, this list gets the word first — before any public announcement. No newsletter, no spam, no other mail from this list. Don't want it later? Reply to that email and you're off.</p>
+  <form class="form" method="post" action="/brambleforce/founding-figure" style="max-width:480px;">
+    <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <label for="ff-email">Email address
+      <input id="ff-email" type="email" name="email" required maxlength="160" placeholder="you@example.com" autocomplete="email">
+    </label>
+    <p style="margin-top:.9rem;"><button class="btn" type="submit">Put me on the list</button></p>
+  </form>
+  <p class="fineprint">Joining is not an order and reserves nothing — there is nothing to reserve yet. It simply tells us the demand is real.</p>
+</section>
+
+<section class="bf-section" aria-label="What comes after Tor">
+  <p class="bf-kicker">The wave plan</p>
+  <h2>Tor first. The rest earn it.</h2>
+  <p>Tor is the test. If he proves out, the other Vinebreakers follow — Selene, Dane, Mara, Zola, Otto and Yusuf — and the garden's fodder (Pip, Petunia, Pearl and the rest) are natural mini-figures after that. Nothing beyond Tor is promised; each wave has to earn the next.</p>
+</section>
+
+<section class="bf-buybox" aria-label="Play Brambleforce now">
+  <div class="bf-pitch">
+    <h2>While you wait — play him</h2>
+    <p><%= products.game.blurb %></p>
+    <p>Brambleforce is <strong>out now on this website for Android and iPhone</strong> — tap the button, buy on the page, and the download installs right there. No app store needed. Rolling out next: Google Play, Amazon Appstore + Fire TV, Game Jolt and itch.io.</p>
+    <p>More Brambleforce on your shelf already? The <a href="/merch">merch shop</a> carries the house's shirts, posters and prints today.</p>
+  </div>
+  <div class="bf-buyact">
+    <div class="bf-price">$<%= (products.game.priceCents / 100).toFixed(2) %><small>one-time · yours for good</small></div>
+    <p><a class="btn" href="/brambleforce/buy/game">Get Brambleforce — $<%= (products.game.priceCents / 100).toFixed(2) %></a></p>
+    <p class="bf-secure" style="text-align:right;">Secure checkout by PayPal</p>
+  </div>
+</section>
+
+<%- include('../partials/rolodex-placements') %>

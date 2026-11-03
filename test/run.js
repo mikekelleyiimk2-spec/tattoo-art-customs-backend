@@ -1562,6 +1562,7 @@ async function main() {
   r = await areq('GET', '/admin');
   ok(r.status === 200, 'admin dashboard loads');
   await require('./founding').runHttpTests(ok, req, areq);
+  await require('./foundingFigure').runHttpTests(ok, req); // Founding Figure interest page (signup form, ops read/remove door)
   await require('./cannadashFounding').runHttpTests(ok, req, areq); // Bundle C B1
   await require('./librarySponsors').runHttpTests(ok, req, areq); // Bundle C B2
   await require('./libraryShelf').runHttpTests(ok, req); // Briefs #39/#40: First Library Shelf pages + watchdog status door

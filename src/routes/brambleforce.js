@@ -181,6 +181,50 @@ function pageRouter() {
     });
   });
 
+  // Founding Figure interest page (owner approved 2026-11-03, $0
+  // route): the first Brambleforce figure (Tor, 6" statue) is NOT in
+  // production — no sculpt exists, no price is set, nothing here is
+  // for sale. The page is an honest interest list: joining means one
+  // email if and when the figure opens. Signups land in
+  // founding_figure_signups (migration 125) — the same per-list table
+  // pattern as the app-launch notify list (043).
+  router.get('/founding-figure', (req, res) => {
+    res.render('site/brambleforce-founding-figure', {
+      layout: 'layout-brambleforce',
+      title: 'The Founding Figure — the first Brambleforce statue (interest list)',
+      metaDescription: 'The first Brambleforce figure would be Tor "Hammer" Halvorsen as a 6-inch statue. It is not in production yet — join the interest list and we will email you if it opens. No price, no pre-order.',
+      products: bf.PRODUCTS,
+      partners: partners(),
+      disclosureStandard: rolodex.disclosureStandard(),
+      user: req.user || null,
+    });
+  });
+
+  router.post('/founding-figure', formLimiter, checkHoneypot, async (req, res) => {
+    const email = guestCheckout.parseGuestEmail(req.body && req.body.email);
+    if (!email) {
+      req.session.flash = 'Enter a valid email address and we will put you on the Founding Figure list.';
+      return res.redirect('/brambleforce/founding-figure#figure-list');
+    }
+    try {
+      const existing = await db.get('SELECT id FROM founding_figure_signups WHERE email = ?', [email]);
+      if (!existing) {
+        await db.insert('founding_figure_signups', { email, created_at: db.now(), notified_at: null });
+      }
+      // Read the row back before claiming success: the flash may only
+      // promise a list spot that storage actually confirms.
+      const row = await db.get('SELECT id FROM founding_figure_signups WHERE email = ?', [email]);
+      if (!row) throw new Error('signup read-back failed');
+      req.session.flash = existing
+        ? 'That email is already on the Founding Figure list — you are in. We will email you if the figure opens.'
+        : 'You are on the Founding Figure list. If the Tor statue opens, this email gets the word first.';
+    } catch (e) {
+      console.error('founding-figure signup failed:', e.message);
+      req.session.flash = 'Something went wrong saving that — please try again in a moment.';
+    }
+    return res.redirect('/brambleforce/founding-figure#figure-list');
+  });
+
   router.get('/buy/:productId', resolveProduct, requirePurchasable, (req, res) => {
     // Never let a browser pin a stale copy of a buy page: the checkout
     // key, watchdog and form all ship with this document, and a cached
@@ -591,6 +635,32 @@ function apiRouter() {
       ok: true, orderId: order.id, product: productId, code: issued.code,
       revoked: issued.revoked, buyerEmail: email, siteEmail,
     });
+  });
+
+  // ---- Founding Figure list ops (service-token only) -------------------
+  // POST /api/brambleforce/founding-figure-ops { action: 'list' } |
+  // { action: 'remove', email } — house-ops read/remove for the interest
+  // list (migration 125), same auth convention as support-reissue above:
+  // 404 while MUSE_SERVICE_TOKEN is unset, 401 on a bad bearer. The
+  // public page only accepts signups; reading or pruning the list is an
+  // ops door, never a public one.
+  router.use('/brambleforce/founding-figure-ops', redeemLimiter);
+  router.post('/brambleforce/founding-figure-ops', async (req, res) => {
+    if (!process.env.MUSE_SERVICE_TOKEN) return res.status(404).json({ ok: false });
+    if (!supportAuthorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+    const action = req.body && typeof req.body.action === 'string' ? req.body.action : '';
+    if (action === 'list') {
+      const rows = await db.all('SELECT email, created_at FROM founding_figure_signups ORDER BY created_at ASC');
+      return res.status(200).json({ ok: true, count: rows.length, signups: rows });
+    }
+    if (action === 'remove') {
+      const email = guestCheckout.parseGuestEmail(req.body && req.body.email);
+      if (!email) return res.status(400).json({ ok: false, error: 'email required' });
+      await db.query('DELETE FROM founding_figure_signups WHERE email = ?', [email]);
+      const row = await db.get('SELECT id FROM founding_figure_signups WHERE email = ?', [email]);
+      return res.status(200).json({ ok: true, removed: !row, email });
+    }
+    return res.status(400).json({ ok: false, error: 'unknown action' });
   });
   return router;
 }

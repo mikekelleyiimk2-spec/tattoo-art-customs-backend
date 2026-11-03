@@ -104,6 +104,7 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/advertise`, changefreq: 'weekly', priority: '0.6' },
     { loc: `${base}/about`, changefreq: 'monthly', priority: '0.5' },
     { loc: `${base}/testers`, changefreq: 'weekly', priority: '0.6' },
+    { loc: `${base}/brambleforce/founding-figure`, changefreq: 'weekly', priority: '0.6' },
     { loc: `${base}/raffle`, changefreq: 'weekly', priority: '0.6' },
     { loc: `${base}/terms`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/privacy`, changefreq: 'monthly', priority: '0.3' },

@@ -121,6 +121,7 @@ const DELETE_BY_EMAIL = [
   ['mailing_list', 'email'],
   ['merch_notify', 'email'],
   ['app_launch_signups', 'email'],
+  ['founding_figure_signups', 'email'],
 ];
 
 // [table, SET clause, key column] — rows kept for other parties / the
