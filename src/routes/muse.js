@@ -1285,17 +1285,19 @@ router.post('/upload-public-media', (req, res) => {
 // 404s when unset; 503 when R2 is not configured.
 const SIDELOAD_R2_SLOTS = {
   'tac-android-free': {
-    rel: 'uploads/sideload/tac-android-free.apk',
+    rels: ['uploads/sideload/tac-android-free.apk', 'sideload/tac-android-free.apk'],
     key: 'sideload/tac-android-free.apk',
     contentType: 'application/vnd.android.package-archive',
   },
   'tac-android-pro': {
-    rel: 'uploads/sideload/tac-android-pro.apk',
+    rels: ['uploads/sideload/tac-android-pro.apk', 'sideload/tac-android-pro.apk'],
     key: 'sideload/tac-android-pro.apk',
     contentType: 'application/vnd.android.package-archive',
   },
   'tac-ios': {
-    rel: 'uploads/ios-app/tattoo-art-customs.ipa',
+    // The IPA sits at <uploadDir>/ios-app/ (single segment — unlike the
+    // sideload APKs' doubled uploads/uploads path from the pre-fix era).
+    rels: ['ios-app/tattoo-art-customs.ipa', 'uploads/ios-app/tattoo-art-customs.ipa'],
     key: 'ios-app/tattoo-art-customs.ipa',
     contentType: 'application/octet-stream',
   },
@@ -1311,12 +1313,23 @@ router.post('/r2-migrate-sideload', express.json(), async (req, res) => {
     ? req.body.slots.map(String)
     : Object.keys(SIDELOAD_R2_SLOTS);
   const results = {};
-  try {
-    for (const slot of wanted) {
-      const cfg = SIDELOAD_R2_SLOTS[slot];
-      if (!cfg) return res.status(400).json({ ok: false, error: `unknown slot: ${slot}` });
-      const abs = storage.resolveStoredPath(cfg.rel);
-      if (!abs) return res.status(404).json({ ok: false, error: `slot file missing on disk: ${slot}` });
+  let anyOk = false;
+  for (const slot of wanted) {
+    const cfg = SIDELOAD_R2_SLOTS[slot];
+    if (!cfg) {
+      results[slot] = { ok: false, error: 'unknown slot' };
+      continue;
+    }
+    try {
+      let abs = null;
+      for (const rel of cfg.rels) {
+        abs = storage.resolveStoredPath(rel);
+        if (abs) break;
+      }
+      if (!abs) {
+        results[slot] = { ok: false, error: 'slot file missing on disk' };
+        continue;
+      }
       const sha256 = await new Promise((resolve, reject) => {
         const h = crypto.createHash('sha256');
         const s = fs.createReadStream(abs);
@@ -1326,13 +1339,14 @@ router.post('/r2-migrate-sideload', express.json(), async (req, res) => {
       });
       const sizeBytes = fs.statSync(abs).size;
       const storageRef = await storage.putPrivateObject(abs, cfg.key, cfg.contentType);
-      results[slot] = { storageRef, sha256, sizeBytes };
+      results[slot] = { ok: true, storageRef, sha256, sizeBytes };
+      anyOk = true;
+    } catch (e) {
+      console.error(`[muse/r2-migrate-sideload] slot ${slot} failed:`, e.message);
+      results[slot] = { ok: false, error: e.message };
     }
-    return res.json({ ok: true, results });
-  } catch (e) {
-    console.error('[muse/r2-migrate-sideload] failed:', e.message);
-    return res.status(500).json({ ok: false, error: 'migrate failed' });
   }
+  return res.status(anyOk ? 200 : 502).json({ ok: anyOk, results });
 });
 
 // POST /api/muse/pro-apk-download-link
