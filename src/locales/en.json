@@ -4,7 +4,7 @@
     "for_artists": "For design artists",
     "for_shops": "For tattoo shops",
     "house_rules": "House rules",
-    "intro": "Tattoo Art Customs is a marketplace for original tattoo designs, built and run by Useful Appz Development Studios in Abbeville, Louisiana. Independent designers upload their own original work — thousands of premade pieces across every major style — plus custom designs drawn to order ({custom}, or {sale} during the Saturday sale; 50% deposit, 48-hour delivery).",
+    "intro": "Tattoo Art Customs is a marketplace for original tattoo designs, built and run by Useful Appz Development Studios. Independent designers upload their own original work — thousands of premade pieces across every major style — plus custom designs drawn to order ({custom}, or {sale} during the Saturday sale; 50% deposit, 48-hour delivery).",
     "story": "The catalog is deep on purpose. A tattoo is permanent, so choosing one should never mean settling for whatever a single shop happens to have on its wall — here you can search thousands of original designs by style and subject, buy the finished full-color artwork together with the clean linework your artist stencils from, or hand the whole thing to the custom desk and have a design drawn for you alone.",
     "rule1": "All contact stays through the site — no off-site emails, phones, socials, or payment info in bios, profiles, or messages.",
     "rule2": "Off-site sales mean membership cancellation with no refund.",
@@ -372,9 +372,9 @@
     },
     "story": {
       "title": "A working studio, not a clip-art mill",
-      "p1": "Tattoo Art Customs is the storefront of Useful Appz Development Studios, an independent studio in Abbeville, Louisiana. Every design in the gallery — {count} and growing — is original work by independent tattoo designers, never stock art: a finished full-color piece plus the clean linework your artist stencils from, delivered together when you buy.",
+      "p1": "Tattoo Art Customs is the storefront of Useful Appz Development Studios, an independent studio. Every design in the gallery — {count} and growing — is original work by independent tattoo designers, never stock art: a finished full-color piece plus the clean linework your artist stencils from, delivered together when you buy.",
       "p2": "Why build a catalog this deep? Because a tattoo is a one-time decision you wear for life, and nobody should have to settle for the least-bad option on a shop wall. A deep catalog means the design fits the person — their story, their body, their artist's hand — instead of the other way around. And when nothing on the shelves is quite it, the custom desk draws it: describe what you want, approve the direction, and the finished design is yours within 48 hours.",
-      "p3": "The studio is bigger than the gallery. The same team builds the apps on this site, produces two shows — Color With Us, where featured designs are colored on screen, and Poppy & Ziggy, our educational series for kids — and runs Little Inkers, the free coloring app for children. One small studio in Louisiana, doing all of it in-house."
+      "p3": "The studio is bigger than the gallery. The same team builds the apps on this site, produces two shows — Color With Us, where featured designs are colored on screen, and Poppy & Ziggy, our educational series for kids — and runs Little Inkers, the free coloring app for children. One small studio, doing all of it in-house."
     },
     "watch": {
       "title": "📺 Watch",

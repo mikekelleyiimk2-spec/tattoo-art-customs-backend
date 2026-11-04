@@ -110,7 +110,7 @@ const FAQS = [
   {
     q: 'Do you tattoo people yourselves?',
     a: [
-      'Tattoo Art Customs is the design marketplace: the artwork is drawn by the design artists here and tattooed by tattoo artists — a verified shop from our network or your own local artist, working from the linework file you receive. Shops also run their side of the business on the platform — storefronts, bookings and payments — which the <a href="/guides/for-tattoo-shops">shops guide</a> explains. We are built and run in-house in Abbeville, Louisiana, and the <a href="/about">about page</a> maps everything else the studio makes.',
+      'Tattoo Art Customs is the design marketplace: the artwork is drawn by the design artists here and tattooed by tattoo artists — a verified shop from our network or your own local artist, working from the linework file you receive. Shops also run their side of the business on the platform — storefronts, bookings and payments — which the <a href="/guides/for-tattoo-shops">shops guide</a> explains. We are built and run in-house, and the <a href="/about">about page</a> maps everything else the studio makes.',
     ],
   },
 ];
