@@ -54,7 +54,7 @@ const PRODUCTS = {
   game: {
     name: 'Brambleforce — Full Game (Android APK)',
     priceCents: 699,
-    blurb: 'Run-and-gun through a killer garden. 11 missions, 4 fighters, 11 bosses. Zero ads — it is a paid game, it acts like one.',
+    blurb: 'Run-and-gun through a killer garden. 12 missions, 4 fighters, 12 bosses. Online co-op and the Prune or Be Pruned arena. Zero ads — it is a paid game, it acts like one.',
     kind: 'game',
   },
   everything_bundle: {
@@ -72,7 +72,7 @@ const PRODUCTS = {
   boss_rush_time_attack: {
     name: 'Boss Rush + Time Attack',
     priceCents: 199,
-    blurb: 'All eleven bosses back to back on one stock, and the clock on every mission.',
+    blurb: 'All twelve bosses back to back on one stock, and the clock on every mission.',
     kind: 'iap',
   },
   queens_hunt: {

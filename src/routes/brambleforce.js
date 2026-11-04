@@ -171,7 +171,7 @@ function pageRouter() {
     res.render('site/brambleforce', {
       layout: 'layout-brambleforce',
       title: 'Brambleforce — Run-and-Gun Through a Killer Garden',
-      metaDescription: 'Brambleforce for Android — $6.99, 11 missions, 4 fighters, 11 bosses, zero ads. Buy direct and sideload the APK today.',
+      metaDescription: 'Brambleforce for Android — $6.99, 12 missions, 4 fighters, 12 bosses, online co-op and arena, zero ads. Buy direct and sideload the APK today.',
       products: bf.PRODUCTS,
       productIds: permanentIds,
       drop,
