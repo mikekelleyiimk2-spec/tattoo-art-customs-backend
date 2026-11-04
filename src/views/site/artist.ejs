@@ -16,6 +16,13 @@
     <% } %>
   </div>
 </div>
+<% if (typeof profileStats !== 'undefined' && profileStats && profileStats.total) { %>
+<section class="card">
+  <h2>About this portfolio</h2>
+  <p><%= artist.display_name || 'This artist' %> has <%= profileStats.total %> approved design<%= profileStats.total === 1 ? '' : 's' %> in the gallery<% if (profileStats.premade && profileStats.custom) { %> — <%= profileStats.premade %> ready-to-license premade piece<%= profileStats.premade === 1 ? '' : 's' %> and <%= profileStats.custom %> custom portfolio piece<%= profileStats.custom === 1 ? '' : 's' %><% } else if (profileStats.premade) { %>, all ready-to-license premade pieces<% } else if (profileStats.custom) { %>, all drawn as custom portfolio pieces<% } %><% if (profileStats.styles.length) { %>. The work concentrates in <% profileStats.styles.forEach(function(s, i) { %><% if (i > 0) { %><%= i === profileStats.styles.length - 1 ? ' and ' : ', ' %><% } %><a href="/gallery?style=<%= encodeURIComponent(s.slug) %>"><%= s.name %></a><% }); %><% } %><% if (profileStats.categories.length) { %>, with recurring subjects like <%= profileStats.categories.join(', ').toLowerCase() %><% } %>.</p>
+  <p>Every premade design here is sold with the finished full-color artwork and the clean linework your tattoo artist stencils from, under a single-use tattoo license. <% if (profileStats.styles.length && profileStats.styles[0].hasGuide) { %>New to <%= profileStats.styles[0].name %>? The <a href="/styles/<%= profileStats.styles[0].slug %>"><%= profileStats.styles[0].name %> style guide</a> covers how the style is drawn, where it sits best, and how it ages. <% } %>Want something drawn from scratch instead? The <a href="/orders/custom">custom desk</a> draws one-of-one designs to order, delivered within 48 hours of the deposit.</p>
+</section>
+<% } %>
 <% if (!pieces.length) { %>
 <p class="muted"><%= t('artist_page.no_pieces') %></p>
 <% } %>

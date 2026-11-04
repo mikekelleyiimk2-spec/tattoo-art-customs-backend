@@ -11,6 +11,8 @@ const { premadePriceCents, customFullCents, lineworkOnlyPriceCents, LINEWORK_ONL
 const { viewerFor, displayImgFile, canViewUnblurred } = require('../lib/contentPolicy');
 const { blurbFor: categoryBlurbFor, SITEMAP_CATEGORIES } = require('../lib/categoryContent');
 const { blurbForStyle, nameForStyle, SITEMAP_STYLES } = require('../lib/styleContent');
+const { GUIDES: STYLE_GUIDES, GUIDE_SLUGS, guideForStyle, redirectForStyle, notesForStyle } = require('../lib/styleGuides');
+const { FAQS, faqJsonLd } = require('../lib/faq');
 
 const router = express.Router();
 
@@ -165,6 +167,13 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/guides/choosing-a-design`, changefreq: 'monthly', priority: '0.7' },
     { loc: `${base}/guides/custom-design-process`, changefreq: 'monthly', priority: '0.7' },
     { loc: `${base}/guides/for-tattoo-shops`, changefreq: 'monthly', priority: '0.7' },
+    // Long-form tattoo style guides + FAQ (AdSense "low value content"
+    // remediation 2026-11-03): substantive original editorial pages.
+    { loc: `${base}/styles`, changefreq: 'weekly', priority: '0.8' },
+    ...GUIDE_SLUGS.map((s) => ({
+      loc: `${base}/styles/${s}`, changefreq: 'monthly', priority: '0.7',
+    })),
+    { loc: `${base}/faq`, changefreq: 'monthly', priority: '0.6' },
   ];
   try {
     const designs = await db.all(
@@ -1185,6 +1194,10 @@ router.get('/design/:id', async (req, res) => {
       ? `${descriptionSummary} Portfolio piece at Tattoo Art Customs — request a custom design like it.`
       : `${descriptionSummary} ${priceStr} — full-color artwork and clean linework delivered after purchase.`,
     descriptionParagraphs,
+    // Style-specific tattooing notes (placement / sizing / aging) from the
+    // style's long-form guide, so a design page carries real guidance for
+    // its style — not just a price and a button (2026-11-03 content pass).
+    styleNotes: notesForStyle(design.style),
     canonical, ogImage: ogImgFile ? `${base}/img/designs/${ogImgFile}` : '', ogType: 'product', jsonLd,
     creditBalance: req.user ? await require('../lib/credits').getCreditBalance(req.user.id) : 0,
   });
@@ -1214,9 +1227,38 @@ router.get('/artists/:id', async (req, res) => {
     const f = displayImgFile(p, artViewer);
     return { ...p, thumb: f ? `thumb/${f}` : '' };
   });
+  // Portfolio facts for the written profile block (2026-11-03 content
+  // pass): derived from the artist's real approved pieces — counts and the
+  // styles they actually work in — so an artist page carries substantive
+  // text even before the artist writes a bio. Nothing here is invented;
+  // it is arithmetic over their own catalog rows.
+  let profileStats = null;
+  if (pieces.length) {
+    const styleCounts = new Map();
+    const catCounts = new Map();
+    for (const p of pieces) {
+      const s = String(p.style || '').trim().toLowerCase();
+      if (s) styleCounts.set(s, (styleCounts.get(s) || 0) + 1);
+      let cats = [];
+      try { cats = JSON.parse(p.categories || '[]'); } catch { /* keep empty */ }
+      for (const c of cats) if (c) catCounts.set(c, (catCounts.get(c) || 0) + 1);
+    }
+    const topStyles = [...styleCounts.entries()]
+      .sort((a, b) => b[1] - a[1]).slice(0, 3)
+      .map(([slug, count]) => ({ slug, name: nameForStyle(slug), count, hasGuide: !!guideForStyle(slug) }));
+    const topCats = [...catCounts.entries()]
+      .sort((a, b) => b[1] - a[1]).slice(0, 3).map(([name]) => name);
+    profileStats = {
+      total: pieces.length,
+      premade: pieces.filter((p) => !p.isCustom).length,
+      custom: pieces.filter((p) => p.isCustom).length,
+      styles: topStyles,
+      categories: topCats,
+    };
+  }
   res.render('site/artist', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
     title: `${artist.display_name || 'Artist'} — Tattoo Designs for Sale | Chorvix / Tattoo`,
-    artist, bio: profile ? profile.bio : '', pieces: piecesWithThumbs, sale: await salePriceActive(req.user),
+    artist, bio: profile ? profile.bio : '', pieces: piecesWithThumbs, profileStats, sale: await salePriceActive(req.user),
     metaDescription: `${artist.display_name || 'Artist'} — buy original tattoo designs from this artist's portfolio at Tattoo Art Customs.`,
     canonical: `${config.baseUrl.replace(/\/$/, '')}/artists/${artist.id}`,
   });
@@ -1634,6 +1676,47 @@ router.get('/guides/for-tattoo-shops', (req, res) => res.render('site/guide-for-
   title: 'For Tattoo Shops: Run Your Business on Tattoo Art Customs',
   metaDescription: 'What a Tattoo Art Customs shop membership includes: verified storefront, bookings and client profiles, tap-to-pay with no card reader, 20% referral earnings, design sales, and back-office tools.',
   canonical: `${config.baseUrl.replace(/\/$/, '')}/guides/for-tattoo-shops`,
+}));
+
+// Tattoo style guides index + one long-form guide per major style
+// (AdSense "low value content" remediation 2026-11-03, owner order: every
+// low-value verdict triggers a real content upgrade). Guide copy lives in
+// lib/styleGuides; slugs are the catalog's designs.style values. A style
+// with a GUIDE_REDIRECTS entry (stipple → dotwork) 301s to its guide.
+router.get('/styles', (req, res) => res.render('site/styles', {homeFace: true, darkFace: true, bodyClass: 'page-dark',
+  title: 'Tattoo Style Guides — Tattoo Art Customs',
+  metaDescription: 'Complete guides to the major tattoo styles: what each style is, how its designs are drawn, best placements, honest sizing, and how each style ages.',
+  canonical: `${config.baseUrl.replace(/\/$/, '')}/styles`,
+  guides: GUIDE_SLUGS.map((slug) => ({ slug, name: STYLE_GUIDES[slug].name, summary: STYLE_GUIDES[slug].summary })),
+}));
+
+router.get('/styles/:slug', (req, res) => {
+  const slug = String(req.params.slug || '').toLowerCase();
+  const target = redirectForStyle(slug);
+  if (target && target !== slug) return res.redirect(301, `/styles/${target}`);
+  const guide = guideForStyle(slug);
+  if (!guide) return res.status(404).render('error', {homeFace: true, darkFace: true, bodyClass: 'page-dark', title: 'Not found', message: 'That style guide does not exist.' });
+  const idx = GUIDE_SLUGS.indexOf(slug);
+  const related = [1, 2, 3]
+    .map((n) => GUIDE_SLUGS[(idx + n) % GUIDE_SLUGS.length])
+    .map((s) => ({ slug: s, name: STYLE_GUIDES[s].name, summary: STYLE_GUIDES[s].summary }));
+  res.render('site/style-guide', {homeFace: true, darkFace: true, bodyClass: 'page-dark',
+    title: `${guide.name} Tattoos: The Complete Guide — Tattoo Art Customs`,
+    metaDescription: guide.summary,
+    canonical: `${config.baseUrl.replace(/\/$/, '')}/styles/${slug}`,
+    guide, slug, related,
+  });
+});
+
+// FAQ (same remediation): the license, custom process, sizing/aging and
+// aftercare answers in one substantive page, copy sourced from the site's
+// own guides and terms (lib/faq). Carries FAQPage structured data.
+router.get('/faq', (req, res) => res.render('site/faq', {homeFace: true, darkFace: true, bodyClass: 'page-dark',
+  title: 'Frequently Asked Questions — Tattoo Art Customs',
+  metaDescription: 'What you get when you buy a tattoo design, how the single-use license works, how custom designs are ordered and delivered, sizing and aging, aftercare, and selling your own designs.',
+  canonical: `${config.baseUrl.replace(/\/$/, '')}/faq`,
+  faqs: FAQS,
+  jsonLd: faqJsonLd(config.baseUrl),
 }));
 
 // Tester bug reports: anyone (signed in or not) can file one. Each report is

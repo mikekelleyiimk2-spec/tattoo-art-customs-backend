@@ -1,0 +1,19 @@
+<% if (typeof jsonLd !== 'undefined' && jsonLd) { %>
+<script type="application/ld+json"><%- safeJson(jsonLd) %></script>
+<% } %>
+<h1>Frequently Asked Questions</h1>
+<p class="muted">What you get when you buy a design, how the license works, how custom orders run, and how to heal the tattoo afterwards — answered plainly.</p>
+
+<p>Most questions about Tattoo Art Customs come down to one thing: this is a marketplace for tattoo <em>artwork</em>, not a tattoo parlor, and that confuses people until somebody explains it once. You buy finished, tattoo-ready files — the full-color artwork and the clean linework your artist stencils from — together with a license to have that design tattooed on you once. Everything below expands on that: the license in plain language, the custom-order process step by step, sizing and aging honesty, aftercare essentials, and how artists and shops fit in. If your question is not answered here, <a href="/contact">contact us</a> and a human will answer it.</p>
+
+<% faqs.forEach(function(f) { %>
+<section class="card">
+  <h2><%= f.q %></h2>
+  <% f.a.forEach(function(p) { %><p><%- p %></p><% }); %>
+</section>
+<% }); %>
+
+<section class="card">
+  <h2>Still deciding?</h2>
+  <p>Browse the <a href="/gallery">design gallery</a> when you know the subject but not the style, read the <a href="/styles">style guides</a> when you know the style but not the subject, or go straight to a <a href="/orders/custom">custom order</a> when the piece only exists in your head. After the appointment, the <a href="/guides/aftercare">aftercare guide</a> takes it from there.</p>
+</section>

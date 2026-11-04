@@ -1,0 +1,37 @@
+<p class="muted"><a href="/styles">← All tattoo style guides</a></p>
+<h1><%= guide.name %> Tattoos: The Complete Guide</h1>
+<p class="muted"><%= guide.summary %></p>
+
+<% guide.intro.forEach(function(p) { %><p><%= p %></p><% }); %>
+
+<h2>How <%= guide.name %> designs are drawn</h2>
+<% guide.character.forEach(function(p) { %><p><%= p %></p><% }); %>
+
+<h2>Best placements for <%= guide.name %> tattoos</h2>
+<% guide.placement.forEach(function(p) { %><p><%= p %></p><% }); %>
+
+<h2>How big does a <%= guide.name %> tattoo need to be?</h2>
+<% guide.sizing.forEach(function(p) { %><p><%= p %></p><% }); %>
+
+<h2>How <%= guide.name %> tattoos age</h2>
+<% guide.aging.forEach(function(p) { %><p><%= p %></p><% }); %>
+
+<h2>Choosing a <%= guide.name %> design</h2>
+<% guide.choosing.forEach(function(p) { %><p><%= p %></p><% }); %>
+
+<p>
+  <a class="btn" href="/gallery?style=<%= slug %>">Browse <%= guide.name %> designs</a>
+  <a class="btn btn-secondary" href="/orders/custom">Order a custom <%= guide.name %> design</a>
+</p>
+
+<% if (related && related.length) { %>
+<section class="card">
+  <h2>Related style guides</h2>
+  <ul>
+    <% related.forEach(function(r) { %>
+    <li><a href="/styles/<%= r.slug %>"><%= r.name %></a> — <%= r.summary %></li>
+    <% }); %>
+  </ul>
+  <p>New to all of this? Start with <a href="/guides/choosing-a-design">how to choose a tattoo design that ages well</a>, then the <a href="/guides/aftercare">complete aftercare guide</a> for what happens after the appointment.</p>
+</section>
+<% } %>

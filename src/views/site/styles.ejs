@@ -1,0 +1,20 @@
+<h1>Tattoo Style Guides</h1>
+<p class="muted">What each tattoo style actually is, where it sits best, how big it needs to be, and how it ages — written from the drawing side of the needle.</p>
+
+<p>A tattoo style is not a filter. It is a set of decisions about line weight, color, shading and composition that decide how your tattoo behaves for the rest of its life: whether it stays crisp or softens, whether it can live at two inches or demands eight, whether it forgives sun or punishes it. Two designs of the same subject — a rose, a wolf, a skull — drawn in different styles are different tattoos with different futures, and most regret in tattooing comes from picking the picture without picking the style on purpose.</p>
+
+<p>The guides below cover every major style in our gallery, one page each, written to the same honest standard: what the style is and where it comes from, how its designs are drawn, the placements that flatter it, the sizes it honestly needs, and how it ages — including the parts some shops would rather not say out loud, like which styles fade fastest and which ones ask for touch-ups. Read the guide before you fall for the design; then browse the gallery in that style with your eyes open. If you already know your subject but not your style, our <a href="/guides/choosing-a-design">choosing-a-design guide</a> walks the decision from the other direction.</p>
+
+<% guides.forEach(function(g) { %>
+<section class="card">
+  <h2><a href="/styles/<%= g.slug %>"><%= g.name %> Tattoos: The Complete Guide</a></h2>
+  <p><%= g.summary %></p>
+  <p><a class="btn" href="/styles/<%= g.slug %>">Read the <%= g.name %> guide</a>
+     <a class="btn btn-secondary" href="/gallery?style=<%= g.slug %>">Browse <%= g.name %> designs</a></p>
+</section>
+<% }); %>
+
+<section class="card">
+  <h2>Still deciding?</h2>
+  <p>Three ways forward. Browse the <a href="/gallery">full gallery</a> and let a subject find you, then check its style guide here. Post a loose idea on the <a href="/by-request">by-request board</a> and let designers draw it in their own styles. Or go straight to a <a href="/orders/custom">custom order</a> — name the style in your brief and the design is drawn in it from the first line. When the ink is in and healing, the <a href="/guides/aftercare">aftercare guide</a> takes it from there.</p>
+</section>

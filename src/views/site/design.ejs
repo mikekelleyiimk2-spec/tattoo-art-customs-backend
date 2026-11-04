@@ -45,6 +45,15 @@
     <% (typeof descriptionParagraphs !== 'undefined' && descriptionParagraphs && descriptionParagraphs.length ? descriptionParagraphs : (design.description ? [design.description] : [])).forEach(function (para) { %>
     <p><%= para %></p>
     <% }); %>
+    <% if (typeof styleNotes !== 'undefined' && styleNotes) { %>
+    <section class="card" aria-label="Tattooing notes for this style">
+      <h2>Tattooing notes: <%= styleNotes.name %></h2>
+      <p><strong>Placement:</strong> <%= styleNotes.placement %></p>
+      <p><strong>Size:</strong> <%= styleNotes.sizing %></p>
+      <p><strong>How it ages:</strong> <%= styleNotes.aging %></p>
+      <p><a href="/styles/<%= styleNotes.guideSlug %>">Read the full <%= styleNotes.name %> style guide</a> — how the style is drawn, where it sits best, and what to check before you book.</p>
+    </section>
+    <% } %>
     <% /* Video-game backgrounds link to their matching by-request characters */ %>
     <% if (typeof vgCharacters !== 'undefined' && vgCharacters && vgCharacters.length) { %>
     <section class="card" aria-label="<%= t('design.vg_chars_title') %>">
