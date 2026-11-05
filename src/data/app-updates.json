@@ -231,6 +231,17 @@
         "gated": true,
         "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.game2runandgun-2.0.1.apk"
     },
+    "brambleforce-pc": {
+        "versionCode": 28,
+        "versionName": "2.0.1",
+        "fileName": "Brambleforce-2.0.1-Windows-x64.zip",
+        "notes": "Brambleforce 2.0.1 \u2014 Windows Edition (PC wrapper of the shipped 2.0.1 build): the full game in true fullscreen, mouse aim + keyboard, gamepad native. Unzip and run Brambleforce.exe. Zero ads.",
+        "sha256": "fafc62b2966d6afb55da52f4ec21f115da9783974ddda2ccb88579bb79b1feb4",
+        "sizeBytes": 1203182592,
+        "publishedAt": "2026-11-05T02:50:31Z",
+        "gated": true,
+        "storageRef": "r2://tattoo-art-customs-private/app-updates/brambleforce-pc-2.0.1.zip"
+    },
     "com.usefulappz.game2runandgun.ios": {
         "versionCode": 25,
         "versionName": "2.0.0",
