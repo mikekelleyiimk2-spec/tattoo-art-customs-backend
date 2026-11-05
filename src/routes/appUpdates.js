@@ -157,7 +157,7 @@ router.get('/apps/:package/apk', async (req, res) => {
 // /api/muse/upload-pc-build lane), same presigned-R2 serving. A
 // purchase of the Windows edition is the ONLY way through this door.
 router.get('/apps/brambleforce-pc/download', async (req, res) => {
-  const entry = readUpdates()['brambleforce-pc'];
+  const entry = entryFor('brambleforce-pc');
   if (!entry || !entry.storageRef) {
     return res.status(404).json({ ok: false, error: 'pc build not found' });
   }
