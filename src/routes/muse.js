@@ -1178,6 +1178,108 @@ router.post('/upload-pc-build', (req, res) => {
   });
 });
 
+// POST /api/muse/upload-pc-build/chunk + /finalize — the chunked
+// sibling of /upload-pc-build (2026-11-04, ship night). The single
+// POST of the 1.2 GB Windows zip died twice at ~390 s: this request
+// path has a ~6.5-minute ceiling and the 1.05 GB APK only squeaked
+// under it (379 s). So the zip travels as ≤200 MB parts (each its own
+// short request), staged under ipaStageDir/pc-chunks-<session>/, and
+// finalize concatenates them in order, runs the same zip-magic +
+// sha256 + size computation, and performs the same putPrivateObject
+// to app-updates/brambleforce-pc-<versionName>.zip. Same service
+// token auth; parts are deleted on finalize (success or failure).
+const PC_CHUNK_SESSION_RE = /^[a-z0-9]{8,32}$/;
+function pcChunkDir(session) {
+  return path.join(ipaStageDir, `pc-chunks-${session}`);
+}
+router.post('/upload-pc-build/chunk', (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  pcChunkUpload(req, res, async (err) => {
+    if (err) return res.status(400).json({ ok: false, error: err.message });
+    if (!req.file) return res.status(400).json({ ok: false, error: 'no file' });
+    const staged = req.file.path;
+    try {
+      const session = String(req.body.session || '');
+      const index = parseInt(req.body.index, 10);
+      if (!PC_CHUNK_SESSION_RE.test(session) || !Number.isInteger(index) || index < 0 || index > 999) {
+        try { fs.unlinkSync(staged); } catch { /* ignore */ }
+        return res.status(400).json({ ok: false, error: 'bad session or index' });
+      }
+      const dir = pcChunkDir(session);
+      fs.mkdirSync(dir, { recursive: true });
+      const dest = path.join(dir, `${index}.part`);
+      fs.renameSync(staged, dest);
+      return res.json({ ok: true, session, index, sizeBytes: fs.statSync(dest).size });
+    } catch (e) {
+      try { fs.unlinkSync(staged); } catch { /* ignore */ }
+      console.error('[muse/upload-pc-build/chunk] failed:', e.message);
+      return res.status(500).json({ ok: false, error: 'store failed' });
+    }
+  });
+});
+router.post('/upload-pc-build/finalize', async (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  const session = String((req.body || {}).session || '');
+  const chunks = parseInt((req.body || {}).chunks, 10);
+  if (!PC_CHUNK_SESSION_RE.test(session) || !Number.isInteger(chunks) || chunks < 1 || chunks > 1000) {
+    return res.status(400).json({ ok: false, error: 'bad session or chunks' });
+  }
+  const dir = pcChunkDir(session);
+  const assembled = path.join(ipaStageDir, `pc-assembled-${session}.zip`);
+  const cleanup = () => {
+    try { fs.rmSync(dir, { recursive: true, force: true }); } catch { /* ignore */ }
+    try { fs.unlinkSync(assembled); } catch { /* ignore */ }
+  };
+  try {
+    const { pipeline } = require('stream/promises');
+    const out = fs.createWriteStream(assembled);
+    for (let i = 0; i < chunks; i++) {
+      const part = path.join(dir, `${i}.part`);
+      if (!fs.existsSync(part)) { out.destroy(); cleanup(); return res.status(400).json({ ok: false, error: `missing chunk ${i}` }); }
+      await pipeline(fs.createReadStream(part), out, { end: false });
+    }
+    out.end();
+    await new Promise((resolve, reject) => { out.on('finish', resolve); out.on('error', reject); });
+    const fd = fs.openSync(assembled, 'r');
+    const head = Buffer.alloc(4);
+    fs.readSync(fd, head, 0, 4, 0);
+    fs.closeSync(fd);
+    if (head[0] !== 0x50 || head[1] !== 0x4b || head[2] !== 0x03 || head[3] !== 0x04) {
+      cleanup();
+      return res.status(400).json({ ok: false, error: 'not a valid zip file' });
+    }
+    const sha256 = await new Promise((resolve, reject) => {
+      const h = crypto.createHash('sha256');
+      const s = fs.createReadStream(assembled);
+      s.on('data', (d) => h.update(d));
+      s.on('end', () => resolve(h.digest('hex')));
+      s.on('error', reject);
+    });
+    const sizeBytes = fs.statSync(assembled).size;
+    const storage = require('../lib/storage');
+    const vn = String((req.body || {}).versionName || '').replace(/[^a-zA-Z0-9._-]/g, '');
+    const key = vn ? `app-updates/brambleforce-pc-${vn}.zip` : 'app-updates/brambleforce-pc.zip';
+    let storageRef;
+    try {
+      storageRef = await storage.putPrivateObject(assembled, key, 'application/zip');
+    } catch (e) {
+      if (e && e.code === 'r2_not_configured') {
+        cleanup();
+        return res.status(503).json({ ok: false, error: 'r2_not_configured' });
+      }
+      throw e;
+    }
+    cleanup();
+    return res.json({ ok: true, package: 'brambleforce-pc', storageRef, sha256, sizeBytes });
+  } catch (e) {
+    cleanup();
+    console.error('[muse/upload-pc-build/finalize] failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'store failed' });
+  }
+});
+
 // POST /api/muse/upload-ios-update
 // The iOS twin of /upload-app-update: publishes a big sideload IPA
 // (Brambleforce, ~635 MB) that can NEVER live on this service's 1 GB
@@ -1961,6 +2063,17 @@ const pcBuildUpload = multer({
     if (/\.zip$/i.test(file.originalname)) cb(null, true);
     else cb(new Error('Only .zip files are allowed.'));
   },
+}).single('file');
+
+// PC chunk upload middleware (used by POST /upload-pc-build/chunk
+// above): same staging dir, 220 MB cap per part, no extension filter
+// (parts carry split suffixes, not .zip).
+const pcChunkUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, ipaStageDir),
+    filename: (req, file, cb) => cb(null, `chunk-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.part`),
+  }),
+  limits: { fileSize: 220 * 1024 * 1024, files: 1 },
 }).single('file');
 
 // iOS-update R2 upload middleware (used by POST /upload-ios-update
