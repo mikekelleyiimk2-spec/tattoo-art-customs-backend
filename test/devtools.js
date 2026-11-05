@@ -1,6 +1,7 @@
 // Developer Tools for other developers — Bundle B (Oct 28 2026):
 // Fill-My-List standalone service face, Rolodex public demo,
-// Money Watch for developers (offer + interest register).
+// Money Watch for developers (offer + interest register + the real
+// PayPal buy door, wired 2026-11-05 for gap G-11).
 // DB phase: settled-price invariants + the interest register.
 // HTTP phase: the three own-face pages, the demo's no-house-data
 // guarantee, the fill-order wiring, and the codex entries.
@@ -23,6 +24,9 @@ async function runDbTests(ok) {
     && devtools.ROLODEX_TIERS.master.baseCents === 799,
     'Rolodex tiers settled: Affiliate $4.99 / Social $4.99 / Master $7.99');
   ok(devtools.MONEY_WATCH.priceCents === 499, 'Money Watch settled at $4.99 one-time');
+  ok(devtools.moneyWatchRegisterCents() === pricing.withFeeCents(499)
+    && devtools.moneyWatchRegisterCents() === 565,
+    'Money Watch register total = settled price + house fee pass-through ($5.65)');
   ok(devtools.MONEY_WATCH.sourceDoors.length === 5
     && devtools.MONEY_WATCH.sourceDoors.every((d) => d.name && d.state && d.note),
     'Money Watch source doors carry honest states');
@@ -109,8 +113,10 @@ async function runHttpTests(ok, req) {
   ok(mw.status === 200, '/money-watch serves 200');
   ok(mw.text.includes('Money Watch') && mw.text.includes('$4.99'), 'money watch offer carries the settled $4.99');
   ok(mw.text.includes('action="/money-watch/interest"'), 'interest form posts to the register door');
+  ok(mw.text.includes('action="/money-watch/buy"'), 'buy form posts to the real checkout door (G-11 wired)');
+  ok(mw.text.includes('$5.65'), 'register total ($4.99 + $0.66 fee) printed on the face');
   ok(/read-only/i.test(mw.text) && /never moves your money/i.test(mw.text), 'read-only-first law printed on the face');
-  ok(/no payment is taken/i.test(mw.text), 'interest state is honest — no payment taken today');
+  ok(/takes no payment/i.test(mw.text), 'interest state is honest — joining the list takes no payment');
   ok(mw.text.includes('https://www.paypal.com/ncp/payment/WA9DS6J8ERSHW'), 'tip jar (Penny Sweeper) on the money watch page');
 
   // NOTE: this phase of run.js runs with the shared DB handle closed
@@ -128,6 +134,15 @@ async function runHttpTests(ok, req) {
     body: new URLSearchParams({ name: 'No Email', email: 'not-an-email', sources: '', website: '' }).toString(),
   });
   ok(badPost.status === 302, 'interest POST with a bad email still lands softly (flash, no 500)');
+
+  // The buy door rejects a bad guest email BEFORE any PayPal call —
+  // a soft landing back on the offer, no 500, no order chased.
+  const badBuy = await anon('/money-watch/buy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ name: 'No Email', email: 'not-an-email', sources: '', website: '' }).toString(),
+  });
+  ok(badBuy.status === 302 && (badBuy.location || '').includes('/money-watch'), 'buy POST with a bad email lands softly on the offer (no PayPal call made)');
 
   // ---- Codex carries the new doors + prices ----
   const codexRes = await anon('/api/codex');

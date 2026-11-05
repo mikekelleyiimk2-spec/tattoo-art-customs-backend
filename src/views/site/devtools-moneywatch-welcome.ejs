@@ -1,0 +1,51 @@
+<%#
+  Money Watch — for developers (buyer confirmation page).
+  Body fragment only, same face as the offer page (layout-devtools).
+  Shown only behind the paid-order gate in routes/devtools.js
+  (guest HMAC token or the buyer's own login): payment is complete
+  when this page renders. Honest next steps only — the plugs seat at
+  signup, the watch is read-only, and the confirmation email is the
+  durable receipt.
+%>
+<style>
+  .mw-state { display:inline-block; padding:.15rem .6rem; border-radius:999px; border:1px solid currentColor; font-size:.8rem; font-weight:700; letter-spacing:.02em; }
+  .mw-flash-amount { font-size:2rem; font-weight:800; line-height:1.15; margin:.4rem 0; }
+</style>
+
+<div class="wrap">
+
+  <% if (flash) { %>
+  <div class="band" role="status"><p style="margin:0;"><%= flash %></p></div>
+  <% } %>
+
+  <section class="hero">
+    <p class="muted" style="margin-bottom:.3rem;"><%= face.name %> · Useful Appz · For developers</p>
+    <h1>Payment complete — Money Watch is yours.</h1>
+    <p class="mw-flash-amount"><%= money(totalCents) %> paid</p>
+    <p>Reference <strong><%= orderRef %></strong><% if (deliveryEmail) { %> · confirmation sent to <strong><%= deliveryEmail %></strong><% } %>. Keep that email — it is your receipt.</p>
+    <p><span class="mw-state">PAID</span></p>
+  </section>
+
+  <section>
+    <h2>What happens next</h2>
+    <div class="steps">
+      <div class="card">
+        <h3>1. Sign in with the same email</h3>
+        <p>Your source plugs seat at signup. <a href="/login">Sign in or create your account</a> with the email you checked out with, so the desk can match your purchase to your account.</p>
+      </div>
+      <div class="card">
+        <h3>2. Your plugs get seated</h3>
+        <p>The desk seats your Business PayPal plug first — a read-only lane; your credential, seated server-side by you.<% if (sources) { %> You named: <em><%= sources %></em> — those are added from there.<% } %></p>
+      </div>
+      <div class="card">
+        <h3>3. The watch starts watching</h3>
+        <p>The first run on any source is a baseline that fires nothing; every landing after that flashes exactly once: &ldquo;you made X in Y time&rdquo;, with your split map drawn on it.</p>
+      </div>
+    </div>
+    <div class="band">
+      <p style="margin:0;"><strong>Money Watch never moves your money.</strong> Watching, reporting and the split plan are read-only — moving money stays in your own banking.</p>
+    </div>
+    <p><a class="btn" href="/login">Sign in to start setup</a> <a class="btn-ghost" href="/money-watch">Back to Money Watch</a></p>
+  </section>
+
+</div>

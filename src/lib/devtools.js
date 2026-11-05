@@ -24,9 +24,14 @@
 //   records it 'awaiting_payment' in the Hub's fill cycle. The web
 //   payment rail for it is being set up; the desk confirms payment by
 //   hand (Business PayPal mk4 + entitlement grant) — the page says so.
-// - Money Watch for developers is NOT on sale yet: the offer page
-//   collects interest through the register (an orders row, below).
-//   No payment is taken or implied.
+// - Money Watch for developers is ON SALE (wired 2026-11-05, gap
+//   G-11): the standard house PayPal checkout (orders row -> checkout
+//   -> capture -> paid) runs from routes/devtools.js, same shape as
+//   routes/buyApp.js. Fulfillment is the paid register row itself:
+//   it fires the admin notification and the buyer's confirmation
+//   email, and the desk seats the buyer's source plugs at signup
+//   ("built — plug seats at signup", below). The interest register
+//   (recordMoneyWatchInterest) stays for visitors not ready to buy.
 const db = require('../db');
 const pricing = require('./pricing');
 const fillCycle = require('./fillCycle');
@@ -49,6 +54,13 @@ const ROLODEX_TIERS = {
   social: { key: 'social', name: 'Social Link Rolodex', baseCents: 499 },
   master: { key: 'master', name: 'Master Rolodex — All My Links', baseCents: 799 },
 };
+
+// Register total for a Money Watch sale: settled price + the house
+// processing-fee pass-through, the same math every web door uses
+// ($4.99 + $0.66 = $5.65).
+function moneyWatchRegisterCents() {
+  return pricing.withFeeCents(MONEY_WATCH.priceCents);
+}
 
 const MONEY_WATCH = {
   priceCents: 499, // $4.99 one-time — settled
@@ -129,7 +141,7 @@ module.exports = {
   TIP_JAR_URL,
   FILL, fillRegisterCents,
   ROLODEX_TIERS,
-  MONEY_WATCH,
+  MONEY_WATCH, moneyWatchRegisterCents,
   poolCount,
   recordMoneyWatchInterest,
 };

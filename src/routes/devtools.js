@@ -7,23 +7,34 @@
 //   GET  /rolodex-demo        Affiliate Rolodex public demo (no signup)
 //   GET  /money-watch         Money Watch for developers — offer
 //   POST /money-watch/interest  interest -> orders (pending_review)
+//   POST /money-watch/buy     buy -> orders + PayPal checkout
+//   GET  /money-watch/approve/:orderId   PayPal return: capture + paid
+//   GET  /money-watch/welcome/:orderId   buyer confirmation page
 //
 // The machinery is all existing house machinery, wired — not rebuilt:
 // the fill cycle (lib/fillCycle.js) behind POST /api/testers/fill/*,
 // the register's orders table for interest, and the settled prices in
 // lib/devtools.js (one config place). Honest payment states only:
 // the fill order records 'awaiting_payment' until the desk confirms;
-// Money Watch takes no payment at all yet — an interest list.
+// Money Watch sells through the standard house PayPal checkout (the
+// routes/buyApp.js shape: order row -> checkout -> capture -> paid),
+// wired 2026-11-05 for gap G-11. The interest list stays as the
+// not-ready-to-buy door.
 //
 // OneMind tie: every page is public; the sign-in door is the site's
 // standard /login (Google + email), and signing in seats the account
 // via seatQuietly like everywhere else.
 const express = require('express');
+const db = require('../db');
 const config = require('../config');
 const pricing = require('../lib/pricing');
 const devtools = require('../lib/devtools');
 const fillCycle = require('../lib/fillCycle');
 const rolodex = require('../lib/rolodex');
+const paypal = require('../lib/paypal');
+const guestCheckout = require('../lib/guestCheckout');
+const seatVerify = require('../lib/seatVerify');
+const { sendMail } = require('../lib/mail');
 const { formLimiter, checkHoneypot } = require('../middleware/rateLimit');
 
 const router = express.Router();
@@ -99,12 +110,210 @@ router.get('/money-watch', (req, res) => {
     path: '/money-watch',
     face: FACES.moneywatch,
     title: 'Money Watch for Developers — never search for a payout again | Useful Appz',
-    metaDescription: 'Money Watch, productized for other developers: every payout source watched, every landing flashed ("you made X in Y time"), your own split map drawn on every landing. Read-only first — it never moves your money. $4.99, interest list open.',
+    metaDescription: 'Money Watch, productized for other developers: every payout source watched, every landing flashed ("you made X in Y time"), your own split map drawn on every landing. Read-only first — it never moves your money. $4.99 one-time, on sale now.',
     user: req.user || null,
     priceCents: devtools.MONEY_WATCH.priceCents,
+    feeCents: pricing.processingFeeCents(devtools.MONEY_WATCH.priceCents),
+    registerCents: devtools.moneyWatchRegisterCents(),
     sourceDoors: devtools.MONEY_WATCH.sourceDoors,
     doors: { appsUrl: '/apps', hubUrl: '/tester-hub' },
     rolodexTiers: devtools.ROLODEX_TIERS,
+    fill: devtools.FILL,
+  });
+});
+
+// ---- Money Watch — the buy door (standard house PayPal checkout) ----
+// Same shape as routes/buyApp.js: an orders row first, then a PayPal
+// checkout order, capture on return, amount verified against the row,
+// then fulfillment. Fulfillment for this product is the paid row
+// itself: it fires the admin notification (the desk seats the buyer's
+// source plugs at signup) and the buyer's confirmation email, and the
+// welcome page is the buyer's on-screen receipt. Guests check out
+// with just a delivery email — the PayPal return URL carries the HMAC
+// guest token (lib/guestCheckout), scoped 'money_watch_dev'.
+const MW_ORDER_TYPE = 'money_watch_dev';
+const MW_SCOPE = 'money_watch_dev';
+
+router.post('/money-watch/buy', formLimiter, checkHoneypot, async (req, res) => {
+  const name = String(req.body.name || '').trim().slice(0, 120);
+  const sources = String(req.body.sources || '').trim().slice(0, 600);
+  const guest = !req.user;
+  let deliveryEmail = null;
+  if (guest) {
+    deliveryEmail = guestCheckout.parseGuestEmail(req.body.email);
+    if (!deliveryEmail) {
+      req.session.flash = 'Enter the email address your confirmation should go to — that is where your Money Watch setup starts.';
+      return res.redirect('/money-watch#buy');
+    }
+  } else {
+    deliveryEmail = String(req.user.email || '').trim().toLowerCase() || null;
+  }
+  const price = devtools.MONEY_WATCH.priceCents;
+  const fee = pricing.processingFeeCents(price);
+  const orderId = await db.insert('orders', {
+    buyer_id: guest ? '' : req.user.id,
+    order_type: MW_ORDER_TYPE,
+    amount_cents: price,
+    fee_cents: fee,
+    status: 'pending',
+    payment_method: 'paypal',
+    guest_email: guest ? deliveryEmail : '',
+    guest_note: JSON.stringify({ name, sources, deliveryEmail: deliveryEmail || '' }),
+    created_at: db.now(),
+  });
+  try {
+    const pp = await paypal.createCheckoutOrder({
+      amountCents: price + fee,
+      description: 'Money Watch for Developers — one-time',
+      returnUrl: guest
+        ? `${config.baseUrl}/money-watch/approve/${orderId}?gt=${guestCheckout.guestToken(orderId, MW_SCOPE)}`
+        : `${config.baseUrl}/money-watch/approve/${orderId}`,
+      cancelUrl: `${config.baseUrl}/money-watch`,
+    });
+    await db.update('orders', orderId, { paypal_order_id: pp.id });
+    const approve = pp.links.find((l) => l.rel === 'approve');
+    res.redirect(approve.href);
+  } catch (e) {
+    console.error('money watch PayPal order create failed:', e.message);
+    req.session.flash = 'PayPal checkout is unavailable right now — try again later.';
+    res.redirect('/money-watch#buy');
+  }
+});
+
+// Shared gate for approve + welcome: guest orders prove ownership with
+// the HMAC checkout token (?gt=); member orders need the buyer's own
+// login. Returns the order, or null after responding.
+async function loadMoneyWatchOrder(req, res, { paidOnly }) {
+  const order = await db.get(
+    `SELECT * FROM orders WHERE id = ? AND order_type = ?${paidOnly ? " AND status = 'paid'" : ''}`,
+    [req.params.orderId, MW_ORDER_TYPE]
+  );
+  if (!order) {
+    res.status(paidOnly ? 403 : 404).render('error', {
+      title: paidOnly ? 'Not available' : 'Not found',
+      message: paidOnly ? 'This confirmation is not available.' : 'Order not found.',
+    });
+    return null;
+  }
+  if (guestCheckout.isGuestOrder(order)) {
+    if (guestCheckout.verifyGuestToken(req.query.gt, MW_SCOPE) !== String(order.id)) {
+      res.status(403).render('error', {
+        title: 'Invalid checkout link',
+        message: 'This guest checkout link is not valid. Your confirmation is also emailed to you when payment completes.',
+      });
+      return null;
+    }
+    return order;
+  }
+  if (!req.user) {
+    res.redirect(`/login?next=${encodeURIComponent(req.originalUrl)}`);
+    return null;
+  }
+  if (order.buyer_id !== req.user.id) {
+    res.status(paidOnly ? 403 : 404).render('error', {
+      title: paidOnly ? 'Not available' : 'Not found',
+      message: paidOnly ? 'This confirmation is not available.' : 'Order not found.',
+    });
+    return null;
+  }
+  return order;
+}
+
+function moneyWatchWelcomePath(req, order) {
+  const base = `/money-watch/welcome/${order.id}`;
+  return guestCheckout.isGuestOrder(order)
+    ? `${base}?gt=${encodeURIComponent(guestCheckout.guestToken(order.id, MW_SCOPE))}`
+    : base;
+}
+
+// Buyer confirmation email — best-effort by contract (payment is
+// already captured when this runs; a mail failure never breaks the
+// buyer's flow, it is logged and the welcome page still confirms).
+async function sendMoneyWatchConfirmation(order) {
+  let note = {};
+  try { note = JSON.parse(order.guest_note || '{}'); } catch (e) { note = {}; }
+  const to = order.guest_email || note.deliveryEmail || '';
+  if (!to) return false;
+  const ref = String(order.id).slice(0, 8);
+  const lines = [
+    `Hi there,`,
+    ``,
+    `Thanks for your purchase — payment is complete. Money Watch for Developers is yours (reference ${ref}).`,
+    ``,
+    `What happens next: the watch is read-only and never moves your money. Your source plugs seat at signup — sign in (or create your account) at ${config.baseUrl}/login with this email address, and the desk seats your PayPal plug first; the sources you named are added from there.`,
+    ``,
+    `Keep this email — it is your receipt. If you have any trouble, just reply to this email.`,
+    ``,
+    `— Useful Appz`,
+  ];
+  try {
+    await sendMail({
+      to,
+      subject: `Money Watch for Developers — payment complete (reference ${ref})`,
+      text: lines.join('\n'),
+    });
+    return true;
+  } catch (e) {
+    console.error('money watch confirmation email failed:', e.message);
+    return false;
+  }
+}
+
+router.get('/money-watch/approve/:orderId', async (req, res) => {
+  const order = await loadMoneyWatchOrder(req, res, { paidOnly: false });
+  if (!order) return;
+  if (order.status === 'paid') return res.redirect(moneyWatchWelcomePath(req, order));
+  try {
+    const captureFn = paypal.captureOrder || paypal.captureCheckoutOrder;
+    const capture = await captureFn(order.paypal_order_id);
+    const expectedTotal = order.amount_cents + order.fee_cents;
+    const captured = Math.round(parseFloat(capture.purchase_units[0].payments.captures[0].amount.value) * 100);
+    if (captured !== expectedTotal) {
+      await seatVerify.logEvent({
+        kind: 'fulfillment_mismatch',
+        detail: `money-watch: captured ${captured} != expected ${expectedTotal} (order ${order.id})`,
+        userId: order.buyer_id || null, req,
+      });
+      throw new Error('Amount mismatch');
+    }
+    await db.update('orders', order.id, { status: 'paid', paid_at: db.now() });
+    try {
+      await require('../lib/notify').notifyAdmins({
+        kind: 'contact',
+        title: `Money Watch (developers) SOLD: order ${String(order.id).slice(0, 8)}`,
+        body: `Money Watch for Developers sold for ${pricing.money(expectedTotal)} (order ${order.id}). Buyer: ${order.guest_email || order.buyer_id}. Seat the buyer's source plugs at signup.`,
+        link: '/money-watch',
+      });
+    } catch (e) { console.error('money watch sale notify failed:', e.message); }
+    await sendMoneyWatchConfirmation(order);
+    req.session.flash = 'Payment complete — Money Watch for Developers is yours.';
+    res.redirect(moneyWatchWelcomePath(req, order));
+  } catch (e) {
+    console.error('money watch PayPal capture failed:', e.message);
+    req.session.flash = 'Payment could not be completed — try again.';
+    res.redirect('/money-watch#buy');
+  }
+});
+
+router.get('/money-watch/welcome/:orderId', async (req, res) => {
+  const order = await loadMoneyWatchOrder(req, res, { paidOnly: true });
+  if (!order) return;
+  let note = {};
+  try { note = JSON.parse(order.guest_note || '{}'); } catch (e) { note = {}; }
+  face(res, 'site/devtools-moneywatch-welcome', {
+    path: '/money-watch',
+    face: FACES.moneywatch,
+    title: 'Money Watch for Developers — payment complete | Useful Appz',
+    metaDescription: 'Your Money Watch for Developers purchase is complete.',
+    user: req.user || null,
+    order,
+    orderRef: String(order.id).slice(0, 8),
+    totalCents: order.amount_cents + order.fee_cents,
+    deliveryEmail: order.guest_email || note.deliveryEmail || '',
+    sources: note.sources || '',
+    doors: { appsUrl: '/apps', hubUrl: '/tester-hub' },
+    rolodexTiers: devtools.ROLODEX_TIERS,
+    moneyWatchPriceCents: devtools.MONEY_WATCH.priceCents,
     fill: devtools.FILL,
   });
 });
@@ -121,7 +330,7 @@ router.post('/money-watch/interest', formLimiter, checkHoneypot, async (req, res
     const orderId = await devtools.recordMoneyWatchInterest({
       name, email, sources, userId: req.user ? req.user.id : '',
     });
-    req.session.flash = `You are on the Money Watch interest list (reference ${orderId}). No payment is taken today — when the developer edition opens at ${pricing.money(devtools.MONEY_WATCH.priceCents)}, the list hears first.`;
+    req.session.flash = `You are on the Money Watch interest list (reference ${orderId}). Joining takes no payment — and Money Watch is on sale now at ${pricing.money(devtools.MONEY_WATCH.priceCents)} if you'd rather skip the line: the buy door is at the top of this page.`;
   } catch (e) {
     console.error('money watch interest failed:', e.message);
     req.session.flash = 'The interest door hiccuped — try once more in a moment.';

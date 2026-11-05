@@ -6,8 +6,10 @@
   .door-card), and the money() cents formatter.
   Honest states only: source doors render from the sourceDoors local
   (this view holds no second list), the one flash shown is a labeled
-  EXAMPLE, and no checkout is live — the form below joins an interest
-  list and takes no payment.
+  EXAMPLE, and the buy door below is the real house PayPal checkout
+  (wired 2026-11-05, gap G-11) — price, fee and total all printed.
+  The interest form stays underneath for visitors not ready to buy;
+  joining it takes no payment, and the page says exactly that.
 %>
 <style>
   .mw-state { display:inline-block; padding:.15rem .6rem; border-radius:999px; border:1px solid currentColor; font-size:.8rem; font-weight:700; letter-spacing:.02em; }
@@ -31,9 +33,9 @@
     <h1>Money Watch — for developers.</h1>
     <p>Every payout source you have, watched. The moment money lands, you see it: <strong>&ldquo;you made X in Y time&rdquo;</strong> — and your own split map, drawn on every landing, so you can see where each payout is meant to go before you touch your banking.</p>
     <p>No more hunting through store dashboards, PayPal, affiliate balances, and bank deposits to answer one question: <em>did I get paid?</em></p>
-    <p><a class="btn" href="#interest">Join the interest list</a> <a class="btn-ghost" href="#watches">What it watches</a></p>
+    <p><a class="btn" href="#buy">Buy Money Watch — <%= money(priceCents) %></a> <a class="btn-ghost" href="#watches">What it watches</a></p>
     <% if (user) { %>
-    <p class="fineprint">You are signed in — the interest form below still applies; joining the list is separate from your site account.</p>
+    <p class="fineprint">You are signed in — checkout attaches to your account. Not ready yet? The interest list is still open below the buy door.</p>
     <% } %>
   </section>
 
@@ -91,13 +93,38 @@
     <p class="fineprint">Read-only credentials only, no custody of funds, and you can disconnect any source at any time. In reports, account identifiers are shown as role labels — never printed raw.</p>
   </section>
 
-  <%# 5. Price + interest %>
-  <section id="interest">
+  <%# 5. Price + the buy door (real checkout) + interest (secondary) %>
+  <section id="buy">
     <h2>Price</h2>
     <div class="card">
       <p class="price-tag"><%= money(priceCents) %></p>
-      <p><strong>One-time.</strong> The settled Money Watch price — pay once, no subscription.</p>
-      <p>First sales run through the interest list — join it and you're in line for unit pricing at launch; no payment is taken today.</p>
+      <p><strong>One-time.</strong> The settled Money Watch price — pay once, no subscription. On sale now: checkout is PayPal, and the total at the register is <strong><%= money(registerCents) %></strong> (<%= money(priceCents) %> + <%= money(feeCents) %> processing).</p>
+      <form class="mw-form" method="post" action="/money-watch/buy">
+        <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <p style="margin:0;">
+          <label for="mw-buy-name">Your name</label>
+          <input id="mw-buy-name" type="text" name="name" maxlength="80" autocomplete="name">
+        </p>
+        <% if (!user) { %>
+        <p style="margin:0;">
+          <label for="mw-buy-email">Your email — your confirmation and setup start here</label>
+          <input id="mw-buy-email" type="email" name="email" required maxlength="120" autocomplete="email" placeholder="you@example.com">
+        </p>
+        <% } %>
+        <p style="margin:0;">
+          <label for="mw-buy-sources">What should it watch for you?</label>
+          <input id="mw-buy-sources" type="text" name="sources" maxlength="300" placeholder="Play payouts, PayPal, my store backend, affiliates…">
+        </p>
+        <p><button class="btn" type="submit">Buy Money Watch — <%= money(registerCents) %> via PayPal</button></p>
+      </form>
+      <p class="fineprint" style="margin-bottom:0;">Payment is captured by PayPal (Business PayPal) and confirmed on the next page and by email. Fulfillment: your source plugs seat at signup — sign in with the same email and the desk seats your PayPal plug first. The watch stays read-only: it never moves your money.</p>
+    </div>
+  </section>
+
+  <section id="interest">
+    <h2>Not ready to buy?</h2>
+    <div class="card">
+      <p>Join the interest list and hear about Money Watch first — new sources, new doors, price news. Joining the list is not a purchase and takes no payment.</p>
       <form class="mw-form" method="post" action="/money-watch/interest">
         <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
         <p style="margin:0;">
@@ -114,7 +141,6 @@
         </p>
         <p><button class="btn" type="submit">Join the interest list</button></p>
       </form>
-      <p class="fineprint" style="margin-bottom:0;">Joining the list is not a purchase and takes no payment. When sales open, people on the list are in line first, at the price above.</p>
     </div>
   </section>
 
