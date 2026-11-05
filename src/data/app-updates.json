@@ -1,245 +1,245 @@
 {
-  "com.usefulappz.clipboardbar": {
-    "versionCode": 5,
-    "versionName": "1.0.3",
-    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.clipboardbar/apk",
-    "notes": "Now with automatic updates \u2014 future versions install themselves.",
-    "sha256": "611965ccd3d0fc44ad6a8f00491a0e357018a7cd5119b822fae30a85196bb375",
-    "sizeBytes": 58785,
-    "publishedAt": "2026-10-14T21:55:59Z",
-    "gated": true,
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.clipboardbar-1.0.3.apk"
-  },
-  "com.usefulappz.coloringcontests": {
-    "versionCode": 4,
-    "versionName": "1.2",
-    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.coloringcontests/apk",
-    "notes": "Now with automatic updates \u2014 future versions install themselves.",
-    "sha256": "f93cfe4ad2daf3ad877df2e9638175d931eba18e35064eeddeb3969b33e78b3e",
-    "sizeBytes": 11112231,
-    "publishedAt": "2026-10-14T19:11:17Z",
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.coloringcontests-1.2.apk"
-  },
-  "com.usefulappz.countdownbar": {
-    "versionCode": 5,
-    "versionName": "1.0.3",
-    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.countdownbar/apk",
-    "notes": "Now with automatic updates \u2014 future versions install themselves.",
-    "sha256": "23082fa5cde878d10c2a5e8fccbc6d0040c46b255b95ce3adc2fe67587d2d652",
-    "sizeBytes": 58705,
-    "publishedAt": "2026-10-14T21:55:59Z",
-    "gated": true,
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.countdownbar-1.0.3.apk"
-  },
-  "com.usefulappz.drawwithme": {
-    "versionCode": 4,
-    "versionName": "1.0.2",
-    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.drawwithme/apk",
-    "notes": "Now with automatic updates \u2014 future versions install themselves.",
-    "sha256": "28ec90134cc4bd372a14cf773204405ce184f75326c91f899f47a998abb0defc",
-    "sizeBytes": 9600400,
-    "publishedAt": "2026-10-14T19:11:17Z",
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.drawwithme-1.0.2.apk"
-  },
-  "com.usefulappz.habitdot": {
-    "versionCode": 3,
-    "versionName": "1.0.2",
-    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.habitdot/apk",
-    "notes": "Now with automatic updates \u2014 future versions install themselves.",
-    "sha256": "d56418a49e0568212eeefb758f28928793794af230502a91c043a433de640035",
-    "sizeBytes": 9112986,
-    "publishedAt": "2026-10-14T19:11:17Z",
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.habitdot-1.0.2.apk"
-  },
-  "com.usefulappz.littleinkerscoloring": {
-    "versionCode": 4,
-    "versionName": "1.2",
-    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.littleinkerscoloring/apk",
-    "notes": "Now with automatic updates \u2014 future versions install themselves.",
-    "sha256": "0fe12174fc254e159e57dae9145570977f27349acc6963cdde1a3c2183d78789",
-    "sizeBytes": 7003789,
-    "publishedAt": "2026-10-14T19:11:17Z",
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.littleinkerscoloring-1.2.apk"
-  },
-  "com.usefulappz.stickerworld": {
-    "versionCode": 5,
-    "versionName": "1.0.2",
-    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.stickerworld/apk",
-    "notes": "Now with automatic updates \u2014 future versions install themselves.",
-    "sha256": "f918b67517072e8e7a8ff2f0aad039e674057bbb638ce2b555eb6788a4c65428",
-    "sizeBytes": 13545018,
-    "publishedAt": "2026-10-14T19:11:17Z",
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.stickerworld-1.0.2.apk"
-  },
-  "com.usefulappz.aibar": {
-    "versionCode": 26,
-    "versionName": "1.7.7",
-    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.aibar/apk",
-    "notes": "OneMind \u2014 the thin-client cutover. Your words now run on the team server (no per-AI apps, no copy-paste); answers and the team log appear right in the panel. Copilot still answers through the phone bridge.",
-    "sha256": "f572799c99e3ed5b626750d090aa93a749e2d69a1020ad13812fb97779d82dbc",
-    "sizeBytes": 524237,
-    "publishedAt": "2026-10-22T19:47:17Z",
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.aibar-1.7.7.apk"
-  },
-  "com.usefulappz.odometer": {
-    "versionCode": 6,
-    "versionName": "1.4.0",
-    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.odometer/apk",
-    "notes": "The MileIQ-gap release: PDF tax report, QuickBooks CSV, trip edit + manual add, classification inbox, per-platform efficiency, deadhead vs paid miles \u2014 plus self-updates from now on.",
-    "sha256": "5f5c457104890b31816646b7f73195a07a7f86841f01cd94c5ae1261932a5e15",
-    "sizeBytes": 1876823,
-    "publishedAt": "2026-10-14T19:11:17Z",
-    "gated": true,
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.odometer-1.4.0.apk"
-  },
-  "com.usefulappz.musebar": {
-    "versionCode": 10,
-    "versionName": "2.5",
-    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.musebar/apk",
-    "notes": "Now with automatic updates \u2014 future versions install themselves.",
-    "sha256": "e3a380487418bff0224167af3c095739366cd6dd086780c33f94281de37fb1fa",
-    "sizeBytes": 67025,
-    "publishedAt": "2026-10-14T19:11:17Z",
-    "gated": true,
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.musebar-2.5.apk"
-  },
-  "com.usefulappz.chatgptbar": {
-    "versionCode": 6,
-    "versionName": "1.5",
-    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.chatgptbar/apk",
-    "notes": "Now with automatic updates \u2014 future versions install themselves.",
-    "sha256": "f19c1a63fe31086bca976776575ada3f493b30c6b26ca259c64742586b746bb1",
-    "sizeBytes": 62862,
-    "publishedAt": "2026-10-14T19:11:17Z",
-    "gated": true,
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.chatgptbar-1.5.apk"
-  },
-  "com.usefulappz.claudebar": {
-    "versionCode": 6,
-    "versionName": "1.5",
-    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.claudebar/apk",
-    "notes": "Now with automatic updates \u2014 future versions install themselves.",
-    "sha256": "9afa1f3f70783be44590aa91acb498c5c9d72245722ea64bd32d696493575667",
-    "sizeBytes": 62860,
-    "publishedAt": "2026-10-14T19:11:17Z",
-    "gated": true,
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.claudebar-1.5.apk"
-  },
-  "com.usefulappz.copilotbar": {
-    "versionCode": 6,
-    "versionName": "1.5",
-    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.copilotbar/apk",
-    "notes": "Now with automatic updates \u2014 future versions install themselves.",
-    "sha256": "ac3d8c3a314f4f01d88f35e8cdcffeeff7c4742e79f23081c98037e17752e676",
-    "sizeBytes": 62861,
-    "publishedAt": "2026-10-14T19:11:17Z",
-    "gated": true,
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.copilotbar-1.5.apk"
-  },
-  "com.usefulappz.deepseekbar": {
-    "versionCode": 6,
-    "versionName": "1.5",
-    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.deepseekbar/apk",
-    "notes": "Now with automatic updates \u2014 future versions install themselves.",
-    "sha256": "ca0eaf00018abc9185453e55d2abf291ce9a2ce646bc2b848dc583e3d301b9e1",
-    "sizeBytes": 62865,
-    "publishedAt": "2026-10-14T19:11:17Z",
-    "gated": true,
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.deepseekbar-1.5.apk"
-  },
-  "com.usefulappz.geminibar": {
-    "versionCode": 6,
-    "versionName": "1.5",
-    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.geminibar/apk",
-    "notes": "Now with automatic updates \u2014 future versions install themselves.",
-    "sha256": "2469fa3b25383a0d549e677c47cfe2613279830a6b2c1245bd5ae3d347f59cf1",
-    "sizeBytes": 62860,
-    "publishedAt": "2026-10-14T19:11:17Z",
-    "gated": true,
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.geminibar-1.5.apk"
-  },
-  "com.usefulappz.grokbar": {
-    "versionCode": 6,
-    "versionName": "1.5",
-    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.grokbar/apk",
-    "notes": "Now with automatic updates \u2014 future versions install themselves.",
-    "sha256": "eb705326377ced3e55a7b25c8f7e868642b5f553a733571aa15e2ac63b47e9fb",
-    "sizeBytes": 62853,
-    "publishedAt": "2026-10-14T19:11:17Z",
-    "gated": true,
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.grokbar-1.5.apk"
-  },
-  "com.usefulappz.perplexitybar": {
-    "versionCode": 6,
-    "versionName": "1.5",
-    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.perplexitybar/apk",
-    "notes": "Now with automatic updates \u2014 future versions install themselves.",
-    "sha256": "7e4ad6a9f8af047e6fa0d5bc1b06d5859259e0021b46b656c64ebe0f5a488a09",
-    "sizeBytes": 62871,
-    "publishedAt": "2026-10-14T19:11:17Z",
-    "gated": true,
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.perplexitybar-1.5.apk"
-  },
-  "com.usefulappz.testerhub": {
-    "versionCode": 7,
-    "versionName": "1.3.0",
-    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.testerhub/apk",
-    "notes": "Fill My Tester List lands: developer door carries the TIRED OF LOOKING FOR TESTERS pitch, the $24.99 one-app one-charge fill (waves cycle until FULL=12 confirmed, free top-ups through the 14-day run), tester in-app opt-in confirmations, and the live dopamine light board (real fill events only). Tester face leads with BECOME A TESTER \u2014 FIRST IN LINE. Full ad stack unchanged: AdMob banner + capped interstitials (max 1 per 3 min, never on first open) + rotating house commercials.",
-    "sha256": "a20574f562eb3c18936698988de74a02566050a6fdb51f4d8d4b15de6f7ea8a8",
-    "sizeBytes": 9366986,
-    "publishedAt": "2026-10-26T20:10:00Z",
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.testerhub-1.3.0.apk"
-  },
-  "com.usefulappz.folder": {
-    "versionCode": 5,
-    "versionName": "1.2.1",
-    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.folder/apk",
-    "notes": "UsefulAppz Folder vc5: per the owner's change of orders, the AI to AI door no longer aims at OneMind's room \u2014 AI-to-AI is a standalone app now (com.usefulappz.ai2ai) and the door launches it, with OneMind as the fallback until it's installed. Everything else from vc4 stands: the list files in the folder's own order (8 groups A\u2013Z, apps A\u2013Z inside, all 47 apps), Poppy & Ziggy the game in Kids & Family, full ad stack unchanged.",
-    "sha256": "37bfd8ffdcb85d17f8f490685384a00d776755d6f2c62220ee65f979e3945d5e",
-    "sizeBytes": 9128718,
-    "publishedAt": "2026-10-26T22:05:16Z",
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.folder-1.2.1.apk"
-  },
-  "com.usefulappz.poppyziggy": {
-    "versionCode": 1,
-    "versionName": "1.0.0",
-    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.poppyziggy/apk",
-    "notes": "Poppy & Ziggy \u2014 the Kids' Corner game: a collection of mini-games in the show's own format. First mini-game: the Bounce Brigade blanket \u2014 Poppy and Ziggy hold the tilting blanket, you bounce Azul, Jewel, Mango, Pip and T-Rex home to their nests. Fully offline, no ads.",
-    "sha256": "630ce1814aef0818a6b60086eb51e7beabedb55c1b37d775f480c407443d46c1",
-    "sizeBytes": 1029972,
-    "publishedAt": "2026-10-26T21:38:20Z",
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.poppyziggy-1.0.0.apk"
-  },
-  "com.usefulappz.cannadashdriver": {
-    "versionCode": 3,
-    "versionName": "1.0.2",
-    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.cannadashdriver/apk",
-    "notes": "Founding driver build \u2014 install it now; founding drivers get first access to delivery requests at launch.",
-    "sha256": "55237e708fd872551bbcb67096fc3292376a8734e424e5fa3da2bdf14b8141d9",
-    "sizeBytes": 386835,
-    "publishedAt": "2026-10-28T13:45:00Z",
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.cannadashdriver-1.0.2.apk"
-  },
-  "com.usefulappz.game2runandgun": {
-    "versionCode": 28,
-    "versionName": "2.0.1",
-    "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.game2runandgun/apk",
-    "notes": "Brambleforce 2.0.1 \u2014 the full campaign: 12 missions, 12 sealed boss arenas, online co-op, and PRUNE OR BE PRUNED: the 15-player online arena (5 heroes, 1 boss, 9 playable fodder), ranked seasons, the dossier dressing room, one wardrobe across every mode. Zero ads.",
-    "sha256": "5118c3d0627936962bc776899a1ec420aa0dbcbcf57ccb7b9d4611cabbe2b269",
-    "sizeBytes": 1051467835,
-    "publishedAt": "2026-11-05T01:25:16Z",
-    "gated": true,
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.game2runandgun-2.0.1.apk"
-  },
-  "com.usefulappz.game2runandgun.ios": {
-    "versionCode": 25,
-    "versionName": "2.0.0",
-    "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.game2runandgun-2.0.0.ipa",
-    "sha256": "0d561076bf87eaef909145df732d19cae8091e91b784dc4ee63410c0bd11e81e",
-    "sizeBytes": 948815710,
-    "publishedAt": "2026-11-03T10:27:10Z",
-    "gated": true,
-    "ipaFile": "Brambleforce-2.0.0.ipa",
-    "notes": "Brambleforce iOS sideload edition \u2014 vc25/2.0.0 unsigned IPA (SideStore/AltStore re-sign on the buyer\u2019s own free Apple ID; no Apple IAP \u2014 extras are website unlock codes). NEW in 2.0.0: PRUNE OR BE PRUNED, the 15-player online arena (5 heroes, 1 boss, 9 playable fodder), ranked seasons with funny ladders and banked rewards, the dossier dressing room, one wardrobe across every mode, the stick-figure Hackers Bundle with its big red X."
-  }
+    "com.usefulappz.clipboardbar": {
+        "versionCode": 5,
+        "versionName": "1.0.3",
+        "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.clipboardbar/apk",
+        "notes": "Now with automatic updates \u2014 future versions install themselves.",
+        "sha256": "611965ccd3d0fc44ad6a8f00491a0e357018a7cd5119b822fae30a85196bb375",
+        "sizeBytes": 58785,
+        "publishedAt": "2026-10-14T21:55:59Z",
+        "gated": true,
+        "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.clipboardbar-1.0.3.apk"
+    },
+    "com.usefulappz.coloringcontests": {
+        "versionCode": 4,
+        "versionName": "1.2",
+        "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.coloringcontests/apk",
+        "notes": "Now with automatic updates \u2014 future versions install themselves.",
+        "sha256": "f93cfe4ad2daf3ad877df2e9638175d931eba18e35064eeddeb3969b33e78b3e",
+        "sizeBytes": 11112231,
+        "publishedAt": "2026-10-14T19:11:17Z",
+        "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.coloringcontests-1.2.apk"
+    },
+    "com.usefulappz.countdownbar": {
+        "versionCode": 5,
+        "versionName": "1.0.3",
+        "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.countdownbar/apk",
+        "notes": "Now with automatic updates \u2014 future versions install themselves.",
+        "sha256": "23082fa5cde878d10c2a5e8fccbc6d0040c46b255b95ce3adc2fe67587d2d652",
+        "sizeBytes": 58705,
+        "publishedAt": "2026-10-14T21:55:59Z",
+        "gated": true,
+        "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.countdownbar-1.0.3.apk"
+    },
+    "com.usefulappz.drawwithme": {
+        "versionCode": 4,
+        "versionName": "1.0.2",
+        "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.drawwithme/apk",
+        "notes": "Now with automatic updates \u2014 future versions install themselves.",
+        "sha256": "28ec90134cc4bd372a14cf773204405ce184f75326c91f899f47a998abb0defc",
+        "sizeBytes": 9600400,
+        "publishedAt": "2026-10-14T19:11:17Z",
+        "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.drawwithme-1.0.2.apk"
+    },
+    "com.usefulappz.habitdot": {
+        "versionCode": 3,
+        "versionName": "1.0.2",
+        "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.habitdot/apk",
+        "notes": "Now with automatic updates \u2014 future versions install themselves.",
+        "sha256": "d56418a49e0568212eeefb758f28928793794af230502a91c043a433de640035",
+        "sizeBytes": 9112986,
+        "publishedAt": "2026-10-14T19:11:17Z",
+        "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.habitdot-1.0.2.apk"
+    },
+    "com.usefulappz.littleinkerscoloring": {
+        "versionCode": 4,
+        "versionName": "1.2",
+        "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.littleinkerscoloring/apk",
+        "notes": "Now with automatic updates \u2014 future versions install themselves.",
+        "sha256": "0fe12174fc254e159e57dae9145570977f27349acc6963cdde1a3c2183d78789",
+        "sizeBytes": 7003789,
+        "publishedAt": "2026-10-14T19:11:17Z",
+        "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.littleinkerscoloring-1.2.apk"
+    },
+    "com.usefulappz.stickerworld": {
+        "versionCode": 5,
+        "versionName": "1.0.2",
+        "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.stickerworld/apk",
+        "notes": "Now with automatic updates \u2014 future versions install themselves.",
+        "sha256": "f918b67517072e8e7a8ff2f0aad039e674057bbb638ce2b555eb6788a4c65428",
+        "sizeBytes": 13545018,
+        "publishedAt": "2026-10-14T19:11:17Z",
+        "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.stickerworld-1.0.2.apk"
+    },
+    "com.usefulappz.aibar": {
+        "versionCode": 26,
+        "versionName": "1.7.7",
+        "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.aibar/apk",
+        "notes": "OneMind \u2014 the thin-client cutover. Your words now run on the team server (no per-AI apps, no copy-paste); answers and the team log appear right in the panel. Copilot still answers through the phone bridge.",
+        "sha256": "f572799c99e3ed5b626750d090aa93a749e2d69a1020ad13812fb97779d82dbc",
+        "sizeBytes": 524237,
+        "publishedAt": "2026-10-22T19:47:17Z",
+        "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.aibar-1.7.7.apk"
+    },
+    "com.usefulappz.odometer": {
+        "versionCode": 6,
+        "versionName": "1.4.0",
+        "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.odometer/apk",
+        "notes": "The MileIQ-gap release: PDF tax report, QuickBooks CSV, trip edit + manual add, classification inbox, per-platform efficiency, deadhead vs paid miles \u2014 plus self-updates from now on.",
+        "sha256": "5f5c457104890b31816646b7f73195a07a7f86841f01cd94c5ae1261932a5e15",
+        "sizeBytes": 1876823,
+        "publishedAt": "2026-10-14T19:11:17Z",
+        "gated": true,
+        "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.odometer-1.4.0.apk"
+    },
+    "com.usefulappz.musebar": {
+        "versionCode": 10,
+        "versionName": "2.5",
+        "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.musebar/apk",
+        "notes": "Now with automatic updates \u2014 future versions install themselves.",
+        "sha256": "e3a380487418bff0224167af3c095739366cd6dd086780c33f94281de37fb1fa",
+        "sizeBytes": 67025,
+        "publishedAt": "2026-10-14T19:11:17Z",
+        "gated": true,
+        "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.musebar-2.5.apk"
+    },
+    "com.usefulappz.chatgptbar": {
+        "versionCode": 6,
+        "versionName": "1.5",
+        "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.chatgptbar/apk",
+        "notes": "Now with automatic updates \u2014 future versions install themselves.",
+        "sha256": "f19c1a63fe31086bca976776575ada3f493b30c6b26ca259c64742586b746bb1",
+        "sizeBytes": 62862,
+        "publishedAt": "2026-10-14T19:11:17Z",
+        "gated": true,
+        "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.chatgptbar-1.5.apk"
+    },
+    "com.usefulappz.claudebar": {
+        "versionCode": 6,
+        "versionName": "1.5",
+        "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.claudebar/apk",
+        "notes": "Now with automatic updates \u2014 future versions install themselves.",
+        "sha256": "9afa1f3f70783be44590aa91acb498c5c9d72245722ea64bd32d696493575667",
+        "sizeBytes": 62860,
+        "publishedAt": "2026-10-14T19:11:17Z",
+        "gated": true,
+        "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.claudebar-1.5.apk"
+    },
+    "com.usefulappz.copilotbar": {
+        "versionCode": 6,
+        "versionName": "1.5",
+        "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.copilotbar/apk",
+        "notes": "Now with automatic updates \u2014 future versions install themselves.",
+        "sha256": "ac3d8c3a314f4f01d88f35e8cdcffeeff7c4742e79f23081c98037e17752e676",
+        "sizeBytes": 62861,
+        "publishedAt": "2026-10-14T19:11:17Z",
+        "gated": true,
+        "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.copilotbar-1.5.apk"
+    },
+    "com.usefulappz.deepseekbar": {
+        "versionCode": 6,
+        "versionName": "1.5",
+        "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.deepseekbar/apk",
+        "notes": "Now with automatic updates \u2014 future versions install themselves.",
+        "sha256": "ca0eaf00018abc9185453e55d2abf291ce9a2ce646bc2b848dc583e3d301b9e1",
+        "sizeBytes": 62865,
+        "publishedAt": "2026-10-14T19:11:17Z",
+        "gated": true,
+        "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.deepseekbar-1.5.apk"
+    },
+    "com.usefulappz.geminibar": {
+        "versionCode": 6,
+        "versionName": "1.5",
+        "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.geminibar/apk",
+        "notes": "Now with automatic updates \u2014 future versions install themselves.",
+        "sha256": "2469fa3b25383a0d549e677c47cfe2613279830a6b2c1245bd5ae3d347f59cf1",
+        "sizeBytes": 62860,
+        "publishedAt": "2026-10-14T19:11:17Z",
+        "gated": true,
+        "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.geminibar-1.5.apk"
+    },
+    "com.usefulappz.grokbar": {
+        "versionCode": 6,
+        "versionName": "1.5",
+        "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.grokbar/apk",
+        "notes": "Now with automatic updates \u2014 future versions install themselves.",
+        "sha256": "eb705326377ced3e55a7b25c8f7e868642b5f553a733571aa15e2ac63b47e9fb",
+        "sizeBytes": 62853,
+        "publishedAt": "2026-10-14T19:11:17Z",
+        "gated": true,
+        "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.grokbar-1.5.apk"
+    },
+    "com.usefulappz.perplexitybar": {
+        "versionCode": 6,
+        "versionName": "1.5",
+        "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.perplexitybar/apk",
+        "notes": "Now with automatic updates \u2014 future versions install themselves.",
+        "sha256": "7e4ad6a9f8af047e6fa0d5bc1b06d5859259e0021b46b656c64ebe0f5a488a09",
+        "sizeBytes": 62871,
+        "publishedAt": "2026-10-14T19:11:17Z",
+        "gated": true,
+        "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.perplexitybar-1.5.apk"
+    },
+    "com.usefulappz.testerhub": {
+        "versionCode": 7,
+        "versionName": "1.3.0",
+        "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.testerhub/apk",
+        "notes": "Fill My Tester List lands: developer door carries the TIRED OF LOOKING FOR TESTERS pitch, the $24.99 one-app one-charge fill (waves cycle until FULL=12 confirmed, free top-ups through the 14-day run), tester in-app opt-in confirmations, and the live dopamine light board (real fill events only). Tester face leads with BECOME A TESTER \u2014 FIRST IN LINE. Full ad stack unchanged: AdMob banner + capped interstitials (max 1 per 3 min, never on first open) + rotating house commercials.",
+        "sha256": "a20574f562eb3c18936698988de74a02566050a6fdb51f4d8d4b15de6f7ea8a8",
+        "sizeBytes": 9366986,
+        "publishedAt": "2026-10-26T20:10:00Z",
+        "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.testerhub-1.3.0.apk"
+    },
+    "com.usefulappz.folder": {
+        "versionCode": 5,
+        "versionName": "1.2.1",
+        "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.folder/apk",
+        "notes": "UsefulAppz Folder vc5: per the owner's change of orders, the AI to AI door no longer aims at OneMind's room \u2014 AI-to-AI is a standalone app now (com.usefulappz.ai2ai) and the door launches it, with OneMind as the fallback until it's installed. Everything else from vc4 stands: the list files in the folder's own order (8 groups A\u2013Z, apps A\u2013Z inside, all 47 apps), Poppy & Ziggy the game in Kids & Family, full ad stack unchanged.",
+        "sha256": "37bfd8ffdcb85d17f8f490685384a00d776755d6f2c62220ee65f979e3945d5e",
+        "sizeBytes": 9128718,
+        "publishedAt": "2026-10-26T22:05:16Z",
+        "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.folder-1.2.1.apk"
+    },
+    "com.usefulappz.poppyziggy": {
+        "versionCode": 1,
+        "versionName": "1.0.0",
+        "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.poppyziggy/apk",
+        "notes": "Poppy & Ziggy \u2014 the Kids' Corner game: a collection of mini-games in the show's own format. First mini-game: the Bounce Brigade blanket \u2014 Poppy and Ziggy hold the tilting blanket, you bounce Azul, Jewel, Mango, Pip and T-Rex home to their nests. Fully offline, no ads.",
+        "sha256": "630ce1814aef0818a6b60086eb51e7beabedb55c1b37d775f480c407443d46c1",
+        "sizeBytes": 1029972,
+        "publishedAt": "2026-10-26T21:38:20Z",
+        "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.poppyziggy-1.0.0.apk"
+    },
+    "com.usefulappz.cannadashdriver": {
+        "versionCode": 3,
+        "versionName": "1.0.2",
+        "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.cannadashdriver/apk",
+        "notes": "Founding driver build \u2014 install it now; founding drivers get first access to delivery requests at launch.",
+        "sha256": "55237e708fd872551bbcb67096fc3292376a8734e424e5fa3da2bdf14b8141d9",
+        "sizeBytes": 386835,
+        "publishedAt": "2026-10-28T13:45:00Z",
+        "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.cannadashdriver-1.0.2.apk"
+    },
+    "com.usefulappz.game2runandgun": {
+        "versionCode": 28,
+        "versionName": "2.0.1",
+        "apkUrl": "https://tattoo-art-customs.onrender.com/api/apps/com.usefulappz.game2runandgun/apk",
+        "notes": "Brambleforce 2.0.1 \u2014 the full campaign: 12 missions, 12 sealed boss arenas, online co-op, and PRUNE OR BE PRUNED: the 15-player online arena (5 heroes, 1 boss, 9 playable fodder), ranked seasons, the dossier dressing room, one wardrobe across every mode. Zero ads.",
+        "sha256": "5118c3d0627936962bc776899a1ec420aa0dbcbcf57ccb7b9d4611cabbe2b269",
+        "sizeBytes": 1051467835,
+        "publishedAt": "2026-11-05T01:25:16Z",
+        "gated": true,
+        "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.game2runandgun-2.0.1.apk"
+    },
+    "com.usefulappz.game2runandgun.ios": {
+        "versionCode": 25,
+        "versionName": "2.0.0",
+        "storageRef": "r2://tattoo-art-customs-private/app-updates/com.usefulappz.game2runandgun-2.0.0.ipa",
+        "sha256": "0d561076bf87eaef909145df732d19cae8091e91b784dc4ee63410c0bd11e81e",
+        "sizeBytes": 948815710,
+        "publishedAt": "2026-11-03T10:27:10Z",
+        "gated": true,
+        "ipaFile": "Brambleforce-2.0.0.ipa",
+        "notes": "Brambleforce iOS sideload edition \u2014 vc25/2.0.0 unsigned IPA (SideStore/AltStore re-sign on the buyer\u2019s own free Apple ID; no Apple IAP \u2014 extras are website unlock codes). NEW in 2.0.0: PRUNE OR BE PRUNED, the 15-player online arena (5 heroes, 1 boss, 9 playable fodder), ranked seasons with funny ladders and banked rewards, the dossier dressing room, one wardrobe across every mode, the stick-figure Hackers Bundle with its big red X."
+    }
 }
