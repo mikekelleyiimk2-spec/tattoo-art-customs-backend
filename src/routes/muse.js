@@ -1117,6 +1117,67 @@ router.post('/upload-app-update', (req, res) => {
   });
 });
 
+// POST /api/muse/upload-pc-build
+// The PC twin of /upload-app-update (Brambleforce Windows edition,
+// 2026-11-04): the ~1.2 GB wrapper zip can NEVER live on this
+// service's 1 GB persistent disk — it stages on the ephemeral tmp
+// filesystem and streams straight into the private R2 bucket at
+// app-updates/brambleforce-pc-<versionName>.zip. The gated route
+// GET /api/apps/brambleforce-pc/download serves it from there via a
+// presigned redirect once the registry entry (key 'brambleforce-pc'
+// in data/app-updates.json) carries the storageRef. Computes sha256 +
+// size itself and returns them so the registry flip is a one-line
+// commit. Same service-token auth as /upload-app-update.
+router.post('/upload-pc-build', (req, res) => {
+  if (!serviceToken()) return res.status(404).json({ ok: false });
+  if (!authorized(req)) return res.status(401).json({ ok: false, error: 'unauthorized' });
+  pcBuildUpload(req, res, async (err) => {
+    if (err) return res.status(400).json({ ok: false, error: err.message });
+    if (!req.file) return res.status(400).json({ ok: false, error: 'no file' });
+    const staged = req.file.path;
+    const done = (code, obj) => {
+      try { fs.unlinkSync(staged); } catch { /* already gone */ }
+      return res.status(code).json(obj);
+    };
+    try {
+      if (!req.file.originalname.toLowerCase().endsWith('.zip')) {
+        return done(400, { ok: false, error: 'expected a .zip file' });
+      }
+      const fd = fs.openSync(staged, 'r');
+      const head = Buffer.alloc(4);
+      fs.readSync(fd, head, 0, 4, 0);
+      fs.closeSync(fd);
+      if (head[0] !== 0x50 || head[1] !== 0x4b || head[2] !== 0x03 || head[3] !== 0x04) {
+        return done(400, { ok: false, error: 'not a valid zip file' });
+      }
+      const sha256 = await new Promise((resolve, reject) => {
+        const h = crypto.createHash('sha256');
+        const s = fs.createReadStream(staged);
+        s.on('data', (d) => h.update(d));
+        s.on('end', () => resolve(h.digest('hex')));
+        s.on('error', reject);
+      });
+      const sizeBytes = fs.statSync(staged).size;
+      const storage = require('../lib/storage');
+      const vn = String(req.body.versionName || '').replace(/[^a-zA-Z0-9._-]/g, '');
+      const key = vn ? `app-updates/brambleforce-pc-${vn}.zip` : 'app-updates/brambleforce-pc.zip';
+      let storageRef;
+      try {
+        storageRef = await storage.putPrivateObject(staged, key, 'application/zip');
+      } catch (e) {
+        if (e && e.code === 'r2_not_configured') {
+          return done(503, { ok: false, error: 'r2_not_configured' });
+        }
+        throw e;
+      }
+      return done(200, { ok: true, package: 'brambleforce-pc', storageRef, sha256, sizeBytes });
+    } catch (e) {
+      console.error('[muse/upload-pc-build] failed:', e.message);
+      return done(500, { ok: false, error: 'store failed' });
+    }
+  });
+});
+
 // POST /api/muse/upload-ios-update
 // The iOS twin of /upload-app-update: publishes a big sideload IPA
 // (Brambleforce, ~635 MB) that can NEVER live on this service's 1 GB
@@ -1885,6 +1946,20 @@ const appUpdateUpload = multer({
   fileFilter: (req, file, cb) => {
     if (/\.apk$/i.test(file.originalname)) cb(null, true);
     else cb(new Error('Only .apk files are allowed.'));
+  },
+}).single('file');
+
+// PC-build R2 upload middleware (used by POST /upload-pc-build
+// above): same staging dir, same 1600 MB cap, .zip filter.
+const pcBuildUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, ipaStageDir),
+    filename: (req, file, cb) => cb(null, `stg-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.zip`),
+  }),
+  limits: { fileSize: 1600 * 1024 * 1024, files: 1 },
+  fileFilter: (req, file, cb) => {
+    if (/\.zip$/i.test(file.originalname)) cb(null, true);
+    else cb(new Error('Only .zip files are allowed.'));
   },
 }).single('file');
 

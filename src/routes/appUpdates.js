@@ -148,4 +148,38 @@ router.get('/apps/:package/apk', async (req, res) => {
   return fs.createReadStream(absPath).pipe(res);
 });
 
+// Brambleforce Windows edition — gated download (PC ship, 2026-11-04).
+// The sibling of /:pkg/apk for the one non-APK deliverable: same
+// HMAC purchase token (issued by the brambleforce success page with
+// the PC_DOWNLOAD_KEY slot), same paid-order DB check (order_type
+// 'brambleforce:game_pc' — lib/brambleforce orderType), same registry
+// (data/app-updates.json, key 'brambleforce-pc', written by the
+// /api/muse/upload-pc-build lane), same presigned-R2 serving. A
+// purchase of the Windows edition is the ONLY way through this door.
+router.get('/apps/brambleforce-pc/download', async (req, res) => {
+  const entry = readUpdates()['brambleforce-pc'];
+  if (!entry || !entry.storageRef) {
+    return res.status(404).json({ ok: false, error: 'pc build not found' });
+  }
+  const token = req.get('x-update-token') || req.query.t;
+  const orderId = updateTokens.verify(token, 'brambleforce-pc');
+  if (!orderId) {
+    await seatVerify.logEvent({
+      kind: 'download_gate_rejected', detail: 'brambleforce-pc:bad_token', surface: 'app-updates', req,
+    });
+    return purchaseTokenRequired(res);
+  }
+  const order = await db.get('SELECT status, order_type FROM orders WHERE id = ?', [orderId]);
+  if (!order || order.status !== 'paid' || order.order_type !== 'brambleforce:game_pc') {
+    await seatVerify.logEvent({
+      kind: 'download_gate_rejected', detail: 'brambleforce-pc:order_mismatch', surface: 'app-updates', req,
+    });
+    return purchaseTokenRequired(res);
+  }
+  res.set('Cache-Control', 'no-store');
+  return servePrivateFile(res, String(entry.storageRef), {
+    downloadName: entry.fileName || 'Brambleforce-2.0.1-Windows-x64.zip',
+  });
+});
+
 module.exports = router;

@@ -1,0 +1,32 @@
+<%#
+  Brambleforce on PC — landing section (PC store kit draft, wired live
+  2026-11-04 for the vc28 ship run once the wrapper packages landed
+  and the gate passed). Copy trimmed at wiring time to the wrapper
+  QC's proven truth: fullscreen, mouse aim + keyboard, gamepad,
+  local saves in the wrapper profile. Desktop has no seat sign-in
+  (the game's sign-in runs through the native app bridge), so this
+  section does NOT claim shared leaderboard standings or sign-in
+  progress roaming — the arena lobby itself ships in the box.
+  Price renders from the game_pc catalogue product, same pattern as
+  the buy box. Buy href: /brambleforce/buy/game_pc.
+%>
+<section class="bf-section" aria-label="Brambleforce on PC">
+  <p class="bf-kicker">New — Windows edition</p>
+  <h2>Brambleforce on PC</h2>
+  <p>The same garden, grown for the big screen. The Windows edition is the full game — every mission, boss, and the full Prune or Be Pruned arena — in true fullscreen.</p>
+  <ul class="bf-chips">
+    <li>Windows 10/11 · 64-bit</li>
+    <li>Mouse aim + keyboard</li>
+    <li>Gamepad native</li>
+    <li>Ultrawide — never stretched</li>
+    <li>1.2 GB download</li>
+  </ul>
+  <ul class="bf-inside">
+    <li><strong>Mouse aim + full keyboard play</strong> — alongside the gamepad support the game was built for; menus work by mouse, keys, and controller alike</li>
+    <li><strong>The whole game, nothing cut</strong> — all 12 missions, 4 fighters, 12 bosses, and the Prune or Be Pruned arena, exactly as shipped on Android</li>
+    <li><strong>Same price as everywhere</strong> — $<%= (products.game_pc.priceCents / 100).toFixed(2) %>, one-time, yours for good. Price parity on every storefront</li>
+    <li><strong>Extras carry over</strong> — every extra bought here unlocks in the PC edition with the same code: EXTRAS (B) → REDEEM CODE</li>
+  </ul>
+  <p><a class="btn" href="/brambleforce/buy/game_pc">Get Brambleforce for Windows — $<%= (products.game_pc.priceCents / 100).toFixed(2) %></a></p>
+  <p class="fineprint">Secure checkout by PayPal — the same door as the Android edition. Your Windows download waits on your purchase page (and in your email) the moment you buy. No installer — unzip and run. Internet connection needed for online co-op and the arena.</p>
+</section>

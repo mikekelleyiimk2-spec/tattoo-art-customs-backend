@@ -47,6 +47,13 @@ const { sendMail, transportReady } = require('./mail');
 
 const PACKAGE = 'com.usefulappz.game2runandgun';
 
+// Registry key (data/app-updates.json) + update-token package slot for
+// the Windows edition's gated download. NOT an Android package: the
+// gated route for it lives beside the APK route in
+// routes/appUpdates.js and DB-checks orders of type
+// orderType('game_pc') === 'brambleforce:game_pc'.
+const PC_DOWNLOAD_KEY = 'brambleforce-pc';
+
 // id -> { name, priceCents, blurb, kind }
 // kind 'game' delivers the sideload APK (gated app-updates store);
 // kind 'iap' issues a single-use unlock code on payment.
@@ -56,6 +63,12 @@ const PRODUCTS = {
     priceCents: 699,
     blurb: 'Run-and-gun through a killer garden. 12 missions, 4 fighters, 12 bosses. Online co-op and the Prune or Be Pruned arena. Zero ads — it is a paid game, it acts like one.',
     kind: 'game',
+  },
+  game_pc: {
+    name: 'Brambleforce — Windows Edition (PC)',
+    priceCents: 699,
+    blurb: 'The full game for Windows 10/11 (64-bit): 12 missions, 4 fighters, 12 bosses, the Prune or Be Pruned arena. True fullscreen, mouse aim + keyboard, gamepad native. One-time purchase — the download waits on your purchase page.',
+    kind: 'game_pc',
   },
   everything_bundle: {
     name: 'Everything Bundle — All Of It',
@@ -563,14 +576,63 @@ async function sendGameEmail({ to, successUrl, orderId }) {
   }
 }
 
+// Windows-edition delivery email — the sendGameEmail twin, with the
+// PC install truth (unzip + run; the build is new and unsigned, so
+// Windows shows a one-time SmartScreen prompt — say so up front
+// instead of letting the buyer think something is wrong).
+async function sendPcEmail({ to, successUrl, orderId }) {
+  const where = `order=${orderId || '?'} product=game_pc`;
+  if (!to) {
+    console.error(`brambleforce PC email NOT sent (${where}): no buyer email on the order`);
+    return { sent: false, error: 'no_recipient' };
+  }
+  if (!transportReady()) {
+    console.error(`brambleforce PC email NOT sent (${where}): mail transport is not configured on this server`);
+    return { sent: false, error: 'mail_not_configured' };
+  }
+  const lines = [
+    'Hi there,',
+    '',
+    'Thanks for your purchase — payment is complete.',
+    '',
+    'Download Brambleforce — Windows Edition from your purchase page:',
+    successUrl,
+    '',
+    'Unzip the file, open the folder, and run Brambleforce.exe. No installer needed.',
+    'First run only: Windows may show "Windows protected your PC" — the build is new and',
+    'unsigned. Choose "More info" → "Run anyway" and it starts normally from then on.',
+    'Your campaign saves right on your computer. Zero ads.',
+    '',
+    'Keep this email — it is your receipt and your way back to the download page.',
+    'If you have any trouble, just reply to this email.',
+    '',
+    '— Useful Appz / Tattoo Art Customs',
+  ];
+  try {
+    const info = await sendMail({
+      to,
+      subject: 'Your download is ready — Brambleforce (Windows)',
+      text: lines.join('\n'),
+    });
+    if (!info || info.dev) {
+      console.error(`brambleforce PC email NOT delivered (${where}): the mailer took the dev fallback`);
+      return { sent: false, error: 'mail_not_delivered' };
+    }
+    return { sent: true };
+  } catch (e) {
+    console.error(`brambleforce PC email FAILED (${where}):`, e.message);
+    return { sent: false, error: e.message };
+  }
+}
+
 function baseUrl() {
   return config.baseUrl;
 }
 
 module.exports = {
-  PACKAGE, PRODUCTS, PRODUCT_IDS, LAUNCH_PRODUCT_IDS, DROPS, BUNDLE_GRANTS,
+  PACKAGE, PC_DOWNLOAD_KEY, PRODUCTS, PRODUCT_IDS, LAUNCH_PRODUCT_IDS, DROPS, BUNDLE_GRANTS,
   product, orderType,
   chicagoToday, windowState, isPurchasable, purchasableIds, dayLabel, dropInfo,
   generateCode, normalizeCode, hashCode, issueCodeForOrder, reissueCodeForOrder, redeemCode,
-  sendCodeEmail, sendGameEmail, baseUrl,
+  sendCodeEmail, sendGameEmail, sendPcEmail, baseUrl,
 };

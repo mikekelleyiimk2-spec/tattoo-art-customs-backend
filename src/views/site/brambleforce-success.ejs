@@ -24,6 +24,20 @@
   </ol>
   <p class="muted fineprint" style="margin-top:.8rem;">Your download can be re-issued from this page anytime — bookmark it. If a purchase email reached you, it links back here too. Lost this page? <a href="/contact">Contact support</a> with your PayPal receipt and we'll sort you out. Optional extras (modes, skins, the expansion) live in the in-game Supply Store — they check out here and unlock with a code.</p>
 </section>
+<% } else if (productId === 'game_pc') { %>
+<h1 class="bf-title" style="font-size:clamp(1.55rem,4.6vw,2.3rem);">Your Brambleforce Download</h1>
+<p class="bf-lede">Thanks for your purchase! Payment is complete.</p>
+
+<section class="bf-buy-panel" style="margin-top:1.1rem;">
+  <h2 style="margin:0 0 .4rem;">Brambleforce — Windows Edition (PC)</h2>
+  <p><a class="btn bf-btn-wide" href="<%= downloadUrl %>">Download Brambleforce for Windows (ZIP)</a></p>
+  <ol class="bf-steps" style="margin-top:1rem;">
+    <li><strong>Download the ZIP</strong>About 1.2 GB — give it a minute on a slow connection.</li>
+    <li><strong>Unzip it</strong>Right-click the file → Extract All, then open the folder.</li>
+    <li><strong>Run Brambleforce.exe</strong>No installer. First run only, Windows may say "Windows protected your PC" — the build is new and unsigned: choose "More info" → "Run anyway".</li>
+  </ol>
+  <p class="muted fineprint" style="margin-top:.8rem;">Your download can be re-issued from this page anytime — bookmark it. If a purchase email reached you, it links back here too. Your campaign saves right on your computer. Lost this page? <a href="/contact">Contact support</a> with your PayPal receipt and we'll sort you out. Optional extras (modes, skins, the expansion) live in the in-game Supply Store — they check out here and unlock with a code, in this edition too: EXTRAS (B) → REDEEM CODE.</p>
+</section>
 <% } else if (code) { %>
 <h1 class="bf-title" style="font-size:clamp(1.55rem,4.6vw,2.3rem);">Your Unlock Code</h1>
 <p class="bf-lede">Thanks for your purchase! Payment is complete<% if (codeEmailed === true) { %> — this code was also emailed to you<% } %>.</p>

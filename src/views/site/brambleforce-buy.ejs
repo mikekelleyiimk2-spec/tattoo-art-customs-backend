@@ -20,6 +20,7 @@
   };
   var bfHero = bfArt[productId] || '/img/brambleforce/title.webp';
   var bfIsGame = productId === 'game';
+  var bfIsPc = productId === 'game_pc';
 %>
 <div class="bf-product-head">
   <div class="bf-hero-art banner"><img src="<%= bfHero %>" alt="Brambleforce — <%= product.name %>" fetchpriority="high"></div>
@@ -56,7 +57,7 @@
     <label><%= t('buyApp.guest_email_label') %>
       <input type="email" name="guest_email" required maxlength="160" placeholder="you@example.com">
     </label>
-    <% if (bfIsGame) { %>
+    <% if (bfIsGame || bfIsPc) { %>
     <p class="muted fineprint"><%= t('buyApp.guest_email_note') %></p>
     <% } else { %>
     <%# Extras deliver an unlock CODE by email, not a download link — the
@@ -81,6 +82,13 @@
     <li><strong>Install &amp; play</strong>Open the APK, allow installs from this source if asked, tap Install. Zero ads — it's a paid game.</li>
   </ol>
   <p class="muted fineprint" style="margin-top:.8rem;">Android 8+. Built for controllers (gamepad out of the box), keyboard, and touch.</p>
+  <% } else if (bfIsPc) { %>
+  <ol class="bf-steps">
+    <li><strong>Buy here with PayPal</strong>One-time $<%= (price / 100).toFixed(2) %>. Guest checkout — just an email for delivery.</li>
+    <li><strong>Download the Windows edition</strong>Your purchase page has the download (a ZIP, about 1.2 GB), and it can be re-issued from that page anytime — bookmark it after checkout.</li>
+    <li><strong>Unzip &amp; play</strong>Extract the ZIP and run Brambleforce.exe — no installer. First run, Windows may show a one-time "Windows protected your PC" prompt (the build is new and unsigned): "More info" → "Run anyway".</li>
+  </ol>
+  <p class="muted fineprint" style="margin-top:.8rem;">Windows 10/11, 64-bit. Mouse aim + keyboard, gamepad native, true fullscreen. Your campaign saves right on your computer.</p>
   <% } else { %>
   <ol class="bf-steps">
     <li><strong>Buy here with PayPal</strong>One-time $<%= (price / 100).toFixed(2) %>. Guest checkout — just an email for delivery.</li>

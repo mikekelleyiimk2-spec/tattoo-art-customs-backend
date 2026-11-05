@@ -373,6 +373,15 @@ function pageRouter() {
         req.session.flash = 'Payment complete — your Brambleforce download is ready.';
         return res.redirect(successPath(req, order));
       }
+      if (p.kind === 'game_pc') {
+        // Windows edition: same durable-purchase-page delivery as the
+        // game, PC email wording, gated download route beside the APK
+        // route (routes/appUpdates.js). No guest bridge — that tie is
+        // the Android package's, not the PC edition's.
+        await bf.sendPcEmail({ to: email, successUrl, orderId: order.id });
+        req.session.flash = 'Payment complete — your Brambleforce for Windows download is ready.';
+        return res.redirect(successPath(req, order));
+      }
       // IAP: mint the single-use unlock code and render the success
       // page WITH the code in this response (hash-only at rest in the
       // DB, as designed). Two delivery truths are carried honestly:
@@ -433,7 +442,12 @@ function pageRouter() {
     const order = await loadBfOrder(req, res, { paidOnly: true });
     if (!order) return;
     const isGame = p.kind === 'game';
-    const token = isGame ? updateTokens.issue(order.id, bf.PACKAGE) : null;
+    const isPc = p.kind === 'game_pc';
+    const token = isGame
+      ? updateTokens.issue(order.id, bf.PACKAGE)
+      : isPc
+        ? updateTokens.issue(order.id, bf.PC_DOWNLOAD_KEY)
+        : null;
     let sessionCode = null;
     if (!isGame && req.session && req.session.bfCodes && req.session.bfCodes[order.id]) {
       const row = await db.get('SELECT spent FROM brambleforce_codes WHERE order_id = ?', [order.id]);
@@ -446,7 +460,7 @@ function pageRouter() {
     }
     res.render('site/brambleforce-success', {
       layout: 'layout-brambleforce',
-      title: isGame ? 'Download Brambleforce' : `Your purchase — ${p.name}`,
+      title: isGame || isPc ? 'Download Brambleforce' : `Your purchase — ${p.name}`,
       product: p,
       productId: req.bfProductId,
       code: sessionCode,
@@ -454,7 +468,11 @@ function pageRouter() {
       // not something this later page-load can claim" — the view has a
       // distinct neutral wording for it.
       codeEmailed: sessionCode ? null : false,
-      downloadUrl: isGame ? `/api/apps/${bf.PACKAGE}/apk?t=${token}` : null,
+      downloadUrl: isGame
+        ? `/api/apps/${bf.PACKAGE}/apk?t=${token}`
+        : isPc
+          ? `/api/apps/${bf.PC_DOWNLOAD_KEY}/download?t=${token}`
+          : null,
       token,
       order,
       user: req.user || null,
