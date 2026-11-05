@@ -62,7 +62,11 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-inline'", 'https://www.paypal.com', 'https://www.sandbox.paypal.com',
         // AdSense: without these the adsbygoogle.js tag the site injects is
         // blocked and no ads render (found 2026-09-29 during hamburger CSP test).
-        'https://pagead2.googlesyndication.com', 'https://googleads.g.doubleclick.net'],
+        'https://pagead2.googlesyndication.com', 'https://googleads.g.doubleclick.net',
+        // Cloudflare Web Analytics: the beacon script ships in every
+        // layout via partials/cf-analytics; without this host CSP blocks
+        // it and no visit data is collected (installed 2026-11-04).
+        'https://static.cloudflareinsights.com'],
       // helmet defaults script-src-attr to 'none', which kills inline
       // onclick handlers even when script-src allows 'unsafe-inline'.
       // The mobile hamburger, cookie banner, and payout controls all use
@@ -79,7 +83,10 @@ app.use(helmet({
         'https://www.youtube-nocookie.com', 'https://www.youtube.com'],
       imgSrc: ["'self'", 'data:', 'https:'],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      connectSrc: ["'self'", 'https://api-m.paypal.com', 'https://api-m.sandbox.paypal.com'],
+      connectSrc: ["'self'", 'https://api-m.paypal.com', 'https://api-m.sandbox.paypal.com',
+        // Cloudflare Web Analytics: the beacon posts its cookieless,
+        // no-personal-data pageview payloads to this host (2026-11-04).
+        'https://cloudflareinsights.com'],
       // PayPal is the REDIRECT target of every checkout form on the
       // site: the buy POST answers 302 -> paypal.com/checkoutnow.
       // Chrome and Safari enforce form-action across redirect hops
