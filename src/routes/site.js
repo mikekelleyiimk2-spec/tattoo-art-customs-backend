@@ -85,7 +85,7 @@ router.get('/.well-known/apple-developer-merchantid-domain-association', (req, r
 // 404s until both are set. The filename is matched exactly and may not
 // contain path separators — anything else falls through to a 404.
 router.get(['/:file', '/.well-known/:file'], (req, res, next) => {
-  const { filename, content } = config.impactVerification;
+  const { filename, content } = config.impactVerification || {};
   if (!filename || !content) return next();
   const requested = String(req.params.file || '');
   if (requested.includes('/') || requested.includes('\\') || requested !== filename) return next();
