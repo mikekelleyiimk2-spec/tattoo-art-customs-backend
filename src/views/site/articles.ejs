@@ -1,0 +1,19 @@
+<h1>Tattoo Articles: Meanings, Placement &amp; the Craft</h1>
+<%- include('../partials/byline') %>
+<p class="muted">Dated, bylined articles from the studio desk — what designs mean, where they sit best, how much they hurt, and how they age. New pieces land here as they are written.</p>
+
+<p>Guides tell you how the process works. Articles are where we think in public about the tattoos themselves: why a rose is never just a rose, why a koi's direction changes its meaning, what a cover-up can and cannot do, and where a first tattoo hurts least. Every piece is written from the same shop-floor experience as our <a href="/guides">guides</a> and links onward to the part of the <a href="/gallery">gallery</a> it talks about, so you can go from reading to browsing the actual designs in one step.</p>
+
+<% articles.forEach(function (a) { %>
+<section class="card">
+  <h2><a href="/articles/<%= a.slug %>"><%= a.title %></a></h2>
+  <p class="muted"><time datetime="<%= a.published %>"><%= a.publishedHuman %></time> · By <%= articleAuthorName %></p>
+  <p><%= a.deck %></p>
+  <p><a class="btn" href="/articles/<%= a.slug %>">Read the article</a></p>
+</section>
+<% }); %>
+
+<section class="card">
+  <h2>Start with the guides</h2>
+  <p>New here? The <a href="/guides/first-tattoo">first-tattoo walkthrough</a> goes in the order it actually happens, the <a href="/guides/aftercare">aftercare guide</a> covers healing day by day, and <a href="/guides/choosing-a-design">choosing a design that ages well</a> is the piece to read before you fall for anything in the gallery.</p>
+</section>

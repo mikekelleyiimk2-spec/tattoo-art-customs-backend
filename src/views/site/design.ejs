@@ -51,7 +51,17 @@
       <p><strong>Placement:</strong> <%= styleNotes.placement %></p>
       <p><strong>Size:</strong> <%= styleNotes.sizing %></p>
       <p><strong>How it ages:</strong> <%= styleNotes.aging %></p>
-      <p><a href="/styles/<%= styleNotes.guideSlug %>">Read the full <%= styleNotes.name %> style guide</a> — how the style is drawn, where it sits best, and what to check before you book.</p>
+      <% if (styleNotes.guideSlug) { %><p><a href="/styles/<%= styleNotes.guideSlug %>">Read the full <%= styleNotes.name %> style guide</a> — how the style is drawn, where it sits best, and what to check before you book.</p><% } %>
+    </section>
+    <% } %>
+    <% /* Coloring pages are not tattoos: they carry coloring guidance
+         (prints, tools, skills) instead of tattooing notes. */ %>
+    <% if (typeof coloringNotes !== 'undefined' && coloringNotes) { %>
+    <section class="card" aria-label="Coloring notes for grown-ups">
+      <h2>Coloring notes for grown-ups</h2>
+      <p><strong>Printing:</strong> <%= coloringNotes.printing %></p>
+      <p><strong>Best tools:</strong> <%= coloringNotes.tools %></p>
+      <p><strong>What it practices:</strong> <%= coloringNotes.skills %></p>
     </section>
     <% } %>
     <% /* Video-game backgrounds link to their matching by-request characters */ %>

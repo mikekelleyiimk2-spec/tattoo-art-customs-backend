@@ -1,0 +1,7 @@
+<% /* Byline + dates + Article JSON-LD (AdSense DO-NOW pass 2026-11-07).
+       Rendered when the route passes `byline` (lib/authorship). */ %>
+<% if (typeof byline !== 'undefined' && byline) { %>
+<script type="application/ld+json"><%- safeJson(byline.jsonLd) %></script>
+<p class="muted byline">By <strong><%= byline.authorName %></strong> · <%= byline.authorRole %><br>
+Published <time datetime="<%= byline.publishedIso %>"><%= byline.published %></time> · Updated <time datetime="<%= byline.updatedIso %>"><%= byline.updated %></time></p>
+<% } %>

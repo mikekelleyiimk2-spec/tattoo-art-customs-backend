@@ -34,6 +34,26 @@ function isSubstantiveDescription(desc) {
   if (STAMP_RES.some((re) => re.test(d))) return false;
   const sentences = (d.match(/[.!?]+(\s|$)/g) || []).length;
   if (sentences < 2 && d.length < 260) return false;
+  if (sentences < 2) return false;
+  // Stamp tail without the head (DO-NOW pass 2026-11-07): the legacy
+  // ingest also wrote entries that open with a real per-design sentence
+  // but close with the shared delivery stamp ("Full color with shading
+  // plus matching clean linework included."). The STAMP_RES tail test
+  // above requires the word "background" and misses this variant, so
+  // those entries passed as "the artist's own words" and the page
+  // rendered ~20-30 words. Two real sentences plus this tail is still
+  // the stamp family — the delivery facts are already in the built
+  // description's own closing paragraph.
+  if (/Full color with shading/i.test(d) && /clean linework included/i.test(d)) return false;
+  // The artist's-own-words bar in density terms (same pass): a kept
+  // description replaces the full three-paragraph build, so it has to
+  // carry comparable substance itself. Legacy one- and two-sentence
+  // entries under ~60 words are captions, not descriptions — measured
+  // at 114 of 1,221 local rows rendering 18-32 words as the page's
+  // whole body text. Genuine multi-sentence artist descriptions run
+  // well past this; anything under it gets the built description, with
+  // the stored line preserved as the colorization note path if set.
+  if (d.split(/\s+/).filter(Boolean).length < 60) return false;
   return true;
 }
 
@@ -387,7 +407,10 @@ function subjectCategory(cats, design) {
     const k = slugKey(c);
     // A category that is really a style name carries no subject.
     if (k === styleSlug || STYLE_INFO[k]) continue;
-    return c;
+    // Hierarchical catalog paths ("Mythology & Fantasy > Thor, God of
+    // Thunder") read as their parent collection in prose — the part
+    // after ">" is already in the design's title.
+    return String(c).split('>')[0].trim() || c;
   }
   return '';
 }
@@ -498,6 +521,155 @@ function descriptionParagraphs(design, artistName) {
   return buildParagraphs(design, artistName);
 }
 
+// --- fallback tattooing notes (AdSense DO-NOW pass 2026-11-07) --------
+// notesForDesign used to return null whenever a design's style tokens
+// resolved to no style guide — measured live at ~70% of the catalog
+// (empty/program-marker styles, subject-only categories, pipeline
+// spellings). Those pages rendered image + title + price and nothing
+// else: the literal shape of the "low value content" verdict. Stored
+// descriptions turned out never to be the problem — the catalog's
+// legacy rows carry real per-design text; it was the NOTES layer that
+// was missing. The fallback below builds notes from the same knowledge
+// this module already carries — the design's wear class (how its style
+// class sits, sizes and ages), its subject talk and its subject
+// category — selected per design by the same stable hash, so a design
+// page always carries substantive, design-specific tattooing guidance.
+// Formula frame + unique fill, per the approved-site benchmark.
+
+const FALLBACK_NOTES = {
+  fine: {
+    placement: [
+      'Fine work like this sits best where skin stays calm and flat — forearm, inner arm, ankle, shoulder blade or ribs — so the hairlines are not pulled around by a joint every time you move.',
+      'Delicate line belongs on calmer ground: the forearm, calf, shoulder blade and upper back keep fine lines where the artist put them, and the detail reads cleanest there.',
+    ],
+    sizing: [
+      'Plan on palm-sized or a touch larger. The smallest lines need room around them, because skin settles over the years and crowded hairlines are the first thing time spends.',
+      'Give it at least three to four inches across, and more if the detail is tight — fine work sized generously is the version of this piece that still looks right in twenty years.',
+    ],
+    aging: [
+      'Fine lines soften gently as the skin renews itself; drawn with breathing room, this piece keeps its read for decades. Sunscreen is the cheapest insurance a fine-line tattoo can have.',
+      'Expect the lightest lines to relax a fraction over the years — that is the nature of the weight, and a design with space between its lines absorbs it gracefully.',
+    ],
+  },
+  bold: {
+    placement: [
+      'Bold drawing is the most forgiving kind of tattoo: upper arm, thigh, calf, chest or back all take it happily, and it wraps a limb without losing its punch.',
+      'Give this one a stage — forearm, upper arm, calf, thigh or shoulder — anywhere the strong shapes can be read at the distance they were drawn for.',
+    ],
+    sizing: [
+      'It scales from palm-sized to a full panel without losing readability; three to four inches is a sensible floor for a single strong subject.',
+      'Bold work is flexible on size, but it rewards going bigger: the shapes open up, the negative space breathes, and the piece reads from across the room.',
+    ],
+    aging: [
+      'This is the best-aging class of tattoo there is. Heavy shapes hold their edges, and a piece drawn bold still reads clearly after decades of sun and skin.',
+      'Bold work settles the way it was drawn to: lines may thicken a fraction over a lifetime, and the drawing has the margin to absorb exactly that.',
+    ],
+  },
+  soft: {
+    placement: [
+      'Soft edges want flatter, calmer skin — back, thigh or the outer upper arm — where washes and dissolving edges are not dragged around a joint.',
+      'Place soft work where the body is quiet: the back, thigh and outer arm keep gradients and gentle edges in the shape the artist left them.',
+    ],
+    sizing: [
+      'Give soft work room — mid-to-large placements let the gradients breathe instead of crowding them; most pieces in this class are happiest at five inches and up.',
+      'Size is atmosphere here: a larger placement is what lets the tones step gradually instead of stacking, so do not shrink this one to fit a small spot.',
+    ],
+    aging: [
+      'The lightest washes soften first over the years, which is why the drawing is built on a line skeleton — the structure stays even as the atmosphere relaxes.',
+      'Soft work ages like a watercolor left in kind light: gently. Keep it out of harsh sun and the tones hold their steps for a long time.',
+    ],
+  },
+  geo: {
+    placement: [
+      'Pattern work reads best on a flat, centered canvas — sternum, spine, forearm, calf or chest — and a good artist will stencil it on and mirror-check the symmetry against your body before inking.',
+      'Centered placements show construction like this off best: sternum, forearm, calf or between the shoulder blades, where the pattern can sit true.',
+    ],
+    sizing: [
+      'The placement has to be big enough for the pattern\'s rhythm to stay legible — three inches is a floor, and repeated patterns want more so the repeat can establish itself.',
+      'Precision work should never be shrunk to fit: size it so every element keeps its spacing, because crowded geometry is the first casualty of time.',
+    ],
+    aging: [
+      'Geometry ages on its spacing: lines thicken a fraction over the years, and a design drawn with honest gaps between elements keeps its rhythm instead of closing up.',
+      'Drawn on a true grid, pattern work holds its structure well; sunscreen keeps the contrast that the whole effect depends on.',
+    ],
+  },
+  realism: {
+    placement: [
+      'Tonal work needs a panel: thigh, back, upper arm or chest — somewhere the tones have room to step from light to dark without wrapping around a joint.',
+      'Give graduated work the flattest ground you can offer it — thigh, back or upper arm — so the shading reads the way it was drawn.',
+    ],
+    sizing: [
+      'Gradients cannot survive being shrunk: think five inches at the smallest, and let your artist talk you into the larger placement — the depth in the drawing depends on it.',
+      'Size is what buys tonal range. A bigger placement is not vanity here; it is the difference between a picture and a smudge in ten years.',
+    ],
+    aging: [
+      'The lightest greys relax first as years pass; a piece built on strong dark anchors keeps its depth, and a refresh pass restores the top tones when it needs one.',
+      'Tonal work settles softly and predictably — keep the darks dark with sunscreen and the picture holds together for decades.',
+    ],
+  },
+  panel: {
+    placement: [
+      'Segmented work reads best on flatter ground — back, sternum, thigh or forearm — where the leading lines stay true instead of bending around a joint.',
+      'Flat placements keep pane structure crisp: back, thigh, forearm or sternum are the natural homes for segmented drawing.',
+    ],
+    sizing: [
+      'Mid-to-large sizing suits it: each segment needs enough skin to hold its own color or tone, so plan on four inches and up.',
+      'Every segment needs room to be itself — size the piece so the smallest pane still reads as a pane, not a chip.',
+    ],
+    aging: [
+      'The bold leading lines are the insurance here: they hold each segment apart visually for decades, even as the tones inside soften a little.',
+      'Segmented work ages in compartments — a touch-up can refresh one pane\'s color without disturbing the rest of the piece.',
+    ],
+  },
+  general: {
+    placement: [
+      'Talk placement over with your artist before you commit to a spot — the composition scales well, and the right move is matching its proportions to the body part so the focal point lands where your eye wants it.',
+      'It is a flexible composition: a standalone piece on an arm or leg, or the anchor of a larger collection built around it over time.',
+    ],
+    sizing: [
+      'Most single-subject pieces are happiest between three and six inches — big enough for the detail to survive healing, small enough to sit as one clear statement.',
+      'Size it to the focal point: if the smallest detail you love would end up under a quarter-inch on skin, go bigger or ask for a simplified custom version.',
+    ],
+    aging: [
+      'Drawn tattoo-first — honest shapes at real tattoo sizes — a piece like this settles the way it was drawn to: readable now, readable in twenty years, sunscreen permitting.',
+      'Clean structure is what ages well, and this drawing has it: strong focal shapes first, detail where it can survive.',
+    ],
+  },
+};
+
+function fallbackNotesForDesign(design) {
+  const cats = categoriesOf(design);
+  const seed = hashOf((design && design.id) || (design && design.title) || '');
+  const style = styleInfoFor(design, cats);
+  const wearKey = (style && style.wear) || 'general';
+  const bank = FALLBACK_NOTES[wearKey] || FALLBACK_NOTES.general;
+  const title = proseTitle(design && design.title);
+  const catName = subjectCategory(cats, design);
+  const subjectLines = subjectTalkFor(cats);
+  const name = style ? style.name : (catName || 'this design');
+  let placement = pick(bank.placement, seed >> 7);
+  if (catName) {
+    placement = `From the gallery's ${catName} shelf: ${placement.charAt(0).toLowerCase()}${placement.slice(1)}`;
+  } else if (subjectLines) {
+    placement = `${pick(subjectLines, seed >> 8)} ${placement}`;
+  }
+  return {
+    placement,
+    sizing: pick(bank.sizing, seed >> 9),
+    aging: pick(bank.aging, seed >> 10),
+    name,
+    guideSlug: null,
+  };
+}
+
+// True when a design is a kids' coloring page rather than a tattoo
+// design: those pages carry coloring guidance, not tattooing notes.
+function isColoringDesign(design) {
+  const cats = categoriesOf(design || {});
+  return cats.some((c) => normKey(c) === 'coloring pages')
+    || slugKey((design && design.style) || '') === 'little-inkers';
+}
+
 // One-to-two sentence summary for meta tags / JSON-LD.
 function descriptionSummary(design, artistName) {
   const paras = descriptionParagraphs(design, artistName);
@@ -515,7 +687,11 @@ function descriptionSummary(design, artistName) {
 // notes at all. Resolve the same way this module resolves style info:
 // stored style, then a style carried in the categories, then the style
 // token embedded in nightly ids; look each up slug-normalized so the
-// styleGuides alias map applies.
+// styleGuides alias map applies. When no guide covers the design, the
+// fallback builder above supplies notes from its wear class and subject
+// instead (DO-NOW pass 2026-11-07): a tattoo design page now ALWAYS
+// carries tattooing notes. Only coloring pages return null here — they
+// are not tattoos, and the route gives them coloring guidance instead.
 function notesForDesign(design) {
   const { notesForStyle } = require('./styleGuides');
   const cats = categoriesOf(design);
@@ -539,11 +715,14 @@ function notesForDesign(design) {
       if (notes) return notes;
     }
   }
-  return null;
+  if (isColoringDesign(design)) return null;
+  return fallbackNotesForDesign(design);
 }
 
 module.exports = {
   notesForDesign,
+  fallbackNotesForDesign,
+  isColoringDesign,
   isSubstantiveDescription,
   descriptionParagraphs,
   descriptionSummary,

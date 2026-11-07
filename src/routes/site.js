@@ -75,6 +75,23 @@ router.get('/.well-known/apple-developer-merchantid-domain-association', (req, r
   res.type('application/octet-stream').send(content);
 });
 
+// Impact website-channel verification — impact.com proves domain
+// ownership by fetching a file with a console-generated random name
+// (e.g. /ut<token>.txt or /.well-known/ut<token>.txt) whose body is a
+// fixed verification string. Name and body are served from env
+// (IMPACT_VERIFICATION_FILENAME / IMPACT_VERIFICATION_CONTENT) so the
+// exact values Impact issued are returned byte-for-byte without
+// touching the frozen homepage or shipping a new file per attempt.
+// 404s until both are set. The filename is matched exactly and may not
+// contain path separators — anything else falls through to a 404.
+router.get(['/:file', '/.well-known/:file'], (req, res, next) => {
+  const { filename, content } = config.impactVerification;
+  if (!filename || !content) return next();
+  const requested = String(req.params.file || '');
+  if (requested.includes('/') || requested.includes('\\') || requested !== filename) return next();
+  res.type('text/plain').send(content);
+});
+
 // robots.txt — allow all crawlers; point them at the sitemap.
 router.get('/robots.txt', (req, res) => {
   res.type('text/plain').send(
@@ -150,6 +167,12 @@ router.get('/sitemap.xml', async (req, res) => {
       loc: `${base}/styles/${s}`, changefreq: 'monthly', priority: '0.7',
     })),
     { loc: `${base}/faq`, changefreq: 'monthly', priority: '0.6' },
+    // Dated article series (DO-NOW pass 2026-11-07): the editorial
+    // stream the benchmark found missing — meanings, placement, craft.
+    { loc: `${base}/articles`, changefreq: 'weekly', priority: '0.7' },
+    ...require('../lib/articles').ARTICLES.map((a) => ({
+      loc: `${base}/articles/${a.slug}`, changefreq: 'monthly', priority: '0.7', lastmod: a.updated,
+    })),
   ];
   try {
     const designs = await db.all(
@@ -437,6 +460,7 @@ router.get('/show-designs', async (req, res) => {
     regularPrice: withFeeCents(premadePriceCents(new Date(), member)),
     metaDescription: 'Every tattoo design featured on the Little Inkers "Color With Us!" show. TAC members save on show designs.',
     canonical: `${base}/show-designs`,
+    byline: bylineForPage('show', '/show-designs', 'Show Designs \u2014 Color With Us!', 'Every tattoo design featured on the Little Inkers "Color With Us!" show.'),
   });
 });
 
@@ -467,6 +491,7 @@ router.get('/poppy-and-ziggy', async (req, res) => {
     metaDescription: 'Poppy & Ziggy color a page and it comes to life! New episode every Friday at 5 PM CT on YouTube, plus a fun Short every day. Subscribe free.',
     canonical: `${base}/poppy-and-ziggy`,
     pzFace: true,
+    byline: bylineForPage('poppy-ziggy', '/poppy-and-ziggy', 'Poppy & Ziggy \u2014 the Kids\' Cartoon', 'Poppy & Ziggy color a page and it comes to life! New episode every Friday at 5 PM CT on YouTube.'),
   });
 });
 
@@ -482,6 +507,7 @@ router.get('/worlds', (req, res) => {
     title: 'Our Worlds — Useful Appz | Chorvix',
     metaDescription: 'One roof, separate rooms: Tattoo Art Customs, Little Inkers, Poppy & Ziggy, HerbHaul (21+), Chorvix, the Library, and the Useful Appz studio — each world on its own page.',
     canonical: `${base}/worlds`,
+    byline: bylineForPage('worlds', '/worlds', 'Our Worlds \u2014 Useful Appz', 'One roof, separate rooms: the worlds of the Useful Appz studio, each on its own page.'),
   });
 });
 
@@ -585,6 +611,7 @@ router.get('/watch', (req, res) => {
     title: 'Watch — Chorvix / Tattoo on YouTube',
     metaDescription: 'Watch Tattoo Art Customs commercials, design Shorts, and Rook 98 videos. Every play counts as a YouTube view — subscribe free.',
     canonical: `${base}/watch`,
+    byline: bylineForPage('watch', '/watch', 'Watch \u2014 Tattoo Art Customs on YouTube', 'Watch Tattoo Art Customs commercials, design Shorts, and Rook 98 videos.'),
     commercials: watchVideos.COMMERCIALS,
     designShorts: watchVideos.DESIGN_SHORTS,
     rookVideos: watchVideos.ROOK_VIDEOS,
@@ -1173,7 +1200,16 @@ router.get('/design/:id', async (req, res) => {
     // Style-specific tattooing notes (placement / sizing / aging) from the
     // style's long-form guide, so a design page carries real guidance for
     // its style — not just a price and a button (2026-11-03 content pass).
+    // notesForDesign now always returns notes for tattoo designs (guide
+    // notes, or wear-class/subject fallback when no guide covers the
+    // design — DO-NOW pass 2026-11-07); coloring pages get coloring
+    // guidance instead of tattooing notes.
     styleNotes: designDesc.notesForDesign(design),
+    coloringNotes: designDesc.isColoringDesign(design) ? {
+      printing: 'Print on the heaviest paper your printer takes — card stock or matte photo paper keeps markers from bleeding through, and one page per child saves the negotiation. The bold outlines are drawn to survive a home printer at full page size.',
+      tools: 'Crayons, washable markers and colored pencils all work; the shapes are big enough for first grips and chunky crayons. In the Little Inkers app, the same page colors on screen with a tap-to-fill bucket for the youngest artists.',
+      skills: 'Staying inside bold lines is fine-motor practice, color choice is early composition, and finishing a page from the show children just watched is a first lesson in completing something. Pages in a pack follow one episode, so a finished set retells the story.',
+    } : null,
     canonical, ogImage: ogImgFile ? `${base}/img/designs/${ogImgFile}` : '', ogType: 'product', jsonLd,
     creditBalance: req.user ? await require('../lib/credits').getCreditBalance(req.user.id) : 0,
   });
@@ -1480,6 +1516,7 @@ router.get('/privacy/cannadash-driver', (req, res) => res.redirect(301, '/privac
 router.get('/about', (req, res) => res.render('site/about', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'About — Chorvix',
   metaDescription: 'About Tattoo Art Customs marketplace.',
+  byline: bylineForPage('about', '/about', 'About Tattoo Art Customs', 'About Tattoo Art Customs marketplace.'),
 }));
 
 router.get('/apps', (req, res) => res.render('site/apps', {
@@ -1620,34 +1657,45 @@ router.get('/aftercare', (req, res) => res.render('site/aftercare', {homeFace: t
 // Guides hub + long-form guide pages (added 2026-10-12 for AdSense "low value
 // content" fix: substantial unique editorial content, hardcoded English like
 // /terms and /privacy; nav labels live in the footer.* catalog keys).
+// Byline/date helper for the E-E-A-T layer (DO-NOW pass 2026-11-07,
+// lib/authorship): named studio-desk byline + published/updated dates +
+// Article JSON-LD on the guides and content pages.
+const BASE_URL = config.baseUrl.replace(/\/$/, '');
+const bylineForPage = (key, path, headline, description) => require('../lib/authorship').bylineFor(key, { base: BASE_URL, path, headline, description });
+
 router.get('/guides', (req, res) => res.render('site/guides', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Tattoo Guides & Resources — Tattoo Art Customs',
   metaDescription: 'Free tattoo guides: complete aftercare instructions, how to choose a design that ages well, how custom tattoo designs work, and resources for tattoo shops.',
   canonical: `${config.baseUrl.replace(/\/$/, '')}/guides`,
+  byline: bylineForPage('guides', '/guides', 'Tattoo Guides & Resources', 'Free tattoo guides: complete aftercare instructions, how to choose a design that ages well, how custom tattoo designs work, and resources for tattoo shops.'),
 }));
 
 router.get('/guides/aftercare', (req, res) => res.render('site/guide-aftercare', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'The Complete Tattoo Aftercare Guide — Tattoo Art Customs',
   metaDescription: 'Complete tattoo aftercare, day by day: the first wash, the peel and itch phase, moisturizing, sun, swimming and exercise rules, infection warning signs, and long-term care.',
   canonical: `${config.baseUrl.replace(/\/$/, '')}/guides/aftercare`,
+  byline: bylineForPage('guide-aftercare', '/guides/aftercare', 'The Complete Tattoo Aftercare Guide', 'Complete tattoo aftercare, day by day: the first wash, the peel and itch phase, moisturizing, sun, swimming and exercise rules, infection warning signs, and long-term care.'),
 }));
 
 router.get('/guides/choosing-a-design', (req, res) => res.render('site/guide-choosing-design', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'How to Choose a Tattoo Design That Ages Well — Tattoo Art Customs',
   metaDescription: 'How to choose a tattoo design that still looks good in twenty years: placement, size and detail, how each tattoo style ages, judging linework, color and skin tone, and design licenses.',
   canonical: `${config.baseUrl.replace(/\/$/, '')}/guides/choosing-a-design`,
+  byline: bylineForPage('guide-choosing-design', '/guides/choosing-a-design', 'How to Choose a Tattoo Design That Ages Well', 'How to choose a tattoo design that still looks good in twenty years: placement, size and detail, how each tattoo style ages, judging linework, color and skin tone, and design licenses.'),
 }));
 
 router.get('/guides/custom-design-process', (req, res) => res.render('site/guide-custom-process', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'How Custom Tattoo Designs Work, Step by Step — Tattoo Art Customs',
   metaDescription: 'How custom tattoo designs work: writing a brief, the 50% deposit, 48-hour drawing, the files and single-use license you receive, plus by-request and doodle-to-tattoo.',
   canonical: `${config.baseUrl.replace(/\/$/, '')}/guides/custom-design-process`,
+  byline: bylineForPage('guide-custom-process', '/guides/custom-design-process', 'How Custom Tattoo Designs Work, Step by Step', 'How custom tattoo designs work: writing a brief, the 50% deposit, 48-hour drawing, the files and single-use license you receive, plus by-request and doodle-to-tattoo.'),
 }));
 
 router.get('/guides/for-tattoo-shops', (req, res) => res.render('site/guide-for-shops', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'For Tattoo Shops: Run Your Business on Tattoo Art Customs',
   metaDescription: 'What a Tattoo Art Customs shop membership includes: verified storefront, bookings and client profiles, tap-to-pay with no card reader, 20% referral earnings, design sales, and back-office tools.',
   canonical: `${config.baseUrl.replace(/\/$/, '')}/guides/for-tattoo-shops`,
+  byline: bylineForPage('guide-for-shops', '/guides/for-tattoo-shops', 'For Tattoo Shops: Run Your Business on Tattoo Art Customs', 'What a Tattoo Art Customs shop membership includes: verified storefront, bookings and client profiles, tap-to-pay with no card reader, 20% referral earnings, design sales, and back-office tools.'),
 }));
 
 // First-tattoo walkthrough + stencil-day guide (AdSense pass 2026-11-07,
@@ -1659,12 +1707,14 @@ router.get('/guides/first-tattoo', (req, res) => res.render('site/guide-first-ta
   title: 'Your First Tattoo: A Complete, Calm Walkthrough — Tattoo Art Customs',
   metaDescription: 'Your first tattoo in the order it happens: the health and eligibility checks, sitting with the idea, choosing an artist by healed work, the consultation and honest pricing, the day itself, and the chair.',
   canonical: `${config.baseUrl.replace(/\/$/, '')}/guides/first-tattoo`,
+  byline: bylineForPage('guide-first-tattoo', '/guides/first-tattoo', 'Your First Tattoo: A Complete, Calm Walkthrough', 'Your first tattoo in the order it happens: the health and eligibility checks, sitting with the idea, choosing an artist by healed work, the consultation and honest pricing, the day itself, and the chair.'),
 }));
 
 router.get('/guides/stencil-day', (req, res) => res.render('site/guide-stencil-day', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
   title: 'Stencil Day: Size, Placement & the Mirror Check — Tattoo Art Customs',
   metaDescription: 'How a tattoo design gets mapped onto a body: worked size minimums for script, portraits and fine detail, distortion in motion, orientation, symmetry, and the mirror check that catches mistakes free.',
   canonical: `${config.baseUrl.replace(/\/$/, '')}/guides/stencil-day`,
+  byline: bylineForPage('guide-stencil-day', '/guides/stencil-day', 'Stencil Day: Size, Placement & the Mirror Check', 'How a tattoo design gets mapped onto a body: worked size minimums for script, portraits and fine detail, distortion in motion, orientation, symmetry, and the mirror check that catches mistakes free.'),
 }));
 
 // Tattoo style guides index + one long-form guide per major style
@@ -1694,6 +1744,40 @@ router.get('/styles/:slug', (req, res) => {
     metaDescription: guide.summary,
     canonical: `${config.baseUrl.replace(/\/$/, '')}/styles/${slug}`,
     guide, slug, related,
+  });
+});
+
+// Article series (DO-NOW pass 2026-11-07, benchmark gap #2): a dated,
+// bylined editorial stream — meanings, placement, pain, cover-ups —
+// interlinked to the gallery categories and guides each piece covers.
+// Registry + dates live in lib/articles; bodies are per-article views.
+router.get('/articles', (req, res) => {
+  const { ARTICLES } = require('../lib/articles');
+  const { humanDate, AUTHOR } = require('../lib/authorship');
+  res.render('site/articles', {homeFace: true, darkFace: true, bodyClass: 'page-dark',
+    title: 'Tattoo Articles: Meanings, Placement & the Craft — Tattoo Art Customs',
+    metaDescription: 'Dated, bylined tattoo articles from the Tattoo Art Customs studio desk: design meanings, placement and pain guides, cover-up advice, and how tattoos age.',
+    canonical: `${BASE_URL}/articles`,
+    byline: bylineForPage('guides', '/articles', 'Tattoo Articles: Meanings, Placement & the Craft', 'Dated, bylined tattoo articles from the Tattoo Art Customs studio desk.'),
+    articles: ARTICLES.map((a) => ({ ...a, publishedHuman: humanDate(a.published) })),
+    articleAuthorName: AUTHOR.name,
+  });
+});
+
+router.get('/articles/:slug', (req, res) => {
+  const { articleForSlug, ARTICLES } = require('../lib/articles');
+  const { bylineFromDates, humanDate } = require('../lib/authorship');
+  const a = articleForSlug(String(req.params.slug || '').toLowerCase());
+  if (!a) return res.status(404).render('error', {homeFace: true, darkFace: true, bodyClass: 'page-dark', title: 'Not found', message: 'That article does not exist.' });
+  const others = ARTICLES.filter((x) => x.slug !== a.slug).slice(0, 3)
+    .map((x) => ({ ...x, publishedHuman: humanDate(x.published) }));
+  res.render(`site/article-${a.slug}`, {homeFace: true, darkFace: true, bodyClass: 'page-dark',
+    title: `${a.title} — Tattoo Art Customs`,
+    metaDescription: a.deck,
+    canonical: `${BASE_URL}/articles/${a.slug}`,
+    byline: bylineFromDates(a, { base: BASE_URL, path: `/articles/${a.slug}`, headline: a.title, description: a.deck }),
+    article: a,
+    others,
   });
 });
 

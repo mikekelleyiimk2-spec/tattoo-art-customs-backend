@@ -389,6 +389,28 @@ const GUIDE_REDIRECTS = {
   surrealism: 'realism',
   'ascii-art': 'new-school',
   bioluminescent: 'watercolor',
+  // Orphan-batch / pipeline spelling variants (AdSense DO-NOW pass
+  // 2026-11-07): the restored-catalog ingest stored style tokens in
+  // forms the guide index never knew — squashed compounds, abbreviations
+  // and cut-line family names. Each maps to the guide that genuinely
+  // covers the same drawing approach, so those design pages carry real
+  // tattooing notes instead of none.
+  fineline: 'fine-line',
+  celticnorse: 'tribal',
+  'celtic-norse': 'tribal',
+  celtic: 'tribal',
+  carvedstone: 'blackwork',
+  xray: 'blackwork',
+  etching: 'blackwork',
+  cybersigilism: 'fine-line',
+  'stick-poke': 'dotwork',
+  'frost-fractal': 'geometric',
+  'dark-surrealism': 'realism',
+  biomech: 'black-grey',
+  biomechanical: 'black-grey',
+  psychedelic: 'new-school',
+  'funny-ironic': 'new-school',
+  illustrative: 'realism',
 };
 
 GUIDES['tribal'] = {
