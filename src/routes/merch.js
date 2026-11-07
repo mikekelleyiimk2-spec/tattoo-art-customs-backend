@@ -22,6 +22,27 @@ const catalog = require('../lib/merchCatalog');
 
 const router = express.Router();
 
+// Guest guard for the catalog checkout POST (money-path fix 2026-11-07):
+// the product page is public, but orders are account records, so checkout
+// needs an account. Sending a guest straight at requireLogin bounced them
+// to /login with returnTo = this POST URL — after login they landed on
+// GET /merch/catalog (a 404) with their filled form gone, and the payment
+// step was never reached. Instead: remember the PRODUCT page as the
+// return target, explain once, and let login/signup bring the buyer
+// straight back to the item they were buying.
+function catalogGuestGuard(req, res, next) {
+  if (req.user) return next();
+  const productId = String((req.body && req.body.product_id) || '').trim().slice(0, 80);
+  const back = productId ? `/merch/catalog/${encodeURIComponent(productId)}` : '/merch';
+  try {
+    if (req.session) {
+      req.session.returnTo = back;
+      req.session.flash = 'Checkout needs a free account — log in or sign up and you will come right back to this item.';
+    }
+  } catch (e) { /* session unavailable — the login redirect still applies */ }
+  return res.redirect('/login');
+}
+
 // --- Public: merch landing (tee info, or "coming soon" + notify) ---
 router.get('/', async (req, res) => {
   const configured = printfulConfigured();
@@ -198,6 +219,12 @@ router.get('/catalog/:productId', formLimiter, async (req, res) => {
     req.session.flash = 'That item is not available yet — join the notify list below.';
     return res.redirect('/merch');
   }
+  // A guest browsing a product is showing buying intent: remember this
+  // page as the post-login/signup destination so the account step returns
+  // them to the item, not to a generic account page (2026-11-07).
+  if (!req.user) {
+    try { if (req.session) req.session.returnTo = `/merch/catalog/${product.id}`; } catch (e) { /* session unavailable */ }
+  }
   // Per-product sizes/pricing: synced Printful products carry their own
   // sizes + priceCents; legacy tee_classic entries fall back to tee pricing.
   const sizes = product.sizes || pricing.TEE_SIZES;
@@ -216,6 +243,7 @@ router.get('/catalog/:productId', formLimiter, async (req, res) => {
     title: `Mike's Custom Tees — ${product.id}`,
     product,
     likeCount: Number((likeRow && likeRow.like_count) || 0),
+    loggedIn: !!req.user,
     sizes,
     singleVariant: !product.sizes,
     colors: pricing.TEE_COLORS,
@@ -225,7 +253,7 @@ router.get('/catalog/:productId', formLimiter, async (req, res) => {
   });
 });
 
-router.post('/catalog', requireLogin, formLimiter, checkHoneypot, async (req, res) => {
+router.post('/catalog', catalogGuestGuard, requireLogin, formLimiter, checkHoneypot, async (req, res) => {
   try {
     const product = catalog.getProduct(String(req.body.product_id || ''));
     if (!product || product.kind !== 'pod' || product.status !== 'live' || !printfulConfigured()) {
