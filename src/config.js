@@ -36,6 +36,18 @@ const config = {
     clientId: process.env.GOOGLE_CLIENT_ID || '',
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
   },
+  // Impact (impact.com) website-channel ownership verification. Impact
+  // issues a random filename + file body in its console (e.g.
+  // "ut<token>.txt" containing "impact-…"); both come from env so the
+  // exact values Impact generated are served byte-for-byte by the
+  // /.well-known route in routes/site.js. Until both are set the route
+  // 404s, same closed-door pattern as the Apple Pay association above.
+  // Env-configured (not a static file) because Impact regenerates the
+  // filename on each verification attempt.
+  impactVerification: {
+    filename: (process.env.IMPACT_VERIFICATION_FILENAME || '').trim(),
+    content: (process.env.IMPACT_VERIFICATION_CONTENT || '').trim(),
+  },
   playStoreUrl: process.env.PLAY_STORE_URL || '',
   playStoreProUrl: process.env.PLAY_STORE_URL_PRO || '',
   appStoreUrl: process.env.APP_STORE_URL || '',

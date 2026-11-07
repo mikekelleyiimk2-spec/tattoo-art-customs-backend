@@ -67,6 +67,31 @@ services:
       # secrets store — never in the repo.
       - key: MUSE_SERVICE_TOKEN
         sync: false
+      # Customer seating (2026-11-01): "Continue with Google" is the
+      # sign-in that claims a customer's personal AI seats, and the
+      # Gemini Connect path rides the same door. Set from the one
+      # Google Cloud OAuth client (Web application; redirect URI
+      # https://tattoo-art-customs.onrender.com/auth/google/callback).
+      # Until set, the Google door stays closed — never faked.
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      # Impact (impact.com) website-channel verification: the console
+      # issues a random filename + file body; routes/site.js serves
+      # them byte-for-byte at /<filename> and /.well-known/<filename>
+      # without touching the homepage. Until both are set the route
+      # falls through (closed door, same pattern as above).
+      - key: IMPACT_VERIFICATION_FILENAME
+        sync: false
+      - key: IMPACT_VERIFICATION_CONTENT
+        sync: false
+      # Copilot account-connect (Microsoft OAuth): until set, the
+      # Copilot Connect button renders disabled with its reason.
+      - key: MICROSOFT_CLIENT_ID
+        sync: false
+      - key: MICROSOFT_CLIENT_SECRET
+        sync: false
       - key: FOUNDING_SHOP_WINDOW_END
         value: 2027-03-01
       - key: SMTP_HOST

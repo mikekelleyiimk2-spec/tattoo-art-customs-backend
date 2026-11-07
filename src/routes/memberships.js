@@ -52,6 +52,36 @@ router.get('/healed-wall', (req, res) => {
 });
 
 router.get('/', requireLogin, async (req, res) => {
+  // The core TAC plans (customer / artist / shop) are seeded by
+  // db/seed.js, which production runs at deploy. ensurePlans() only
+  // upserts the Dawnfold subset, so on any DB where the full seed has
+  // not run (or predates a core plan) the core rows are missing and
+  // this page silently renders only the Dawnfold cards. Upsert the
+  // core plans from config here — same one-source pattern as
+  // ensurePlans() — so the register on this page is always complete.
+  try {
+    const descriptions = {
+      customer: 'Lower-cost custom commissions, pre-made designs, early access to new content. First month $1.53.',
+      customer_annual: 'Everything in Customer Membership, billed yearly — two months free ($52.24/year).',
+      customer_6month: 'Everything in Customer Membership, billed every 6 months — 6 months for the price of 5, first month free with a Pro app purchase ($26.37/6 months). Pro-app owners only.',
+      design_artist: 'Upload your art, write an artist bio, earn 60% commission per sale.',
+      tattoo_shop: 'Refer customers and earn 20% on every verified sale you refer. Includes the full Design Artist membership — upload your art, write an artist bio, earn designer commissions.',
+    };
+    const keyBySlug = { customer: 'customer', customer_annual: 'customer_annual', customer_6month: 'customer_6month', design_artist: 'artist', tattoo_shop: 'shop' };
+    for (const slug of Object.keys(keyBySlug)) {
+      const p = Object.values(config.pricing.plans).find((x) => x.slug === slug);
+      if (!p) continue;
+      const paypalPlanId = config.paypal.planIds[keyBySlug[slug]] || '';
+      const existing = await db.get('SELECT id FROM plans WHERE slug = ?', [slug]);
+      if (existing) {
+        await db.update('plans', existing.id, { name: p.name, price_cents: p.priceCents, interval: p.interval, paypal_plan_id: paypalPlanId, description: descriptions[slug] || '' });
+      } else {
+        await db.insert('plans', { slug: p.slug, name: p.name, price_cents: p.priceCents, interval: p.interval, paypal_plan_id: paypalPlanId, active: 1, description: descriptions[slug] || '' });
+      }
+    }
+  } catch (e) {
+    console.error('membership core-plan upsert failed:', e.message);
+  }
   const plans = await db.all('SELECT * FROM plans WHERE active = 1 ORDER BY price_cents');
   const subs = await db.all(
     `SELECT s.*, p.slug AS plan_slug, p.name AS plan_name FROM subscriptions s
