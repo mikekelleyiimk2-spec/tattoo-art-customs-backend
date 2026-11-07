@@ -157,7 +157,14 @@ app.use((req, res, next) => {
   res.locals.paypalClientId = config.paypal.clientId || '';
   res.locals.klarnaReady = config.klarnaConfigured();
   res.locals.afterpayReady = config.afterpayConfigured();
-  res.locals.adsenseId = config.adsense.publisherId;
+  // AdSense loader suppression (AdSense pass 2026-11-07): legal-boilerplate
+  // and store-required utility pages carry no adsbygoogle loader while the
+  // site is under review — blank ad slots on privacy text read as
+  // "built to carry ads." Pages stay fully live and linked from the app
+  // stores; they just stop asking for ads. All other pages unchanged.
+  res.locals.adsenseId = /^\/privacy(\/|$)/.test(req.path || '') || req.path === '/delete-account' || req.path === '/terms'
+    ? ''
+    : config.adsense.publisherId;
   res.locals.adsenseSlots = config.adsense.slots;
   res.locals.siteName = 'Tattoo Art Customs';
   res.locals.baseUrl = config.baseUrl;
@@ -342,6 +349,7 @@ app.use('/play', require('./routes/play'));
 app.use('/api', require('./routes/api').router);
 app.use('/api', require('./routes/onemind'));
 app.use('/api', require('./routes/onemindVerify'));
+app.use('/api', require('./routes/brambleforceOnline'));
 app.use('/api', require('./routes/appUpdates'));
 app.use('/api/muse', require('./routes/muse'));
 app.use('/api/muse', require('./routes/messenger'));

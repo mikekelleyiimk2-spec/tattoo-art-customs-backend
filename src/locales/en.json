@@ -6,6 +6,14 @@
     "house_rules": "House rules",
     "intro": "Tattoo Art Customs is a marketplace for original tattoo designs, built and run by Useful Appz Development Studios. Independent designers upload their own original work — thousands of premade pieces across every major style — plus custom designs drawn to order ({custom}, or {sale} during the Saturday sale; 50% deposit, 48-hour delivery).",
     "story": "The catalog is deep on purpose. A tattoo is permanent, so choosing one should never mean settling for whatever a single shop happens to have on its wall — here you can search thousands of original designs by style and subject, buy the finished full-color artwork together with the clean linework your artist stencils from, or hand the whole thing to the custom desk and have a design drawn for you alone.",
+    "purchase_h": "How a purchase works, exactly",
+    "purchase_1": "When you buy a design here, you receive two files and a license. The files are the finished full-color artwork and the clean linework version of the same design. The color file is the reference for how the tattoo should look; the linework file is the working document — it is what your tattoo artist prints at the size you agree together, transfers to your skin as a stencil, and tattoos from. Both arrive digitally after checkout, tied to your account and your download link. Keep both safe after download, because together they are your purchase. If something is technically wrong with a delivery — a file that will not open, the wrong files — contact us and we will sort the delivery out.",
+    "purchase_2": "Previews are watermarked — the clean files are never posted. Some previews show the linework; a featured row also shows finished color pieces as watermarked previews. Either way, what you are seeing is a picture of the artwork, never the artwork itself.",
+    "license_h": "The license, in plain words",
+    "license_1": "A premade design is licensed to be tattooed on you, once. It is not an exclusive sale — the same design may be licensed to other buyers — and copyright stays with the artist and Tattoo Art Customs. You may not resell the files, share or redistribute them, give them to someone else to be tattooed with, or print the artwork on merchandise. A custom design is the opposite arrangement: drawn for you alone, retired when it is delivered, and never sold again.",
+    "makers_h": "Who makes the art",
+    "makers_1": "Every design in the gallery is drawn by an independent designer who uploads their own original work and earns 60% commission on every sale of it — founding artists earn 70%. That split is the point of the place. A designer's page here is their storefront: their catalog, their bio, and a commission recorded on every sale, under the payout rules in the designer guide. To join, a designer registers, subscribes, and sets up a payout method; the designer guide covers upload specs, the style requirements designs are held to, and exactly how commissions and payouts work.",
+    "makers_2": "Tattoo shops sit on the other side of the same counter. A verified shop is a shop whose business details the studio has checked before its location, hours, and appointment requirements may be listed; verified shops take bookings through the site and earn 20% on every verified sale they refer. Tattoo Art Customs is the room those two sides meet in. Useful Appz, the studio behind it, builds and runs the room.",
     "rule1": "All contact stays through the site — no off-site emails, phones, socials, or payment info in bios, profiles, or messages.",
     "rule2": "Off-site sales mean membership cancellation with no refund.",
     "rule3": "All sales, subscriptions, and memberships are final.",
@@ -1426,7 +1434,9 @@
     "subscribe_tac": "📺 Subscribe — Tattoo Art Customs",
     "subscribe_rook": "📺 Subscribe — Rook 98",
     "subscribe_note": "Subscribing is free, and it's the best way to support the channels — every subscriber helps us reach more artists, shops, and collectors.",
-    "testerhub_line": "🧪 Want the apps before everyone else? Become a tester — get the FillMyList"
+    "testerhub_line": "🧪 Want the apps before everyone else? Become a tester — get the FillMyList",
+    "shorts_find": "Every Short's title is the design's own gallery title, and the price in the title is the design's price. If a Short sends you hunting for the piece, search the gallery by that exact title: you will find the design itself, the designer who drew it, and the buy button that pays them — full-color artwork plus clean linework, under the single-use license.",
+    "rook_1": "Rook 98 is the studio's second channel. It carries the same commercials as the main channel — \"Your Custom Tattoo in 48 Hours\" runs there too — plus the first episode of Brambleforce, \"Verdant Fracture — The Thornwall Wakes,\" and the Little Inkers ad. New videos appear on the channels first; this page gathers the ones worth keeping in one place."
   },
   "show": {
     "badge": "As seen on Color With Us!",
@@ -1442,7 +1452,10 @@
     "starts_when_airs": "Member sale starts when the episode airs.",
     "intro_h": "The designs behind the show",
     "intro_1": "These are the actual tattoo designs colored on Color With Us!, the Little Inkers coloring show. Episodes take designs from this gallery and color them in, start to finish — this page collects every featured piece in one place so viewers can own the original artwork themselves.",
-    "intro_2": "Buy a featured design and you get the full-color finished artwork plus the clean linework version — the same linework the show colors from. Tattoo Art Customs members save on show designs once their episode airs, and every purchase pays the artist who drew the piece."
+    "intro_2": "Buy a featured design and you get the full-color finished artwork plus the clean linework version — the same linework the show colors from. Tattoo Art Customs members save on show designs once their episode airs, and every purchase pays the artist who drew the piece.",
+    "how_h": "How a design gets here",
+    "how_1": "Three versions of a featured design's artwork exist, and it is worth keeping them straight. The coloring version is the design's clean linework, drawn bold so small hands can color inside it — that is what you watch being colored. The color artwork is the finished piece in full color, the designer's own completed work. The linework file is the clean black-line version a tattoo artist prints and turns into a stencil. The show colors from the linework; what you buy here is the color artwork plus that same linework, together.",
+    "how_2": "To take a design from an episode to your own artist: find it on this page by its badge, or search the gallery by the design's title — the episode's design keeps its gallery title. Buy it, and the color artwork and the linework are delivered under the single-use license, with the designer who drew it paid on the sale. Any tattoo artist can then work from the linework; that is what it is for."
   },
   "newsletter": {
     "title": "Join the mailing list",

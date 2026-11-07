@@ -347,7 +347,49 @@ GUIDES['dotwork'] = {
 // 'stipple' is the same technique as dotwork (the catalog carries both
 // style values); its guide URL redirects to the dotwork guide rather than
 // duplicating the page.
-const GUIDE_REDIRECTS = { stipple: 'dotwork' };
+const GUIDE_REDIRECTS = {
+  stipple: 'dotwork',
+  // Style-vocabulary aliases (AdSense pass 2026-11-07): the catalog stores
+  // designs under more style names than it has guides — the nightly design
+  // pipeline alone uses 40+. Mapping each stored variant onto the guide
+  // that genuinely covers it means every design page can carry its style's
+  // tattooing notes instead of none. Only true synonyms / parent styles
+  // are mapped here — never a stretch.
+  traditional: 'traditional-old-school',
+  'old-school': 'traditional-old-school',
+  polynesian: 'tribal',
+  japanese: 'japanese-irezumi',
+  'neo-japanese': 'japanese-irezumi',
+  neojap: 'japanese-irezumi',
+  'color-realism': 'realism',
+  'black-and-grey': 'black-grey',
+  'black-and-grey-realism': 'black-grey',
+  'black-grey-realism': 'black-grey',
+  'ignorant-style': 'minimalist',
+  sketch: 'fine-line',
+  pixelated: 'new-school',
+  'pixel-art': 'new-school',
+  anime: 'new-school',
+  'dark-anime': 'new-school',
+  graffiti: 'new-school',
+  ornamental: 'mandala',
+  'carved-wood': 'blackwork',
+  carvedwood: 'blackwork',
+  'stained-glass': 'geometric',
+  'stained-shard': 'geometric',
+  'x-ray-dissection': 'blackwork',
+  blueprint: 'geometric',
+  'circuit-bloom': 'geometric',
+  circuitbloom: 'geometric',
+  topographic: 'geometric',
+  mosaic: 'geometric',
+  origami: 'geometric',
+  'cross-stitch': 'dotwork',
+  'smoke-form': 'black-grey',
+  surrealism: 'realism',
+  'ascii-art': 'new-school',
+  bioluminescent: 'watercolor',
+};
 
 GUIDES['tribal'] = {
   name: 'Tribal',

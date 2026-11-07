@@ -23,7 +23,11 @@ async function runHttpTests(ok, req) {
 
   // Ghost Box — zero permissions, no microphone, nothing collected.
   await check('ghost-box', 'Ghost Box', 'com.usefulappz.ghostbox', 'no microphone', 'states the no-microphone rule');
-  await check('ghostbox', 'Ghost Box', 'com.usefulappz.ghostbox', 'no microphone', 'states the no-microphone rule');
+  for (const old of ['ghostbox']) {
+    const r = await req('GET', `/privacy/${old}`, { follow: false });
+    ok(r.status === 301 && r.location === '/privacy/ghost-box',
+      `privacy page /privacy/${old} 301-redirects to /privacy/ghost-box`);
+  }
 
   // Loophole Ciphers — zero permissions, no internet, nothing collected.
   await check('loophole-ciphers', 'Loophole Ciphers', 'com.usefulappz.ciphertoy', 'no internet permission', 'states the no-internet rule');
@@ -48,7 +52,11 @@ async function runHttpTests(ok, req) {
 
   // Habit Dot — honestly declares Google AdMob collection in the free version.
   await check('habit-dot', 'Habit Dot', 'com.usefulappz.habitdot', 'AdMob', 'discloses AdMob ads');
-  await check('habitdot', 'Habit Dot', 'com.usefulappz.habitdot', 'AdMob', 'discloses AdMob ads');
+  for (const old of ['habitdot']) {
+    const r = await req('GET', `/privacy/${old}`, { follow: false });
+    ok(r.status === 301 && r.location === '/privacy/habit-dot',
+      `privacy page /privacy/${old} 301-redirects to /privacy/habit-dot`);
+  }
 }
 
 module.exports = { runHttpTests };

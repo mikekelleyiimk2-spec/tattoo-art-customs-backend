@@ -6,6 +6,12 @@
   <p><%= t('show.intro_1') %></p>
   <p><%= t('show.intro_2') %></p>
 </section>
+
+<section class="card show-how">
+  <h2><%= t('show.how_h') %></h2>
+  <p><%= t('show.how_1') %></p>
+  <p><%= t('show.how_2') %></p>
+</section>
 <% if (customerMember && anyAired) { %>
 <p><span class="badge ok"><%= t('show.member_save', {pct: showDiscountPct}) %></span>
 <span class="muted"><%= fmtMoney(memberPrice) %> <%= t('show.vs_regular', {price: fmtMoney(regularPrice)}) %></span></p>

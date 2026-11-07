@@ -508,7 +508,42 @@ function descriptionSummary(design, artistName) {
   return out;
 }
 
+// Style notes for a design page (AdSense pass 2026-11-07): the design route
+// used to look notes up by the raw stored style string only, so any style
+// whose stored name is not a guide slug — 'Color Realism', nightly-pipeline
+// variants, styles carried in a category instead — rendered NO tattooing
+// notes at all. Resolve the same way this module resolves style info:
+// stored style, then a style carried in the categories, then the style
+// token embedded in nightly ids; look each up slug-normalized so the
+// styleGuides alias map applies.
+function notesForDesign(design) {
+  const { notesForStyle } = require('./styleGuides');
+  const cats = categoriesOf(design);
+  const direct = slugKey((design && design.style) || '');
+  if (direct && !NOT_A_STYLE.has(direct)) {
+    const n = notesForStyle(direct);
+    if (n) return n;
+  }
+  for (const c of cats) {
+    const k = slugKey(c);
+    if (k && !NOT_A_STYLE.has(k)) {
+      const n = notesForStyle(k);
+      if (n) return n;
+    }
+  }
+  const idTokens = String((design && design.id) || '').toLowerCase().split('-');
+  for (let n = 3; n >= 1; n--) {
+    for (let i = 0; i + n <= idTokens.length; i++) {
+      const cand = idTokens.slice(i, i + n).join('-');
+      const notes = notesForStyle(cand);
+      if (notes) return notes;
+    }
+  }
+  return null;
+}
+
 module.exports = {
+  notesForDesign,
   isSubstantiveDescription,
   descriptionParagraphs,
   descriptionSummary,

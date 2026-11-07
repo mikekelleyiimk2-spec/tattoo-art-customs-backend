@@ -11,7 +11,7 @@ const { premadePriceCents, customFullCents, lineworkOnlyPriceCents, LINEWORK_ONL
 const { viewerFor, displayImgFile, canViewUnblurred } = require('../lib/contentPolicy');
 const { blurbFor: categoryBlurbFor, SITEMAP_CATEGORIES } = require('../lib/categoryContent');
 const { blurbForStyle, nameForStyle, SITEMAP_STYLES } = require('../lib/styleContent');
-const { GUIDES: STYLE_GUIDES, GUIDE_SLUGS, guideForStyle, redirectForStyle, notesForStyle } = require('../lib/styleGuides');
+const { GUIDES: STYLE_GUIDES, GUIDE_SLUGS, guideForStyle, redirectForStyle } = require('../lib/styleGuides');
 const { FAQS, faqJsonLd } = require('../lib/faq');
 
 const router = express.Router();
@@ -88,17 +88,11 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/`, changefreq: 'daily', priority: '1.0' },
     { loc: `${base}/gallery`, changefreq: 'daily', priority: '0.9', lastmod: new Date().toISOString().slice(0, 10) },
     { loc: `${base}/top-loved`, changefreq: 'daily', priority: '0.8', lastmod: new Date().toISOString().slice(0, 10) },
-    // Curated category pages (each carries its own editorial intro copy).
-    ...SITEMAP_CATEGORIES.map((c) => ({
-      loc: `${base}/gallery?cat=${encodeURIComponent(c)}`,
-      changefreq: 'weekly', priority: '0.7', lastmod: new Date().toISOString().slice(0, 10),
-    })),
-    // Curated style pages (owner order 2026-10-16 — same treatment as the
-    // category pages: own editorial intro, title/meta, sitemap entry).
-    ...SITEMAP_STYLES.map((s) => ({
-      loc: `${base}/gallery?style=${encodeURIComponent(s)}`,
-      changefreq: 'weekly', priority: '0.7', lastmod: new Date().toISOString().slice(0, 10),
-    })),
+    // Filtered gallery URLs (?cat= / ?style=) are NOT sitemap-listed
+    // (AdSense pass 2026-11-07): the pages stay live with their curated
+    // editorial intros (owner order 2026-10-16), but handing Google 32
+    // faceted variants of one gallery as separate "important" URLs reads
+    // as doorway duplication. Discovery runs through /gallery itself.
     // /membership itself is NOT listed: it 302s anonymous visitors to
     // /login, and a sitemap entry that lands on a login wall is a
     // low-value signal (Polish Day 2026-10-27). The public shops page is.
@@ -109,32 +103,12 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/brambleforce/founding-figure`, changefreq: 'weekly', priority: '0.6' },
     { loc: `${base}/raffle`, changefreq: 'weekly', priority: '0.6' },
     { loc: `${base}/terms`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy`, changefreq: 'monthly', priority: '0.3' },
     { loc: `${base}/delete-account`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/odometer`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/ai-bar`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/onemind`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/screenqr`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/habit-dot`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/habitdot`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/world-weather`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/loophole-ciphers`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/ciphertoy`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/ghost-box`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/ghostbox`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/fill-my-list`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/library`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/kids-wing`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/librarykids`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/email-keeper`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/rolodex`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/social-rolodex`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/master-rolodex`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/robosweeper`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/money-watch`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/dawnfold`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/herbhaul`, changefreq: 'monthly', priority: '0.3' },
-    { loc: `${base}/privacy/herbhaul-driver`, changefreq: 'monthly', priority: '0.3' },
+    // Privacy policies are NOT sitemap-listed (AdSense pass 2026-11-07):
+    // the /privacy pages stay live at their URLs — Google Play listings
+    // link several of them directly — but 25 legal-boilerplate URLs,
+    // including the habit-dot/habitdot and ghost-box/ghostbox duplicate
+    // pairs, do not belong in the sitemap as content signals.
     { loc: `${base}/discounts`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${base}/aftercare`, changefreq: 'monthly', priority: '0.6' },
     { loc: `${base}/merch`, changefreq: 'weekly', priority: '0.7' },
@@ -167,6 +141,8 @@ router.get('/sitemap.xml', async (req, res) => {
     { loc: `${base}/guides/choosing-a-design`, changefreq: 'monthly', priority: '0.7' },
     { loc: `${base}/guides/custom-design-process`, changefreq: 'monthly', priority: '0.7' },
     { loc: `${base}/guides/for-tattoo-shops`, changefreq: 'monthly', priority: '0.7' },
+    { loc: `${base}/guides/first-tattoo`, changefreq: 'monthly', priority: '0.7' },
+    { loc: `${base}/guides/stencil-day`, changefreq: 'monthly', priority: '0.7' },
     // Long-form tattoo style guides + FAQ (AdSense "low value content"
     // remediation 2026-11-03): substantive original editorial pages.
     { loc: `${base}/styles`, changefreq: 'weekly', priority: '0.8' },
@@ -1197,7 +1173,7 @@ router.get('/design/:id', async (req, res) => {
     // Style-specific tattooing notes (placement / sizing / aging) from the
     // style's long-form guide, so a design page carries real guidance for
     // its style — not just a price and a button (2026-11-03 content pass).
-    styleNotes: notesForStyle(design.style),
+    styleNotes: designDesc.notesForDesign(design),
     canonical, ogImage: ogImgFile ? `${base}/img/designs/${ogImgFile}` : '', ogType: 'product', jsonLd,
     creditBalance: req.user ? await require('../lib/credits').getCreditBalance(req.user.id) : 0,
   });
@@ -1326,13 +1302,11 @@ router.get('/privacy/habit-dot', (req, res) => res.render('site/privacy-habitdot
   metaDescription: 'Privacy policy for Habit Dot. Your habits stay on your device; the free version shows Google AdMob ads, and Premium ($2.99 via Google Play Billing) removes them.',
 }));
 
-// Package-name alias for the Habit Dot policy above (same page, same
-// policy — the /privacy/onemind alias for the AI Bar page is the house
-// precedent for serving one policy at both its slugs).
-router.get('/privacy/habitdot', (req, res) => res.render('site/privacy-habitdot', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
-  title: 'Habit Dot Privacy Policy — Usefulappz',
-  metaDescription: 'Privacy policy for Habit Dot. Your habits stay on your device; the free version shows Google AdMob ads, and Premium ($2.99 via Google Play Billing) removes them.',
-}));
+// Package-name alias for the Habit Dot policy above: 301 to the canonical
+// hyphenated URL (AdSense pass 2026-11-07 — the two slugs served identical
+// policy text at two URLs; one canonical policy URL is the signal we want,
+// and follows the /privacy/tester-hub 301 precedent below).
+router.get('/privacy/habitdot', (req, res) => res.redirect(301, '/privacy/habit-dot'));
 
 // Per-app policy for the World Weather Android app (Google Play requires
 // a public privacy-policy URL; the app uses device location only on tap
@@ -1363,12 +1337,10 @@ router.get('/privacy/ghost-box', (req, res) => res.render('site/privacy-ghostbox
   metaDescription: 'Privacy policy for Ghost Box — Spirit Radio. No microphone, no internet permission, nothing recorded or collected — an entertainment novelty that runs entirely on your device.',
 }));
 
-// Package-name alias for the Ghost Box policy above (the app's package
-// is com.usefulappz.ghostbox; same page, same policy).
-router.get('/privacy/ghostbox', (req, res) => res.render('site/privacy-ghostbox', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
-  title: 'Ghost Box Privacy Policy — Usefulappz',
-  metaDescription: 'Privacy policy for Ghost Box — Spirit Radio. No microphone, no internet permission, nothing recorded or collected — an entertainment novelty that runs entirely on your device.',
-}));
+// Package-name alias for the Ghost Box policy above: 301 to the canonical
+// hyphenated URL (AdSense pass 2026-11-07 — same duplicate-pair fix as
+// /privacy/habitdot above).
+router.get('/privacy/ghostbox', (req, res) => res.redirect(301, '/privacy/ghost-box'));
 
 // Per-app policy for the FillMyList Android app (v1.2.3: free with
 // AdMob ads; sends only what the user types into its forms to the
@@ -1676,6 +1648,23 @@ router.get('/guides/for-tattoo-shops', (req, res) => res.render('site/guide-for-
   title: 'For Tattoo Shops: Run Your Business on Tattoo Art Customs',
   metaDescription: 'What a Tattoo Art Customs shop membership includes: verified storefront, bookings and client profiles, tap-to-pay with no card reader, 20% referral earnings, design sales, and back-office tools.',
   canonical: `${config.baseUrl.replace(/\/$/, '')}/guides/for-tattoo-shops`,
+}));
+
+// First-tattoo walkthrough + stencil-day guide (AdSense pass 2026-11-07,
+// table-reviewed): net-new editorial the existing guides do not carry —
+// the eligibility gate, the consultation, the day itself, and body-mapping
+// at the stencil. Design/style/aging selection stays in choosing-a-design;
+// these two link to it instead of restating it.
+router.get('/guides/first-tattoo', (req, res) => res.render('site/guide-first-tattoo', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
+  title: 'Your First Tattoo: A Complete, Calm Walkthrough — Tattoo Art Customs',
+  metaDescription: 'Your first tattoo in the order it happens: the health and eligibility checks, sitting with the idea, choosing an artist by healed work, the consultation and honest pricing, the day itself, and the chair.',
+  canonical: `${config.baseUrl.replace(/\/$/, '')}/guides/first-tattoo`,
+}));
+
+router.get('/guides/stencil-day', (req, res) => res.render('site/guide-stencil-day', {homeFace: true, darkFace: true, bodyClass: 'page-dark', 
+  title: 'Stencil Day: Size, Placement & the Mirror Check — Tattoo Art Customs',
+  metaDescription: 'How a tattoo design gets mapped onto a body: worked size minimums for script, portraits and fine detail, distortion in motion, orientation, symmetry, and the mirror check that catches mistakes free.',
+  canonical: `${config.baseUrl.replace(/\/$/, '')}/guides/stencil-day`,
 }));
 
 // Tattoo style guides index + one long-form guide per major style
