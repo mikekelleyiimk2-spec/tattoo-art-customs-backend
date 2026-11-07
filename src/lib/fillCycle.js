@@ -24,11 +24,14 @@
 //
 // PAYMENT RAIL — the honest state: an order starts 'awaiting_payment'
 // and an unpaid app NEVER enters the cycle. The order flips to
-// 'filling' only via grantFillEntitlement(), the managed entitlement
-// grant (service-token only) — the exact pattern the Profile Plug
-// runs on today (src/lib/profilePlug.js) until Play Billing receipt
-// verification lands on the console train. A grant made without a
-// real Play receipt is recorded simulated=1, never dressed as a sale.
+// 'filling' only via grantFillEntitlement() — the single entitlement
+// door, called either by the managed grant (service-token only, the
+// exact pattern the Profile Plug runs on today,
+// src/lib/profilePlug.js) or, since 2026-11-07, server-side by the
+// self-serve web checkout in routes/devtools.js AFTER a verified
+// PayPal capture of the register total (never by the buyer, never
+// with the service token exposed). A grant made without a real
+// receipt/capture is recorded simulated=1, never dressed as a sale.
 //
 // The light-board events written here are REAL cycle events only.
 // Developer display names come from the public Hub profile
@@ -182,9 +185,11 @@ async function createFillOrder({ package: pkg, developer_gmail }) {
   return { ok: true, created: true, order: await publicOrder(order) };
 }
 
-// THE ENTITLEMENT GATE (service-token route only). This is the single
-// door from 'awaiting_payment' to 'filling': wave 1 routes the moment
-// it opens. Mirrors profilePlug.grantEntitlement's managed pattern.
+// THE ENTITLEMENT GATE. This is the single door from
+// 'awaiting_payment' to 'filling': wave 1 routes the moment it opens.
+// Callers: the service-token route in routes/api.js, and the web
+// checkout's approve route in routes/devtools.js after a verified
+// PayPal capture. Mirrors profilePlug.grantEntitlement's pattern.
 async function grantFillEntitlement({ package: pkg, purchase_ref, simulated }) {
   const order = await openOrderFor(pkg);
   if (!order) return { ok: false, error: 'no open fill order for that package' };

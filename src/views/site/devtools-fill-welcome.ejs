@@ -1,0 +1,45 @@
+<%#
+  FillMyList — buyer confirmation page.
+  Body fragment only, same face as the service page (layout-devtools).
+  Shown only behind the paid-register-order gate in routes/devtools.js
+  (HMAC checkout token): payment is complete and the fill entitlement
+  has been granted when this page renders. The fill counts shown are
+  the cycle's live counts, never invented.
+%>
+<div class="hero">
+  <p class="kicker">FillMyList · payment complete</p>
+  <h1>Payment complete — your fill has started.</h1>
+  <p>
+    <span class="price-tag" style="font-size:30px;"><%= money(totalCents) %></span>
+    <span class="muted">paid via PayPal</span>
+  </p>
+  <p>Reference <strong><%= orderRef %></strong><% if (deliveryEmail) { %> · confirmation sent to <strong><%= deliveryEmail %></strong><% } %>. Keep that email — it is your receipt.</p>
+  <p><span class="mono">PAID</span></p>
+</div>
+
+<section>
+  <h2>Your fill<% if (packageName) { %> — <%= packageName %><% } %></h2>
+  <div class="card">
+    <% if (fillOrder) { %>
+    <p style="margin-top:0;">Status: <span class="mono"><%= fillOrder.status %></span></p>
+    <p class="muted" style="margin:4px 0;">Confirmed testers: <strong style="color:var(--ink);"><%= fillOrder.confirmed %> of <%= fillOrder.target %></strong> · Wave <%= fillOrder.wave %></p>
+    <% } else { %>
+    <p style="margin-top:0;">Your fill is running. Its live count is on the FillMyList page — use the status form there with your package name and developer Gmail.</p>
+    <% } %>
+  </div>
+  <div class="steps">
+    <div class="card">
+      <h3>Waves are routing</h3>
+      <p>The pool is routed to your app in waves. Each tester sees your app in their FillMyList feed with its Play opt-in link.</p>
+    </div>
+    <div class="card">
+      <h3>Testers tap, we count</h3>
+      <p>A tester counts only when they tap your app's Play opt-in link themselves on Google's page. Confirmations are counted live as testers confirm.</p>
+    </div>
+    <div class="card">
+      <h3>FULL stays full</h3>
+      <p>At <%= fill.target %> confirmed opt-ins your list is FULL. If a confirmed tester drops during your 14-day closed-test run, top-up waves run free until the run ends.</p>
+    </div>
+  </div>
+  <p><a class="btn" href="/fill-my-list#start">Check the count</a> <a class="btn-ghost" href="/fill-my-list">Back to FillMyList</a></p>
+</section>

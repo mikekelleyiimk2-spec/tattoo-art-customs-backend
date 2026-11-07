@@ -20,10 +20,15 @@
 //   watch rides the same figure — no separate watch price).
 //
 // HONEST PAYMENT STATES (the standing rule — never fake a checkout):
-// - A Fill order is REAL machinery today: POST /api/testers/fill/order
-//   records it 'awaiting_payment' in the Hub's fill cycle. The web
-//   payment rail for it is being set up; the desk confirms payment by
-//   hand (Business PayPal mk4 + entitlement grant) — the page says so.
+// - FillMyList is ON SALE (web rail wired 2026-11-07): POST
+//   /api/testers/fill/order (or the buy door itself) records the fill
+//   order 'awaiting_payment' in the Hub's fill cycle, then the
+//   standard house PayPal checkout (orders row -> checkout -> capture
+//   -> verified) runs from routes/devtools.js, same shape as Money
+//   Watch below; on a verified capture the approve route calls
+//   fillCycle.grantFillEntitlement() server-side and the fill starts.
+//   An unpaid / cancelled / failed-capture order stays
+//   'awaiting_payment' — the page says exactly that.
 // - Money Watch for developers is ON SALE (wired 2026-11-05, gap
 //   G-11): the standard house PayPal checkout (orders row -> checkout
 //   -> capture -> paid) runs from routes/devtools.js, same shape as

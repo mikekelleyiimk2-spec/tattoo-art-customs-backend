@@ -19,6 +19,7 @@ async function runDbTests(ok) {
   ok(devtools.FILL.baseCents === fillCycle.PRICE_CENTS, 'the service page price and the fill machine price can never disagree');
   ok(devtools.FILL.target === 12, 'a fill runs until FULL = 12 confirmed opt-ins');
   ok(devtools.fillRegisterCents() === pricing.withFeeCents(2499), 'register total applies the house fee pass-through');
+  ok(devtools.fillRegisterCents() === 2635, 'FillMyList register total is exactly $26.35 ($24.99 + $1.36 fee)');
   ok(devtools.ROLODEX_TIERS.affiliate.baseCents === 499
     && devtools.ROLODEX_TIERS.social.baseCents === 499
     && devtools.ROLODEX_TIERS.master.baseCents === 799,
@@ -63,7 +64,11 @@ async function runHttpTests(ok, req) {
   ok(fill.text.includes('awaiting_payment'), 'the honest checkout state is printed on the face');
   ok(/tap your app’s Play opt-in link themselves|tap.*opt-in link themselves/.test(fill.text), 'the tester tap is stated plainly — never described away');
   ok(fill.text.includes('sign-up IS the opt-in'), 'pool copy states sign-up IS the opt-in');
-  ok(fill.text.includes('/api/testers/fill/order') && fill.text.includes('/api/testers/fill/status'), 'order + status forms wire the real fill API');
+  ok(fill.text.includes('action="/fill-my-list/buy"') && fill.text.includes('/api/testers/fill/status'), 'buy form wires the real PayPal checkout door + status form wires the real fill API');
+  ok(fill.text.includes('$26.35'), 'register total ($24.99 + $1.36 fee = $26.35) printed on the fill face');
+  ok(fill.text.includes('Checkout is live'), 'fill face states checkout is live');
+  ok(!fill.text.includes('being set up') && !fill.text.includes('grants the entitlement by hand'),
+    'fill face no longer claims web checkout is being set up / desk-granted by hand');
   ok(fill.text.includes('https://www.paypal.com/ncp/payment/WA9DS6J8ERSHW'), 'tip jar (Penny Sweeper) on the fill page');
   ok(fill.text.includes('/rolodex-demo') && fill.text.includes('/money-watch') && fill.text.includes('/onemind'), 'sister cross-links on the fill page');
 
@@ -91,6 +96,79 @@ async function runHttpTests(ok, req) {
   ok(ord.json.order.price_cents === 2499 && ord.json.order.target === 12, 'fill order carries the settled price + FULL target');
   const st = await call('GET', `/api/testers/fill/status?package=${PKG}&gmail=${encodeURIComponent(DEV)}`);
   ok(st.json && st.json.ok === true && st.json.order.confirmed === 0, 'fill status reads back through the page’s status door');
+
+  // The buy door: a mismatched developer Gmail is refused BEFORE any
+  // PayPal call (soft landing back on the face, no 500, no charge).
+  const badFillBuy = await anon('/fill-my-list/buy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ package: PKG, developer_gmail: 'not-the-dev@gmail.com', website: '' }).toString(),
+  });
+  ok(badFillBuy.status === 302 && (badFillBuy.location || '').includes('/fill-my-list'),
+    'fill buy with a mismatched Gmail lands softly on the face (no PayPal call made)');
+
+  // A valid buy with the suite's fake PayPal credentials degrades
+  // gracefully: redirect back to the face, the fill order stays
+  // awaiting_payment, and nothing enters the cycle unpaid.
+  const gracefulBuy = await anon('/fill-my-list/buy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ package: PKG, developer_gmail: DEV, website: '' }).toString(),
+  });
+  ok(gracefulBuy.status === 302 && (gracefulBuy.location || '').includes('/fill-my-list'),
+    'fill buy degrades gracefully when PayPal cannot create a checkout (no crash, no /login bounce)');
+  const stAfterBuy = await call('GET', `/api/testers/fill/status?package=${PKG}&gmail=${encodeURIComponent(DEV)}`);
+  ok(stAfterBuy.json && stAfterBuy.json.order.status === 'awaiting_payment',
+    'fill order stays awaiting_payment after a failed checkout creation — unpaid never cycles');
+
+  // The cancel return: a soft landing on the face, no charge attempted.
+  const cancelled = await anon('/fill-my-list/cancelled');
+  ok(cancelled.status === 302 && (cancelled.location || '').includes('/fill-my-list'),
+    'fill cancel return lands softly on the face');
+
+  // The approve door over a seeded register row (the guest-app
+  // checkout pattern): HMAC-gated, the stubbed capture verifies, the
+  // register row pays, and grantFillEntitlement flips the fill to
+  // 'filling' server-side — no service token anywhere in the flow.
+  {
+    const Database = require('better-sqlite3');
+    const tdb = new Database(process.env.SQLITE_PATH);
+    const guestCheckout = require('../src/lib/guestCheckout');
+    const PKG2 = 'com.example.fillbuy';
+    const DEV2 = 'fillbuy.dev@gmail.com';
+    const added2 = await call('POST', '/api/testers/apps', {
+      app_name: 'Fill Buy Demo App', package: PKG2,
+      optin_url: `https://play.google.com/apps/testing/${PKG2}`,
+      developer_gmail: DEV2, blurb: 'Fill checkout wiring check.',
+    });
+    ok(added2.json && added2.json.ok === true, 'fill-buy demo app added to the Hub');
+    const ord2 = await call('POST', '/api/testers/fill/order', { package: PKG2, developer_gmail: DEV2 });
+    ok(ord2.json && ord2.json.order.status === 'awaiting_payment', 'fill-buy order born awaiting_payment');
+    tdb.prepare(`INSERT INTO orders
+      (id, buyer_id, design_id, order_type, amount_cents, fee_cents, status, payment_method, paypal_order_id, referral_code, guest_email, guest_note, created_at)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`).run('ord-fill-buy-1', '', null, 'fill_my_list', 2499, 136,
+      'pending', 'paypal', 'pp-fill-buy-1', '', DEV2,
+      JSON.stringify({ package: PKG2, developerGmail: DEV2 }), Date.now());
+    let a = await anon('/fill-my-list/approve/ord-fill-buy-1');
+    ok(a.status === 403, 'fill: approve without the checkout token is 403');
+    a = await anon('/fill-my-list/approve/ord-fill-buy-1?gt=ord-fill-buy-1.00000000000000000000000000000000');
+    ok(a.status === 403, 'fill: approve with a forged token is 403');
+    const fillGt = guestCheckout.guestToken('ord-fill-buy-1', 'fill_my_list');
+    a = await anon(`/fill-my-list/approve/ord-fill-buy-1?gt=${encodeURIComponent(fillGt)}`);
+    ok(a.status === 302 && (a.location || '').includes('/fill-my-list/welcome/ord-fill-buy-1'),
+      'fill: approve captures and redirects to the confirmation page');
+    const regRow = tdb.prepare('SELECT status FROM orders WHERE id = ?').get('ord-fill-buy-1');
+    ok(regRow && regRow.status === 'paid', 'fill: register order is paid after capture');
+    const stFill = await call('GET', `/api/testers/fill/status?package=${PKG2}&gmail=${encodeURIComponent(DEV2)}`);
+    ok(stFill.json && stFill.json.order.status === 'filling',
+      'fill: verified capture grants the entitlement — the fill is filling (wave routed, no service token)');
+    a = await anon(`/fill-my-list/welcome/ord-fill-buy-1?gt=${encodeURIComponent(fillGt)}`);
+    ok(a.status === 200 && a.text.includes('Payment complete') && a.text.includes(PKG2),
+      'fill: welcome page confirms payment + the started fill');
+    a = await anon('/fill-my-list/welcome/ord-fill-buy-1');
+    ok(a.status === 403, 'fill: welcome page without the checkout token is 403');
+    tdb.close();
+  }
 
   // ---- Rolodex demo ----
   const demo = await anon('/rolodex-demo');

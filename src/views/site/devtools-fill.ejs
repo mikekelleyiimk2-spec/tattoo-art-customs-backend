@@ -26,7 +26,7 @@
     </div>
     <div class="card">
       <h3>Start the fill — <%= money(fill.baseCents) %></h3>
-      <p>One charge, one app. Your order is recorded in the fill cycle and holds your app's place at the settled price. An unpaid app never enters the cycle — no fake paid states, ever.</p>
+      <p>One charge, one app, paid through PayPal checkout on this page. Your order is recorded in the fill cycle at the settled price, and the fill starts the moment your PayPal payment is captured and verified. An unpaid app never enters the cycle — no fake paid states, ever.</p>
     </div>
     <div class="card">
       <h3>Waves roll out</h3>
@@ -46,17 +46,17 @@
 <section id="start">
   <h2>Start a fill</h2>
   <div class="card">
-    <p style="margin-top:0;">Your app must be in FillMyList first (that's the free step above — the <a href="/tester-hub">FillMyList page</a> and the FillMyList app both add apps). Then record the fill order here:</p>
-    <form id="fill-order-form">
+    <p style="margin-top:0;">Your app must be in FillMyList first (that's the free step above — the <a href="/tester-hub">FillMyList page</a> and the FillMyList app both add apps). Then pay and start the fill here:</p>
+    <form method="post" action="/fill-my-list/buy">
+      <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
       <label for="fill-package">Your app's package name</label>
-      <input type="text" id="fill-package" placeholder="com.yourstudio.yourapp" autocomplete="off" required>
+      <input type="text" id="fill-package" name="package" placeholder="com.yourstudio.yourapp" autocomplete="off" required>
       <label for="fill-gmail">The developer Gmail on the app's FillMyList listing</label>
-      <input type="email" id="fill-gmail" placeholder="you@gmail.com" autocomplete="email" required>
-      <p style="margin:18px 0 0;"><button type="submit" class="btn">Record my fill order — <%= money(fill.baseCents) %></button></p>
+      <input type="email" id="fill-gmail" name="developer_gmail" placeholder="you@gmail.com" autocomplete="email" required>
+      <p style="margin:18px 0 0;"><button type="submit" class="btn">Pay <%= money(fillRegisterCents) %> via PayPal — start my fill</button></p>
     </form>
-    <div class="card result-panel" id="fill-order-result" role="status"></div>
     <div class="band" style="margin-bottom:0;">
-      <strong>The honest checkout state:</strong> web checkout for FillMyList is being set up. Recording the order holds your app's place at <%= money(fill.baseCents) %> (<%= money(fillRegisterCents) %> at the register with the processing fee passed through, like every price on this site). The desk confirms payment through the Business PayPal link and grants the entitlement by hand — your fill starts the moment that lands, and the order says <span class="mono">awaiting_payment</span> until it does. Nothing about that is dressed up.
+      <strong>Checkout is live:</strong> PayPal checkout on this page — <%= money(fill.baseCents) %> plus <%= money(fillFeeCents) %> processing (passed through, like every price on this site) is <%= money(fillRegisterCents) %> at the register. Your order reads <span class="mono">awaiting_payment</span> until PayPal captures your payment and the site verifies it; the moment that lands, your fill starts automatically and wave 1 routes. If you cancel at PayPal or a capture fails, no fill starts and the order stays <span class="mono">awaiting_payment</span> — nothing about that is dressed up.
     </div>
   </div>
 
@@ -93,7 +93,7 @@
 
 <section>
   <h2>One service, no FillMyList adoption required</h2>
-  <p class="muted" style="max-width:46em;">FillMyList works for a developer who never installs anything else of ours: add the app, record the order, watch the count. Developers who do run FillMyList get the same fill from inside it — same price, same cycle, same FULL. And testers are never charged: the tester side of FillMyList is free, always. Developers pay; testers tap. For testers, sign-up IS the opt-in — one signup puts them in the pool for every fill that routes their way.</p>
+  <p class="muted" style="max-width:46em;">FillMyList works for a developer who never installs anything else of ours: add the app, pay for the fill, watch the count. Developers who do run FillMyList get the same fill from inside it — same price, same cycle, same FULL. And testers are never charged: the tester side of FillMyList is free, always. Developers pay; testers tap. For testers, sign-up IS the opt-in — one signup puts them in the pool for every fill that routes their way.</p>
 </section>
 
 <section>
@@ -139,27 +139,12 @@
   }
   function orderHtml(o) {
     var stateLine = o.status === 'awaiting_payment'
-      ? 'Recorded as <span class="mono">awaiting_payment</span> — the desk confirms payment and your fill starts the moment the entitlement lands.'
+      ? 'Recorded as <span class="mono">awaiting_payment</span> — payment has not completed yet, so the fill has not started. Run the PayPal checkout above to pay and start it.'
       : 'Status: <span class="mono">' + esc(o.status) + '</span>';
     return '<h3 style="margin-top:0;">Fill order — ' + esc(o.package) + '</h3>'
       + '<p style="margin:4px 0;">' + stateLine + '</p>'
       + '<p class="muted" style="margin:4px 0;">Confirmed testers: <strong style="color:var(--ink);">' + esc(o.confirmed) + ' of ' + esc(o.target) + '</strong> · Wave ' + esc(o.wave) + '</p>';
   }
-  document.getElementById('fill-order-form').addEventListener('submit', function (ev) {
-    ev.preventDefault();
-    var pkg = document.getElementById('fill-package').value.trim();
-    var gmail = document.getElementById('fill-gmail').value.trim();
-    fetch('/api/testers/fill/order', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ package: pkg, developer_gmail: gmail }),
-    }).then(function (r) { return r.json(); }).then(function (j) {
-      if (!j.ok) { show('fill-order-result', '<p style="margin:0;">' + esc(j.error || 'That order could not be recorded.') + '</p>'); return; }
-      show('fill-order-result', orderHtml(j.order) + '<p class="fineprint">Order ' + (j.created ? 'created' : 'already on record') + ' — the price on the order is the settled $24.99.</p>');
-    }).catch(function () {
-      show('fill-order-result', '<p style="margin:0;">The order door did not answer just now — try once more in a moment.</p>');
-    });
-  });
   document.getElementById('fill-status-form').addEventListener('submit', function (ev) {
     ev.preventDefault();
     var pkg = document.getElementById('status-package').value.trim();
